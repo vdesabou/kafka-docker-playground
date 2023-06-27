@@ -50,22 +50,18 @@ $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol t
 # $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 8080 --cidr 35.181.144.237/32 > /dev/null 2>&1 &
 
 # # egress ip cluster cdc oracle
-# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 3.14.223.77/32 > /dev/null 2>&1 &
-# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 3.19.107.110/32 > /dev/null 2>&1 &
-# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 3.22.131.240/32 > /dev/null 2>&1 &
-# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 3.130.86.195/32 > /dev/null 2>&1 &
-# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 3.135.41.119/32 > /dev/null 2>&1 &
-# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 3.135.84.248/32 > /dev/null 2>&1 &
-# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 3.141.214.8/32 > /dev/null 2>&1 &
-# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 3.141.249.111/32 > /dev/null 2>&1 &
-# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 3.142.20.221/32 > /dev/null 2>&1 &
-# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 3.142.170.223/32 > /dev/null 2>&1 &
-# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 13.58.159.211/32 > /dev/null 2>&1 &
-# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 18.118.245.48/32 > /dev/null 2>&1 &
-# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 18.119.83.241/32 > /dev/null 2>&1 &
-# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 18.189.121.248/32 > /dev/null 2>&1 &
-# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 18.190.10.253/32 > /dev/null 2>&1 &
-# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 18.216.32.160/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 13.36.97.85/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 13.36.104.9/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 13.36.132.239/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 13.37.18.182/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 15.188.179.40/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 15.236.107.72/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 15.236.121.33/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 15.236.192.85/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 35.180.176.16/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 35.181.12.7/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 35.181.19.147/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 35.181.144.237/32 > /dev/null 2>&1 &
 
 
 # $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 3306 --cidr 13.36.97.85/32 > /dev/null 2>&1 &
