@@ -15,23 +15,23 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.mtl
 log "Creating MQTT Source connector"
 playground connector create-or-update --connector source-mqtt << EOF
 {
-               "connector.class": "io.confluent.connect.mqtt.MqttSourceConnector",
-               "tasks.max": "1",
-               "mqtt.server.uri": "ssl://mosquitto:8883",
-               "mqtt.topics":"my-mqtt-topic",
-               "kafka.topic":"mqtt-source-1",
-               "mqtt.qos": "2",
-               "mqtt.username": "myuser",
-               "mqtt.password": "mypassword",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "mqtt.ssl.trust.store.path": "/tmp/truststore.jks",
-               "mqtt.ssl.trust.store.password": "confluent",
-               "mqtt.ssl.key.store.path": "/tmp/keystore.jks",
-               "mqtt.ssl.key.store.password": "confluent",
-               "mqtt.ssl.key.password": "confluent"
-          }
+     "connector.class": "io.confluent.connect.mqtt.MqttSourceConnector",
+     "tasks.max": "1",
+     "mqtt.server.uri": "ssl://mosquitto:8883",
+     "mqtt.topics":"my-mqtt-topic",
+     "kafka.topic":"mqtt-source-1",
+     "mqtt.qos": "2",
+     "mqtt.username": "myuser",
+     "mqtt.password": "mypassword",
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1",
+     "mqtt.ssl.trust.store.path": "/tmp/truststore.jks",
+     "mqtt.ssl.trust.store.password": "confluent",
+     "mqtt.ssl.key.store.path": "/tmp/keystore.jks",
+     "mqtt.ssl.key.store.password": "confluent",
+     "mqtt.ssl.key.password": "confluent"
+}
 EOF
 
 

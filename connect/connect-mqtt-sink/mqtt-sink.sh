@@ -14,19 +14,19 @@ EOF
 log "Creating MQTT Sink connector"
 playground connector create-or-update --connector sink-mqtt << EOF
 {
-               "connector.class": "io.confluent.connect.mqtt.MqttSinkConnector",
-                    "tasks.max": "1",
-                    "mqtt.server.uri": "tcp://mosquitto:1883",
-                    "topics":"sink-messages",
-                    "mqtt.qos": "2",
-                    "mqtt.username": "myuser",
-                    "mqtt.password": "mypassword",
-                    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }
+     "connector.class": "io.confluent.connect.mqtt.MqttSinkConnector",
+     "tasks.max": "1",
+     "mqtt.server.uri": "tcp://mosquitto:1883",
+     "topics":"sink-messages",
+     "mqtt.qos": "2",
+     "mqtt.username": "myuser",
+     "mqtt.password": "mypassword",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 
