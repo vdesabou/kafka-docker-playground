@@ -162,6 +162,11 @@ do
     log "✨ Display content of topic $topic, it contains $nb_messages messages"
   fi
 
+  if [[ -n "$grep_string" ]]
+  then
+    logwarn "--grep is set so only matched results will be displayed !"
+  fi
+
   if [[ -n "$timestamp_field" ]]
   then
     log "📈 plotting results.."
@@ -337,7 +342,7 @@ do
           display_line=0
         fi
       fi
-      
+
       if [ $display_line -eq 1 ]
       then
         echo "$line"
