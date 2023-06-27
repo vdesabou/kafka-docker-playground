@@ -17,30 +17,30 @@ log "-------------------------------------"
 log "Creating http-sink connector"
 playground connector create-or-update --connector http-mtls-sink << EOF
 {
-          "topics": "http-messages",
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.http.HttpSinkConnector",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "reporter.bootstrap.servers": "broker:9092",
-               "reporter.error.topic.name": "error-responses",
-               "reporter.error.topic.replication.factor": 1,
-               "reporter.result.topic.name": "success-responses",
-               "reporter.result.topic.replication.factor": 1,
-               "http.api.url": "https://http-service-mtls-auth:8443/api/messages",
-               "auth.type": "NONE",
-               "ssl.enabled": "true",
-               "https.ssl.truststore.location": "/tmp/truststore.http-service-mtls-auth.jks",
-               "https.ssl.truststore.type": "JKS",
-               "https.ssl.truststore.password": "confluent",
-               "https.ssl.keystore.location": "/tmp/keystore.http-service-mtls-auth.jks",
-               "https.ssl.keystore.type": "JKS",
-               "https.ssl.keystore.password": "confluent",
-               "https.ssl.key.password": "confluent",
-               "https.ssl.protocol": "TLSv1.2"
-          }
+     "topics": "http-messages",
+     "tasks.max": "1",
+     "connector.class": "io.confluent.connect.http.HttpSinkConnector",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1",
+     "reporter.bootstrap.servers": "broker:9092",
+     "reporter.error.topic.name": "error-responses",
+     "reporter.error.topic.replication.factor": 1,
+     "reporter.result.topic.name": "success-responses",
+     "reporter.result.topic.replication.factor": 1,
+     "http.api.url": "https://http-service-mtls-auth:8443/api/messages",
+     "auth.type": "NONE",
+     "ssl.enabled": "true",
+     "https.ssl.truststore.location": "/tmp/truststore.http-service-mtls-auth.jks",
+     "https.ssl.truststore.type": "JKS",
+     "https.ssl.truststore.password": "confluent",
+     "https.ssl.keystore.location": "/tmp/keystore.http-service-mtls-auth.jks",
+     "https.ssl.keystore.type": "JKS",
+     "https.ssl.keystore.password": "confluent",
+     "https.ssl.key.password": "confluent",
+     "https.ssl.protocol": "TLSv1.2"
+}
 EOF
 
 

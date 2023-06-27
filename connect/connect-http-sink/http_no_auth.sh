@@ -17,21 +17,21 @@ log "-------------------------------------"
 log "Creating http-sink connector"
 playground connector create-or-update --connector http-sink << EOF
 {
-          "topics": "http-messages",
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.http.HttpSinkConnector",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "reporter.bootstrap.servers": "broker:9092",
-               "reporter.error.topic.name": "error-responses",
-               "reporter.error.topic.replication.factor": 1,
-               "reporter.result.topic.name": "success-responses",
-               "reporter.result.topic.replication.factor": 1,
-               "http.api.url": "http://http-service-no-auth:8080/api/messages",
-               "batch.max.size": "10"
-          }
+     "topics": "http-messages",
+     "tasks.max": "1",
+     "connector.class": "io.confluent.connect.http.HttpSinkConnector",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1",
+     "reporter.bootstrap.servers": "broker:9092",
+     "reporter.error.topic.name": "error-responses",
+     "reporter.error.topic.replication.factor": 1,
+     "reporter.result.topic.name": "success-responses",
+     "reporter.result.topic.replication.factor": 1,
+     "http.api.url": "http://http-service-no-auth:8080/api/messages",
+     "batch.max.size": "10"
+}
 EOF
 
 
