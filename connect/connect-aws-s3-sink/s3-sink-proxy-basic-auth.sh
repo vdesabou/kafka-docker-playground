@@ -63,23 +63,23 @@ set -e
 log "Creating S3 Sink connector with bucket name <$AWS_BUCKET_NAME>"
 playground connector create-or-update --connector s3-sink-proxy-basic-auth << EOF
 {
-               "connector.class": "io.confluent.connect.s3.S3SinkConnector",
-               "tasks.max": "1",
-               "topics": "s3_topic",
-               "s3.region": "$AWS_REGION",
-               "s3.bucket.name": "$AWS_BUCKET_NAME",
-               "s3.part.size": 52428801,
-               "topics.dir": "$TAG",
-               "flush.size": "3",
-               "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
-               "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
-               "s3.proxy.url": "https://squid:8888",
-               "s3.proxy.user": "admin",
-               "s3.proxy.password": "1234",
-               "storage.class": "io.confluent.connect.s3.storage.S3Storage",
-               "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
-               "schema.compatibility": "NONE"
-          }
+    "connector.class": "io.confluent.connect.s3.S3SinkConnector",
+    "tasks.max": "1",
+    "topics": "s3_topic",
+    "s3.region": "$AWS_REGION",
+    "s3.bucket.name": "$AWS_BUCKET_NAME",
+    "s3.part.size": 52428801,
+    "topics.dir": "$TAG",
+    "flush.size": "3",
+    "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
+    "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
+    "s3.proxy.url": "https://squid:8888",
+    "s3.proxy.user": "admin",
+    "s3.proxy.password": "1234",
+    "storage.class": "io.confluent.connect.s3.storage.S3Storage",
+    "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
+    "schema.compatibility": "NONE"
+}
 EOF
 
 

@@ -76,23 +76,23 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 log "Creating Azure Service Bus Source connector"
 playground connector create-or-update --connector azure-service-bus-source << EOF
 {
-                "connector.class": "io.confluent.connect.azure.servicebus.ServiceBusSourceConnector",
-                "kafka.topic": "servicebus-topic",
-                "tasks.max": "1",
-                "azure.servicebus.sas.keyname": "RootManageSharedAccessKey",
-                "azure.servicebus.sas.key": "\${file:/data:AZURE_SAS_KEY}",
-                "azure.servicebus.namespace": "\${file:/data:AZURE_SERVICE_BUS_NAMESPACE}",
-                "azure.servicebus.entity.name": "\${file:/data:AZURE_SERVICE_BUS_QUEUE_NAME}",
-                "azure.servicebus.subscription" : "",
-                "azure.servicebus.max.message.count" : "10",
-                "azure.servicebus.max.waiting.time.seconds" : "30",
-                "confluent.license": "",
-                "confluent.topic.bootstrap.servers": "broker:9092",
-                "confluent.topic.replication.factor": "1",
-                "errors.tolerance": "all",
-                "errors.log.enable": "true",
-                "errors.log.include.messages": "true"
-          }
+    "connector.class": "io.confluent.connect.azure.servicebus.ServiceBusSourceConnector",
+    "kafka.topic": "servicebus-topic",
+    "tasks.max": "1",
+    "azure.servicebus.sas.keyname": "RootManageSharedAccessKey",
+    "azure.servicebus.sas.key": "\${file:/data:AZURE_SAS_KEY}",
+    "azure.servicebus.namespace": "\${file:/data:AZURE_SERVICE_BUS_NAMESPACE}",
+    "azure.servicebus.entity.name": "\${file:/data:AZURE_SERVICE_BUS_QUEUE_NAME}",
+    "azure.servicebus.subscription" : "",
+    "azure.servicebus.max.message.count" : "10",
+    "azure.servicebus.max.waiting.time.seconds" : "30",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1",
+    "errors.tolerance": "all",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
+}
 EOF
 
 sleep 5

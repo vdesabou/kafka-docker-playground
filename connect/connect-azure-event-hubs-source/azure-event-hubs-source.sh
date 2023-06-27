@@ -82,21 +82,21 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 log "Creating Azure Event Hubs Source connector"
 playground connector create-or-update --connector azure-event-hubs-source << EOF
 {
-                "connector.class": "io.confluent.connect.azure.eventhubs.EventHubsSourceConnector",
-                "kafka.topic": "event_hub_topic",
-                "tasks.max": "1",
-                "max.events": "1",
-                "azure.eventhubs.sas.keyname": "RootManageSharedAccessKey",
-                "azure.eventhubs.sas.key": "\${file:/data:AZURE_SAS_KEY}",
-                "azure.eventhubs.namespace": "\${file:/data:AZURE_EVENT_HUBS_NAMESPACE}",
-                "azure.eventhubs.hub.name": "\${file:/data:AZURE_EVENT_HUBS_NAME}",
-                "confluent.license": "",
-                "confluent.topic.bootstrap.servers": "broker:9092",
-                "confluent.topic.replication.factor": "1",
-                "errors.tolerance": "all",
-                "errors.log.enable": "true",
-                "errors.log.include.messages": "true"
-          }
+    "connector.class": "io.confluent.connect.azure.eventhubs.EventHubsSourceConnector",
+    "kafka.topic": "event_hub_topic",
+    "tasks.max": "1",
+    "max.events": "1",
+    "azure.eventhubs.sas.keyname": "RootManageSharedAccessKey",
+    "azure.eventhubs.sas.key": "\${file:/data:AZURE_SAS_KEY}",
+    "azure.eventhubs.namespace": "\${file:/data:AZURE_EVENT_HUBS_NAMESPACE}",
+    "azure.eventhubs.hub.name": "\${file:/data:AZURE_EVENT_HUBS_NAME}",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1",
+    "errors.tolerance": "all",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
+}
 EOF
 
 sleep 5

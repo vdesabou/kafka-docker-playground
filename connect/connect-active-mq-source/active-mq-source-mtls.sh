@@ -15,15 +15,15 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.mtl
 log "Creating ActiveMQ source connector"
 playground connector create-or-update --connector active-mq-source-mtls << EOF
 {
-               "connector.class": "io.confluent.connect.activemq.ActiveMQSourceConnector",
-               "kafka.topic": "MyKafkaTopicName",
-               "activemq.url": "ssl://activemq:61617",
-               "jms.destination.name": "DEV.QUEUE.1",
-               "jms.destination.type": "queue",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+     "connector.class": "io.confluent.connect.activemq.ActiveMQSourceConnector",
+     "kafka.topic": "MyKafkaTopicName",
+     "activemq.url": "ssl://activemq:61617",
+     "jms.destination.name": "DEV.QUEUE.1",
+     "jms.destination.type": "queue",
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 5

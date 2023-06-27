@@ -87,26 +87,26 @@ EOF
 log "Creating Azure Functions Sink connector"
 playground connector create-or-update --connector azure-functions-sink << EOF
 {
-                "connector.class": "io.confluent.connect.azure.functions.AzureFunctionsSinkConnector",
-                "tasks.max": "1",
-                "topics": "functions-test",
-                "key.converter":"org.apache.kafka.connect.storage.StringConverter",
-                "value.converter":"org.apache.kafka.connect.storage.StringConverter",
-                "function.url": "$FUNCTIONS_URL",
-                "function.key": "",
-                "confluent.license": "",
-                "confluent.topic.bootstrap.servers": "broker:9092",
-                "confluent.topic.replication.factor": "1",
-                "reporter.bootstrap.servers": "broker:9092",
-                "reporter.error.topic.name": "test-error",
-                "reporter.error.topic.replication.factor": 1,
-                "reporter.error.topic.key.format": "string",
-                "reporter.error.topic.value.format": "string",
-                "reporter.result.topic.name": "test-result",
-                "reporter.result.topic.key.format": "string",
-                "reporter.result.topic.value.format": "string",
-                "reporter.result.topic.replication.factor": 1
-          }
+    "connector.class": "io.confluent.connect.azure.functions.AzureFunctionsSinkConnector",
+    "tasks.max": "1",
+    "topics": "functions-test",
+    "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+    "value.converter":"org.apache.kafka.connect.storage.StringConverter",
+    "function.url": "$FUNCTIONS_URL",
+    "function.key": "",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1",
+    "reporter.bootstrap.servers": "broker:9092",
+    "reporter.error.topic.name": "test-error",
+    "reporter.error.topic.replication.factor": 1,
+    "reporter.error.topic.key.format": "string",
+    "reporter.error.topic.value.format": "string",
+    "reporter.result.topic.name": "test-result",
+    "reporter.result.topic.key.format": "string",
+    "reporter.result.topic.value.format": "string",
+    "reporter.result.topic.replication.factor": 1
+}
 EOF
 
 

@@ -70,17 +70,17 @@ aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --
 log "Creating Kinesis Source connector"
 playground connector create-or-update --connector kinesis-source << EOF
 {
-               "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",
-               "tasks.max": "1",
-               "kafka.topic": "kinesis_topic",
-               "kinesis.stream": "$KINESIS_STREAM_NAME",
-               "kinesis.region": "$AWS_REGION",
-               "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
-               "aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+    "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",
+    "tasks.max": "1",
+    "kafka.topic": "kinesis_topic",
+    "kinesis.stream": "$KINESIS_STREAM_NAME",
+    "kinesis.region": "$AWS_REGION",
+    "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
+    "aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1"
+}
 EOF
 
 docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},

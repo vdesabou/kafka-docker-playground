@@ -75,19 +75,19 @@ set -e
 log "Creating S3 Sink connector with bucket name <$AWS_BUCKET_NAME>"
 playground connector create-or-update --connector s3-sink << EOF
 {
-               "connector.class": "io.confluent.connect.s3.S3SinkConnector",
-               "tasks.max": "1",
-               "topics": "s3_topic",
-               "s3.region": "$AWS_REGION",
-               "s3.bucket.name": "$AWS_BUCKET_NAME",
-               "s3.part.size": 52428801,
-               "topics.dir": "$TAG",
-               "flush.size": "3",
-               "s3.proxy.url": "https://nginx-proxy:8888",
-               "storage.class": "io.confluent.connect.s3.storage.S3Storage",
-               "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
-               "schema.compatibility": "NONE"
-          }
+    "connector.class": "io.confluent.connect.s3.S3SinkConnector",
+    "tasks.max": "1",
+    "topics": "s3_topic",
+    "s3.region": "$AWS_REGION",
+    "s3.bucket.name": "$AWS_BUCKET_NAME",
+    "s3.part.size": 52428801,
+    "topics.dir": "$TAG",
+    "flush.size": "3",
+    "s3.proxy.url": "https://nginx-proxy:8888",
+    "storage.class": "io.confluent.connect.s3.storage.S3Storage",
+    "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
+    "schema.compatibility": "NONE"
+}
 EOF
 
 # [2022-12-19 16:58:00,112] ERROR [s3-sink|task-0] WorkerSinkTask{id=s3-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:208)

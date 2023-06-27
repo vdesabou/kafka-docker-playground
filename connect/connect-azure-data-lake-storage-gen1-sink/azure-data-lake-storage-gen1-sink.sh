@@ -74,19 +74,19 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 log "Creating Data Lake Storage Gen1 Sink connector"
 playground connector create-or-update --connector azure-datalake-gen1-sink << EOF
 {
-            "connector.class": "io.confluent.connect.azure.datalake.gen1.AzureDataLakeGen1StorageSinkConnector",
-            "tasks.max": "1",
-            "topics": "datalake_topic",
-            "flush.size": "3",
-            "azure.datalake.client.id": "\${file:/data:AZURE_DATALAKE_CLIENT_ID}",
-            "azure.datalake.client.key": "\${file:/data:AZURE_DATALAKE_CLIENT_PASSWORD}",
-            "azure.datalake.account.name": "\${file:/data:AZURE_DATALAKE_ACCOUNT_NAME}",
-            "azure.datalake.token.endpoint": "\${file:/data:AZURE_DATALAKE_TOKEN_ENDPOINT}",
-            "format.class": "io.confluent.connect.azure.storage.format.avro.AvroFormat",
-            "confluent.license": "",
-            "confluent.topic.bootstrap.servers": "broker:9092",
-            "confluent.topic.replication.factor": "1"
-          }
+    "connector.class": "io.confluent.connect.azure.datalake.gen1.AzureDataLakeGen1StorageSinkConnector",
+    "tasks.max": "1",
+    "topics": "datalake_topic",
+    "flush.size": "3",
+    "azure.datalake.client.id": "\${file:/data:AZURE_DATALAKE_CLIENT_ID}",
+    "azure.datalake.client.key": "\${file:/data:AZURE_DATALAKE_CLIENT_PASSWORD}",
+    "azure.datalake.account.name": "\${file:/data:AZURE_DATALAKE_ACCOUNT_NAME}",
+    "azure.datalake.token.endpoint": "\${file:/data:AZURE_DATALAKE_TOKEN_ENDPOINT}",
+    "format.class": "io.confluent.connect.azure.storage.format.avro.AvroFormat",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1"
+}
 EOF
 
 

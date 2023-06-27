@@ -96,18 +96,18 @@ EOF
 log "Creating Azure Cosmos DB Sink connector"
 playground connector create-or-update --connector azure-cosmosdb-sink << EOF
 {
-                "connector.class": "com.azure.cosmos.kafka.connect.sink.CosmosDBSinkConnector",
-                "tasks.max": "1",
-                "topics": "hotels",
-                "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                "value.converter.schemas.enable": "false",
-                "key.converter.schemas.enable": "false",
-                "connect.cosmos.connection.endpoint": "\${file:/data:AZURE_COSMOSDB_DB_ENDPOINT_URI}",
-                "connect.cosmos.master.key": "\${file:/data:AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY}",
-                "connect.cosmos.databasename": "\${file:/data:AZURE_COSMOSDB_DB_NAME}",
-                "connect.cosmos.containers.topicmap": "\${file:/data:TOPIC_MAP}"
-          }
+    "connector.class": "com.azure.cosmos.kafka.connect.sink.CosmosDBSinkConnector",
+    "tasks.max": "1",
+    "topics": "hotels",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "key.converter.schemas.enable": "false",
+    "connect.cosmos.connection.endpoint": "\${file:/data:AZURE_COSMOSDB_DB_ENDPOINT_URI}",
+    "connect.cosmos.master.key": "\${file:/data:AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY}",
+    "connect.cosmos.databasename": "\${file:/data:AZURE_COSMOSDB_DB_NAME}",
+    "connect.cosmos.containers.topicmap": "\${file:/data:TOPIC_MAP}"
+}
 EOF
 
 sleep 10

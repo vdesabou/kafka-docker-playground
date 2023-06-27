@@ -114,31 +114,31 @@ seq -f "{\"a\": %g,\"b\": 1}" 10 | docker exec -i connect kafka-avro-console-pro
 log "Creating AWS Lambda Sink connector"
 playground connector create-or-update --connector aws-lambda << EOF
 {
-               "connector.class" : "io.confluent.connect.aws.lambda.AwsLambdaSinkConnector",
-               "tasks.max": "1",
-               "topics" : "add-topic",
-               "aws.lambda.function.name" : "$LAMBDA_FUNCTION_NAME",
-               "aws.lambda.invocation.type" : "sync",
-               "aws.lambda.batch.size" : "50",
-               "aws.lambda.region": "$AWS_REGION",
+    "connector.class" : "io.confluent.connect.aws.lambda.AwsLambdaSinkConnector",
+    "tasks.max": "1",
+    "topics" : "add-topic",
+    "aws.lambda.function.name" : "$LAMBDA_FUNCTION_NAME",
+    "aws.lambda.invocation.type" : "sync",
+    "aws.lambda.batch.size" : "50",
+    "aws.lambda.region": "$AWS_REGION",
 
-               "aws.credentials.provider.class": "com.github.vdesabou.AwsAssumeRoleCredentialsProvider",
-               "aws.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
-               "aws.credentials.provider.sts.role.session.name": "session-name",
-               "aws.credentials.provider.sts.role.external.id": "123",
-               "aws.credentials.provider.sts.aws.access.key.id": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID",
-               "aws.credentials.provider.sts.aws.secret.key.id": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY",
-               
-               "behavior.on.error" : "fail",
-               "reporter.bootstrap.servers": "broker:9092",
-               "reporter.error.topic.name": "error-responses",
-               "reporter.error.topic.replication.factor": 1,
-               "reporter.result.topic.name": "success-responses",
-               "reporter.result.topic.replication.factor": 1,
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+    "aws.credentials.provider.class": "com.github.vdesabou.AwsAssumeRoleCredentialsProvider",
+    "aws.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
+    "aws.credentials.provider.sts.role.session.name": "session-name",
+    "aws.credentials.provider.sts.role.external.id": "123",
+    "aws.credentials.provider.sts.aws.access.key.id": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID",
+    "aws.credentials.provider.sts.aws.secret.key.id": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY",
+    
+    "behavior.on.error" : "fail",
+    "reporter.bootstrap.servers": "broker:9092",
+    "reporter.error.topic.name": "error-responses",
+    "reporter.error.topic.replication.factor": 1,
+    "reporter.result.topic.name": "success-responses",
+    "reporter.result.topic.replication.factor": 1,
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1"
+}
 EOF
 
 

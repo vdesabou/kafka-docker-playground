@@ -71,18 +71,18 @@ set -e
 log "Creating S3 Sink connector with bucket name <$AWS_BUCKET_NAME>"
 playground connector create-or-update --connector s3-sink << EOF
 {
-               "connector.class": "io.confluent.connect.s3.S3SinkConnector",
-               "tasks.max": "1",
-               "topics": "s3_topic",
-               "s3.region": "$AWS_REGION",
-               "s3.bucket.name": "$AWS_BUCKET_NAME",
-               "s3.part.size": 52428801,
-               "topics.dir": "$TAG",
-               "flush.size": "3",
-               "storage.class": "io.confluent.connect.s3.storage.S3Storage",
-               "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
-               "schema.compatibility": "NONE"
-          }
+    "connector.class": "io.confluent.connect.s3.S3SinkConnector",
+    "tasks.max": "1",
+    "topics": "s3_topic",
+    "s3.region": "$AWS_REGION",
+    "s3.bucket.name": "$AWS_BUCKET_NAME",
+    "s3.part.size": 52428801,
+    "topics.dir": "$TAG",
+    "flush.size": "3",
+    "storage.class": "io.confluent.connect.s3.storage.S3Storage",
+    "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
+    "schema.compatibility": "NONE"
+}
 EOF
 
 

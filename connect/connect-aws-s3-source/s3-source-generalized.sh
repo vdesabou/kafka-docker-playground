@@ -80,25 +80,25 @@ aws s3 cp generalized.quickstart.json s3://$AWS_BUCKET_NAME/quickstart/generaliz
 log "Creating Generalized S3 Source connector with bucket name <$AWS_BUCKET_NAME>"
 playground connector create-or-update --connector s3-source-generalized << EOF
 {
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
-               "s3.region": "$AWS_REGION",
-               "s3.bucket.name": "$AWS_BUCKET_NAME",
-               "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
-               "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
-               "format.class": "io.confluent.connect.s3.format.json.JsonFormat",
-               "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-               "value.converter.schemas.enable": "false",
-               "confluent.license": "",
-               "mode": "GENERIC",
-               "topics.dir": "quickstart",
-               "topic.regex.list": "quick-start-topic:.*",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "errors.tolerance": "all",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
-          }
+    "tasks.max": "1",
+    "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
+    "s3.region": "$AWS_REGION",
+    "s3.bucket.name": "$AWS_BUCKET_NAME",
+    "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
+    "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
+    "format.class": "io.confluent.connect.s3.format.json.JsonFormat",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "confluent.license": "",
+    "mode": "GENERIC",
+    "topics.dir": "quickstart",
+    "topic.regex.list": "quick-start-topic:.*",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1",
+    "errors.tolerance": "all",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
+}
 EOF
 
 

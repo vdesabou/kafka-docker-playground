@@ -54,22 +54,22 @@ CLOUDWATCH_METRICS_URL="https://monitoring.$AWS_REGION.amazonaws.com"
 log "Creating AWS CloudWatch metrics Sink connector"
 playground connector create-or-update --connector aws-cloudwatch-metrics-sink << EOF
 {
-               "tasks.max": "1",
-               "topics": "cloudwatch-metrics-topic",
-               "connector.class": "io.confluent.connect.aws.cloudwatch.metrics.AwsCloudWatchMetricsSinkConnector",
-               "key.converter": "io.confluent.connect.avro.AvroConverter",
-               "key.converter.schema.registry.url": "http://schema-registry:8081",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "aws.cloudwatch.metrics.url": "$CLOUDWATCH_METRICS_URL",
-               "aws.cloudwatch.metrics.namespace": "service-namespace",
-               "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
-               "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
-               "behavior.on.malformed.metric": "FAIL",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+    "tasks.max": "1",
+    "topics": "cloudwatch-metrics-topic",
+    "connector.class": "io.confluent.connect.aws.cloudwatch.metrics.AwsCloudWatchMetricsSinkConnector",
+    "key.converter": "io.confluent.connect.avro.AvroConverter",
+    "key.converter.schema.registry.url": "http://schema-registry:8081",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://schema-registry:8081",
+    "aws.cloudwatch.metrics.url": "$CLOUDWATCH_METRICS_URL",
+    "aws.cloudwatch.metrics.namespace": "service-namespace",
+    "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
+    "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
+    "behavior.on.malformed.metric": "FAIL",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 10

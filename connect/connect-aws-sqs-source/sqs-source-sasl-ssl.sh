@@ -78,27 +78,27 @@ cd -
 log "Creating SQS Source connector with SASL_SSL authentication"
 playground connector create-or-update --connector sqs-source-sasl-ssl << EOF
 {
-               "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
-               "tasks.max": "1",
-               "kafka.topic": "test-sqs-source-sasl-ssl",
-               "sqs.url": "$QUEUE_URL",
-               "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
-               "aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "confluent.topic.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
-               "confluent.topic.ssl.keystore.password" : "confluent",
-               "confluent.topic.ssl.key.password" : "confluent",
-               "confluent.topic.ssl.truststore.location" : "/etc/kafka/secrets/kafka.connect.truststore.jks",
-               "confluent.topic.ssl.truststore.password" : "confluent",
-               "confluent.topic.security.protocol" : "SASL_SSL",
-               "confluent.topic.sasl.mechanism": "PLAIN",
-               "confluent.topic.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";",
-               "errors.tolerance": "all",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
-          }
+    "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
+    "tasks.max": "1",
+    "kafka.topic": "test-sqs-source-sasl-ssl",
+    "sqs.url": "$QUEUE_URL",
+    "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
+    "aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1",
+    "confluent.topic.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
+    "confluent.topic.ssl.keystore.password" : "confluent",
+    "confluent.topic.ssl.key.password" : "confluent",
+    "confluent.topic.ssl.truststore.location" : "/etc/kafka/secrets/kafka.connect.truststore.jks",
+    "confluent.topic.ssl.truststore.password" : "confluent",
+    "confluent.topic.security.protocol" : "SASL_SSL",
+    "confluent.topic.sasl.mechanism": "PLAIN",
+    "confluent.topic.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";",
+    "errors.tolerance": "all",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
+}
 EOF
 
 sleep 10

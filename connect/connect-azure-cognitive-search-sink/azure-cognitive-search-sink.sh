@@ -77,29 +77,29 @@ EOF
 log "Creating Azure Search Sink connector"
 playground connector create-or-update --connector azure-cognitive-search << EOF
 {
-               "connector.class": "io.confluent.connect.azure.search.AzureSearchSinkConnector",
-                "tasks.max": "1",
-                "topics": "hotels-sample",
-                "key.converter": "io.confluent.connect.avro.AvroConverter",
-                "key.converter.schema.registry.url": "http://schema-registry:8081",
-                "value.converter": "io.confluent.connect.avro.AvroConverter",
-                "value.converter.schema.registry.url": "http://schema-registry:8081",
-                "azure.search.service.name": "\${file:/data:AZURE_SEARCH_SERVICE_NAME}",
-                "azure.search.api.key": "\${file:/data:AZURE_SEARCH_ADMIN_PRIMARY_KEY}",
-                "index.name": "\${topic}-index",
-                "confluent.license": "",
-                "confluent.topic.bootstrap.servers": "broker:9092",
-                "confluent.topic.replication.factor": "1",
-                "reporter.bootstrap.servers": "broker:9092",
-                "reporter.error.topic.name": "test-error",
-                "reporter.error.topic.replication.factor": 1,
-                "reporter.error.topic.key.format": "string",
-                "reporter.error.topic.value.format": "string",
-                "reporter.result.topic.name": "test-result",
-                "reporter.result.topic.key.format": "string",
-                "reporter.result.topic.value.format": "string",
-                "reporter.result.topic.replication.factor": 1
-          }
+    "connector.class": "io.confluent.connect.azure.search.AzureSearchSinkConnector",
+    "tasks.max": "1",
+    "topics": "hotels-sample",
+    "key.converter": "io.confluent.connect.avro.AvroConverter",
+    "key.converter.schema.registry.url": "http://schema-registry:8081",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://schema-registry:8081",
+    "azure.search.service.name": "\${file:/data:AZURE_SEARCH_SERVICE_NAME}",
+    "azure.search.api.key": "\${file:/data:AZURE_SEARCH_ADMIN_PRIMARY_KEY}",
+    "index.name": "\${topic}-index",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1",
+    "reporter.bootstrap.servers": "broker:9092",
+    "reporter.error.topic.name": "test-error",
+    "reporter.error.topic.replication.factor": 1,
+    "reporter.error.topic.key.format": "string",
+    "reporter.error.topic.value.format": "string",
+    "reporter.result.topic.name": "test-result",
+    "reporter.result.topic.key.format": "string",
+    "reporter.result.topic.value.format": "string",
+    "reporter.result.topic.replication.factor": 1
+}
 EOF
 
 

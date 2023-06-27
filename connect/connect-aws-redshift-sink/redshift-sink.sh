@@ -97,22 +97,22 @@ EOF
 log "Creating AWS Redshift Sink connector with cluster url $CLUSTER"
 playground connector create-or-update --connector redshift-sink << EOF
 {
-               "connector.class": "io.confluent.connect.aws.redshift.RedshiftSinkConnector",
-               "tasks.max": "1",
-               "topics": "orders",
-               "aws.redshift.domain": "$CLUSTER",
-               "aws.redshift.port": "5439",
-               "aws.redshift.database": "dev",
-               "aws.redshift.user": "masteruser",
-               "aws.redshift.password": "\${file:/data:password}",
-               "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
-               "aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY",
-               "auto.create": "true",
-               "pk.mode": "kafka",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+    "connector.class": "io.confluent.connect.aws.redshift.RedshiftSinkConnector",
+    "tasks.max": "1",
+    "topics": "orders",
+    "aws.redshift.domain": "$CLUSTER",
+    "aws.redshift.port": "5439",
+    "aws.redshift.database": "dev",
+    "aws.redshift.user": "masteruser",
+    "aws.redshift.password": "\${file:/data:password}",
+    "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
+    "aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY",
+    "auto.create": "true",
+    "pk.mode": "kafka",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 20

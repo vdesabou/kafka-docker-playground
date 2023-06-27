@@ -77,22 +77,22 @@ az storage blob upload --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${A
 log "Creating Generalized Azure Blob Storage Source connector"
 playground connector create-or-update --connector azure-blob-source << EOF
 {
-                "connector.class": "io.confluent.connect.azure.blob.storage.AzureBlobStorageSourceConnector",
-                "tasks.max": "1",
-                "azblob.account.name": "\${file:/data:AZURE_ACCOUNT_NAME}",
-                "azblob.account.key": "\${file:/data:AZURE_ACCOUNT_KEY}",
-                "azblob.container.name": "\${file:/data:AZURE_CONTAINER_NAME}",
-                "format.class": "io.confluent.connect.cloud.storage.source.format.CloudStorageJsonFormat",
-                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                "value.converter.schemas.enable": "false",
-                "confluent.license": "",
-                "mode": "GENERIC",
-                "topics.dir": "quickstart",
-                "topic.regex.list": "quick-start-topic:.*",
-                "confluent.license": "",
-                "confluent.topic.bootstrap.servers": "broker:9092",
-                "confluent.topic.replication.factor": "1"
-          }
+    "connector.class": "io.confluent.connect.azure.blob.storage.AzureBlobStorageSourceConnector",
+    "tasks.max": "1",
+    "azblob.account.name": "\${file:/data:AZURE_ACCOUNT_NAME}",
+    "azblob.account.key": "\${file:/data:AZURE_ACCOUNT_KEY}",
+    "azblob.container.name": "\${file:/data:AZURE_CONTAINER_NAME}",
+    "format.class": "io.confluent.connect.cloud.storage.source.format.CloudStorageJsonFormat",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "confluent.license": "",
+    "mode": "GENERIC",
+    "topics.dir": "quickstart",
+    "topic.regex.list": "quick-start-topic:.*",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 5

@@ -73,19 +73,19 @@ cd -
 log "Creating SQS Source connector"
 playground connector create-or-update --connector sqs-source << EOF
 {
-               "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
-               "tasks.max": "1",
-               "kafka.topic": "test-sqs-source",
-               "sqs.url": "$QUEUE_URL",
-               "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
-               "aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "errors.tolerance": "all",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
-          }
+    "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
+    "tasks.max": "1",
+    "kafka.topic": "test-sqs-source",
+    "sqs.url": "$QUEUE_URL",
+    "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
+    "aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1",
+    "errors.tolerance": "all",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
+}
 EOF
 
 log "Verify we have received the data in test-sqs-source topic"

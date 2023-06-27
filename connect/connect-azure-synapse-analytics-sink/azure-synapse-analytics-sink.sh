@@ -91,23 +91,23 @@ EOF
 log "Creating Azure Synapse Analytics Sink connector"
 playground connector create-or-update --connector azure-sql-dw-sink << EOF
 {
-                "connector.class": "io.confluent.connect.azuresqldw.AzureSqlDwSinkConnector",
-                "tasks.max": "1",
-                "topics": "products",
-                "auto.create": "true",
-                "auto.evolve": "true",
-                "table.name.format": "kafka_\${topic}",
-                "azure.sql.dw.url": "\${file:/data:AZURE_SQL_URL}",
-                "azure.sql.dw.user": "myadmin",
-                "azure.sql.dw.password": "\${file:/data:PASSWORD}",
-                "azure.sql.dw.database.name": "\${file:/data:AZURE_DATA_WAREHOUSE_NAME}",
-                "confluent.license": "",
-                "confluent.topic.bootstrap.servers": "broker:9092",
-                "confluent.topic.replication.factor": "1",
-                "errors.tolerance": "all",
-                "errors.log.enable": "true",
-                "errors.log.include.messages": "true"
-          }
+    "connector.class": "io.confluent.connect.azuresqldw.AzureSqlDwSinkConnector",
+    "tasks.max": "1",
+    "topics": "products",
+    "auto.create": "true",
+    "auto.evolve": "true",
+    "table.name.format": "kafka_\${topic}",
+    "azure.sql.dw.url": "\${file:/data:AZURE_SQL_URL}",
+    "azure.sql.dw.user": "myadmin",
+    "azure.sql.dw.password": "\${file:/data:PASSWORD}",
+    "azure.sql.dw.database.name": "\${file:/data:AZURE_DATA_WAREHOUSE_NAME}",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1",
+    "errors.tolerance": "all",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
+}
 EOF
 
 sleep 60

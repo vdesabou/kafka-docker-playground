@@ -85,24 +85,24 @@ set -e
 log "Creating S3 Sink connector with bucket name <$AWS_BUCKET_NAME>"
 playground connector create-or-update --connector s3-sink << EOF
 {
-               "connector.class": "io.confluent.connect.s3.S3SinkConnector",
-               "tasks.max": "1",
-               "topics": "s3_topic",
-               "s3.region": "$AWS_REGION",
-               "s3.bucket.name": "$AWS_BUCKET_NAME",
-               "s3.part.size": 52428801,
-               "topics.dir": "$TAG",
-               "flush.size": "3",
-               "storage.class": "io.confluent.connect.s3.storage.S3Storage",
-               "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
-               "s3.credentials.provider.class": "io.confluent.connect.s3.auth.AwsAssumeRoleCredentialsProvider",
-               "s3.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
-               "s3.credentials.provider.sts.role.session.name": "session-name",
-               "s3.credentials.provider.sts.role.external.id": "123",
-               "aws.access.key.id": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID",
-               "aws.secret.access.key": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY",
-               "schema.compatibility": "NONE"
-          }
+    "connector.class": "io.confluent.connect.s3.S3SinkConnector",
+    "tasks.max": "1",
+    "topics": "s3_topic",
+    "s3.region": "$AWS_REGION",
+    "s3.bucket.name": "$AWS_BUCKET_NAME",
+    "s3.part.size": 52428801,
+    "topics.dir": "$TAG",
+    "flush.size": "3",
+    "storage.class": "io.confluent.connect.s3.storage.S3Storage",
+    "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
+    "s3.credentials.provider.class": "io.confluent.connect.s3.auth.AwsAssumeRoleCredentialsProvider",
+    "s3.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
+    "s3.credentials.provider.sts.role.session.name": "session-name",
+    "s3.credentials.provider.sts.role.external.id": "123",
+    "aws.access.key.id": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID",
+    "aws.secret.access.key": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY",
+    "schema.compatibility": "NONE"
+}
 EOF
 
 

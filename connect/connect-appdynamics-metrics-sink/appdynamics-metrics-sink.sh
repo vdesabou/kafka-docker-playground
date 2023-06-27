@@ -34,22 +34,22 @@ EOF
 log "Creating AppDynamics Metrics sink connector"
 playground connector create-or-update --connector appdynamics-metrics-sink << EOF
 {
-               "connector.class": "io.confluent.connect.appdynamics.metrics.AppDynamicsMetricsSinkConnector",
-               "tasks.max": "1",
-               "topics": "appdynamics-metrics-topic",
-               "machine.agent.host": "http://appdynamics-metrics",
-               "machine.agent.port": "8090",
-               "key.converter": "io.confluent.connect.avro.AvroConverter",
-               "key.converter.schema.registry.url":"http://schema-registry:8081",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url":"http://schema-registry:8081",
-               "reporter.bootstrap.servers": "broker:9092",
-               "reporter.error.topic.replication.factor": 1,
-               "reporter.result.topic.replication.factor": 1,
-               "behavior.on.error": "fail",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+     "connector.class": "io.confluent.connect.appdynamics.metrics.AppDynamicsMetricsSinkConnector",
+     "tasks.max": "1",
+     "topics": "appdynamics-metrics-topic",
+     "machine.agent.host": "http://appdynamics-metrics",
+     "machine.agent.port": "8090",
+     "key.converter": "io.confluent.connect.avro.AvroConverter",
+     "key.converter.schema.registry.url":"http://schema-registry:8081",
+     "value.converter": "io.confluent.connect.avro.AvroConverter",
+     "value.converter.schema.registry.url":"http://schema-registry:8081",
+     "reporter.bootstrap.servers": "broker:9092",
+     "reporter.error.topic.replication.factor": 1,
+     "reporter.result.topic.replication.factor": 1,
+     "behavior.on.error": "fail",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 5

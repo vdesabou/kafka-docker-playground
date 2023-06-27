@@ -61,15 +61,15 @@ aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --
 log "Creating Kinesis Source connector"
 playground connector create-or-update --connector kinesis-source << EOF
 {
-               "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",
-               "tasks.max": "1",
-               "kafka.topic": "kinesis_topic",
-               "kinesis.stream": "$KINESIS_STREAM_NAME",
-               "kinesis.region": "$AWS_REGION",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+     "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",
+     "tasks.max": "1",
+     "kafka.topic": "kinesis_topic",
+     "kinesis.stream": "$KINESIS_STREAM_NAME",
+     "kinesis.region": "$AWS_REGION",
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 log "Verify we have received the data in kinesis_topic topic"

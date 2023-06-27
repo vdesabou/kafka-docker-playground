@@ -62,19 +62,19 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.pro
 log "Creating Azure Blob Storage Sink connector"
 playground connector create-or-update --connector azure-blob-sink << EOF
 {
-                "connector.class": "io.confluent.connect.azure.blob.AzureBlobStorageSinkConnector",
-                "tasks.max": "1",
-                "topics": "blob_topic",
-                "flush.size": "3",
-                "azblob.account.name": "\${file:/data:AZURE_ACCOUNT_NAME}",
-                "azblob.account.key": "\${file:/data:AZURE_ACCOUNT_KEY}",
-                "azblob.container.name": "\${file:/data:AZURE_CONTAINER_NAME}",
-                "azblob.proxy.url" : "https://nginx-proxy:8888",
-                "format.class": "io.confluent.connect.azure.blob.format.avro.AvroFormat",
-                "confluent.license": "",
-                "confluent.topic.bootstrap.servers": "broker:9092",
-                "confluent.topic.replication.factor": "1"
-          }
+    "connector.class": "io.confluent.connect.azure.blob.AzureBlobStorageSinkConnector",
+    "tasks.max": "1",
+    "topics": "blob_topic",
+    "flush.size": "3",
+    "azblob.account.name": "\${file:/data:AZURE_ACCOUNT_NAME}",
+    "azblob.account.key": "\${file:/data:AZURE_ACCOUNT_KEY}",
+    "azblob.container.name": "\${file:/data:AZURE_CONTAINER_NAME}",
+    "azblob.proxy.url" : "https://nginx-proxy:8888",
+    "format.class": "io.confluent.connect.azure.blob.format.avro.AvroFormat",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1"
+}
 EOF
 
 

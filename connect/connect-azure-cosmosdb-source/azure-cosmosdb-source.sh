@@ -95,22 +95,22 @@ docker exec -e AZURE_COSMOSDB_DB_ENDPOINT_URI="$AZURE_COSMOSDB_DB_ENDPOINT_URI" 
 log "Creating Azure Cosmos DB Source connector"
 playground connector create-or-update --connector azure-cosmosdb-source << EOF
 {
-                "connector.class": "com.azure.cosmos.kafka.connect.source.CosmosDBSourceConnector",
-                "tasks.max": "1",
-                "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                "value.converter.schemas.enable": "false",
-                "key.converter.schemas.enable": "false",
-                "connect.cosmos.task.poll.interval": "100",
-                "connect.cosmos.connection.endpoint": "\${file:/data:AZURE_COSMOSDB_DB_ENDPOINT_URI}",
-                "connect.cosmos.master.key": "\${file:/data:AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY}",
-                "connect.cosmos.databasename": "\${file:/data:AZURE_COSMOSDB_DB_NAME}",
-                "connect.cosmos.containers.topicmap": "\${file:/data:TOPIC_MAP}",
-                "connect.cosmos.offset.useLatest": false,
-                "errors.tolerance": "all",
-                "errors.log.enable": "true",
-                "errors.log.include.messages": "true"
-          }
+    "connector.class": "com.azure.cosmos.kafka.connect.source.CosmosDBSourceConnector",
+    "tasks.max": "1",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "key.converter.schemas.enable": "false",
+    "connect.cosmos.task.poll.interval": "100",
+    "connect.cosmos.connection.endpoint": "\${file:/data:AZURE_COSMOSDB_DB_ENDPOINT_URI}",
+    "connect.cosmos.master.key": "\${file:/data:AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY}",
+    "connect.cosmos.databasename": "\${file:/data:AZURE_COSMOSDB_DB_NAME}",
+    "connect.cosmos.containers.topicmap": "\${file:/data:TOPIC_MAP}",
+    "connect.cosmos.offset.useLatest": false,
+    "errors.tolerance": "all",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
+}
 EOF
 
 sleep 30
