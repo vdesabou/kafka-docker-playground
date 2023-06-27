@@ -280,6 +280,7 @@ do
   # Loop through each line in the named pipe
   while read -r line
   do
+    display_line=1
     if [[ $line =~ "CreateTime:" ]]
     then
       # Extract the timestamp from the line
@@ -290,9 +291,23 @@ do
       readable_date="$(${date_command}${timestamp_sec} "+%Y-%m-%d %H:%M:%S.${milliseconds}")"
       line_with_date=$(echo "$line" | sed -E "s/CreateTime:[0-9]{13}/CreateTime: ${readable_date}/")
 
+      if [[ -n "$grep_string" ]]
+      then
+        if [[ $line =~ "$grep_string" ]]
+        then
+          log "✅ found $grep_string in topic $topic"
+          found=1
+        else
+          display_line=0
+        fi
+      fi
+
       if [[ ! -n "$timestamp_field" ]]
       then
-        echo "$line_with_date"
+        if [ $display_line -eq 1 ]
+        then
+          echo "$line_with_date"
+        fi
       fi
 
       if [[ -n "$timestamp_field" ]]
@@ -312,14 +327,20 @@ do
     then
       continue
     else
-      echo "$line"
-    fi
-    if [[ -n "$grep_string" ]]
-    then
-      if [[ $line =~ "$grep_string" ]]
+      if [[ -n "$grep_string" ]]
       then
-        log "✅ found $grep_string in topic $topic"
-        found=1
+        if [[ $line =~ "$grep_string" ]]
+        then
+          log "✅ found $grep_string in topic $topic"
+          found=1
+        else
+          display_line=0
+        fi
+      fi
+      
+      if [ $display_line -eq 1 ]
+      then
+        echo "$line"
       fi
     fi
   done < "$fifo_path"
