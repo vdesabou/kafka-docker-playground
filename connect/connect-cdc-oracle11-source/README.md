@@ -59,6 +59,7 @@ $ curl -X PUT \
                "oracle.username": "MYUSER",
                "oracle.password": "password",
                "start.from":"snapshot",
+               "enable.metrics.collection": "true",
                "redo.log.topic.name": "redo-log-topic",
                "redo.log.consumer.bootstrap.servers":"broker:9092",
                "table.inclusion.regex": ".*CUSTOMERS.*",

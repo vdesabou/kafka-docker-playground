@@ -249,6 +249,7 @@ playground connector create-or-update --connector cdc-oracle-source-cdb << EOF
                "oracle.connection.javax.net.ssl.keyStore": "/tmp/keystore.jks",
                "oracle.connection.javax.net.ssl.keyStorePassword": "welcome123",
                "start.from":"snapshot",
+               "enable.metrics.collection": "true",
                "redo.log.topic.name": "redo-log-topic",
                "redo.log.consumer.bootstrap.servers":"broker:9092",
                "table.inclusion.regex": ".*CUSTOMERS.*",

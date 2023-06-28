@@ -274,6 +274,7 @@ playground connector create-or-update --connector cdc-oracle-source-pdb << EOF
                "oracle.connection.javax.net.ssl.keyStorePassword": "welcome123",
                "oracle.connection.oracle.net.authentication_services": "(TCPS)",
                "start.from":"snapshot",
+               "enable.metrics.collection": "true",
                "redo.log.topic.name": "redo-log-topic",
                "redo.log.consumer.bootstrap.servers":"broker:9092",
                "table.inclusion.regex": "ORCLPDB1[.].*[.]CUSTOMERS",

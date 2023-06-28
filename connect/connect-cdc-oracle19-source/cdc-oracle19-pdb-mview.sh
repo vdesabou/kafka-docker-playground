@@ -160,6 +160,7 @@ playground connector create-or-update --connector cdc-oracle-source-pdb-mview <<
                "oracle.username": "C##MYUSER",
                "oracle.password": "mypassword",
                "start.from":"snapshot",
+               "enable.metrics.collection": "true",
                "redo.log.topic.name": "redo-log-topic",
                "redo.log.consumer.bootstrap.servers":"broker:9092",
                "table.inclusion.regex": "ORCLPDB1[.].*[.]CUSTOMERS_MV",
