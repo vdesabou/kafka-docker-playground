@@ -1180,17 +1180,6 @@ commands:
         help: |-
           Schema Registry compatibility rule
 
-    - name: display-schema-id-statistics
-      group: Topic
-      help: |-
-        🧞 Easily identify the usage of different schema versions within a topic.
-
-        It makes use of https://github.com/EladLeev/schema-registry-statistics
-
-        It only works when plaintext environment is used
-      flags:
-      - *topic
-
     - name: create
       group: Topic
       help: |-
