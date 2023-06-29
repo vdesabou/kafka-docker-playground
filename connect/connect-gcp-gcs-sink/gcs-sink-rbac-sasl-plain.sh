@@ -63,28 +63,28 @@ playground topic consume --topic rbac_gcs_topic --min-expected-messages 1 --time
 log "Creating GCS Sink connector"
 playground connector create-or-update --connector my-rbac-connector << EOF
 {
-               "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
-                    "tasks.max" : "1",
-                    "topics" : "rbac_gcs_topic",
-                    "gcs.bucket.name" : "$GCS_BUCKET_NAME",
-                    "gcs.part.size": "5242880",
-                    "flush.size": "3",
-                    "gcs.credentials.path": "/tmp/keyfile.json",
-                    "storage.class": "io.confluent.connect.gcs.storage.GcsStorage",
-                    "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
-                    "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
-                    "schema.compatibility": "NONE",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1",
-                    "confluent.topic.sasl.mechanism": "PLAIN",
-                    "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"admin\" password=\"admin-secret\";",
-                    "confluent.topic.security.protocol" : "SASL_PLAINTEXT",
-                    "value.converter": "io.confluent.connect.avro.AvroConverter",
-                    "value.converter.schema.registry.url": "http://schema-registry:8081",
-                    "value.converter.basic.auth.credentials.source": "USER_INFO",
-                    "value.converter.basic.auth.user.info": "connectorSA:connectorSA",
-                    "consumer.override.sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required username=\"connectorSA\" password=\"connectorSA\" metadataServerUrls=\"http://broker:8091\";"
-          }
+    "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
+    "tasks.max" : "1",
+    "topics" : "rbac_gcs_topic",
+    "gcs.bucket.name" : "$GCS_BUCKET_NAME",
+    "gcs.part.size": "5242880",
+    "flush.size": "3",
+    "gcs.credentials.path": "/tmp/keyfile.json",
+    "storage.class": "io.confluent.connect.gcs.storage.GcsStorage",
+    "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
+    "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
+    "schema.compatibility": "NONE",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1",
+    "confluent.topic.sasl.mechanism": "PLAIN",
+    "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"admin\" password=\"admin-secret\";",
+    "confluent.topic.security.protocol" : "SASL_PLAINTEXT",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://schema-registry:8081",
+    "value.converter.basic.auth.credentials.source": "USER_INFO",
+    "value.converter.basic.auth.user.info": "connectorSA:connectorSA",
+    "consumer.override.sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required username=\"connectorSA\" password=\"connectorSA\" metadataServerUrls=\"http://broker:8091\";"
+}
 EOF
 
 sleep 10
