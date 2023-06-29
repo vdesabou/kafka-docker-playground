@@ -175,7 +175,7 @@ fi
 
 # sleep 5
 
-# log "Verifying topic dbserver1_mydb_calls"
-playground topic consume --topic dbserver1_mydb_calls --min-expected-messages 2 --timeout 60
+# log "Verifying topic dbserver1.mydb.calls"
+playground topic consume --topic dbserver1.mydb.calls --min-expected-messages 2 --timeout 60
 
 
