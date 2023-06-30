@@ -1,0 +1,17 @@
+---
+version: '3.5'
+services:
+  activemq:
+    image: rmohr/activemq:5.15.9
+    hostname: activemq
+    container_name: activemq
+    ports:
+      - '61616:61616'
+      - '8161:8161'
+
+  connect:
+    volumes:
+      - ../../connect/connect-lenses-active-mq-source/kafka-connect-jms-${VERSION}-2.1.0-all.jar:/usr/share/lenses-connectors/kafka-connect-jms-${VERSION}-2.1.0-all/kafka-connect-jms-${VERSION}-2.1.0-all.jar
+      - ../../connect/connect-lenses-active-mq-source/activemq-all-5.15.4.jar:/usr/share/lenses-connectors/kafka-connect-jms-${VERSION}-2.1.0-all/activemq-all-5.15.4.jar
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/java/,/usr/share/confluent-hub-components/,/usr/share/lenses-connectors
