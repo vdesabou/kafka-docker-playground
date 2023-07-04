@@ -169,6 +169,20 @@ else
   cp $test_file $repro_test_file
 fi
 
+tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+echo "#!/bin/bash" > $tmp_dir/intro
+echo ": '" >> $tmp_dir/intro
+echo "🗓️ date: `date`" >> $tmp_dir/intro
+echo "👤 author: `whoami`" >> $tmp_dir/intro
+echo "🧑‍🎓 description: $description" >> $tmp_dir/intro
+echo "💬 comments:" >> $tmp_dir/intro
+echo "" >> $tmp_dir/intro
+echo "'" >> $tmp_dir/intro
+
+cat $tmp_dir/intro > $tmp_dir/tmp_file
+cat $repro_test_file | grep -v "#!/bin/bash" >> $tmp_dir/tmp_file
+mv $tmp_dir/tmp_file $repro_test_file
+
 for file in README.md docker-compose*.yml keyfile.json stop.sh .gitignore sql-datagen
 do
   if [ -f $file ]
@@ -181,7 +195,6 @@ done
 
 if [ "$producer" != "none" ]
 then
-  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
   case "${producer}" in
     avro)
       echo "               \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\"," > $tmp_dir/key_converter
@@ -639,8 +652,6 @@ then
   mkdir -p $repro_dir/$custom_smt_name/
   cp -Ra ../../other/custom-smt/MyCustomSMT/* $repro_dir/$custom_smt_name/
 
-  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-
   get_custom_smt_build_heredoc
   # log "✨ Adding command to build jar for $custom_smt_name to $repro_test_file"
   cp $repro_test_file $tmp_dir/tmp_file
@@ -706,8 +717,6 @@ fi
 #### pipeline
 if [[ -n "$sink_file" ]]
 then
-  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-
   if [[ $sink_file == *"@"* ]]
   then
     sink_file=$(echo "$sink_file" | cut -d "@" -f 2)
