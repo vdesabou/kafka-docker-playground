@@ -38,17 +38,17 @@ fi
 log "Creating MQTT Source connector"
 playground connector create-or-update --connector mqtt-source << EOF
 {
-               "connector.class": "io.confluent.connect.mqtt.MqttSourceConnector",
-               "tasks.max": "1",
-               "mqtt.server.uri": "tcp://mosquitto:1883",
-               "mqtt.topics":"my-mqtt-topic",
-               "kafka.topic": "$MQTT_TOPIC",
-               "mqtt.qos": "2",
-               "mqtt.username": "myuser",
-               "mqtt.password": "mypassword",
-               "topic.creation.default.replication.factor": "-1",
-               "topic.creation.default.partitions": "-1"
-          }
+     "connector.class": "io.confluent.connect.mqtt.MqttSourceConnector",
+     "tasks.max": "1",
+     "mqtt.server.uri": "tcp://mosquitto:1883",
+     "mqtt.topics":"my-mqtt-topic",
+     "kafka.topic": "$MQTT_TOPIC",
+     "mqtt.qos": "2",
+     "mqtt.username": "myuser",
+     "mqtt.password": "mypassword",
+     "topic.creation.default.replication.factor": "-1",
+     "topic.creation.default.partitions": "-1"
+}
 EOF
 
 sleep 5
