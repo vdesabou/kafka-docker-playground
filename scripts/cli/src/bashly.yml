@@ -568,6 +568,11 @@ commands:
   - playground bootstrap-reproduction-model -f hdfs2<tab> -d "testing custom smt" --custom-smt
   - playground bootstrap-reproduction-model -f debeziumpostgres<tab> -d "create pipeline" --pipeline jdbcsink<tab>
 
+- name: get-docker-compose
+  group: Kafka
+  help: |-
+    🐋 Get docker-compose
+
 - name: get-properties
   group: Kafka
   help: |-
