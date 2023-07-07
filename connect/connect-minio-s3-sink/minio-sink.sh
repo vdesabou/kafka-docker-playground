@@ -21,19 +21,19 @@ docker container restart create-buckets
 log "Creating S3 Sink connector with Minio"
 playground connector create-or-update --connector minio-sink << EOF
 {
-               "connector.class": "io.confluent.connect.s3.S3SinkConnector",
-               "tasks.max": "1",
-               "topics": "minio_topic",
-               "s3.bucket.name": "mybucket",
-               "s3.part.size": 5242880,
-               "store.url": "http://minio:9000",
-               "flush.size": "3",
-               "storage.class": "io.confluent.connect.s3.storage.S3Storage",
-               "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
-               "schema.generator.class": "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator",
-               "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
-               "schema.compatibility": "NONE"
-          }
+     "connector.class": "io.confluent.connect.s3.S3SinkConnector",
+     "tasks.max": "1",
+     "topics": "minio_topic",
+     "s3.bucket.name": "mybucket",
+     "s3.part.size": 5242880,
+     "store.url": "http://minio:9000",
+     "flush.size": "3",
+     "storage.class": "io.confluent.connect.s3.storage.S3Storage",
+     "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
+     "schema.generator.class": "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator",
+     "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
+     "schema.compatibility": "NONE"
+}
 EOF
 
 
