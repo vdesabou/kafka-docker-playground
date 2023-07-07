@@ -171,16 +171,27 @@ fi
 
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 echo "#!/bin/bash" > $tmp_dir/intro
+echo "###############################################" >> $tmp_dir/intro
 echo "# 🗓️ date: `date`" >> $tmp_dir/intro
 echo "# 👤 author: `whoami`" >> $tmp_dir/intro
-echo "# 🧑‍🎓 description: $description" >> $tmp_dir/intro
+echo "# 💡 description: $description" >> $tmp_dir/intro
 if [[ $description =~ ^[0-9]{6} ]]
 then
   numbers="${BASH_REMATCH[0]}"
   echo "# 🔮 ticket: https://confluent.zendesk.com/agent/tickets/$numbers" >> $tmp_dir/intro
 fi
+echo "# 🙋 how to use: https://github.com/confluentinc/kafka-docker-playground-internal/tree/master#how-to-use" >> $tmp_dir/intro
+string=$(grep "Quickly test " README.md)
+url=$(echo "$string" | grep -oE 'https?://[^ ]+')
+url=${url//)/}
+
+if [[ $url =~ "http" ]]
+then
+  echo "# 🌐 documentation: $url" >> $tmp_dir/intro
+fi
 echo "# 💬 comments:" >> $tmp_dir/intro
 echo "#" >> $tmp_dir/intro
+echo "###############################################" >> $tmp_dir/intro
 echo "" >> $tmp_dir/intro
 
 cat $tmp_dir/intro > $tmp_dir/tmp_file
@@ -962,10 +973,10 @@ echo "" >> $tmp_dir/tmp_file
 echo "" >> $tmp_dir/tmp_file
 # echo ": '" >> $tmp_dir/tmp_file
 
-echo "#####################################################################" >> $tmp_dir/tmp_file
+echo "#################################################################################################" >> $tmp_dir/tmp_file
 echo "# 🚀 below is a list of snippets that can help you to build your example !" >> $tmp_dir/tmp_file
 echo "# 🚀 for full documentation, visit https://kafka-docker-playground.io/#/ !" >> $tmp_dir/tmp_file
-echo "#####################################################################" >> $tmp_dir/tmp_file
+echo "#################################################################################################" >> $tmp_dir/tmp_file
 
 if [[ "$base1" == *sink ]]
 then
