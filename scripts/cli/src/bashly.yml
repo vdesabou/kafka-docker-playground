@@ -260,6 +260,10 @@ commands:
   dependencies:
     fzf: visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install
   flags:
+    - long: --clear
+      required: false
+      help: |- 
+        🧼 Clear any previous flags
     - *tag
     - *connector-tag
     - *connector-zip

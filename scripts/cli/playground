@@ -583,6 +583,11 @@ playground_re_run_usage() {
 
     # :command.usage_flags
     # :flag.usage
+    printf "  %s\n" "$(magenta "--clear")"
+    printf "    🧼 Clear any previous flags\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--tag TAG")"
     printf "    🎯 Confluent Platform (CP) version to use\n    \n    Must be greater or equal to 5.0.0\n"
     echo
@@ -7695,6 +7700,7 @@ playground_re_run_command() {
   enable_kcat="${args[--enable-kcat]}"
   enable_sr_maven_plugin_app="${args[--enable-sr-maven-plugin-app]}"
   enable_sql_datagen="${args[--enable-sql-datagen]}"
+  clear="${args[--clear]}"
 
   flag_list=""
   if [[ -n "$tag" ]]
@@ -7786,9 +7792,15 @@ playground_re_run_command() {
     log "⛳ Flags used are $flag_list"
     playground run -f $test_file $flag_list ${other_args[*]}
   else
-    log "🚀 Running example again with same flags as before"
-    cat /tmp/playground-run
-    bash /tmp/playground-run
+    if [[ -n "$clear" ]]
+    then
+      log "🧼 Running example again with no flags"
+      playground run -f $test_file ${other_args[*]}
+    else
+      log "🚀 Running example again with same flags as before"
+      cat /tmp/playground-run
+      bash /tmp/playground-run
+    fi
   fi
 }
 
@@ -9275,8 +9287,9 @@ playground_debug_enable_remote_debugging_command() {
        source /tmp/delta_configs/env.delta
   fi
 
-  # keep CONNECT TAG
+  # keep CONNECT TAG and ORACLE_IMAGE
   export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect | cut -d ":" -f 2)
+  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle | cut -d ":" -f 2)
 
   if [ ! -f /tmp/playground-command ]
   then
@@ -9538,8 +9551,9 @@ playground_container_recreate_command() {
   # src/container_recreate_command.sh
   IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 
-  # keep CONNECT TAG
+  # keep CONNECT TAG and ORACLE_IMAGE
   export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect | cut -d ":" -f 2)
+  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle | cut -d ":" -f 2)
 
   if [ ! -f /tmp/playground-command ]
   then
@@ -12506,6 +12520,14 @@ playground_re_run_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --clear)
+
+        # :flag.case_no_arg
+        args['--clear']=1
+        shift
+        ;;
+
       # :flag.case
       --tag)
 
