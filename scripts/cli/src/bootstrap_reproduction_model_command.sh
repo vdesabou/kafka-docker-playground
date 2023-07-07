@@ -189,6 +189,7 @@ if [[ $url =~ "http" ]]
 then
   echo "# 🌐 documentation: $url" >> $tmp_dir/intro
 fi
+echo "# 🐳 playground website: https://kafka-docker-playground.io" >> $tmp_dir/intro
 echo "# 💬 comments:" >> $tmp_dir/intro
 echo "#" >> $tmp_dir/intro
 echo "###############################################" >> $tmp_dir/intro
