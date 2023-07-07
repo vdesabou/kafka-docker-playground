@@ -1060,7 +1060,20 @@ commands:
         arg: key
         required: false
         help: |-
-          Value to use for all key records. If not set, no key is used.
+          🗝️ Key to use for all records. If not set, no key is used.
+      - long: --forced-value
+        arg: forced-value
+        required: false
+        help: |-
+          ☢️ Value to use for all records. 
+          
+          🎓 Tip: use --generate-only first with avro, json-schema or protobuf to get skeleton of messages and then use --forced-value to send the message you need. 
+      - long: --generate-only
+        required: false
+        help: |-
+          🚪 Only generate messages without sending to kafka topic.
+
+          Used with --forced-value, this is a powerful way to send specific messages.
       - long: --tombstone
         required: false
         help: |-
