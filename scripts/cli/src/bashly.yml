@@ -632,6 +632,21 @@ commands:
     - playground debug enable-remote-debugging --container broker
     - playground debug enable-remote-debugging -c broker
 
+  - name: testssl
+    help: |-
+      🔐 Testing TLS/SSL encryption using https://testssl.sh/
+
+      testssl <URI>, where <URI> is:
+
+      host|host:port|URL|URL:port   port 443 is default, URL can only contain HTTPS protocol
+    args:
+    - name: arguments
+      help: arguments to pass to testssl, see https://testssl.sh for all options
+      required: false
+    examples:
+    - playground debug testssl https://google.com
+    - playground debug testssl pkc-xxxx.us-west-2.aws.confluent.cloud:9092
+
   - name: thread-dump
     help: |-
       🎯 Take a java thread dump

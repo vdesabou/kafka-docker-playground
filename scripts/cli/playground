@@ -55,6 +55,7 @@ playground_usage() {
   printf "%s\n" "$(bold "Debug commands:")"
   printf "  %s   🐞 Debug commands\n" "$(green "debug")                            "
   [[ -n $long_usage ]] && printf "  %s   ✨ Enable java remote debugging for container\n" "$(green "debug enable-remote-debugging")    "
+  [[ -n $long_usage ]] && printf "  %s   🔐 Testing TLS/SSL encryption using https://testssl.sh/\n" "$(green "debug testssl")                    "
   [[ -n $long_usage ]] && printf "  %s   🎯 Take a java thread dump\n" "$(green "debug thread-dump")                "
   [[ -n $long_usage ]] && printf "  %s   👻 Take a heap dump\n" "$(green "debug heap-dump")                  "
   [[ -n $long_usage ]] && printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "debug tcp-dump")                   "
@@ -1187,6 +1188,7 @@ playground_debug_usage() {
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   ✨ Enable java remote debugging for container\n" "$(green "enable-remote-debugging")"
+  printf "  %s   🔐 Testing TLS/SSL encryption using https://testssl.sh/\n" "$(green "testssl")                "
   printf "  %s   🎯 Take a java thread dump\n" "$(green "thread-dump")            "
   printf "  %s   👻 Take a heap dump\n" "$(green "heap-dump")              "
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "tcp-dump")               "
@@ -1246,6 +1248,52 @@ playground_debug_enable_remote_debugging_usage() {
     printf "  playground debug enable-remote-debugging\n"
     printf "  playground debug enable-remote-debugging --container broker\n"
     printf "  playground debug enable-remote-debugging -c broker\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_debug_testssl_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground debug testssl\n"
+    echo
+
+    printf "  🔐 Testing TLS/SSL encryption using https://testssl.sh/\n  \n  testssl <URI>, where <URI> is:\n  \n  host|host:port|URL|URL:port   port 443 is default, URL can only contain HTTPS\n  protocol\n"
+    echo
+
+  else
+    printf "playground debug testssl - 🔐 Testing TLS/SSL encryption using https://testssl.sh/\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground debug testssl [ARGUMENTS]\n"
+  printf "  playground debug testssl --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "ARGUMENTS")"
+    printf "    arguments to pass to testssl, see https://testssl.sh for all options\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground debug testssl https://google.com\n"
+    printf "  playground debug testssl pkc-xxxx.us-west-2.aws.confluent.cloud:9092\n"
     echo
 
   fi
@@ -9376,6 +9424,15 @@ playground_debug_enable_remote_debugging_command() {
 }
 
 # :command.function
+playground_debug_testssl_command() {
+  # src/debug_testssl_command.sh
+  arguments="${args[arguments]}"
+
+  log "🔐 Testing TLS/SSL encryption with arguments $arguments"
+  docker run --rm -ti  drwetter/testssl.sh $arguments
+}
+
+# :command.function
 playground_debug_thread_dump_command() {
   # src/debug_thread_dump_command.sh
   container="${args[--container]}"
@@ -13870,6 +13927,13 @@ playground_debug_parse_requirements() {
       shift $#
       ;;
 
+    testssl)
+      action="testssl"
+      shift
+      playground_debug_testssl_parse_requirements "$@"
+      shift $#
+      ;;
+
     thread-dump)
       action="thread-dump"
       shift
@@ -13992,6 +14056,56 @@ playground_debug_enable_remote_debugging_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['--container']:-} ]] || args['--container']="connect"
+
+}
+
+# :command.parse_requirements
+playground_debug_testssl_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_debug_testssl_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="debug testssl"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        if [[ -z ${args['arguments']+x} ]]; then
+
+          args['arguments']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -17553,6 +17667,7 @@ run() {
     "get-all-schemas") playground_get_all_schemas_command ;;
     "debug") playground_debug_command ;;
     "debug enable-remote-debugging") playground_debug_enable_remote_debugging_command ;;
+    "debug testssl") playground_debug_testssl_command ;;
     "debug thread-dump") playground_debug_thread_dump_command ;;
     "debug heap-dump") playground_debug_heap_dump_command ;;
     "debug tcp-dump") playground_debug_tcp_dump_command ;;
