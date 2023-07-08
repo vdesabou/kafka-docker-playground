@@ -79,7 +79,11 @@ playground connector create-or-update --connector debezium-sqlserver-source << E
   "database.encrypt": "false",
   "topic.prefix": "server1",
   "schema.history.internal.kafka.bootstrap.servers": "broker:9092",
-  "schema.history.internal.kafka.topic": "schema-changes.inventory"
+  "schema.history.internal.kafka.topic": "schema-changes.inventory",
+
+  "_comment:": "remove _ to use ExtractNewRecordState smt",
+  "_transforms": "unwrap",
+  "_transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
 }
 EOF
 

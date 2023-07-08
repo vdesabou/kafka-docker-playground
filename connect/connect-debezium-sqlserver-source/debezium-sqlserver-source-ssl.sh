@@ -112,7 +112,11 @@ playground connector create-or-update --connector debezium-sqlserver-source-ssl 
   "schema.history.internal.kafka.bootstrap.servers": "broker:9092",
   "schema.history.internal.kafka.topic": "schema-changes.inventory",
   "database.ssl.truststore": "/tmp/truststore.jks",
-  "database.ssl.truststore.password": "confluent"
+  "database.ssl.truststore.password": "confluent",
+
+  "_comment:": "remove _ to use ExtractNewRecordState smt",
+  "_transforms": "unwrap",
+  "_transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
 }
 EOF
 

@@ -58,7 +58,11 @@ playground connector create-or-update --connector debezium-mongodb-source << EOF
     "topic.prefix": "dbserver1",
 
     "mongodb.user" : "debezium",
-    "mongodb.password" : "dbz"
+    "mongodb.password" : "dbz",
+
+    "_comment:": "remove _ to use ExtractNewRecordState smt",
+    "_transforms": "unwrap",
+    "_transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
 }
 EOF
 

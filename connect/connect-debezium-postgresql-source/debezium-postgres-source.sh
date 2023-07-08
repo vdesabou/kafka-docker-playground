@@ -120,8 +120,12 @@ playground connector create-or-update --connector debezium-postgres-source << EO
      "transforms": "addTopicSuffix",
      "transforms.addTopicSuffix.type":"org.apache.kafka.connect.transforms.RegexRouter",
      "transforms.addTopicSuffix.regex":"(.*)",
-     "transforms.addTopicSuffix.replacement": "\$1-raw"
-     }
+     "transforms.addTopicSuffix.replacement": "\$1-raw",
+
+     "_comment:": "remove _ to use ExtractNewRecordState smt",
+     "_transforms": "unwrap,addTopicSuffix",
+     "_transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
+}
 EOF
 
 
