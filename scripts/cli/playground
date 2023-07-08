@@ -10520,7 +10520,12 @@ playground_topic_produce_command() {
       schema_type=raw
   fi
 
-  nb_max_messages_to_generate=50
+  if [ "$schema_type" == "protobuf" ]
+  then
+      nb_max_messages_to_generate=50
+  else
+      nb_max_messages_to_generate=200
+  fi
   if [ $nb_messages -lt $nb_max_messages_to_generate ]
   then
       nb_messages_to_generate=$nb_messages
@@ -10551,7 +10556,6 @@ playground_topic_produce_command() {
               cat $tmp_dir/result.log | grep "Payload: " | awk '{print $2}' > $tmp_dir/out.json
               #--record-size 104
           ;;
-
           avro)
               docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/value_schema --count $nb_messages_to_generate > /dev/null 2>&1
               docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
