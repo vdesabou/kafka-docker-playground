@@ -3888,6 +3888,7 @@ EOF
 
 function get_remote_debugging_command_heredoc () {
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+trap 'rm -rf $tmp_dir' EXIT
 cat << EOF > $tmp_dir/docker-compose-remote-debugging.yml
 version: '3.5'
 services:
@@ -4203,6 +4204,7 @@ function maybe_create_image()
     fi
 
     tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+    trap 'rm -rf $tmp_dir' EXIT
 cat << EOF > $tmp_dir/Dockerfile
 FROM ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
 USER root
@@ -7374,6 +7376,7 @@ function force_enable () {
   logwarn "💪 Forcing $flag ($env_variable env variable)"
   line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh' $repro_test_file | cut -d ":" -f 1 | tail -n1)
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
   echo "# remove or comment those lines if you don't need it anymore" > $tmp_dir/tmp_force_enable
   echo "logwarn \"💪 Forcing $flag ($env_variable env variable) as it was set when reproduction model was created\"" >> $tmp_dir/tmp_force_enable
   echo "export $env_variable=true" >> $tmp_dir/tmp_force_enable
@@ -8358,6 +8361,7 @@ playground_bootstrap_reproduction_model_command() {
   fi
 
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
   echo "#!/bin/bash" > $tmp_dir/intro
   echo "###############################################" >> $tmp_dir/intro
   echo "# 🗓️ date: `date`" >> $tmp_dir/intro
@@ -10214,6 +10218,7 @@ playground_topic_consume_command() {
 
     type=""
     tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+    trap 'rm -rf $tmp_dir' EXIT
     fifo_path="$tmp_dir/kafka_output_fifo"
     mkfifo "$fifo_path"
 

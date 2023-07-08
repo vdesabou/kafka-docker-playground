@@ -116,6 +116,7 @@ EOF
 
 function get_remote_debugging_command_heredoc () {
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+trap 'rm -rf $tmp_dir' EXIT
 cat << EOF > $tmp_dir/docker-compose-remote-debugging.yml
 version: '3.5'
 services:

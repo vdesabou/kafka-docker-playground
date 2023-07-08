@@ -192,6 +192,7 @@ function maybe_create_image()
     fi
 
     tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+    trap 'rm -rf $tmp_dir' EXIT
 cat << EOF > $tmp_dir/Dockerfile
 FROM ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
 USER root
@@ -3407,6 +3408,7 @@ function force_enable () {
   logwarn "💪 Forcing $flag ($env_variable env variable)"
   line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh' $repro_test_file | cut -d ":" -f 1 | tail -n1)
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
   echo "# remove or comment those lines if you don't need it anymore" > $tmp_dir/tmp_force_enable
   echo "logwarn \"💪 Forcing $flag ($env_variable env variable) as it was set when reproduction model was created\"" >> $tmp_dir/tmp_force_enable
   echo "export $env_variable=true" >> $tmp_dir/tmp_force_enable
