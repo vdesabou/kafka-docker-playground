@@ -4,15 +4,17 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+if [ ! -f jcl-over-slf4j-2.0.7.jar ]
+then
+     wget https://repo1.maven.org/maven2/org/slf4j/jcl-over-slf4j/2.0.7/jcl-over-slf4j-2.0.7.jar
+fi
 
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending messages to topic avro-topic"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic avro-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
-log "-------------------------------------"
-log "Running AVRO Converter Example"
-log "-------------------------------------"
+playground debug log-level set --package "org.apache.http" --level TRACE
 
 log "Creating http-sink connector"
 playground connector create-or-update --connector http-sink << EOF

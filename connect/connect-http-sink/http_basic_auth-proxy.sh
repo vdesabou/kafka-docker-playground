@@ -4,15 +4,18 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -f jcl-over-slf4j-2.0.7.jar ]
+then
+     wget https://repo1.maven.org/maven2/org/slf4j/jcl-over-slf4j/2.0.7/jcl-over-slf4j-2.0.7.jar
+fi
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.proxy.yml"
 
 
 log "Sending messages to topic http-messages"
 seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages
 
-log "-------------------------------------"
-log "Running Basic Authentication Example"
-log "-------------------------------------"
+playground debug log-level set --package "org.apache.http" --level TRACE
 
 log "Creating HttpSinkBasicAuth connector"
 playground connector create-or-update --connector http << EOF

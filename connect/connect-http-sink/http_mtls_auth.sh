@@ -11,13 +11,10 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-
 log "Sending messages to topic http-messages"
 seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages
 
-log "-------------------------------------"
-log "Running SSL with Mutual TLS Authentication Example"
-log "-------------------------------------"
+playground debug log-level set --package "org.apache.http" --level TRACE
 
 log "Creating http-sink connector"
 playground connector create-or-update --connector http-mtls-sink << EOF
