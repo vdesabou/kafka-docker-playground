@@ -690,6 +690,32 @@ commands:
     examples:
     - playground debug tcp-dump --container control-center --port 9021 --duration 60
 
+  - name: block-traffic
+    help: |-
+      🚫 Blocking traffic using iptables
+    flags:
+      - *container
+      - long: --destination
+        arg: destination
+        required: true
+        help: |-
+          Destination: it could be an ip address, a container name or a hostname
+      - long: --port
+        arg: port
+        validate: integer
+        required: false
+        help: |-
+          Port on which tcp traffic should be blocked
+      - long: --action
+        allowed: [start, stop]
+        arg: action
+        required: true
+        help: |-
+          🟢 start or stop
+    examples:
+    - playground debug block-traffic --destination google.com --action start
+    - playground debug block-traffic --container broker --destination zookeeper --action start
+
   - name: log-level
     help: |-
       🧬 Set log level for any package

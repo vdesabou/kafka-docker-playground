@@ -59,6 +59,7 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   🎯 Take a java thread dump\n" "$(green "debug thread-dump")                "
   [[ -n $long_usage ]] && printf "  %s   👻 Take a heap dump\n" "$(green "debug heap-dump")                  "
   [[ -n $long_usage ]] && printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "debug tcp-dump")                   "
+  [[ -n $long_usage ]] && printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "debug block-traffic")              "
   [[ -n $long_usage ]] && printf "  %s   🧬 Set log level for any package\n" "$(green "debug log-level")                  "
   echo
   printf "%s\n" "$(bold "Container commands:")"
@@ -1192,6 +1193,7 @@ playground_debug_usage() {
   printf "  %s   🎯 Take a java thread dump\n" "$(green "thread-dump")            "
   printf "  %s   👻 Take a heap dump\n" "$(green "heap-dump")              "
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "tcp-dump")               "
+  printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "block-traffic")          "
   printf "  %s   🧬 Set log level for any package\n" "$(green "log-level")              "
   echo
 
@@ -1436,6 +1438,64 @@ playground_debug_tcp_dump_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground debug tcp-dump --container control-center --port 9021 --duration 60\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_debug_block_traffic_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground debug block-traffic - 🚫 Blocking traffic using iptables\n"
+    echo
+
+  else
+    printf "playground debug block-traffic - 🚫 Blocking traffic using iptables\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground debug block-traffic [OPTIONS]\n"
+  printf "  playground debug block-traffic --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
+    printf "    🐳 Container name\n"
+    printf "    Default: connect\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--destination DESTINATION (required)")"
+    printf "    Destination: it could be an ip address, a container name or a hostname\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--port PORT")"
+    printf "    Port on which tcp traffic should be blocked\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--action ACTION (required)")"
+    printf "    🟢 start or stop\n"
+    printf "    Allowed: start, stop\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground debug block-traffic --destination google.com --action start\n"
+    printf "  playground debug block-traffic --container broker --destination zookeeper\n  --action start\n"
     echo
 
   fi
@@ -9597,6 +9657,119 @@ playground_debug_tcp_dump_command() {
 }
 
 # :command.function
+playground_debug_block_traffic_command() {
+  # src/debug_block_traffic_command.sh
+  container="${args[--container]}"
+  port="${args[--port]}"
+  destination="${args[--destination]}"
+  action="${args[--action]}"
+
+  set +e
+  docker exec $container type iptables > /dev/null 2>&1
+  if [ $? != 0 ]
+  then
+      logwarn "iptables is not installed on container $container, attempting to install it"
+
+      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+      dir1=$(echo ${DIR_CLI%/*})
+      root_folder=$(echo ${dir1%/*})
+      IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
+      source $root_folder/scripts/utils.sh
+
+      if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
+      then
+        docker exec --privileged --user root $container bash -c "yum -y install --disablerepo='Confluent*' iptables"
+      else
+        docker exec --privileged --user root $container bash -c "apt-get update && echo iptables | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*"
+      fi
+  fi
+  docker exec $container type iptables > /dev/null 2>&1
+  if [ $? != 0 ]
+  then
+      logerror "❌ iptables could not be installed"
+      exit 1
+  fi
+  set -e
+
+  ip_pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$"
+
+  function get_container_ip() {
+      local container_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$1")
+      if [ $? -eq 0 ]
+      then
+          echo "$container_ip"
+      fi
+  }
+
+  function get_ip_by_nslookup() {
+      local ip_address=$(nslookup "$1" | awk '/^Address: / { print $2 }')
+      if [ $? -eq 0 ]
+      then
+          echo "$ip_address"
+      fi
+  }
+
+  ip=""
+  if [[ $destination =~ $ip_pattern ]]
+  then
+      ip=$destination
+  else
+      ip_address=$(get_container_ip "$destination")
+      if [[ -n $ip_address ]]
+      then
+          ip=$ip_address
+      else
+          log "🌐 Using nslookup to get IP address..."
+          ip_address=$(get_ip_by_nslookup "$destination")
+          if [[ -n $ip_address ]]
+          then
+              ip=$ip_address
+          else
+              logerror "❌ Unable to retrieve IP address for $destination using nslookup"
+              exit 1
+          fi
+      fi
+  fi
+
+  case "${action}" in
+      start)
+          action="A"
+          if [[ -n "$port" ]]
+          then
+              log "🚫 Blocking traffic on container ${container} and port ${port} for destination ${destination} (${ip})"
+          else
+              log "🚫 Blocking traffic on container ${container} for all ports for destination ${destination} (${ip})"
+          fi
+      ;;
+      stop)
+          action="D"
+
+          if [[ -n "$port" ]]
+          then
+              log "🟢 Unblocking traffic on container ${container} and port ${port} for destination ${destination} (${ip})"
+          else
+              log "🟢 Unblocking traffic on container ${container} for all ports from destination ${destination} (${ip})"
+          fi
+      ;;
+      *)
+          logerror "should not happen"
+          exit 1
+      ;;
+  esac
+
+  if [[ -n "$port" ]]
+  then
+    docker exec --privileged --user root ${container} bash -c "iptables -${action} INPUT -p tcp -s ${ip} --dport ${port} -j DROP"
+  else
+    docker exec --privileged --user root ${container} bash -c "iptables -${action} INPUT -p tcp -s ${ip} -j DROP"
+  fi
+
+  log "Output of command iptables-save"
+  docker exec --privileged --user root ${container} bash -c "iptables-save"
+
+}
+
+# :command.function
 playground_debug_log_level_get_command() {
   # src/debug_log_level_get_command.sh
   ret=$(get_connect_url_and_security)
@@ -14006,6 +14179,13 @@ playground_debug_parse_requirements() {
       shift $#
       ;;
 
+    block-traffic)
+      action="block-traffic"
+      shift
+      playground_debug_block_traffic_parse_requirements "$@"
+      shift $#
+      ;;
+
     log-level)
       action="log-level"
       shift
@@ -14381,6 +14561,133 @@ playground_debug_tcp_dump_parse_requirements() {
   # :command.default_assignments
   [[ -n ${args['--container']:-} ]] || args['--container']="connect"
   [[ -n ${args['--duration']:-} ]] || args['--duration']="30"
+
+}
+
+# :command.parse_requirements
+playground_debug_block_traffic_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_debug_block_traffic_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="debug block-traffic"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --container | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--container']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--container requires an argument: --container, -c CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --destination)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--destination']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--destination requires an argument: --destination DESTINATION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --port)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_integer "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--port PORT" "$(validate_integer "$2")" >&2
+            exit 1
+          fi
+
+          args['--port']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--port requires an argument: --port PORT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --action)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--action']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--action requires an argument: --action ACTION" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--destination']+x} ]]; then
+    printf "missing required flag: --destination DESTINATION\n" >&2
+    exit 1
+  fi
+  if [[ -z ${args['--action']+x} ]]; then
+    printf "missing required flag: --action ACTION\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--container']:-} ]] || args['--container']="connect"
+
+  # :command.whitelist_filter
+  if [[ ${args['--action']} ]] && [[ ! ${args['--action']} =~ ^(start|stop)$ ]]; then
+    printf "%s\n" "--action must be one of: start, stop" >&2
+    exit 1
+  fi
 
 }
 
@@ -17745,6 +18052,7 @@ run() {
     "debug thread-dump") playground_debug_thread_dump_command ;;
     "debug heap-dump") playground_debug_heap_dump_command ;;
     "debug tcp-dump") playground_debug_tcp_dump_command ;;
+    "debug block-traffic") playground_debug_block_traffic_command ;;
     "debug log-level") playground_debug_log_level_command ;;
     "debug log-level get") playground_debug_log_level_get_command ;;
     "debug log-level set") playground_debug_log_level_set_command ;;
