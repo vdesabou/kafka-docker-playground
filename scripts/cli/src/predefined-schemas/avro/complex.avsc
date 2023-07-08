@@ -1,0 +1,630 @@
+{
+    "fields": [
+        {
+            "name": "myProductId",
+            "type": "string"
+        },
+        {
+            "name": "bananaIds",
+            "type": {
+                "items": {
+                    "name": "BananaId",
+                    "namespace": "com.github.vdesabou.provider.enums",
+                    "symbols": [
+                        "XXXX",
+                        "YYYY",
+                        "ZZZZ",
+                        "WWWW"
+                    ],
+                    "type": "enum"
+                },
+                "type": "array"
+            }
+        },
+        {
+            "default": false,
+            "name": "discardedApple",
+            "type": "boolean"
+        },
+        {
+            "name": "mergeApple",
+            "type": {
+                "name": "MergeApple",
+                "namespace": "com.github.vdesabou.enums",
+                "symbols": [
+                    "DEFAULT_WEB_YYYY",
+                    "DEFAULT_WEB_ZZZZ",
+                    "DEFAULT_WEB_XXXX"
+                ],
+                "type": "enum"
+            }
+        },
+        {
+            "default": null,
+            "name": "mergedTomatoe",
+            "type": [
+                "null",
+                {
+                    "fields": [
+                        {
+                            "name": "mergedProviderTomatoe",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "properties",
+                                        "type": {
+                                            "fields": [
+                                                {
+                                                    "default": null,
+                                                    "name": "featuresValues",
+                                                    "type": [
+                                                        "null",
+                                                        {
+                                                            "items": {
+                                                                "fields": [
+                                                                    {
+                                                                        "name": "featureId",
+                                                                        "type": "string"
+                                                                    },
+                                                                    {
+                                                                        "default": null,
+                                                                        "name": "featureValueId",
+                                                                        "type": [
+                                                                            "null",
+                                                                            "string"
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "default": null,
+                                                                        "name": "values",
+                                                                        "type": [
+                                                                            "null",
+                                                                            {
+                                                                                "items": [
+                                                                                    "null",
+                                                                                    {
+                                                                                        "fields": [
+                                                                                            {
+                                                                                                "name": "lang",
+                                                                                                "type": [
+                                                                                                    "null",
+                                                                                                    {
+                                                                                                        "name": "LangEnum",
+                                                                                                        "namespace": "com.github.vdesabou.utils.enums",
+                                                                                                        "symbols": [
+                                                                                                            "FR",
+                                                                                                            "EN",
+                                                                                                            "RU",
+                                                                                                            "ES",
+                                                                                                            "PT",
+                                                                                                            "KK",
+                                                                                                            "CA",
+                                                                                                            "PL",
+                                                                                                            "IT",
+                                                                                                            "ZA",
+                                                                                                            "RO",
+                                                                                                            "EL",
+                                                                                                            "GR",
+                                                                                                            "BE",
+                                                                                                            "UA",
+                                                                                                            "BZ"
+                                                                                                        ],
+                                                                                                        "type": "enum"
+                                                                                                    }
+                                                                                                ]
+                                                                                            },
+                                                                                            {
+                                                                                                "default": null,
+                                                                                                "name": "value",
+                                                                                                "type": [
+                                                                                                    "null",
+                                                                                                    "string"
+                                                                                                ]
+                                                                                            }
+                                                                                        ],
+                                                                                        "name": "OrangeStringType",
+                                                                                        "namespace": "com.github.vdesabou.utils",
+                                                                                        "type": "record"
+                                                                                    }
+                                                                                ],
+                                                                                "type": "array"
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ],
+                                                                "name": "FeatureValue",
+                                                                "type": "record"
+                                                            },
+                                                            "type": "array"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "default": null,
+                                                    "name": "enabledAvocado",
+                                                    "type": [
+                                                        "null",
+                                                        {
+                                                            "items": [
+                                                                "null",
+                                                                {
+                                                                    "fields": [
+                                                                        {
+                                                                            "name": "category",
+                                                                            "type": {
+                                                                                "name": "GtinCategory",
+                                                                                "namespace": "com.github.vdesabou.properties.enums",
+                                                                                "symbols": [
+                                                                                    "X",
+                                                                                    "U",
+                                                                                    "T",
+                                                                                    "M",
+                                                                                    "P"
+                                                                                ],
+                                                                                "type": "enum"
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "name": "value",
+                                                                            "type": "string"
+                                                                        }
+                                                                    ],
+                                                                    "name": "ToeType",
+                                                                    "type": "record"
+                                                                }
+                                                            ],
+                                                            "type": "array"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "name": "modelId",
+                                                    "type": "string"
+                                                },
+                                                {
+                                                    "name": "category",
+                                                    "type": {
+                                                        "name": "Category",
+                                                        "namespace": "com.github.vdesabou.properties.enums",
+                                                        "symbols": [
+                                                            "XX",
+                                                            "ZZ"
+                                                        ],
+                                                        "type": "enum"
+                                                    }
+                                                },
+                                                {
+                                                    "default": null,
+                                                    "name": "catLinks",
+                                                    "type": [
+                                                        "null",
+                                                        {
+                                                            "items": {
+                                                                "fields": [
+                                                                    {
+                                                                        "name": "myProductId",
+                                                                        "type": "string"
+                                                                    },
+                                                                    {
+                                                                        "java-class": "java.lang.Integer",
+                                                                        "name": "quantity",
+                                                                        "type": "int"
+                                                                    }
+                                                                ],
+                                                                "name": "CatLink",
+                                                                "type": "record"
+                                                            },
+                                                            "type": "array"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "default": null,
+                                                    "name": "dreamLinks",
+                                                    "type": [
+                                                        "null",
+                                                        {
+                                                            "items": {
+                                                                "fields": [
+                                                                    {
+                                                                        "name": "myProductId",
+                                                                        "type": "string"
+                                                                    }
+                                                                ],
+                                                                "name": "DreamLink",
+                                                                "type": "record"
+                                                            },
+                                                            "type": "array"
+                                                        }
+                                                    ]
+                                                }
+                                            ],
+                                            "name": "BiscuitData",
+                                            "namespace": "com.github.vdesabou.properties",
+                                            "type": "record"
+                                        }
+                                    },
+                                    {
+                                        "default": null,
+                                        "name": "dogStatus",
+                                        "type": [
+                                            "null",
+                                            {
+                                                "name": "LifecycleStatus",
+                                                "namespace": "com.github.vdesabou.maintained.enums",
+                                                "symbols": [
+                                                    "OK",
+                                                    "NOT_OK"
+                                                ],
+                                                "type": "enum"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "name": "MergedBiscuitData",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "identityByBatman",
+                            "type": {
+                                "items": {
+                                    "fields": [
+                                        {
+                                            "name": "bu",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "localPlus",
+                                            "type": "string"
+                                        }
+                                    ],
+                                    "name": "LocalBocal",
+                                    "namespace": "com.github.vdesabou.identity",
+                                    "type": "record"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "medias",
+                            "type": {
+                                "items": {
+                                    "fields": [
+                                        {
+                                            "name": "type",
+                                            "type": {
+                                                "name": "MediaType",
+                                                "namespace": "com.github.vdesabou.media.enums",
+                                                "symbols": [
+                                                    "EE",
+                                                    "EEE",
+                                                    "EEEE",
+                                                    "EEEEE"
+                                                ],
+                                                "type": "enum"
+                                            }
+                                        },
+                                        {
+                                            "default": null,
+                                            "name": "categoryDam",
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
+                                        },
+                                        {
+                                            "default": null,
+                                            "name": "externalId",
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
+                                        },
+                                        {
+                                            "default": null,
+                                            "name": "accountId",
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
+                                        },
+                                        {
+                                            "name": "createdDate",
+                                            "type": {
+                                                "logicalType": "timestamp-millis",
+                                                "type": "long"
+                                            }
+                                        },
+                                        {
+                                            "name": "extension",
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
+                                        },
+                                        {
+                                            "name": "fileName",
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
+                                        },
+                                        {
+                                            "name": "format",
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
+                                        },
+                                        {
+                                            "name": "isFree",
+                                            "type": [
+                                                "null",
+                                                "boolean"
+                                            ]
+                                        },
+                                        {
+                                            "name": "isInternet",
+                                            "type": [
+                                                "null",
+                                                "boolean"
+                                            ]
+                                        },
+                                        {
+                                            "name": "isReference",
+                                            "type": [
+                                                "null",
+                                                "boolean"
+                                            ]
+                                        },
+                                        {
+                                            "name": "mediaID",
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
+                                        },
+                                        {
+                                            "name": "pixelHeight",
+                                            "type": [
+                                                "null",
+                                                "int"
+                                            ]
+                                        },
+                                        {
+                                            "name": "pixelWidth",
+                                            "type": [
+                                                "null",
+                                                "int"
+                                            ]
+                                        },
+                                        {
+                                            "name": "pubInternetOrderIndex",
+                                            "type": [
+                                                "null",
+                                                "int"
+                                            ]
+                                        },
+                                        {
+                                            "name": "updatedDate",
+                                            "type": {
+                                                "logicalType": "timestamp-millis",
+                                                "type": "long"
+                                            }
+                                        },
+                                        {
+                                            "name": "url",
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
+                                        },
+                                        {
+                                            "default": null,
+                                            "name": "languages",
+                                            "type": [
+                                                "null",
+                                                {
+                                                    "items": "string",
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "default": null,
+                                            "name": "localizedLanguages",
+                                            "type": [
+                                                "null",
+                                                {
+                                                    "items": "string",
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "default": null,
+                                            "name": "metadata",
+                                            "type": [
+                                                "null",
+                                                {
+                                                    "type": "map",
+                                                    "values": [
+                                                        "null",
+                                                        {
+                                                            "items": "string",
+                                                            "type": "array"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "name": "BrouMedia",
+                                    "namespace": "com.github.vdesabou.media",
+                                    "type": "record"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "truDta",
+                            "type": {
+                                "items": {
+                                    "fields": [
+                                        {
+                                            "name": "bu",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "tttFruuit",
+                                            "type": {
+                                                "fields": [
+                                                    {
+                                                        "default": null,
+                                                        "name": "cccId",
+                                                        "type": [
+                                                            "null",
+                                                            "string"
+                                                        ]
+                                                    },
+                                                    {
+                                                        "name": "ccceeeId",
+                                                        "type": "string"
+                                                    },
+                                                    {
+                                                        "default": null,
+                                                        "name": "tttrrttId",
+                                                        "type": [
+                                                            "null",
+                                                            "string"
+                                                        ]
+                                                    },
+                                                    {
+                                                        "default": null,
+                                                        "name": "ggggId",
+                                                        "type": [
+                                                            "null",
+                                                            "string"
+                                                        ]
+                                                    }
+                                                ],
+                                                "name": "YutData",
+                                                "type": "record"
+                                            }
+                                        }
+                                    ],
+                                    "name": "TuyBU",
+                                    "namespace": "com.github.vdesabou.nomenclature",
+                                    "type": "record"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "eeeLanguages",
+                            "type": {
+                                "items": "com.github.vdesabou.utils.enums.LangEnum",
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "tbnnnArea",
+                            "type": {
+                                "items": {
+                                    "fields": [
+                                        {
+                                            "name": "iiuuA",
+                                            "type": {
+                                                "name": "SArea",
+                                                "namespace": "com.github.vdesabou.utils.enums",
+                                                "symbols": [
+                                                    "ZZ",
+                                                    "ITZZ",
+                                                    "ZT",
+                                                    "ESZ"
+                                                ],
+                                                "type": "enum"
+                                            }
+                                        },
+                                        {
+                                            "name": "status",
+                                            "type": {
+                                                "name": "GryStatus",
+                                                "namespace": "com.github.vdesabou.quality.enums",
+                                                "symbols": [
+                                                    "A"
+                                                ],
+                                                "type": "enum"
+                                            }
+                                        },
+                                        {
+                                            "default": null,
+                                            "name": "comment",
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
+                                        },
+                                        {
+                                            "default": null,
+                                            "name": "statDate",
+                                            "type": [
+                                                "null",
+                                                {
+                                                    "logicalType": "timestamp-millis",
+                                                    "type": "long"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "name": "QData",
+                                    "namespace": "com.github.vdesabou.quality",
+                                    "type": "record"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "default": null,
+                            "name": "realStatus",
+                            "type": [
+                                "null",
+                                {
+                                    "fields": [
+                                        {
+                                            "name": "remved",
+                                            "type": "boolean"
+                                        }
+                                    ],
+                                    "name": "RemData",
+                                    "namespace": "com.github.vdesabou.removal",
+                                    "type": "record"
+                                }
+                            ]
+                        },
+                        {
+                            "name": "seAreas",
+                            "type": {
+                                "items": "com.github.vdesabou.utils.enums.SArea",
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "MergedPotatoe",
+                    "type": "record"
+                }
+            ]
+        },
+        {
+            "name": "timestamp",
+            "type": {
+                "logicalType": "timestamp-millis",
+                "type": "long"
+            }
+        }
+    ],
+    "name": "Customer",
+    "namespace": "com.github.vdesabou",
+    "type": "record"
+}
