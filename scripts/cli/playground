@@ -10728,6 +10728,7 @@ playground_topic_produce_command() {
       log "☢️ --force-value is set"
       echo "$force_value" > $tmp_dir/out.json
   else
+      SECONDS=0
       case "${schema_type}" in
           json|sql)
               # https://github.com/MaterializeInc/datagen
@@ -10780,6 +10781,7 @@ playground_topic_produce_command() {
   fi
   output_file=$tmp_dir/out_final.json
 
+  max_batch=100000
   lines_count=0
   stop=0
   while [ $stop != 1 ]
@@ -10788,6 +10790,11 @@ playground_topic_produce_command() {
       do
           echo "$line" >> "$output_file"
           lines_count=$((lines_count+1))
+          if [ $lines_count -ge $max_batch ]
+          then
+              stop=1
+              break
+          fi
           if [ $lines_count -ge $nb_messages ]
           then
               stop=1
@@ -10796,7 +10803,7 @@ playground_topic_produce_command() {
       done < "$input_file"
   done
 
-  nb_generated_messages=$(wc -l < $tmp_dir/out_final.json)
+  nb_generated_messages=$(wc -l < $output_file)
   nb_generated_messages=${nb_generated_messages// /}
 
   if [ "$nb_generated_messages" == "0" ]
@@ -10811,13 +10818,14 @@ playground_topic_produce_command() {
       value_str=" based on --force-value "
   fi
 
+  ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
   if (( nb_generated_messages < 10 ))
   then
       log "✨ $nb_generated_messages records were generated$value_str"
-      cat $tmp_dir/out_final.json
+      cat "$output_file"
   else
-      log "✨ $nb_generated_messages records were generated$value_str (only showing first 10)"
-      head -n 10 "$tmp_dir/out_final.json"
+      log "✨ $nb_generated_messages records were generated$value_str (only showing first 10), $ELAPSED"
+      head -n 10 "$output_file"
   fi
 
   if [[ -n "$generate_only" ]]
@@ -10861,55 +10869,94 @@ playground_topic_produce_command() {
       while read line
       do
           echo "$key|$line" >> $tmp_dir/tempfile
-      done < $tmp_dir/out_final.json
+      done < $output_file
 
-      mv $tmp_dir/tempfile $tmp_dir/out_final.json
+      mv $tmp_dir/tempfile $output_file
   fi
 
   set -e
-  log "📤 producing $nb_generated_messages records to topic $topic"
+  SECONDS=0
+  log "📤 producing $nb_messages records to topic $topic"
+  if [ $nb_messages -gt $max_batch ]
+  then
+      log "✨ it will be done in batches of maximum $max_batch records"
+  fi
   if [[ -n "$verbose" ]]
   then
       set -x
   fi
-  case "${schema_type}" in
-      json|sql|raw)
-          if [[ "$environment" == "environment" ]]
-          then
-              if [[ -n "$key" ]]
+  nb_messages_sent=0
+  nb_messages_to_send=0
+  stop=0
+  should_stop=0
+  while [ $stop != 1 ]
+  do
+      if [ $((nb_messages_sent + nb_generated_messages)) -le $nb_messages ]
+      then
+          nb_messages_to_send=$nb_generated_messages
+      else
+          nb_messages_to_send=$((nb_messages - nb_messages_sent))
+          should_stop=1
+      fi
+      if [ $nb_messages_to_send -eq 0 ]
+      then
+          stop=1
+          continue
+      fi
+      if [ $nb_messages -gt $max_batch ]
+      then
+          SECONDS=0
+          log "📤 producing a batch of $nb_messages_to_send records to topic $topic"
+          log "💯 $nb_messages_sent/$nb_messages records sent so far..."
+      fi
+      case "${schema_type}" in
+          json|sql|raw)
+              if [[ "$environment" == "environment" ]]
               then
-                  cat $tmp_dir/out_final.json | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security --property parse.key=true --property key.separator="|"
+                  if [[ -n "$key" ]]
+                  then
+                      head -n $nb_messages_to_send $output_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security --property parse.key=true --property key.separator="|"
+                  else
+                      head -n $nb_messages_to_send $output_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security
+                  fi
               else
-                  cat $tmp_dir/out_final.json | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security
+                  if [[ -n "$key" ]]
+                  then
+                      head -n $nb_messages_to_send $output_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security --property parse.key=true --property key.separator="|"
+                  else
+                      head -n $nb_messages_to_send $output_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security
+                  fi
               fi
-          else
-              if [[ -n "$key" ]]
+          ;;
+          *)
+              if [[ "$environment" == "environment" ]]
               then
-                  cat $tmp_dir/out_final.json | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security --property parse.key=true --property key.separator="|"
+                  if [[ -n "$key" ]]
+                  then
+                      head -n $nb_messages_to_send $output_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e schema_type=$schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer
+                  else
+                      head -n $nb_messages_to_send $output_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e schema_type=$schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $schema_file)"
+                  fi
               else
-                  cat $tmp_dir/out_final.json | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security
+                  if [[ -n "$key" ]]
+                  then
+                      head -n $nb_messages_to_send $output_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer
+                  else
+                      head -n $nb_messages_to_send $output_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)"
+                  fi
               fi
-          fi
-      ;;
-      *)
-          if [[ "$environment" == "environment" ]]
-          then
-              if [[ -n "$key" ]]
-              then
-                  cat $tmp_dir/out_final.json | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e schema_type=$schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer
-              else
-                  cat $tmp_dir/out_final.json | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e schema_type=$schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $schema_file)"
-              fi
-          else
-              if [[ -n "$key" ]]
-              then
-                  cat $tmp_dir/out_final.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer
-              else
-                  cat $tmp_dir/out_final.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)"
-              fi
-          fi
-      ;;
-  esac
+          ;;
+      esac
+
+      # Increment the number of sent messages
+      nb_messages_sent=$((nb_messages_sent + nb_messages_to_send))
+      ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
+      log "⏲️ $ELAPSED"
+      if [ $should_stop -eq 1 ]
+      then
+          stop=1
+      fi
+  done
   set +x
   playground topic get-number-records --topic $topic
 }
