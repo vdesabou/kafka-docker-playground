@@ -9,6 +9,7 @@ generate_only="${args[--generate-only]}"
 tombstone="${args[--tombstone]}"
 
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+trap 'rm -rf $tmp_dir' EXIT
 #log "tmp_dir is $tmp_dir"
 schema_file=$tmp_dir/value_schema
 
@@ -137,12 +138,12 @@ else
     log "📢 no known schema could be identified, payload will be sent as raw data"
     schema_type=raw
 fi
-
+log "✨ generating data..."
 if [ "$schema_type" == "protobuf" ]
 then
     nb_max_messages_to_generate=50
 else
-    nb_max_messages_to_generate=200
+    nb_max_messages_to_generate=1000
 fi
 if [ $nb_messages -lt $nb_max_messages_to_generate ]
 then
@@ -210,7 +211,7 @@ then
 fi
 output_file=$tmp_dir/out_final.json
 
-max_batch=100000
+max_batch=300000
 lines_count=0
 stop=0
 while [ $stop != 1 ]
@@ -334,7 +335,6 @@ do
     fi
     if [ $nb_messages -gt $max_batch ]
     then
-        SECONDS=0
         log "📤 producing a batch of $nb_messages_to_send records to topic $topic"
         log "💯 $nb_messages_sent/$nb_messages records sent so far..."
     fi
@@ -379,12 +379,12 @@ do
 
     # Increment the number of sent messages
     nb_messages_sent=$((nb_messages_sent + nb_messages_to_send))
-    ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
-    log "⏲️ $ELAPSED"
     if [ $should_stop -eq 1 ]
     then
         stop=1
     fi
 done
+ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
+log "📤 produced $nb_messages records to topic $topic, $ELAPSED"
 set +x
 playground topic get-number-records --topic $topic
