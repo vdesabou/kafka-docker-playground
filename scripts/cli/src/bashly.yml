@@ -990,6 +990,10 @@ commands:
       help: |-
         📥 Consume topic from beginning
       flags:
+      - &verbose
+        long: --verbose
+        short: -v
+        help: 🐞 Show command being ran.
       - *topic
       - long: --max-messages
         arg: max-messages
@@ -1058,6 +1062,7 @@ commands:
 
           * Directly set payload
 
+      - *verbose
       - long: --topic
         short: -t
         required: true

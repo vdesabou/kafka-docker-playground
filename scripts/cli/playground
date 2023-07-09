@@ -2294,6 +2294,11 @@ playground_topic_consume_usage() {
 
     # :command.usage_flags
     # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
     printf "    🗳 Topic name\n"
     echo
@@ -2366,6 +2371,11 @@ playground_topic_produce_usage() {
     printf "  %s\n" "$(magenta "--input INPUT")"
     printf "    🔥 You can either:\n    \n    * Set your own schema (avro, json-schema, protobuf) with stdin (see example\n    section).\n    \n    * You can also generate json data using json or sql format using syntax from\n    https://github.com/MaterializeInc/datagen\n    \n    * Use completion to select predefined schemas (or use your own schema file)\n    🎓 Tip: use <tab> completion to trigger fzf completion\n    \n    * Directly set payload\n"
     printf "    Default: -\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
     echo
 
     # :flag.usage
@@ -10165,6 +10175,7 @@ playground_topic_describe_command() {
 playground_topic_consume_command() {
   # src/topic_consume_command.sh
   topic="${args[--topic]}"
+  verbose="${args[--verbose]}"
   max_messages="${args[--max-messages]}"
   grep_string="${args[--grep]}"
   min_expected_messages="${args[--min-expected-messages]}"
@@ -10407,6 +10418,10 @@ playground_topic_consume_command() {
     then
       nottailing2=""
     fi
+    if [[ -n "$verbose" ]]
+    then
+        set -x
+    fi
     case "${value_type}" in
       avro|protobuf|json-schema)
           if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
@@ -10435,7 +10450,7 @@ playground_topic_consume_command() {
         fi
       ;;
     esac
-
+    set +x
     # Detect the platform (macOS or Linux) and set the date command accordingly
     if [[ "$(uname)" == "Darwin" ]]; then
       # macOS
@@ -10555,6 +10570,7 @@ playground_topic_consume_command() {
 playground_topic_produce_command() {
   # src/topic_produce_command.sh
   topic="${args[--topic]}"
+  verbose="${args[--verbose]}"
   nb_messages="${args[--nb-messages]}"
   nb_partitions="${args[--nb-partitions]}"
   schema="${args[--input]}"
@@ -10852,6 +10868,10 @@ playground_topic_produce_command() {
 
   set -e
   log "📤 producing $nb_generated_messages records to topic $topic"
+  if [[ -n "$verbose" ]]
+  then
+      set -x
+  fi
   case "${schema_type}" in
       json|sql|raw)
           if [[ "$environment" == "environment" ]]
@@ -10890,7 +10910,7 @@ playground_topic_produce_command() {
           fi
       ;;
   esac
-
+  set +x
   playground topic get-number-records --topic $topic
 }
 
@@ -16168,6 +16188,14 @@ playground_topic_consume_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
       --topic | -t)
 
         # :flag.case_arg
@@ -16356,6 +16384,14 @@ playground_topic_produce_parse_requirements() {
           printf "%s\n" "--input requires an argument: --input INPUT" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
         ;;
 
       # :flag.case

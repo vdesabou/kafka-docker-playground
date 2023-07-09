@@ -1,4 +1,5 @@
 topic="${args[--topic]}"
+verbose="${args[--verbose]}"
 nb_messages="${args[--nb-messages]}"
 nb_partitions="${args[--nb-partitions]}"
 schema="${args[--input]}"
@@ -296,6 +297,10 @@ fi
 
 set -e
 log "📤 producing $nb_generated_messages records to topic $topic"
+if [[ -n "$verbose" ]]
+then
+    set -x
+fi
 case "${schema_type}" in
     json|sql|raw)
         if [[ "$environment" == "environment" ]]
@@ -334,5 +339,5 @@ case "${schema_type}" in
         fi
     ;;
 esac
-
+set +x
 playground topic get-number-records --topic $topic

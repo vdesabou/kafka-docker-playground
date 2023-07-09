@@ -1,4 +1,5 @@
 topic="${args[--topic]}"
+verbose="${args[--verbose]}"
 max_messages="${args[--max-messages]}"
 grep_string="${args[--grep]}"
 min_expected_messages="${args[--min-expected-messages]}"
@@ -239,6 +240,10 @@ do
   then
     nottailing2=""
   fi
+  if [[ -n "$verbose" ]]
+  then
+      set -x
+  fi
   case "${value_type}" in
     avro|protobuf|json-schema)
         if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
@@ -267,7 +272,7 @@ do
       fi
     ;;
   esac
-
+  set +x
   # Detect the platform (macOS or Linux) and set the date command accordingly
   if [[ "$(uname)" == "Darwin" ]]; then
     # macOS

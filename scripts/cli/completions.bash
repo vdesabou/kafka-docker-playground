@@ -569,11 +569,11 @@ _playground_completions() {
       ;;
 
     'topic produce'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--forced-value --generate-only --help --input --key --nb-messages --nb-partitions --tombstone --topic -h -t")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--forced-value --generate-only --help --input --key --nb-messages --nb-partitions --tombstone --topic --verbose -h -t -v")" -- "$cur" )
       ;;
 
     'topic consume'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--grep --help --max-messages --min-expected-messages --plot-latencies-timestamp-field --tail --timeout --topic -h -t")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--grep --help --max-messages --min-expected-messages --plot-latencies-timestamp-field --tail --timeout --topic --verbose -h -t -v")" -- "$cur" )
       ;;
 
     'container ssh'*)
