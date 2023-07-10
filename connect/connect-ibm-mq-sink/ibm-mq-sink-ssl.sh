@@ -44,7 +44,7 @@ DISPLAY CHANNEL(DEV.APP.SVRCONN)
 EOF
 
 log "Sending messages to topic sink-messages"
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages << EOF
+playground topic produce --topic sink-messages --nb-messages 1 << 'EOF'
 This is my message
 EOF
 

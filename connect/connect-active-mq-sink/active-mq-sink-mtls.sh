@@ -12,9 +12,6 @@ cd ${DIR}
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.mtls.yml"
 
 log "Sending messages to topic sink-messages"
-# docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages << EOF
-# This is my message
-# EOF
 playground topic produce --topic sink-messages --nb-messages 1 << 'EOF'
 This is my message
 EOF
