@@ -569,7 +569,7 @@ _playground_completions() {
       ;;
 
     'topic produce'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--forced-value --generate-only --help --input --key --nb-messages --nb-partitions --tombstone --topic --verbose -h -t -v")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--forced-value --generate-only --headers --help --input --key --nb-messages --nb-partitions --tombstone --topic --verbose -h -t -v")" -- "$cur" )
       ;;
 
     'topic consume'*)

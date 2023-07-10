@@ -1092,6 +1092,15 @@ commands:
         required: false
         help: |-
           🗝️ Key to use for all records. If not set, no key is used.
+      - long: --headers
+        arg: headers
+        required: false
+        help: |-
+          🚏 Headers to use for all records. If not set, no header is used.
+
+          Example: --headers "header1:value1,header2:value2"
+
+          Note: CP 7.1+ is required.
       - long: --forced-value
         arg: forced-value
         required: false
