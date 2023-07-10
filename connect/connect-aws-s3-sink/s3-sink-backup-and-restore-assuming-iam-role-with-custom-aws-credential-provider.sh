@@ -133,7 +133,36 @@ EOF
 
 
 log "Sending messages to topic s3_topic"
-seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic s3_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+playground topic produce -t s3_topic --nb-messages 10 << 'EOF'
+{
+    "type": "record",
+    "namespace": "com.github.vdesabou",
+    "name": "Customer",
+    "version": "1",
+    "fields": [
+        {
+            "name": "count",
+            "type": "long",
+            "doc": "count"
+        },
+        {
+            "name": "first_name",
+            "type": "string",
+            "doc": "First Name of Customer"
+        },
+        {
+            "name": "last_name",
+            "type": "string",
+            "doc": "Last Name of Customer"
+        },
+        {
+            "name": "address",
+            "type": "string",
+            "doc": "Address of Customer"
+        }
+    ]
+}
+EOF
 
 sleep 10
 
