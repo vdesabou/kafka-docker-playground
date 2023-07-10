@@ -112,6 +112,15 @@ then
 else
   if [[ -n "$clear" ]]
   then
+    test_file=$(cat /tmp/playground-run | awk '{ print $4}')
+
+    if [ ! -f $test_file ]
+    then 
+      logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
+      logerror "Make sure to use <playground run> command !"
+      exit 1
+    fi
+
     log "🧼 Running example again with no flags"
     playground run -f $test_file ${other_args[*]}
   else
