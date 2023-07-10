@@ -293,7 +293,8 @@ then
 else
     if [ "$nb_partitions" != "" ]
     then
-        log "--nb-partitions is set, re-creating topic with $nb_partitions partitions"
+        logwarn "--nb-partitions is set, re-creating topic with $nb_partitions partitions ?"
+        check_if_continue
         playground topic delete --topic $topic
         playground topic create --topic $topic --nb-partitions $nb_partitions
     else
