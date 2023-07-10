@@ -83,7 +83,67 @@ set -e
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.with-custom-basic-aws-credentials-provider.yml"
 
 log "Sending messages to topic mytable"
-seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mytable --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+playground topic produce -t mytable --nb-messages 3 << 'EOF'
+{
+    "type": "record",
+    "namespace": "com.github.vdesabou",
+    "name": "Customer",
+    "version": "1",
+    "fields": [
+        {
+            "name": "count",
+            "type": "long",
+            "doc": "count"
+        },
+        {
+            "name": "first_name",
+            "type": "string",
+            "doc": "First Name of Customer"
+        },
+        {
+            "name": "last_name",
+            "type": "string",
+            "doc": "Last Name of Customer"
+        },
+        {
+            "name": "address",
+            "type": "string",
+            "doc": "Address of Customer"
+        }
+    ]
+}
+EOF
+
+playground topic produce -t mytable --nb-messages 3 --forced-value = '{"count":4,"first_name":"value1","last_name":"Jasmin","address":"Robbie"}' << 'EOF'
+{
+    "type": "record",
+    "namespace": "com.github.vdesabou",
+    "name": "Customer",
+    "version": "1",
+    "fields": [
+        {
+            "name": "count",
+            "type": "long",
+            "doc": "count"
+        },
+        {
+            "name": "first_name",
+            "type": "string",
+            "doc": "First Name of Customer"
+        },
+        {
+            "name": "last_name",
+            "type": "string",
+            "doc": "Last Name of Customer"
+        },
+        {
+            "name": "address",
+            "type": "string",
+            "doc": "Address of Customer"
+        }
+    ]
+}
+EOF
 
 log "Creating AWS DynamoDB Sink connector"
 playground connector create-or-update --connector dynamodb-sink << EOF
