@@ -1,2 +1,1 @@
-docker build -t vdesabou/json-schema-faker . 
-docker push vdesabou/json-schema-faker:latest
+docker buildx build --push --tag vdesabou/json-schema-faker:latest -o type=image --platform=linux/arm64,linux/amd64 .

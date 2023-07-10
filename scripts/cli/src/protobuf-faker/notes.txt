@@ -1,2 +1,1 @@
-docker build -t vdesabou/protobuf-faker . 
-docker push vdesabou/protobuf-faker:latest
+docker buildx build --push --tag vdesabou/protobuf-faker:latest -o type=image --platform=linux/arm64,linux/amd64 .
