@@ -116,9 +116,9 @@ fi
 
 if [[ -n "$headers" ]]
 then
-    if ! version_gt $CONNECT_TAG "7.0.99"
+    if ! version_gt $CONNECT_TAG "7.1.99"
     then
-        logerror "❌ --headers is set but it can be produced only with CP 7.1+"
+        logerror "❌ --headers is set but it can be produced only with CP 7.2+"
         exit 1
     fi
 fi

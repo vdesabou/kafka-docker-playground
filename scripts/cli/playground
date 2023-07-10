@@ -2402,7 +2402,7 @@ playground_topic_produce_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--headers HEADERS")"
-    printf "    🚏 Headers to use for all records. If not set, no header is used.\n    \n    Example: --headers \"header1:value1,header2:value2\"\n    \n    Note: CP 7.1+ is required.\n"
+    printf "    🚏 Headers to use for all records. If not set, no header is used.\n    \n    Example: --headers \"header1:value1,header2:value2\"\n    \n    Note: CP 7.2+ is required.\n"
     echo
 
     # :flag.usage
@@ -10703,9 +10703,9 @@ playground_topic_produce_command() {
 
   if [[ -n "$headers" ]]
   then
-      if ! version_gt $CONNECT_TAG "7.0.99"
+      if ! version_gt $CONNECT_TAG "7.1.99"
       then
-          logerror "❌ --headers is set but it can be produced only with CP 7.1+"
+          logerror "❌ --headers is set but it can be produced only with CP 7.2+"
           exit 1
       fi
   fi
@@ -10880,7 +10880,8 @@ playground_topic_produce_command() {
   else
       if [ "$nb_partitions" != "" ]
       then
-          log "--nb-partitions is set, re-creating topic with $nb_partitions partitions"
+          logwarn "--nb-partitions is set, re-creating topic with $nb_partitions partitions ?"
+          check_if_continue
           playground topic delete --topic $topic
           playground topic create --topic $topic --nb-partitions $nb_partitions
       else

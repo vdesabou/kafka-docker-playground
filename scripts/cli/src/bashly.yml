@@ -1100,7 +1100,7 @@ commands:
 
           Example: --headers "header1:value1,header2:value2"
 
-          Note: CP 7.1+ is required.
+          Note: CP 7.2+ is required.
       - long: --forced-value
         arg: forced-value
         required: false
