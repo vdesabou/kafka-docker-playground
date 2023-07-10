@@ -9363,7 +9363,7 @@ playground_get_docker_compose_command() {
   # src/get_docker_compose_command.sh
   # keep CONNECT TAG and ORACLE_IMAGE
   export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect | cut -d ":" -f 2)
-  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle | cut -d ":" -f 2)
+  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle)
 
   if [ ! -f /tmp/playground-command ]
   then
@@ -9481,7 +9481,7 @@ playground_debug_enable_remote_debugging_command() {
 
   # keep CONNECT TAG and ORACLE_IMAGE
   export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect | cut -d ":" -f 2)
-  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle | cut -d ":" -f 2)
+  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle)
 
   if [ ! -f /tmp/playground-command ]
   then
@@ -9867,7 +9867,7 @@ playground_container_recreate_command() {
 
   # keep CONNECT TAG and ORACLE_IMAGE
   export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect | cut -d ":" -f 2)
-  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle | cut -d ":" -f 2)
+  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle)
 
   if [ ! -f /tmp/playground-command ]
   then
