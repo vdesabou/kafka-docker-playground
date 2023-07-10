@@ -305,13 +305,25 @@ fi
 
 if [[ -n "$key" ]]
 then
-    log "🗝️ key is set $key"
-    while read line
-    do
-        echo "${key}|${line}" >> $tmp_dir/tempfile
-    done < $output_file
+    if [[ $key =~ ^[0-9]+$ ]]
+    then
+        log "🗝️ key is set with a number $key, it will be used as starting point"
+        while read line
+        do
+            echo "${key}|${line}" >> $tmp_dir/tempfile
+            let key=key+1
+        done < $output_file
 
-    mv $tmp_dir/tempfile $output_file
+        mv $tmp_dir/tempfile $output_file
+    else
+        log "🗝️ key is set with a string $key, it will be used for all records"
+        while read line
+        do
+            echo "${key}|${line}" >> $tmp_dir/tempfile
+        done < $output_file
+
+        mv $tmp_dir/tempfile $output_file
+    fi
 fi
 
 if [[ -n "$headers" ]]
