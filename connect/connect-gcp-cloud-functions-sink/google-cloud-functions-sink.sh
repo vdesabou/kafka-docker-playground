@@ -32,14 +32,8 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 
 log "Produce test data to the functions-messages topic in Kafka"
-playground topic produce -t functions-messages --nb-messages 1 --key "key1" << 'EOF'
-value1
-EOF
-playground topic produce -t functions-messages --nb-messages 1 --key "key2" << 'EOF'
-value2
-EOF
-playground topic produce -t functions-messages --nb-messages 1 --key "key3" << 'EOF'
-value3
+playground topic produce -t functions-test --nb-messages 3 --key "key1" << 'EOF'
+value%g
 EOF
 
 log "Creating Google Cloud Functions Sink connector"

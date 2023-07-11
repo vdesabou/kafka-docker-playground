@@ -99,35 +99,16 @@ playground connector create-or-update --connector azure-datalake-gen2-sink << EO
 EOF
 
 
-log "Sending messages to topic datalake_topic"
-playground topic produce -t datalake_topic --nb-messages 10 << 'EOF'
+playground topic produce -t datalake_topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
-    "type": "record",
-    "namespace": "com.github.vdesabou",
-    "name": "Customer",
-    "version": "1",
-    "fields": [
-        {
-            "name": "count",
-            "type": "long",
-            "doc": "count"
-        },
-        {
-            "name": "first_name",
-            "type": "string",
-            "doc": "First Name of Customer"
-        },
-        {
-            "name": "last_name",
-            "type": "string",
-            "doc": "Last Name of Customer"
-        },
-        {
-            "name": "address",
-            "type": "string",
-            "doc": "Address of Customer"
-        }
-    ]
+  "type": "record",
+  "name": "myrecord",
+  "fields": [
+    {
+      "name": "f1",
+      "type": "string"
+    }
+  ]
 }
 EOF
 

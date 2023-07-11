@@ -102,7 +102,18 @@ EOF
 Sending messages to topic `FOO`
 
 ```bash
-$ seq -f "{\"F1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic FOO --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"F1","type":"string"}]}'
+$ playground topic produce -t FOO --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+{
+  "type": "record",
+  "name": "myrecord",
+  "fields": [
+    {
+      "name": "f1",
+      "type": "string"
+    }
+  ]
+}
+EOF
 ```
 
 Creating JDBC Snowflake Sink connector

@@ -20,65 +20,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 log "Sending messages to topic mytable"
 playground topic produce -t mytable --nb-messages 3 << 'EOF'
-{
-    "type": "record",
-    "namespace": "com.github.vdesabou",
-    "name": "Customer",
-    "version": "1",
-    "fields": [
-        {
-            "name": "count",
-            "type": "long",
-            "doc": "count"
-        },
-        {
-            "name": "first_name",
-            "type": "string",
-            "doc": "First Name of Customer"
-        },
-        {
-            "name": "last_name",
-            "type": "string",
-            "doc": "Last Name of Customer"
-        },
-        {
-            "name": "address",
-            "type": "string",
-            "doc": "Address of Customer"
-        }
-    ]
-}
-EOF
-
-playground topic produce -t mytable --nb-messages 3 --forced-value = '{"count":4,"first_name":"value1","last_name":"Jasmin","address":"Robbie"}' << 'EOF'
-{
-    "type": "record",
-    "namespace": "com.github.vdesabou",
-    "name": "Customer",
-    "version": "1",
-    "fields": [
-        {
-            "name": "count",
-            "type": "long",
-            "doc": "count"
-        },
-        {
-            "name": "first_name",
-            "type": "string",
-            "doc": "First Name of Customer"
-        },
-        {
-            "name": "last_name",
-            "type": "string",
-            "doc": "Last Name of Customer"
-        },
-        {
-            "name": "address",
-            "type": "string",
-            "doc": "Address of Customer"
-        }
-    ]
-}
+value%g
 EOF
 
 log "Creating Vertica sink connector"

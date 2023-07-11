@@ -46,8 +46,18 @@ log "Creating Dataproc cluster $CLUSTER_NAME"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud dataproc clusters create "$CLUSTER_NAME" --region us-east1 --project "$GCP_PROJECT"
 
 log "Sending messages to topic test_dataproc"
-seq -f "{\"f1\": \"value%g-`date`\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_dataproc --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
-
+playground topic produce -t test_dataproc --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+{
+  "type": "record",
+  "name": "myrecord",
+  "fields": [
+    {
+      "name": "f1",
+      "type": "string"
+    }
+  ]
+}
+EOF
 
 log "Creating GCP Dataproc Sink connector"
 playground connector create-or-update --connector gcp-dataproc-sink << EOF

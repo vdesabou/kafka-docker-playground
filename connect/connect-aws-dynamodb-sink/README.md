@@ -43,10 +43,21 @@ $ playground run -f dynamodb-sink-with-custom-basic-aws-credentials-provider<tab
 
 ## Details of what the script is doing
 
-Sending messages to topic topic1
+Sending messages to topic mytable
 
 ```bash
-$ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic topic1 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+$ playground topic produce -t mytable --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+{
+  "type": "record",
+  "name": "myrecord",
+  "fields": [
+    {
+      "name": "f1",
+      "type": "string"
+    }
+  ]
+}
+EOF
 ```
 
 Creating AWS DynamoDB Sink connector
@@ -57,7 +68,7 @@ $ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.aws.dynamodb.DynamoDbSinkConnector",
                     "tasks.max": "1",
-                    "topics": "topic1",
+                    "topics": "mytable",
                     "aws.dynamodb.region": "$AWS_REGION",
                     "aws.dynamodb.endpoint": "$DYNAMODB_ENDPOINT",
                     "confluent.license": "",
@@ -70,7 +81,7 @@ $ curl -X PUT \
 Verify data is in DynamoDB
 
 ```bash
-$ aws dynamodb scan --table-name topic1 --region $AWS_REGION
+$ aws dynamodb scan --table-name mytable --region $AWS_REGION
 ```
 
 Results:

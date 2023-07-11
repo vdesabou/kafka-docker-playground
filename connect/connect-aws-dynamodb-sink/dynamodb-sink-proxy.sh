@@ -48,33 +48,43 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.proxy.yml"
 
-log "Sending messages to topic topic1"
-seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic topic1 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
-
+log "Sending messages to topic mytable"
+playground topic produce -t mytable --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+{
+  "type": "record",
+  "name": "myrecord",
+  "fields": [
+    {
+      "name": "f1",
+      "type": "string"
+    }
+  ]
+}
+EOF
 
 DYNAMODB_ENDPOINT="https://dynamodb.$AWS_REGION.amazonaws.com"
 
 log "Creating AWS DynamoDB Sink connector"
 playground connector create-or-update --connector dynamodb-sink << EOF
 {
-               "connector.class": "io.confluent.connect.aws.dynamodb.DynamoDbSinkConnector",
-               "tasks.max": "1",
-               "topics": "topic1",
-               "aws.dynamodb.region": "$AWS_REGION",
-               "aws.dynamodb.endpoint": "$DYNAMODB_ENDPOINT",
-               "aws.dynamodb.proxy.url": "https://nginx-proxy:8888",
-               "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
-               "aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+    "connector.class": "io.confluent.connect.aws.dynamodb.DynamoDbSinkConnector",
+    "tasks.max": "1",
+    "topics": "mytable",
+    "aws.dynamodb.region": "$AWS_REGION",
+    "aws.dynamodb.endpoint": "$DYNAMODB_ENDPOINT",
+    "aws.dynamodb.proxy.url": "https://nginx-proxy:8888",
+    "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
+    "aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1"
+}
 EOF
 
 log "Sleeping 120 seconds, waiting for table to be created"
 sleep 120
 
 log "Verify data is in DynamoDB"
-aws dynamodb scan --table-name topic1 --region $AWS_REGION  > /tmp/result.log  2>&1
+aws dynamodb scan --table-name mytable --region $AWS_REGION  > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "value1" /tmp/result.log
