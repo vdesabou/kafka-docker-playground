@@ -5,7 +5,7 @@ nb_partitions="${args[--nb-partitions]}"
 schema="${args[--input]}"
 key="${args[--key]}"
 headers="${args[--headers]}"
-force_value="${args[--forced-value]}"
+forced_value="${args[--forced-value]}"
 generate_only="${args[--generate-only]}"
 tombstone="${args[--tombstone]}"
 
@@ -162,10 +162,10 @@ else
 fi
 input_file=""
 
-if [[ -n "$force_value" ]]
+if [[ -n "$forced_value" ]]
 then
-    log "☢️ --force-value is set"
-    echo "$force_value" > $tmp_dir/out.json
+    log "☢️ --forced-value is set"
+    echo "$forced_value" > $tmp_dir/out.json
 else
     SECONDS=0
     case "${schema_type}" in
@@ -252,9 +252,9 @@ then
 fi
 
 value_str=""
-if [[ -n "$force_value" ]]
+if [[ -n "$forced_value" ]]
 then
-    value_str=" based on --force-value "
+    value_str=" based on --forced-value "
 fi
 
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
