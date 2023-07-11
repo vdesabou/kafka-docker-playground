@@ -78,10 +78,14 @@ log "Functions URL is $FUNCTIONS_URL"
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending messages to topic functions-test"
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic functions-test --property parse.key=true --property key.separator=, << EOF
-key1,value1
-key2,value2
-key3,value3
+playground topic produce -t functions-test --nb-messages 1 --key "key1" << 'EOF'
+value1
+EOF
+playground topic produce -t functions-test --nb-messages 1 --key "key2" << 'EOF'
+value2
+EOF
+playground topic produce -t functions-test --nb-messages 1 --key "key3" << 'EOF'
+value3
 EOF
 
 log "Creating Azure Functions Sink connector"

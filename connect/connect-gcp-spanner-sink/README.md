@@ -53,11 +53,46 @@ $ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud span
 Sending messages to topic `products`:
 
 ```bash
-$ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic products --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"name","type":"string"},
-{"name":"price", "type": "float"}, {"name":"quantity", "type": "int"}]}' << EOF
-{"name": "scissors", "price": 2.75, "quantity": 3}
-{"name": "tape", "price": 0.99, "quantity": 10}
-{"name": "notebooks", "price": 1.99, "quantity": 5}
+$ playground topic produce -t products --nb-messages 2 << 'EOF'
+{
+  "type": "record",
+  "name": "myrecord",
+  "fields": [
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "price",
+      "type": "float"
+    },
+    {
+      "name": "quantity",
+      "type": "int"
+    }
+  ]
+}
+EOF
+
+playground topic produce -t products --nb-messages 1 --forced-value '{"name": "notebooks", "price": 1.99, "quantity": 5}' << 'EOF'
+{
+  "type": "record",
+  "name": "myrecord",
+  "fields": [
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "price",
+      "type": "float"
+    },
+    {
+      "name": "quantity",
+      "type": "int"
+    }
+  ]
+}
 EOF
 ```
 
