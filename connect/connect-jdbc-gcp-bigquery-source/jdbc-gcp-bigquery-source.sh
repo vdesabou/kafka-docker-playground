@@ -57,10 +57,10 @@ log "Create dataset $GCP_PROJECT.$DATASET"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" mk --dataset --description "used by playground" "$DATASET"
 
 log "Create table $GCP_PROJECT:$DATASET.customers"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq  mk --table --description "customers table" $GCP_PROJECT:$DATASET.customers id:INTEGER,first_name:STRING,last_name:STRING,email:STRING
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq  mk --table --description "customers table" $GCP_PROJECT:$DATASET.customers id:INTEGER,first_name:STRING,last_name:STRING,email:STRING,updated_at:TIMESTAMP
 
 log "Insert a row"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" query --nouse_legacy_sql "INSERT INTO $DATASET.customers(first_name,last_name,email) VALUES ('Sally','Thomas','sally.thomas@acme.com');" > /tmp/result.log  2>&1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" query --nouse_legacy_sql "INSERT INTO $DATASET.customers(first_name,last_name,email,updated_at) VALUES ('Sally','Thomas','sally.thomas@acme.com', CURRENT_TIMESTAMP());" > /tmp/result.log  2>&1
 cat /tmp/result.log
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
@@ -80,5 +80,25 @@ playground connector create-or-update --connector jdbc-gcp-bigquery-source << EO
     "validate.non.null": "false"
 }
 EOF
+
+#     "mode": "timestamp",
+#     "timestamp.column.name": "updated_at",
+# [2023-07-11 15:11:49,341] INFO [jdbc-gcp-bigquery-source|task-0] Begin using SQL query: SELECT * FROM `vincent-de-saboulin-lab`.`pgvsaboulinds740`.`customers` WHERE `vincent-de-saboulin-lab`.`pgvsaboulinds740`.`customers`.`updated_at` > ? AND `vincent-de-saboulin-lab`.`pgvsaboulinds740`.`customers`.`updated_at` < ? ORDER BY `vincent-de-saboulin-lab`.`pgvsaboulinds740`.`customers`.`updated_at` ASC (io.confluent.connect.jdbc.source.TableQuerier:182)
+# [2023-07-11 15:11:49,822] ERROR [jdbc-gcp-bigquery-source|task-0] SQL exception while running query for table: TimestampTableQuerier{table="vincent-de-saboulin-lab"."pgvsaboulinds740"."customers", query='null', topicPrefix='gcp-', timestampColumns=[updated_at]}, java.sql.SQLException: [Simba][BigQueryJDBCDriver](100032) Error executing query job. Message: 400 Bad Request
+# POST https://bigquery.googleapis.com/bigquery/v2/projects/vincent-de-saboulin-lab/jobs
+# {
+#   "code": 400,
+#   "errors": [
+#     {
+#       "domain": "global",
+#       "location": "q",
+#       "locationType": "parameter",
+#       "message": "Unrecognized name: `vincent-de-saboulin-lab` at [1:78]",
+#       "reason": "invalidQuery"
+#     }
+#   ],
+#   "message": "Unrecognized name: `vincent-de-saboulin-lab` at [1:78]",
+#   "status": "INVALID_ARGUMENT"
+# }. Attempting retry 1 of -1 attempts. (io.confluent.connect.jdbc.source.JdbcSourceTask:455)
 
 playground topic consume
