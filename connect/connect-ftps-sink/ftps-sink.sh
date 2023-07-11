@@ -22,30 +22,30 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 log "Creating JSON file with schema FTPS Sink connector"
 playground connector create-or-update --connector ftps-sink << EOF
 {
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.ftps.FtpsSinkConnector",
-               "ftps.working.dir": "/",
-               "ftps.username":"bob",
-               "ftps.password":"test",
-               "ftps.host":"ftps-server",
-               "ftps.port":"220",
-               "ftps.security.mode": "EXPLICIT",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "ftps.ssl.truststore.location": "/etc/kafka/secrets/kafka.ftps-server.truststore.jks",
-               "ftps.ssl.truststore.password": "confluent",
-               "ftps.ssl.keystore.location": "/etc/kafka/secrets/kafka.ftps-server.keystore.jks",
-               "ftps.ssl.key.password": "confluent",
-               "ftps.ssl.keystore.password": "confluent",
-               "topics": "test_ftps_sink",
-               "key.converter": "io.confluent.connect.avro.AvroConverter",
-               "key.converter.schema.registry.url": "http://schema-registry:8081",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "format.class": "io.confluent.connect.ftps.sink.format.avro.AvroFormat",
-               "flush.size": "1"
-          }
+     "tasks.max": "1",
+     "connector.class": "io.confluent.connect.ftps.FtpsSinkConnector",
+     "ftps.working.dir": "/",
+     "ftps.username":"bob",
+     "ftps.password":"test",
+     "ftps.host":"ftps-server",
+     "ftps.port":"220",
+     "ftps.security.mode": "EXPLICIT",
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1",
+     "ftps.ssl.truststore.location": "/etc/kafka/secrets/kafka.ftps-server.truststore.jks",
+     "ftps.ssl.truststore.password": "confluent",
+     "ftps.ssl.keystore.location": "/etc/kafka/secrets/kafka.ftps-server.keystore.jks",
+     "ftps.ssl.key.password": "confluent",
+     "ftps.ssl.keystore.password": "confluent",
+     "topics": "test_ftps_sink",
+     "key.converter": "io.confluent.connect.avro.AvroConverter",
+     "key.converter.schema.registry.url": "http://schema-registry:8081",
+     "value.converter": "io.confluent.connect.avro.AvroConverter",
+     "value.converter.schema.registry.url": "http://schema-registry:8081",
+     "format.class": "io.confluent.connect.ftps.sink.format.avro.AvroFormat",
+     "flush.size": "1"
+}
 EOF
 
 log "Sending messages to topic test_ftps_sink"
