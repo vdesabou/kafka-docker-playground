@@ -92,7 +92,7 @@ $ curl -X PUT \
 Write data to topic hotels:
 
 ```bash
-$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic hotels << EOF
+$ playground topic produce -t hotels --nb-messages 1 << 'EOF'
 {"id": "h1", "HotelName": "Marriott", "Description": "Marriott description"}
 {"id": "h2", "HotelName": "HolidayInn", "Description": "HolidayInn description"}
 {"id": "h3", "HotelName": "Motel8", "Description": "Motel8 description"}
