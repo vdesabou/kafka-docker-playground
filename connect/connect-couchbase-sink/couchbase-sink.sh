@@ -31,21 +31,21 @@ docker exec json-producer bash -c "java -jar json-producer-1.0.0-SNAPSHOT-jar-wi
 log "Creating Couchbase sink connector"
 playground connector create-or-update --connector couchbase-sink << EOF
 {
-               "connector.class": "com.couchbase.connect.kafka.CouchbaseSinkConnector",
-               "tasks.max": "2",
-               "topics": "couchbase-sink-example",
-               "couchbase.seed.nodes": "couchbase",
-               "couchbase.bootstrap.timeout": "2000ms",
-               "couchbase.bucket": "travel-data",
-               "couchbase.username": "Administrator",
-               "couchbase.password": "password",
-               "couchbase.persist.to": "NONE",
-               "couchbase.replicate.to": "NONE",
-               "couchbase.document.id": "/airport",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-               "value.converter.schemas.enable": "false"
-          }
+     "connector.class": "com.couchbase.connect.kafka.CouchbaseSinkConnector",
+     "tasks.max": "2",
+     "topics": "couchbase-sink-example",
+     "couchbase.seed.nodes": "couchbase",
+     "couchbase.bootstrap.timeout": "2000ms",
+     "couchbase.bucket": "travel-data",
+     "couchbase.username": "Administrator",
+     "couchbase.password": "password",
+     "couchbase.persist.to": "NONE",
+     "couchbase.replicate.to": "NONE",
+     "couchbase.document.id": "/airport",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "value.converter.schemas.enable": "false"
+}
 EOF
 
 sleep 10

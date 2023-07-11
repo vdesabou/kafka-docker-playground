@@ -9,47 +9,58 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 log "Creating DataDiode Source connector"
 playground connector create-or-update --connector datadiode-source << EOF
 {
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.diode.source.DataDiodeSourceConnector",
-               "kafka.topic.prefix": "dest_",
-               "key.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
-               "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
-               "header.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
-               "diode.port": "3456",
-               "diode.encryption.password": "supersecretpassword",
-               "diode.encryption.salt": "secretsalt",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "errors.tolerance": "all",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
-          }
+     "tasks.max": "1",
+     "connector.class": "io.confluent.connect.diode.source.DataDiodeSourceConnector",
+     "kafka.topic.prefix": "dest_",
+     "key.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
+     "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
+     "header.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
+     "diode.port": "3456",
+     "diode.encryption.password": "supersecretpassword",
+     "diode.encryption.salt": "secretsalt",
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1",
+     "errors.tolerance": "all",
+     "errors.log.enable": "true",
+     "errors.log.include.messages": "true"
+}
 EOF
 
 log "Creating DataDiode Sink connector"
 playground connector create-or-update --connector datadiode-sink << EOF
 {
-               "connector.class": "io.confluent.connect.diode.sink.DataDiodeSinkConnector",
-               "tasks.max": "1",
-               "topics": "diode",
-               "key.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
-               "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
-               "header.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
-               "diode.host": "connect",
-               "diode.port": "3456",
-               "diode.encryption.password": "supersecretpassword",
-               "diode.encryption.salt": "secretsalt",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+     "connector.class": "io.confluent.connect.diode.sink.DataDiodeSinkConnector",
+     "tasks.max": "1",
+     "topics": "diode",
+     "key.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
+     "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
+     "header.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
+     "diode.host": "connect",
+     "diode.port": "3456",
+     "diode.encryption.password": "supersecretpassword",
+     "diode.encryption.salt": "secretsalt",
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 10
 
 log "Send message to diode topic"
-seq -f "This is a message %g" 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic diode
+playground topic produce -t diode --nb-messages 10 << 'EOF'
+This is a message 1
+This is a message 2
+This is a message 3
+This is a message 4
+This is a message 5
+This is a message 6
+This is a message 7
+This is a message 8
+This is a message 9
+This is a message 10
+EOF
 
 sleep 5
 
