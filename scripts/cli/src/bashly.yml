@@ -1093,10 +1093,10 @@ commands:
         help: |-
           🗝️ Key to use. If not set, no key is used.
 
-          If it is a number, it will be used as starting point and incremented for each record. 
+          If the key contain a number, it will be used as starting point and incremented for each record. 
           
-          Example: 1 will start with 1, then 2, etc..
-          Example: 10 will start with 10 then 11, etc..
+          Example: key1 will start with key1, then key1, etc..
+          Example: mykey-10-suffix will start with mykey-10-suffix then mykey-11-suffix, etc..
 
           Otherwise, the key will be same for all records.
           

@@ -2397,7 +2397,7 @@ playground_topic_produce_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--key KEY")"
-    printf "    🗝️ Key to use. If not set, no key is used.\n    \n    If it is a number, every record will use an incrementing number starting\n    from the value set.\n    \n    Example: 1 will start generate 1, then 2, etc..\n             10 will start at 10 then 11, etc..\n    \n    Otherwise, then the key will be same for all records.\n"
+    printf "    🗝️ Key to use. If not set, no key is used.\n    \n    If the key contain a number, it will be used as starting point and\n    incremented for each record.\n    \n    Example: key1 will start with key1, then key1, etc..\n    Example: mykey-10-suffix will start with mykey-10-suffix then\n    mykey-11-suffix, etc..\n    \n    Otherwise, the key will be same for all records.\n"
     echo
 
     # :flag.usage
@@ -10892,24 +10892,28 @@ playground_topic_produce_command() {
 
   if [[ -n "$key" ]]
   then
-      if [[ $key =~ ^[0-9]+$ ]]
-      then
-          log "🗝️ key is set with a number $key, it will be used as starting point"
-          while read line
-          do
-              echo "${key}|${line}" >> $tmp_dir/tempfile
-              let key=key+1
-          done < $output_file
+      if [[ $key =~ ^([^0-9]*)([0-9]+)([^0-9]*)$ ]]; then
+          prefix="${BASH_REMATCH[1]}"
+          number="${BASH_REMATCH[2]}"
+          suffix="${BASH_REMATCH[3]}"
 
-          mv $tmp_dir/tempfile $output_file
+          log "🗝️ key $key is set with a number $number, it will be used as starting point"
+          while read -r line
+          do
+              new_key="${prefix}${number}${suffix}"
+              echo "${new_key}|${line}" >> "$tmp_dir/tempfile"
+              number=$((number + 1))
+          done < "$output_file"
+
+          mv "$tmp_dir/tempfile" "$output_file"
       else
           log "🗝️ key is set with a string $key, it will be used for all records"
-          while read line
+          while read -r line
           do
-              echo "${key}|${line}" >> $tmp_dir/tempfile
-          done < $output_file
+          echo "${key}|${line}" >> "$tmp_dir/tempfile"
+          done < "$output_file"
 
-          mv $tmp_dir/tempfile $output_file
+          mv "$tmp_dir/tempfile" "$output_file"
       fi
   fi
 

@@ -305,24 +305,28 @@ fi
 
 if [[ -n "$key" ]]
 then
-    if [[ $key =~ ^[0-9]+$ ]]
-    then
-        log "🗝️ key is set with a number $key, it will be used as starting point"
-        while read line
+    if [[ $key =~ ^([^0-9]*)([0-9]+)([^0-9]*)$ ]]; then
+        prefix="${BASH_REMATCH[1]}"
+        number="${BASH_REMATCH[2]}"
+        suffix="${BASH_REMATCH[3]}"
+        
+        log "🗝️ key $key is set with a number $number, it will be used as starting point"
+        while read -r line
         do
-            echo "${key}|${line}" >> $tmp_dir/tempfile
-            let key=key+1
-        done < $output_file
+            new_key="${prefix}${number}${suffix}"
+            echo "${new_key}|${line}" >> "$tmp_dir/tempfile"
+            number=$((number + 1))
+        done < "$output_file"
 
-        mv $tmp_dir/tempfile $output_file
+        mv "$tmp_dir/tempfile" "$output_file"
     else
         log "🗝️ key is set with a string $key, it will be used for all records"
-        while read line
+        while read -r line
         do
-            echo "${key}|${line}" >> $tmp_dir/tempfile
-        done < $output_file
+        echo "${key}|${line}" >> "$tmp_dir/tempfile"
+        done < "$output_file"
 
-        mv $tmp_dir/tempfile $output_file
+        mv "$tmp_dir/tempfile" "$output_file"
     fi
 fi
 
