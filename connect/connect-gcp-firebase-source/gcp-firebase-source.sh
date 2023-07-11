@@ -44,17 +44,17 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 log "Creating GCP Firebase Source connector"
 playground connector create-or-update --connector firebase-source << EOF
 {
-               "connector.class" : "io.confluent.connect.firebase.FirebaseSourceConnector",
-               "tasks.max" : "1",
-               "gcp.firebase.credentials.path": "/tmp/keyfile.json",
-               "gcp.firebase.database.reference": "https://$GCP_PROJECT.firebaseio.com/musicBlog",
-               "gcp.firebase.snapshot":"true",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "errors.tolerance": "all",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
-          }
+     "connector.class" : "io.confluent.connect.firebase.FirebaseSourceConnector",
+     "tasks.max" : "1",
+     "gcp.firebase.credentials.path": "/tmp/keyfile.json",
+     "gcp.firebase.database.reference": "https://$GCP_PROJECT.firebaseio.com/musicBlog",
+     "gcp.firebase.snapshot":"true",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1",
+     "errors.tolerance": "all",
+     "errors.log.enable": "true",
+     "errors.log.include.messages": "true"
+}
 EOF
 
 sleep 10

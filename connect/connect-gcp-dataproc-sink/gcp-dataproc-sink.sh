@@ -52,18 +52,18 @@ seq -f "{\"f1\": \"value%g-`date`\"}" 10 | docker exec -i connect kafka-avro-con
 log "Creating GCP Dataproc Sink connector"
 playground connector create-or-update --connector gcp-dataproc-sink << EOF
 {
-               "connector.class": "io.confluent.connect.gcp.dataproc.DataprocSinkConnector",
-               "tasks.max" : "1",
-               "flush.size": "3",
-               "topics" : "test_dataproc",
-               "gcp.dataproc.projectId": "$GCP_PROJECT",
-               "gcp.dataproc.region": "us-east1",
-               "gcp.dataproc.cluster": "$CLUSTER_NAME",
-               "gcp.dataproc.credentials.path" : "/tmp/keyfile.json",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+    "connector.class": "io.confluent.connect.gcp.dataproc.DataprocSinkConnector",
+    "tasks.max" : "1",
+    "flush.size": "3",
+    "topics" : "test_dataproc",
+    "gcp.dataproc.projectId": "$GCP_PROJECT",
+    "gcp.dataproc.region": "us-east1",
+    "gcp.dataproc.cluster": "$CLUSTER_NAME",
+    "gcp.dataproc.credentials.path" : "/tmp/keyfile.json",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 10

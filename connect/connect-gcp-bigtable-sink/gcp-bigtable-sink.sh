@@ -46,30 +46,55 @@ log "Create a BigTable Instance and Database"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances create $INSTANCE --project $GCP_PROJECT --cluster $INSTANCE --cluster-zone=us-east1-c --display-name="playground-bigtable-instance" --instance-type=DEVELOPMENT
 
 log "Sending messages to topic stats"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic stats --property parse.key=true --property key.separator=, --property key.schema='{"type" : "string", "name" : "id"}' --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"users","type":{"name":"columnfamily","type":"record","fields":[{"name": "name", "type": "string"},{"name": "friends", "type": "string"}]}}]}' << EOF
-"simple-key-1", {"users": {"name":"Bob","friends": "1000"}}
-"simple-key-2", {"users": {"name":"Jess","friends": "10000"}}
-"simple-key-3", {"users": {"name":"John","friends": "10000"}}
+playground topic produce -t stats --nb-messages 1 --forced-value '{"users": {"name":"Bob","friends": "1000"}}' --key "simple-key-1" << 'EOF'
+{
+  "type": "record",
+  "name": "myrecord",
+  "fields": [
+    {
+      "name": "users",
+      "type": {
+        "name": "columnfamily",
+        "type": "record",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "friends",
+            "type": "string"
+          }
+        ]
+      }
+    }
+  ]
+}
+EOF
+playground topic produce -t stats --nb-messages 1 --forced-value '{"users": {"name":"Jess","friends": "10000"}}' --key "simple-key-2" << 'EOF'
+{"type":"record","name":"myrecord","fields":[{"name":"users","type":{"name":"columnfamily","type":"record","fields":[{"name":"name","type":"string"},{"name":"friends","type":"string"}]}}]}
+EOF
+playground topic produce -t stats --nb-messages 1 --forced-value '{"users": {"name":"John","friends": "10000"}}' --key "simple-key-3" << 'EOF'
+{"type":"record","name":"myrecord","fields":[{"name":"users","type":{"name":"columnfamily","type":"record","fields":[{"name":"name","type":"string"},{"name":"friends","type":"string"}]}}]}
 EOF
 
-
-log "Creating GCP BigTbale Sink connector"
+log "Creating GCP BigTable Sink connector"
 playground connector create-or-update --connector gcp-bigtable-sink << EOF
 {
-               "connector.class": "io.confluent.connect.gcp.bigtable.BigtableSinkConnector",
-               "tasks.max" : "1",
-               "topics" : "stats",
-               "auto.create" : "true",
-               "gcp.bigtable.credentials.path": "/tmp/keyfile.json",
-               "gcp.bigtable.instance.id": "$INSTANCE",
-               "gcp.bigtable.project.id": "$GCP_PROJECT",
-               "auto.create.tables": "true",
-               "auto.create.column.families": "true",
-               "table.name.format" : "kafka_\${topic}",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+    "connector.class": "io.confluent.connect.gcp.bigtable.BigtableSinkConnector",
+    "tasks.max" : "1",
+    "topics" : "stats",
+    "auto.create" : "true",
+    "gcp.bigtable.credentials.path": "/tmp/keyfile.json",
+    "gcp.bigtable.instance.id": "$INSTANCE",
+    "gcp.bigtable.project.id": "$GCP_PROJECT",
+    "auto.create.tables": "true",
+    "auto.create.column.families": "true",
+    "table.name.format" : "kafka_\${topic}",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 30

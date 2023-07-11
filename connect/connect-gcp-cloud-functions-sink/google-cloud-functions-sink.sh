@@ -32,36 +32,40 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 
 log "Produce test data to the functions-messages topic in Kafka"
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic functions-messages --property parse.key=true --property key.separator=, << EOF
-key1,value1
-key2,value2
-key3,value3
+playground topic produce -t functions-messages --nb-messages 1 --key "key1" << 'EOF'
+value1
+EOF
+playground topic produce -t functions-messages --nb-messages 1 --key "key2" << 'EOF'
+value2
+EOF
+playground topic produce -t functions-messages --nb-messages 1 --key "key3" << 'EOF'
+value3
 EOF
 
 log "Creating Google Cloud Functions Sink connector"
 playground connector create-or-update --connector gcp-functions << EOF
 {
-               "connector.class": "io.confluent.connect.gcp.functions.GoogleCloudFunctionsSinkConnector",
-               "tasks.max" : "1",
-               "topics" : "functions-messages",
-               "key.converter":"org.apache.kafka.connect.storage.StringConverter",
-               "value.converter":"org.apache.kafka.connect.storage.StringConverter",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor":1,
-               "function.name": "$FUNCTION",
-               "project.id": "$GCP_PROJECT",
-               "region": "$REGION",
-               "gcf.credentials.path": "/tmp/keyfile.json",
-               "reporter.bootstrap.servers": "broker:9092",
-               "reporter.error.topic.name": "test-error",
-               "reporter.error.topic.replication.factor": 1,
-               "reporter.error.topic.key.format": "string",
-               "reporter.error.topic.value.format": "string",
-               "reporter.result.topic.name": "test-result",
-               "reporter.result.topic.key.format": "string",
-               "reporter.result.topic.value.format": "string",
-               "reporter.result.topic.replication.factor": 1
-          }
+    "connector.class": "io.confluent.connect.gcp.functions.GoogleCloudFunctionsSinkConnector",
+    "tasks.max" : "1",
+    "topics" : "functions-messages",
+    "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+    "value.converter":"org.apache.kafka.connect.storage.StringConverter",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor":1,
+    "function.name": "$FUNCTION",
+    "project.id": "$GCP_PROJECT",
+    "region": "$REGION",
+    "gcf.credentials.path": "/tmp/keyfile.json",
+    "reporter.bootstrap.servers": "broker:9092",
+    "reporter.error.topic.name": "test-error",
+    "reporter.error.topic.replication.factor": 1,
+    "reporter.error.topic.key.format": "string",
+    "reporter.error.topic.value.format": "string",
+    "reporter.result.topic.name": "test-result",
+    "reporter.result.topic.key.format": "string",
+    "reporter.result.topic.value.format": "string",
+    "reporter.result.topic.replication.factor": 1
+}
 EOF
 
 sleep 10

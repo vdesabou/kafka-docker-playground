@@ -11,17 +11,17 @@ docker exec -i connect bash -c "mkdir -p /tmp/kafka-connect/examples/ && curl -s
 log "Creating FileStream Source connector"
 playground connector create-or-update --connector filestream-source << EOF
 {
-               "tasks.max": "1",
-               "connector.class": "org.apache.kafka.connect.file.FileStreamSourceConnector",
-               "topic": "filestream",
-               "file": "/tmp/kafka-connect/examples/file.json",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-               "value.converter.schemas.enable": "false",
-               "errors.tolerance": "all",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
-          }
+     "tasks.max": "1",
+     "connector.class": "org.apache.kafka.connect.file.FileStreamSourceConnector",
+     "topic": "filestream",
+     "file": "/tmp/kafka-connect/examples/file.json",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "value.converter.schemas.enable": "false",
+     "errors.tolerance": "all",
+     "errors.log.enable": "true",
+     "errors.log.include.messages": "true"
+}
 EOF
 
 

@@ -56,7 +56,7 @@ playground connector create-or-update --connector gcp-bigquery-sink << EOF
 {
     "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
     "tasks.max" : "1",
-    "topics" : "kcbq-quickstart1",
+    "topics" : "products",
     "sanitizeTopics" : "true",
     "autoCreateTables" : "true",
     "defaultDataset" : "$DATASET",
@@ -66,16 +66,56 @@ playground connector create-or-update --connector gcp-bigquery-sink << EOF
 EOF
 
 
-log "Sending messages to topic kcbq-quickstart1"
-seq -f "{\"f1\": \"value%g-`date`\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic kcbq-quickstart1 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+log "Sending messages to topic products"
+playground topic produce -t products --nb-messages 2 << 'EOF'
+{
+  "type": "record",
+  "name": "myrecord",
+  "fields": [
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "price",
+      "type": "float"
+    },
+    {
+      "name": "quantity",
+      "type": "int"
+    }
+  ]
+}
+EOF
+
+playground topic produce -t products --nb-messages 1 --forced-value '{"name": "notebooks", "price": 1.99, "quantity": 5}' << 'EOF'
+{
+  "type": "record",
+  "name": "myrecord",
+  "fields": [
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "price",
+      "type": "float"
+    },
+    {
+      "name": "quantity",
+      "type": "int"
+    }
+  ]
+}
+EOF
 
 log "Sleeping 125 seconds"
 sleep 125
 
 log "Verify data is in GCP BigQuery:"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" query "SELECT * FROM $DATASET.kcbq_quickstart1;" > /tmp/result.log  2>&1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" query "SELECT * FROM $DATASET.products;" > /tmp/result.log  2>&1
 cat /tmp/result.log
-grep "value1" /tmp/result.log
+grep "notebooks" /tmp/result.log
 
 # log "Drop dataset $DATASET"
 # docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" rm -r -f -d "$DATASET"

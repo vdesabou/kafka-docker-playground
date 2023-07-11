@@ -42,19 +42,19 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 log "Creating GCP Firebase Sink connector"
 playground connector create-or-update --connector firebase-sink << EOF
 {
-               "connector.class" : "io.confluent.connect.firebase.FirebaseSinkConnector",
-               "tasks.max" : "1",
-               "topics":"artists,songs",
-               "gcp.firebase.credentials.path": "/tmp/keyfile.json",
-               "gcp.firebase.database.reference": "https://$GCP_PROJECT.firebaseio.com/musicBlog",
-               "insert.mode":"update",
-               "key.converter" : "io.confluent.connect.avro.AvroConverter",
-               "key.converter.schema.registry.url":"http://schema-registry:8081",
-               "value.converter" : "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url":"http://schema-registry:8081",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+     "connector.class" : "io.confluent.connect.firebase.FirebaseSinkConnector",
+     "tasks.max" : "1",
+     "topics":"artists,songs",
+     "gcp.firebase.credentials.path": "/tmp/keyfile.json",
+     "gcp.firebase.database.reference": "https://$GCP_PROJECT.firebaseio.com/musicBlog",
+     "insert.mode":"update",
+     "key.converter" : "io.confluent.connect.avro.AvroConverter",
+     "key.converter.schema.registry.url":"http://schema-registry:8081",
+     "value.converter" : "io.confluent.connect.avro.AvroConverter",
+     "value.converter.schema.registry.url":"http://schema-registry:8081",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 
