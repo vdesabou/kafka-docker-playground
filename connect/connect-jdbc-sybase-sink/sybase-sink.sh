@@ -9,14 +9,14 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 log "Create JDBC Sybase sink connector"
 playground connector create-or-update --connector sybase-sink << EOF
 {
-               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-               "tasks.max": "1",
-               "connection.url": "jdbc:jtds:sybase://sybase:5000",
-               "connection.user": "sa",
-               "connection.password": "password",
-               "topics": "orders",
-               "auto.create": "true"
-          }
+  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+  "tasks.max": "1",
+  "connection.url": "jdbc:jtds:sybase://sybase:5000",
+  "connection.user": "sa",
+  "connection.password": "password",
+  "topics": "orders",
+  "auto.create": "true"
+}
 EOF
 
 log "Sending messages to topic orders"

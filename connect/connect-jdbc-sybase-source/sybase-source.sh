@@ -25,19 +25,19 @@ EOF
 log "Creating JDBC Sybase source connector"
 playground connector create-or-update --connector jdbc-sybase-source << EOF
 {
-                "connector.class" : "io.confluent.connect.jdbc.JdbcSourceConnector",
-                "tasks.max" : "1",
-                "connection.url": "jdbc:jtds:sybase://sybase:5000/testDB",
-                "connection.user": "sa",
-                "connection.password": "password",
-                "table.whitelist": "customers",
-                "mode": "incrementing",
-                "incrementing.column.name": "id",
-                "topic.prefix": "sybase-",
-                "validate.non.null":"false",
-                "errors.log.enable": "true",
-                "errors.log.include.messages": "true"
-          }
+      "connector.class" : "io.confluent.connect.jdbc.JdbcSourceConnector",
+      "tasks.max" : "1",
+      "connection.url": "jdbc:jtds:sybase://sybase:5000/testDB",
+      "connection.user": "sa",
+      "connection.password": "password",
+      "table.whitelist": "customers",
+      "mode": "incrementing",
+      "incrementing.column.name": "id",
+      "topic.prefix": "sybase-",
+      "validate.non.null":"false",
+      "errors.log.enable": "true",
+      "errors.log.include.messages": "true"
+}
 EOF
 
 sleep 5

@@ -150,18 +150,18 @@ CONNECTION_URL="jdbc:snowflake://$SNOWFLAKE_ACCOUNT_NAME.snowflakecomputing.com/
 log "Creating JDBC Snowflake Source connector"
 playground connector create-or-update --connector jdbc-snowflake-source << EOF
 {
-               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-               "tasks.max": "1",
-               "connection.url": "$CONNECTION_URL",
-               "table.whitelist": "FOO",
-               "mode": "timestamp+incrementing",
-               "timestamp.column.name": "UPDATE_TS",
-               "incrementing.column.name": "ID",
-               "topic.prefix": "snowflake-",
-               "validate.non.null":"false",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
-          }
+     "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+     "tasks.max": "1",
+     "connection.url": "$CONNECTION_URL",
+     "table.whitelist": "FOO",
+     "mode": "timestamp+incrementing",
+     "timestamp.column.name": "UPDATE_TS",
+     "incrementing.column.name": "ID",
+     "topic.prefix": "snowflake-",
+     "validate.non.null":"false",
+     "errors.log.enable": "true",
+     "errors.log.include.messages": "true"
+}
 EOF
 
 sleep 15

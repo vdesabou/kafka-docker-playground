@@ -36,17 +36,17 @@ EOF
 log "Creating JDBC CockroachDB source connector"
 playground connector create-or-update --connector cockroachdb-source << EOF
 {
-               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-               "tasks.max": "1",
-               "connection.url": "jdbc:postgresql://cockroachdb:26257/defaultdb?user=root&sslmode=disable",
-               "table.whitelist": "drivers",
-               "mode": "incrementing",
-               "incrementing.column.name": "rownum",
-               "topic.prefix": "cockroachdb-",
-               "validate.non.null":"false",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
-          }
+    "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+    "tasks.max": "1",
+    "connection.url": "jdbc:postgresql://cockroachdb:26257/defaultdb?user=root&sslmode=disable",
+    "table.whitelist": "drivers",
+    "mode": "incrementing",
+    "incrementing.column.name": "rownum",
+    "topic.prefix": "cockroachdb-",
+    "validate.non.null":"false",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
+}
 EOF
 
 

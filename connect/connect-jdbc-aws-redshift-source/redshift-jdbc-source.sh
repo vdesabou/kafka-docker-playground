@@ -108,18 +108,18 @@ EOF
 log "Creating JDBC AWS Redshift source connector"
 playground connector create-or-update --connector redshift-jdbc-source << EOF
 {
-               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-               "tasks.max": "1",
-               "connection.url": "jdbc:postgresql://$CLUSTER:$PORT/dev?user=masteruser&password=myPassword1&ssl=false",
-               "table.whitelist": "customers",
-               "mode": "timestamp+incrementing",
-               "timestamp.column.name": "update_ts",
-               "incrementing.column.name": "id",
-               "topic.prefix": "redshift-",
-               "validate.non.null":"false",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
-          }
+     "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+     "tasks.max": "1",
+     "connection.url": "jdbc:postgresql://$CLUSTER:$PORT/dev?user=masteruser&password=myPassword1&ssl=false",
+     "table.whitelist": "customers",
+     "mode": "timestamp+incrementing",
+     "timestamp.column.name": "update_ts",
+     "incrementing.column.name": "id",
+     "topic.prefix": "redshift-",
+     "validate.non.null":"false",
+     "errors.log.enable": "true",
+     "errors.log.include.messages": "true"
+}
 EOF
 
 
