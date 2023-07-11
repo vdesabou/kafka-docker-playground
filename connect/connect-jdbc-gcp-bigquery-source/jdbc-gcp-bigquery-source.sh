@@ -10,7 +10,7 @@ then
      exit 1
 fi
 
-if [ ! -f ${DIR}/GoogleBigQueryJDBC42 ]
+if [ ! -f ${PWD}/GoogleBigQueryJDBC42/GoogleBigQueryJDBC42.jar ]
 then
     mkdir -p GoogleBigQueryJDBC42
     cd GoogleBigQueryJDBC42
@@ -59,7 +59,7 @@ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_
 log "Create table $GCP_PROJECT:$DATASET.customers"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq  mk --table --description "customers table" $GCP_PROJECT:$DATASET.customers id:INTEGER,first_name:STRING,last_name:STRING,email:STRING
 
-log "insert a row"
+log "Insert a row"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" query --nouse_legacy_sql "INSERT INTO $DATASET.customers(first_name,last_name,email) VALUES ('Sally','Thomas','sally.thomas@acme.com');" > /tmp/result.log  2>&1
 cat /tmp/result.log
 
@@ -71,16 +71,14 @@ playground connector create-or-update --connector jdbc-gcp-bigquery-source << EO
 {
     "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
     "tasks.max": "1",
-    "connection.url": "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;ProjectId=$GCP_PROJECT;OAuthType=0;OAuthServiceAcctEmail=$SERVICE_ACCOUNT_EMAIL;OAuthPvtKeyPath=/tmp/keyfile.json;DefaultDataset=$DATASET;",
+    "connection.url": "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;ProjectId=$GCP_PROJECT;OAuthType=0;OAuthServiceAcctEmail=$SERVICE_ACCOUNT_EMAIL;OAuthPvtKeyPath=/tmp/keyfile.json;DefaultDataset=$DATASET;IgnoreTransactions=1;",
     "table.whitelist": "customers",
     "mode": "bulk",
-    "topic.prefix": "gcp-customers",
-    "validate.non.null":"false",
+    "topic.prefix": "gcp-",
     "errors.log.enable": "true",
-    "errors.log.include.messages": "true"
+    "errors.log.include.messages": "true",
+    "validate.non.null": "false"
 }
 EOF
-
-# [2023-07-11 14:30:12,291] ERROR [jdbc-gcp-bigquery-source|task-0] SQL exception while running query for table: BulkTableQuerier{table='"vincent-de-saboulin-lab"."pgvsaboulinds740"."customers"', query='null', topicPrefix='gcp-customers'}, java.sql.SQLException: [Simba][BigQueryJDBCDriver](100032) Error executing query job. Message: EXEC_JOB_EXECUTION_ERR. Attempting retry 1 of -1 attempts. (io.confluent.connect.jdbc.source.JdbcSourceTask:455)
 
 playground topic consume
