@@ -223,10 +223,15 @@ output_file=$tmp_dir/out_final.json
 max_batch=300000
 lines_count=0
 stop=0
+counter=1
 while [ $stop != 1 ]
 do
     while IFS= read -r line
     do
+        if [[ $line == *"%g"* ]]; then
+            line=${line/\%g/$counter}
+        fi
+
         echo "$line" >> "$output_file"
         lines_count=$((lines_count+1))
         if [ $lines_count -ge $max_batch ]
@@ -239,6 +244,7 @@ do
             stop=1
             break
         fi
+        counter=$((counter+1))
     done < "$input_file"
 done
 
