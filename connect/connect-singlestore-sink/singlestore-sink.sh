@@ -34,21 +34,30 @@ log "Creating 'test' SingleStore database..."
 docker exec singlestore memsql -u root -proot -e "create database if not exists test;"
 
 log "Sending messages to topic mytable"
-playground topic produce -t mytable --nb-messages 3 << 'EOF'
-value%g
+playground topic produce -t mytable --nb-messages 3 --forced-value '{"f1":"value%g"}' << 'EOF'
+{
+  "type": "record",
+  "name": "myrecord",
+  "fields": [
+    {
+      "name": "f1",
+      "type": "string"
+    }
+  ]
+}
 EOF
 
 log "Creating Singlestore sink connector"
 playground connector create-or-update --connector singlestore-sink << EOF
 {
-               "connector.class":"com.singlestore.kafka.SingleStoreSinkConnector",
-               "tasks.max":"1",
-               "topics":"mytable",
-               "connection.ddlEndpoint" : "singlestore:3306",
-               "connection.database" : "test",
-               "connection.user" : "root",
-               "connection.password" : "root"
-          }
+  "connector.class":"com.singlestore.kafka.SingleStoreSinkConnector",
+  "tasks.max":"1",
+  "topics":"mytable",
+  "connection.ddlEndpoint" : "singlestore:3306",
+  "connection.database" : "test",
+  "connection.user" : "root",
+  "connection.password" : "root"
+}
 EOF
 
 sleep 10
