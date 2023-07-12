@@ -51,7 +51,7 @@ playground topic produce -t orders --nb-messages 1 << 'EOF'
 }
 EOF
 
-playground topic produce -t orders --nb-messages 1 --forced-value = '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
+playground topic produce -t orders --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
