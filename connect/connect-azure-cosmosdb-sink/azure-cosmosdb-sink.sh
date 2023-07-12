@@ -86,7 +86,7 @@ sed -e "s|:AZURE_COSMOSDB_DB_ENDPOINT_URI:|$AZURE_COSMOSDB_DB_ENDPOINT_URI|g" \
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Write data to topic hotels"
-playground topic produce -t hotels --nb-messages 1 << 'EOF'
+playground topic produce -t hotels --nb-messages 3 << 'EOF'
 {"id": "h1", "HotelName": "Marriott", "Description": "Marriott description"}
 {"id": "h2", "HotelName": "HolidayInn", "Description": "HolidayInn description"}
 {"id": "h3", "HotelName": "Motel8", "Description": "Motel8 description"}
