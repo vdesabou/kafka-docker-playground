@@ -28,13 +28,13 @@ sleep 2
 log "Creating MongoDB source connector"
 playground connector create-or-update --connector mongodb-source << EOF
 {
-               "connector.class" : "com.mongodb.kafka.connect.MongoSourceConnector",
-                    "tasks.max" : "1",
-                    "connection.uri" : "mongodb://myuser:mypassword@mongodb:27017",
-                    "database":"inventory",
-                    "collection":"customers",
-                    "topic.prefix":"mongo"
-          }
+     "connector.class" : "com.mongodb.kafka.connect.MongoSourceConnector",
+     "tasks.max" : "1",
+     "connection.uri" : "mongodb://myuser:mypassword@mongodb:27017",
+     "database":"inventory",
+     "collection":"customers",
+     "topic.prefix":"mongo"
+}
 EOF
 
 sleep 5

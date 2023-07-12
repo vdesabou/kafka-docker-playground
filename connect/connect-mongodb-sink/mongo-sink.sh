@@ -79,12 +79,12 @@ EOF
 log "Creating MongoDB sink connector"
 playground connector create-or-update --connector mongodb-sink << EOF
 {
-     "connector.class" : "com.mongodb.kafka.connect.MongoSinkConnector",
-     "tasks.max" : "1",
-     "connection.uri" : "mongodb://myuser:mypassword@mongodb:27017",
-     "database":"inventory",
-     "collection":"customers",
-     "topics":"orders"
+    "connector.class" : "com.mongodb.kafka.connect.MongoSinkConnector",
+    "tasks.max" : "1",
+    "connection.uri" : "mongodb://myuser:mypassword@mongodb:27017",
+    "database":"inventory",
+    "collection":"customers",
+    "topics":"orders"
 }
 EOF
 
