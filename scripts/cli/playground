@@ -3203,7 +3203,7 @@ playground_connector_log_level_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--level, -l LEVEL (required)")"
-    printf "    Log level\n"
+    printf "    ❕Log level\n"
     printf "    Allowed: INFO, WARN, DEBUG, TRACE\n"
     echo
 
@@ -3240,6 +3240,12 @@ playground_connector_create_or_update_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR (required)")"
     printf "    🔗 Connector name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--level, -l LEVEL")"
+    printf "    ❕Log level\n"
+    printf "    Allowed: INFO, WARN, DEBUG, TRACE\n"
     echo
 
     # :command.usage_fixed_flags
@@ -11904,6 +11910,7 @@ playground_connector_log_level_command() {
 playground_connector_create_or_update_command() {
   # src/connector_create_or_update_command.sh
   json=${args[json]}
+  level=${args[level]}
 
   if [ "$json" = "-" ]
   then
@@ -11979,6 +11986,10 @@ playground_connector_create_or_update_command() {
           logerror "Command failed with error code $error_code"
           logerror "$message"
       else
+          if [[ -n "$level" ]]
+          then
+              playground connector log-level --connector $connector --level $level
+          fi
           if [ $is_create == 1 ]
           then
               log "✅ Connector $connector was successfully created"
@@ -18161,6 +18172,21 @@ playground_connector_create_or_update_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --level | -l)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--level']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--level requires an argument: --level, -l LEVEL" >&2
+          exit 1
+        fi
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -18191,6 +18217,12 @@ playground_connector_create_or_update_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['json']:-} ]] || args['json']="-"
+
+  # :command.whitelist_filter
+  if [[ ${args['--level']} ]] && [[ ! ${args['--level']} =~ ^(INFO|WARN|DEBUG|TRACE)$ ]]; then
+    printf "%s\n" "--level must be one of: INFO, WARN, DEBUG, TRACE" >&2
+    exit 1
+  fi
 
 }
 

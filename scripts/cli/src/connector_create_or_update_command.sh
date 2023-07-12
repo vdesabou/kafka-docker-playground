@@ -1,4 +1,5 @@
 json=${args[json]}
+level=${args[level]}
 
 if [ "$json" = "-" ]
 then
@@ -74,6 +75,10 @@ then
         logerror "Command failed with error code $error_code"
         logerror "$message"
     else
+        if [[ -n "$level" ]]
+        then
+            playground connector log-level --connector $connector --level $level
+        fi
         if [ $is_create == 1 ]
         then
             log "✅ Connector $connector was successfully created"

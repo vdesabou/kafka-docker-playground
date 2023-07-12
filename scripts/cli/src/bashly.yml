@@ -744,7 +744,8 @@ commands:
         help: |-
           📦 Package name
 
-      - long: --level
+      - &level
+        long: --level
         short: -l
         arg: level
         allowed: [INFO, WARN, DEBUG, TRACE]
@@ -1454,12 +1455,7 @@ commands:
       🧬 Set connect log level
     flags:
     - *connector
-    - long: --level
-      short: -l
-      help: Log level
-      arg: level
-      allowed: [INFO, WARN, DEBUG, TRACE]
-      required: true
+    - *level
 
   - name: create-or-update
     help: 🧑‍🎨  Create or update connector
@@ -1479,7 +1475,13 @@ commands:
         - $(playground get-connector-list)
       help: |-
         🔗 Connector name
-
+    - long: --level
+      short: -l
+      arg: level
+      allowed: [INFO, WARN, DEBUG, TRACE]
+      required: false
+      help: |-
+        ❕Log level
     examples: |
       playground connector create-or-update -c filestream-sink << EOF
       {
