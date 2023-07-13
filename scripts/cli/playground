@@ -104,6 +104,7 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")                 "
   [[ -n $long_usage ]] && printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")                 "
   [[ -n $long_usage ]] && printf "  %s   🐢 Show lag of sink connector\n" "$(green "connector show-lag")               "
+  [[ -n $long_usage ]] && printf "  %s   ⚙️ Show config connector\n" "$(green "connector config")                 "
   [[ -n $long_usage ]] && printf "  %s   🧬 Set connect log level\n" "$(green "connector log-level")              "
   [[ -n $long_usage ]] && printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "connector create-or-update")       "
   echo
@@ -2887,6 +2888,7 @@ playground_connector_usage() {
   printf "  %s   ⏯️  Resume connector\n" "$(green "resume")          "
   printf "  %s   🗑️  Delete connector\n" "$(green "delete")          "
   printf "  %s   🐢 Show lag of sink connector\n" "$(green "show-lag")        "
+  printf "  %s   ⚙️ Show config connector\n" "$(green "config")          "
   printf "  %s   🧬 Set connect log level\n" "$(green "log-level")       "
   printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "create-or-update")"
   echo
@@ -3154,6 +3156,41 @@ playground_connector_show_lag_usage() {
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground connector show-lag [OPTIONS]\n"
   printf "  playground connector show-lag --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_config_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector config - ⚙️ Show config connector\n"
+    echo
+
+  else
+    printf "playground connector config - ⚙️ Show config connector\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector config [OPTIONS]\n"
+  printf "  playground connector config --help | -h\n"
   echo
 
   # :command.long_usage
@@ -11875,6 +11912,109 @@ playground_connector_show_lag_command() {
 }
 
 # :command.function
+playground_connector_config_command() {
+  # src/connector_config_command.sh
+  ret=$(get_connect_url_and_security)
+
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
+  connector="${args[--connector]}"
+
+  if [[ ! -n "$connector" ]]
+  then
+      log "✨ --connector flag was not provided, applying command to all connectors"
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No connector is running !"
+          exit 1
+      fi
+  fi
+
+  items=($connector)
+  for connector in ${items[@]}
+  do
+      log "⏸️ Config connector $connector"
+      json_config=$(curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config")
+      connector_class=$(echo "$json_config" | jq -r '."connector.class"')
+
+      set +e
+      curl_output=$(curl $security -s -X PUT \
+          -H "Content-Type: application/json" \
+          --data "$json_config" \
+          $connect_url/connector-plugins/$connector_class/config/validate)
+      ret=$?
+      set -e
+      if [ $ret -eq 0 ]
+      then
+          error_code=$(echo "$curl_output" | jq -r .error_code)
+          if [ "$error_code" != "null" ]
+          then
+              message=$(echo "$curl_output" | jq -r .message)
+              logerror "Command failed with error code $error_code"
+              logerror "$message"
+          else
+
+              if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
+              then
+                  set +e
+                  json_file=/tmp/json
+                  echo "$curl_output" > $json_file
+                  jq_output=$(jq . "$json_file" 2>&1)
+                  error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
+
+                  if [[ -n "$error_line" ]]; then
+                      logerror "❌ Invalid JSON at line $error_line"
+                  fi
+                  set -e
+
+                  if [[ $(type -f bat 2>&1) =~ "not found" ]]
+                  then
+                      cat -n $json_file
+                  else
+                      bat $json_file --highlight-line $error_line
+                  fi
+
+                  exit 1
+              fi
+
+              # Build the table header
+              header="| Parameter  | Group | Default Value | Required | Importance | Description |"
+              divider=$(printf "| --%s-- | --%s-- | --%s-- | --%s-- | --%s-- | --%s-- |" $(printf '%.0s-' {1..9}))
+
+              for row in $(echo "$curl_output" | jq -r '.configs[]| @base64'); do
+                  _jq() {
+                  echo ${row} | base64 --decode | jq -r ${1}
+                  }
+                  param=$(echo $(_jq '.definition.name'))
+                  group=$(echo $(_jq '.definition.group'))
+                  if [ "$group" == "Common" ] || [ "$group" == "Transforms" ] || [ "$group" == "Error Handling" ] || [ "$group" == "Topic Creation" ] || [ "$group" == "offsets.topic" ] || [ "$group" == "exactly.once.support" ] || [ "$group" == "Predicates" ]
+                  then
+                      continue
+                  fi
+                  default=$(echo $(_jq '.definition.default_value'))
+                  required=$(echo $(_jq '.definition.required'))
+                  importance=$(echo $(_jq '.definition.importance'))
+                  description=$(echo $(_jq '.definition.documentation '))
+
+                  rows+="| $param | $group | $default | $required | $importance | $description |\n"
+              done
+
+              # Display the table
+              echo -e "$header\n$divider\n$rows$divider"
+
+          fi
+      else
+          logerror "❌ curl request failed with error code $ret!"
+          exit 1
+      fi
+
+  done
+
+}
+
+# :command.function
 playground_connector_log_level_command() {
   # src/connector_log_level_command.sh
   ret=$(get_connect_url_and_security)
@@ -11962,6 +12102,43 @@ playground_connector_create_or_update_command() {
           is_create=0
       fi
   done
+
+  connector_class=$(echo "$json_content" | jq ."connector.class")
+  set +e
+  curl_output=$(curl $security -s -X PUT \
+       -H "Content-Type: application/json" \
+       --data "$json_content" \
+       $connect_url/connector-plugins/$connector_class/config/validate)
+  ret=$?
+  set -e
+  if [ $ret -eq 0 ]
+  then
+      error_code=$(echo "$curl_output" | jq -r .error_code)
+      if [ "$error_code" != "null" ]
+      then
+          message=$(echo "$curl_output" | jq -r .message)
+          logerror "Command failed with error code $error_code"
+          logerror "$message"
+      else
+          if [[ -n "$level" ]]
+          then
+              playground connector log-level --connector $connector --level $level
+          fi
+          if [ $is_create == 1 ]
+          then
+              log "✅ Connector $connector was successfully created"
+              log "🥁 Waiting a few seconds to get new status"
+          else
+              log "✅ Connector $connector was successfully updated"
+              log "🥁 Waiting a few seconds to get new status"
+          fi
+          sleep 8
+          playground connector status
+      fi
+  else
+      logerror "❌ curl request failed with error code $ret!"
+      exit 1
+  fi
 
   if [ $is_create == 1 ]
   then
@@ -17562,6 +17739,13 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
+    config)
+      action="config"
+      shift
+      playground_connector_config_parse_requirements "$@"
+      shift $#
+      ;;
+
     log-level)
       action="log-level"
       shift
@@ -18048,6 +18232,64 @@ playground_connector_show_lag_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_connector_config_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_config_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector config"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
 playground_connector_log_level_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
@@ -18324,6 +18566,7 @@ run() {
     "connector resume") playground_connector_resume_command ;;
     "connector delete") playground_connector_delete_command ;;
     "connector show-lag") playground_connector_show_lag_command ;;
+    "connector config") playground_connector_config_command ;;
     "connector log-level") playground_connector_log_level_command ;;
     "connector create-or-update") playground_connector_create_or_update_command ;;
   esac
