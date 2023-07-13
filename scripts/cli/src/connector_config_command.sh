@@ -1,3 +1,5 @@
+open="${args[--open]}"
+
 ret=$(get_connect_url_and_security)
 
 connect_url=$(echo "$ret" | cut -d "@" -f 1)
@@ -19,10 +21,10 @@ fi
 items=($connector)
 for connector in ${items[@]}
 do
-    log "⏸️ Config connector $connector"
     json_config=$(curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config")
     connector_class=$(echo "$json_config" | jq -r '."connector.class"')
 
+    log "⚙️ Config for connector $connector ($connector_class)"
     set +e
     curl_output=$(curl $security -s -X PUT \
         -H "Content-Type: application/json" \
@@ -39,7 +41,6 @@ do
             logerror "Command failed with error code $error_code"
             logerror "$message"
         else
-
             if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
             then
                 set +e
@@ -63,9 +64,11 @@ do
                 exit 1
             fi
 
-            header="| Parameter  | Group | Default Value | Required | Importance | Description |"
-            divider=$(printf "| --%s-- | --%s-- | --%s-- | --%s-- | --%s-- | --%s-- |\n" $(printf '%.0s-' {1..9}))
-
+            if [[ -n "$open" ]]
+            then
+                filename="/tmp/config-$connector.txt"
+            fi
+            current_group=""
             rows=()
             for row in $(echo "$curl_output" | jq -r '.configs[] | @base64'); do
                 _jq() {
@@ -77,20 +80,78 @@ do
                     continue
                 fi
 
+                if [ "$group" != "$current_group" ]
+                then
+                    if [[ -n "$open" ]]
+                    then
+                        echo -e "==========================" > $filename
+                        echo -e "$group"                     >> $filename
+                        echo -e "==========================" >> $filename
+                    else
+                        echo -e "=========================="
+                        echo -e "$group"
+                        echo -e "=========================="
+                    fi
+                    current_group=$group
+                fi
+
                 param=$(_jq '.definition.name')
                 default=$(_jq '.definition.default_value')
+                type=$(_jq '.definition.type')
                 required=$(_jq '.definition.required')
                 importance=$(_jq '.definition.importance')
                 description=$(_jq '.definition.documentation')
 
-                rows+=("| $param | $group | $default | $required | $importance | $description |\n")
+                if [[ -n "$open" ]]
+                then
+                    echo -e "🔘 $param" >> $filename
+                    echo -e "" >> $filename
+                    echo -e "$description" >> $filename
+                    echo -e "" >> $filename
+                    echo -e "\t - Type: $type" >> $filename
+                    echo -e "\t - Default: $default" >> $filename
+                    echo -e "\t - Importance: $importance" >> $filename
+                    echo -e "\t - Required: $required" >> $filename
+                    echo -e "" >> $filename
+                else
+                    echo -e "🔘 $param"
+                    echo -e ""
+                    echo -e "$description"
+                    echo -e ""
+                    echo -e "\t - Type: $type"
+                    echo -e "\t - Default: $default"
+                    echo -e "\t - Importance: $importance"
+                    echo -e "\t - Required: $required"
+                    echo -e ""
+                fi
             done
-
-            echo -e "$header\n$divider\n${rows[*]}$divider"
         fi
     else
         logerror "❌ curl request failed with error code $ret!"
         exit 1
     fi
 
+    if [[ -n "$open" ]]
+    then
+        filename="/tmp/config-$connector.txt"
+        if config_has_key "editor"
+        then
+            editor=$(config_get "editor")
+        log "📖 Opening ${filename} using configured editor $editor"
+        $editor $filename
+        else
+            if [[ $(type code 2>&1) =~ "not found" ]]
+            then
+            logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
+            exit 1
+            else
+            log "📖 Opening ${filename} with code (default) - you can change editor by updating config.ini"
+            code $filename
+            fi
+        fi
+    fi
 done
+
+
+
+

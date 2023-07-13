@@ -501,7 +501,7 @@ _playground_completions() {
       ;;
 
     'connector config'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help -c -h")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --open -c -h -o")" -- "$cur" )
       ;;
 
     'topic produce'*'-t')

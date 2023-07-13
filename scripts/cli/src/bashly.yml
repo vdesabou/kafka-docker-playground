@@ -1454,6 +1454,10 @@ commands:
     help: ⚙️ Show config connector
     flags:
     - *connector
+    - long: --open
+      short: -o
+      help: |- 
+        🔖 Save output to a file and open with text editor set with config.ini (default is code)
 
   - name: log-level
     help: |-
