@@ -63,31 +63,30 @@ do
                 exit 1
             fi
 
-            # Build the table header
             header="| Parameter  | Group | Default Value | Required | Importance | Description |"
-            divider=$(printf "| --%s-- | --%s-- | --%s-- | --%s-- | --%s-- | --%s-- |" $(printf '%.0s-' {1..9}))
+            divider=$(printf "| --%s-- | --%s-- | --%s-- | --%s-- | --%s-- | --%s-- |\n" $(printf '%.0s-' {1..9}))
 
-            rows=""
-            for row in $(echo "$curl_output" | jq -r '.configs[]| @base64'); do
+            rows=()
+            for row in $(echo "$curl_output" | jq -r '.configs[] | @base64'); do
                 _jq() {
-                echo ${row} | base64 --decode | jq -r ${1}
+                    echo ${row} | base64 --decode | jq -r ${1}
                 }
-                param=$(echo $(_jq '.definition.name'))
-                group=$(echo $(_jq '.definition.group'))
-                if [ "$group" == "Common" ] || [ "$group" == "Transforms" ] || [ "$group" == "Error Handling" ] || [ "$group" == "Topic Creation" ] || [ "$group" == "offsets.topic" ] || [ "$group" == "exactly.once.support" ] || [ "$group" == "Predicates" ]
-                then
+
+                group=$(_jq '.definition.group')
+                if [[ "$group" == "Common" || "$group" == "Transforms" || "$group" == "Error Handling" || "$group" == "Topic Creation" || "$group" == "offsets.topic" || "$group" == "Exactly Once Support" || "$group" == "Predicates" ]]; then
                     continue
                 fi
-                default=$(echo $(_jq '.definition.default_value'))
-                required=$(echo $(_jq '.definition.required'))
-                importance=$(echo $(_jq '.definition.importance'))
-                description=$(echo $(_jq '.definition.documentation '))
 
-                rows+="| $param | $group | $default | $required | $importance | $description |\n"
+                param=$(_jq '.definition.name')
+                default=$(_jq '.definition.default_value')
+                required=$(_jq '.definition.required')
+                importance=$(_jq '.definition.importance')
+                description=$(_jq '.definition.documentation')
+
+                rows+=("| $param | $group | $default | $required | $importance | $description |\n")
             done
 
-            # Display the table
-            echo -e "$header\n$divider\n$rows$divider"
+            echo -e "$header\n$divider\n${rows[*]}$divider"
         fi
     else
         logerror "❌ curl request failed with error code $ret!"

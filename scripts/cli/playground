@@ -11979,31 +11979,30 @@ playground_connector_config_command() {
                   exit 1
               fi
 
-              # Build the table header
               header="| Parameter  | Group | Default Value | Required | Importance | Description |"
-              divider=$(printf "| --%s-- | --%s-- | --%s-- | --%s-- | --%s-- | --%s-- |" $(printf '%.0s-' {1..9}))
+              divider=$(printf "| --%s-- | --%s-- | --%s-- | --%s-- | --%s-- | --%s-- |\n" $(printf '%.0s-' {1..9}))
 
-              for row in $(echo "$curl_output" | jq -r '.configs[]| @base64'); do
+              rows=()
+              for row in $(echo "$curl_output" | jq -r '.configs[] | @base64'); do
                   _jq() {
-                  echo ${row} | base64 --decode | jq -r ${1}
+                      echo ${row} | base64 --decode | jq -r ${1}
                   }
-                  param=$(echo $(_jq '.definition.name'))
-                  group=$(echo $(_jq '.definition.group'))
-                  if [ "$group" == "Common" ] || [ "$group" == "Transforms" ] || [ "$group" == "Error Handling" ] || [ "$group" == "Topic Creation" ] || [ "$group" == "offsets.topic" ] || [ "$group" == "exactly.once.support" ] || [ "$group" == "Predicates" ]
-                  then
+
+                  group=$(_jq '.definition.group')
+                  if [[ "$group" == "Common" || "$group" == "Transforms" || "$group" == "Error Handling" || "$group" == "Topic Creation" || "$group" == "offsets.topic" || "$group" == "Exactly Once Support" || "$group" == "Predicates" ]]; then
                       continue
                   fi
-                  default=$(echo $(_jq '.definition.default_value'))
-                  required=$(echo $(_jq '.definition.required'))
-                  importance=$(echo $(_jq '.definition.importance'))
-                  description=$(echo $(_jq '.definition.documentation '))
 
-                  rows+="| $param | $group | $default | $required | $importance | $description |\n"
+                  param=$(_jq '.definition.name')
+                  default=$(_jq '.definition.default_value')
+                  required=$(_jq '.definition.required')
+                  importance=$(_jq '.definition.importance')
+                  description=$(_jq '.definition.documentation')
+
+                  rows+=("| $param | $group | $default | $required | $importance | $description |\n")
               done
 
-              # Display the table
-              echo -e "$header\n$divider\n$rows$divider"
-
+              echo -e "$header\n$divider\n${rows[*]}$divider"
           fi
       else
           logerror "❌ curl request failed with error code $ret!"
@@ -12102,43 +12101,6 @@ playground_connector_create_or_update_command() {
           is_create=0
       fi
   done
-
-  connector_class=$(echo "$json_content" | jq ."connector.class")
-  set +e
-  curl_output=$(curl $security -s -X PUT \
-       -H "Content-Type: application/json" \
-       --data "$json_content" \
-       $connect_url/connector-plugins/$connector_class/config/validate)
-  ret=$?
-  set -e
-  if [ $ret -eq 0 ]
-  then
-      error_code=$(echo "$curl_output" | jq -r .error_code)
-      if [ "$error_code" != "null" ]
-      then
-          message=$(echo "$curl_output" | jq -r .message)
-          logerror "Command failed with error code $error_code"
-          logerror "$message"
-      else
-          if [[ -n "$level" ]]
-          then
-              playground connector log-level --connector $connector --level $level
-          fi
-          if [ $is_create == 1 ]
-          then
-              log "✅ Connector $connector was successfully created"
-              log "🥁 Waiting a few seconds to get new status"
-          else
-              log "✅ Connector $connector was successfully updated"
-              log "🥁 Waiting a few seconds to get new status"
-          fi
-          sleep 8
-          playground connector status
-      fi
-  else
-      logerror "❌ curl request failed with error code $ret!"
-      exit 1
-  fi
 
   if [ $is_create == 1 ]
   then
