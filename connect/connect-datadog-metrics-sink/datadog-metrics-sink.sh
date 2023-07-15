@@ -34,7 +34,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 log "Sending messages to topic datadog-metrics-topic"
 TIMESTAMP=`date +%s`
-playground topic produce -t datadog-metrics-topic --nb-messages 1 --forced-value="{\"name\":\"Felipe\",\"type\":\"Eddie\",\"timestamp\":$TIMESTAMP,\"dimensions\":{\"host\":\"Narciso\",\"interval\":1,\"tag1\":\"Mabel\"},\"values\":{\"doubleValue\":0.06258885007678572}}" << 'EOF'
+playground topic produce -t datadog-metrics-topic --nb-messages 1 --forced-value="{\"name\":\"perf.metric\", \"type\":\"rate\",\"timestamp\": $TIMESTAMP, \"dimensions\": {\"host\": \"metric.host1\", \"interval\": 1, \"tag1\": \"testing-data\"},\"values\": {\"doubleValue\": 5.639623848362502}}" << 'EOF'
 {
   "name": "metric",
   "type": "record",
