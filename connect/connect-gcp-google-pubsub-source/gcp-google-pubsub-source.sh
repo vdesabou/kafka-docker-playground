@@ -64,17 +64,17 @@ sleep 10
 log "Creating Google Cloud Pub/Sub Group Kafka Source connector"
 playground connector create-or-update --connector pubsub-source << EOF
 {
-               "connector.class" : "com.google.pubsub.kafka.source.CloudPubSubSourceConnector",
-               "tasks.max" : "1",
-               "kafka.topic" : "pubsub-topic",
-               "cps.project" : "$GCP_PROJECT",
-               "cps.topic" : "topic-1",
-               "cps.subscription" : "subscription-1",
-               "gcp.credentials.file.path" : "/tmp/keyfile.json",
-               "errors.tolerance": "all",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
-          }
+     "connector.class" : "com.google.pubsub.kafka.source.CloudPubSubSourceConnector",
+     "tasks.max" : "1",
+     "kafka.topic" : "pubsub-topic",
+     "cps.project" : "$GCP_PROJECT",
+     "cps.topic" : "topic-1",
+     "cps.subscription" : "subscription-1",
+     "gcp.credentials.file.path" : "/tmp/keyfile.json",
+     "errors.tolerance": "all",
+     "errors.log.enable": "true",
+     "errors.log.include.messages": "true"
+}
 EOF
 
 sleep 10
