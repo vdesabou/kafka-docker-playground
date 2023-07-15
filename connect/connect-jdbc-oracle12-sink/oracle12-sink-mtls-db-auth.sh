@@ -184,21 +184,21 @@ log "Creating Oracle sink connector"
 
 playground connector create-or-update --connector oracle-sink-mtls-db-auth << EOF
 {
-               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-               "tasks.max": "1",
-               "connection.oracle.net.ssl_server_dn_match": "true",
-               "connection.oracle.net.authentication_services": "(TCPS)",
-               "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLCDB))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=server,C=US\")))",
-               "topics": "ORDERS",
-               "auto.create": "true",
-               "insert.mode":"insert",
-               "auto.evolve":"true"
-          }
+  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+  "tasks.max": "1",
+  "connection.oracle.net.ssl_server_dn_match": "true",
+  "connection.oracle.net.authentication_services": "(TCPS)",
+  "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLCDB))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=server,C=US\")))",
+  "topics": "ORDERS",
+  "auto.create": "true",
+  "insert.mode":"insert",
+  "auto.evolve":"true"
+}
 EOF
 
 
-log "Sending messages to topic orders"
-playground topic produce -t orders --nb-messages 1 << 'EOF'
+log "Sending messages to topic ORDERS"
+playground topic produce -t ORDERS --nb-messages 1 << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -223,7 +223,7 @@ playground topic produce -t orders --nb-messages 1 << 'EOF'
 }
 EOF
 
-playground topic produce -t orders --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
+playground topic produce -t ORDERS --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",

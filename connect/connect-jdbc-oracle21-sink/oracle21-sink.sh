@@ -59,21 +59,21 @@ log "Creating Oracle sink connector"
 
 playground connector create-or-update --connector oracle-sink << EOF
 {
-               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-               "tasks.max": "1",
-               "connection.user": "C##MYUSER",
-               "connection.password": "mypassword",
-               "connection.url": "jdbc:oracle:thin:@oracle:1521/ORCLCDB",
-               "topics": "ORDERS",
-               "auto.create": "true",
-               "insert.mode":"insert",
-               "auto.evolve":"true"
-          }
+  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+  "tasks.max": "1",
+  "connection.user": "C##MYUSER",
+  "connection.password": "mypassword",
+  "connection.url": "jdbc:oracle:thin:@oracle:1521/ORCLCDB",
+  "topics": "ORDERS",
+  "auto.create": "true",
+  "insert.mode":"insert",
+  "auto.evolve":"true"
+}
 EOF
 
 
-log "Sending messages to topic orders"
-playground topic produce -t orders --nb-messages 1 << 'EOF'
+log "Sending messages to topic ORDERS"
+playground topic produce -t ORDERS --nb-messages 1 << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -98,7 +98,7 @@ playground topic produce -t orders --nb-messages 1 << 'EOF'
 }
 EOF
 
-playground topic produce -t orders --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
+playground topic produce -t ORDERS --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
