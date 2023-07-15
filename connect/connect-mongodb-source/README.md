@@ -14,7 +14,13 @@ Quickly test [MongoDB](https://docs.mongodb.com/ecosystem/connectors/kafka/) con
 Simply run:
 
 ```
-$ playground run -f mongo<tab>
+$ playground run -f mongo-source<tab>
+```
+
+or with SSL encryption:
+
+```
+$ playground run -f mongo-source-ssl<tab>
 ```
 
 ## Details of what the script is doing

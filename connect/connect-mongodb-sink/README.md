@@ -17,6 +17,12 @@ Simply run:
 $ playground run -f mongo-sink<tab>
 ```
 
+or with SSL encryption:
+
+```
+$ playground run -f mongo-sink-ssl<tab>
+```
+
 ## Details of what the script is doing
 
 

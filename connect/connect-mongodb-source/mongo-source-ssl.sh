@@ -4,8 +4,8 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-mkdir -p ${DIR}/ssl
-cd ${DIR}/ssl
+mkdir -p ../../connect/connect-mongodb-source/ssl
+cd ../../connect/connect-mongodb-source/ssl
 if [[ "$OSTYPE" == "darwin"* ]]
 then
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
