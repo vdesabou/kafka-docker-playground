@@ -24,7 +24,8 @@ do
     json_config=$(curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config")
     connector_class=$(echo "$json_config" | jq -r '."connector.class"')
 
-    log "⚙️ Config for connector $connector ($connector_class)"
+    class=$(echo $connector_class | rev | cut -d '.' -f 1 | rev)
+    log "🔩 parameters for connector $connector ($class)"
     set +e
     curl_output=$(curl $security -s -X PUT \
         -H "Content-Type: application/json" \
@@ -151,7 +152,3 @@ do
         fi
     fi
 done
-
-
-
-

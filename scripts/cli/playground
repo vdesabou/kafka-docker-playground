@@ -105,7 +105,7 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")                 "
   [[ -n $long_usage ]] && printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")                 "
   [[ -n $long_usage ]] && printf "  %s   🐢 Show lag of sink connector\n" "$(green "connector show-lag")               "
-  [[ -n $long_usage ]] && printf "  %s   ⚙️ Show config connector\n" "$(green "connector config")                 "
+  [[ -n $long_usage ]] && printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "connector show-config")            "
   [[ -n $long_usage ]] && printf "  %s   🧬 Set connect log level\n" "$(green "connector log-level")              "
   [[ -n $long_usage ]] && printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "connector create-or-update")       "
   echo
@@ -2924,7 +2924,7 @@ playground_connector_usage() {
   printf "  %s   ⏯️  Resume connector\n" "$(green "resume")          "
   printf "  %s   🗑️  Delete connector\n" "$(green "delete")          "
   printf "  %s   🐢 Show lag of sink connector\n" "$(green "show-lag")        "
-  printf "  %s   ⚙️ Show config connector\n" "$(green "config")          "
+  printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "show-config")     "
   printf "  %s   🧬 Set connect log level\n" "$(green "log-level")       "
   printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "create-or-update")"
   echo
@@ -3213,20 +3213,20 @@ playground_connector_show_lag_usage() {
 }
 
 # :command.usage
-playground_connector_config_usage() {
+playground_connector_show_config_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground connector config - ⚙️ Show config connector\n"
+    printf "playground connector show-config - 🔩 Show all possible configuration parameters of connector\n"
     echo
 
   else
-    printf "playground connector config - ⚙️ Show config connector\n"
+    printf "playground connector show-config - 🔩 Show all possible configuration parameters of connector\n"
     echo
 
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground connector config [OPTIONS]\n"
-  printf "  playground connector config --help | -h\n"
+  printf "  playground connector show-config [OPTIONS]\n"
+  printf "  playground connector show-config --help | -h\n"
   echo
 
   # :command.long_usage
@@ -12003,8 +12003,8 @@ playground_connector_show_lag_command() {
 }
 
 # :command.function
-playground_connector_config_command() {
-  # src/connector_config_command.sh
+playground_connector_show_config_command() {
+  # src/connector_show_config_command.sh
   open="${args[--open]}"
 
   ret=$(get_connect_url_and_security)
@@ -12031,7 +12031,8 @@ playground_connector_config_command() {
       json_config=$(curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config")
       connector_class=$(echo "$json_config" | jq -r '."connector.class"')
 
-      log "⚙️ Config for connector $connector ($connector_class)"
+      class=$(echo $connector_class | rev | cut -d '.' -f 1 | rev)
+      log "🔩 parameters for connector $connector ($class)"
       set +e
       curl_output=$(curl $security -s -X PUT \
           -H "Content-Type: application/json" \
@@ -12158,7 +12159,6 @@ playground_connector_config_command() {
           fi
       fi
   done
-
 }
 
 # :command.function
@@ -17907,10 +17907,10 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
-    config)
-      action="config"
+    show-config)
+      action="show-config"
       shift
-      playground_connector_config_parse_requirements "$@"
+      playground_connector_show_config_parse_requirements "$@"
       shift $#
       ;;
 
@@ -18400,13 +18400,13 @@ playground_connector_show_lag_parse_requirements() {
 }
 
 # :command.parse_requirements
-playground_connector_config_parse_requirements() {
+playground_connector_show_config_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
     case "${1:-}" in
       --help | -h)
         long_usage=yes
-        playground_connector_config_usage
+        playground_connector_show_config_usage
         exit
         ;;
 
@@ -18418,7 +18418,7 @@ playground_connector_config_parse_requirements() {
   done
 
   # :command.command_filter
-  action="connector config"
+  action="connector show-config"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -18743,7 +18743,7 @@ run() {
     "connector resume") playground_connector_resume_command ;;
     "connector delete") playground_connector_delete_command ;;
     "connector show-lag") playground_connector_show_lag_command ;;
-    "connector config") playground_connector_config_command ;;
+    "connector show-config") playground_connector_show_config_command ;;
     "connector log-level") playground_connector_log_level_command ;;
     "connector create-or-update") playground_connector_create_or_update_command ;;
   esac

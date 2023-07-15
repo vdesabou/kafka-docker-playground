@@ -1459,8 +1459,8 @@ commands:
     flags:
     - *connector
 
-  - name: config
-    help: ⚙️ Show config connector
+  - name: show-config
+    help: 🔩 Show all possible configuration parameters of connector
     flags:
     - *connector
     - long: --open
