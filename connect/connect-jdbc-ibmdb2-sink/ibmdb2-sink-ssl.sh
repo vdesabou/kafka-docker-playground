@@ -114,8 +114,8 @@ docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/dock
 # Keep it for utils.sh
 # ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.ssl.yml"
 
-log "Sending messages to topic orders"
-playground topic produce -t orders --nb-messages 1 << 'EOF'
+log "Sending messages to topic ORDERS"
+playground topic produce -t ORDERS --nb-messages 1 << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -140,7 +140,7 @@ playground topic produce -t orders --nb-messages 1 << 'EOF'
 }
 EOF
 
-playground topic produce -t orders --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
+playground topic produce -t ORDERS --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
