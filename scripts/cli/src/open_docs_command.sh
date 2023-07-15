@@ -31,7 +31,8 @@ then
     short_url=$(echo $url | cut -d '#' -f 1)
     if [[ -n "$only_show_url" ]]
     then
-        log "🌐 documentation is avaliable at $short_url"
+        log "🌐 documentation is available at:"
+        echo "$short_url"
     else
         log "🌐 opening documentation $short_url"
         open "$short_url"
