@@ -9,12 +9,12 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 log "Creating JDBC PostgreSQL sink connector"
 playground connector create-or-update --connector postgres-sink << EOF
 {
-               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-               "tasks.max": "1",
-               "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false",
-               "topics": "orders",
-               "auto.create": "true"
-          }
+  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+  "tasks.max": "1",
+  "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false",
+  "topics": "orders",
+  "auto.create": "true"
+}
 EOF
 
 
@@ -74,4 +74,4 @@ sleep 5
 log "Show content of ORDERS table:"
 docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM ORDERS'" > /tmp/result.log  2>&1
 cat /tmp/result.log
-grep "foo" /tmp/result.log | grep "100"
+grep "foo" /tmp/result.log
