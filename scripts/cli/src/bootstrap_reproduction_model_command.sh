@@ -188,7 +188,8 @@ url=${url//)/}
 
 if [[ $url =~ "http" ]]
 then
-  echo "# 🌐 documentation: $url" >> $tmp_dir/intro
+  short_url=$(echo $url | cut -d '#' -f 1)
+  echo "# 🌐 documentation: $short_url" >> $tmp_dir/intro
 fi
 echo "# 🐳 playground website: https://kafka-docker-playground.io" >> $tmp_dir/intro
 echo "# 💬 comments:" >> $tmp_dir/intro

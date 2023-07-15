@@ -436,6 +436,15 @@ commands:
   help: |-
     🛑 Stop currently running example
 
+- name: open-docs
+  group: Run
+  help: |-
+    🧑‍🎓 Open Confluent documentation of currently running example
+  flags:
+  - long: --only-show-url
+    help: |-
+      🌐 Only show url
+
 - name: bootstrap-reproduction-model
   environment_variables:
   - name: OUTPUT_FOLDER 
