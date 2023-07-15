@@ -25,30 +25,30 @@ docker exec broker kafka-acls --bootstrap-server broker:9092 --add --allow-princ
 log "Creating SFTP Sink connector"
 playground connector create-or-update --connector sftp-sink << EOF
 {
-        "topics": "test_sftp_sink",
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.sftp.SftpSinkConnector",
-               "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
-               "schema.generator.class": "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator",
-               "flush.size": "3",
-               "schema.compatibility": "NONE",
-               "format.class": "io.confluent.connect.sftp.sink.format.avro.AvroFormat",
-               "storage.class": "io.confluent.connect.sftp.sink.storage.SftpSinkStorage",
-               "sftp.host": "sftp-server",
-               "sftp.port": "22",
-               "sftp.username": "foo",
-               "sftp.password": "pass",
-               "sftp.working.dir": "/upload",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "consumer.override.sasl.mechanism": "PLAIN",
-               "consumer.override.security.protocol": "SASL_PLAINTEXT",
-               "consumer.override.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"sftp\" password=\"sftp-secret\";",
-               "errors.tolerance": "all",
-               "errors.deadletterqueue.topic.name": "dlq",
-               "errors.deadletterqueue.topic.replication.factor": "1"
-          }
+  "topics": "test_sftp_sink",
+  "tasks.max": "1",
+  "connector.class": "io.confluent.connect.sftp.SftpSinkConnector",
+  "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
+  "schema.generator.class": "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator",
+  "flush.size": "3",
+  "schema.compatibility": "NONE",
+  "format.class": "io.confluent.connect.sftp.sink.format.avro.AvroFormat",
+  "storage.class": "io.confluent.connect.sftp.sink.storage.SftpSinkStorage",
+  "sftp.host": "sftp-server",
+  "sftp.port": "22",
+  "sftp.username": "foo",
+  "sftp.password": "pass",
+  "sftp.working.dir": "/upload",
+  "confluent.license": "",
+  "confluent.topic.bootstrap.servers": "broker:9092",
+  "confluent.topic.replication.factor": "1",
+  "consumer.override.sasl.mechanism": "PLAIN",
+  "consumer.override.security.protocol": "SASL_PLAINTEXT",
+  "consumer.override.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"sftp\" password=\"sftp-secret\";",
+  "errors.tolerance": "all",
+  "errors.deadletterqueue.topic.name": "dlq",
+  "errors.deadletterqueue.topic.replication.factor": "1"
+}
 EOF
 
 
