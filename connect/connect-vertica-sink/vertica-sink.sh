@@ -35,19 +35,19 @@ EOF
 log "Creating Vertica sink connector"
 playground connector create-or-update --connector vertica-sink << EOF
 {
-     "connector.class" : "io.confluent.vertica.VerticaSinkConnector",
-     "tasks.max" : "1",
-     "vertica.database": "docker",
-     "vertica.host": "vertica",
-     "vertica.port": "5433",
-     "vertica.username": "dbadmin",
-     "vertica.password": "",
-     "auto.create": "true",
-     "auto.evolve": "false",
-     "topics": "mytable",
-     "confluent.topic.bootstrap.servers": "broker:9092",
-     "confluent.topic.replication.factor": "1"
-     }
+  "connector.class" : "io.confluent.vertica.VerticaSinkConnector",
+  "tasks.max" : "1",
+  "vertica.database": "docker",
+  "vertica.host": "vertica",
+  "vertica.port": "5433",
+  "vertica.username": "dbadmin",
+  "vertica.password": "",
+  "auto.create": "true",
+  "auto.evolve": "false",
+  "topics": "mytable",
+  "confluent.topic.bootstrap.servers": "broker:9092",
+  "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 10

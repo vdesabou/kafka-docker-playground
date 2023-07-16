@@ -58,12 +58,12 @@ EOF
 log "Creating JDBC Vertica sink connector"
 playground connector create-or-update --connector jdbc-vertica-sink << EOF
 {
-     "connector.class" : "io.confluent.connect.jdbc.JdbcSinkConnector",
-     "tasks.max" : "1",
-     "connection.url": "jdbc:vertica://vertica:5433/docker?user=dbadmin&password=",
-     "auto.create": "true",
-     "topics": "mytable"
-     }
+  "connector.class" : "io.confluent.connect.jdbc.JdbcSinkConnector",
+  "tasks.max" : "1",
+  "connection.url": "jdbc:vertica://vertica:5433/docker?user=dbadmin&password=",
+  "auto.create": "true",
+  "topics": "mytable"
+}
 EOF
 
 sleep 10
