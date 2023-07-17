@@ -12226,7 +12226,7 @@ playground_connector_log_level_command() {
 playground_connector_create_or_update_command() {
   # src/connector_create_or_update_command.sh
   json=${args[json]}
-  level=${args[level]}
+  level=${args[--level]}
 
   if [ "$json" = "-" ]
   then

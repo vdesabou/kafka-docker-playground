@@ -1,5 +1,5 @@
 json=${args[json]}
-level=${args[level]}
+level=${args[--level]}
 
 if [ "$json" = "-" ]
 then
