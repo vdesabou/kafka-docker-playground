@@ -10,6 +10,6 @@ services:
       - broker
       - schema-registry
     volumes:
-        - ../../connect/connect-jdbc-aws-redshift-sink/RedshiftJDBC4-1.2.20.1043.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/RedshiftJDBC4-1.2.20.1043.jar
+        - ../../connect/connect-jdbc-aws-redshift-sink/redshift-jdbc42-2.1.0.17/redshift-jdbc42-2.1.0.17.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/redshift-jdbc42-2.1.0.17.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
