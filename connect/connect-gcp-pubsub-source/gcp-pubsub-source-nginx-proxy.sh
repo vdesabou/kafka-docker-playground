@@ -84,4 +84,4 @@ playground topic consume --topic pubsub-topic --min-expected-messages 3 --timeou
 # docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics delete topic-1
 # docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions delete subscription-1
 
-docker rm -f gcloud-config
+# docker rm -f gcloud-config
