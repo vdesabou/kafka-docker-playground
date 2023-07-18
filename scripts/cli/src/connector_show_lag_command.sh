@@ -36,22 +36,20 @@ do
   then
     CHECK_INTERVAL=5
     SECONDS=0
-    # Loop until all consumer lags become 0
     while true
     do
-      # Get the consumer group lag details
       lag_output=$(docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $securityP)
 
-      # Check if any non-zero lag value is found
-      if echo "$lag_output" | grep -q -v "LAG\s\+0"
+      total_lag=$(echo "$lag_output" | grep -v "PARTITION" | awk -F" " '{sum+=$6;} END{print sum;}')
+      if [ $total_lag -ne 0 ]
       then
-          log "🐢 consumer lag is not 0..."
+          log "🐢 consumer lag is $total_lag"
           echo "$lag_output" | awk -F" " '{ print $3,$4,$5,$6 }'
           sleep $CHECK_INTERVAL
       else
           ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
           log "🏁 all consumer lags are 0 ! $ELAPSED"
-          continue
+          break
       fi
     done
   else
