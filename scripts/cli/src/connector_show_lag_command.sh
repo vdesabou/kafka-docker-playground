@@ -1,4 +1,5 @@
 connector="${args[--connector]}"
+wait_for_zero_lag="${args[--wait-for-zero-lag]}"
 
 ret=$(get_connect_url_and_security)
 

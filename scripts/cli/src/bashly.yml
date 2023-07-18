@@ -1458,6 +1458,10 @@ commands:
     help: 🐢 Show lag of sink connector
     flags:
     - *connector
+    - &wait-for-zero-lag
+      long: --wait-for-zero-lag
+      help: |- 
+        😴 Wait until lag becomes 0
 
   - name: show-config
     help: 🔩 Show all possible configuration parameters of connector
