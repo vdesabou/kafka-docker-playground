@@ -59,19 +59,19 @@ sleep 10
 log "Creating GCP PubSub Source connector"
 playground connector create-or-update --connector pubsub-source << EOF
 {
-               "connector.class" : "io.confluent.connect.gcp.pubsub.PubSubSourceConnector",
-               "tasks.max" : "1",
-               "kafka.topic" : "pubsub-topic",
-               "gcp.pubsub.project.id" : "$GCP_PROJECT",
-               "gcp.pubsub.topic.id" : "topic-1",
-               "gcp.pubsub.subscription.id" : "subscription-1",
-               "gcp.pubsub.credentials.path" : "/tmp/keyfile.json",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "errors.tolerance": "all",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
-          }
+    "connector.class" : "io.confluent.connect.gcp.pubsub.PubSubSourceConnector",
+    "tasks.max" : "1",
+    "kafka.topic" : "pubsub-topic",
+    "gcp.pubsub.project.id" : "$GCP_PROJECT",
+    "gcp.pubsub.topic.id" : "topic-1",
+    "gcp.pubsub.subscription.id" : "subscription-1",
+    "gcp.pubsub.credentials.path" : "/tmp/keyfile.json",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1",
+    "errors.tolerance": "all",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
+}
 EOF
 
 sleep 10
@@ -79,8 +79,8 @@ sleep 10
 log "Verify messages are in topic pubsub-topic"
 playground topic consume --topic pubsub-topic --min-expected-messages 3 --timeout 60
 
-log "Delete topic and subscription"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics delete topic-1
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions delete subscription-1
+# log "Delete topic and subscription"
+# docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics delete topic-1
+# docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions delete subscription-1
 
 docker rm -f gcloud-config
