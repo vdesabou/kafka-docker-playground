@@ -65,5 +65,4 @@ do
     log "🐢 Show lag for sink connector $connector"
     docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security
   fi
-
 done

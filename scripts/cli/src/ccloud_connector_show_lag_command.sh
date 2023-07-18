@@ -5,6 +5,7 @@ cluster=$(echo "$ret" | cut -d "@" -f 2)
 authorization=$(echo "$ret" | cut -d "@" -f 3)
 
 connector="${args[--connector]}"
+wait_for_zero_lag="${args[--wait-for-zero-lag]}"
 
 if [[ ! -n "$connector" ]]
 then
@@ -47,7 +48,37 @@ do
     fi
     connectorId=$(get_ccloud_connector_lcc $connector)
 
-    log "🐢 Show lag for sink connector $connector ($connectorId)"
-    #docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security
-    docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group connect-$connectorId --describe
+    if [[ -n "$wait_for_zero_lag" ]]
+    then
+        CHECK_INTERVAL=5
+        SECONDS=0
+        while true
+        do
+            lag_output=$(docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group connect-$connectorId --describe)
+
+            set +e
+            echo "$lag_output" | awk -F" " '{ print $6 }' | grep "-"
+            if [ $? -eq 0 ]
+            then
+                logwarn "🐢 consumer lag for connector $connector ($connectorId) is not set"
+                echo "$lag_output" | awk -F" " '{ print $3,$4,$5,$6 }'
+                sleep $CHECK_INTERVAL
+            else
+                total_lag=$(echo "$lag_output" | grep -v "PARTITION" | awk -F" " '{sum+=$6;} END{print sum;}')
+                if [ $total_lag -ne 0 ]
+                then
+                    log "🐢 consumer lag for connector $connector ($connectorId) is $total_lag"
+                    echo "$lag_output" | awk -F" " '{ print $3,$4,$5,$6 }'
+                    sleep $CHECK_INTERVAL
+                else
+                    ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
+                    log "🏁 consumer lag for connector $connector ($connectorId) is 0 ! $ELAPSED"
+                    break
+                fi
+            fi
+        done
+    else
+        log "🐢 Show lag for sink connector $connector ($connectorId)"
+        docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group connect-$connectorId --describe
+    fi
 done

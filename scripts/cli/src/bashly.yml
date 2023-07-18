@@ -1369,6 +1369,10 @@ commands:
     help: 🐢 Show lag of sink connector
     flags:
     - *ccloudconnector
+    - &waitforzerolag
+      long: --wait-for-zero-lag
+      help: |- 
+        😴 Wait until lag becomes 0
 
   - name: create-or-update
     help: 🧑‍🎨  Create or update connector
@@ -1458,10 +1462,7 @@ commands:
     help: 🐢 Show lag of sink connector
     flags:
     - *connector
-    - &wait-for-zero-lag
-      long: --wait-for-zero-lag
-      help: |- 
-        😴 Wait until lag becomes 0
+    - *waitforzerolag
 
   - name: show-config
     help: 🔩 Show all possible configuration parameters of connector
