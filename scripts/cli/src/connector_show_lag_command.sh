@@ -38,18 +38,27 @@ do
     SECONDS=0
     while true
     do
-      lag_output=$(docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $securityP)
+      lag_output=$(docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security)
 
-      total_lag=$(echo "$lag_output" | grep -v "PARTITION" | awk -F" " '{sum+=$6;} END{print sum;}')
-      if [ $total_lag -ne 0 ]
+      set +e
+      echo "$lag_output" | awk -F" " '{ print $6 }' | grep "-"
+      if [ $? -eq 0 ]
       then
-          log "🐢 consumer lag is $total_lag"
-          echo "$lag_output" | awk -F" " '{ print $3,$4,$5,$6 }'
-          sleep $CHECK_INTERVAL
+        logwarn "🐢 consumer lag for connector $connector is not set"
+        echo "$lag_output" | awk -F" " '{ print $3,$4,$5,$6 }'
+        sleep $CHECK_INTERVAL
       else
-          ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
-          log "🏁 all consumer lags are 0 ! $ELAPSED"
-          break
+        total_lag=$(echo "$lag_output" | grep -v "PARTITION" | awk -F" " '{sum+=$6;} END{print sum;}')
+        if [ $total_lag -ne 0 ]
+        then
+            log "🐢 consumer lag for connector $connector is $total_lag"
+            echo "$lag_output" | awk -F" " '{ print $3,$4,$5,$6 }'
+            sleep $CHECK_INTERVAL
+        else
+            ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
+            log "🏁 consumer lag for connector $connector is 0 ! $ELAPSED"
+            break
+        fi
       fi
     done
   else
