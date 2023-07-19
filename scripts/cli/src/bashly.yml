@@ -715,7 +715,8 @@ commands:
         required: false
         help: |-
           Port on which tcp traffic should be blocked
-      - long: --action
+      - &action
+        long: --action
         allowed: [start, stop]
         arg: action
         required: true
@@ -724,6 +725,20 @@ commands:
     examples:
     - playground debug block-traffic --destination google.com --action start
     - playground debug block-traffic --container broker --destination zookeeper --action start
+
+  - name: flight-recorder
+    help: |-
+      🛩️ Record flight recorder
+
+      Read more about it at https://www.baeldung.com/java-flight-recorder-monitoring
+
+      Open the jfr file with JDK Mission Control JMC(https://jdk.java.net/jmc/)
+    flags:
+      - *container
+      - *action
+    examples:
+    - playground debug flight-recorder --action start
+    - playground debug flight-recorder --action stop
 
   - name: log-level
     help: |-

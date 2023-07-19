@@ -61,6 +61,7 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   👻 Take a heap dump\n" "$(green "debug heap-dump")                  "
   [[ -n $long_usage ]] && printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "debug tcp-dump")                   "
   [[ -n $long_usage ]] && printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "debug block-traffic")              "
+  [[ -n $long_usage ]] && printf "  %s   🛩️ Record flight recorder\n" "$(green "debug flight-recorder")            "
   [[ -n $long_usage ]] && printf "  %s   🧬 Set log level for any package\n" "$(green "debug log-level")                  "
   echo
   printf "%s\n" "$(bold "Container commands:")"
@@ -1231,6 +1232,7 @@ playground_debug_usage() {
   printf "  %s   👻 Take a heap dump\n" "$(green "heap-dump")              "
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "tcp-dump")               "
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "block-traffic")          "
+  printf "  %s   🛩️ Record flight recorder\n" "$(green "flight-recorder")        "
   printf "  %s   🧬 Set log level for any package\n" "$(green "log-level")              "
   echo
 
@@ -1533,6 +1535,57 @@ playground_debug_block_traffic_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground debug block-traffic --destination google.com --action start\n"
     printf "  playground debug block-traffic --container broker --destination zookeeper\n  --action start\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_debug_flight_recorder_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground debug flight-recorder\n"
+    echo
+
+    printf "  🛩️ Record flight recorder\n  \n  Read more about it at https://www.baeldung.com/java-flight-recorder-monitoring\n  \n  Open the jfr file with JDK Mission Control JMC(https://jdk.java.net/jmc/)\n"
+    echo
+
+  else
+    printf "playground debug flight-recorder - 🛩️ Record flight recorder\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground debug flight-recorder [OPTIONS]\n"
+  printf "  playground debug flight-recorder --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
+    printf "    🐳 Container name\n"
+    printf "    Default: connect\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--action ACTION (required)")"
+    printf "    🟢 start or stop\n"
+    printf "    Allowed: start, stop\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground debug flight-recorder --action start\n"
+    printf "  playground debug flight-recorder --action stop\n"
     echo
 
   fi
@@ -9718,14 +9771,13 @@ playground_debug_thread_dump_command() {
   else
       logerror "❌ Failed to take thread dump"
   fi
-
 }
 
 # :command.function
 playground_debug_heap_dump_command() {
   # src/debug_heap_dump_command.sh
   container="${args[--container]}"
-  filename="/tmp/heap-dump-$container-`date '+%Y-%m-%d-%H-%M-%S'`.hprof"
+  filename="heap-dump-$container-`date '+%Y-%m-%d-%H-%M-%S'`.hprof"
 
   set +e
   docker exec $container type jmap > /dev/null 2>&1
@@ -9736,11 +9788,11 @@ playground_debug_heap_dump_command() {
   fi
   set -e
   log "🎯 Taking heap dump on container ${container} for pid 1"
-  docker exec $container jmap -dump:live,format=b,file=${filename} 1
+  docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
   if [ $? -eq 0 ]
   then
       log "👻 heap dump is available at ${filename}"
-      docker cp ${container}:${filename} ${filename}
+      docker cp ${container}:/tmp/${filename} ${filename}
       # if [[ $(type -f wireshark 2>&1) =~ "not found" ]]
       # then
       #     logwarn "🦈 wireshark is not installed, grab it at https://www.wireshark.org/"
@@ -9762,7 +9814,7 @@ playground_debug_tcp_dump_command() {
   container="${args[--container]}"
   port="${args[--port]}"
   duration="${args[--duration]}"
-  filename="/tmp/tcp-dump-$container-$port-`date '+%Y-%m-%d-%H-%M-%S'`.pcap"
+  filename="tcp-dump-$container-$port-`date '+%Y-%m-%d-%H-%M-%S'`.pcap"
 
   set +e
   docker exec $container type tcpdump > /dev/null 2>&1
@@ -9802,10 +9854,10 @@ playground_debug_tcp_dump_command() {
   if [[ -n "$port" ]]
   then
     log "🕵️‍♂️ Taking tcp dump on container ${container} and port ${port} for ${duration} seconds..."
-    docker exec -d --privileged --user root ${container} bash -c "tcpdump -w ${filename} port ${port}"
+    docker exec -d --privileged --user root ${container} bash -c "tcpdump -w /tmp/${filename} port ${port}"
   else
     log "🕵️‍♂️ Taking tcp dump on container ${container} and all ports for ${duration} seconds..."
-    docker exec -d --privileged --user root ${container} bash -c "tcpdump -w ${filename}"
+    docker exec -d --privileged --user root ${container} bash -c "tcpdump -w /tmp/${filename}"
   fi
 
   if [ $? -eq 0 ]
@@ -9816,7 +9868,7 @@ playground_debug_tcp_dump_command() {
       docker exec --privileged --user root ${container} bash -c "killall tcpdump" > /dev/null 2>&1
       set -e
       log "🌶️ tcp dump is available at ${filename}"
-      docker cp ${container}:${filename} ${filename}
+      docker cp ${container}:/tmp/${filename} ${filename}
       if [[ $(type -f wireshark 2>&1) =~ "not found" ]]
       then
           logwarn "🦈 wireshark is not installed, grab it at https://www.wireshark.org/"
@@ -9943,6 +9995,86 @@ playground_debug_block_traffic_command() {
   log "Output of command iptables-save"
   docker exec --privileged --user root ${container} bash -c "iptables-save"
 
+}
+
+# :command.function
+playground_debug_flight_recorder_command() {
+  # src/debug_flight_recorder_command.sh
+  container="${args[--container]}"
+  action="${args[--action]}"
+  filename="flight-recorder-$container-`date '+%Y-%m-%d-%H-%M-%S'`.jfr"
+
+  set +e
+  docker exec $container type jcmd > /dev/null 2>&1
+  if [ $? != 0 ]
+  then
+      logwarn "jcmd is not installed on container $container, attempting to install it"
+
+      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+      dir1=$(echo ${DIR_CLI%/*})
+      root_folder=$(echo ${dir1%/*})
+      IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
+      source $root_folder/scripts/utils.sh
+
+      if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
+      then
+        docker exec --privileged --user root $container bash -c "yum -y install --disablerepo='Confluent*' openjdk"
+      else
+        docker exec --privileged --user root $container bash -c "apt-get update && echo openjdk | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*"
+      fi
+  fi
+  docker exec $container type jcmd > /dev/null 2>&1
+  if [ $? != 0 ]
+  then
+      logerror "❌ jcmd could not be installed"
+      exit 1
+  fi
+  set -e
+
+  case "${action}" in
+      start)
+          set +e
+          output=$(docker exec ${container} jcmd 1 JFR.check)
+          echo "$output" | grep "running" | grep "dump1"
+          if [ $? -eq 0 ]
+          then
+              logwarn "🛩️ flight recorder is already started !"
+              exit 0
+          fi
+          set -e
+
+          docker exec ${container} jcmd 1 JFR.start name=dump1 filename=/tmp/${filename}
+          if [ $? -eq 0 ]
+          then
+              log "🛩️ flight recorder is now started"
+          else
+              logerror "❌ Failed to start flight recorder"
+          fi
+      ;;
+      stop)
+          set +e
+          output=$(docker exec ${container} jcmd 1 JFR.check)
+          echo "$output" | grep "running" | grep "dump1"
+          if [ $? -ne 0 ]
+          then
+              logerror "🛩️ flight recorder is not started !"
+              exit 1
+          fi
+          set -e
+          docker exec ${container} jcmd 1 JFR.stop name=dump1 filename=/tmp/${filename}
+          if [ $? -eq 0 ]
+          then
+              log "🛩️ flight recorder is available at ${filename}"
+              docker cp ${container}:/tmp/${filename} ${filename}
+          else
+              logerror "❌ Failed to stop flight recorder"
+          fi
+      ;;
+      *)
+          logerror "should not happen"
+          exit 1
+      ;;
+  esac
 }
 
 # :command.function
@@ -14811,6 +14943,13 @@ playground_debug_parse_requirements() {
       shift $#
       ;;
 
+    flight-recorder)
+      action="flight-recorder"
+      shift
+      playground_debug_flight_recorder_parse_requirements "$@"
+      shift $#
+      ;;
+
     log-level)
       action="log-level"
       shift
@@ -15300,6 +15439,94 @@ playground_debug_block_traffic_parse_requirements() {
     printf "missing required flag: --destination DESTINATION\n" >&2
     exit 1
   fi
+  if [[ -z ${args['--action']+x} ]]; then
+    printf "missing required flag: --action ACTION\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--container']:-} ]] || args['--container']="connect"
+
+  # :command.whitelist_filter
+  if [[ ${args['--action']} ]] && [[ ! ${args['--action']} =~ ^(start|stop)$ ]]; then
+    printf "%s\n" "--action must be one of: start, stop" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_debug_flight_recorder_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_debug_flight_recorder_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="debug flight-recorder"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --container | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--container']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--container requires an argument: --container, -c CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --action)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--action']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--action requires an argument: --action ACTION" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
   if [[ -z ${args['--action']+x} ]]; then
     printf "missing required flag: --action ACTION\n" >&2
     exit 1
@@ -18820,6 +19047,7 @@ run() {
     "debug heap-dump") playground_debug_heap_dump_command ;;
     "debug tcp-dump") playground_debug_tcp_dump_command ;;
     "debug block-traffic") playground_debug_block_traffic_command ;;
+    "debug flight-recorder") playground_debug_flight_recorder_command ;;
     "debug log-level") playground_debug_log_level_command ;;
     "debug log-level get") playground_debug_log_level_get_command ;;
     "debug log-level set") playground_debug_log_level_set_command ;;
