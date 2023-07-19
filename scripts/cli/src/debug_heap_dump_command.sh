@@ -1,5 +1,5 @@
 container="${args[--container]}"
-filename="/tmp/heap-dump-$container-`date '+%Y-%m-%d-%H-%M-%S'`.hprof"
+filename="heap-dump-$container-`date '+%Y-%m-%d-%H-%M-%S'`.hprof"
 
 set +e
 docker exec $container type jmap > /dev/null 2>&1
@@ -10,11 +10,11 @@ then
 fi
 set -e
 log "🎯 Taking heap dump on container ${container} for pid 1"
-docker exec $container jmap -dump:live,format=b,file=${filename} 1
+docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
 if [ $? -eq 0 ]
 then
     log "👻 heap dump is available at ${filename}"
-    docker cp ${container}:${filename} ${filename}
+    docker cp ${container}:/tmp/${filename} ${filename}
     # if [[ $(type -f wireshark 2>&1) =~ "not found" ]]
     # then
     #     logwarn "🦈 wireshark is not installed, grab it at https://www.wireshark.org/"

@@ -3307,6 +3307,11 @@ playground_connector_show_config_usage() {
     printf "    🔖 Save output to a file and open with text editor set with config.ini\n    (default is code)\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--force-refresh")"
+    printf "    ☢️ Force refresh.\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -10065,6 +10070,7 @@ playground_debug_flight_recorder_command() {
           if [ $? -eq 0 ]
           then
               log "🛩️ flight recorder is available at ${filename}"
+              log "use JDK Mission Control JMC (https://jdk.java.net/jmc/) to open it"
               docker cp ${container}:/tmp/${filename} ${filename}
           else
               logerror "❌ Failed to stop flight recorder"
@@ -12225,6 +12231,7 @@ playground_connector_show_lag_command() {
 playground_connector_show_config_command() {
   # src/connector_show_config_command.sh
   open="${args[--open]}"
+  force_refresh="${args[--force-refresh]}"
 
   ret=$(get_connect_url_and_security)
 
@@ -12282,6 +12289,13 @@ playground_connector_show_config_command() {
       class=$(echo $connector_class | rev | cut -d '.' -f 1 | rev)
       log "🔩 getting parameters for connector $connector ($class) and version $version"
 
+      if [[ -n "$force_refresh" ]]
+      then
+          if [ -f $filename ]
+          then
+              rm -f $filename
+          fi
+      fi
       if [ ! -f $filename ]
       then
           set +e
@@ -12337,7 +12351,7 @@ playground_connector_show_config_command() {
 
                       if [ "$group" != "$current_group" ]
                       then
-                          echo -e "==========================" > $filename
+                          echo -e "==========================" >> $filename
                           echo -e "$group"                     >> $filename
                           echo -e "==========================" >> $filename
                           current_group=$group
@@ -18789,6 +18803,14 @@ playground_connector_show_config_parse_requirements() {
 
         # :flag.case_no_arg
         args['--open']=1
+        shift
+        ;;
+
+      # :flag.case
+      --force-refresh)
+
+        # :flag.case_no_arg
+        args['--force-refresh']=1
         shift
         ;;
 

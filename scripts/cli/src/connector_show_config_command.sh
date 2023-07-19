@@ -1,4 +1,5 @@
 open="${args[--open]}"
+force_refresh="${args[--force-refresh]}"
 
 ret=$(get_connect_url_and_security)
 
@@ -56,6 +57,13 @@ do
     class=$(echo $connector_class | rev | cut -d '.' -f 1 | rev)
     log "🔩 getting parameters for connector $connector ($class) and version $version"
 
+    if [[ -n "$force_refresh" ]]
+    then
+        if [ -f $filename ]
+        then
+            rm -f $filename
+        fi
+    fi
     if [ ! -f $filename ]
     then
         set +e
@@ -111,7 +119,7 @@ do
 
                     if [ "$group" != "$current_group" ]
                     then
-                        echo -e "==========================" > $filename
+                        echo -e "==========================" >> $filename
                         echo -e "$group"                     >> $filename
                         echo -e "==========================" >> $filename
                         current_group=$group

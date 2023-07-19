@@ -1,7 +1,7 @@
 container="${args[--container]}"
 port="${args[--port]}"
 duration="${args[--duration]}"
-filename="/tmp/tcp-dump-$container-$port-`date '+%Y-%m-%d-%H-%M-%S'`.pcap"
+filename="tcp-dump-$container-$port-`date '+%Y-%m-%d-%H-%M-%S'`.pcap"
 
 set +e
 docker exec $container type tcpdump > /dev/null 2>&1
@@ -41,10 +41,10 @@ set -e
 if [[ -n "$port" ]]
 then
   log "🕵️‍♂️ Taking tcp dump on container ${container} and port ${port} for ${duration} seconds..."
-  docker exec -d --privileged --user root ${container} bash -c "tcpdump -w ${filename} port ${port}"
+  docker exec -d --privileged --user root ${container} bash -c "tcpdump -w /tmp/${filename} port ${port}"
 else
   log "🕵️‍♂️ Taking tcp dump on container ${container} and all ports for ${duration} seconds..."
-  docker exec -d --privileged --user root ${container} bash -c "tcpdump -w ${filename}"
+  docker exec -d --privileged --user root ${container} bash -c "tcpdump -w /tmp/${filename}"
 fi
 
 if [ $? -eq 0 ]
@@ -55,7 +55,7 @@ then
     docker exec --privileged --user root ${container} bash -c "killall tcpdump" > /dev/null 2>&1
     set -e
     log "🌶️ tcp dump is available at ${filename}"
-    docker cp ${container}:${filename} ${filename}
+    docker cp ${container}:/tmp/${filename} ${filename}
     if [[ $(type -f wireshark 2>&1) =~ "not found" ]]
     then
         logwarn "🦈 wireshark is not installed, grab it at https://www.wireshark.org/"

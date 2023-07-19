@@ -1487,6 +1487,10 @@ commands:
       short: -o
       help: |- 
         🔖 Save output to a file and open with text editor set with config.ini (default is code)
+    - long: --force-refresh
+      required: false
+      help: |-
+        ☢️ Force refresh.
 
   - name: log-level
     help: |-

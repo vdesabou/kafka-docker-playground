@@ -31,5 +31,3 @@ then
 else
     logerror "❌ Failed to take thread dump"
 fi
-
-
