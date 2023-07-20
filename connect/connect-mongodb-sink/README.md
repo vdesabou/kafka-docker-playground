@@ -23,6 +23,8 @@ or with SSL encryption:
 $ playground run -f mongo-sink-ssl<tab>
 ```
 
+mongo-express UI is available at [http://localhost:18081/](http://localhost:18081/)
+
 ## Details of what the script is doing
 
 

@@ -17,6 +17,8 @@ Simply run:
 $ playground run -f mongo<tab>
 ```
 
+mongo-express UI is available at [http://localhost:18081/](http://localhost:18081/)
+
 ## Details of what the script is doing
 
 
