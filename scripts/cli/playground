@@ -4421,7 +4421,7 @@ function maybe_create_image()
       export CONNECT_USER="appuser"
       if [ `uname -m` = "arm64" ]
       then
-        CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && dnf -y install iproute && rpm -i --nosignature http://mirror.centos.org/centos/8-stream/BaseOS/aarch64/os/Packages/iproute-tc-5.18.0-1.el8.aarch64.rpm && rpm -i --nosignature https://rpmfind.net/linux/centos/8-stream/AppStream/aarch64/os/Packages/tcpdump-4.9.3-2.el8.aarch64.rpm && touch /tmp/done; fi"
+        CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && dnf -y install iproute && rpm -i --nosignature http://mirror.centos.org/centos/8-stream/BaseOS/aarch64/os/Packages/iproute-tc-5.18.0-1.1.el8.aarch64.rpm && rpm -i --nosignature https://rpmfind.net/linux/centos/8-stream/AppStream/aarch64/os/Packages/tcpdump-4.9.3-2.el8.aarch64.rpm && touch /tmp/done; fi"
       else
         CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then wget http://vault.centos.org/8.1.1911/BaseOS/x86_64/os/Packages/iproute-tc-4.18.0-15.el8.x86_64.rpm && rpm -i --nodeps --nosignature http://vault.centos.org/8.1.1911/BaseOS/x86_64/os/Packages/iproute-tc-4.18.0-15.el8.x86_64.rpm && curl http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/tcpdump-4.9.3-1.el8.x86_64.rpm -o tcpdump-4.9.3-1.el8.x86_64.rpm && rpm -Uvh tcpdump-4.9.3-1.el8.x86_64.rpm && yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && touch /tmp/done; fi"
       fi
@@ -6663,7 +6663,14 @@ function ccloud::create_ccloud_stack() {
     exit 1
   fi
 
-  BOOTSTRAP_SERVERS=$(confluent kafka cluster describe $CLUSTER -o json | jq -r ".endpoint" | cut -c 12-)
+  endpoint=$(confluent kafka cluster describe $CLUSTER -o json | jq -r ".endpoint")
+  if [[ $endpoint == "SASL_SSL://"* ]]
+  then
+    BOOTSTRAP_SERVERS=$(echo "$endpoint" | cut -c 12-)
+  else
+    BOOTSTRAP_SERVERS="$endpoint"
+  fi
+
   NEED_ACLS=0
   # VINC: added
   if [[ -z "$CLUSTER_CREDS" ]]
