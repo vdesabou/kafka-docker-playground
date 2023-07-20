@@ -1389,6 +1389,19 @@ commands:
       help: |- 
         😴 Wait until lag becomes 0
 
+  - name: show-config
+    help: 🔩 Show all possible configuration parameters of connector
+    flags:
+    - *ccloudconnector
+    - long: --open
+      short: -o
+      help: |- 
+        🔖 Save output to a file and open with text editor set with config.ini (default is code)
+    - long: --force-refresh
+      required: false
+      help: |-
+        ☢️ Force refresh.
+
   - name: create-or-update
     help: 🧑‍🎨  Create or update connector
     args:

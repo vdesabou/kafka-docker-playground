@@ -191,6 +191,11 @@ bash $filename ${other_args[*]}
 ret=$?
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 let ELAPSED_TOTAL+=$SECONDS
+set +e
+# just run it in background in case it is called later, the 
+# file will be present and it will be much faster to display config
+playground ccloud-connector show-config > /dev/null 2>&1 &
+set -e
 if [ $ret -eq 0 ]
 then
     log "####################################################"
