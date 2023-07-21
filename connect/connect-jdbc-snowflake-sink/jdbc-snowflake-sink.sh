@@ -141,13 +141,13 @@ create or replace table FOO (f1 string, update_ts timestamp default current_time
 EOF
 
 log "Sending messages to topic FOO"
-playground topic produce -t FOO --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+playground topic produce -t FOO --nb-messages 10 --forced-value '{"F1":"value%g"}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
   "fields": [
     {
-      "name": "f1",
+      "name": "F1",
       "type": "string"
     }
   ]
@@ -159,15 +159,15 @@ CONNECTION_URL="jdbc:snowflake://$SNOWFLAKE_ACCOUNT_NAME.snowflakecomputing.com/
 log "Creating JDBC Snowflake Sink connector"
 playground connector create-or-update --connector jdbc-snowflake-sink << EOF
 {
-               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-               "tasks.max": "1",
-               "connection.url": "$CONNECTION_URL",
-               "topics": "FOO",
-               "auto.create": "false",
-               "key.converter":"org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081"
-          }
+     "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+     "tasks.max": "1",
+     "connection.url": "$CONNECTION_URL",
+     "topics": "FOO",
+     "auto.create": "false",
+     "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "io.confluent.connect.avro.AvroConverter",
+     "value.converter.schema.registry.url": "http://schema-registry:8081"
+}
 EOF
 
 
