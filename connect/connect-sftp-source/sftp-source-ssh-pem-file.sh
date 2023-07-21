@@ -28,24 +28,24 @@ rm -f csv-sftp-source.csv
 log "Creating CSV SFTP Source connector"
 playground connector create-or-update --connector sftp-source-ssh-pem-file << EOF
 {
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",
-               "cleanup.policy":"NONE",
-               "behavior.on.error":"IGNORE",
-               "input.path": "/home/foo/upload/input",
-               "error.path": "/home/foo/upload/error",
-               "finished.path": "/home/foo/upload/finished",
-               "input.file.pattern": ".*\\\\.csv",
-               "sftp.username":"foo",
-               "sftp.password": "",
-               "tls.pemfile": "/tmp/ssh_host_rsa_key.pem",
-               "tls.passphrase": "mypassword",
-               "sftp.host":"sftp-server",
-               "sftp.port":"22",
-               "kafka.topic": "sftp-testing-topic",
-               "csv.first.row.as.header": "true",
-               "schema.generation.enabled": "true"
-          }
+     "tasks.max": "1",
+     "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",
+     "cleanup.policy":"NONE",
+     "behavior.on.error":"IGNORE",
+     "input.path": "/home/foo/upload/input",
+     "error.path": "/home/foo/upload/error",
+     "finished.path": "/home/foo/upload/finished",
+     "input.file.pattern": ".*\\\\.csv",
+     "sftp.username":"foo",
+     "sftp.password": "",
+     "tls.pemfile": "/tmp/ssh_host_rsa_key.pem",
+     "tls.passphrase": "mypassword",
+     "sftp.host":"sftp-server",
+     "sftp.port":"22",
+     "kafka.topic": "sftp-testing-topic",
+     "csv.first.row.as.header": "true",
+     "schema.generation.enabled": "true"
+}
 EOF
 
 sleep 15

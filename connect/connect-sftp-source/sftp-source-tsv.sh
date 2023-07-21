@@ -22,23 +22,23 @@ rm -f tsv-sftp-source.tsv
 log "Creating TSV SFTP Source connector"
 playground connector create-or-update --connector sftp-source-tsv << EOF
 {
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",
-               "cleanup.policy":"NONE",
-               "behavior.on.error":"IGNORE",
-               "input.path": "/home/foo/upload/input",
-               "error.path": "/home/foo/upload/error",
-               "finished.path": "/home/foo/upload/finished",
-               "input.file.pattern": "tsv-sftp-source.tsv",
-               "sftp.username":"foo",
-               "sftp.password":"pass",
-               "sftp.host":"sftp-server",
-               "sftp.port":"22",
-               "kafka.topic": "sftp-testing-topic",
-               "csv.first.row.as.header": "true",
-               "schema.generation.enabled": "true",
-               "csv.separator.char": "9"
-          }
+     "tasks.max": "1",
+     "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",
+     "cleanup.policy":"NONE",
+     "behavior.on.error":"IGNORE",
+     "input.path": "/home/foo/upload/input",
+     "error.path": "/home/foo/upload/error",
+     "finished.path": "/home/foo/upload/finished",
+     "input.file.pattern": "tsv-sftp-source.tsv",
+     "sftp.username":"foo",
+     "sftp.password":"pass",
+     "sftp.host":"sftp-server",
+     "sftp.port":"22",
+     "kafka.topic": "sftp-testing-topic",
+     "csv.first.row.as.header": "true",
+     "schema.generation.enabled": "true",
+     "csv.separator.char": "9"
+}
 EOF
 
 sleep 15

@@ -55,23 +55,23 @@ rm -f csv-sftp-source.csv
 log "Creating CSV SFTP Source connector"
 playground connector create-or-update --connector sftp-source-kerberos-csv << EOF
 {
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",
-               "cleanup.policy":"NONE",
-               "behavior.on.error":"IGNORE",
-               "input.path": "/home/sshuser/upload/input",
-               "error.path": "/home/sshuser/upload/error",
-               "finished.path": "/home/sshuser/upload/finished",
-               "input.file.pattern": ".*\\\\.csv",
-               "sftp.username":"sshuser",
-               "kerberos.keytab.path": "/tmp/sshuser.keytab",
-               "kerberos.user.principal": "sshuser",
-               "sftp.host":"ssh-server",
-               "sftp.port":"22",
-               "kafka.topic": "sftp-testing-topic",
-               "csv.first.row.as.header": "true",
-               "schema.generation.enabled": "true"
-          }
+     "tasks.max": "1",
+     "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",
+     "cleanup.policy":"NONE",
+     "behavior.on.error":"IGNORE",
+     "input.path": "/home/sshuser/upload/input",
+     "error.path": "/home/sshuser/upload/error",
+     "finished.path": "/home/sshuser/upload/finished",
+     "input.file.pattern": ".*\\\\.csv",
+     "sftp.username":"sshuser",
+     "kerberos.keytab.path": "/tmp/sshuser.keytab",
+     "kerberos.user.principal": "sshuser",
+     "sftp.host":"ssh-server",
+     "sftp.port":"22",
+     "kafka.topic": "sftp-testing-topic",
+     "csv.first.row.as.header": "true",
+     "schema.generation.enabled": "true"
+}
 EOF
 
 sleep 15
