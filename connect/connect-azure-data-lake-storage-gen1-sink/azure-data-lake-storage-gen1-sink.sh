@@ -49,6 +49,16 @@ log "Registering active directory App $AZURE_AD_APP_NAME"
 AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --is-fallback-public-client false --sign-in-audience AzureADandPersonalMicrosoftAccount --query appId -o tsv)
 AZURE_DATALAKE_CLIENT_PASSWORD=$(az ad app credential reset --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.password')
 
+if [ "$AZURE_DATALAKE_CLIENT_PASSWORD" == "" ]
+then
+  logerror "password could not be retrieved"
+  if [ -z "$CI" ]
+  then
+    az ad app credential reset --id $AZURE_DATALAKE_CLIENT_ID
+  fi
+  exit 1
+fi
+
 log "Creating Service Principal associated to the App"
 SERVICE_PRINCIPAL_ID=$(az ad sp create --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.id')
 
