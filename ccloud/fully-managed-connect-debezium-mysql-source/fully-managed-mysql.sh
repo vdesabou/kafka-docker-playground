@@ -136,7 +136,6 @@ playground ccloud-connector create-or-update --connector $connector_name << EOF
     "database.port": "$NGROK_PORT",
     "database.user": "debezium",
     "database.password": "dbz",
-    "database.server.id": "223344",
     "database.server.name": "dbserver1",
     "database.whitelist": "mydb",
     "plugin.name": "pgoutput",
