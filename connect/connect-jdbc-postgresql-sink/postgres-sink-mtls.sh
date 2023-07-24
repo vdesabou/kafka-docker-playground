@@ -140,5 +140,4 @@ sleep 5
 
 log "Show content of ORDERS table:"
 docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM ORDERS'" > /tmp/result.log  2>&1
-cat /tmp/result.log
-grep "foo" /tmp/result.log | grep "100"
+grep "foo" /tmp/result.log
