@@ -67,44 +67,44 @@ playground topic produce -t ORDERS --nb-messages 1 << 'EOF'
   "name": "myrecord",
   "fields": [
     {
-      "name": "id",
+      "name": "ID",
       "type": "int"
     },
     {
-      "name": "product",
+      "name": "PRODUCT",
       "type": "string"
     },
     {
-      "name": "quantity",
+      "name": "QUANTITY",
       "type": "int"
     },
     {
-      "name": "price",
+      "name": "PRICE",
       "type": "float"
     }
   ]
 }
 EOF
 
-playground topic produce -t ORDERS --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
+playground topic produce -t ORDERS --nb-messages 1 --forced-value '{"ID":2,"PRODUCT":"foo","QUANTITY":2,"PRICE":0.86583304}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
   "fields": [
     {
-      "name": "id",
+      "name": "ID",
       "type": "int"
     },
     {
-      "name": "product",
+      "name": "PRODUCT",
       "type": "string"
     },
     {
-      "name": "quantity",
+      "name": "QUANTITY",
       "type": "int"
     },
     {
-      "name": "price",
+      "name": "PRICE",
       "type": "float"
     }
   ]

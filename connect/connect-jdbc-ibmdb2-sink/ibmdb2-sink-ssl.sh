@@ -121,44 +121,44 @@ playground topic produce -t ORDERS --nb-messages 1 << 'EOF'
   "name": "myrecord",
   "fields": [
     {
-      "name": "id",
+      "name": "ID",
       "type": "int"
     },
     {
-      "name": "product",
+      "name": "PRODUCT",
       "type": "string"
     },
     {
-      "name": "quantity",
+      "name": "QUANTITY",
       "type": "int"
     },
     {
-      "name": "price",
+      "name": "PRICE",
       "type": "float"
     }
   ]
 }
 EOF
 
-playground topic produce -t ORDERS --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
+playground topic produce -t ORDERS --nb-messages 1 --forced-value '{"ID":2,"PRODUCT":"foo","QUANTITY":2,"PRICE":0.86583304}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
   "fields": [
     {
-      "name": "id",
+      "name": "ID",
       "type": "int"
     },
     {
-      "name": "product",
+      "name": "PRODUCT",
       "type": "string"
     },
     {
-      "name": "quantity",
+      "name": "QUANTITY",
       "type": "int"
     },
     {
-      "name": "price",
+      "name": "PRICE",
       "type": "float"
     }
   ]
@@ -168,16 +168,16 @@ EOF
 log "Creating JDBC IBM DB2 sink connector"
 playground connector create-or-update --connector ibmdb2-sink << EOF
 {
-               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-               "tasks.max": "1",
-               "connection.url":"jdbc:db2://ibmdb2:50002/sample:retrieveMessagesFromServerOnGetMessage=true;sslConnection=true;sslTrustStoreLocation=/etc/kafka/secrets/truststore.jks;sslTrustStorePassword=confluent;sslTrustStoreType=JKS;",
-               "connection.user":"db2inst1",
-               "connection.password":"passw0rd",
-               "topics": "ORDERS",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true",
-               "auto.create": "true"
-          }
+  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+  "tasks.max": "1",
+  "connection.url":"jdbc:db2://ibmdb2:50002/sample:retrieveMessagesFromServerOnGetMessage=true;sslConnection=true;sslTrustStoreLocation=/etc/kafka/secrets/truststore.jks;sslTrustStorePassword=confluent;sslTrustStoreType=JKS;",
+  "connection.user":"db2inst1",
+  "connection.password":"passw0rd",
+  "topics": "ORDERS",
+  "errors.log.enable": "true",
+  "errors.log.include.messages": "true",
+  "auto.create": "true"
+}
 EOF
 
 
