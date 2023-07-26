@@ -35,10 +35,17 @@ docker exec -i pivotal-gemfire sh /opt/pivotal/workdir/startServer2.sh
 sleep 8
 
 log "Sending messages to topic input_topic"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic input_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' << EOF
-{"f1": "value1"}
-{"f1": "value2"}
-{"f1": "value3"}
+playground topic produce -t input_topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+{
+  "type": "record",
+  "name": "myrecord",
+  "fields": [
+    {
+      "name": "f1",
+      "type": "string"
+    }
+  ]
+}
 EOF
 
 log "Creating Pivotal Gemfire sink connector"

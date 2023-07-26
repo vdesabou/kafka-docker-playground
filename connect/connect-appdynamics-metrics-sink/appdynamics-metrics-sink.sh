@@ -27,8 +27,43 @@ log "Check logs"
 docker exec -i appdynamics-metrics bash -c "cat /opt/appdynamics/machine-agent/logs/machine-agent.log"
 
 log "Sending messages to topic appdynamics-metrics-topic"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic appdynamics-metrics-topic --property value.schema='{"name": "metric","type": "record","fields": [{"name": "name","type": "string"},{"name": "dimensions", "type": {"name": "dimensions", "type": "record", "fields": [{"name": "aggregatorType", "type":"string"}]}},{"name": "values","type": {"name": "values","type": "record","fields": [{"name":"doubleValue", "type": "double"}]}}]}' << EOF
-{"name":"Custom Metrics|Tier-1|CPU-Usage", "dimensions":{"aggregatorType":"AVERAGE"},  "values":{"doubleValue":5.639623848362502}}
+playground topic produce -t appdynamics-metrics-topic << 'EOF'
+{
+  "fields": [
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "dimensions",
+      "type": {
+        "fields": [
+          {
+            "name": "aggregatorType",
+            "type": "string"
+          }
+        ],
+        "name": "dimensions",
+        "type": "record"
+      }
+    },
+    {
+      "name": "values",
+      "type": {
+        "fields": [
+          {
+            "name": "doubleValue",
+            "type": "double"
+          }
+        ],
+        "name": "values",
+        "type": "record"
+      }
+    }
+  ],
+  "name": "metric",
+  "type": "record"
+}
 EOF
 
 log "Creating AppDynamics Metrics sink connector"

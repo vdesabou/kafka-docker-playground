@@ -48,8 +48,7 @@ playground connector create-or-update --connector firebase-sink << EOF
      "gcp.firebase.credentials.path": "/tmp/keyfile.json",
      "gcp.firebase.database.reference": "https://$GCP_PROJECT.firebaseio.com/musicBlog",
      "insert.mode":"update",
-     "key.converter" : "io.confluent.connect.avro.AvroConverter",
-     "key.converter.schema.registry.url":"http://schema-registry:8081",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
      "value.converter" : "io.confluent.connect.avro.AvroConverter",
      "value.converter.schema.registry.url":"http://schema-registry:8081",
      "confluent.topic.bootstrap.servers": "broker:9092",
@@ -58,18 +57,39 @@ playground connector create-or-update --connector firebase-sink << EOF
 EOF
 
 
-log "Produce Avro data to topic artists"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic artists --property parse.key=true --property key.schema='{"type":"string"}' --property "key.separator=:" --property value.schema='{"type":"record","name":"artists","fields":[{"name":"name","type":"string"},{"name":"genre","type":"string"}]}' << EOF
-"artistId1":{"name":"Michael Jackson","genre":"Pop"}
-"artistId2":{"name":"Bob Dylan","genre":"American folk"}
-"artistId3":{"name":"Freddie Mercury","genre":"Rock"}
+playground topic produce -t artists --nb-messages 4 --key "artistId%g" << 'EOF'
+{
+  "fields": [
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "genre",
+      "type": "string"
+    }
+  ],
+  "name": "artists",
+  "type": "record"
+}
 EOF
 
 log "Produce Avro data to topic songs"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic songs --property parse.key=true --property key.schema='{"type":"string"}' --property "key.separator=:" --property value.schema='{"type":"record","name":"songs","fields":[{"name":"title","type":"string"},{"name":"artist","type":"string"}]}' << EOF
-"songId1":{"title":"billie jean","artist":"Michael Jackson"}
-"songId2":{"title":"hurricane","artist":"Bob Dylan"}
-"songId3":{"title":"bohemian rhapsody","artist":"Freddie Mercury"}
+playground topic produce -t songs --nb-messages 3 --key "songId%g" << 'EOF'
+{
+  "fields": [
+    {
+      "name": "title",
+      "type": "string"
+    },
+    {
+      "name": "artist",
+      "type": "string"
+    }
+  ],
+  "name": "songs",
+  "type": "record"
+}
 EOF
 
 log "Follow README to verify data is in Firebase"
@@ -80,6 +100,6 @@ then
      log "Verifying data is in Firebase"
      docker run -p 9005:9005 -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$GCP_PROJECT -i kamshak/firebase-tools-docker firebase database:get / --token "$FIREBASE_TOKEN" --project "$GCP_PROJECT" | jq . > /tmp/result.log  2>&1
      cat /tmp/result.log
-     grep "Michael Jackson" /tmp/result.log
+     grep "artist" /tmp/result.log
 fi
 

@@ -22,10 +22,29 @@ playground topic create --topic products-avro
 set -e
 
 log "Sending messages to topic products-avro on source OnPREM cluster"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info='admin:admin' --topic products-avro --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"name","type":"string"},{"name":"price", "type": "float"}, {"name":"quantity", "type": "int"}]}' --property key.schema='{"type":"string"}' --property parse.key=true --property key.separator=":" << EOF
-"122346":{"name": "scissors", "price": 2.75, "quantity": 3}
-"122347":{"name": "tape", "price": 0.99, "quantity": 10}
-"122348":{"name": "notebooks", "price": 1.99, "quantity": 5}
+playground topic produce -t products-avro --nb-messages 3 << 'EOF'
+{
+  "fields": [
+    {
+      "name": "id",
+      "type": "int"
+    },
+    {
+      "name": "product",
+      "type": "string"
+    },
+    {
+      "name": "quantity",
+      "type": "int"
+    },
+    {
+      "name": "price",
+      "type": "float"
+    }
+  ],
+  "name": "myrecord",
+  "type": "record"
+}
 EOF
 
 playground connector create-or-update --connector replicate-onprem-to-cloud << EOF

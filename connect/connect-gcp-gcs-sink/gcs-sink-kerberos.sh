@@ -54,8 +54,18 @@ log "##  Kerberos GSSAPI authentication"
 log "########"
 
 log "Sending messages to topic gcs_topic"
-docker exec -i client kinit -k -t /var/lib/secret/kafka-client.key kafka_producer
-seq -f "{\"f1\": \"This is a message sent with Kerberos GSSAPI authentication %g\"}" 10 | docker exec -i client kafka-avro-console-producer --broker-list broker:9092 --topic gcs_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --producer.config /etc/kafka/producer.properties
+playground topic produce -t gcs_topic --nb-messages 10 --forced-value "value%g" << 'EOF'
+{
+  "fields": [
+    {
+      "name": "f1",
+      "type": "string"
+    }
+  ],
+  "name": "myrecord",
+  "type": "record"
+}
+EOF
 
 log "Creating GCS Sink connector with Kerberos GSSAPI authentication"
 playground connector create-or-update --connector gcs-sink << EOF

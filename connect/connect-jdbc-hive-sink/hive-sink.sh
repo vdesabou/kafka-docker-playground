@@ -32,21 +32,36 @@ show databases
 EOF
 
 log "Sending messages to topic pokes"
-seq -f "{\"foo\": %g,\"bar\": \"a string\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic pokes --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"foo","type":"int"},{"name":"bar","type":"string"}]}'
+playground topic produce -t pokes --nb-messages 10 --forced-value "{\"foo\": %g,\"bar\": \"a string\"}" << 'EOF'
+{
+  "fields": [
+    {
+      "name": "foo",
+      "type": "int"
+    },
+    {
+      "name": "bar",
+      "type": "string"
+    }
+  ],
+  "name": "myrecord",
+  "type": "record"
+}
+EOF
 
 log "Creating JDBC Hive sink connector"
 playground connector create-or-update --connector jdbc-hive-sink << EOF
 {
-               "connector.class" : "io.confluent.connect.jdbc.JdbcSinkConnector",
-               "tasks.max" : "1",
-               "connection.url": "jdbc:hive2://hive-server:10000/default",
-               "auto.create": "true",
-               "auto.evolve": "true",
-               "topics": "pokes",
-               "pk.mode": "record_value",
-               "pk.fields": "foo",
-               "table.name.format": "default.\${topic}"
-          }
+     "connector.class" : "io.confluent.connect.jdbc.JdbcSinkConnector",
+     "tasks.max" : "1",
+     "connection.url": "jdbc:hive2://hive-server:10000/default",
+     "auto.create": "true",
+     "auto.evolve": "true",
+     "topics": "pokes",
+     "pk.mode": "record_value",
+     "pk.fields": "foo",
+     "table.name.format": "default.\${topic}"
+}
 EOF
 
 #

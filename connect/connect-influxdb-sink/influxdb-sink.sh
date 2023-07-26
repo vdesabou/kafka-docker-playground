@@ -8,13 +8,33 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 
 log "Sending messages to topic orders"
-docker exec -i connect kafka-avro-console-producer \
-     --broker-list broker:9092 \
-     --property schema.registry.url=http://schema-registry:8081 \
-     --topic orders \
-     --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"measurement","type":"string"},{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
-"type": "float"}]}' << EOF
-{"measurement": "orders", "id": 999, "product": "foo", "quantity": 100, "price": 50}
+playground topic produce -t orders --nb-messages 3 << 'EOF'
+{
+  "fields": [
+    {
+      "name": "measurement",
+      "type": "string"
+    },
+    {
+      "name": "id",
+      "type": "int"
+    },
+    {
+      "name": "product",
+      "type": "string"
+    },
+    {
+      "name": "quantity",
+      "type": "int"
+    },
+    {
+      "name": "price",
+      "type": "float"
+    }
+  ],
+  "name": "myrecord",
+  "type": "record"
+}
 EOF
 
 docker exec -i connect kafka-avro-console-consumer \
@@ -24,20 +44,19 @@ docker exec -i connect kafka-avro-console-consumer \
      --from-beginning \
      --max-messages=1
 
-log "Creating orders InfluxDB sink connector"
-curl -s -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.influxdb.InfluxDBSinkConnector",
-                    "tasks.max": "1",
-                    "influxdb.url": "http://influxdb:8086",
-                    "topics": "orders"
-          }' \
-     http://localhost:8083/connectors/influxdb-sink/config | jq .
+log "Creating InfluxDB sink connector"
+playground connector create-or-update --connector influxdb-sink << EOF
+{
+     "connector.class": "io.confluent.influxdb.InfluxDBSinkConnector",
+     "tasks.max": "1",
+     "influxdb.url": "http://influxdb:8086",
+     "topics": "orders"
+}
+EOF
 
 sleep 10
 
 log "Verify that order is in InfluxDB"
 docker exec influxdb influx -database orders -execute 'select * from orders' > /tmp/result.log  2>&1
 cat /tmp/result.log
-grep "foo" /tmp/result.log
+grep "product" /tmp/result.log

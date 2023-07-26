@@ -52,11 +52,29 @@ curl -X DELETE -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO $SCHEMA_REGISTRY_URL/sub
 set -e
 
 log "Sending messages to topic executable-products-avro on source OnPREM cluster"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic executable-products-avro --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"name","type":"string"},
-{"name":"price", "type": "float"}, {"name":"quantity", "type": "int"}]}' << EOF
-{"name": "scissors", "price": 2.75, "quantity": 3}
-{"name": "tape", "price": 0.99, "quantity": 10}
-{"name": "notebooks", "price": 1.99, "quantity": 5}
+playground topic produce -t executable-products-avro --nb-messages 3 << 'EOF'
+{
+  "fields": [
+    {
+      "name": "id",
+      "type": "int"
+    },
+    {
+      "name": "product",
+      "type": "string"
+    },
+    {
+      "name": "quantity",
+      "type": "int"
+    },
+    {
+      "name": "price",
+      "type": "float"
+    }
+  ],
+  "name": "myrecord",
+  "type": "record"
+}
 EOF
 
 log "Starting replicator executable"

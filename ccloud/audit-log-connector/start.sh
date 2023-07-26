@@ -51,24 +51,24 @@ OUTPUT_FILE="${CONNECT_CONTAINER_HOME_DIR}/data/ouput/file.json"
 log "Creating FileStream Sink connector reading confluent-audit-log-events from the audit log cluster"
 playground connector create-or-update --connector filestream-sink << EOF
 {
-               "tasks.max": "1",
-               "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
-               "topics": "confluent-audit-log-events",
-               "file": "/tmp/output.json",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-               "value.converter.schemas.enable": "false",
-               "consumer.override.bootstrap.servers": "\${file:/data_audit_cluster:bootstrap.servers}",
-               "consumer.override.sasl.mechanism": "PLAIN",
-               "consumer.override.security.protocol": "SASL_SSL",
-               "consumer.override.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\${file:/data_audit_cluster:sasl.username}\" password=\"\${file:/data_audit_cluster:sasl.password}\";",
-               "consumer.override.client.dns.lookup": "use_all_dns_ips",
-               "consumer.override.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
-               "consumer.override.confluent.monitoring.interceptor.bootstrap.servers": "\${file:/data:bootstrap.servers}",
-               "consumer.override.confluent.monitoring.interceptor.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\${file:/data:sasl.username}\" password=\"\${file:/data:sasl.password}\";",
-               "consumer.override.confluent.monitoring.interceptor.sasl.mechanism": "PLAIN",
-               "consumer.override.confluent.monitoring.interceptor.security.protocol": "SASL_SSL"
-          }
+     "tasks.max": "1",
+     "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+     "topics": "confluent-audit-log-events",
+     "file": "/tmp/output.json",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "value.converter.schemas.enable": "false",
+     "consumer.override.bootstrap.servers": "\${file:/data_audit_cluster:bootstrap.servers}",
+     "consumer.override.sasl.mechanism": "PLAIN",
+     "consumer.override.security.protocol": "SASL_SSL",
+     "consumer.override.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\${file:/data_audit_cluster:sasl.username}\" password=\"\${file:/data_audit_cluster:sasl.password}\";",
+     "consumer.override.client.dns.lookup": "use_all_dns_ips",
+     "consumer.override.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
+     "consumer.override.confluent.monitoring.interceptor.bootstrap.servers": "\${file:/data:bootstrap.servers}",
+     "consumer.override.confluent.monitoring.interceptor.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\${file:/data:sasl.username}\" password=\"\${file:/data:sasl.password}\";",
+     "consumer.override.confluent.monitoring.interceptor.sasl.mechanism": "PLAIN",
+     "consumer.override.confluent.monitoring.interceptor.security.protocol": "SASL_SSL"
+}
 EOF
 
 sleep 10

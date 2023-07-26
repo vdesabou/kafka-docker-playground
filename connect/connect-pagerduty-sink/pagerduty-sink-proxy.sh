@@ -31,31 +31,46 @@ fi
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.proxy.yml"
 
 log "Sending messages to topic incidents"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic incidents --property value.schema='{"type":"record","name":"details","fields":[{"name":"fromEmail","type":"string"}, {"name":"serviceId","type":"string"},{"name":"incidentTitle","type":"string"}]}' << EOF
-{"fromEmail":"$PAGERDUTY_USER_EMAIL", "serviceId":"$PAGERDUTY_SERVICE_ID", "incidentTitle":"Incident Title x 0"}
-{"fromEmail":"$PAGERDUTY_USER_EMAIL", "serviceId":"$PAGERDUTY_SERVICE_ID", "incidentTitle":"Incident Title x 1"}
-{"fromEmail":"$PAGERDUTY_USER_EMAIL", "serviceId":"$PAGERDUTY_SERVICE_ID", "incidentTitle":"Incident Title x 2"}
+playground topic produce -t incidents --nb-messages 3 --forced-value "{\"fromEmail\":\"$PAGERDUTY_USER_EMAIL\", \"serviceId\":\"$PAGERDUTY_SERVICE_ID\", \"incidentTitle\":\"Incident Title x %g\"}" << 'EOF'
+{
+  "fields": [
+    {
+      "name": "fromEmail",
+      "type": "string"
+    },
+    {
+      "name": "serviceId",
+      "type": "string"
+    },
+    {
+      "name": "incidentTitle",
+      "type": "string"
+    }
+  ],
+  "name": "details",
+  "type": "record"
+}
 EOF
 
 log "Creating PagerDuty Sink connector"
 playground connector create-or-update --connector pagerduty-sink << EOF
 {
-                    "connector.class": "io.confluent.connect.pagerduty.PagerDutySinkConnector",
-                    "topics": "incidents",
-                    "pagerduty.api.key": "$PAGERDUTY_API_KEY",
-                    "pagerduty.proxy.url": "https://nginx-proxy:8888",
-                    "tasks.max": "1",
-                    "behavior.on.error":"fail",
-                    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter": "io.confluent.connect.avro.AvroConverter",
-                    "value.converter.schema.registry.url": "http://schema-registry:8081",
-                    "reporter.bootstrap.servers": "broker:9092",
-                    "reporter.error.topic.replication.factor": 1,
-                    "reporter.result.topic.replication.factor": 1,
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }
+     "connector.class": "io.confluent.connect.pagerduty.PagerDutySinkConnector",
+     "topics": "incidents",
+     "pagerduty.api.key": "$PAGERDUTY_API_KEY",
+     "pagerduty.proxy.url": "https://nginx-proxy:8888",
+     "tasks.max": "1",
+     "behavior.on.error":"fail",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "io.confluent.connect.avro.AvroConverter",
+     "value.converter.schema.registry.url": "http://schema-registry:8081",
+     "reporter.bootstrap.servers": "broker:9092",
+     "reporter.error.topic.replication.factor": 1,
+     "reporter.result.topic.replication.factor": 1,
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 

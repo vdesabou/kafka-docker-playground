@@ -54,7 +54,18 @@ log "##  SSL authentication"
 log "########"
 
 log "Sending messages to topic gcs_topic"
-seq -f "{\"f1\": \"This is a message sent with SSL authentication %g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --topic gcs_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=https://schema-registry:8081 --property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks --property schema.registry.ssl.truststore.password=confluent --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks --property schema.registry.ssl.keystore.password=confluent --producer.config /etc/kafka/secrets/client_without_interceptors.config
+playground topic produce -t gcs_topic --nb-messages 10 --forced-value "value%g" << 'EOF'
+{
+  "fields": [
+    {
+      "name": "f1",
+      "type": "string"
+    }
+  ],
+  "name": "myrecord",
+  "type": "record"
+}
+EOF
 
 log "Creating GCS Sink connector with SSL authentication"
 playground connector create-or-update --connector gcs-sink << EOF

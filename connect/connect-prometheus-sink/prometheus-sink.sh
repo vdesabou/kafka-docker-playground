@@ -28,13 +28,38 @@ EOF
 
 NOW=$(date +%s)
 log "Sending messages to topic test-topic"
-docker exec -i -e NOW=$NOW connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test-topic --property value.schema='{"name": "metric","type": "record","fields": [{"name": "name","type": "string"},{"name": "type","type": "string"},{"name": "timestamp","type": "long"},{"name": "values","type": {"name": "values","type": "record","fields": [{"name":"doubleValue", "type": "double"}]}}]}' << EOF
-{"name":"kafka_gaugeMetric1", "type":"gauge","timestamp": $NOW,"values": {"doubleValue": 5.639623848362502}}
-{"name":"kafka_gaugeMetric2", "type":"gauge","timestamp": $NOW,"values": {"doubleValue": 5.639623848362502}}
-{"name":"kafka_gaugeMetric3", "type":"gauge","timestamp": $NOW,"values": {"doubleValue": 5.639623848362502}}
-{"name":"kafka_gaugeMetric4", "type":"gauge","timestamp": $NOW,"values": {"doubleValue": 5.639623848362502}}
-{"name":"kafka_gaugeMetric5", "type":"gauge","timestamp": $NOW,"values": {"doubleValue": 5.639623848362502}}
-{"name":"kafka_gaugeMetric6", "type":"gauge","timestamp": $NOW,"values": {"doubleValue": 5.639623848362502}}
+playground topic produce -t test-topic --nb-messages 6 --forced-value "{\"name\":\"kafka_gaugeMetric%g\", \"type\":\"gauge\",\"timestamp\": $NOW,\"values\": {\"doubleValue\": 5.639623848362502}}" << 'EOF'
+{
+  "fields": [
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "type",
+      "type": "string"
+    },
+    {
+      "name": "timestamp",
+      "type": "long"
+    },
+    {
+      "name": "values",
+      "type": {
+        "fields": [
+          {
+            "name": "doubleValue",
+            "type": "double"
+          }
+        ],
+        "name": "values",
+        "type": "record"
+      }
+    }
+  ],
+  "name": "metric",
+  "type": "record"
+}
 EOF
 
 sleep 6

@@ -12,7 +12,18 @@ fi
 ${DIR}/../../environment/rbac-sasl-plain/start.sh "${PWD}/docker-compose.rbac-sasl-plain.yml"
 
 log "Sending messages to topic rbac_topic"
-seq -f "{\"f1\": \"This is a message sent with RBAC SASL/PLAIN authentication %g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic rbac_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli --producer.config /etc/kafka/secrets/client_without_interceptors.config
+playground topic produce -t rbac_topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+{
+  "type": "record",
+  "name": "myrecord",
+  "fields": [
+    {
+      "name": "f1",
+      "type": "string"
+    }
+  ]
+}
+EOF
 
 log "Checking messages from topic rbac_topic"
 playground topic consume --topic rbac_topic --min-expected-messages 1 --timeout 60

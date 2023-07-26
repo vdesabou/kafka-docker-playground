@@ -68,12 +68,31 @@ log "Create a BigTable Instance and Database"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances create $INSTANCE --project $GCP_PROJECT --cluster $INSTANCE --cluster-zone=us-east1-c --display-name="playground-bigtable-instance" --instance-type=DEVELOPMENT
 
 log "Sending messages to topic stats"
-docker exec -i -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect kafka-avro-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic stats --property parse.key=true --property key.separator=, --property key.schema='{"type" : "string", "name" : "id"}' --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"users","type":{"name":"columnfamily","type":"record","fields":[{"name": "name", "type": "string"},{"name": "friends", "type": "string"}]}}]}' << EOF
-"simple-key-1", {"users": {"name":"Bob","friends": "1000"}}
-"simple-key-2", {"users": {"name":"Jess","friends": "10000"}}
-"simple-key-3", {"users": {"name":"John","friends": "10000"}}
+playground topic produce -t stats --nb-messages 3 --key "simple-key-%g" << 'EOF'
+{
+  "fields": [
+    {
+      "name": "users",
+      "type": {
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "friends",
+            "type": "string"
+          }
+        ],
+        "name": "columnfamily",
+        "type": "record"
+      }
+    }
+  ],
+  "name": "myrecord",
+  "type": "record"
+}
 EOF
-
 
 log "Creating GCP BigTbale Sink connector"
 playground connector create-or-update --connector gcp-bigtable-sink << EOF
@@ -87,7 +106,8 @@ playground connector create-or-update --connector gcp-bigtable-sink << EOF
      "gcp.bigtable.project.id": "$GCP_PROJECT",
      "auto.create.tables": "true",
      "auto.create.column.families": "true",
-     "table.name.format" : "kafka_\${topic}"
+     "table.name.format" : "kafka_\${topic}",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter"
 }
 EOF
 
