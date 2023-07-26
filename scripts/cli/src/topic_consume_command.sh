@@ -288,6 +288,8 @@ do
      latency_png="$tmp_dir/latency.png"
   fi
   found=0
+  first_record=1
+  is_base64=0
   # Loop through each line in the named pipe
   while read -r line
   do
@@ -301,6 +303,25 @@ do
       milliseconds=$((timestamp_ms % 1000))
       readable_date="$(${date_command}${timestamp_sec} "+%Y-%m-%d %H:%M:%S.${milliseconds}")"
       line_with_date=$(echo "$line" | sed -E "s/CreateTime:[0-9]{13}/CreateTime: ${readable_date}/")
+
+      if [ $first_record -eq 1 ]
+      then
+        payload=$(echo "$line" | cut -d "|" -f 6)
+        # check if it is base64 encoded
+        base64=$(echo "$payload" | tr -d '"' | base64 --decode)
+        if [ "$base64" != "" ]
+        then
+          log "🤖 Data is base64 encoded"
+          is_base64=1
+        fi
+        first_record=0
+      fi
+
+      if [ $is_base64 -eq 1 ]
+      then
+        base64=$(echo "$payload" | tr -d '"' | base64 --decode)
+        line_with_date=$(echo "$line_with_date" | awk 'BEGIN {FS=OFS="|"} {$6="$base64"}1')
+      fi
 
       if [[ -n "$grep_string" ]]
       then
