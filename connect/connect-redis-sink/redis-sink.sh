@@ -8,10 +8,8 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 
 log "Sending messages to topic users"
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic users --property parse.key=true --property key.separator=, << EOF
-key1,value1
-key2,value2
-key3,value3
+playground topic produce -t users --nb-messages 3 --key "key%g" << 'EOF'
+value%g
 EOF
 
 log "Creating Redis sink connector"

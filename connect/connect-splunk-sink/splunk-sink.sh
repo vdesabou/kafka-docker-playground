@@ -50,12 +50,9 @@ playground connector create-or-update --connector splunk-sink << EOF
 }
 EOF
 
-
 log "Sending messages to topic splunk-qs"
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic splunk-qs << EOF
-This is a test with Splunk 1
-This is a test with Splunk 2
-This is a test with Splunk 3
+playground topic produce -t splunk-qs --nb-messages 3 << 'EOF'
+This is a test with Splunk %g
 EOF
 
 log "Sleeping 60 seconds"

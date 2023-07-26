@@ -108,9 +108,8 @@ select owner, table_name from dba_all_tables where table_name = 'FOOQUEUETABLE';
 EOF
 
 log "Sending messages to topic sink-messages"
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages << EOF
-This is my message 1
-This is my message 2
+playground topic produce -t sink-messages --nb-messages 2 << 'EOF'
+This is my message %g
 EOF
 
 

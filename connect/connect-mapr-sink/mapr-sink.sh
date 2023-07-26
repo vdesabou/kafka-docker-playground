@@ -70,10 +70,8 @@ mapr
 EOF
 
 log "Sending messages to topic maprtopic"
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic maprtopic --property parse.key=true --property key.separator=, << EOF
-1,{"schema":{"type":"struct","fields":[{"type":"string","optional":false,"field":"record"}]},"payload":{"record":"record1"}}
-2,{"schema":{"type":"struct","fields":[{"type":"string","optional":false,"field":"record"}]},"payload":{"record":"record2"}}
-3,{"schema":{"type":"struct","fields":[{"type":"string","optional":false,"field":"record"}]},"payload":{"record":"record3"}}
+playground topic produce -t maprtopic --nb-messages 3 --key "%g" << 'EOF'
+{"schema":{"type":"struct","fields":[{"type":"string","optional":false,"field":"record"}]},"payload":{"record":"record%g"}}
 EOF
 
 log "Creating Mapr sink connector"

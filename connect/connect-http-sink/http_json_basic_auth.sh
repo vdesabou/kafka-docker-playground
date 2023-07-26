@@ -12,7 +12,7 @@ fi
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending messages to topic json-topic"
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic json-topic << EOF
+playground topic produce -t json-topic << 'EOF'
 {"customer_name":"Ed", "complaint_type":"Dirty car", "trip_cost": 29.10, "new_customer": false, "number_of_rides": 22}
 EOF
 

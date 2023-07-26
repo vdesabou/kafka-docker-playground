@@ -14,10 +14,8 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.1.2
 
 
 log "Sending messages to topic hbase-test"
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic hbase-test --property parse.key=true --property key.separator=, << EOF
-key1,value1
-key2,value2
-key3,value3
+playground topic produce -t hbase-test --nb-messages 3 --key "key%g" << 'EOF'
+%g
 EOF
 
 log "Creating HBase sink connector"
