@@ -300,8 +300,11 @@ then
             playground topic create --topic $topic
         fi
     else
-        log "--nb-partitions is set, creating topic with $nb_partitions partitions"
-        playground topic create --topic $topic --nb-partitions $nb_partitions
+        if [ "$nb_partitions" != "" ]
+        then
+            log "--nb-partitions is set, creating topic with $nb_partitions partitions"
+            playground topic create --topic $topic --nb-partitions $nb_partitions
+        fi
     fi
 else
     if [ "$nb_partitions" != "" ]
