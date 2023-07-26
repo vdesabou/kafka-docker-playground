@@ -15,25 +15,25 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.1.2
 
 log "Sending messages to topic hbase-test"
 playground topic produce -t hbase-test --nb-messages 3 --key "key%g" << 'EOF'
-%g
+value%g
 EOF
 
 log "Creating HBase sink connector"
 playground connector create-or-update --connector hbase-sink << EOF
 {
-               "connector.class": "io.confluent.connect.hbase.HBaseSinkConnector",
-               "tasks.max": "1",
-               "key.converter":"org.apache.kafka.connect.storage.StringConverter",
-               "value.converter":"org.apache.kafka.connect.storage.StringConverter",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor":1,
-               "hbase.zookeeper.quorum": "hbase",
-               "hbase.zookeeper.property.clientPort": "2181",
-               "auto.create.tables": "true",
-               "auto.create.column.families": "true",
-               "table.name.format": "example_table",
-               "topics": "hbase-test"
-          }
+     "connector.class": "io.confluent.connect.hbase.HBaseSinkConnector",
+     "tasks.max": "1",
+     "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+     "value.converter":"org.apache.kafka.connect.storage.StringConverter",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor":1,
+     "hbase.zookeeper.quorum": "hbase",
+     "hbase.zookeeper.property.clientPort": "2181",
+     "auto.create.tables": "true",
+     "auto.create.column.families": "true",
+     "table.name.format": "example_table",
+     "topics": "hbase-test"
+}
 EOF
 
 sleep 10

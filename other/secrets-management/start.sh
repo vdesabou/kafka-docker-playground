@@ -36,14 +36,14 @@ EOF
 log "Creating FileStream Sink connector with topics set with secrets variable"
 playground connector create-or-update --connector filestream-sink << EOF
 {
-               "tasks.max": "1",
-               "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
-               "topics": "\${securepass:/etc/kafka/secrets/secret.txt:my-config-file.properties/my-secret-property}",
-               "file": "/tmp/output.json",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-               "value.converter.schemas.enable": "false"
-          }
+    "tasks.max": "1",
+    "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+    "topics": "\${securepass:/etc/kafka/secrets/secret.txt:my-config-file.properties/my-secret-property}",
+    "file": "/tmp/output.json",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false"
+}
 EOF
 
 
