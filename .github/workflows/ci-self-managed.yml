@@ -153,6 +153,7 @@ jobs:
           GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          CI: "true"
 
   stop-runner:
     name: Stop Github self-hosted runner
