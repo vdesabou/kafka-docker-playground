@@ -275,7 +275,7 @@ function verify_confluent_details()
 
 function check_if_continue()
 {
-    if [ ! -z "$CI" ]
+    if [ ! -z "$GITHUB_RUN_NUMBER" ]
     then
         # running with github actions, continue
         return
@@ -1251,7 +1251,7 @@ function create_or_get_oracle_image() {
       log "🧹 Clean up ${TEMP_CONTAINER}"
       docker rm ${TEMP_CONTAINER}
 
-      if [ ! -z "$CI" ]
+      if [ ! -z "$GITHUB_RUN_NUMBER" ]
       then
           set +e
           aws s3 ls s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar > /dev/null 2>&1
@@ -1363,7 +1363,7 @@ function maybe_delete_ccloud_environment () {
 function bootstrap_ccloud_environment () {
   DELTA_CONFIGS_ENV=/tmp/delta_configs/env.delta
 
-  if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
+  if [ -z "$GITHUB_RUN_NUMBER" ] && [ -z "$CLOUDFORMATION" ]
   then
     # not running with CI
     verify_installed "confluent"

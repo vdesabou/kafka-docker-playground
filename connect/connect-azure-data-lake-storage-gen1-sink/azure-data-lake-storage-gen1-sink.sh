@@ -52,7 +52,7 @@ AZURE_DATALAKE_CLIENT_PASSWORD=$(az ad app credential reset --id $AZURE_DATALAKE
 if [ "$AZURE_DATALAKE_CLIENT_PASSWORD" == "" ]
 then
   logerror "password could not be retrieved"
-  if [ -z "$CI" ]
+  if [ -z "$GITHUB_RUN_NUMBER" ]
   then
     az ad app credential reset --id $AZURE_DATALAKE_CLIENT_ID
   fi

@@ -51,7 +51,7 @@ EOF
 cat /tmp/result.log
 grep "AVRO" /tmp/result.log | grep "Surname A"
 
-if [ -z "$CI" ]
+if [ -z "$GITHUB_RUN_NUMBER" ]
 then
      log "Verify data is present in Neo4j http://localhost:7474 (neo4j/connect), see README"
      open "http://localhost:7474/"

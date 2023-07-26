@@ -261,7 +261,7 @@ add_latency connect-with-put-latency http-service-basic-auth 100ms
 latency_put=$(get_latency connect-with-put-latency http-service-basic-auth)
 log "Latency from connect-with-put-latency to http-service-basic-auth AFTER traffic control: $latency_put ms"
 
-if [ ! -z "$CI" ]
+if [ ! -z "$GITHUB_RUN_NUMBER" ]
 then
      # running with github actions
      log "##################################################"

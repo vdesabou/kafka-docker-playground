@@ -49,7 +49,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           AWS_REGION: ${{ secrets.AWS_REGION}}
-          CI: "true"
+          
 
   build:
     if: ${{ github.event.inputs.test_name == '' }}
@@ -209,7 +209,7 @@ jobs:
           ORACLE_CONTAINER_REGISTRY_PASSWORD: ${{ secrets.ORACLE_CONTAINER_REGISTRY_PASSWORD}}
           GCP_KEYFILE_CONTENT: ${{ secrets.GCP_KEYFILE_CONTENT}}
           GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
-          CI: "true"
+          
 
   execute_one_test:
     if: ${{ github.event.inputs.test_name != '' }}
@@ -335,7 +335,7 @@ jobs:
           ORACLE_CONTAINER_REGISTRY_PASSWORD: ${{ secrets.ORACLE_CONTAINER_REGISTRY_PASSWORD}}
           GCP_KEYFILE_CONTENT: ${{ secrets.GCP_KEYFILE_CONTENT}}
           GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
-          CI: "true"
+          
 
   post-build:
     name: Cleanup resources and Update README
@@ -388,7 +388,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           AWS_REGION: ${{ secrets.AWS_REGION}}
-          CI: "true"
+          
 
       - name: Update README
         run: |

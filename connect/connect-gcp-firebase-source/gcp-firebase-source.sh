@@ -26,7 +26,7 @@ else
 fi
 cd -
 
-if [ ! -z "$CI" ]
+if [ ! -z "$GITHUB_RUN_NUMBER" ]
 then
      # running with github actions
 

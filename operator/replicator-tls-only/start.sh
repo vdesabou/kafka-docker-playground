@@ -10,7 +10,7 @@ verify_installed "kubectl"
 verify_installed "minikube"
 verify_installed "helm"
 
-if [ -z "$CI" ]
+if [ -z "$GITHUB_RUN_NUMBER" ]
 then
    # not running with github actions
   set +e

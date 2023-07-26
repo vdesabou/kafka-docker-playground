@@ -168,7 +168,7 @@ do
 done
 
 set +e 
-if [ ! -z "$CI" ]
+if [ ! -z "$GITHUB_RUN_NUMBER" ]
 then
     bootstrap_ccloud_environment
 

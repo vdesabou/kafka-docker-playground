@@ -21,7 +21,7 @@ fi
 # Use most basic values file and override it with --set
 VALUES_FILE="${DIR}/../../operator/private.yaml"
 
-if [ -z "$CI" ]
+if [ -z "$GITHUB_RUN_NUMBER" ]
 then
    # not running with github actions
   verify_installed "minikube"

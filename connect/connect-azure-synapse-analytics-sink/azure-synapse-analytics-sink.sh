@@ -44,7 +44,7 @@ az sql server create \
     --location $AZURE_REGION  \
     --admin-user myadmin \
     --admin-password $PASSWORD
-if [ ! -z "$CI" ]
+if [ ! -z "$GITHUB_RUN_NUMBER" ]
 then
     # running with CI
     # connect-azure-synapse-analytics-sink is failing #131

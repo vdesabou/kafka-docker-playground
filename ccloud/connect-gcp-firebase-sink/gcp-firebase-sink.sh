@@ -85,7 +85,7 @@ EOF
 
 log "Follow README to verify data is in Firebase"
 
-if [ ! -z "$CI" ]
+if [ ! -z "$GITHUB_RUN_NUMBER" ]
 then
      
 

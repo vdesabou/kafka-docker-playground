@@ -45,7 +45,7 @@ then
      exit 1
 fi
 
-if [ ! -z "$CI" ]
+if [ ! -z "$GITHUB_RUN_NUMBER" ]
 then
      # this is github actions
      set +e

@@ -82,7 +82,7 @@ then
         if [ $is_create == 1 ]
         then
             log "✅ Connector $connector was successfully created"
-            if [ -z "$CI" ]
+            if [ -z "$GITHUB_RUN_NUMBER" ]
             then
                 log "💈 Configuration is "
                 echo "$curl_output" | jq -S .
@@ -90,7 +90,7 @@ then
             log "🥁 Waiting a few seconds to get new status"
         else
             log "✅ Connector $connector was successfully updated"
-            if [ -z "$CI" ]
+            if [ -z "$GITHUB_RUN_NUMBER" ]
             then
                 log "💈 Configuration is "
                 echo "$curl_output" | jq -S .

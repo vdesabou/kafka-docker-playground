@@ -26,7 +26,7 @@ else
 fi
 cd -
 
-if [ ! -z "$CI" ]
+if [ ! -z "$GITHUB_RUN_NUMBER" ]
 then
      # running with github actions
 
@@ -74,7 +74,7 @@ EOF
 
 log "Follow README to verify data is in Firebase"
 
-if [ ! -z "$CI" ]
+if [ ! -z "$GITHUB_RUN_NUMBER" ]
 then
      # if this is github actions
      log "Verifying data is in Firebase"
