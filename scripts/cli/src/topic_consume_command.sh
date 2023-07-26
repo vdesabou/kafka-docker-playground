@@ -320,7 +320,7 @@ do
       if [ $is_base64 -eq 1 ]
       then
         base64=$(echo "$payload" | tr -d '"' | base64 --decode)
-        line_with_date=$(echo "$line_with_date" | awk 'BEGIN {FS=OFS="|"} {$6="$base64"}1')
+        line_with_date=$(echo "$line_with_date" | awk -v new_value="$base64" 'BEGIN {FS=OFS="|"} {$6=new_value}1')
       fi
 
       if [[ -n "$grep_string" ]]
