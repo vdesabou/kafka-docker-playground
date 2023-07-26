@@ -123,10 +123,25 @@ playground topic create --topic test_table
 set -e
 
 log "Sending messages to topic test_table"
-docker run -i --rm -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG}  kafka-avro-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic test_table --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' << EOF
-{"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
-{"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
-{"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
+playground topic produce -t test_table --nb-messages 3 << 'EOF'
+{
+  "fields": [
+    {
+      "name": "u_name",
+      "type": "string"
+    },
+    {
+      "name": "u_price",
+      "type": "float"
+    },
+    {
+      "name": "u_quantity",
+      "type": "int"
+    }
+  ],
+  "name": "myrecord",
+  "type": "record"
+}
 EOF
 
 connector_name="SnowflakeSink"
@@ -168,7 +183,7 @@ USE WAREHOUSE $PLAYGROUND_WAREHOUSE;
 SELECT * FROM $PLAYGROUND_DB.PUBLIC.TEST_TABLE;
 EOF
 cat /tmp/result.log
-grep "scissors" /tmp/result.log
+grep "u_name" /tmp/result.log
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue

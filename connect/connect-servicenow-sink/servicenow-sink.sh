@@ -58,40 +58,54 @@ fi
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending messages to topic test_table"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_table --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},
-{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' << EOF
-{"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
-{"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
-{"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
+playground topic produce -t test_table --nb-messages 3 << 'EOF'
+{
+  "fields": [
+    {
+      "name": "u_name",
+      "type": "string"
+    },
+    {
+      "name": "u_price",
+      "type": "float"
+    },
+    {
+      "name": "u_quantity",
+      "type": "int"
+    }
+  ],
+  "name": "myrecord",
+  "type": "record"
+}
 EOF
 
 log "Creating ServiceNow Sink connector"
 playground connector create-or-update --connector servicenow-sink << EOF
 {
-                    "connector.class": "io.confluent.connect.servicenow.ServiceNowSinkConnector",
-                    "topics": "test_table",
-                    "servicenow.url": "$SERVICENOW_URL",
-                    "tasks.max": "1",
-                    "servicenow.table": "u_test_table",
-                    "servicenow.user": "admin",
-                    "servicenow.password": "$SERVICENOW_PASSWORD",
-                    "key.converter": "io.confluent.connect.avro.AvroConverter",
-                    "key.converter.schema.registry.url": "http://schema-registry:8081",
-                    "value.converter": "io.confluent.connect.avro.AvroConverter",
-                    "value.converter.schema.registry.url": "http://schema-registry:8081",
-                    "reporter.bootstrap.servers": "broker:9092",
-                    "reporter.error.topic.name": "test-error",
-                    "reporter.error.topic.replication.factor": 1,
-                    "reporter.error.topic.key.format": "string",
-                    "reporter.error.topic.value.format": "string",
-                    "reporter.result.topic.name": "test-result",
-                    "reporter.result.topic.key.format": "string",
-                    "reporter.result.topic.value.format": "string",
-                    "reporter.result.topic.replication.factor": 1,
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }
+     "connector.class": "io.confluent.connect.servicenow.ServiceNowSinkConnector",
+     "topics": "test_table",
+     "servicenow.url": "$SERVICENOW_URL",
+     "tasks.max": "1",
+     "servicenow.table": "u_test_table",
+     "servicenow.user": "admin",
+     "servicenow.password": "$SERVICENOW_PASSWORD",
+     "key.converter": "io.confluent.connect.avro.AvroConverter",
+     "key.converter.schema.registry.url": "http://schema-registry:8081",
+     "value.converter": "io.confluent.connect.avro.AvroConverter",
+     "value.converter.schema.registry.url": "http://schema-registry:8081",
+     "reporter.bootstrap.servers": "broker:9092",
+     "reporter.error.topic.name": "test-error",
+     "reporter.error.topic.replication.factor": 1,
+     "reporter.error.topic.key.format": "string",
+     "reporter.error.topic.value.format": "string",
+     "reporter.result.topic.name": "test-result",
+     "reporter.result.topic.key.format": "string",
+     "reporter.result.topic.value.format": "string",
+     "reporter.result.topic.replication.factor": 1,
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 

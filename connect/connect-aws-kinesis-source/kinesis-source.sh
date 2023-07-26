@@ -83,14 +83,6 @@ playground connector create-or-update --connector kinesis-source << EOF
 }
 EOF
 
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},
-{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' << EOF
-{"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
-{"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
-{"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
-EOF
-
-
 log "Verify we have received the data in kinesis_topic topic"
 playground topic consume --topic kinesis_topic --min-expected-messages 1 --timeout 60
 # 123     "µë-ë,j\u0007µ"

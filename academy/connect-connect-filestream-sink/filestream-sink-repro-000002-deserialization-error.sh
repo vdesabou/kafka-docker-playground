@@ -28,14 +28,14 @@ EOF
 log "Creating FileStream Sink connector"
 playground connector create-or-update --connector filestream-sink << EOF
 {
-               "tasks.max": "1",
-               "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
-               "topics": "filestream",
-               "file": "/tmp/output.json",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081"
-          }
+     "tasks.max": "1",
+     "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+     "topics": "filestream",
+     "file": "/tmp/output.json",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "io.confluent.connect.avro.AvroConverter",
+     "value.converter.schema.registry.url": "http://schema-registry:8081"
+}
 EOF
 
 

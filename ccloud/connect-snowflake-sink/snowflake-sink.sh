@@ -128,33 +128,48 @@ set -e
 sleep 2
 
 log "Sending messages to topic test_table"
-docker exec -i -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect kafka-avro-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic test_table --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' << EOF
-{"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
-{"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
-{"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
+playground topic produce -t test_table --nb-messages 3 << 'EOF'
+{
+  "fields": [
+    {
+      "name": "u_name",
+      "type": "string"
+    },
+    {
+      "name": "u_price",
+      "type": "float"
+    },
+    {
+      "name": "u_quantity",
+      "type": "int"
+    }
+  ],
+  "name": "myrecord",
+  "type": "record"
+}
 EOF
 
 log "Creating Snowflake Sink connector"
 playground connector create-or-update --connector snowflake-sink << EOF
 {
-               "connector.class": "com.snowflake.kafka.connector.SnowflakeSinkConnector",
-               "topics": "test_table",
-               "tasks.max": "1",
-               "snowflake.url.name": "$SNOWFLAKE_URL",
-               "snowflake.user.name": "$PLAYGROUND_USER",
-               "snowflake.user.role": "$PLAYGROUND_CONNECTOR_ROLE",
-               "snowflake.private.key": "\${file:/data_snow:private.key}",
-               "snowflake.private.key.passphrase": "confluent",
-               "snowflake.database.name": "$PLAYGROUND_DB",
-               "snowflake.schema.name":"PUBLIC",
-               "buffer.count.records": "3",
-               "buffer.flush.time" : "10",
-               "key.converter":"org.apache.kafka.connect.storage.StringConverter",
-               "value.converter" : "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "$SCHEMA_REGISTRY_URL",
-               "value.converter.basic.auth.user.info": "\${file:/data:schema.registry.basic.auth.user.info}",
-               "value.converter.basic.auth.credentials.source": "USER_INFO"
-          }
+     "connector.class": "com.snowflake.kafka.connector.SnowflakeSinkConnector",
+     "topics": "test_table",
+     "tasks.max": "1",
+     "snowflake.url.name": "$SNOWFLAKE_URL",
+     "snowflake.user.name": "$PLAYGROUND_USER",
+     "snowflake.user.role": "$PLAYGROUND_CONNECTOR_ROLE",
+     "snowflake.private.key": "\${file:/data_snow:private.key}",
+     "snowflake.private.key.passphrase": "confluent",
+     "snowflake.database.name": "$PLAYGROUND_DB",
+     "snowflake.schema.name":"PUBLIC",
+     "buffer.count.records": "3",
+     "buffer.flush.time" : "10",
+     "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+     "value.converter" : "io.confluent.connect.avro.AvroConverter",
+     "value.converter.schema.registry.url": "$SCHEMA_REGISTRY_URL",
+     "value.converter.basic.auth.user.info": "\${file:/data:schema.registry.basic.auth.user.info}",
+     "value.converter.basic.auth.credentials.source": "USER_INFO"
+}
 EOF
 
 
@@ -169,7 +184,7 @@ USE WAREHOUSE $PLAYGROUND_WAREHOUSE;
 SELECT * FROM $PLAYGROUND_DB.PUBLIC.TEST_TABLE;
 EOF
 cat /tmp/result.log
-grep "scissors" /tmp/result.log
+grep "u_name" /tmp/result.log
 
 # docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-snowflake-sink --describe
 

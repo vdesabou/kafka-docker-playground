@@ -113,11 +113,25 @@ EOF
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending messages to topic test_table"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_table --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},
-{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' << EOF
-{"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
-{"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
-{"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
+playground topic produce -t test_table --nb-messages 3 << 'EOF'
+{
+  "fields": [
+    {
+      "name": "u_name",
+      "type": "string"
+    },
+    {
+      "name": "u_price",
+      "type": "float"
+    },
+    {
+      "name": "u_quantity",
+      "type": "int"
+    }
+  ],
+  "name": "myrecord",
+  "type": "record"
+}
 EOF
 
 log "Creating Snowflake Sink connector"
@@ -153,7 +167,7 @@ USE WAREHOUSE $PLAYGROUND_WAREHOUSE;
 SELECT * FROM $PLAYGROUND_DB.PUBLIC.TEST_TABLE;
 EOF
 cat /tmp/result.log
-grep "scissors" /tmp/result.log
+grep "u_name" /tmp/result.log
 
 # docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-snowflake-sink --describe
 

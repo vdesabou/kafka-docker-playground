@@ -56,29 +56,43 @@ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub
 
 
 log "send data to pubsub-topic topic"
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic pubsub-topic --property parse.key=true --property key.separator=, << EOF
-key1,{"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
-key2,{"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
-key3,{"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
+playground topic produce -t pubsub-topic --nb-messages 3 --key "key%g" << 'EOF'
+{
+  "fields": [
+    {
+      "name": "u_name",
+      "type": "string"
+    },
+    {
+      "name": "u_price",
+      "type": "float"
+    },
+    {
+      "name": "u_quantity",
+      "type": "int"
+    }
+  ],
+  "name": "myrecord",
+  "type": "record"
+}
 EOF
-
 
 sleep 10
 
 log "Creating Google Cloud Pub/Sub Group Kafka Sink connector"
 playground connector create-or-update --connector pubsub-sink << EOF
 {
-               "connector.class" : "com.google.pubsub.kafka.sink.CloudPubSubSinkConnector",
-               "tasks.max" : "1",
-               "topics" : "pubsub-topic",
-               "cps.project" : "$GCP_PROJECT",
-               "cps.topic" : "topic-1",
-               "gcp.credentials.file.path" : "/tmp/keyfile.json",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
-               "metadata.publish": "true",
-               "headers.publish": "true"
-          }
+     "connector.class" : "com.google.pubsub.kafka.sink.CloudPubSubSinkConnector",
+     "tasks.max" : "1",
+     "topics" : "pubsub-topic",
+     "cps.project" : "$GCP_PROJECT",
+     "cps.topic" : "topic-1",
+     "gcp.credentials.file.path" : "/tmp/keyfile.json",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
+     "metadata.publish": "true",
+     "headers.publish": "true"
+}
 EOF
 
 sleep 120
@@ -86,7 +100,7 @@ sleep 120
 log "Get messages from topic-1"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions pull subscription-1 > /tmp/result.log  2>&1
 cat /tmp/result.log
-grep "scissors" /tmp/result.log
+grep "u_name" /tmp/result.log
 
 # ┌──────────────────────────────────────────────────────────┬──────────────────┬──────────────┬───────────────────────────────┬──────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 # │                           DATA                           │    MESSAGE_ID    │ ORDERING_KEY │           ATTRIBUTES          │ DELIVERY_ATTEMPT │                                                                                              ACK_ID                                                                                             │

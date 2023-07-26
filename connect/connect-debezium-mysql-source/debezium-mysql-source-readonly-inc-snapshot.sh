@@ -184,8 +184,8 @@ playground topic consume --topic server1_mydb_customers --min-expected-messages 
 set -e
 
 log "Send Signal to the topic to start incremental snapshot"
-docker exec -i connect kafka-console-producer --broker-list broker:9092 --property "parse.key=true" --property "key.serializer=org.apache.kafka.common.serialization.StringSerializer" --property "key.separator=;" --topic dbz-signals --property "value.serializer=org.apache.kafka.common.serialization.StringSerializer" << EOF
-server1;{"type":"execute-snapshot","data": {"data-collections": ["mydb.customers"], "type": "INCREMENTAL"}}
+playground topic produce -t dbz-signals --nb-messages 1 --key "server1" << 'EOF'
+{"type":"execute-snapshot","data": {"data-collections": ["mydb.customers"], "type": "INCREMENTAL"}}
 EOF
 
 sleep 20

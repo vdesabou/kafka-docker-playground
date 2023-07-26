@@ -72,54 +72,69 @@ playground topic create --topic test_table
 set -e
 
 log "Sending messages to topic test_table"
-docker exec -i -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect kafka-avro-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic test_table --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' << EOF
-{"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
-{"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
-{"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
+playground topic produce -t test_table --nb-messages 3 << 'EOF'
+{
+  "fields": [
+    {
+      "name": "u_name",
+      "type": "string"
+    },
+    {
+      "name": "u_price",
+      "type": "float"
+    },
+    {
+      "name": "u_quantity",
+      "type": "int"
+    }
+  ],
+  "name": "myrecord",
+  "type": "record"
+}
 EOF
 
 log "Creating ServiceNow Sink connector"
 playground connector create-or-update --connector servicenow-sink << EOF
 {
-               "connector.class": "io.confluent.connect.servicenow.ServiceNowSinkConnector",
-               "topics": "test_table",
-               "servicenow.url": "$SERVICENOW_URL",
-               "tasks.max": "1",
-               "servicenow.table": "u_test_table",
-               "servicenow.user": "admin",
-               "servicenow.password": "$SERVICENOW_PASSWORD",
-               "key.converter" : "io.confluent.connect.avro.AvroConverter",
-               "key.converter.schema.registry.url": "$SCHEMA_REGISTRY_URL",
-               "key.converter.basic.auth.user.info": "\${file:/data:schema.registry.basic.auth.user.info}",
-               "key.converter.basic.auth.credentials.source": "USER_INFO",
-               "value.converter" : "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "$SCHEMA_REGISTRY_URL",
-               "value.converter.basic.auth.user.info": "\${file:/data:schema.registry.basic.auth.user.info}",
-               "value.converter.basic.auth.credentials.source": "USER_INFO",
-               "reporter.bootstrap.servers": "\${file:/data:bootstrap.servers}",
-               "reporter.admin.ssl.endpoint.identification.algorithm" : "https",
-               "reporter.admin.sasl.mechanism" : "PLAIN",
-               "reporter.admin.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\${file:/data:sasl.username}\" password=\"\${file:/data:sasl.password}\";",
-               "reporter.admin.security.protocol" : "SASL_SSL",
-               "reporter.producer.ssl.endpoint.identification.algorithm" : "https",
-               "reporter.producer.sasl.mechanism" : "PLAIN",
-               "reporter.producer.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\${file:/data:sasl.username}\" password=\"\${file:/data:sasl.password}\";",
-               "reporter.producer.security.protocol" : "SASL_SSL",
-               "reporter.error.topic.name": "test-error",
-               "reporter.error.topic.replication.factor": 3,
-               "reporter.error.topic.key.format": "string",
-               "reporter.error.topic.value.format": "string",
-               "reporter.result.topic.name": "test-result",
-               "reporter.result.topic.key.format": "string",
-               "reporter.result.topic.value.format": "string",
-               "reporter.result.topic.replication.factor": 3,
-               "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
-               "confluent.topic.sasl.mechanism" : "PLAIN",
-               "confluent.topic.bootstrap.servers": "\${file:/data:bootstrap.servers}",
-               "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\${file:/data:sasl.username}\" password=\"\${file:/data:sasl.password}\";",
-               "confluent.topic.security.protocol" : "SASL_SSL",
-               "confluent.topic.replication.factor": "3"
-          }
+     "connector.class": "io.confluent.connect.servicenow.ServiceNowSinkConnector",
+     "topics": "test_table",
+     "servicenow.url": "$SERVICENOW_URL",
+     "tasks.max": "1",
+     "servicenow.table": "u_test_table",
+     "servicenow.user": "admin",
+     "servicenow.password": "$SERVICENOW_PASSWORD",
+     "key.converter" : "io.confluent.connect.avro.AvroConverter",
+     "key.converter.schema.registry.url": "$SCHEMA_REGISTRY_URL",
+     "key.converter.basic.auth.user.info": "\${file:/data:schema.registry.basic.auth.user.info}",
+     "key.converter.basic.auth.credentials.source": "USER_INFO",
+     "value.converter" : "io.confluent.connect.avro.AvroConverter",
+     "value.converter.schema.registry.url": "$SCHEMA_REGISTRY_URL",
+     "value.converter.basic.auth.user.info": "\${file:/data:schema.registry.basic.auth.user.info}",
+     "value.converter.basic.auth.credentials.source": "USER_INFO",
+     "reporter.bootstrap.servers": "\${file:/data:bootstrap.servers}",
+     "reporter.admin.ssl.endpoint.identification.algorithm" : "https",
+     "reporter.admin.sasl.mechanism" : "PLAIN",
+     "reporter.admin.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\${file:/data:sasl.username}\" password=\"\${file:/data:sasl.password}\";",
+     "reporter.admin.security.protocol" : "SASL_SSL",
+     "reporter.producer.ssl.endpoint.identification.algorithm" : "https",
+     "reporter.producer.sasl.mechanism" : "PLAIN",
+     "reporter.producer.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\${file:/data:sasl.username}\" password=\"\${file:/data:sasl.password}\";",
+     "reporter.producer.security.protocol" : "SASL_SSL",
+     "reporter.error.topic.name": "test-error",
+     "reporter.error.topic.replication.factor": 3,
+     "reporter.error.topic.key.format": "string",
+     "reporter.error.topic.value.format": "string",
+     "reporter.result.topic.name": "test-result",
+     "reporter.result.topic.key.format": "string",
+     "reporter.result.topic.value.format": "string",
+     "reporter.result.topic.replication.factor": 3,
+     "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
+     "confluent.topic.sasl.mechanism" : "PLAIN",
+     "confluent.topic.bootstrap.servers": "\${file:/data:bootstrap.servers}",
+     "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\${file:/data:sasl.username}\" password=\"\${file:/data:sasl.password}\";",
+     "confluent.topic.security.protocol" : "SASL_SSL",
+     "confluent.topic.replication.factor": "3"
+}
 EOF
 
 
@@ -134,4 +149,4 @@ docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICE
     -H 'Content-Type: application/json' \
     -H 'cache-control: no-cache' | jq . > /tmp/result.log  2>&1
 cat /tmp/result.log
-grep "u_name" /tmp/result.log | grep "notebooks"
+grep "u_name" /tmp/result.log
