@@ -55,7 +55,9 @@ log "Create Queue"
 docker exec umserver runUMTool.sh CreateJMSQueue -rname=nsp://localhost:9000 -queuename=test-queue
 
 log "Sending messages to topic sink-messages"
-seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages
+playground topic produce -t sink-messages --nb-messages 10 << 'EOF'
+%g
+EOF
 
 log "Creating Solace source connector"
 playground connector create-or-update --connector jms-sag-um-sink << EOF

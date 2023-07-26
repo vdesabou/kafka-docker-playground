@@ -13,7 +13,9 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.pro
 
 
 log "Sending messages to topic http-messages"
-seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages
+playground topic produce -t http-messages --nb-messages 10 << 'EOF'
+%g
+EOF
 
 playground debug log-level set --package "org.apache.http" --level TRACE
 

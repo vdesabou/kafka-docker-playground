@@ -16,7 +16,9 @@ fi
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending messages to topic http-messages"
-seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages
+playground topic produce -t http-messages --nb-messages 10 << 'EOF'
+%g
+EOF
 
 log "Creating http-sink connector"
 playground connector create-or-update --connector http-sink << EOF
@@ -111,7 +113,9 @@ log "Get connector status"
 curl http://localhost:8083/connectors?expand=status&expand=info | jq .
 
 log "Sending messages to topic http-messages"
-seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages
+playground topic produce -t http-messages --nb-messages 10 << 'EOF'
+%g
+EOF
 
 log "Check the success-responses topic"
 playground topic consume --topic success-responses --min-expected-messages 20 --timeout 60

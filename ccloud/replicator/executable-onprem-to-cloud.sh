@@ -41,7 +41,9 @@ playground topic delete --topic connect-onprem-to-cloud.config
 set -e
 
 log "Sending messages to topic executable-products on source OnPREM cluster"
-seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic executable-products
+playground topic produce -t products --nb-messages 10 << 'EOF'
+%g
+EOF
 
 log "Starting replicator executable"
 docker-compose -f ../../ccloud/environment/docker-compose.yml -f ${PWD}/docker-compose-executable-onprem-to-cloud.yml -f docker-compose-executable-onprem-to-cloud-replicator.yml up -d

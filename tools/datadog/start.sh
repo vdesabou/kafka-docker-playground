@@ -29,7 +29,9 @@ docker container restart datadog
 sleep 10
 
 log "Sending messages to topic test-topic"
-seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test-topic
+playground topic produce -t test-topic --nb-messages 10 << 'EOF'
+%g
+EOF
 
 log "Creating Replicator connector"
 playground connector create-or-update --connector duplicate-topic << EOF

@@ -12,7 +12,9 @@ log "##  SSL authentication"
 log "########"
 
 log "Sending messages to topic test-topic-ssl"
-seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test-topic-ssl --producer.config /etc/kafka/secrets/client_without_interceptors.config
+playground topic produce -t test-topic-ssl --nb-messages 10 << 'EOF'
+%g
+EOF
 
 log "Creating Confluent Replicator connector with SSL authentication"
 playground connector create-or-update --connector duplicate-topic-ssl << EOF

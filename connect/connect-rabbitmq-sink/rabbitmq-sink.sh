@@ -14,7 +14,9 @@ docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare bindi
 
 
 log "Sending messages to topic rabbitmq-messages"
-seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic rabbitmq-messages
+playground topic produce -t rabbitmq-messages --nb-messages 10 << 'EOF'
+%g
+EOF
 
 log "Creating RabbitMQ Sink connector"
 playground connector create-or-update --connector rabbitmq-sink << EOF
