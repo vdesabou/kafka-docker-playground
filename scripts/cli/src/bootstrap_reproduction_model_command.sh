@@ -83,18 +83,6 @@ fi
 test_file_directory="$(dirname "${test_file}")"
 cd ${test_file_directory}
 
-# determining the docker-compose file from from test_file
-docker_compose_file=$(grep "environment" "$test_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
-docker_compose_file="${test_file_directory}/${docker_compose_file}"
-description_kebab_case="${description// /-}"
-description_kebab_case=$(echo "$description_kebab_case" | tr '[:upper:]' '[:lower:]')
-
-if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
-then
-  docker_compose_file=""
-  logwarn "📁 Could not determine docker-compose override file from $test_file !"
-fi
-
 topic_name="customer-$producer"
 topic_name=$(echo $topic_name | tr '-' '_')
 filename=$(basename -- "$test_file")
@@ -141,8 +129,51 @@ fi
 
 repro_dir=$root_folder/$output_folder/$final_dir
 mkdir -p $repro_dir
+tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+trap 'rm -rf $tmp_dir' EXIT
 
+description_kebab_case="${description// /-}"
+description_kebab_case=$(echo "$description_kebab_case" | tr '[:upper:]' '[:lower:]')
 repro_test_file="$repro_dir/$filename-repro-$description_kebab_case.$extension"
+
+# determining the docker-compose file from from test_file
+docker_compose_file=$(grep "environment" "$test_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
+docker_compose_file="${test_file_directory}/${docker_compose_file}"
+
+log "✨ Creating file $repro_test_file"
+rm -f $repro_test_file
+cp $test_file $repro_test_file
+
+if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
+then
+  grep 'DOCKER_COMPOSE_FILE_OVERRIDE=$1' "$test_file"
+  if [ $? -eq 0 ]
+  then
+    # it means it is an environment example
+    # need to create the docker-compose file
+    docker_compose_file=""
+    docker_compose_test_file="$repro_dir/docker-compose.repro-$description_kebab_case.yml"
+    log "✨ Creating empty file $docker_compose_test_file"
+
+    echo "---" > $docker_compose_test_file
+    echo "version: '3.5'" >> $docker_compose_test_file
+    echo "" >> $docker_compose_test_file
+    echo "# override the services here, example " >> $docker_compose_test_file
+    echo "# services:" >> $docker_compose_test_file
+    echo "#    connect:" >> $docker_compose_test_file
+    echo "#      environment:" >> $docker_compose_test_file
+    echo "#        CONNECT_BOOTSTRAP_SERVERS: \"broker:9092\"" >> $docker_compose_test_file
+
+    docker_compose_test_file_name=$(basename -- "$docker_compose_test_file")
+    cp $test_file $tmp_dir/tmp_file
+    line=$(grep -n 'DOCKER_COMPOSE_FILE_OVERRIDE=$1' $test_file | cut -d ":" -f 1 | tail -n1)
+    
+    { head -n $(($line-1)) $tmp_dir/tmp_file; echo "DOCKER_COMPOSE_FILE_OVERRIDE=../../$output_folder/$final_dir/$docker_compose_test_file_name"; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $repro_test_file
+  else
+    docker_compose_file=""
+    logwarn "📁 Could not determine docker-compose override file from $test_file !"
+  fi
+fi
 
 if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
 then
@@ -158,19 +189,13 @@ then
   docker_compose_test_file_name=$(basename -- "$docker_compose_test_file")
 fi
 
-log "✨ Creating file $repro_test_file"
-rm -f $repro_test_file
 if [ "${docker_compose_file}" != "" ]
 then
   filename=$(basename -- "${docker_compose_file}")
   sed -e "s|$filename|$docker_compose_test_file_name|g" \
     $test_file > $repro_test_file
-else
-  cp $test_file $repro_test_file
 fi
 
-tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-trap 'rm -rf $tmp_dir' EXIT
 set +e
 echo "#!/bin/bash" > $tmp_dir/intro
 echo "###############################################" >> $tmp_dir/intro
