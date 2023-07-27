@@ -77,13 +77,13 @@ EOF
 log "Creating Mapr sink connector"
 playground connector create-or-update --connector mapr-sink << EOF
 {
-               "connector.class": "io.confluent.connect.mapr.db.MapRDbSinkConnector",
-               "tasks.max": "1",
-               "mapr.table.map.maprtopic" : "/mapr/maprdemo.mapr.io/maprtopic",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-               "topics": "maprtopic"
-          }
+    "connector.class": "io.confluent.connect.mapr.db.MapRDbSinkConnector",
+    "tasks.max": "1",
+    "mapr.table.map.maprtopic" : "/mapr/maprdemo.mapr.io/maprtopic",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "topics": "maprtopic"
+}
 EOF
 
 sleep 70
