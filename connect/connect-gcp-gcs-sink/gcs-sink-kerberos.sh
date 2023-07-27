@@ -54,7 +54,7 @@ log "##  Kerberos GSSAPI authentication"
 log "########"
 
 log "Sending messages to topic gcs_topic"
-playground topic produce -t gcs_topic --nb-messages 10 --forced-value "value%g" << 'EOF'
+playground topic produce -t gcs_topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "fields": [
     {

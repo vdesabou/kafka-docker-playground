@@ -73,7 +73,7 @@ fi
 
 
 log "Sending messages to topic test-elasticsearch-sink"
-playground topic produce -t test-elasticsearch-sink --nb-messages 10 --forced-value "value%g" << 'EOF'
+playground topic produce -t test-elasticsearch-sink --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "fields": [
     {

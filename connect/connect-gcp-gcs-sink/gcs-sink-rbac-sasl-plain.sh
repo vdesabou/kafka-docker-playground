@@ -55,7 +55,7 @@ set -e
 
 
 log "Sending messages to topic rbac_gcs_topic"
-playground topic produce -t gcs_topic --nb-messages 10 --forced-value "value%g" << 'EOF'
+playground topic produce -t gcs_topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "fields": [
     {
