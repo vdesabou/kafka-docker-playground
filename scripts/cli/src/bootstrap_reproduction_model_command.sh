@@ -997,6 +997,24 @@ cat $repro_test_file > $tmp_dir/tmp_file
 
 
 echo "" >> $tmp_dir/tmp_file
+
+echo "#################################################################################################" >> $tmp_dir/tmp_file
+echo "# 🧠 below is a list of cli commands that are helpful at the end of an example" >> $tmp_dir/tmp_file
+echo "# 🧠 for full documentation, visit https://kafka-docker-playground.io/#/cli !" >> $tmp_dir/tmp_file
+echo "#################################################################################################" >> $tmp_dir/tmp_file
+echo "" >> $tmp_dir/tmp_file
+echo "# 🕵️ to check logs (see https://kafka-docker-playground.io/#/cli?id=%f0%9f%95%b5%ef%b8%8f-logs)" >> $tmp_dir/tmp_file
+echo "# Example: check logs" >> $tmp_dir/tmp_file
+echo "# playground container logs --container connect" >> $tmp_dir/tmp_file
+echo "# playground container logs --container connect --open" >> $tmp_dir/tmp_file
+echo "" >> $tmp_dir/tmp_file
+echo "# 😴 use this command if you want to wait for a specific message to appear in logs" >> $tmp_dir/tmp_file
+echo "# playground container logs --container connect --wait-for-log \"<text to search>\" --max-wait 600" >> $tmp_dir/tmp_file
+echo "" >> $tmp_dir/tmp_file
+echo "# 🐢 use this command if you want to wait for connector consumer lag to be zero" >> $tmp_dir/tmp_file
+echo "# playground connector show-lag --wait-for-zero-lag" >> $tmp_dir/tmp_file
+
+
 echo "exit 0" >> $tmp_dir/tmp_file
 echo "" >> $tmp_dir/tmp_file
 echo "" >> $tmp_dir/tmp_file
@@ -1006,7 +1024,7 @@ echo "##########################################################################
 echo "# 🚀 below is a list of snippets that can help you to build your example !" >> $tmp_dir/tmp_file
 echo "# 🚀 for full documentation, visit https://kafka-docker-playground.io/#/ !" >> $tmp_dir/tmp_file
 echo "#################################################################################################" >> $tmp_dir/tmp_file
-
+echo "" >> $tmp_dir/tmp_file
 if [[ "$base1" == *sink ]]
 then
   cat $root_folder/scripts/cli/snippets/sink.sh | grep -v "#!/bin/bash" >> $tmp_dir/tmp_file
