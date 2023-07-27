@@ -10882,10 +10882,20 @@ playground_topic_consume_command() {
           # check if it is base64 encoded
           set +e
           base64=$(echo "$payload" | tr -d '"' | base64 --decode 2>/dev/null)
-          if [ $? == 0 ] || [ "$base64" != "" ]
+
+          if [[ "$OSTYPE" == "darwin"* ]]
           then
-            logwarn "🤖 Data is base64 encoded, payload will be decoded"
-            is_base64=1
+            if [ "$base64" != "" ]
+            then
+              logwarn "🤖 Data is base64 encoded, payload will be decoded"
+              is_base64=1
+            fi
+          else
+            if [ $? == 0 ]
+            then
+              logwarn "🤖 Data is base64 encoded, payload will be decoded"
+              is_base64=1
+            fi
           fi
           set -e
           first_record=0
