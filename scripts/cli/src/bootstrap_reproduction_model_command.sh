@@ -171,6 +171,7 @@ fi
 
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
+set +e
 echo "#!/bin/bash" > $tmp_dir/intro
 echo "###############################################" >> $tmp_dir/intro
 echo "# 🗓️ date: `date`" >> $tmp_dir/intro

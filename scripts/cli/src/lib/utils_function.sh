@@ -3413,7 +3413,7 @@ function force_enable () {
   env_variable=$2
 
   logwarn "💪 Forcing $flag ($env_variable env variable)"
-  line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+  line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh$' $repro_test_file | cut -d ":" -f 1 | tail -n1)
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
   echo "# remove or comment those lines if you don't need it anymore" > $tmp_dir/tmp_force_enable
