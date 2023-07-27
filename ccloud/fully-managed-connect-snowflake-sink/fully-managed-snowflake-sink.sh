@@ -162,7 +162,7 @@ playground ccloud-connector create-or-update --connector $connector_name << EOF
      "topics": "test_table",
      "snowflake.url.name": "$SNOWFLAKE_URL",
      "snowflake.user.name": "$PLAYGROUND_USER",
-     "snowflake.user.role": "$PLAYGROUND_CONNECTOR_ROLE",
+     
      "snowflake.private.key":"$RSA_PRIVATE_KEY",
      "snowflake.private.key.passphrase": "confluent",
      "snowflake.database.name": "$PLAYGROUND_DB",

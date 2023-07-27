@@ -68,5 +68,3 @@ log "Verify data is in Prometheus"
 curl 'http://localhost:19090/api/v1/query?query=kafka_gaugeMetric1' > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "kafka_gaugeMetric1" /tmp/result.log
-
-# FIXTHIS: if  we execute same command again, it will show no results....
