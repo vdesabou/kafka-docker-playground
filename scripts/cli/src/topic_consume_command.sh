@@ -32,7 +32,7 @@ elif [[ "$environment" == "rbac-sasl-plain" ]]
 then
     sr_url_cli="http://schema-registry:8081"
     security="--property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli --consumer.config /etc/kafka/secrets/client_without_interceptors.config"
-elif [[ "$environment" == "rldap-authorizer-sasl-plain" ]]
+elif [[ "$environment" == "ldap-authorizer-sasl-plain" ]]
 then
     sr_url_cli="http://schema-registry:8081"
     security="--consumer.config /service/kafka/users/alice.properties"
