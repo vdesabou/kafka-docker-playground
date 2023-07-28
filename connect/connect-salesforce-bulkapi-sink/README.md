@@ -45,7 +45,7 @@ Example:
 
 **IMPORTANT !!**: for new orgs, "Username-Password Flow" is disabled by default, see the [help page](https://help.salesforce.com/s/articleView?id=release-notes.rn_security_username-password_flow_blocked_by_default.htm&release=244&type=5).
 
-You need to activate this:
+You need to activate this (otherwise you get `{"error":"invalid_grant","error_description":"authentication failure"}`):
 
 ![Username-Password Flow enabled](../../ccloud/fully-managed-connect-salesforce-cdc-source/ScreenshotOauthDisabled.jpg)
 
