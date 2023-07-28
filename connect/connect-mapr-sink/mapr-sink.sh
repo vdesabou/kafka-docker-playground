@@ -70,7 +70,7 @@ mapr
 EOF
 
 log "Sending messages to topic maprtopic"
-playground topic produce -t maprtopic --nb-messages 3 --key "%g" << 'EOF'
+playground topic produce -t maprtopic --nb-messages 3 --key "1" << 'EOF'
 {"schema":{"type":"struct","fields":[{"type":"string","optional":false,"field":"record"}]},"payload":{"record":"record%g"}}
 EOF
 
