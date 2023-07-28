@@ -35,7 +35,7 @@ then
 elif [[ "$environment" == "ldap-authorizer-sasl-plain" ]]
 then
     sr_url_cli="http://schema-registry:8081"
-    security="--consumer.config /service/kafka/users/alice.properties"
+    security="--group test-consumer-group --consumer.config /service/kafka/users/alice.properties"
 elif [[ "$environment" == "kerberos" ]]
 then
     container="client"
