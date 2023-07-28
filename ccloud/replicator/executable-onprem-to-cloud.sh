@@ -41,7 +41,7 @@ playground topic delete --topic connect-onprem-to-cloud.config
 set -e
 
 log "Sending messages to topic executable-products on source OnPREM cluster"
-playground topic produce -t products --nb-messages 10 << 'EOF'
+playground topic produce -t executable-products --nb-messages 10 << 'EOF'
 %g
 EOF
 
