@@ -8,7 +8,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 
 log "Sending messages to topic users"
-playground topic produce -t users --nb-messages 3 --key "key%g" << 'EOF'
+playground topic produce -t users --nb-messages 3 --key "key1" << 'EOF'
 value%g
 EOF
 

@@ -14,7 +14,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.1.2
 
 
 log "Sending messages to topic hbase-test"
-playground topic produce -t hbase-test --nb-messages 3 --key "key%g" << 'EOF'
+playground topic produce -t hbase-test --nb-messages 3 --key "key1" << 'EOF'
 value%g
 EOF
 

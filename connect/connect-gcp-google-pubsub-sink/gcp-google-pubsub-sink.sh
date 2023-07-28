@@ -56,7 +56,7 @@ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub
 
 
 log "send data to pubsub-topic topic"
-playground topic produce -t pubsub-topic --nb-messages 3 --key "key%g" << 'EOF'
+playground topic produce -t pubsub-topic --nb-messages 3 --key "key1" << 'EOF'
 {
   "fields": [
     {
@@ -100,17 +100,8 @@ sleep 120
 log "Get messages from topic-1"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions pull subscription-1 > /tmp/result.log  2>&1
 cat /tmp/result.log
-grep "u_name" /tmp/result.log
+grep "kafka.topic" /tmp/result.log
 
-# ┌──────────────────────────────────────────────────────────┬──────────────────┬──────────────┬───────────────────────────────┬──────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-# │                           DATA                           │    MESSAGE_ID    │ ORDERING_KEY │           ATTRIBUTES          │ DELIVERY_ATTEMPT │                                                                                              ACK_ID                                                                                             │
-# ├──────────────────────────────────────────────────────────┼──────────────────┼──────────────┼───────────────────────────────┼──────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-# │ {"u_name": "scissors", "u_price": 2.75, "u_quantity": 3} │ 7291919715450279 │              │ kafka.offset=3                │                  │ RVNEUAYWLF1GSFE3GQhoUQ5PXiM_NSAoRRYLUxNRXHUDWxBvXDN1B1ENGXN1ZnVjXhYFBExadF9RGx9ZXESD0IqdL1BdZndjWxoAC0JSe1teGw9vVXSlkoejsvG0XW9WYuXW2dVlXrOw_bFZZiE9XBJLLD5-PTxFQV5AEkw2CURJUytDCypYEU4EISE-MD4 │
-# │                                                          │                  │              │ kafka.partition=0             │                  │                                                                                                                                                                                                 │
-# │                                                          │                  │              │ kafka.timestamp=1679487746962 │                  │                                                                                                                                                                                                 │
-# │                                                          │                  │              │ kafka.topic=pubsub-topic      │                  │                                                                                                                                                                                                 │
-# │                                                          │                  │              │ key=key1                      │                  │                                                                                                                                                                                                 │
-# └──────────────────────────────────────────────────────────┴──────────────────┴──────────────┴───────────────────────────────┴──────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 log "Delete topic and subscription"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics delete topic-1
