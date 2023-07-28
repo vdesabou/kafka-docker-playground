@@ -3524,7 +3524,7 @@ function get_environment_used() {
     return
   fi
 
-  patterns=("environment/2way-ssl" "environment/sasl-ssl" "environment/rbac-sasl-plain" "environment/kerberos" "environment/ssl_kerberos" "environment/ldap-authorizer-sasl-plain" "environment/sasl-plain" "environment/ldap-sasl-plain" "environment/sasl-scram" "environment/mdc-plaintext" "environment/mdc-sasl-plain" "environment/mdc-kerberos" "ccloud/environment")
+  patterns=("environment/2way-ssl" "environment/sasl-ssl" "environment/rbac-sasl-plain" "environment/kerberos" "environment/ssl_kerberos" "environment/ldap-authorizer-sasl-plain" "environment/sasl-plain" "environment/ldap-sasl-plain" "environment/sasl-scram" "environment/mdc-plaintext" "environment/mdc-sasl-plain" "environment/mdc-kerberos" "environment/ldap-authorizer-sasl-plain" "ccloud/environment")
 
   for pattern in "${patterns[@]}"; do
     if grep -q "$pattern" /tmp/playground-command; then
@@ -11116,6 +11116,10 @@ playground_topic_produce_command() {
   then
       sr_url_cli="http://schema-registry:8081"
       security="--property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli --producer.config /etc/kafka/secrets/client_without_interceptors.config"
+  elif [[ "$environment" == "ldap-authorizer-sasl-plain" ]]
+  then
+      sr_url_cli="http://schema-registry:8081"
+      security="--producer.config /service/kafka/users/alice.properties"
   elif [[ "$environment" == "sasl-plain" ]]
   then
       sr_url_cli="http://schema-registry:8081"
