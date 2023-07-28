@@ -49,6 +49,7 @@ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gsutil -m rm 
 set -e
 
 docker exec broker kafka-acls --bootstrap-server broker:9092 --add --topic=gcs_topic --producer --allow-principal="Group:KafkaDevelopers" --command-config /service/kafka/users/kafka.properties
+docker exec broker kafka-acls --bootstrap-server broker:9092 --add --topic=gcs_topic --group test-consumer-group --allow-principal="Group:KafkaDevelopers" --command-config /service/kafka/users/kafka.properties
 
 log "Sending messages to topic gcs_topic"
 playground topic produce -t gcs_topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
