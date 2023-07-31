@@ -96,6 +96,7 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   ⏯️  Resume connector\n" "$(green "ccloud-connector resume")                "
   [[ -n $long_usage ]] && printf "  %s   🗑️  Delete connector\n" "$(green "ccloud-connector delete")                "
   [[ -n $long_usage ]] && printf "  %s   🐢 Show lag of sink connector\n" "$(green "ccloud-connector show-lag")              "
+  [[ -n $long_usage ]] && printf "  %s   🧰 Show current connector config\n" "$(green "ccloud-connector show-config")           "
   [[ -n $long_usage ]] && printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "ccloud-connector show-config-parameters")"
   [[ -n $long_usage ]] && printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "ccloud-connector create-or-update")      "
   printf "  %s   🔗 Connector commands\n" "$(green "connector")                              "
@@ -107,6 +108,7 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")                       "
   [[ -n $long_usage ]] && printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")                       "
   [[ -n $long_usage ]] && printf "  %s   🐢 Show lag of sink connector\n" "$(green "connector show-lag")                     "
+  [[ -n $long_usage ]] && printf "  %s   🧰 Show current connector config\n" "$(green "connector show-config")                  "
   [[ -n $long_usage ]] && printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "connector show-config-parameters")       "
   [[ -n $long_usage ]] && printf "  %s   🧬 Set connect log level\n" "$(green "connector log-level")                    "
   [[ -n $long_usage ]] && printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "connector create-or-update")             "
@@ -2683,6 +2685,7 @@ playground_ccloud_connector_usage() {
   printf "  %s   ⏯️  Resume connector\n" "$(green "resume")                "
   printf "  %s   🗑️  Delete connector\n" "$(green "delete")                "
   printf "  %s   🐢 Show lag of sink connector\n" "$(green "show-lag")              "
+  printf "  %s   🧰 Show current connector config\n" "$(green "show-config")           "
   printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "show-config-parameters")"
   printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "create-or-update")      "
   echo
@@ -2916,6 +2919,41 @@ playground_ccloud_connector_show_lag_usage() {
 }
 
 # :command.usage
+playground_ccloud_connector_show_config_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground ccloud-connector show-config - 🧰 Show current connector config\n"
+    echo
+
+  else
+    printf "playground ccloud-connector show-config - 🧰 Show current connector config\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ccloud-connector show-config [OPTIONS]\n"
+  printf "  playground ccloud-connector show-config --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_ccloud_connector_show_config_parameters_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground ccloud-connector show-config-parameters - 🔩 Show all possible configuration parameters of connector\n"
@@ -3035,6 +3073,7 @@ playground_connector_usage() {
   printf "  %s   ⏯️  Resume connector\n" "$(green "resume")                "
   printf "  %s   🗑️  Delete connector\n" "$(green "delete")                "
   printf "  %s   🐢 Show lag of sink connector\n" "$(green "show-lag")              "
+  printf "  %s   🧰 Show current connector config\n" "$(green "show-config")           "
   printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "show-config-parameters")"
   printf "  %s   🧬 Set connect log level\n" "$(green "log-level")             "
   printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "create-or-update")      "
@@ -3318,6 +3357,41 @@ playground_connector_show_lag_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--wait-for-zero-lag")"
     printf "    😴 Wait until lag becomes 0\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_show_config_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector show-config - 🧰 Show current connector config\n"
+    echo
+
+  else
+    printf "playground connector show-config - 🧰 Show current connector config\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector show-config [OPTIONS]\n"
+  printf "  playground connector show-config --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
     echo
 
     # :command.usage_fixed_flags
@@ -11937,6 +12011,39 @@ playground_ccloud_connector_show_lag_command() {
 }
 
 # :command.function
+playground_ccloud_connector_show_config_command() {
+  # src/ccloud_connector_show_config_command.sh
+  ret=$(get_ccloud_connect)
+
+  environment=$(echo "$ret" | cut -d "@" -f 1)
+  cluster=$(echo "$ret" | cut -d "@" -f 2)
+  authorization=$(echo "$ret" | cut -d "@" -f 3)
+
+  connector="${args[--connector]}"
+
+  if [[ ! -n "$connector" ]]
+  then
+      log "✨ --connector flag was not provided, applying command to all ccloud connectors"
+      connector=$(playground get-ccloud-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No ccloud connector is running !"
+          exit 1
+      fi
+  fi
+
+  items=($connector)
+  for connector in ${items[@]}
+  do
+      log "🧰 Current config for ccloud connector $connector"
+      json_config=$(curl $security -s -X GET -H "Content-Type: application/json" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config" --header "authorization: Basic $authorization")
+      echo "playground ccloud-connector create-or-update --connector $connector << EOF"
+      echo "$json_config" | jq -S .
+      echo "EOF"
+  done
+}
+
+# :command.function
 playground_ccloud_connector_show_config_parameters_command() {
   # src/ccloud_connector_show_config_parameters_command.sh
   ret=$(get_ccloud_connect)
@@ -12627,6 +12734,38 @@ playground_connector_show_lag_command() {
       log "🐢 Show lag for sink connector $connector"
       docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security
     fi
+  done
+}
+
+# :command.function
+playground_connector_show_config_command() {
+  # src/connector_show_config_command.sh
+  ret=$(get_connect_url_and_security)
+
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
+  connector="${args[--connector]}"
+
+  if [[ ! -n "$connector" ]]
+  then
+      log "✨ --connector flag was not provided, applying command to all connectors"
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No connector is running !"
+          exit 1
+      fi
+  fi
+
+  items=($connector)
+  for connector in ${items[@]}
+  do
+      log "🧰 Current config for connector $connector"
+      json_config=$(curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config")
+      echo "playground connector create-or-update --connector $connector << EOF"
+      echo "$json_config" | jq -S .
+      echo "EOF"
   done
 }
 
@@ -18165,6 +18304,13 @@ playground_ccloud_connector_parse_requirements() {
       shift $#
       ;;
 
+    show-config)
+      action="show-config"
+      shift
+      playground_ccloud_connector_show_config_parse_requirements "$@"
+      shift $#
+      ;;
+
     show-config-parameters)
       action="show-config-parameters"
       shift
@@ -18551,6 +18697,64 @@ playground_ccloud_connector_show_lag_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_ccloud_connector_show_config_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_ccloud_connector_show_config_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="ccloud-connector show-config"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
 playground_ccloud_connector_show_config_parameters_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
@@ -18774,6 +18978,13 @@ playground_connector_parse_requirements() {
       action="show-lag"
       shift
       playground_connector_show_lag_parse_requirements "$@"
+      shift $#
+      ;;
+
+    show-config)
+      action="show-config"
+      shift
+      playground_connector_show_config_parse_requirements "$@"
       shift $#
       ;;
 
@@ -19278,6 +19489,64 @@ playground_connector_show_lag_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_connector_show_config_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_show_config_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector show-config"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
 playground_connector_show_config_parameters_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
@@ -19620,6 +19889,7 @@ run() {
     "ccloud-connector resume") playground_ccloud_connector_resume_command ;;
     "ccloud-connector delete") playground_ccloud_connector_delete_command ;;
     "ccloud-connector show-lag") playground_ccloud_connector_show_lag_command ;;
+    "ccloud-connector show-config") playground_ccloud_connector_show_config_command ;;
     "ccloud-connector show-config-parameters") playground_ccloud_connector_show_config_parameters_command ;;
     "ccloud-connector create-or-update") playground_ccloud_connector_create_or_update_command ;;
     "connector") playground_connector_command ;;
@@ -19631,6 +19901,7 @@ run() {
     "connector resume") playground_connector_resume_command ;;
     "connector delete") playground_connector_delete_command ;;
     "connector show-lag") playground_connector_show_lag_command ;;
+    "connector show-config") playground_connector_show_config_command ;;
     "connector show-config-parameters") playground_connector_show_config_parameters_command ;;
     "connector log-level") playground_connector_log_level_command ;;
     "connector create-or-update") playground_connector_create_or_update_command ;;
