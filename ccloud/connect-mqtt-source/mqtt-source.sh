@@ -41,23 +41,23 @@ sleep 5
 log "Creating MQTT Source connector"
 playground connector create-or-update --connector mqtt-source << EOF
 {
-               "connector.class": "io.confluent.connect.mqtt.MqttSourceConnector",
-               "tasks.max": "1",
-               "mqtt.server.uri": "tcp://mosquitto:1883",
-               "mqtt.topics":"my-mqtt-topic",
-               "kafka.topic": "$MQTT_TOPIC",
-               "mqtt.qos": "2",
-               "mqtt.username": "myuser",
-               "mqtt.password": "mypassword",
-               "topic.creation.default.replication.factor": "-1",
-               "topic.creation.default.partitions": "-1",
-               "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
-               "confluent.topic.sasl.mechanism" : "PLAIN",
-               "confluent.topic.bootstrap.servers": "\${file:/data:bootstrap.servers}",
-               "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\${file:/data:sasl.username}\" password=\"\${file:/data:sasl.password}\";",
-               "confluent.topic.security.protocol" : "SASL_SSL",
-               "confluent.topic.replication.factor": "3"
-          }
+     "connector.class": "io.confluent.connect.mqtt.MqttSourceConnector",
+     "tasks.max": "1",
+     "mqtt.server.uri": "tcp://mosquitto:1883",
+     "mqtt.topics":"my-mqtt-topic",
+     "kafka.topic": "$MQTT_TOPIC",
+     "mqtt.qos": "2",
+     "mqtt.username": "myuser",
+     "mqtt.password": "mypassword",
+     "topic.creation.default.replication.factor": "-1",
+     "topic.creation.default.partitions": "-1",
+     "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
+     "confluent.topic.sasl.mechanism" : "PLAIN",
+     "confluent.topic.bootstrap.servers": "\${file:/data:bootstrap.servers}",
+     "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\${file:/data:sasl.username}\" password=\"\${file:/data:sasl.password}\";",
+     "confluent.topic.security.protocol" : "SASL_SSL",
+     "confluent.topic.replication.factor": "3"
+}
 EOF
 
 sleep 5

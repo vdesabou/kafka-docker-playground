@@ -152,23 +152,23 @@ EOF
 log "Creating Snowflake Sink connector"
 playground connector create-or-update --connector snowflake-sink << EOF
 {
-     "connector.class": "com.snowflake.kafka.connector.SnowflakeSinkConnector",
-     "topics": "test_table",
-     "tasks.max": "1",
-     "snowflake.url.name": "$SNOWFLAKE_URL",
-     "snowflake.user.name": "$PLAYGROUND_USER",
-     
-     "snowflake.private.key": "\${file:/data_snow:private.key}",
-     "snowflake.private.key.passphrase": "confluent",
-     "snowflake.database.name": "$PLAYGROUND_DB",
-     "snowflake.schema.name":"PUBLIC",
-     "buffer.count.records": "3",
-     "buffer.flush.time" : "10",
-     "key.converter":"org.apache.kafka.connect.storage.StringConverter",
-     "value.converter" : "io.confluent.connect.avro.AvroConverter",
-     "value.converter.schema.registry.url": "$SCHEMA_REGISTRY_URL",
-     "value.converter.basic.auth.user.info": "\${file:/data:schema.registry.basic.auth.user.info}",
-     "value.converter.basic.auth.credentials.source": "USER_INFO"
+  "connector.class": "com.snowflake.kafka.connector.SnowflakeSinkConnector",
+  "topics": "test_table",
+  "tasks.max": "1",
+  "snowflake.url.name": "$SNOWFLAKE_URL",
+  "snowflake.user.name": "$PLAYGROUND_USER",
+  
+  "snowflake.private.key": "\${file:/data_snow:private.key}",
+  "snowflake.private.key.passphrase": "confluent",
+  "snowflake.database.name": "$PLAYGROUND_DB",
+  "snowflake.schema.name":"PUBLIC",
+  "buffer.count.records": "3",
+  "buffer.flush.time" : "10",
+  "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+  "value.converter" : "io.confluent.connect.avro.AvroConverter",
+  "value.converter.schema.registry.url": "$SCHEMA_REGISTRY_URL",
+  "value.converter.basic.auth.user.info": "\${file:/data:schema.registry.basic.auth.user.info}",
+  "value.converter.basic.auth.credentials.source": "USER_INFO"
 }
 EOF
 

@@ -34,23 +34,23 @@ set -e
 log "Creating Couchbase Source connector"
 playground connector create-or-update --connector couchbase-source << EOF
 {
-               "connector.class": "com.couchbase.connect.kafka.CouchbaseSourceConnector",
-               "tasks.max": "2",
-               "couchbase.topic": "test-travel-sample",
-               "couchbase.seed.nodes": "couchbase",
-               "couchbase.bootstrap.timeout": "2000ms",
-               "couchbase.bucket": "travel-sample",
-               "couchbase.username": "Administrator",
-               "couchbase.password": "password",
-               "couchbase.source.handler": "com.couchbase.connect.kafka.handler.source.DefaultSchemaSourceHandler",
-               "couchbase.event.filter": "com.couchbase.connect.kafka.filter.AllPassFilter",
-               "couchbase.stream.from": "SAVED_OFFSET_OR_BEGINNING",
-               "couchbase.compression": "ENABLED",
-               "couchbase.flow.control.buffer": "128m",
-               "couchbase.persistence.polling.interval": "100ms",
-               "topic.creation.default.replication.factor": "-1",
-               "topic.creation.default.partitions": "-1"
-          }
+     "connector.class": "com.couchbase.connect.kafka.CouchbaseSourceConnector",
+     "tasks.max": "2",
+     "couchbase.topic": "test-travel-sample",
+     "couchbase.seed.nodes": "couchbase",
+     "couchbase.bootstrap.timeout": "2000ms",
+     "couchbase.bucket": "travel-sample",
+     "couchbase.username": "Administrator",
+     "couchbase.password": "password",
+     "couchbase.source.handler": "com.couchbase.connect.kafka.handler.source.DefaultSchemaSourceHandler",
+     "couchbase.event.filter": "com.couchbase.connect.kafka.filter.AllPassFilter",
+     "couchbase.stream.from": "SAVED_OFFSET_OR_BEGINNING",
+     "couchbase.compression": "ENABLED",
+     "couchbase.flow.control.buffer": "128m",
+     "couchbase.persistence.polling.interval": "100ms",
+     "topic.creation.default.replication.factor": "-1",
+     "topic.creation.default.partitions": "-1"
+}
 EOF
 
 sleep 10

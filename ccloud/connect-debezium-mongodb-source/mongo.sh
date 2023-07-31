@@ -61,20 +61,20 @@ EOF
 log "Creating Debezium MongoDB source connector"
 playground connector create-or-update --connector debezium-mongodb-source << EOF
 {
-               "connector.class" : "io.debezium.connector.mongodb.MongoDbConnector",
-               "tasks.max" : "1",
-               "mongodb.hosts" : "debezium/mongodb:27017",
-               "mongodb.user" : "debezium",
-               "mongodb.password" : "dbz",
+     "connector.class" : "io.debezium.connector.mongodb.MongoDbConnector",
+     "tasks.max" : "1",
+     "mongodb.hosts" : "debezium/mongodb:27017",
+     "mongodb.user" : "debezium",
+     "mongodb.password" : "dbz",
 
-               "_comment": "old version before 2.x",
-               "mongodb.name": "dbserver1",
-               "_comment": "new version since 2.x",
-               "topic.prefix": "dbserver1",
+     "_comment": "old version before 2.x",
+     "mongodb.name": "dbserver1",
+     "_comment": "new version since 2.x",
+     "topic.prefix": "dbserver1",
 
-               "topic.creation.default.replication.factor": "-1",
-               "topic.creation.default.partitions": "-1"
-          }
+     "topic.creation.default.replication.factor": "-1",
+     "topic.creation.default.partitions": "-1"
+}
 EOF
 
 
