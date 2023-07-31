@@ -1391,7 +1391,7 @@ commands:
       help: |- 
         😴 Wait until lag becomes 0
 
-  - name: show-config
+  - name: show-config-parameters
     help: 🔩 Show all possible configuration parameters of connector
     flags:
     - *ccloudconnector
@@ -1494,7 +1494,7 @@ commands:
     - *connector
     - *waitforzerolag
 
-  - name: show-config
+  - name: show-config-parameters
     help: 🔩 Show all possible configuration parameters of connector
     flags:
     - *connector
