@@ -1008,6 +1008,29 @@ commands:
       flags:
       - *topic
 
+    - name: set-schema-compatibility
+      filters:
+      - schema_registry_running
+      group: Topic
+      help: |-
+        🛡️ Change topic's schema compatibility
+      flags:
+      - *topic
+      - &compatibility
+        long: --compatibility
+        arg: compatibility
+        allowed: 
+          - BACKWARD
+          - BACKWARD_TRANSITIVE
+          - FORWARD
+          - FORWARD_TRANSITIVE
+          - FULL
+          - FULL_TRANSITIVE
+          - NONE
+        required: true
+        help: |-
+          Schema Registry compatibility rule
+          
     - name: consume
       filters:
       - schema_registry_running
@@ -1112,6 +1135,7 @@ commands:
           🔢 Number of partitions for the topic. (default is 1)
           
           ❌ Important: If topic is existing, it will be re-created before producing to topic.
+      - *compatibility
       - long: --key
         arg: key
         required: false
@@ -1267,28 +1291,6 @@ commands:
           "created_at" datetime DEFAULT (now())
         );
         EOF
-
-    - name: set-schema-compatibility
-      filters:
-      - schema_registry_running
-      group: Topic
-      help: |-
-        🛡️ Change topic's schema compatibility
-      flags:
-      - *topic
-      - long: --compatibility
-        arg: compatibility
-        allowed: 
-          - BACKWARD
-          - BACKWARD_TRANSITIVE
-          - FORWARD
-          - FORWARD_TRANSITIVE
-          - FULL
-          - FULL_TRANSITIVE
-          - NONE
-        required: true
-        help: |-
-          Schema Registry compatibility rule
 
     - name: create
       group: Topic

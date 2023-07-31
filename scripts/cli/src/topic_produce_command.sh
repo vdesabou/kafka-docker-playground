@@ -8,6 +8,7 @@ headers="${args[--headers]}"
 forced_value="${args[--forced-value]}"
 generate_only="${args[--generate-only]}"
 tombstone="${args[--tombstone]}"
+compatibility="${args[--compatibility]}"
 
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
@@ -308,6 +309,8 @@ then
         then
             log "--nb-partitions is set, creating topic with $nb_partitions partitions"
             playground topic create --topic $topic --nb-partitions $nb_partitions
+        else
+            playground topic create --topic $topic
         fi
     fi
 else
@@ -321,6 +324,11 @@ else
         log "💯 Get number of records in topic $topic"
         tail -1 $tmp_dir/result.log
     fi
+fi
+
+if [ "$compatibility" != "" ]
+then
+    playground topic set-schema-compatibility --topic $topic --compatibility $compatibility
 fi
 
 if [[ -n "$key" ]]
