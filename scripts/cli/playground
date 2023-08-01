@@ -2530,7 +2530,7 @@ playground_topic_produce_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--compatibility COMPATIBILITY (required)")"
+    printf "  %s\n" "$(magenta "--compatibility COMPATIBILITY")"
     printf "    Schema Registry compatibility rule\n"
     printf "    Allowed: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE\n"
     echo
@@ -18034,10 +18034,6 @@ playground_topic_produce_parse_requirements() {
   # :command.required_flags_filter
   if [[ -z ${args['--topic']+x} ]]; then
     printf "missing required flag: --topic, -t TOPIC\n" >&2
-    exit 1
-  fi
-  if [[ -z ${args['--compatibility']+x} ]]; then
-    printf "missing required flag: --compatibility COMPATIBILITY\n" >&2
     exit 1
   fi
 

@@ -1016,8 +1016,7 @@ commands:
         🛡️ Change topic's schema compatibility
       flags:
       - *topic
-      - &compatibility
-        long: --compatibility
+      - long: --compatibility
         arg: compatibility
         allowed: 
           - BACKWARD
@@ -1135,7 +1134,19 @@ commands:
           🔢 Number of partitions for the topic. (default is 1)
           
           ❌ Important: If topic is existing, it will be re-created before producing to topic.
-      - *compatibility
+      - &compatibility
+        long: --compatibility
+        arg: compatibility
+        allowed: 
+          - BACKWARD
+          - BACKWARD_TRANSITIVE
+          - FORWARD
+          - FORWARD_TRANSITIVE
+          - FULL
+          - FULL_TRANSITIVE
+          - NONE
+        help: |-
+          Schema Registry compatibility rule
       - long: --key
         arg: key
         required: false
