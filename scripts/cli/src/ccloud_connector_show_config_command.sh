@@ -23,6 +23,6 @@ do
     log "🧰 Current config for ccloud connector $connector"
     json_config=$(curl $security -s -X GET -H "Content-Type: application/json" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config" --header "authorization: Basic $authorization")
     echo "playground ccloud-connector create-or-update --connector $connector << EOF"
-    echo "$json_config" | jq -S .
+    echo "$json_config" | jq -S . | sed 's/\$/\\$/g'
     echo "EOF"
 done

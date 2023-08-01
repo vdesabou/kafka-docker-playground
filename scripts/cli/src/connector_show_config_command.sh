@@ -22,6 +22,6 @@ do
     log "🧰 Current config for connector $connector"
     json_config=$(curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config")
     echo "playground connector create-or-update --connector $connector << EOF"
-    echo "$json_config" | jq -S .
+    echo "$json_config" | jq -S . | sed 's/\$/\\$/g'
     echo "EOF"
 done
