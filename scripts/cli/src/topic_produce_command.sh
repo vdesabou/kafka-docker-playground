@@ -191,7 +191,7 @@ else
                 exit 1
             fi
             set -e
-            cat $tmp_dir/result.log | grep "Payload: " | awk '{print $2}' > $tmp_dir/out.json
+            cat $tmp_dir/result.log | grep "Payload: " | sed 's/Payload: //' > $tmp_dir/out.json
             #--record-size 104
         ;;
         avro)
