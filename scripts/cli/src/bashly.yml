@@ -1364,12 +1364,6 @@ commands:
   commands:
   - name: status
     help: 🧩 Show status of all connectors
-
-  - name: plugins
-    help: 🎨 Show all plugins installed
-
-  - name: pause
-    help: ⏸️  Pause connector
     flags:
     - &ccloudconnector
       long: --connector
@@ -1382,6 +1376,14 @@ commands:
         🔗 Connector name
 
         🎓 Tip: If not specified, the command will apply to all connectors
+
+  - name: plugins
+    help: 🎨 Show all plugins installed
+
+  - name: pause
+    help: ⏸️  Pause connector
+    flags:
+    - *ccloudconnector
 
   - name: resume
     help: ⏯️  Resume connector
@@ -1467,12 +1469,6 @@ commands:
   commands:
   - name: status
     help: 🧩 Show status of all connectors
-
-  - name: plugins
-    help: 🎨 Show all plugins installed
-
-  - name: pause
-    help: ⏸️  Pause connector
     flags:
     - &connector
       long: --connector
@@ -1485,6 +1481,14 @@ commands:
         🔗 Connector name
 
         🎓 Tip: If not specified, the command will apply to all connectors
+
+  - name: plugins
+    help: 🎨 Show all plugins installed
+
+  - name: pause
+    help: ⏸️  Pause connector
+    flags:
+    - *connector
 
   - name: versions
     help:  🧞 Get current and latest version available on Confluent Hub for connector(s) used in example

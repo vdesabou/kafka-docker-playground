@@ -21,5 +21,7 @@ for connector in ${items[@]}
 do
     log "⏸️ Pausing connector $connector"
     curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/pause" | jq .
+
+    sleep 1
+    playground connector status --connector $connector
 done
-playground connector status

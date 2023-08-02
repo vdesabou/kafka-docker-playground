@@ -24,5 +24,3 @@ do
     log "❌ Deleting ccloud connector $connector"
     curl -s --request DELETE "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector" --header "authorization: Basic $authorization" | jq .
 done
-sleep 3
-playground ccloud-connector status

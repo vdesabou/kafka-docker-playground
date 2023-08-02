@@ -99,7 +99,7 @@ then
             log "🥁 Waiting a few seconds to get new status"
         fi
         sleep 8
-        playground connector status
+        playground connector status --connector $connector
     fi
 else
     logerror "❌ curl request failed with error code $ret!"

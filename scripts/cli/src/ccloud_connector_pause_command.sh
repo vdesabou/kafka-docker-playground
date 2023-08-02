@@ -22,6 +22,7 @@ for connector in ${items[@]}
 do
     log "⏸️ Pausing ccloud connector $connector"
     curl -s --request PUT "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/pause" --header "authorization: Basic $authorization" | jq .
+
+    sleep 3
+    playground ccloud-connector status --connector $connector
 done
-sleep 3
-playground ccloud-connector status

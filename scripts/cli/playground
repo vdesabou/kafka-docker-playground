@@ -2728,13 +2728,19 @@ playground_ccloud_connector_status_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground ccloud-connector status\n"
+  printf "  playground ccloud-connector status [OPTIONS]\n"
   printf "  playground ccloud-connector status --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
     printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -3113,13 +3119,19 @@ playground_connector_status_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground connector status\n"
+  printf "  playground connector status [OPTIONS]\n"
   printf "  playground connector status --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
     printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -11803,8 +11815,25 @@ playground_ccloud_connector_status_command() {
   cluster=$(echo "$ret" | cut -d "@" -f 2)
   authorization=$(echo "$ret" | cut -d "@" -f 3)
 
-  curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors?expand=status" \
-  --header "authorization: Basic $authorization" | jq .
+  connector="${args[--connector]}"
+
+  if [[ ! -n "$connector" ]]
+  then
+      log "✨ --connector flag was not provided, applying command to all ccloud connectors"
+      connector=$(playground get-ccloud-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No ccloud connector is running !"
+          exit 1
+      fi
+  fi
+
+  items=($connector)
+  for connector in ${items[@]}
+  do
+      log "🧩 Displaying connector status for $connector"
+      curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status" --header "authorization: Basic $authorization" | jq .
+  done
 }
 
 # :command.function
@@ -11849,9 +11878,11 @@ playground_ccloud_connector_pause_command() {
   do
       log "⏸️ Pausing ccloud connector $connector"
       curl -s --request PUT "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/pause" --header "authorization: Basic $authorization" | jq .
+
+      sleep 3
+      playground ccloud-connector status --connector $connector
   done
-  sleep 3
-  playground ccloud-connector status
+
 }
 
 # :command.function
@@ -11881,9 +11912,11 @@ playground_ccloud_connector_resume_command() {
   do
       log "⏯️ Resuming ccloud connector $connector"
       curl -s --request PUT "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/resume" --header "authorization: Basic $authorization" | jq .
+
+      sleep 3
+      playground ccloud-connector status --connector $connector
   done
-  sleep 3
-  playground ccloud-connector status
+
 }
 
 # :command.function
@@ -11915,8 +11948,6 @@ playground_ccloud_connector_delete_command() {
       log "❌ Deleting ccloud connector $connector"
       curl -s --request DELETE "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector" --header "authorization: Basic $authorization" | jq .
   done
-  sleep 3
-  playground ccloud-connector status
 }
 
 # :command.function
@@ -12335,7 +12366,7 @@ playground_ccloud_connector_create_or_update_command() {
               log "🥁 Waiting a few seconds to get new status"
           fi
           sleep 8
-          playground ccloud-connector status
+          playground ccloud-connector status --connector $connector
       fi
   else
       logerror "❌ curl request failed with error code $ret!"
@@ -12351,72 +12382,77 @@ playground_connector_status_command() {
   connect_url=$(echo "$ret" | cut -d "@" -f 1)
   security=$(echo "$ret" | cut -d "@" -f 2)
 
-  connectors=$(curl -s $security "$connect_url/connectors/" | jq -r '.[]')
+  connector="${args[--connector]}"
 
-  set +e
-  log "🧩 Displaying connector status"
-  if [ -z "$connectors" ]
+  if [[ ! -n "$connector" ]]
   then
-      log "💤 There are no connectors running !"
-  else
-      printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
-      echo "-----------------------------------------------------------------------------------------------------------------------------"
-
-      for connector in $connectors
-      do
-          status=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.connector.state')
-
-          if [ "$status" == "RUNNING" ]
-          then
-              status="✅ RUNNING"
-          elif [ "$status" == "PAUSED" ]
-          then
-              status="⏸️  PAUSED"
-          elif [ "$status" == "FAILED" ]
-          then
-              status="❌ FAILED"
-          else
-              status="🤔 UNKNOWN"
-          fi
-
-          tasks=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.tasks[] | "\(.id):\(.state)[\(.worker_id)]"' | tr '\n' ',' | sed 's/,$/\n/' | sed 's/:8083//g' | sed 's/:8283//g' | sed 's/:8383//g')
-
-          if [[ "$tasks" == *"RUNNING"* ]]
-          then
-              tasks="${tasks//RUNNING/🟢 RUNNING}"
-          elif [[ "$tasks" == *"PAUSED"* ]]
-          then
-              tasks="${tasks//PAUSED/⏸️  PAUSED}"
-          elif [[ "$tasks" == *"FAILED"* ]]
-          then
-              tasks="${tasks//FAILED/🛑 FAILED}"
-          else
-              tasks="🤔 N/A"
-          fi
-
-          stacktrace_connector=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.connector.trace | select(length > 0)')
-          stacktrace_tasks=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.tasks[].trace | select(length > 0)')
-          stacktrace=""
-          if [ "$stacktrace_connector" != "" ]
-          then
-              stacktrace="connector: $stacktrace_connector"
-          fi
-
-          if [ "$stacktrace_tasks" != "" ]
-          then
-              stacktrace="$stacktrace tasks: $stacktrace_tasks"
-          fi
-
-          if [ -z "$stacktrace" ]
-          then
-              stacktrace="-"
-          fi
-
-          printf "%-30s %-12s %-30s %-50s\n" "$connector" "$status" "$tasks" "$stacktrace"
-          echo "-------------------------------------------------------------------------------------------------------------"
-      done
+      log "✨ --connector flag was not provided, applying command to all connectors"
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No connector is running !"
+          exit 1
+      fi
   fi
 
+  items=($connector)
+  for connector in ${items[@]}
+  do
+      set +e
+      log "🧩 Displaying connector status for $connector"
+      printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
+      echo "-----------------------------------------------------------------------------------------------------------------------------"
+      status=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.connector.state')
+
+      if [ "$status" == "RUNNING" ]
+      then
+          status="✅ RUNNING"
+      elif [ "$status" == "PAUSED" ]
+      then
+          status="⏸️  PAUSED"
+      elif [ "$status" == "FAILED" ]
+      then
+          status="❌ FAILED"
+      else
+          status="🤔 UNKNOWN"
+      fi
+
+      tasks=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.tasks[] | "\(.id):\(.state)[\(.worker_id)]"' | tr '\n' ',' | sed 's/,$/\n/' | sed 's/:8083//g' | sed 's/:8283//g' | sed 's/:8383//g')
+
+      if [[ "$tasks" == *"RUNNING"* ]]
+      then
+          tasks="${tasks//RUNNING/🟢 RUNNING}"
+      elif [[ "$tasks" == *"PAUSED"* ]]
+      then
+          tasks="${tasks//PAUSED/⏸️  PAUSED}"
+      elif [[ "$tasks" == *"FAILED"* ]]
+      then
+          tasks="${tasks//FAILED/🛑 FAILED}"
+      else
+          tasks="🤔 N/A"
+      fi
+
+      stacktrace_connector=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.connector.trace | select(length > 0)')
+      stacktrace_tasks=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.tasks[].trace | select(length > 0)')
+      stacktrace=""
+      if [ "$stacktrace_connector" != "" ]
+      then
+          stacktrace="connector: $stacktrace_connector"
+      fi
+
+      if [ "$stacktrace_tasks" != "" ]
+      then
+          stacktrace="$stacktrace tasks: $stacktrace_tasks"
+      fi
+
+      if [ -z "$stacktrace" ]
+      then
+          stacktrace="-"
+      fi
+
+      printf "%-30s %-12s %-30s %-50s\n" "$connector" "$status" "$tasks" "$stacktrace"
+      echo "-------------------------------------------------------------------------------------------------------------"
+  done
 }
 
 # :command.function
@@ -12457,8 +12493,10 @@ playground_connector_pause_command() {
   do
       log "⏸️ Pausing connector $connector"
       curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/pause" | jq .
+
+      sleep 1
+      playground connector status --connector $connector
   done
-  playground connector status
 }
 
 # :command.function
@@ -12600,7 +12638,7 @@ playground_connector_restart_command() {
       fi
   done
   sleep 3
-  playground connector status
+  playground ccloud-connector status
 }
 
 # :command.function
@@ -12629,8 +12667,10 @@ playground_connector_resume_command() {
   do
       log "⏯️ Resuming connector $connector"
       curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/resume"  | jq .
+
+      sleep 1
+      playground connector status --connector $connector
   done
-  playground connector status
 }
 
 # :command.function
@@ -12661,7 +12701,6 @@ playground_connector_delete_command() {
       log "❌ Deleting connector $connector"
       curl $security -s -X DELETE "$connect_url/connectors/$connector" | jq .
   done
-  playground connector status
 }
 
 # :command.function
@@ -13088,7 +13127,7 @@ playground_connector_create_or_update_command() {
               log "🥁 Waiting a few seconds to get new status"
           fi
           sleep 8
-          playground connector status
+          playground connector status --connector $connector
       fi
   else
       logerror "❌ curl request failed with error code $ret!"
@@ -18391,6 +18430,20 @@ playground_ccloud_connector_status_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
@@ -19081,6 +19134,20 @@ playground_connector_status_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2

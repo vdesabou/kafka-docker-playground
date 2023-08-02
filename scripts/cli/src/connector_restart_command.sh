@@ -41,4 +41,4 @@ do
     fi
 done
 sleep 3
-playground connector status
+playground ccloud-connector status

@@ -23,4 +23,3 @@ do
     log "❌ Deleting connector $connector"
     curl $security -s -X DELETE "$connect_url/connectors/$connector" | jq .
 done
-playground connector status
