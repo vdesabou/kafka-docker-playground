@@ -97,7 +97,7 @@ then
             log "🥁 Waiting a few seconds to get new status"
         fi
         sleep 8
-        playground connector status --connector $connector
+        playground ccloud-connector status
     fi
 else
     logerror "❌ curl request failed with error code $ret!"
