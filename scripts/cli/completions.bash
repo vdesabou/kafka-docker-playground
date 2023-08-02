@@ -329,7 +329,7 @@ _playground_completions() {
       ;;
 
     'connector create-or-update'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --level -c -h -l")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --level --package -c -h -l -p")" -- "$cur" )
       ;;
 
     'ccloud-connector show-lag'*)

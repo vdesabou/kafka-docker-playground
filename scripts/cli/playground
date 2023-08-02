@@ -3533,6 +3533,11 @@ playground_connector_create_or_update_usage() {
     printf "    Allowed: INFO, WARN, DEBUG, TRACE\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--package, -p PACKAGE")"
+    printf "    Package name\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -13028,6 +13033,7 @@ playground_connector_create_or_update_command() {
   # src/connector_create_or_update_command.sh
   json=${args[json]}
   level=${args[--level]}
+  package=${args[--package]}
 
   if [ "$json" = "-" ]
   then
@@ -13106,7 +13112,12 @@ playground_connector_create_or_update_command() {
       else
           if [[ -n "$level" ]]
           then
-              playground connector log-level --connector $connector --level $level
+              if [[ -n "$package" ]]
+              then
+                  playground connector log-level --connector $connector --level $level --package $package
+              else
+                  playground connector log-level --connector $connector --level $level
+              fi
           fi
           if [ $is_create == 1 ]
           then
@@ -19821,6 +19832,26 @@ playground_connector_create_or_update_parse_requirements() {
           shift
         else
           printf "%s\n" "--level requires an argument: --level, -l LEVEL" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --package | -p)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_not_empty "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--package, -p PACKAGE" "$(validate_not_empty "$2")" >&2
+            exit 1
+          fi
+
+          args['--package']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--package requires an argument: --package, -p PACKAGE" >&2
           exit 1
         fi
         ;;

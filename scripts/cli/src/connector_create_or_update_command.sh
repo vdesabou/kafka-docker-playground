@@ -1,5 +1,6 @@
 json=${args[json]}
 level=${args[--level]}
+package=${args[--package]}
 
 if [ "$json" = "-" ]
 then
@@ -78,7 +79,12 @@ then
     else
         if [[ -n "$level" ]]
         then
-            playground connector log-level --connector $connector --level $level
+            if [[ -n "$package" ]]
+            then
+                playground connector log-level --connector $connector --level $level --package $package
+            else
+                playground connector log-level --connector $connector --level $level
+            fi
         fi
         if [ $is_create == 1 ]
         then

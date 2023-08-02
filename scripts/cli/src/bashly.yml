@@ -749,7 +749,8 @@ commands:
     - name: get
       help: Get log levels
       flags:
-      - long: --package
+      - &package
+        long: --package
         short: -p
         required: false
         validate: not_empty
@@ -1564,6 +1565,7 @@ commands:
       required: false
       help: |-
         ❕Log level
+    - *package
     examples: |
       playground connector create-or-update -c filestream-sink << EOF
       {
