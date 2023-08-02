@@ -9,6 +9,7 @@ else
 fi
 
 json_file=/tmp/json
+trap 'rm -f /tmp/json' EXIT
 echo "$json_content" > $json_file
 
 # JSON is invalid
