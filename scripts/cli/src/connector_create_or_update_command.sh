@@ -86,7 +86,7 @@ then
             if [ -z "$GITHUB_RUN_NUMBER" ]
             then
                 log "💈 Configuration is "
-                echo "$curl_output" | jq -S .
+                echo "$json_content" | jq -S .
             fi
             log "🥁 Waiting a few seconds to get new status"
         else
@@ -94,7 +94,7 @@ then
             if [ -z "$GITHUB_RUN_NUMBER" ]
             then
                 log "💈 Configuration is "
-                echo "$curl_output" | jq -S .
+                echo "$json_content" | jq -S .
             fi
             log "🥁 Waiting a few seconds to get new status"
         fi

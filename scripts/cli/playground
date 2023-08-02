@@ -12247,6 +12247,7 @@ playground_ccloud_connector_create_or_update_command() {
   fi
 
   json_file=/tmp/json
+  trap 'rm -f /tmp/json' EXIT
   echo "$json_content" > $json_file
 
   # JSON is invalid
@@ -12321,7 +12322,7 @@ playground_ccloud_connector_create_or_update_command() {
               if [ -z "$GITHUB_RUN_NUMBER" ]
               then
                   log "💈 Configuration is "
-                  echo "$curl_output" | jq -S .
+                  echo "$json_content" | jq -S .
               fi
               log "🥁 Waiting a few seconds to get new status"
           else
@@ -12329,7 +12330,7 @@ playground_ccloud_connector_create_or_update_command() {
               if [ -z "$GITHUB_RUN_NUMBER" ]
               then
                   log "💈 Configuration is "
-                  echo "$curl_output" | jq -S .
+                  echo "$json_content" | jq -S .
               fi
               log "🥁 Waiting a few seconds to get new status"
           fi
@@ -12998,6 +12999,7 @@ playground_connector_create_or_update_command() {
   fi
 
   json_file=/tmp/json
+  trap 'rm -f /tmp/json' EXIT
   echo "$json_content" > $json_file
 
   # JSON is invalid
@@ -13073,7 +13075,7 @@ playground_connector_create_or_update_command() {
               if [ -z "$GITHUB_RUN_NUMBER" ]
               then
                   log "💈 Configuration is "
-                  echo "$curl_output" | jq -S .
+                  echo "$json_content" | jq -S .
               fi
               log "🥁 Waiting a few seconds to get new status"
           else
@@ -13081,7 +13083,7 @@ playground_connector_create_or_update_command() {
               if [ -z "$GITHUB_RUN_NUMBER" ]
               then
                   log "💈 Configuration is "
-                  echo "$curl_output" | jq -S .
+                  echo "$json_content" | jq -S .
               fi
               log "🥁 Waiting a few seconds to get new status"
           fi
