@@ -41,4 +41,4 @@ do
     fi
 done
 sleep 3
-playground ccloud-connector status
+playground connector status --connector $connector

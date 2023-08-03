@@ -8521,7 +8521,7 @@ playground_run_ccloud_command() {
   log "####################################################"
   SECONDS=0
   cd $test_file_directory
-  trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground connector versions' EXIT
+  trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground ccloud-connector status;playground connector versions' EXIT
   touch /tmp/playground-run-command-used
   bash $filename ${other_args[*]}
   ret=$?
@@ -12643,7 +12643,7 @@ playground_connector_restart_command() {
       fi
   done
   sleep 3
-  playground ccloud-connector status
+  playground connector status --connector $connector
 }
 
 # :command.function
