@@ -9230,26 +9230,26 @@ playground_bootstrap_reproduction_model_command() {
 
     kafka_cli_producer_error=0
     kafka_cli_producer_eof=0
-    line_kafka_cli_producer=$(egrep -n "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $repro_test_file | cut -d ":" -f 1 | tail -n1)
+    line_kafka_cli_producer=$(egrep -n "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer|playground topic produce" $repro_test_file | cut -d ":" -f 1 | tail -n1)
     if [ $? != 0 ] || [ "$line_kafka_cli_producer" == "" ]
     then
         logwarn "Could not find kafka cli producer!"
         kafka_cli_producer_error=1
     fi
     set +e
-    egrep "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $repro_test_file | grep EOF > /dev/null
+    egrep "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer|playground topic produce" $repro_test_file | grep EOF > /dev/null
     if [ $? = 0 ]
     then
         kafka_cli_producer_eof=1
-
-        sed -n "$line_kafka_cli_producer,$(($line_kafka_cli_producer + 10))p" $repro_test_file > /tmp/tmp
+        sed -n "$line_kafka_cli_producer,$(($line_kafka_cli_producer + 50))p" $repro_test_file > /tmp/tmp
         tmp=$(grep -n "^EOF" /tmp/tmp | cut -d ":" -f 1 | tail -n1)
-        if [ $tmp == "" ]
+        if [ "$tmp" == "" ]
         then
           logwarn "Could not determine EOF for kafka cli producer!"
           kafka_cli_producer_error=1
+        else
+          line_kafka_cli_producer_end=$(($line_kafka_cli_producer + $tmp))
         fi
-        line_kafka_cli_producer_end=$(($line_kafka_cli_producer + $tmp))
     fi
     set -e
     if [ $kafka_cli_producer_error = 1 ]
@@ -13114,7 +13114,7 @@ playground_connector_create_or_update_command() {
           then
               if [[ -n "$package" ]]
               then
-                  playground connector log-level --connector $connector --level $level --package $package
+                  playground debug log-level set --level $level --package $package
               else
                   playground connector log-level --connector $connector --level $level
               fi

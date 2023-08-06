@@ -81,7 +81,7 @@ then
         then
             if [[ -n "$package" ]]
             then
-                playground connector log-level --connector $connector --level $level --package $package
+                playground debug log-level set --level $level --package $package
             else
                 playground connector log-level --connector $connector --level $level
             fi
