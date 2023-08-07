@@ -21,21 +21,21 @@ EOF
 log "Creating JMS ActiveMQ sink connector"
 playground connector create-or-update --connector jms-active-mq-sink << EOF
 {
-               "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
-                    "topics": "sink-messages",
-                    "java.naming.factory.initial": "org.apache.activemq.jndi.ActiveMQInitialContextFactory",
-                    "java.naming.provider.url": "tcp://activemq:61616",
-                    "java.naming.security.principal": "admin",
-                    "java.naming.security.credentials": "admin",
-                    "connection.factory.name": "ConnectionFactory",
-                    "jms.destination.type": "queue",
-                    "jms.destination.name": "DEV.QUEUE.1",
-                    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }
+     "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
+     "topics": "sink-messages",
+     "java.naming.factory.initial": "org.apache.activemq.jndi.ActiveMQInitialContextFactory",
+     "java.naming.provider.url": "tcp://activemq:61616",
+     "java.naming.security.principal": "admin",
+     "java.naming.security.credentials": "admin",
+     "connection.factory.name": "ConnectionFactory",
+     "jms.destination.type": "queue",
+     "jms.destination.name": "DEV.QUEUE.1",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 5
