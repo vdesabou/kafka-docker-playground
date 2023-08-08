@@ -84,30 +84,30 @@ curl --request PUT \
 log "Creating Salesforce PushTopics Source connector"
 playground connector create-or-update --connector salesforce-pushtopic-source-proxy-basic-auth << EOF
 {
-                    "connector.class": "io.confluent.salesforce.SalesforcePushTopicSourceConnector",
-                    "kafka.topic": "sfdc-pushtopic-leads",
-                    "tasks.max": "1",
-                    "curl.logging": "true",
-                    "salesforce.object" : "Lead",
-                    "salesforce.push.topic.name" : "$PUSH_TOPICS_NAME",
-                    "salesforce.instance" : "$SALESFORCE_INSTANCE",
-                    "salesforce.username" : "$SALESFORCE_USERNAME",
-                    "salesforce.password" : "$SALESFORCE_PASSWORD",
-                    "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
-                    "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY",
-                    "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD",
-                    "http.proxy": "squid:8888",
-                    "http.proxy.auth.scheme": "BASIC",
-                    "http.proxy.user": "admin",
-                    "http.proxy.password": "1234",
-                    "salesforce.initial.start" : "latest",
-                    "connection.max.message.size": "10048576",
-                    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }
+     "connector.class": "io.confluent.salesforce.SalesforcePushTopicSourceConnector",
+     "kafka.topic": "sfdc-pushtopic-leads",
+     "tasks.max": "1",
+     "curl.logging": "true",
+     "salesforce.object" : "Lead",
+     "salesforce.push.topic.name" : "$PUSH_TOPICS_NAME",
+     "salesforce.instance" : "$SALESFORCE_INSTANCE",
+     "salesforce.username" : "$SALESFORCE_USERNAME",
+     "salesforce.password" : "$SALESFORCE_PASSWORD",
+     "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
+     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY",
+     "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD",
+     "http.proxy": "squid:8888",
+     "http.proxy.auth.scheme": "BASIC",
+     "http.proxy.user": "admin",
+     "http.proxy.password": "1234",
+     "salesforce.initial.start" : "latest",
+     "connection.max.message.size": "10048576",
+     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 # [2022-01-21 13:47:19,274] DEBUG Using HTTP(S) proxy: nginx-proxy:8888 (io.confluent.salesforce.rest.SalesforceHttpClientUtil:40)

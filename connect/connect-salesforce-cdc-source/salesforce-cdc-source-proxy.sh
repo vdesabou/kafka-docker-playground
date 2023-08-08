@@ -54,28 +54,28 @@ docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -
 log "Creating Salesforce CDC Source connector"
 playground connector create-or-update --connector salesforce-cdc-source << EOF
 {
-                    "connector.class": "io.confluent.salesforce.SalesforceCdcSourceConnector",
-                    "kafka.topic": "sfdc-cdc-contacts",
-                    "tasks.max": "1",
-                    "curl.logging": "true",
-                    "salesforce.instance" : "$SALESFORCE_INSTANCE",
-                    "salesforce.cdc.name" : "ContactChangeEvent",
-                    "__comment" : "from 2.0.0 salesforce.cdc.name is renamed salesforce.cdc.channel",
-                    "salesforce.cdc.channel" : "ContactChangeEvent",
-                    "salesforce.username" : "$SALESFORCE_USERNAME",
-                    "salesforce.password" : "$SALESFORCE_PASSWORD",
-                    "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
-                    "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY",
-                    "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD",
-                    "http.proxy": "nginx-proxy:8888",
-                    "salesforce.initial.start" : "latest",
-                    "connection.max.message.size": "10048576",
-                    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }
+     "connector.class": "io.confluent.salesforce.SalesforceCdcSourceConnector",
+     "kafka.topic": "sfdc-cdc-contacts",
+     "tasks.max": "1",
+     "curl.logging": "true",
+     "salesforce.instance" : "$SALESFORCE_INSTANCE",
+     "salesforce.cdc.name" : "ContactChangeEvent",
+     "__comment" : "from 2.0.0 salesforce.cdc.name is renamed salesforce.cdc.channel",
+     "salesforce.cdc.channel" : "ContactChangeEvent",
+     "salesforce.username" : "$SALESFORCE_USERNAME",
+     "salesforce.password" : "$SALESFORCE_PASSWORD",
+     "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
+     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY",
+     "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD",
+     "http.proxy": "nginx-proxy:8888",
+     "salesforce.initial.start" : "latest",
+     "connection.max.message.size": "10048576",
+     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 5

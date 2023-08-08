@@ -44,22 +44,22 @@ docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_
 log "Creating Salesforce Bulk API Source connector"
 playground connector create-or-update --connector salesforce-bulkapi-source << EOF
 {
-                    "connector.class": "io.confluent.connect.salesforce.SalesforceBulkApiSourceConnector",
-                    "kafka.topic": "sfdc-bulkapi-leads",
-                    "tasks.max": "1",
-                    "curl.logging": "true",
-                    "salesforce.object" : "Lead",
-                    "salesforce.instance" : "$SALESFORCE_INSTANCE",
-                    "salesforce.username" : "$SALESFORCE_USERNAME",
-                    "salesforce.password" : "$SALESFORCE_PASSWORD",
-                    "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
-                    "connection.max.message.size": "10048576",
-                    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }
+     "connector.class": "io.confluent.connect.salesforce.SalesforceBulkApiSourceConnector",
+     "kafka.topic": "sfdc-bulkapi-leads",
+     "tasks.max": "1",
+     "curl.logging": "true",
+     "salesforce.object" : "Lead",
+     "salesforce.instance" : "$SALESFORCE_INSTANCE",
+     "salesforce.username" : "$SALESFORCE_USERNAME",
+     "salesforce.password" : "$SALESFORCE_PASSWORD",
+     "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
+     "connection.max.message.size": "10048576",
+     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 

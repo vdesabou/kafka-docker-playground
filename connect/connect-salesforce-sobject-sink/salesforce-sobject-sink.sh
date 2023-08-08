@@ -108,26 +108,26 @@ docker exec sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" 
 log "Creating Salesforce PushTopics Source connector"
 playground connector create-or-update --connector salesforce-pushtopic-source << EOF
 {
-                    "connector.class": "io.confluent.salesforce.SalesforcePushTopicSourceConnector",
-                    "kafka.topic": "sfdc-pushtopic-leads",
-                    "tasks.max": "1",
-                    "curl.logging": "true",
-                    "salesforce.object" : "Lead",
-                    "salesforce.push.topic.name" : "$PUSH_TOPICS_NAME",
-                    "salesforce.instance" : "$SALESFORCE_INSTANCE",
-                    "salesforce.username" : "$SALESFORCE_USERNAME",
-                    "salesforce.password" : "$SALESFORCE_PASSWORD",
-                    "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
-                    "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY",
-                    "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD",
-                    "salesforce.initial.start" : "latest",
-                    "connection.max.message.size": "10048576",
-                    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }
+     "connector.class": "io.confluent.salesforce.SalesforcePushTopicSourceConnector",
+     "kafka.topic": "sfdc-pushtopic-leads",
+     "tasks.max": "1",
+     "curl.logging": "true",
+     "salesforce.object" : "Lead",
+     "salesforce.push.topic.name" : "$PUSH_TOPICS_NAME",
+     "salesforce.instance" : "$SALESFORCE_INSTANCE",
+     "salesforce.username" : "$SALESFORCE_USERNAME",
+     "salesforce.password" : "$SALESFORCE_PASSWORD",
+     "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
+     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY",
+     "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD",
+     "salesforce.initial.start" : "latest",
+     "connection.max.message.size": "10048576",
+     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 5
@@ -630,34 +630,34 @@ playground topic consume --topic sfdc-pushtopic-leads --min-expected-messages 1 
 log "Creating Salesforce SObject Sink connector"
 playground connector create-or-update --connector salesforce-sobject-sink << EOF
 {
-                    "connector.class": "io.confluent.salesforce.SalesforceSObjectSinkConnector",
-                    "topics": "sfdc-pushtopic-leads",
-                    "tasks.max": "1",
-                    "curl.logging": "true",
-                    "salesforce.object" : "Lead",
-                    "salesforce.instance" : "$SALESFORCE_INSTANCE_ACCOUNT2",
-                    "salesforce.username" : "$SALESFORCE_USERNAME_ACCOUNT2",
-                    "salesforce.password" : "$SALESFORCE_PASSWORD_ACCOUNT2",
-                    "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN_ACCOUNT2",
-                    "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY_ACCOUNT2",
-                    "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2",
-                    "salesforce.use.custom.id.field" : "true",
-                    "salesforce.custom.id.field.name" : "CustomId__c",
-                    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "salesforce.ignore.fields" : "CleanStatus",
-                    "salesforce.ignore.reference.fields" : "true",
-                    "override.event.type": "true",
-                    "salesforce.sink.object.operation": "upsert",
-                    "reporter.bootstrap.servers": "broker:9092",
-                    "reporter.error.topic.name": "error-responses",
-                    "reporter.error.topic.replication.factor": 1,
-                    "reporter.result.topic.name": "success-responses",
-                    "reporter.result.topic.replication.factor": 1,
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }
+     "connector.class": "io.confluent.salesforce.SalesforceSObjectSinkConnector",
+     "topics": "sfdc-pushtopic-leads",
+     "tasks.max": "1",
+     "curl.logging": "true",
+     "salesforce.object" : "Lead",
+     "salesforce.instance" : "$SALESFORCE_INSTANCE_ACCOUNT2",
+     "salesforce.username" : "$SALESFORCE_USERNAME_ACCOUNT2",
+     "salesforce.password" : "$SALESFORCE_PASSWORD_ACCOUNT2",
+     "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN_ACCOUNT2",
+     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY_ACCOUNT2",
+     "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2",
+     "salesforce.use.custom.id.field" : "true",
+     "salesforce.custom.id.field.name" : "CustomId__c",
+     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "salesforce.ignore.fields" : "CleanStatus",
+     "salesforce.ignore.reference.fields" : "true",
+     "override.event.type": "true",
+     "salesforce.sink.object.operation": "upsert",
+     "reporter.bootstrap.servers": "broker:9092",
+     "reporter.error.topic.name": "error-responses",
+     "reporter.error.topic.replication.factor": 1,
+     "reporter.result.topic.name": "success-responses",
+     "reporter.result.topic.replication.factor": 1,
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 

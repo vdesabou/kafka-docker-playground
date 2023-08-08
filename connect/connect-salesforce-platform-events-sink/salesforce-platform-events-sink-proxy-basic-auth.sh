@@ -55,28 +55,28 @@ docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -
 log "Creating Salesforce Platform Events Source connector"
 playground connector create-or-update --connector salesforce-platform-events-source << EOF
 {
-                    "connector.class": "io.confluent.salesforce.SalesforcePlatformEventSourceConnector",
-                    "kafka.topic": "sfdc-platform-events",
-                    "tasks.max": "1",
-                    "curl.logging": "true",
-                    "salesforce.platform.event.name" : "MyPlatformEvent__e",
-                    "salesforce.instance" : "$SALESFORCE_INSTANCE",
-                    "salesforce.username" : "$SALESFORCE_USERNAME",
-                    "salesforce.password" : "$SALESFORCE_PASSWORD",
-                    "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
-                    "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY",
-                    "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD",
-                    "http.proxy": "squid:8888",
-                    "http.proxy.auth.scheme": "BASIC",
-                    "http.proxy.user": "admin",
-                    "http.proxy.password": "1234",
-                    "salesforce.initial.start" : "latest",
-                    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }
+     "connector.class": "io.confluent.salesforce.SalesforcePlatformEventSourceConnector",
+     "kafka.topic": "sfdc-platform-events",
+     "tasks.max": "1",
+     "curl.logging": "true",
+     "salesforce.platform.event.name" : "MyPlatformEvent__e",
+     "salesforce.instance" : "$SALESFORCE_INSTANCE",
+     "salesforce.username" : "$SALESFORCE_USERNAME",
+     "salesforce.password" : "$SALESFORCE_PASSWORD",
+     "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
+     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY",
+     "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD",
+     "http.proxy": "squid:8888",
+     "http.proxy.auth.scheme": "BASIC",
+     "http.proxy.user": "admin",
+     "http.proxy.password": "1234",
+     "salesforce.initial.start" : "latest",
+     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 5
