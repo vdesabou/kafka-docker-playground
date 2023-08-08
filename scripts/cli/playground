@@ -8521,7 +8521,7 @@ playground_run_ccloud_command() {
   log "####################################################"
   SECONDS=0
   cd $test_file_directory
-  trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground ccloud-connector status;playground connector versions' EXIT
+  trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground ccloud-connector status;playground connector versions' EXIT
   touch /tmp/playground-run-command-used
   bash $filename ${other_args[*]}
   ret=$?
@@ -11390,7 +11390,7 @@ playground_topic_produce_command() {
               #--record-size 104
           ;;
           avro)
-              docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/value_schema --count $nb_messages_to_generate > /dev/null 2>&1
+              docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/value_schema --count $nb_messages_to_generate
               docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
           ;;
           json-schema)
