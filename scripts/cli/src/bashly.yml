@@ -1148,6 +1148,16 @@ commands:
           - NONE
         help: |-
           Schema Registry compatibility rule
+
+      - &value-subject-name-strategy
+        long: --value-subject-name-strategy
+        arg: value-subject-name-strategy
+        allowed: 
+          - TopicNameStrategy
+          - RecordNameStrategy
+          - TopicRecordNameStrategy
+        help: |-
+          Value Subject Name Strategy
       - long: --key
         arg: key
         required: false
