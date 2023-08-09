@@ -5508,7 +5508,12 @@ function remove_cdb_oracle_image() {
 
   SETUP_FILE=${SETUP_FOLDER}/01_user-setup.sh
   SETUP_FILE_CKSUM=$(cksum $SETUP_FILE | awk '{ print $1 }')
-  ORACLE_IMAGE="db-prebuilt-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
+  if [ `uname -m` = "arm64" ]
+  then
+      export ORACLE_IMAGE="db-prebuilt-arm64-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
+  else
+      export ORACLE_IMAGE="db-prebuilt-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
+  fi
 
   if ! test -z "$(docker images -q $ORACLE_IMAGE)"
   then
@@ -5531,6 +5536,12 @@ function create_or_get_oracle_image() {
   then
       ORACLE_VERSION="21.3.0-ee"
   else
+      if [ `uname -m` = "arm64" ]
+      then
+          ZIP_FILE="LINUX.ARM64_1919000_db_home.zip"
+      else
+          ZIP_FILE="LINUX.X64_193000_db_home.zip"
+      fi
       ORACLE_VERSION="19.3.0-ee"
   fi
   # used for docker-images repo
@@ -5539,7 +5550,13 @@ function create_or_get_oracle_image() {
   # https://github.com/oracle/docker-images/tree/main/OracleDatabase/SingleInstance/samples/prebuiltdb
   SETUP_FILE=${SETUP_FOLDER}/01_user-setup.sh
   SETUP_FILE_CKSUM=$(cksum $SETUP_FILE | awk '{ print $1 }')
-  export ORACLE_IMAGE="db-prebuilt-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
+
+  if [ `uname -m` = "arm64" ]
+  then
+      export ORACLE_IMAGE="db-prebuilt-arm64-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
+  else
+      export ORACLE_IMAGE="db-prebuilt-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
+  fi
   TEMP_CONTAINER="oracle-build-$ORACLE_VERSION-$(basename $SETUP_FOLDER)"
 
   if test -z "$(docker images -q $ORACLE_IMAGE)"
@@ -5644,8 +5661,6 @@ function create_or_get_oracle_image() {
       rm -rf docker-images
       cd ${OLDDIR}
   fi
-
-  export ORACLE_IMAGE="db-prebuilt-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
 
   if test -z "$(docker images -q $ORACLE_IMAGE)"
   then
@@ -10774,6 +10789,7 @@ playground_topic_consume_command() {
   timeout="${args[--timeout]}"
   tail="${args[--tail]}"
   timestamp_field="${args[--plot-latencies-timestamp-field]}"
+  value_subject_name_strategy="${args[--value-subject-name-strategy]}"
 
   environment=`get_environment_used`
 

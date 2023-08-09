@@ -1082,7 +1082,12 @@ function remove_cdb_oracle_image() {
 
   SETUP_FILE=${SETUP_FOLDER}/01_user-setup.sh
   SETUP_FILE_CKSUM=$(cksum $SETUP_FILE | awk '{ print $1 }')
-  ORACLE_IMAGE="db-prebuilt-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
+  if [ `uname -m` = "arm64" ]
+  then
+      export ORACLE_IMAGE="db-prebuilt-arm64-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
+  else
+      export ORACLE_IMAGE="db-prebuilt-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
+  fi
 
   if ! test -z "$(docker images -q $ORACLE_IMAGE)"
   then
@@ -1119,7 +1124,13 @@ function create_or_get_oracle_image() {
   # https://github.com/oracle/docker-images/tree/main/OracleDatabase/SingleInstance/samples/prebuiltdb
   SETUP_FILE=${SETUP_FOLDER}/01_user-setup.sh
   SETUP_FILE_CKSUM=$(cksum $SETUP_FILE | awk '{ print $1 }')
-  export ORACLE_IMAGE="db-prebuilt-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
+
+  if [ `uname -m` = "arm64" ]
+  then
+      export ORACLE_IMAGE="db-prebuilt-arm64-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
+  else
+      export ORACLE_IMAGE="db-prebuilt-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
+  fi
   TEMP_CONTAINER="oracle-build-$ORACLE_VERSION-$(basename $SETUP_FOLDER)"
 
   if test -z "$(docker images -q $ORACLE_IMAGE)"
@@ -1224,8 +1235,6 @@ function create_or_get_oracle_image() {
       rm -rf docker-images
       cd ${OLDDIR}
   fi
-
-  export ORACLE_IMAGE="db-prebuilt-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
 
   if test -z "$(docker images -q $ORACLE_IMAGE)"
   then
