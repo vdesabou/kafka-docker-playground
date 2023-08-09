@@ -1105,6 +1105,12 @@ function create_or_get_oracle_image() {
   then
       ORACLE_VERSION="21.3.0-ee"
   else
+      if [ `uname -m` = "arm64" ]
+      then
+          ZIP_FILE="LINUX.ARM64_1919000_db_home.zip"
+      else
+          ZIP_FILE="LINUX.X64_193000_db_home.zip"
+      fi
       ORACLE_VERSION="19.3.0-ee"
   fi
   # used for docker-images repo

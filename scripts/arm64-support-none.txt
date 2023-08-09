@@ -1,18 +1,13 @@
 connect/connect-cdc-oracle11-source
 connect/connect-cdc-oracle12-source
 connect/connect-cdc-oracle18-source
-connect/connect-cdc-oracle19-source
 connect/connect-cdc-oracle21-source
 connect/connect-jdbc-oracle11-sink
 connect/connect-jdbc-oracle11-source
 connect/connect-jdbc-oracle12-sink
 connect/connect-jdbc-oracle12-source
-connect/connect-jdbc-oracle19-sink
-connect/connect-jdbc-oracle19-source
 connect/connect-jdbc-oracle21-sink
 connect/connect-jdbc-oracle21-source
-connect/connect-jms-oracle19-sink
-connect/connect-jms-oracle19-source
 connect/connect-jms-oracle21-sink
 connect/connect-jms-oracle21-source
 
