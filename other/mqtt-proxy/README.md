@@ -14,9 +14,3 @@ Simply run:
 ```
 $ playground run -f mqtt-proxy<tab>
 ```
-
-or with MTLS
-
-```
-$ playground run -f mqtt-souproxyrce-mtls<tab>
-```
