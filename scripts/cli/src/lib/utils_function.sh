@@ -60,6 +60,11 @@ function version_gt() {
 
 function set_kafka_client_tag()
 {
+    if [[ $TAG_BASE = 7.5.* ]]
+    then
+      export KAFKA_CLIENT_TAG="3.5.0"
+    fi
+
     if [[ $TAG_BASE = 7.4.* ]]
     then
       export KAFKA_CLIENT_TAG="3.4.0"
