@@ -5,6 +5,11 @@ bashly generate
 rm /Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/cli/completions.bash
 bashly add completions_script
 source /Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/cli/completions.bash
+bashly render :markdown docs
+
+cat /Users/vsaboulin/Documents/github/kafka-docker-playground-docs/docs/cli-template.md > /Users/vsaboulin/Documents/github/kafka-docker-playground-docs/docs/cli.md
+cat /Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/cli/docs/index.md >> /Users/vsaboulin/Documents/github/kafka-docker-playground-docs/docs/cli.md
+mv /Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/cli/docs/*.md /Users/vsaboulin/Documents/github/kafka-docker-playground-docs/docs/
 cd -
 
 #asciinema rec -c /bin/zsh /tmp/asciinema.cast --overwrite
