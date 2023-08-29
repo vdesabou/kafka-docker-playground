@@ -1,13 +1,11 @@
-# mac
+alias bashly='docker run --rm -it --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/bashly'
+
 cd /Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/cli
 bashly generate
 rm /Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/cli/completions.bash
 bashly add completions_script
 source /Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/cli/completions.bash
 cd -
-
-# update
-brew gem install bashly
 
 #asciinema rec -c /bin/zsh /tmp/asciinema.cast --overwrite
 #asciicast2gif -w 80 -h 30 /tmp/asciinema.cast ~/Downloads/asciinema.gif
