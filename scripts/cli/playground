@@ -44,8 +44,9 @@ playground_usage() {
   printf "  %s   🛑 Stop currently running example\n" "$(green "stop")                                   "
   printf "  %s   🧑‍🎓 Open Confluent documentation of currently running example\n" "$(green "open-docs")                              "
   echo
-  printf "%s\n" "$(bold "Bootstrap commands:")"
-  printf "  %s   🛠  Bootstrap reproduction model\n" "$(green "bootstrap-reproduction-model")           "
+  printf "%s\n" "$(bold "Repro commands:")"
+  printf "  %s   👷‍♂️ Reproduction model commands\n" "$(green "repro")                                  "
+  [[ -n $long_usage ]] && printf "  %s   🛠  Bootstrap reproduction model\n" "$(green "repro bootstrap")                        "
   echo
   printf "%s\n" "$(bold "Kafka commands:")"
   printf "  %s   🐋 Get docker-compose\n" "$(green "get-docker-compose")                     "
@@ -906,23 +907,56 @@ playground_open_docs_usage() {
 }
 
 # :command.usage
-playground_bootstrap_reproduction_model_usage() {
+playground_repro_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground bootstrap-reproduction-model\n"
+    printf "playground repro - 👷‍♂️ Reproduction model commands\n"
+    echo
+
+  else
+    printf "playground repro - 👷‍♂️ Reproduction model commands\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground repro COMMAND\n"
+  printf "  playground repro [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🛠  Bootstrap reproduction model\n" "$(green "bootstrap")"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_repro_bootstrap_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground repro bootstrap\n"
     echo
 
     printf "  🛠  Bootstrap reproduction model\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/reusables?id=%f0%9f%9b%a0-bootstrap-reproduction-model\n"
     echo
 
   else
-    printf "playground bootstrap-reproduction-model - 🛠  Bootstrap reproduction model\n"
+    printf "playground repro bootstrap - 🛠  Bootstrap reproduction model\n"
     echo
 
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground bootstrap-reproduction-model [OPTIONS] [ARGUMENTS...]\n"
-  printf "  playground bootstrap-reproduction-model --help | -h\n"
+  printf "  playground repro bootstrap [OPTIONS] [ARGUMENTS...]\n"
+  printf "  playground repro bootstrap --help | -h\n"
   echo
 
   # :command.long_usage
@@ -1086,11 +1120,11 @@ playground_bootstrap_reproduction_model_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground bootstrap-reproduction-model -f hdfs2<tab> -d \"simple test\"\n"
-    printf "  playground bootstrap-reproduction-model -f /full/path/hdfs2-sink.sh -d\n  \"testing with avro producer\" --producer avro --producer-schema-value\n  myschema<tab>\n"
-    printf "  playground bootstrap-reproduction-model -f hdfs2<tab> -d \"testing with 2\n  protobuf producers\" --producer protobuf --nb-producers 2\n"
-    printf "  playground bootstrap-reproduction-model -f hdfs2<tab> -d \"testing custom smt\"\n  --custom-smt\n"
-    printf "  playground bootstrap-reproduction-model -f debeziumpostgres<tab> -d \"create\n  pipeline\" --pipeline jdbcsink<tab>\n"
+    printf "  playground repro bootstrap -f hdfs2<tab> -d \"simple test\"\n"
+    printf "  playground repro bootstrap -f /full/path/hdfs2-sink.sh -d \"testing with avro\n  producer\" --producer avro --producer-schema-value myschema<tab>\n"
+    printf "  playground repro bootstrap -f hdfs2<tab> -d \"testing with 2 protobuf\n  producers\" --producer protobuf --nb-producers 2\n"
+    printf "  playground repro bootstrap -f hdfs2<tab> -d \"testing custom smt\" --custom-smt\n"
+    printf "  playground repro bootstrap -f debeziumpostgres<tab> -d \"create pipeline\"\n  --pipeline jdbcsink<tab>\n"
     echo
 
   fi
@@ -8705,8 +8739,8 @@ playground_open_docs_command() {
 }
 
 # :command.function
-playground_bootstrap_reproduction_model_command() {
-  # src/bootstrap_reproduction_model_command.sh
+playground_repro_bootstrap_command() {
+  # src/repro_bootstrap_command.sh
   IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 
   DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
@@ -13335,10 +13369,10 @@ parse_requirements() {
       shift $#
       ;;
 
-    bootstrap-reproduction-model)
-      action="bootstrap-reproduction-model"
+    repro)
+      action="repro"
       shift
-      playground_bootstrap_reproduction_model_parse_requirements "$@"
+      playground_repro_parse_requirements "$@"
       shift $#
       ;;
 
@@ -14910,13 +14944,80 @@ playground_open_docs_parse_requirements() {
 }
 
 # :command.parse_requirements
-playground_bootstrap_reproduction_model_parse_requirements() {
+playground_repro_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
     case "${1:-}" in
       --help | -h)
         long_usage=yes
-        playground_bootstrap_reproduction_model_usage
+        playground_repro_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    bootstrap)
+      action="bootstrap"
+      shift
+      playground_repro_bootstrap_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_repro_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_repro_bootstrap_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_repro_bootstrap_usage
         exit
         ;;
 
@@ -14941,7 +15042,7 @@ playground_bootstrap_reproduction_model_parse_requirements() {
   fi
 
   # :command.command_filter
-  action="bootstrap-reproduction-model"
+  action="repro bootstrap"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -20007,7 +20108,8 @@ run() {
     "open") playground_open_command ;;
     "stop") playground_stop_command ;;
     "open-docs") playground_open_docs_command ;;
-    "bootstrap-reproduction-model") playground_bootstrap_reproduction_model_command ;;
+    "repro") playground_repro_command ;;
+    "repro bootstrap") playground_repro_bootstrap_command ;;
     "get-docker-compose") playground_get_docker_compose_command ;;
     "get-properties") playground_get_properties_command ;;
     "get-all-schemas") playground_get_all_schemas_command ;;

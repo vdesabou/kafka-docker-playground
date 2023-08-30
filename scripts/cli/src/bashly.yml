@@ -445,137 +445,143 @@ commands:
     help: |-
       🌐 Only show url
 
-- name: bootstrap-reproduction-model
-  environment_variables:
-  - name: OUTPUT_FOLDER 
-    help: 📁 Output folder where to generate bootstrapped files
-    default: reproduction-models
-  group: Bootstrap
-  dependencies:
-    fzf: visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install
+- name: repro
+  expose: true
+  group: Repro
   help: |-
-    🛠  Bootstrap reproduction model
-    
-    👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%f0%9f%9b%a0-bootstrap-reproduction-model
-  catch_all:
-    label: arguments
-    help: |-
-      Arguments to use by example script
+    👷‍♂️ Reproduction model commands
+  commands:
 
-      Most of examples support to get required options either by using arguments or environment variables.
+  - name: bootstrap
+    environment_variables:
+    - name: OUTPUT_FOLDER 
+      help: 📁 Output folder where to generate bootstrapped files
+      default: reproduction-models
+    dependencies:
+      fzf: visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install
+    help: |-
+      🛠  Bootstrap reproduction model
       
-      Example with Zendesk:
+      👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%f0%9f%9b%a0-bootstrap-reproduction-model
+    catch_all:
+      label: arguments
+      help: |-
+        Arguments to use by example script
 
-      playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
-    required: false
-  flags:
-  - *tag
-  - *connector-tag
-  - *connector-zip
-  - *connector-jar
-  - *enable-ksqldb
-  - *enable-control-center
-  - *enable-conduktor
-  - *enable-multiple-brokers
-  - *enable-multiple-connect-workers
-  - *enable-jmx-grafana
-  - *enable-kcat
-  - *enable-sr-maven-plugin-app
-  - *enable-sql-datagen
-  - *cluster-region
-  - *cluster-environment
-  - *cluster-name
-  - *cluster-creds
-  - *cluster-schema-registry-creds
+        Most of examples support to get required options either by using arguments or environment variables.
+        
+        Example with Zendesk:
 
-  - long: --file
-    short: -f
-    required: true
-    validate: file_exists_with_trick
-    arg: file
-    completions:
-      - $(playground get-examples-list-with-fzf --without-repro "$cur")
-    help: |-
-      🔖 Example file to use as basis
-      
-      ❕ It must be absolute full path
+        playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
+      required: false
+    flags:
+    - *tag
+    - *connector-tag
+    - *connector-zip
+    - *connector-jar
+    - *enable-ksqldb
+    - *enable-control-center
+    - *enable-conduktor
+    - *enable-multiple-brokers
+    - *enable-multiple-connect-workers
+    - *enable-jmx-grafana
+    - *enable-kcat
+    - *enable-sr-maven-plugin-app
+    - *enable-sql-datagen
+    - *cluster-region
+    - *cluster-environment
+    - *cluster-name
+    - *cluster-creds
+    - *cluster-schema-registry-creds
 
-      🎓 Tip: use <tab> completion to trigger fzf completion
+    - long: --file
+      short: -f
+      required: true
+      validate: file_exists_with_trick
+      arg: file
+      completions:
+        - $(playground get-examples-list-with-fzf --without-repro "$cur")
+      help: |-
+        🔖 Example file to use as basis
+        
+        ❕ It must be absolute full path
 
-  - long: --description
-    short: -d
-    required: true
-    validate: not_empty
-    arg: description
-    help: |-
-      💭 Description for the reproduction model
+        🎓 Tip: use <tab> completion to trigger fzf completion
 
-  - long: --producer
-    short: -p
-    arg: producer-type
-    conflicts: [--pipeline]
-    default: "none"
-    allowed: 
-      - none
-      - avro
-      - avro-with-key
-      - protobuf
-      - protobuf-with-key
-      - json-schema
-      - json-schema-with-key
-    help: |-
-      ♨️ Java producer type to use
-      
-      One of avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key
+    - long: --description
+      short: -d
+      required: true
+      validate: not_empty
+      arg: description
+      help: |-
+        💭 Description for the reproduction model
 
-      🎓 Tip: 'with-key' will also produce key with selected converter, otherwise LongConverter is used
+    - long: --producer
+      short: -p
+      arg: producer-type
+      conflicts: [--pipeline]
+      default: "none"
+      allowed: 
+        - none
+        - avro
+        - avro-with-key
+        - protobuf
+        - protobuf-with-key
+        - json-schema
+        - json-schema-with-key
+      help: |-
+        ♨️ Java producer type to use
+        
+        One of avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key
 
-  - long: --nb-producers
-    short: -n
-    arg: nb-producers
-    validate: integer
-    default: ""
-    help: |-
-      2️⃣ Number of java producers to generate
+        🎓 Tip: 'with-key' will also produce key with selected converter, otherwise LongConverter is used
 
-  - long: --producer-schema-key
-    required: false
-    help: |-
-      🔰 Schema to use for the key
+    - long: --nb-producers
+      short: -n
+      arg: nb-producers
+      validate: integer
+      default: ""
+      help: |-
+        2️⃣ Number of java producers to generate
 
-      ✨ Copy and paste the schema you want to use for the key, save and close the file to continue
+    - long: --producer-schema-key
+      required: false
+      help: |-
+        🔰 Schema to use for the key
 
-  - long: --producer-schema-value
-    required: false
-    help: |-
-      🔰 Schema to use for the value
+        ✨ Copy and paste the schema you want to use for the key, save and close the file to continue
 
-      ✨ Copy and paste the schema you want to use for the key, save and close the file to continue
+    - long: --producer-schema-value
+      required: false
+      help: |-
+        🔰 Schema to use for the value
 
-  - long: --custom-smt
-    help: |-
-      ⚙️ Add a custom SMT (which is a no-op)
+        ✨ Copy and paste the schema you want to use for the key, save and close the file to continue
 
-  - long: --pipeline
-    required: false
-    validate: file_exists_with_trick
-    arg: sink_file
-    conflicts: [--producer]
-    completions:
-      - $(playground get-examples-list-with-fzf --without-repro --sink-only "$cur")
-    help: |-
-      🔖 Sink example file to use for creating a pipeline
-      
-      ❕ It must be absolute full path. 
+    - long: --custom-smt
+      help: |-
+        ⚙️ Add a custom SMT (which is a no-op)
 
-      🎓 Tip: use <tab> completion to trigger fzf completion
+    - long: --pipeline
+      required: false
+      validate: file_exists_with_trick
+      arg: sink_file
+      conflicts: [--producer]
+      completions:
+        - $(playground get-examples-list-with-fzf --without-repro --sink-only "$cur")
+      help: |-
+        🔖 Sink example file to use for creating a pipeline
+        
+        ❕ It must be absolute full path. 
 
-  examples:
-  - playground bootstrap-reproduction-model -f hdfs2<tab> -d "simple test"
-  - playground bootstrap-reproduction-model -f /full/path/hdfs2-sink.sh -d "testing with avro producer" --producer avro --producer-schema-value myschema<tab>
-  - playground bootstrap-reproduction-model -f hdfs2<tab> -d "testing with 2 protobuf producers" --producer protobuf --nb-producers 2
-  - playground bootstrap-reproduction-model -f hdfs2<tab> -d "testing custom smt" --custom-smt
-  - playground bootstrap-reproduction-model -f debeziumpostgres<tab> -d "create pipeline" --pipeline jdbcsink<tab>
+        🎓 Tip: use <tab> completion to trigger fzf completion
+
+    examples:
+    - playground repro bootstrap -f hdfs2<tab> -d "simple test"
+    - playground repro bootstrap -f /full/path/hdfs2-sink.sh -d "testing with avro producer" --producer avro --producer-schema-value myschema<tab>
+    - playground repro bootstrap -f hdfs2<tab> -d "testing with 2 protobuf producers" --producer protobuf --nb-producers 2
+    - playground repro bootstrap -f hdfs2<tab> -d "testing custom smt" --custom-smt
+    - playground repro bootstrap -f debeziumpostgres<tab> -d "create pipeline" --pipeline jdbcsink<tab>
 
 - name: get-docker-compose
   group: Kafka
