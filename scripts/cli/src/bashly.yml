@@ -70,6 +70,14 @@ commands:
     required: false
     help: correspond to completion $cur
 
+- name: get-playground-repro-export-with-fzf
+  help: Return some completion for export tgz files
+  private: true
+  args:
+  - name: cur
+    required: false
+    help: correspond to completion $cur
+
 - name: get-predefined-schemas
   help: Return some completion for predefined schemas
   private: true
@@ -460,7 +468,7 @@ commands:
 
   - name: export
     help: |-
-      ↗️ Export your reproduction models to easily share.
+      📤 Export as tgz file uncommitted reproduction models from the folder of current reproduction model
     dependencies:
       git: visit $(blue_underlined https://git-scm.com/downloads) to install
     flags:
@@ -468,6 +476,25 @@ commands:
         required: false
         help: |-
           Export all uncommitted reproduction models
+
+  - name: import
+    help: |-
+      📥 Import tgz file which was created with export command
+    flags:
+    - long: --file
+      short: -f
+      arg: file
+      required: false
+      validate: file_exists_with_trick
+      completions:
+        - $(playground get-playground-repro-export-with-fzf "$cur")
+      help: |- 
+        🤐 playground_repro_export.tgz file
+
+        ❕ It must be absolute full path
+
+        🎓 Tip: use <tab> completion to trigger fzf completion 
+                use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
 
   - name: bootstrap
     help: |-

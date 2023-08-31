@@ -39,7 +39,7 @@ then
             tar cvfz "$output_filename" $new_files > /dev/null 2>&1
             if [ -f $final_archive ]
             then
-                log "✅ Exported archive is available: $final_archive"
+                log "📤 Exported archive is available: $final_archive"
             else
                 logerror "❌ export failed as archive could not be created !"
                 exit 1
@@ -94,7 +94,7 @@ else
             tar cvfz "$output_filename" $new_files > /dev/null 2>&1
             if [ -f $final_archive ]
             then
-                log "✅ Exported archive is available: $final_archive"
+                log "📤 Exported archive is available: $final_archive"
             else
                 logerror "❌ export failed as archive could not be created !"
                 exit 1
