@@ -450,15 +450,26 @@ commands:
   group: Repro
   help: |-
     👷‍♂️ Reproduction model commands
+  environment_variables:
+  - name: OUTPUT_FOLDER 
+    help: 📁 Output folder where to generate bootstrapped files
+    default: reproduction-models
+  dependencies:
+    fzf: visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install
   commands:
 
-  - name: bootstrap
-    environment_variables:
-    - name: OUTPUT_FOLDER 
-      help: 📁 Output folder where to generate bootstrapped files
-      default: reproduction-models
+  - name: export
+    help: |-
+      ↗️ Export your reproduction models to easily share.
     dependencies:
-      fzf: visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install
+      git: visit $(blue_underlined https://git-scm.com/downloads) to install
+    flags:
+      - long: --all
+        required: false
+        help: |-
+          Export all uncommitted reproduction models
+
+  - name: bootstrap
     help: |-
       🛠  Bootstrap reproduction model
       
