@@ -189,6 +189,11 @@ else
     SECONDS=0
     case "${schema_type}" in
         json|sql)
+            if [[ -n "$validate" ]]
+            then
+                logerror "❌ --validate is set and only supports avro, protobuf or json-schema"
+                exit 1
+            fi
             # https://github.com/MaterializeInc/datagen
             set +e
             docker run --rm -i -v $schema_file:/app/schema.$schema_type materialize/datagen -s schema.$schema_type -n $nb_messages_to_generate --dry-run > $tmp_dir/result.log
@@ -216,6 +221,11 @@ else
             docker run --rm -v $tmp_dir:/tmp/ -v $schema_file:/app/schema.proto -e NB_MESSAGES=$nb_messages_to_generate vdesabou/protobuf-faker  > $tmp_dir/out.json
         ;;
         raw)
+            if [[ -n "$validate" ]]
+            then
+                logerror "❌ --validate is set and only supports avro, protobuf or json-schema"
+                exit 1
+            fi
             if jq -e . >/dev/null 2>&1 <<< "$(cat "$schema_file")"
             then
                 log "💫 payload is single json, it will be sent as one record"
@@ -300,6 +310,7 @@ fi
 
 if [[ -n "$validate" ]]
 then
+    set +e
     log "🏗 Building jar for schema-validator"
     docker run -i --rm -e TAG=$TAG_BASE -v "${root_folder}/scripts/cli/src/schema-validator":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "${root_folder}/scripts/cli/src/schema-validator/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG package > /tmp/result.log 2>&1
     if [ $? != 0 ]
@@ -308,13 +319,14 @@ then
         tail -500 /tmp/result.log
         exit 1
     fi
+    set -e
 
     docker cp ${root_folder}/scripts/cli/src/schema-validator/target/schema-validator-1.0.0-jar-with-dependencies.jar connect:/tmp/schema-validator-1.0.0-jar-with-dependencies.jar
     docker cp $schema_file connect:/tmp/schema.json
     docker cp $tmp_dir/out.json connect:/tmp/message.json
 
     log "✔️ Validating schema now..."
-    docker exec connect bash -c "java -jar /tmp/schema-validator-1.0.0-jar-with-dependencies.jar"
+    docker exec -e SCHEMA_TYPE=$schema_type connect bash -c "java -jar /tmp/schema-validator-1.0.0-jar-with-dependencies.jar"
 
     log "✔️ --validate is set, exiting now."
     exit 0

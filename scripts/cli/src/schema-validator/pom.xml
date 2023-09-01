@@ -27,10 +27,16 @@
             <artifactId>javafaker</artifactId>
             <version>0.12</version>
         </dependency>
-        
+
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-json-schema-serializer</artifactId>
+            <version>${kafka.tag}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-connect-json-schema-converter</artifactId>
             <version>${kafka.tag}</version>
         </dependency>
 
@@ -42,7 +48,7 @@
 
         <dependency>
             <groupId>io.confluent</groupId>
-            <artifactId>kafka-connect-json-schema-converter</artifactId>
+            <artifactId>kafka-connect-avro-converter</artifactId>
             <version>${kafka.tag}</version>
         </dependency>
 
