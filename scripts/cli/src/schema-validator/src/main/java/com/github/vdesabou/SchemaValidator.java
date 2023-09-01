@@ -67,23 +67,23 @@ public class SchemaValidator {
                 converter.configure(properties, false);
                 converter.toConnectData(randomName, serializedRecord1);
             } else if (schemaType.equals("avro")) {
-                CachedSchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient("http://schema-registry:8081",1000);
+//                 CachedSchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient("http://schema-registry:8081",1000);
 
 
-// [ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.7.0:compile (default-compile) on project schema-validator: Compilation failure
-// [ERROR] /usr/src/mymaven/src/main/java/com/github/vdesabou/SchemaValidator.java:[73,68] no suitable constructor found for AvroSchema(com.fasterxml.jackson.databind.JsonNode)
-// [ERROR]     constructor io.confluent.kafka.schemaregistry.avro.AvroSchema.AvroSchema(java.lang.String) is not applicable
-// [ERROR]       (argument mismatch; com.fasterxml.jackson.databind.JsonNode cannot be converted to java.lang.String)
-// [ERROR]     constructor io.confluent.kafka.schemaregistry.avro.AvroSchema.AvroSchema(org.apache.avro.Schema) is not applicable
-// [ERROR]       (argument mismatch; com.fasterxml.jackson.databind.JsonNode cannot be converted to org.apache.avro.Schema)
-                schemaRegistryClient.register(randomName+"-value", new AvroSchema(rawSchemaJson));
-                KafkaAvroSerializer serializer = new KafkaAvroSerializer(schemaRegistryClient);
-                AvroConverter converter = new AvroConverter();
-                byte[] serializedRecord1 = serializer.serialize(randomName,
-                JsonSchemaUtils.envelope(rawSchemaJson, masterJSON));
+// // [ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.7.0:compile (default-compile) on project schema-validator: Compilation failure
+// // [ERROR] /usr/src/mymaven/src/main/java/com/github/vdesabou/SchemaValidator.java:[73,68] no suitable constructor found for AvroSchema(com.fasterxml.jackson.databind.JsonNode)
+// // [ERROR]     constructor io.confluent.kafka.schemaregistry.avro.AvroSchema.AvroSchema(java.lang.String) is not applicable
+// // [ERROR]       (argument mismatch; com.fasterxml.jackson.databind.JsonNode cannot be converted to java.lang.String)
+// // [ERROR]     constructor io.confluent.kafka.schemaregistry.avro.AvroSchema.AvroSchema(org.apache.avro.Schema) is not applicable
+// // [ERROR]       (argument mismatch; com.fasterxml.jackson.databind.JsonNode cannot be converted to org.apache.avro.Schema)
+//                 schemaRegistryClient.register(randomName+"-value", new AvroSchema(rawSchemaJson));
+//                 KafkaAvroSerializer serializer = new KafkaAvroSerializer(schemaRegistryClient);
+//                 AvroConverter converter = new AvroConverter();
+//                 byte[] serializedRecord1 = serializer.serialize(randomName,
+//                 JsonSchemaUtils.envelope(rawSchemaJson, masterJSON));
 
-                converter.configure(properties, false);
-                converter.toConnectData(randomName, serializedRecord1);
+//                 converter.configure(properties, false);
+//                 converter.toConnectData(randomName, serializedRecord1);
             } 
 
         } catch(Exception e) {
