@@ -10,6 +10,7 @@ generate_only="${args[--generate-only]}"
 tombstone="${args[--tombstone]}"
 compatibility="${args[--compatibility]}"
 value_subject_name_strategy="${args[--value-subject-name-strategy]}"
+validate="${args[--validate]}"
 
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
@@ -287,6 +288,28 @@ if [[ -n "$generate_only" ]]
 then
   log "🚪 --generate-only is set, exiting now."
   exit 0
+fi
+
+if [[ -n "$validate" ]]
+then
+    log "🏗 Building jar for schema-validator"
+    docker run -i --rm -e TAG=$TAG_BASE -v "${root_folder}/scripts/cli/src/schema-validator":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "${root_folder}/scripts/cli/src/schema-validator/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG package > /tmp/result.log 2>&1
+    if [ $? != 0 ]
+    then
+        logerror "ERROR: failed to build java component schema-validator"
+        tail -500 /tmp/result.log
+        exit 1
+    fi
+
+    docker cp ${root_folder}/scripts/cli/src/schema-validator/target/schema-validator-1.0.0-jar-with-dependencies.jar connect:/tmp/schema-validator-1.0.0-jar-with-dependencies.jar
+    docker cp $schema_file connect:/tmp/schema.json
+    docker cp $tmp_dir/out.json connect:/tmp/message.json
+
+    log "✔️ Validating schema now..."
+    docker exec connect bash -c "java -jar /tmp/schema-validator-1.0.0-jar-with-dependencies.jar"
+
+    log "✔️ --validate is set, exiting now."
+    exit 0
 fi
 
 playground topic get-number-records --topic $topic > $tmp_dir/result.log 2>$tmp_dir/result.log

@@ -1245,6 +1245,10 @@ commands:
           --key must be set when this flag is used.
 
           Note: CP 7.2+ is required.
+      - long: --validate
+        required: false
+        help: |-
+          Validate schema
       examples: |
 
         playground topic produce --tombstone --topic a-topic --key mykey
