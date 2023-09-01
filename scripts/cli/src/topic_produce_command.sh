@@ -171,6 +171,14 @@ then
 else
     nb_messages_to_generate=$nb_max_messages_to_generate
 fi
+if [[ -n "$validate" ]]
+then
+    if [ $nb_messages != 1 ]
+    then
+        logwarn "--validate is set, ignoring --nb-messages"
+        nb_messages=1
+    fi
+fi
 input_file=""
 
 if [[ -n "$forced_value" ]]

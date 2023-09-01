@@ -11738,6 +11738,14 @@ playground_topic_produce_command() {
   else
       nb_messages_to_generate=$nb_max_messages_to_generate
   fi
+  if [[ -n "$validate" ]]
+  then
+      if [ $nb_messages != 1 ]
+      then
+          logwarn "--validate is set, ignoring --nb-messages"
+          nb_messages=1
+      fi
+  fi
   input_file=""
 
   if [[ -n "$forced_value" ]]
@@ -11872,7 +11880,6 @@ playground_topic_produce_command() {
       docker cp $schema_file connect:/tmp/schema.json
       docker cp $tmp_dir/out.json connect:/tmp/message.json
 
-  cat $tmp_dir/out.json
       log "✔️ Validating schema now..."
       docker exec connect bash -c "java -jar /tmp/schema-validator-1.0.0-jar-with-dependencies.jar"
 

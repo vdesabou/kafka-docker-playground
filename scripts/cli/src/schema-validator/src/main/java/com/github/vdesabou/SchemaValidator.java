@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import com.github.javafaker.Faker;
 
 public class SchemaValidator {
 
@@ -45,28 +46,29 @@ public class SchemaValidator {
 
     private void start() throws InterruptedException {
         logger.info("creating schema validator with props: {}", properties);
+        Faker faker = new Faker();
 
         try {
             JsonNode rawSchemaJson = readJsonNode("/tmp/schema.json");
-
             ObjectMapper mapper = new ObjectMapper();
+
+            String randomName = faker.name().firstName();
             File from = new File("/tmp/message.json");
             JsonNode masterJSON = mapper.readTree(from);
 
             CachedSchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient("http://schema-registry:8081",1000);
-             schemaRegistryClient.register("test-value", new JsonSchema(rawSchemaJson));
+             schemaRegistryClient.register(randomName+"-value", new JsonSchema(rawSchemaJson));
 
             KafkaJsonSchemaSerializer serializer = new KafkaJsonSchemaSerializer(schemaRegistryClient);
 
-            byte[] serializedRecord1 = serializer.serialize("test",
+            byte[] serializedRecord1 = serializer.serialize(randomName,
                     JsonSchemaUtils.envelope(rawSchemaJson, masterJSON)
             );
             JsonSchemaConverter converter = new JsonSchemaConverter();
             converter.configure(properties, false);
-            converter.toConnectData("test", serializedRecord1);
+            converter.toConnectData(randomName, serializedRecord1);
         } catch(Exception e) {
-            System.out.println(e);
-            e.printStackTrace();
+            logger.error("Exception: ", e);
         }
     }
 
