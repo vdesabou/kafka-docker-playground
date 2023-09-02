@@ -310,6 +310,7 @@ fi
 
 if [[ -n "$validate" ]]
 then
+    log "✔️ --validate is set, validating schema now..."
     set +e
     log "🏗 Building jar for schema-validator"
     docker run -i --rm -e TAG=$TAG_BASE -v "${root_folder}/scripts/cli/src/schema-validator":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "${root_folder}/scripts/cli/src/schema-validator/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG package > /tmp/result.log 2>&1
@@ -321,15 +322,20 @@ then
     fi
     set -e
 
-    docker cp ${root_folder}/scripts/cli/src/schema-validator/target/schema-validator-1.0.0-jar-with-dependencies.jar connect:/tmp/schema-validator-1.0.0-jar-with-dependencies.jar
-    docker cp $schema_file connect:/tmp/schema.json
-    docker cp $tmp_dir/out.json connect:/tmp/message.json
+    docker cp ${root_folder}/scripts/cli/src/schema-validator/target/schema-validator-1.0.0-jar-with-dependencies.jar connect:/tmp/schema-validator-1.0.0-jar-with-dependencies.jar > /dev/null 2>&1
+    docker cp $schema_file connect:/tmp/schema.json > /dev/null 2>&1
+    docker cp $tmp_dir/out.json connect:/tmp/message.json > /dev/null 2>&1
 
-    log "✔️ Validating schema now..."
-    docker exec -e SCHEMA_TYPE=$schema_type connect bash -c "java -jar /tmp/schema-validator-1.0.0-jar-with-dependencies.jar"
-
-    log "✔️ --validate is set, exiting now."
-    exit 0
+    docker exec -e SCHEMA_TYPE=$schema_type connect bash -c "java -jar /tmp/schema-validator-1.0.0-jar-with-dependencies.jar" > $tmp_dir/result.log
+    nb=$(grep -c "ERROR" $tmp_dir/result.log)
+    if [ $nb -ne 0 ]
+    then
+        logerror "❌ schema is not valid according to $schema_type sink converter"
+        cat $tmp_dir/result.log
+        exit 1
+    else
+        log "👌 schema is valid according to $schema_type sink converter"
+    fi
 fi
 
 playground topic get-number-records --topic $topic > $tmp_dir/result.log 2>$tmp_dir/result.log

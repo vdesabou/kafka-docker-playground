@@ -9,14 +9,12 @@ import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.avro.*;
 import io.confluent.kafka.schemaregistry.json.*;
 import io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer;
-import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import io.confluent.connect.avro.*;
 import io.confluent.connect.json.*;
 import java.io.File;
@@ -26,6 +24,18 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import com.github.javafaker.Faker;
+import io.confluent.connect.avro.AvroConverter;
+import io.confluent.kafka.schemaregistry.avro.AvroSchema;
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.kafka.connect.data.SchemaAndValue;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class SchemaValidator {
 
@@ -47,16 +57,15 @@ public class SchemaValidator {
     private void start() throws InterruptedException {
         logger.info("creating schema validator with props: {}", properties);
         Faker faker = new Faker();
-
+        String randomName = faker.name().firstName();
+        SchemaAndValue converted1 =  null;
         try {
-            JsonNode rawSchemaJson = readJsonNode("/tmp/schema.json");
-            ObjectMapper mapper = new ObjectMapper();
-
-            String randomName = faker.name().firstName();
-            File from = new File("/tmp/message.json");
-            JsonNode masterJSON = mapper.readTree(from);
-
             if (schemaType.equals("json-schema")) {
+                JsonNode rawSchemaJson = readJsonNode("/tmp/schema.json");
+                ObjectMapper mapper = new ObjectMapper();
+
+                File from = new File("/tmp/message.json");
+                JsonNode masterJSON = mapper.readTree(from);
                 CachedSchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient("http://schema-registry:8081",1000);
                 schemaRegistryClient.register(randomName+"-value", new JsonSchema(rawSchemaJson));
                 KafkaJsonSchemaSerializer serializer = new KafkaJsonSchemaSerializer(schemaRegistryClient);
@@ -65,27 +74,29 @@ public class SchemaValidator {
                 JsonSchemaUtils.envelope(rawSchemaJson, masterJSON));
 
                 converter.configure(properties, false);
-                converter.toConnectData(randomName, serializedRecord1);
+                converted1 = converter.toConnectData(randomName, serializedRecord1);
             } else if (schemaType.equals("avro")) {
-//                 CachedSchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient("http://schema-registry:8081",1000);
+                Schema schema = new Schema.Parser().parse(new File("/tmp/schema.json"));
+                String json = new String(Files.readAllBytes(Paths.get("/tmp/message.json")));
+                Decoder decoder = DecoderFactory.get().jsonDecoder(schema, json);
+                DatumReader<GenericRecord> reader = new SpecificDatumReader<>(schema);
+                GenericRecord record = reader.read(null, decoder);
+
+                CachedSchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient("http://schema-registry:8081",1000);
 
 
-// // [ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.7.0:compile (default-compile) on project schema-validator: Compilation failure
-// // [ERROR] /usr/src/mymaven/src/main/java/com/github/vdesabou/SchemaValidator.java:[73,68] no suitable constructor found for AvroSchema(com.fasterxml.jackson.databind.JsonNode)
-// // [ERROR]     constructor io.confluent.kafka.schemaregistry.avro.AvroSchema.AvroSchema(java.lang.String) is not applicable
-// // [ERROR]       (argument mismatch; com.fasterxml.jackson.databind.JsonNode cannot be converted to java.lang.String)
-// // [ERROR]     constructor io.confluent.kafka.schemaregistry.avro.AvroSchema.AvroSchema(org.apache.avro.Schema) is not applicable
-// // [ERROR]       (argument mismatch; com.fasterxml.jackson.databind.JsonNode cannot be converted to org.apache.avro.Schema)
-//                 schemaRegistryClient.register(randomName+"-value", new AvroSchema(rawSchemaJson));
-//                 KafkaAvroSerializer serializer = new KafkaAvroSerializer(schemaRegistryClient);
-//                 AvroConverter converter = new AvroConverter();
-//                 byte[] serializedRecord1 = serializer.serialize(randomName,
-//                 JsonSchemaUtils.envelope(rawSchemaJson, masterJSON));
+                schemaRegistryClient.register(randomName+"-value", new AvroSchema(schema));
+                KafkaAvroSerializer serializer = new KafkaAvroSerializer(schemaRegistryClient);
+                AvroConverter converter = new AvroConverter();
+                byte[] serializedRecord1 = serializer.serialize(randomName,record);
 
-//                 converter.configure(properties, false);
-//                 converter.toConnectData(randomName, serializedRecord1);
-            } 
-
+                converter.configure(properties, false);
+                converted1 = converter.toConnectData(randomName, serializedRecord1);
+            }
+            if(converted1 != null)
+            {
+                logger.info("Connect Schema is: {}", converted1.toString());
+            }
         } catch(Exception e) {
             logger.error("Exception: ", e);
         }
