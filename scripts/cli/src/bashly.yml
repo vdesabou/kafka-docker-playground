@@ -1248,7 +1248,25 @@ commands:
       - long: --validate
         required: false
         help: |-
-          Validate schema according to connect sink converter used
+          ☑️ Validate schema according to connect converter used
+
+      - long: --validate-config
+        arg: validate-config
+        help: |-
+          🔩 Converter configuration parameters to use
+
+          🎓 Tip: you can pass multiple parameters by specifying --validate-config multiple times
+        required: false
+        repeatable: true
+        allowed: 
+          - scrub.invalid.names=true
+          - enhanced.avro.schema.support=true
+          - connect.meta.data=false
+          - object.additional.properties=false
+          - use.optional.for.nonrequired=true
+          - ignore.default.for.nullables=true
+          - generalized.sum.type.support=true
+
       examples: |
 
         playground topic produce --tombstone --topic a-topic --key mykey

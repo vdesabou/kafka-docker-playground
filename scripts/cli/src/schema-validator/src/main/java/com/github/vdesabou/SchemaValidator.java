@@ -55,7 +55,7 @@ public class SchemaValidator {
     }
 
     private void start() throws InterruptedException {
-        logger.info("creating schema validator with props: {}", properties);
+        logger.info("Creating schema validator with properties: {}", properties);
         Faker faker = new Faker();
         String randomName = faker.name().firstName();
         SchemaAndValue converted1 =  null;
@@ -63,7 +63,6 @@ public class SchemaValidator {
             if (schemaType.equals("json-schema")) {
                 JsonNode rawSchemaJson = readJsonNode("/tmp/schema.json");
                 ObjectMapper mapper = new ObjectMapper();
-
                 File from = new File("/tmp/message.json");
                 JsonNode masterJSON = mapper.readTree(from);
                 CachedSchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient("http://schema-registry:8081",1000);
@@ -81,10 +80,7 @@ public class SchemaValidator {
                 Decoder decoder = DecoderFactory.get().jsonDecoder(schema, json);
                 DatumReader<GenericRecord> reader = new SpecificDatumReader<>(schema);
                 GenericRecord record = reader.read(null, decoder);
-
                 CachedSchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient("http://schema-registry:8081",1000);
-
-
                 schemaRegistryClient.register(randomName+"-value", new AvroSchema(schema));
                 KafkaAvroSerializer serializer = new KafkaAvroSerializer(schemaRegistryClient);
                 AvroConverter converter = new AvroConverter();
@@ -95,7 +91,7 @@ public class SchemaValidator {
             }
             if(converted1 != null)
             {
-                logger.info("Connect Schema is: {}", converted1.toString());
+                logger.info("Connect schema is: {}", converted1.toString());
             }
         } catch(Exception e) {
             logger.error("Exception: ", e);
