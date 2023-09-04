@@ -1240,7 +1240,7 @@ commands:
       - long: --tombstone
         required: false
         help: |-
-          Generate tombstone (record with null value). 
+          ⚰️ Generate tombstone (record with null value). 
           
           --key must be set when this flag is used.
 
