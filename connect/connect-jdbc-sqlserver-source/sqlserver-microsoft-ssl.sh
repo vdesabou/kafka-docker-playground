@@ -95,19 +95,19 @@ EOF
 log "Creating JDBC SQL Server (with Microsoft driver) source connector"
 playground connector create-or-update --connector sqlserver-source-ssl << EOF
 {
-                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-                "tasks.max": "1",
-                "connection.url": "jdbc:sqlserver://sqlserver:1433;databaseName=testDB;encrypt=true;trustServerCertificate=false;trustStore=/tmp/truststore.jks;trustStorePassword=confluent;",
-                "connection.user": "sa",
-                "connection.password": "Password!",
-                "table.whitelist": "customers",
-                "mode": "incrementing",
-                "incrementing.column.name": "id",
-                "topic.prefix": "sqlserver-",
-                "validate.non.null":"false",
-                "errors.log.enable": "true",
-                "errors.log.include.messages": "true"
-          }
+  "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+  "tasks.max": "1",
+  "connection.url": "jdbc:sqlserver://sqlserver:1433;databaseName=testDB;encrypt=true;trustServerCertificate=false;trustStore=/tmp/truststore.jks;trustStorePassword=confluent;",
+  "connection.user": "sa",
+  "connection.password": "Password!",
+  "table.whitelist": "customers",
+  "mode": "incrementing",
+  "incrementing.column.name": "id",
+  "topic.prefix": "sqlserver-",
+  "validate.non.null":"false",
+  "errors.log.enable": "true",
+  "errors.log.include.messages": "true"
+}
 EOF
 
 sleep 5
