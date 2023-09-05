@@ -1248,7 +1248,7 @@ commands:
       - long: --validate
         required: false
         help: |-
-          ☑️ Validate schema according to connect converter used
+          ☑️ Validate schema according to connect sink converter used
 
       - long: --validate-config
         arg: validate-config
