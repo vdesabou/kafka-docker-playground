@@ -14,7 +14,7 @@
         <google.protobuf.version>3.16.3</google.protobuf.version>
         <protoc.jar.maven.plugin>3.11.4</protoc.jar.maven.plugin>
         <kafka.tag>6.2.0</kafka.tag>
-        <kafka.client.tag>2.8.0</kafka.client.tag>
+        <kafka.client.tag>5.3.0-ccs</kafka.client.tag>
     </properties>
     <repositories>
         <repository>
