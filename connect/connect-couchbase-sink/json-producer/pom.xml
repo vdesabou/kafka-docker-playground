@@ -9,7 +9,7 @@
     <artifactId>json-producer</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <properties>
-        <kafka.client.tag>2.8.0</kafka.client.tag>
+        <kafka.client.tag>2.8.1</kafka.client.tag>
     </properties>
 
     <dependencies>
