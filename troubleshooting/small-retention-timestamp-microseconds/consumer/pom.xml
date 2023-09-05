@@ -13,7 +13,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <avro.version>1.10.2</avro.version>
         <kafka.tag>6.2.0</kafka.tag>
-        <kafka.client.tag>2.8.0</kafka.client.tag>
+        <kafka.client.tag>5.3.0-ccs</kafka.client.tag>
     </properties>
     <repositories>
         <repository>
