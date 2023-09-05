@@ -3,8 +3,10 @@ package com.github.vdesabou;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -17,8 +19,11 @@ import io.confluent.kafka.schemaregistry.json.*;
 import io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer;
 import io.confluent.connect.avro.*;
 import io.confluent.connect.json.*;
+
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -36,6 +41,17 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.protobuf.*;
+import io.confluent.connect.protobuf.ProtobufConverter;
+import io.confluent.kafka.schemaregistry.ParsedSchema;
+import io.confluent.kafka.schemaregistry.SchemaProvider;
+import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchema;
+import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchemaProvider;
+import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchemaUtils;
+import io.confluent.kafka.serializers.protobuf.KafkaProtobufSerializer;
 
 public class SchemaValidator {
 
@@ -58,10 +74,10 @@ public class SchemaValidator {
         logger.info("Creating schema validator with properties: {}", properties);
         Faker faker = new Faker();
         String randomName = faker.name().firstName();
-        SchemaAndValue converted1 =  null;
+        SchemaAndValue connectSchema =  null;
         try {
             if (schemaType.equals("json-schema")) {
-                JsonNode rawSchemaJson = readJsonNode("/tmp/schema.json");
+                JsonNode rawSchemaJson = readJsonNode("/tmp/schema");
                 ObjectMapper mapper = new ObjectMapper();
                 File from = new File("/tmp/message.json");
                 JsonNode masterJSON = mapper.readTree(from);
@@ -73,9 +89,9 @@ public class SchemaValidator {
                 JsonSchemaUtils.envelope(rawSchemaJson, masterJSON));
 
                 converter.configure(properties, false);
-                converted1 = converter.toConnectData(randomName, serializedRecord1);
+                connectSchema = converter.toConnectData(randomName, serializedRecord1);
             } else if (schemaType.equals("avro")) {
-                Schema schema = new Schema.Parser().parse(new File("/tmp/schema.json"));
+                Schema schema = new Schema.Parser().parse(new File("/tmp/schema"));
                 String json = new String(Files.readAllBytes(Paths.get("/tmp/message.json")));
                 Decoder decoder = DecoderFactory.get().jsonDecoder(schema, json);
                 DatumReader<GenericRecord> reader = new SpecificDatumReader<>(schema);
@@ -87,11 +103,34 @@ public class SchemaValidator {
                 byte[] serializedRecord1 = serializer.serialize(randomName,record);
 
                 converter.configure(properties, false);
-                converted1 = converter.toConnectData(randomName, serializedRecord1);
+                connectSchema = converter.toConnectData(randomName, serializedRecord1);
+            } else if (schemaType.equals("protobuf")) {
+                String jsonMessagePath = "/tmp/message.json";
+                String jsonMessageString = new String(Files.readAllBytes(Paths.get(jsonMessagePath)));
+
+                String jsonSchemaPath = "/tmp/schema";
+                String jsonSchemaString = new String(Files.readAllBytes(Paths.get(jsonSchemaPath)));
+
+                SchemaProvider protobufSchemaProvider = new ProtobufSchemaProvider();
+                ParsedSchema parsedSchema = protobufSchemaProvider.parseSchemaOrElseThrow(
+                        new io.confluent.kafka.schemaregistry.client.rest.entities.Schema(null, null, null, ProtobufSchema.TYPE, new ArrayList<>(), jsonSchemaString), false, false);
+                Optional<ParsedSchema> parsedSchemaOptional = protobufSchemaProvider.parseSchema(jsonSchemaString,
+                        new ArrayList<>(), false, false);
+
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode jsonNode = mapper.readTree(jsonMessageString);
+                Object Objectmessage =  ProtobufSchemaUtils.toObject(jsonNode, (ProtobufSchema) parsedSchema);
+                CachedSchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient("http://schema-registry:8081",1000);
+                schemaRegistryClient.register(randomName+"-value",parsedSchema);
+                KafkaProtobufSerializer serializer = new KafkaProtobufSerializer(schemaRegistryClient);
+                byte[] serializedRecord1 = serializer.serialize(randomName, (Message) Objectmessage);
+                ProtobufConverter converter = new ProtobufConverter();
+                converter.configure(properties, false);
+                connectSchema =converter.toConnectData(randomName, serializedRecord1);
             }
-            if(converted1 != null)
+            if(connectSchema != null)
             {
-                logger.info("Connect schema is: {}", converted1.toString());
+                logger.info("Connect schema is: {}", connectSchema.toString());
             }
         } catch(Exception e) {
             logger.error("Exception: ", e);

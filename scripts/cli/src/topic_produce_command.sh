@@ -315,21 +315,26 @@ then
     set -e
 
     docker cp ${root_folder}/scripts/cli/src/schema-validator/target/schema-validator-1.0.0-jar-with-dependencies.jar connect:/tmp/schema-validator-1.0.0-jar-with-dependencies.jar > /dev/null 2>&1
-    docker cp $schema_file connect:/tmp/schema.json > /dev/null 2>&1
+    docker cp $schema_file connect:/tmp/schema > /dev/null 2>&1
     docker cp $tmp_dir/out.json connect:/tmp/message.json > /dev/null 2>&1
     env_list=""
     for conf in "${validate_config[@]}"
     do
         case "${conf}" in
+
+            "connect.meta.data=false")
+                env_list="$env_list -e KAFKA_CONNECT_META_DATA=false"
+            ;;
+
+            # avro specifics
             "scrub.invalid.names=true")
                 env_list="$env_list -e KAFKA_SCRUB_INVALID_NAMES=true"
             ;;
             "enhanced.avro.schema.support=true")
                 env_list="$env_list -e KAFKA_ENHANCED_AVRO_SCHEMA_SUPPORT=true"
             ;;
-            "connect.meta.data=false")
-                env_list="$env_list -e KAFKA_CONNECT_META_DATA=false"
-            ;;
+
+            # json-schema specifics
             "use.optional.for.nonrequired=true")
                 env_list="$env_list -e KAFKA_USE_OPTIONAL_FOR_NONREQUIRED=true"
             ;;
@@ -338,6 +343,29 @@ then
             ;;
             "generalized.sum.type.support=true")
                 env_list="$env_list -e KAFKA_GENERALIZED_SUM_TYPE_SUPPORT=true"
+            ;;
+
+            # protobuf specifics
+            "enhanced.protobuf.schema.support=true")
+                env_list="$env_list -e KAFKA_ENHANCED_PROTOBUF_SCHEMA_SUPPORT=true"
+            ;;
+            "generate.index.for.unions=false")
+                env_list="$env_list -e KAFKA_GENERATE_INDEX_FOR_UNIONS=false"
+            ;;
+            "int.for.enums=true")
+                env_list="$env_list -e KAFKA_INT_FOR_ENUMS=true"
+            ;;
+            "optional.for.nullables=true")
+                env_list="$env_list -e KAFKA_OPTIONAL_FOR_NULLABLES=true"
+            ;;
+            "generate.struct.for.nulls=true")
+                env_list="$env_list -e KAFKA_GENERATE_STRUCT_FOR_NULLS=true"
+            ;;
+            "wrapper.for.nullables=true")
+                env_list="$env_list -e KAFKA_WRAPPER_FOR_NULLABLES=true"
+            ;;
+            "wrapper.for.raw.primitives=false")
+                env_list="$env_list -e KAFKA_WRAPPER_FOR_RAW_PRIMITIVES=false"
             ;;
             *)
                 logerror "default (none of above)"

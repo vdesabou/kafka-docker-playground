@@ -1253,7 +1253,9 @@ commands:
       - long: --validate-config
         arg: validate-config
         help: |-
-          🔩 Converter configuration parameters to use
+          🔩 Converter configuration parameters to use 
+          
+          See docs: https://docs.confluent.io/platform/current/schema-registry/connect.html#using-kconnect-long-with-sr
 
           🎓 Tip: you can pass multiple parameters by specifying --validate-config multiple times
         required: false
@@ -1266,6 +1268,13 @@ commands:
           - use.optional.for.nonrequired=true
           - ignore.default.for.nullables=true
           - generalized.sum.type.support=true
+          - enhanced.protobuf.schema.support=true
+          - generate.index.for.unions=false
+          - int.for.enums=true
+          - optional.for.nullables=true
+          - generate.struct.for.nulls=true
+          - wrapper.for.nullables=true
+          - wrapper.for.raw.primitives=false
 
       examples: |
 

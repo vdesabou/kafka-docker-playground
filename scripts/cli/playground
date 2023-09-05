@@ -2708,7 +2708,7 @@ playground_topic_produce_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--tombstone")"
-    printf "    Generate tombstone (record with null value). \n    \n    --key must be set when this flag is used.\n    \n    Note: CP 7.2+ is required.\n"
+    printf "    ⚰️ Generate tombstone (record with null value). \n    \n    --key must be set when this flag is used.\n    \n    Note: CP 7.2+ is required.\n"
     echo
 
     # :flag.usage
@@ -2718,8 +2718,8 @@ playground_topic_produce_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--validate-config VALIDATE-CONFIG (repeatable)")"
-    printf "    🔩 Converter configuration parameters to use\n    \n    🎓 Tip: you can pass multiple parameters by specifying --validate-config\n    multiple times\n"
-    printf "    Allowed: scrub.invalid.names=true, enhanced.avro.schema.support=true, connect.meta.data=false, object.additional.properties=false, use.optional.for.nonrequired=true, ignore.default.for.nullables=true, generalized.sum.type.support=true\n"
+    printf "    🔩 Converter configuration parameters to use \n    \n    See docs:\n    https://docs.confluent.io/platform/current/schema-registry/connect.html#using-kconnect-long-with-sr\n    \n    🎓 Tip: you can pass multiple parameters by specifying --validate-config\n    multiple times\n"
+    printf "    Allowed: scrub.invalid.names=true, enhanced.avro.schema.support=true, connect.meta.data=false, object.additional.properties=false, use.optional.for.nonrequired=true, ignore.default.for.nullables=true, generalized.sum.type.support=true, enhanced.protobuf.schema.support=true, generate.index.for.unions=false, int.for.enums=true, optional.for.nullables=true, generate.struct.for.nulls=true, wrapper.for.nullables=true, wrapper.for.raw.primitives=false\n"
     echo
 
     # :command.usage_fixed_flags
@@ -11888,21 +11888,26 @@ playground_topic_produce_command() {
       set -e
 
       docker cp ${root_folder}/scripts/cli/src/schema-validator/target/schema-validator-1.0.0-jar-with-dependencies.jar connect:/tmp/schema-validator-1.0.0-jar-with-dependencies.jar > /dev/null 2>&1
-      docker cp $schema_file connect:/tmp/schema.json > /dev/null 2>&1
+      docker cp $schema_file connect:/tmp/schema > /dev/null 2>&1
       docker cp $tmp_dir/out.json connect:/tmp/message.json > /dev/null 2>&1
       env_list=""
       for conf in "${validate_config[@]}"
       do
           case "${conf}" in
+
+              "connect.meta.data=false")
+                  env_list="$env_list -e KAFKA_CONNECT_META_DATA=false"
+              ;;
+
+              # avro specifics
               "scrub.invalid.names=true")
                   env_list="$env_list -e KAFKA_SCRUB_INVALID_NAMES=true"
               ;;
               "enhanced.avro.schema.support=true")
                   env_list="$env_list -e KAFKA_ENHANCED_AVRO_SCHEMA_SUPPORT=true"
               ;;
-              "connect.meta.data=false")
-                  env_list="$env_list -e KAFKA_CONNECT_META_DATA=false"
-              ;;
+
+              # json-schema specifics
               "use.optional.for.nonrequired=true")
                   env_list="$env_list -e KAFKA_USE_OPTIONAL_FOR_NONREQUIRED=true"
               ;;
@@ -11911,6 +11916,29 @@ playground_topic_produce_command() {
               ;;
               "generalized.sum.type.support=true")
                   env_list="$env_list -e KAFKA_GENERALIZED_SUM_TYPE_SUPPORT=true"
+              ;;
+
+              # protobuf specifics
+              "enhanced.protobuf.schema.support=true")
+                  env_list="$env_list -e KAFKA_ENHANCED_PROTOBUF_SCHEMA_SUPPORT=true"
+              ;;
+              "generate.index.for.unions=false")
+                  env_list="$env_list -e KAFKA_GENERATE_INDEX_FOR_UNIONS=false"
+              ;;
+              "int.for.enums=true")
+                  env_list="$env_list -e KAFKA_INT_FOR_ENUMS=true"
+              ;;
+              "optional.for.nullables=true")
+                  env_list="$env_list -e KAFKA_OPTIONAL_FOR_NULLABLES=true"
+              ;;
+              "generate.struct.for.nulls=true")
+                  env_list="$env_list -e KAFKA_GENERATE_STRUCT_FOR_NULLS=true"
+              ;;
+              "wrapper.for.nullables=true")
+                  env_list="$env_list -e KAFKA_WRAPPER_FOR_NULLABLES=true"
+              ;;
+              "wrapper.for.raw.primitives=false")
+                  env_list="$env_list -e KAFKA_WRAPPER_FOR_RAW_PRIMITIVES=false"
               ;;
               *)
                   logerror "default (none of above)"
@@ -18881,8 +18909,8 @@ playground_topic_produce_parse_requirements() {
   fi
   eval "input_array=(${args[--validate-config]})"
   for i in "${input_array[@]}"; do
-    if [[ ! $i =~ ^(scrub.invalid.names=true|enhanced.avro.schema.support=true|connect.meta.data=false|object.additional.properties=false|use.optional.for.nonrequired=true|ignore.default.for.nullables=true|generalized.sum.type.support=true)$ ]]; then
-      printf "%s\n" "--validate-config must be one of: scrub.invalid.names=true, enhanced.avro.schema.support=true, connect.meta.data=false, object.additional.properties=false, use.optional.for.nonrequired=true, ignore.default.for.nullables=true, generalized.sum.type.support=true" >&2
+    if [[ ! $i =~ ^(scrub.invalid.names=true|enhanced.avro.schema.support=true|connect.meta.data=false|object.additional.properties=false|use.optional.for.nonrequired=true|ignore.default.for.nullables=true|generalized.sum.type.support=true|enhanced.protobuf.schema.support=true|generate.index.for.unions=false|int.for.enums=true|optional.for.nullables=true|generate.struct.for.nulls=true|wrapper.for.nullables=true|wrapper.for.raw.primitives=false)$ ]]; then
+      printf "%s\n" "--validate-config must be one of: scrub.invalid.names=true, enhanced.avro.schema.support=true, connect.meta.data=false, object.additional.properties=false, use.optional.for.nonrequired=true, ignore.default.for.nullables=true, generalized.sum.type.support=true, enhanced.protobuf.schema.support=true, generate.index.for.unions=false, int.for.enums=true, optional.for.nullables=true, generate.struct.for.nulls=true, wrapper.for.nullables=true, wrapper.for.raw.primitives=false" >&2
       exit 1
     fi
   done
