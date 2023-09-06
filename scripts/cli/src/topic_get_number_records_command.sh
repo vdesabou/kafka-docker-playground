@@ -39,6 +39,29 @@ do
     set +e
     if [[ "$environment" == "environment" ]]
     then
+        ret=$(get_sr_url_and_security)
+
+        sr_url=$(echo "$ret" | cut -d "@" -f 1)
+        sr_security=$(echo "$ret" | cut -d "@" -f 2)
+
+        value_type=""
+        version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-value/versions/1" | jq -r .version)
+        if [ "$version" != "null" ]
+        then
+        schema_type=$(curl $sr_security -s "${sr_url}/subjects/${topic}-value/versions/1"  | jq -r .schemaType)
+        case "${schema_type}" in
+            JSON)
+            value_type="json-schema"
+            ;;
+            PROTOBUF)
+            value_type="protobuf"
+            ;;
+            null)
+            value_type="avro"
+            ;;
+        esac
+        fi
+
         if [ ! -f /tmp/delta_configs/librdkafka.delta ]
         then
             logerror "ERROR: /tmp/delta_configs/librdkafka.delta has not been generated"
@@ -52,7 +75,16 @@ do
                 -F /tmp/configuration/ccloud.properties \
                 -C -t $topic \
                 -e -q > /tmp/result.log 2>/dev/null
-        wc -l /tmp/result.log | awk '{print $1}'
+        case "${value_type}" in
+        avro|protobuf|json-schema)
+            variable=$(wc -l /tmp/result.log | awk '{print $1}')
+            result=$((variable / 3))
+            echo $result
+            ;;
+        *)
+            wc -l /tmp/result.log | awk '{print $1}'
+        ;;
+        esac
     else
         if ! version_gt $TAG_BASE "6.9.9" && [ "$security" != "" ]
         then
