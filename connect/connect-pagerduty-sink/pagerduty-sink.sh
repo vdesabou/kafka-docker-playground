@@ -83,4 +83,4 @@ curl --request GET \
   --header "content-type: application/json" \
   --data '{"time_zone": "UTC"}' > /tmp/result.log  2>&1
 cat /tmp/result.log
-grep "Incident Title x 0" /tmp/result.log
+grep "Incident Title x 1" /tmp/result.log
