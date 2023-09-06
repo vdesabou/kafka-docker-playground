@@ -10,6 +10,12 @@ filters:
 - docker_running
 commands:
 
+- name: help
+  help: Show help about a command
+  args:
+  - name: command
+    help: 🆘 Help command
+
 ### private commands for completion
 - name: get-connector-list
   help: Return some completion for connector list
