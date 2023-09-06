@@ -55,21 +55,21 @@ EOF
 log "Creating PagerDuty Sink connector"
 playground connector create-or-update --connector pagerduty-sink << EOF
 {
-     "connector.class": "io.confluent.connect.pagerduty.PagerDutySinkConnector",
-     "topics": "incidents",
-     "pagerduty.api.key": "$PAGERDUTY_API_KEY",
-     "pagerduty.proxy.url": "https://nginx-proxy:8888",
-     "tasks.max": "1",
-     "behavior.on.error":"fail",
-     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-     "value.converter": "io.confluent.connect.avro.AvroConverter",
-     "value.converter.schema.registry.url": "http://schema-registry:8081",
-     "reporter.bootstrap.servers": "broker:9092",
-     "reporter.error.topic.replication.factor": 1,
-     "reporter.result.topic.replication.factor": 1,
-     "confluent.license": "",
-     "confluent.topic.bootstrap.servers": "broker:9092",
-     "confluent.topic.replication.factor": "1"
+  "connector.class": "io.confluent.connect.pagerduty.PagerDutySinkConnector",
+  "topics": "incidents",
+  "pagerduty.api.key": "$PAGERDUTY_API_KEY",
+  "pagerduty.proxy.url": "https://nginx-proxy:8888",
+  "tasks.max": "1",
+  "behavior.on.error":"fail",
+  "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+  "value.converter": "io.confluent.connect.avro.AvroConverter",
+  "value.converter.schema.registry.url": "http://schema-registry:8081",
+  "reporter.bootstrap.servers": "broker:9092",
+  "reporter.error.topic.replication.factor": 1,
+  "reporter.result.topic.replication.factor": 1,
+  "confluent.license": "",
+  "confluent.topic.bootstrap.servers": "broker:9092",
+  "confluent.topic.replication.factor": "1"
 }
 EOF
 
