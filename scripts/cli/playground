@@ -11042,7 +11042,7 @@ playground_topic_get_number_records_command() {
               container=$(echo "$ret" | cut -d "@" -f 1)
               security=$(echo "$ret" | cut -d "@" -f 2)
               set +e
-              docker exec $container kafka-console-consumer --bootstrap-server broker:9092 --topic $topic $security --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
+              docker exec $container timeout 15 kafka-console-consumer --bootstrap-server broker:9092 --topic $topic $security --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
               set -e
           else
               docker exec $container kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 $security --topic $topic --time -1 | awk -F ":" '{sum += $3} END {print sum}'
