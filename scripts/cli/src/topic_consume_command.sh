@@ -240,7 +240,7 @@ do
     nottailing2="timeout $timeout"
   fi
 
-  if [[ -n "$max_messages" ]]
+  if [ "$max_messages" != "50" ]
   then
     nottailing2=""
   fi
