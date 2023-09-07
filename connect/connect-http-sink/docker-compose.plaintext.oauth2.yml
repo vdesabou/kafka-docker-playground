@@ -9,10 +9,11 @@ services:
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-http
 
-  httpserver:
-    build:
-      context: ../../connect/connect-http-sink/httpserver
-    hostname: httpserver
-    container_name: httpserver
+  http-service-oauth2-auth:
+    image: vdesabou/http-sink-demo
+    hostname: http-service-oauth2-auth
+    container_name: http-service-oauth2-auth
     ports:
-      - "9006:9006"
+      - "10080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: 'oauth2'

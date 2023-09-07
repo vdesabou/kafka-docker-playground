@@ -19,6 +19,9 @@ EOF
 
 playground debug log-level set --package "org.apache.http" --level TRACE
 
+log "Set webserver to reply with 200"
+curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006
+
 log "Creating http-sink connector"
 playground connector create-or-update --connector http-sink << EOF
 {
@@ -34,18 +37,13 @@ playground connector create-or-update --connector http-sink << EOF
      "reporter.error.topic.replication.factor": 1,
      "reporter.result.topic.name": "success-responses",
      "reporter.result.topic.replication.factor": 1,
-     "http.api.url": "http://http-service-no-auth:8080/api/messages",
+     "http.api.url": "http://httpserver:9006",
      "batch.max.size": "10"
 }
 EOF
 
 
 sleep 10
-
-log "Confirm that the data was sent to the HTTP endpoint."
-curl localhost:8080/api/messages | jq . > /tmp/result.log  2>&1
-cat /tmp/result.log
-grep "10" /tmp/result.log
 
 log "Check the success-responses topic"
 playground topic consume --topic success-responses --min-expected-messages 10 --timeout 60
