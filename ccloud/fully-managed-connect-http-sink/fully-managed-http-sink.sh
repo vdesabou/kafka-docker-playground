@@ -14,6 +14,17 @@ else
      exit 1
 fi
 
+docker-compose -f docker-compose.noauth.yml build
+docker-compose -f docker-compose.noauth.yml down -v --remove-orphans
+docker-compose -f docker-compose.noauth.yml up -d
+
+sleep 5
+
+log "Getting ngrok hostname and port"
+NGROK_URL=$(curl --silent http://127.0.0.1:4551/api/tunnels | jq -r '.tunnels[0].public_url')
+NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
+NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
+
 log "Creating http-topic topic in Confluent Cloud"
 set +e
 playground topic create --topic http-topic
@@ -49,7 +60,7 @@ playground ccloud-connector create-or-update --connector $connector_name << EOF
      "kafka.api.secret": "$CLOUD_SECRET",
      "topics": "http-topic",
      "input.data.format": "AVRO",
-     "http.api.url": "http://httpstat.us/200/",
+     "http.api.url": "http://$NGROK_HOSTNAME:$NGROK_PORT",
      "behavior.on.error": "fail",
      "tasks.max" : "1"
 }

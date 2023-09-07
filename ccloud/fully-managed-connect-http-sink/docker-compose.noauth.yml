@@ -1,0 +1,28 @@
+---
+version: '3.5'
+services:
+
+  httpserver:
+    build:
+      context: ../../connect/connect-http-sink/httpserver
+    hostname: httpserver
+    container_name: httpserver
+    ports:
+      - "9006:9006"
+  
+  # https://github.com/shkoliar/docker-ngrok
+  ngrok:
+    image: shkoliar/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    ports:
+      - 4551:4551
+    links:
+      - httpserver
+    environment:
+      DOMAIN: httpserver
+      PORT: 9006
+      PROTOCOL: tcp
+      REGION: eu
+      AUTH_TOKEN: $NGROK_AUTH_TOKEN
+      DEBUG: "true"
