@@ -14,3 +14,9 @@ Simply run:
 ```
 $ playground run -f mqtt-proxy<tab>
 ```
+
+or 
+
+```
+$ playground run -f mqtt-proxy-sasl-plaintext<tab>
+```

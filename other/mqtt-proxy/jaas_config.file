@@ -1,0 +1,4 @@
+ConfluentKafkaMqtt {
+  io.confluent.mqtt.protocol.security.PropertyFileLoginModule required
+  file="/tmp/password-file";
+};

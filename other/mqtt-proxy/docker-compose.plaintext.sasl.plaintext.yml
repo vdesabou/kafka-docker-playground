@@ -1,0 +1,28 @@
+---
+version: '3.5'
+services:
+
+  mosquitto:
+    image: eclipse-mosquitto:1.6.13
+    hostname: mosquitto
+    container_name: mosquitto
+    entrypoint: ["sh", "-c", "sleep infinity"]
+
+  mqtt-proxy:
+    image: confluentinc/cp-kafka-mqtt:${TAG}
+    hostname: mqtt-proxy
+    container_name: mqtt-proxy
+    volumes:
+      - ../../other/mqtt-proxy/jaas_config.file:/tmp/jaas_config.file
+      - ../../other/mqtt-proxy/password-file:/tmp/password-file
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - mosquitto
+    environment:
+      KAFKA_MQTT_BOOTSTRAP_SERVERS: broker:9092
+      KAFKA_MQTT_TOPIC_REGEX_LIST: "temperature:.*temperature"
+      KAFKA_MQTT_CONFLUENT_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_MQTT_OPTS: "-Djava.security.auth.login.config=/tmp/jaas_config.file"
+      KAFKA_MQTT_LISTENERS_SECURITY_PROTOCOL: SASL_PLAINTEXT
