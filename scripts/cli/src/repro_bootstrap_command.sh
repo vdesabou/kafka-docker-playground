@@ -146,6 +146,7 @@ cp $test_file $repro_test_file
 
 if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
 then
+  set +e
   grep 'DOCKER_COMPOSE_FILE_OVERRIDE=$1' "$test_file"
   if [ $? -eq 0 ]
   then
@@ -173,6 +174,7 @@ then
     docker_compose_file=""
     logwarn "📁 Could not determine docker-compose override file from $test_file !"
   fi
+  set -e
 fi
 
 if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]

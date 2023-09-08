@@ -9276,6 +9276,7 @@ playground_repro_bootstrap_command() {
 
   if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
   then
+    set +e
     grep 'DOCKER_COMPOSE_FILE_OVERRIDE=$1' "$test_file"
     if [ $? -eq 0 ]
     then
@@ -9303,6 +9304,7 @@ playground_repro_bootstrap_command() {
       docker_compose_file=""
       logwarn "📁 Could not determine docker-compose override file from $test_file !"
     fi
+    set -e
   fi
 
   if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
