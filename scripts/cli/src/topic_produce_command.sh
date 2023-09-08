@@ -13,6 +13,7 @@ value_subject_name_strategy="${args[--value-subject-name-strategy]}"
 validate="${args[--validate]}"
 # Convert the space delimited string to an array
 eval "validate_config=(${args[--validate-config]})"
+eval "producer_property=(${args[--producer-property]})"
 
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
@@ -486,6 +487,17 @@ then
     mv $tmp_dir/tempfile $output_file
 fi
 
+producer_properties=""
+for producer_prop in "${producer_property[@]}"
+do
+    producer_properties="$producer_properties --producer-property $producer_prop"
+done
+
+if [ "$producer_properties" != "" ]
+then
+    log "Following producer properties will be used: $producer_properties"
+fi
+
 set -e
 SECONDS=0
 log "📤 producing $nb_messages records to topic $topic"
@@ -528,16 +540,16 @@ do
                 then
                     if [[ -n "$headers" ]]
                     then
-                        head -n $nb_messages_to_send $output_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security --property parse.key=true --property key.separator="|" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
+                        head -n $nb_messages_to_send $output_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties --property parse.key=true --property key.separator="|" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
                     else
-                        head -n $nb_messages_to_send $output_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security --property parse.key=true --property key.separator="|" 
+                        head -n $nb_messages_to_send $output_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties --property parse.key=true --property key.separator="|" 
                     fi
                 else
                     if [[ -n "$headers" ]]
                     then
-                        head -n $nb_messages_to_send $output_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
+                        head -n $nb_messages_to_send $output_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
                     else
-                        head -n $nb_messages_to_send $output_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security
+                        head -n $nb_messages_to_send $output_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties
                     fi
                 fi
             else
@@ -545,16 +557,16 @@ do
                 then
                     if [[ -n "$headers" ]]
                     then
-                        head -n $nb_messages_to_send $output_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security --property parse.key=true --property key.separator="|" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
+                        head -n $nb_messages_to_send $output_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security $producer_properties --property parse.key=true --property key.separator="|" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
                     else
-                        head -n $nb_messages_to_send $output_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security --property parse.key=true --property key.separator="|"
+                        head -n $nb_messages_to_send $output_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security $producer_properties --property parse.key=true --property key.separator="|"
                     fi
                 else
                     if [[ -n "$headers" ]]
                     then
-                        head -n $nb_messages_to_send $output_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
+                        head -n $nb_messages_to_send $output_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security $producer_properties --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
                     else
-                        head -n $nb_messages_to_send $output_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security
+                        head -n $nb_messages_to_send $output_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security $producer_properties
                     fi
                 fi
             fi

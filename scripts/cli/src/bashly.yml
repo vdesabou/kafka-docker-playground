@@ -1282,6 +1282,19 @@ commands:
           - wrapper.for.nullables=true
           - wrapper.for.raw.primitives=false
 
+      - long: --producer-property
+        arg: producer-property
+        help: |-
+          🔩 Producer configuration parameters to use 
+          
+          See docs: https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html#cp-config-producer
+
+          🎓 Tip: you can pass multiple parameters by specifying --producer-property multiple times
+
+          Example: --producer-property "max.request.size=990485760" --producer-property "client.id=myid"
+        required: false
+        repeatable: true
+
       examples: |
 
         playground topic produce --tombstone --topic a-topic --key mykey
@@ -1384,7 +1397,7 @@ commands:
         }
         EOF
 
-        playground topic produce -t vincent-jsql --nb-messages 10 << 'EOF'
+        playground topic produce -t topic-jsql --nb-messages 10 << 'EOF'
         CREATE TABLE "notused"."notused" (
           "id" int PRIMARY KEY,
           "name" varchar COMMENT 'faker.internet.userName()',
@@ -1394,6 +1407,8 @@ commands:
           "created_at" datetime DEFAULT (now())
         );
         EOF
+
+        playground topic produce -t topic-json --nb-messages 1 --producer-property "max.request.size=990485760" < bigjson.json
 
     - name: create
       group: Topic
