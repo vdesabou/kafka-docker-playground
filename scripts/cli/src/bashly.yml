@@ -1295,6 +1295,14 @@ commands:
         required: false
         repeatable: true
 
+      - long: --record-size
+        arg: record-size
+        validate: integer
+        required: false
+        default: "0"
+        help: |-
+          🏋️ Minimum record size being produced
+
       examples: |
 
         playground topic produce --tombstone --topic a-topic --key mykey

@@ -2767,6 +2767,12 @@ playground_topic_produce_usage() {
     printf "    🔩 Producer configuration parameters to use \n    \n    See docs:\n    https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html#cp-config-producer\n    \n    🎓 Tip: you can pass multiple parameters by specifying --producer-property\n    multiple times\n    \n    Example: --producer-property \"max.request.size=990485760\"\n    --producer-property \"client.id=myid\"\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--record-size RECORD-SIZE")"
+    printf "    🏋️ Minimum record size being produced\n"
+    printf "    Default: 0\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -11686,6 +11692,7 @@ playground_topic_produce_command() {
   compatibility="${args[--compatibility]}"
   value_subject_name_strategy="${args[--value-subject-name-strategy]}"
   validate="${args[--validate]}"
+  record_size="${args[--record-size]}"
   # Convert the space delimited string to an array
   eval "validate_config=(${args[--validate-config]})"
   eval "producer_property=(${args[--producer-property]})"
@@ -11917,6 +11924,8 @@ playground_topic_produce_command() {
       input_file=$tmp_dir/out.json
   fi
   output_file=$tmp_dir/out_final.json
+  record_size_temp_file_line=$tmp_dir/line.json
+  record_size_temp_file_output=$tmp_dir/output.json
 
   max_batch=300000
   lines_count=0
@@ -11926,11 +11935,76 @@ playground_topic_produce_command() {
   do
       while IFS= read -r line
       do
-          if [[ $line == *"%g"* ]]; then
+          if [[ $line == *"%g"* ]]
+          then
               line=${line/\%g/$counter}
           fi
 
-          echo "$line" >> "$output_file"
+          if [ $record_size != 0 ]
+          then
+              if ! echo "$line" | jq -e .  > /dev/null 2>&1
+              then
+                  echo "${line}PLACEHOLDER" > $record_size_temp_file_line
+                  size_with_placeholder=$(wc -c < $record_size_temp_file_line)
+                  new_value_size=$((record_size - size_with_placeholder))
+
+                  if [[ $new_value_size -gt 0 ]]
+                  then
+                      # Create a string of '-' characters with length equivalent to new_value_size
+                      new_value_string=$(head -c $new_value_size /dev/zero | tr '\0' '-')
+
+                      # Write the new_value_string to a temporary file
+                      echo -n "$new_value_string" > temp.txt
+
+                      # Replace placeholder with the content of temp.txt file in $record_size_temp_file_output
+                      # Perl can handle very large arguments and perform replacement effectively
+                      perl -pi -e 'BEGIN{undef $/;} s/PLACEHOLDER/`cat temp.txt`/gse' $record_size_temp_file_line
+
+                      cat $record_size_temp_file_line >> "$output_file"
+                      # Remove temp file
+                      rm temp.txt
+                  else
+                      log "❌ record-size is too small"
+                      exit 1
+                  fi
+              else
+                  echo $line > $record_size_temp_file_line
+
+                  # Placeholder
+                  new_value="PLACEHOLDER"
+
+                  jq -c --arg new_field "$new_value" '. + {"new_field": $new_field}' $record_size_temp_file_line > $record_size_temp_file_output
+
+                  # Size of the current JSON with placeholder
+                  size_with_placeholder=$(wc -c < $record_size_temp_file_output)
+
+                  # The size needed for the new_value
+                  new_value_size=$((record_size - size_with_placeholder))
+
+                  if [[ $new_value_size -gt 0 ]]
+                  then
+                      # Create a string of '-' characters with length equivalent to new_value_size
+                      new_value_string=$(head -c $new_value_size /dev/zero | tr '\0' '-')
+
+                      # Write the new_value_string to a temporary file
+                      echo -n "$new_value_string" > temp.txt
+
+                      # Replace placeholder with the content of temp.txt file in $record_size_temp_file_output
+                      # Perl can handle very large arguments and perform replacement effectively
+                      perl -pi -e 'BEGIN{undef $/;} s/PLACEHOLDER/`cat temp.txt`/gse' $record_size_temp_file_output
+
+                      cat $record_size_temp_file_output >> "$output_file"
+                      # Remove temp file
+                      rm temp.txt
+                  else
+                      log "❌ record-size is too small"
+                      exit 1
+                  fi
+              fi
+          else
+              echo "$line" >> "$output_file"
+          fi
+
           lines_count=$((lines_count+1))
           if [ $lines_count -ge $max_batch ]
           then
@@ -19062,6 +19136,26 @@ playground_topic_produce_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --record-size)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_integer "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--record-size RECORD-SIZE" "$(validate_integer "$2")" >&2
+            exit 1
+          fi
+
+          args['--record-size']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--record-size requires an argument: --record-size RECORD-SIZE" >&2
+          exit 1
+        fi
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -19088,6 +19182,7 @@ playground_topic_produce_parse_requirements() {
   [[ -n ${args['--input']:-} ]] || args['--input']="-"
   [[ -n ${args['--nb-messages']:-} ]] || args['--nb-messages']="1"
   [[ -n ${args['--nb-partitions']:-} ]] || args['--nb-partitions']=""
+  [[ -n ${args['--record-size']:-} ]] || args['--record-size']="0"
 
   # :command.whitelist_filter
   if [[ ${args['--compatibility']} ]] && [[ ! ${args['--compatibility']} =~ ^(BACKWARD|BACKWARD_TRANSITIVE|FORWARD|FORWARD_TRANSITIVE|FULL|FULL_TRANSITIVE|NONE)$ ]]; then

@@ -11,9 +11,11 @@ tombstone="${args[--tombstone]}"
 compatibility="${args[--compatibility]}"
 value_subject_name_strategy="${args[--value-subject-name-strategy]}"
 validate="${args[--validate]}"
+record_size="${args[--record-size]}"
 # Convert the space delimited string to an array
 eval "validate_config=(${args[--validate-config]})"
 eval "producer_property=(${args[--producer-property]})"
+
 
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
@@ -241,6 +243,8 @@ then
     input_file=$tmp_dir/out.json
 fi
 output_file=$tmp_dir/out_final.json
+record_size_temp_file_line=$tmp_dir/line.json
+record_size_temp_file_output=$tmp_dir/output.json
 
 max_batch=300000
 lines_count=0
@@ -250,11 +254,76 @@ while [ $stop != 1 ]
 do
     while IFS= read -r line
     do
-        if [[ $line == *"%g"* ]]; then
+        if [[ $line == *"%g"* ]]
+        then
             line=${line/\%g/$counter}
         fi
 
-        echo "$line" >> "$output_file"
+        if [ $record_size != 0 ]
+        then
+            if ! echo "$line" | jq -e .  > /dev/null 2>&1
+            then
+                echo "${line}PLACEHOLDER" > $record_size_temp_file_line
+                size_with_placeholder=$(wc -c < $record_size_temp_file_line)
+                new_value_size=$((record_size - size_with_placeholder))
+
+                if [[ $new_value_size -gt 0 ]]
+                then
+                    # Create a string of '-' characters with length equivalent to new_value_size
+                    new_value_string=$(head -c $new_value_size /dev/zero | tr '\0' '-')
+
+                    # Write the new_value_string to a temporary file
+                    echo -n "$new_value_string" > temp.txt
+
+                    # Replace placeholder with the content of temp.txt file in $record_size_temp_file_output
+                    # Perl can handle very large arguments and perform replacement effectively
+                    perl -pi -e 'BEGIN{undef $/;} s/PLACEHOLDER/`cat temp.txt`/gse' $record_size_temp_file_line
+
+                    cat $record_size_temp_file_line >> "$output_file"
+                    # Remove temp file
+                    rm temp.txt
+                else
+                    log "❌ record-size is too small"
+                    exit 1
+                fi
+            else
+                echo $line > $record_size_temp_file_line
+
+                # Placeholder
+                new_value="PLACEHOLDER"
+
+                jq -c --arg new_field "$new_value" '. + {"new_field": $new_field}' $record_size_temp_file_line > $record_size_temp_file_output
+
+                # Size of the current JSON with placeholder
+                size_with_placeholder=$(wc -c < $record_size_temp_file_output)
+
+                # The size needed for the new_value
+                new_value_size=$((record_size - size_with_placeholder))
+
+                if [[ $new_value_size -gt 0 ]]
+                then
+                    # Create a string of '-' characters with length equivalent to new_value_size
+                    new_value_string=$(head -c $new_value_size /dev/zero | tr '\0' '-')
+
+                    # Write the new_value_string to a temporary file
+                    echo -n "$new_value_string" > temp.txt
+
+                    # Replace placeholder with the content of temp.txt file in $record_size_temp_file_output
+                    # Perl can handle very large arguments and perform replacement effectively
+                    perl -pi -e 'BEGIN{undef $/;} s/PLACEHOLDER/`cat temp.txt`/gse' $record_size_temp_file_output
+
+                    cat $record_size_temp_file_output >> "$output_file"
+                    # Remove temp file
+                    rm temp.txt
+                else
+                    log "❌ record-size is too small"
+                    exit 1
+                fi
+            fi
+        else
+            echo "$line" >> "$output_file"
+        fi
+
         lines_count=$((lines_count+1))
         if [ $lines_count -ge $max_batch ]
         then
