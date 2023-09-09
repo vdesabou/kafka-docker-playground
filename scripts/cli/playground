@@ -12016,13 +12016,22 @@ playground_topic_produce_command() {
   fi
 
   ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
-  if (( nb_generated_messages < 10 ))
+
+  size_limit_to_show=5000
+  if [ $record_size > $size_limit_to_show ]
   then
-      log "✨ $nb_generated_messages records were generated$value_str"
-      cat "$output_file"
+      log "✨ $nb_generated_messages records were generated$value_str (only showing first 1 as record size is $record_size), $ELAPSED"
+      log "only showing first $size_limit_to_show characters"
+      head -n 1 "$output_file" | cut -c 1-${size_limit_to_show}
   else
-      log "✨ $nb_generated_messages records were generated$value_str (only showing first 10), $ELAPSED"
-      head -n 10 "$output_file"
+      if (( nb_generated_messages < 10 ))
+      then
+          log "✨ $nb_generated_messages records were generated$value_str"
+          cat "$output_file"
+      else
+          log "✨ $nb_generated_messages records were generated$value_str (only showing first 10), $ELAPSED"
+          head -n 10 "$output_file"
+      fi
   fi
 
   if [[ -n "$generate_only" ]]
