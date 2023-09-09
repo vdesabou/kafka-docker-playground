@@ -207,7 +207,6 @@ else
             fi
             set -e
             cat $tmp_dir/result.log | grep "Payload: " | sed 's/Payload: //' > $tmp_dir/out.json
-            #--record-size 104
         ;;
         avro)
             docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/value_schema --count $nb_messages_to_generate
@@ -264,61 +263,42 @@ do
             if ! echo "$line" | jq -e .  > /dev/null 2>&1
             then
                 echo "${line}PLACEHOLDER" > $record_size_temp_file_line
-                size_with_placeholder=$(wc -c < $record_size_temp_file_line)
-                new_value_size=$((record_size - size_with_placeholder))
-
-                if [[ $new_value_size -gt 0 ]]
-                then
-                    # Create a string of '-' characters with length equivalent to new_value_size
-                    new_value_string=$(head -c $new_value_size /dev/zero | tr '\0' '-')
-
-                    # Write the new_value_string to a temporary file
-                    echo -n "$new_value_string" > temp.txt
-
-                    # Replace placeholder with the content of temp.txt file in $record_size_temp_file_output
-                    # Perl can handle very large arguments and perform replacement effectively
-                    perl -pi -e 'BEGIN{undef $/;} s/PLACEHOLDER/`cat temp.txt`/gse' $record_size_temp_file_line
-
-                    cat $record_size_temp_file_line >> "$output_file"
-                    # Remove temp file
-                    rm temp.txt
-                else
-                    log "❌ record-size is too small"
-                    exit 1
-                fi
             else
                 echo $line > $record_size_temp_file_line
-
-                # Placeholder
                 new_value="PLACEHOLDER"
 
-                jq -c --arg new_field "$new_value" '. + {"new_field": $new_field}' $record_size_temp_file_line > $record_size_temp_file_output
+                jq -c --arg recordSizePayload "$new_value" '. + {"recordSizePayload": $recordSizePayload}' $record_size_temp_file_line > $record_size_temp_file_output
+            fi
 
-                # Size of the current JSON with placeholder
+                size_with_placeholder=$(wc -c < $record_size_temp_file_output)
                 size_with_placeholder=$(wc -c < $record_size_temp_file_output)
 
                 # The size needed for the new_value
-                new_value_size=$((record_size - size_with_placeholder))
+            size_with_placeholder=$(wc -c < $record_size_temp_file_output)
 
-                if [[ $new_value_size -gt 0 ]]
-                then
-                    # Create a string of '-' characters with length equivalent to new_value_size
-                    new_value_string=$(head -c $new_value_size /dev/zero | tr '\0' '-')
+                # The size needed for the new_value
+            new_value_size=$((record_size - size_with_placeholder))
 
-                    # Write the new_value_string to a temporary file
-                    echo -n "$new_value_string" > temp.txt
+            if [[ $new_value_size -gt 0 ]]
+            then
+                # Create a string of '-' characters with length equivalent to new_value_size
+                new_value_string=$(LC_ALL=C tr -dc 'a-zA-Z0-9' < /dev/urandom | head -c$new_value_size)
 
-                    # Replace placeholder with the content of temp.txt file in $record_size_temp_file_output
-                    # Perl can handle very large arguments and perform replacement effectively
-                    perl -pi -e 'BEGIN{undef $/;} s/PLACEHOLDER/`cat temp.txt`/gse' $record_size_temp_file_output
+                echo -n "$new_value_string" > temp.txt
+
+                # Replace placeholder with the content of temp.txt file in $record_size_temp_file_output
+                # Perl can handle very large arguments and perform replacement effectively
+                perl -pi -e 'BEGIN{undef $/;} s/PLACEHOLDER/`cat temp.txt`/gse' $record_size_temp_file_output
 
                     cat $record_size_temp_file_output >> "$output_file"
+                    cat $record_size_temp_file_output >> "$output_file"
                     # Remove temp file
-                    rm temp.txt
-                else
-                    log "❌ record-size is too small"
-                    exit 1
-                fi
+                cat $record_size_temp_file_output >> "$output_file"
+                    # Remove temp file
+                rm temp.txt
+            else
+                log "❌ record-size is too small"
+                exit 1
             fi
         else
             echo "$line" >> "$output_file"

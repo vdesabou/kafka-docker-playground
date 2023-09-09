@@ -1301,7 +1301,7 @@ commands:
         required: false
         default: "0"
         help: |-
-          🏋️ Minimum record size being produced
+          🏋️ Record size in bytes, eg. 1048576 for 1MB
 
       examples: |
 
