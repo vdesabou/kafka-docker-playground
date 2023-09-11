@@ -11594,6 +11594,7 @@ playground_topic_consume_command() {
     found=0
     first_record=1
     is_base64=0
+    size_limit_to_show=2500
     # Loop through each line in the named pipe
     while read -r line
     do
@@ -11611,25 +11612,30 @@ playground_topic_consume_command() {
         if [ $first_record -eq 1 ]
         then
           payload=$(echo "$line" | cut -d "|" -f 6)
-          # check if it is base64 encoded
-          set +e
-          base64=$(echo "$payload" | tr -d '"' | base64 --decode 2>/dev/null)
 
-          if [[ "$OSTYPE" == "darwin"* ]]
+          if [ ${#payload} -lt 1000 ]
           then
-            if [ "$base64" != "" ]
+            # check if it is base64 encoded
+            set +e
+            base64=$(echo "$payload" | tr -d '"' | base64 --decode 2>/dev/null)
+
+            if [[ "$OSTYPE" == "darwin"* ]]
             then
-              logwarn "🤖 Data is base64 encoded, payload will be decoded"
-              is_base64=1
+              if [ "$base64" != "" ]
+              then
+                logwarn "🤖 Data is base64 encoded, payload will be decoded"
+                is_base64=1
+              fi
+            else
+              if [ $? == 0 ]
+              then
+                logwarn "🤖 Data is base64 encoded, payload will be decoded"
+                is_base64=1
+              fi
             fi
-          else
-            if [ $? == 0 ]
-            then
-              logwarn "🤖 Data is base64 encoded, payload will be decoded"
-              is_base64=1
-            fi
+            set -e
           fi
-          set -e
+
           first_record=0
         fi
 
@@ -11654,7 +11660,13 @@ playground_topic_consume_command() {
         then
           if [ $display_line -eq 1 ]
           then
-            echo "$line_with_date"
+            payload=$(echo "$line_with_date" | cut -d "|" -f 6)
+            if [ ${#payload} -lt $size_limit_to_show ]
+            then
+              echo "$line_with_date"
+            else
+              echo "$line_with_date" | cut -c 1-$size_limit_to_show | awk "{print \$0 \"...<truncated, only showing first $size_limit_to_show characters, out of ${#payload}>...\"}"
+            fi
           fi
         fi
 
@@ -11688,7 +11700,13 @@ playground_topic_consume_command() {
 
         if [ $display_line -eq 1 ]
         then
-          echo "$line"
+          payload=$(echo "$line" | cut -d "|" -f 6)
+          if [ ${#payload} -lt $size_limit_to_show ]
+          then
+            echo "$line"
+          else
+            echo "$line" | cut -c 1-$size_limit_to_show | awk "{print \$0 \"...<truncated, only showing first $size_limit_to_show characters, out of ${#payload}>...\"}"
+          fi
         fi
       fi
     done < "$fifo_path"
@@ -11992,7 +12010,7 @@ playground_topic_produce_command() {
           then
               if ! echo "$line" | jq -e .  > /dev/null 2>&1
               then
-                  echo "${line}PLACEHOLDER" > $record_size_temp_file_line
+                  echo "${line}PLACEHOLDER" > $record_size_temp_file_output
               else
                   echo $line > $record_size_temp_file_line
                   new_value="PLACEHOLDER"
@@ -12000,13 +12018,10 @@ playground_topic_produce_command() {
                   jq -c --arg recordSizePayload "$new_value" '. + {"recordSizePayload": $recordSizePayload}' $record_size_temp_file_line > $record_size_temp_file_output
               fi
 
-                  size_with_placeholder=$(wc -c < $record_size_temp_file_output)
-                  size_with_placeholder=$(wc -c < $record_size_temp_file_output)
-
-                  # The size needed for the new_value
+              # The size needed for the new_value
               size_with_placeholder=$(wc -c < $record_size_temp_file_output)
 
-                  # The size needed for the new_value
+              # The size needed for the new_value
               new_value_size=$((record_size - size_with_placeholder))
 
               if [[ $new_value_size -gt 0 ]]
@@ -12071,7 +12086,7 @@ playground_topic_produce_command() {
   then
       log "✨ $nb_generated_messages records were generated$value_str (only showing first 1 as record size is $record_size), $ELAPSED"
       log "✨ only showing first $size_limit_to_show characters"
-      head -n 1 "$output_file" | cut -c 1-${size_limit_to_show} | awk '{print $0 "...<truncated>..."}'
+      head -n 1 "$output_file" | cut -c 1-${size_limit_to_show} | awk "{print \$0 \"...<truncated, only showing first $size_limit_to_show characters, out of $record_size>...\"}"
   else
       if (( nb_generated_messages < 10 ))
       then
@@ -12281,7 +12296,7 @@ playground_topic_produce_command() {
   if [ $record_size -gt 1048576 ]
   then
       log "✨ record-size $record_size is greater than 1Mb (1048576), setting --producer-property max.request.size=$((record_size + 1000))"
-      producer_properties="--producer-property max.request.size=$((record_size + 1000))"
+      producer_properties="--producer-property max.request.size=$((record_size + 1000)) --producer-property buffer.memory=67108864"
       log "✨ topic $topic max.message.bytes is also set to $((record_size + 1000))"
       playground topic alter --topic $topic --add-config max.message.bytes=$((record_size + 1000))
   fi

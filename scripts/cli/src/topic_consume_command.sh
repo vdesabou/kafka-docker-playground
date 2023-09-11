@@ -294,6 +294,7 @@ do
   found=0
   first_record=1
   is_base64=0
+  size_limit_to_show=2500
   # Loop through each line in the named pipe
   while read -r line
   do
@@ -311,25 +312,30 @@ do
       if [ $first_record -eq 1 ]
       then
         payload=$(echo "$line" | cut -d "|" -f 6)
-        # check if it is base64 encoded
-        set +e
-        base64=$(echo "$payload" | tr -d '"' | base64 --decode 2>/dev/null)
 
-        if [[ "$OSTYPE" == "darwin"* ]]
+        if [ ${#payload} -lt 1000 ]
         then
-          if [ "$base64" != "" ]
+          # check if it is base64 encoded
+          set +e
+          base64=$(echo "$payload" | tr -d '"' | base64 --decode 2>/dev/null)
+
+          if [[ "$OSTYPE" == "darwin"* ]]
           then
-            logwarn "🤖 Data is base64 encoded, payload will be decoded"
-            is_base64=1
+            if [ "$base64" != "" ]
+            then
+              logwarn "🤖 Data is base64 encoded, payload will be decoded"
+              is_base64=1
+            fi
+          else
+            if [ $? == 0 ]
+            then
+              logwarn "🤖 Data is base64 encoded, payload will be decoded"
+              is_base64=1
+            fi
           fi
-        else
-          if [ $? == 0 ]
-          then
-            logwarn "🤖 Data is base64 encoded, payload will be decoded"
-            is_base64=1
-          fi
+          set -e
         fi
-        set -e
+
         first_record=0
       fi
 
@@ -354,7 +360,13 @@ do
       then
         if [ $display_line -eq 1 ]
         then
-          echo "$line_with_date"
+          payload=$(echo "$line_with_date" | cut -d "|" -f 6)
+          if [ ${#payload} -lt $size_limit_to_show ]
+          then
+            echo "$line_with_date"
+          else
+            echo "$line_with_date" | cut -c 1-$size_limit_to_show | awk "{print \$0 \"...<truncated, only showing first $size_limit_to_show characters, out of ${#payload}>...\"}"
+          fi
         fi
       fi
 
@@ -388,7 +400,13 @@ do
 
       if [ $display_line -eq 1 ]
       then
-        echo "$line"
+        payload=$(echo "$line" | cut -d "|" -f 6)
+        if [ ${#payload} -lt $size_limit_to_show ]
+        then
+          echo "$line"
+        else
+          echo "$line" | cut -c 1-$size_limit_to_show | awk "{print \$0 \"...<truncated, only showing first $size_limit_to_show characters, out of ${#payload}>...\"}"
+        fi
       fi
     fi
   done < "$fifo_path"
