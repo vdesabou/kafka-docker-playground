@@ -262,7 +262,7 @@ do
         then
             if ! echo "$line" | jq -e .  > /dev/null 2>&1
             then
-                echo "${line}PLACEHOLDER" > $record_size_temp_file_line
+                echo "${line}PLACEHOLDER" > $record_size_temp_file_output
             else
                 echo $line > $record_size_temp_file_line
                 new_value="PLACEHOLDER"
@@ -270,13 +270,10 @@ do
                 jq -c --arg recordSizePayload "$new_value" '. + {"recordSizePayload": $recordSizePayload}' $record_size_temp_file_line > $record_size_temp_file_output
             fi
 
-                size_with_placeholder=$(wc -c < $record_size_temp_file_output)
-                size_with_placeholder=$(wc -c < $record_size_temp_file_output)
-
-                # The size needed for the new_value
+            # The size needed for the new_value
             size_with_placeholder=$(wc -c < $record_size_temp_file_output)
 
-                # The size needed for the new_value
+            # The size needed for the new_value
             new_value_size=$((record_size - size_with_placeholder))
 
             if [[ $new_value_size -gt 0 ]]
@@ -341,7 +338,7 @@ if [ $record_size > $size_limit_to_show ]
 then
     log "✨ $nb_generated_messages records were generated$value_str (only showing first 1 as record size is $record_size), $ELAPSED"
     log "✨ only showing first $size_limit_to_show characters"
-    head -n 1 "$output_file" | cut -c 1-${size_limit_to_show} | awk '{print $0 "...<truncated>..."}'
+    head -n 1 "$output_file" | cut -c 1-${size_limit_to_show} | awk "{print \$0 \"...<truncated, only showing first $size_limit_to_show characters, out of $record_size>...\"}"
 else
     if (( nb_generated_messages < 10 ))
     then
@@ -549,8 +546,8 @@ producer_properties=""
 
 if [ $record_size -gt 1048576 ]
 then
-    log "✨ record-size $record_size is greater than 1Mb (1048576), setting --producer-property max.request.size=$((record_size + 1000))"
-    producer_properties="--producer-property max.request.size=$((record_size + 1000))"
+    log "✨ record-size $record_size is greater than 1Mb (1048576), setting --producer-property max.request.size=$((record_size + 1000)) and --producer-property buffer.memory=67108864"
+    producer_properties="--producer-property max.request.size=$((record_size + 1000)) --producer-property buffer.memory=67108864"
     log "✨ topic $topic max.message.bytes is also set to $((record_size + 1000))"
     playground topic alter --topic $topic --add-config max.message.bytes=$((record_size + 1000))
 fi
