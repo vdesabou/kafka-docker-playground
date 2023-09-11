@@ -9,6 +9,8 @@ services:
     container_name: sql-datagen
     profiles:
     - sql_datagen
+    volumes:
+      - ../../connect/connect-jdbc-sqlserver-source/sqlserver-datagen/target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2019-latest
