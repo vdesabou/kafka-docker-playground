@@ -266,8 +266,11 @@ do
             else
                 echo $line > $record_size_temp_file_line
                 new_value="PLACEHOLDER"
+                
+                first_string_field=$(echo "$line" | jq -r 'path(.. | select(type == "string")) | .[-1]' | tail -1)
 
-                jq -c --arg recordSizePayload "$new_value" '. + {"recordSizePayload": $recordSizePayload}' $record_size_temp_file_line > $record_size_temp_file_output
+                log "🔮 Replacing first string field $first_string_field value with long payload"
+                jq -c --arg new_val "$new_value" ".${first_string_field} |= \$new_val" $record_size_temp_file_line > $record_size_temp_file_output
             fi
 
             # The size needed for the new_value
