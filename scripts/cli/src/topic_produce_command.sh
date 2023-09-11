@@ -287,11 +287,8 @@ do
                 # Perl can handle very large arguments and perform replacement effectively
                 perl -pi -e 'BEGIN{undef $/;} s/PLACEHOLDER/`cat temp.txt`/gse' $record_size_temp_file_output
 
-                    cat $record_size_temp_file_output >> "$output_file"
-                    cat $record_size_temp_file_output >> "$output_file"
-                    # Remove temp file
                 cat $record_size_temp_file_output >> "$output_file"
-                    # Remove temp file
+                # Remove temp file
                 rm temp.txt
             else
                 log "❌ record-size is too small"
