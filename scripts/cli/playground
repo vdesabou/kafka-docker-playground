@@ -2690,7 +2690,7 @@ playground_topic_produce_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--input INPUT")"
-    printf "    🔥 You can either:\n    \n    * Set your own schema (avro, json-schema, protobuf) with stdin (see example\n    section).\n    \n    * You can also generate json data using json or sql format using syntax from\n    https://github.com/MaterializeInc/datagen\n    \n    * Use completion to select predefined schemas (or use your own schema file)\n    🎓 Tip: use <tab> completion to trigger fzf completion\n    \n    * Directly set payload\n"
+    printf "    🔥 You can either:\n    \n    * Set your own schema (avro, json-schema, protobuf) with stdin (see example\n    section).\n    \n    * You can also generate json data using json or sql format using syntax from\n    https://github.com/MaterializeInc/datagen\n    \n    * Use completion to select predefined schemas (or use your own schema file)\n    🎓 Tip: use <tab> completion to trigger fzf completion\n    \n    * Directly set payload (\"%g\" can be used to generate a counter)\n"
     printf "    Default: -\n"
     echo
 
@@ -2730,7 +2730,7 @@ playground_topic_produce_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--key KEY")"
-    printf "    🗝️ Key to use. If not set, no key is used.\n    \n    If the key contain a number, it will be used as starting point and\n    incremented for each record.\n    \n    Example: key1 will start with key1, then key1, etc..\n    Example: mykey-10-suffix will start with mykey-10-suffix then\n    mykey-11-suffix, etc..\n    \n    Otherwise, the key will be same for all records.\n"
+    printf "    🗝️ Key to use. If not set, no key is used.\n    \n    If the key contain a number, it will be used as starting point and\n    incremented for each record.\n    \n    Example: key1 will start with key1, then key2, etc..\n    Example: mykey-10-suffix will start with mykey-10-suffix then\n    mykey-11-suffix, etc..\n    \n    \"%g\" can also be used to generate a counter\n    \n    Example: key%g will start with key1, then key2, etc..\n    \n    Otherwise, the key will be same for all records.\n"
     echo
 
     # :flag.usage
@@ -12270,10 +12270,15 @@ playground_topic_produce_command() {
 
           mv "$tmp_dir/tempfile" "$output_file"
       else
+          counter=1
           log "🗝️ key is set with a string $key, it will be used for all records"
           while read -r line
           do
-          echo "${key}|${line}" >> "$tmp_dir/tempfile"
+              if [[ $key == *"%g"* ]]
+              then
+                  key=${key/\%g/$counter}
+              fi
+              echo "${key}|${line}" >> "$tmp_dir/tempfile"
           done < "$output_file"
 
           mv "$tmp_dir/tempfile" "$output_file"

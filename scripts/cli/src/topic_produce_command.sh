@@ -521,10 +521,15 @@ then
 
         mv "$tmp_dir/tempfile" "$output_file"
     else
+        counter=1
         log "🗝️ key is set with a string $key, it will be used for all records"
         while read -r line
         do
-        echo "${key}|${line}" >> "$tmp_dir/tempfile"
+            if [[ $key == *"%g"* ]]
+            then
+                key=${key/\%g/$counter}
+            fi
+            echo "${key}|${line}" >> "$tmp_dir/tempfile"
         done < "$output_file"
 
         mv "$tmp_dir/tempfile" "$output_file"
