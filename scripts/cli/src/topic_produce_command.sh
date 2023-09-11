@@ -336,12 +336,12 @@ fi
 
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 
-size_limit_to_show=5000
+size_limit_to_show=2500
 if [ $record_size > $size_limit_to_show ]
 then
     log "✨ $nb_generated_messages records were generated$value_str (only showing first 1 as record size is $record_size), $ELAPSED"
-    log "only showing first $size_limit_to_show characters"
-    head -n 1 "$output_file" | cut -c 1-${size_limit_to_show}
+    log "✨ only showing first $size_limit_to_show characters"
+    head -n 1 "$output_file" | cut -c 1-${size_limit_to_show} | awk '{print $0 "...<truncated>..."}'
 else
     if (( nb_generated_messages < 10 ))
     then
@@ -546,6 +546,15 @@ then
 fi
 
 producer_properties=""
+
+if [ $record_size -gt 1048576 ]
+then
+    log "✨ record-size $record_size is greater than 1Mb (1048576), setting --producer-property max.request.size=$((record_size + 1000))"
+    producer_properties="--producer-property max.request.size=$((record_size + 1000))"
+    log "✨ topic $topic max.message.bytes is also set to $((record_size + 1000))"
+    playground topic alter --topic $topic --add-config max.message.bytes=$((record_size + 1000))
+fi
+
 for producer_prop in "${producer_property[@]}"
 do
     producer_properties="$producer_properties --producer-property $producer_prop"

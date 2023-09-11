@@ -93,6 +93,7 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   📤 Produce to a topic\n" "$(green "topic produce")                          "
   [[ -n $long_usage ]] && printf "  %s   🆕 Create topic\n" "$(green "topic create")                           "
   [[ -n $long_usage ]] && printf "  %s   ❌ Delete topic\n" "$(green "topic delete")                           "
+  [[ -n $long_usage ]] && printf "  %s   🪛 Alter topic config\n" "$(green "topic alter")                            "
   echo
   printf "%s\n" "$(bold "Connector commands:")"
   printf "  %s   🔗☁️ Fully Managed Connector commands\n" "$(green "ccloud-connector")                       "
@@ -2430,6 +2431,7 @@ playground_topic_usage() {
   printf "  %s   📤 Produce to a topic\n" "$(green "produce")                 "
   printf "  %s   🆕 Create topic\n" "$(green "create")                  "
   printf "  %s   ❌ Delete topic\n" "$(green "delete")                  "
+  printf "  %s   🪛 Alter topic config\n" "$(green "alter")                   "
   echo
 
   # :command.long_usage
@@ -2769,7 +2771,7 @@ playground_topic_produce_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--record-size RECORD-SIZE")"
-    printf "    🏋️ Record size in bytes, eg. 1048576 for 1MB\n"
+    printf "    🏋️ Record size in bytes, eg. 1048576 for 1MB\n    \n    📢 If size is > 1Mb, --producer-property max.request.size and topic\n    max.message.bytes will be automatically set to support the record size.\n"
     printf "    Default: 0\n"
     echo
 
@@ -2869,6 +2871,53 @@ playground_topic_delete_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_alter_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground topic alter - 🪛 Alter topic config\n"
+    echo
+
+  else
+    printf "playground topic alter - 🪛 Alter topic config\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic alter [OPTIONS] [ARGUMENTS...]\n"
+  printf "  playground topic alter --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
+    printf "    🗳 Topic name\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    echo "  ARGUMENTS..."
+    printf "    Any arguments to be used with kafka-configs --alter. If the topic does not\n    exist, it is created first.\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground topic alter --topic atopic --add-config max.message.bytes=5242940\n"
     echo
 
   fi
@@ -12017,12 +12066,12 @@ playground_topic_produce_command() {
 
   ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 
-  size_limit_to_show=5000
+  size_limit_to_show=2500
   if [ $record_size > $size_limit_to_show ]
   then
       log "✨ $nb_generated_messages records were generated$value_str (only showing first 1 as record size is $record_size), $ELAPSED"
-      log "only showing first $size_limit_to_show characters"
-      head -n 1 "$output_file" | cut -c 1-${size_limit_to_show}
+      log "✨ only showing first $size_limit_to_show characters"
+      head -n 1 "$output_file" | cut -c 1-${size_limit_to_show} | awk '{print $0 "...<truncated>..."}'
   else
       if (( nb_generated_messages < 10 ))
       then
@@ -12228,6 +12277,15 @@ playground_topic_produce_command() {
   fi
 
   producer_properties=""
+
+  if [ $record_size -gt 1048576 ]
+  then
+      log "✨ record-size $record_size is greater than 1Mb (1048576), setting --producer-property max.request.size=$((record_size + 1000))"
+      producer_properties="--producer-property max.request.size=$((record_size + 1000))"
+      log "✨ topic $topic max.message.bytes is also set to $((record_size + 1000))"
+      playground topic alter --topic $topic --add-config max.message.bytes=$((record_size + 1000))
+  fi
+
   for producer_prop in "${producer_property[@]}"
   do
       producer_properties="$producer_properties --producer-property $producer_prop"
@@ -12488,6 +12546,66 @@ playground_topic_delete_command() {
   else
       docker exec $container kafka-topics --delete --topic $topic --bootstrap-server broker:9092 $security
   fi
+}
+
+# :command.function
+playground_topic_alter_command() {
+  # src/topic_alter_command.sh
+  topic="${args[--topic]}"
+
+  ret=$(get_security_broker "--command-config")
+
+  container=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1
+
+  fi
+
+  playground topic get-number-records --topic $topic > /tmp/result.log 2>/tmp/result.log
+  set +e
+  grep "does not exist" /tmp/result.log > /dev/null 2>&1
+  if [ $? == 0 ]
+  then
+      logwarn "🆕 topic $topic does not exist, creating it..."
+      playground topic create --topic $topic
+
+      playground topic alter --topic $topic ${other_args[*]}
+  else
+      log "🪛 Altering topic $topic"
+      if [[ "$environment" == "environment" ]]
+      then
+          if [ -f /tmp/delta_configs/env.delta ]
+          then
+              source /tmp/delta_configs/env.delta
+          else
+              logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+              exit 1
+          fi
+          if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+          then
+              logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
+              exit 1
+          fi
+
+          DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+          dir1=$(echo ${DIR_CLI%/*})
+          root_folder=$(echo ${dir1%/*})
+          IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
+          source $root_folder/scripts/utils.sh
+
+          docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties ${other_args[*]}
+      else
+          docker exec $container kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server broker:9092 $security ${other_args[*]}
+      fi
+  fi
+  set -e
+
 }
 
 # :command.function
@@ -18406,6 +18524,13 @@ playground_topic_parse_requirements() {
       shift $#
       ;;
 
+    alter)
+      action="alter"
+      shift
+      playground_topic_alter_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_topic_usage >&2
@@ -19342,6 +19467,76 @@ playground_topic_delete_parse_requirements() {
         # :command.parse_requirements_case_simple
         printf "invalid argument: %s\n" "$key" >&2
         exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--topic']+x} ]]; then
+    printf "missing required flag: --topic, -t TOPIC\n" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_topic_alter_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_alter_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="topic alter"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        other_args+=("$@")
+        break
+        ;;
+
+      -?*)
+        other_args+=("$1")
+        shift
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_catch_all
+        other_args+=("$1")
+        shift
 
         ;;
 
@@ -21073,6 +21268,7 @@ run() {
     "topic produce") playground_topic_produce_command ;;
     "topic create") playground_topic_create_command ;;
     "topic delete") playground_topic_delete_command ;;
+    "topic alter") playground_topic_alter_command ;;
     "ccloud-connector") playground_ccloud_connector_command ;;
     "ccloud-connector status") playground_ccloud_connector_status_command ;;
     "ccloud-connector plugins") playground_ccloud_connector_plugins_command ;;

@@ -1303,6 +1303,8 @@ commands:
         help: |-
           🏋️ Record size in bytes, eg. 1048576 for 1MB
 
+          📢 If size is > 1Mb, --producer-property max.request.size and topic max.message.bytes will be automatically set to support the record size.
+
       examples: |
 
         playground topic produce --tombstone --topic a-topic --key mykey
@@ -1458,6 +1460,27 @@ commands:
           - $(playground get-topic-list)
         help: |-
           🗳 Topic name
+
+    - name: alter
+      group: Topic
+      help: |-
+        🪛 Alter topic config
+      flags:
+      - long: --topic
+        short: -t
+        required: true
+        arg: topic
+        completions:
+          - $(playground get-topic-list)
+        help: |-
+          🗳 Topic name
+      catch_all:
+        label: arguments
+        help: |-
+          Any arguments to be used with kafka-configs --alter. If the topic does not exist, it is created first.
+        required: false
+      examples: |
+        playground topic alter --topic atopic --add-config max.message.bytes=5242940
 
 - name: ccloud-connector
   expose: true
