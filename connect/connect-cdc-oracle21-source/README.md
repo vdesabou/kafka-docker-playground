@@ -1,6 +1,6 @@
 # Oracle CDC Source (Oracle 21c) Source connector
 
-# ⚠️⚠️⚠️⚠️⚠️⚠️⚠️ ORACLE CDC DOES NOT SUPPORT ORACLE 21C ⚠️⚠️⚠️⚠️⚠️⚠️⚠️
+⚠️ Oracle 21c is supported only since Oracle CDC 2.9.0
 
 ## Objective
 
