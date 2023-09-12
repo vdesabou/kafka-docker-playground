@@ -706,6 +706,19 @@ commands:
     - playground debug testssl https://google.com
     - playground debug testssl pkc-xxxx.us-west-2.aws.confluent.cloud:9092
 
+  - name: generate-diagnostics
+    help: |-
+      ⛑️ Generate a diagnostic bundle with Diagnostics Bundle Tool
+
+      ⚠️ only connect and broker containers are supported for now
+
+      see https://docs.confluent.io/platform/current/tools/diagnostics-tool.html#collect-diagnostics
+    flags:
+      - *container
+    examples:
+    - playground debug generate-diagnostics
+    - playground debug generate-diagnostics --container broker
+
   - name: thread-dump
     help: |-
       🎯 Take a java thread dump
