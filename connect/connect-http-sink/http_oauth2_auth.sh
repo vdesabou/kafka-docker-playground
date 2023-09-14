@@ -19,6 +19,9 @@ EOF
 
 playground debug log-level set --package "org.apache.http" --level TRACE
 
+log "Set webserver to reply with 200"
+curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006
+
 log "Creating http-sink connector"
 playground connector create-or-update --connector http-sink << EOF
 {
@@ -34,28 +37,24 @@ playground connector create-or-update --connector http-sink << EOF
   "reporter.error.topic.replication.factor": 1,
   "reporter.result.topic.name": "success-responses",
   "reporter.result.topic.replication.factor": 1,
-  "http.api.url": "http://http-service-oauth2-auth:8080/api/messages",
+  "http.api.url": "http://httpserver:9006",
   "auth.type": "OAUTH2",
-  "oauth2.token.url": "http://http-service-oauth2-auth:8080/oauth/token",
-  "oauth2.client.id": "kc-client",
-  "oauth2.client.secret": "kc-secret"
+  "oauth2.token.url": "http://httpserver:9006/oauth/token",
+  "oauth2.client.id": "confidentialApplication",
+  "oauth2.client.secret": "topSecret",
+  "oauth2.token.property": "accessToken"
 }
 EOF
 
 
 sleep 10
 
-# create token, see https://github.com/confluentinc/kafka-connect-http-demo#oauth2
+# create token, see https://github.com/pedroetb/node-oauth2-server-example#with-client_credentials-grant-1
 token=$(curl -X POST \
-  http://localhost:10080/oauth/token \
+  http://localhost:9006/oauth/token \
   -H 'Content-Type: application/x-www-form-urlencoded' \
-  -H 'Authorization: Basic a2MtY2xpZW50OmtjLXNlY3JldA==' \
-  -d 'grant_type=client_credentials&scope=any' | jq -r '.access_token')
+  -H 'Authorization: Basic Y29uZmlkZW50aWFsQXBwbGljYXRpb246dG9wU2VjcmV0' \
+  -d 'grant_type=client_credentials&scope=any' | jq -r '.accessToken')
 
 
-log "Confirm that the data was sent to the HTTP endpoint."
-curl -X GET \
-    http://localhost:10080/api/messages \
-    -H "Authorization: Bearer ${token}" | jq . > /tmp/result.log  2>&1
-cat /tmp/result.log
-grep "10" /tmp/result.log
+playground topic consume --topic success-responses --min-expected-messages 10 --timeout 60
