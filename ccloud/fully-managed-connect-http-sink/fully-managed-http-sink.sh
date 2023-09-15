@@ -50,6 +50,9 @@ log "Deleting fully managed connector $connector_name, it might fail..."
 playground ccloud-connector delete --connector $connector_name
 set -e
 
+log "Set webserver to reply with 200"
+curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006
+
 log "Creating fully managed connector"
 playground ccloud-connector create-or-update --connector $connector_name << EOF
 {

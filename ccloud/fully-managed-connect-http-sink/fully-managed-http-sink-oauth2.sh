@@ -75,6 +75,9 @@ log "Deleting fully managed connector $connector_name, it might fail..."
 playground ccloud-connector delete --connector $connector_name
 set -e
 
+log "Set webserver to reply with 200"
+curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006
+
 log "Creating fully managed connector"
 playground ccloud-connector create-or-update --connector $connector_name << EOF
 {
@@ -85,14 +88,14 @@ playground ccloud-connector create-or-update --connector $connector_name << EOF
      "kafka.api.secret": "$CLOUD_SECRET",
      "topics": "http-topic",
      "input.data.format": "AVRO",
-     "http.api.url": "http://$NGROK_HOSTNAME:$NGROK_PORT/api/messages",
+     "http.api.url": "http://$NGROK_HOSTNAME:$NGROK_PORT",
      "behavior.on.error": "fail",
      "tasks.max" : "1",
      "auth.type": "OAUTH2",
      "oauth2.token.url": "http://$NGROK_HOSTNAME:$NGROK_PORT/oauth/token",
-     "oauth2.client.id": "kc-client",
-     "oauth2.client.secret": "kc-secret",
-     "oauth2.client.mode": "header"
+     "oauth2.client.id": "confidentialApplication",
+     "oauth2.client.secret": "topSecret",
+     "oauth2.token.property": "accessToken"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 300
@@ -106,3 +109,11 @@ log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
 playground ccloud-connector delete --connector $connector_name
+
+
+# create token, see https://github.com/pedroetb/node-oauth2-server-example#with-client_credentials-grant-1
+# token=$(curl -X POST \
+#   http://localhost:9006/oauth/token \
+#   -H 'Content-Type: application/x-www-form-urlencoded' \
+#   -H 'Authorization: Basic Y29uZmlkZW50aWFsQXBwbGljYXRpb246dG9wU2VjcmV0' \
+#   -d 'grant_type=client_credentials&scope=any' | jq -r '.accessToken')
