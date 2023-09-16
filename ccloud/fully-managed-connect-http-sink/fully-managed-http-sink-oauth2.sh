@@ -89,13 +89,14 @@ playground ccloud-connector create-or-update --connector $connector_name << EOF
      "topics": "http-topic",
      "input.data.format": "AVRO",
      "http.api.url": "http://$NGROK_HOSTNAME:$NGROK_PORT",
-     "behavior.on.error": "fail",
      "tasks.max" : "1",
      "auth.type": "OAUTH2",
      "oauth2.token.url": "http://$NGROK_HOSTNAME:$NGROK_PORT/oauth/token",
      "oauth2.client.id": "confidentialApplication",
      "oauth2.client.secret": "topSecret",
-     "oauth2.token.property": "accessToken"
+     "oauth2.token.property": "accessToken",
+     "request.body.format" : "json",
+     "headers": "Content-Type: application/json"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 300

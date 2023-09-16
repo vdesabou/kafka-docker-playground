@@ -64,8 +64,9 @@ playground ccloud-connector create-or-update --connector $connector_name << EOF
      "topics": "http-topic",
      "input.data.format": "AVRO",
      "http.api.url": "http://$NGROK_HOSTNAME:$NGROK_PORT",
-     "behavior.on.error": "fail",
-     "tasks.max" : "1"
+     "tasks.max" : "1",
+     "request.body.format" : "json",
+     "headers": "Content-Type: application/json"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 300
