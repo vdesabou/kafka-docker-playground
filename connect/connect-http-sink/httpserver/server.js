@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} to ${req.url}`);
@@ -13,12 +14,14 @@ var errorCode = 200;
 
 app.get('/', (req, res) => {
   res.status(errorCode).json({ message: `Returned status: ${errorCode}` });
-  console.log(`[${new Date().toISOString()}] ${req.body}: sending back ${errorCode}`);
+  console.log(req.body); // the posted data
+  console.log(`[${new Date().toISOString()}] sending back ${errorCode}`); 
 });
 
 app.post('/', (req, res) => {
   res.status(errorCode).json({ message: `Returned status: ${errorCode}` });
-  console.log(`[${new Date().toISOString()}] ${req.body}: sending back ${errorCode}`);
+  console.log(req.body); // the posted data
+  console.log(`[${new Date().toISOString()}] sending back ${errorCode}`);
 });
 
 app.put('/', (req, res) => {

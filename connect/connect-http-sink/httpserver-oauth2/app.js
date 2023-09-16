@@ -1,15 +1,13 @@
 // https://github.com/pedroetb/node-oauth2-server-example
 var express = require('express'),
-	bodyParser = require('body-parser'),
 	OAuth2Server = require('oauth2-server'),
 	Request = OAuth2Server.Request,
 	Response = OAuth2Server.Response;
 
 var app = express();
 
-app.use(bodyParser.urlencoded({ extended: true }));
-
-app.use(bodyParser.json());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.oauth = new OAuth2Server({
 	model: require('./model.js'),
@@ -30,7 +28,8 @@ var errorCode = 200;
 
 app.post('/', authenticateRequest, (req, res) => {
   res.status(errorCode).json({ message: `Returned status: ${errorCode}` });
-  console.log(`[${new Date().toISOString()}] ${req.body}: sending back ${errorCode}`);
+  console.log(req.body); // the posted data
+  console.log(`[${new Date().toISOString()}] sending back ${errorCode}`); 
 });
 
 app.put('/', (req, res) => {

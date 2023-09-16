@@ -14,7 +14,24 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.oau
 
 log "Sending messages to topic http-messages"
 playground topic produce -t http-messages --nb-messages 10 << 'EOF'
-%g
+{
+    "_meta": {
+        "topic": "",
+        "key": "",
+        "relationships": []
+    },
+    "nested": {
+        "phone": "faker.phone.imei()",
+        "website": "faker.internet.domainName()"
+    },
+    "id": "iteration.index",
+    "name": "faker.internet.userName()",
+    "email": "faker.internet.exampleEmail()",
+    "phone": "faker.phone.imei()",
+    "website": "faker.internet.domainName()",
+    "city": "faker.address.city()",
+    "company": "faker.company.name()"
+}
 EOF
 
 playground debug log-level set --package "org.apache.http" --level TRACE
@@ -29,7 +46,8 @@ playground connector create-or-update --connector http-sink << EOF
   "tasks.max": "1",
   "connector.class": "io.confluent.connect.http.HttpSinkConnector",
   "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-  "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+  "value.converter":"org.apache.kafka.connect.json.JsonConverter",
+  "value.converter.schemas.enable":"false",
   "confluent.topic.bootstrap.servers": "broker:9092",
   "confluent.topic.replication.factor": "1",
   "reporter.bootstrap.servers": "broker:9092",
@@ -42,7 +60,9 @@ playground connector create-or-update --connector http-sink << EOF
   "oauth2.token.url": "http://httpserver:9006/oauth/token",
   "oauth2.client.id": "confidentialApplication",
   "oauth2.client.secret": "topSecret",
-  "oauth2.token.property": "accessToken"
+  "oauth2.token.property": "accessToken",
+  "request.body.format" : "json",
+  "headers": "Content-Type: application/json"
 }
 EOF
 
