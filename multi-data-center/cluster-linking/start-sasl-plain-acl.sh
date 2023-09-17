@@ -143,3 +143,5 @@ seq -f "europe_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe ba
 set +e
 log "Delete the cluster link"
 docker container exec -i broker-europe kafka-cluster-links --bootstrap-server broker-europe:9092 --delete --link demo-link --command-config /tmp/superuser-client.properties
+
+exit 0
