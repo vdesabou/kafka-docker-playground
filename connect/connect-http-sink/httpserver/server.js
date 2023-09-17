@@ -14,13 +14,19 @@ var errorCode = 200;
 
 app.get('/', (req, res) => {
   res.status(errorCode).json({ message: `Returned status: ${errorCode}` });
-  console.log(req.body); // the posted data
+	console.log("headers:");
+	console.log(req.headers);
+	console.log("body:");
+	console.log(req.body);
   console.log(`[${new Date().toISOString()}] sending back ${errorCode}`); 
 });
 
 app.post('/', (req, res) => {
   res.status(errorCode).json({ message: `Returned status: ${errorCode}` });
-  console.log(req.body); // the posted data
+	console.log("headers:");
+	console.log(req.headers);
+	console.log("body:");
+	console.log(req.body);
   console.log(`[${new Date().toISOString()}] sending back ${errorCode}`);
 });
 

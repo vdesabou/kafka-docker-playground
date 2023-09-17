@@ -9,6 +9,11 @@ var app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} to ${req.url}`);
+  next();
+});
+
 app.oauth = new OAuth2Server({
 	model: require('./model.js'),
 	accessTokenLifetime: 60 * 60, // one hour valid
@@ -28,7 +33,10 @@ var errorCode = 200;
 
 app.post('/', authenticateRequest, (req, res) => {
   res.status(errorCode).json({ message: `Returned status: ${errorCode}` });
-  console.log(req.body); // the posted data
+  console.log("headers:");
+  console.log(req.headers);
+  console.log("body:");
+  console.log(req.body);
   console.log(`[${new Date().toISOString()}] sending back ${errorCode}`); 
 });
 
@@ -50,6 +58,11 @@ function obtainToken(req, res) {
 
 	var request = new Request(req);
 	var response = new Response(res);
+
+	console.log("headers:");
+	console.log(req.headers);
+	console.log("body:");
+	console.log(req.body);
 
 	return app.oauth.token(request, response)
 		.then(function(token) {

@@ -70,11 +70,45 @@ EOF
 sleep 10
 
 # create token, see https://github.com/pedroetb/node-oauth2-server-example#with-client_credentials-grant-1
-token=$(curl -X POST \
-  http://localhost:9006/oauth/token \
-  -H 'Content-Type: application/x-www-form-urlencoded' \
-  -H 'Authorization: Basic Y29uZmlkZW50aWFsQXBwbGljYXRpb246dG9wU2VjcmV0' \
-  -d 'grant_type=client_credentials&scope=any' | jq -r '.accessToken')
+# token=$(curl -X POST \
+#   http://localhost:9006/oauth/token \
+#   -H 'Content-Type: application/x-www-form-urlencoded' \
+#   -H 'Authorization: Basic Y29uZmlkZW50aWFsQXBwbGljYXRpb246dG9wU2VjcmV0' \
+#   -d 'grant_type=client_credentials&scope=any' | jq -r '.accessToken')
 
+# "oauth2.client.auth.mode": "headers"
+# [2023-09-17T07:50:23.898Z] POST to /oauth/token
+# headers:
+# {
+#   authorization: 'Basic Y29uZmlkZW50aWFsQXBwbGljYXRpb246dG9wU2VjcmV0',
+#   'content-type': 'application/x-www-form-urlencoded',
+#   'content-length': '39',
+#   host: 'httpserver:9006',
+#   connection: 'Keep-Alive',
+#   'user-agent': 'Apache-HttpClient/4.5.13 (Java/11.0.20)',
+#   'accept-encoding': 'gzip,deflate'
+# }
+# body:
+# { grant_type: 'client_credentials', scope: 'any' }
+
+
+# "oauth2.client.auth.mode": "url"
+# [2023-09-17T07:48:00.625Z] POST to /oauth/token
+# headers:
+# {
+#   'content-type': 'application/x-www-form-urlencoded',
+#   'content-length': '97',
+#   host: 'httpserver:9006',
+#   connection: 'Keep-Alive',
+#   'user-agent': 'Apache-HttpClient/4.5.13 (Java/11.0.20)',
+#   'accept-encoding': 'gzip,deflate'
+# }
+# body:
+# {
+#   grant_type: 'client_credentials',
+#   scope: 'any',
+#   client_id: 'confidentialApplication',
+#   client_secret: 'topSecret'
+# }
 
 playground topic consume --topic success-responses --min-expected-messages 10 --timeout 60
