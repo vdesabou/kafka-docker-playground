@@ -29,7 +29,7 @@ fi
 set +e
 if [[ -n "$all" ]]
 then
-    if git rev-parse --git-dir > /dev/null 2>&1
+    if [ -d .git ]
     then
         new_files=$(git status --porcelain 2>/dev/null  | grep "^?? " | cut -d " " -f2-)
         if [[ -n "$new_files" ]]
@@ -49,8 +49,15 @@ then
             exit 1
         fi
     else
-        logerror "❌ output folder is not managed by git, please clone repository using git clone"
-        exit 1
+        logwarn "output folder is not managed by git, creating a full tgz of $output_folder"
+        tar cvfz "$output_filename" * > /dev/null 2>&1
+        if [ -f $final_archive ]
+        then
+            log "📤 Exported archive is available: $final_archive"
+        else
+            logerror "❌ export failed as archive could not be created !"
+            exit 1
+        fi
     fi
 else
     # copy only current example
@@ -64,7 +71,7 @@ else
     test_file=$(cat /tmp/playground-run | awk '{ print $4}')
 
     if [ ! -f $test_file ]
-    then 
+    then
         logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
         logerror "Make sure to use <playground run> command !"
         exit 1
@@ -81,7 +88,7 @@ else
         exit 1
     fi
 
-    if git rev-parse --git-dir > /dev/null 2>&1
+    if [ -d .git ]
     then
         cd $test_file_directory
 
@@ -104,7 +111,14 @@ else
             exit 1
         fi
     else
-        logerror "❌ output folder is not managed by git, please clone repository using git clone"
-        exit 1
+        logwarn "output folder is not managed by git, creating a full tgz of $test_file_directory"
+        tar cvfz "$output_filename" $test_file_directory > /dev/null 2>&1
+        if [ -f $final_archive ]
+        then
+            log "📤 Exported archive is available: $final_archive"
+        else
+            logerror "❌ export failed as archive could not be created !"
+            exit 1
+        fi
     fi
 fi
