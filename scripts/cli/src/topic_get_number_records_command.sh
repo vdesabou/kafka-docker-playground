@@ -68,23 +68,35 @@ do
             exit 1
         fi
         tr -d '"' < /tmp/delta_configs/librdkafka.delta > /tmp/delta_configs/librdkafka_no_quotes_tmp.delta
+        sr_url=$(grep "schema.registry.url=" /tmp/delta_configs/librdkafka_no_quotes_tmp.delta | cut -d "=" -f2)
+        sr_url_hostname=$(echo $sr_url | cut -d "/" -f 3)
+        sr_auth=$(grep "basic.auth.user.info=" /tmp/delta_configs/librdkafka_no_quotes_tmp.delta | cut -d "=" -f2)
+        sr_username=$(echo $sr_auth | cut -d ":" -f 1)
+        sr_password=$(echo $sr_auth | cut -d ":" -f 2)
+        # sr_password_url_encoded=$(urlencode $sr_password)
         grep -v "basic.auth.user.info" /tmp/delta_configs/librdkafka_no_quotes_tmp.delta > /tmp/delta_configs/librdkafka_no_quotes.delta
+
+        case "${value_type}" in
+        avro)
+        docker run -i --network=host \
+                -v /tmp/delta_configs/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
+            confluentinc/cp-kcat:latest kcat \
+                -F /tmp/configuration/ccloud.properties \
+                -C -t $topic \
+                -s value=avro \
+                -r https://$sr_username:$sr_password@$sr_url_hostname \
+                -e -q > /tmp/result.log 2>/dev/null
+            ;;
+        *)
         docker run -i --network=host \
                 -v /tmp/delta_configs/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
             confluentinc/cp-kcat:latest kcat \
                 -F /tmp/configuration/ccloud.properties \
                 -C -t $topic \
                 -e -q > /tmp/result.log 2>/dev/null
-        case "${value_type}" in
-        avro|protobuf|json-schema)
-            variable=$(wc -l /tmp/result.log | awk '{print $1}')
-            result=$((variable / 3))
-            echo $result
-            ;;
-        *)
-            wc -l /tmp/result.log | awk '{print $1}'
         ;;
         esac
+        wc -l /tmp/result.log | awk '{print $1}'
     else
         if ! version_gt $TAG_BASE "6.9.9" && [ "$security" != "" ]
         then
