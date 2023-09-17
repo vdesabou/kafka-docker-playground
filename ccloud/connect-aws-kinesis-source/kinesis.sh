@@ -113,7 +113,7 @@ playground connector create-or-update --connector kinesis-source << EOF
 }
 EOF
 
-sleep 10
+sleep 60
 
 log "Verify we have received the data in $KINESIS_TOPIC topic"
 playground topic consume --topic $KINESIS_TOPIC --min-expected-messages 1 --timeout 60
