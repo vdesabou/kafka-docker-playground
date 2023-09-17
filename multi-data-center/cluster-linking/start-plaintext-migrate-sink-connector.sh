@@ -32,8 +32,9 @@ EOF
 
 log "Creating FileStream Sink connector in US"
 docker exec connect-us \
-playground connector create-or-update --connector filestream-sink << EOF
-{
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
                "tasks.max": "1",
                "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
                "topics": "demo",
@@ -41,8 +42,8 @@ playground connector create-or-update --connector filestream-sink << EOF
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                "value.converter.schemas.enable": "false"
-          }
-EOF
+          }' \
+     http://localhost:8083/connectors/filestream-sink/config | jq .
 
 
 sleep 5
@@ -71,8 +72,9 @@ docker exec broker-europe kafka-consumer-groups --bootstrap-server broker-europe
 # connect-filestream-sink demo            0          1               1               0               -               -               -
 log "Creating FileStream Sink connector in Europe"
 docker exec connect-europe \
-playground connector create-or-update --connector filestream-sink << EOF
-{
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
                "tasks.max": "1",
                "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
                "topics": "demo",
@@ -80,8 +82,8 @@ playground connector create-or-update --connector filestream-sink << EOF
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                "value.converter.schemas.enable": "false"
-          }
-EOF
+          }' \
+     http://localhost:8083/connectors/filestream-sink/config | jq .
 
 
 sleep 5
