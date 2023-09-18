@@ -193,7 +193,7 @@ playground connector create-or-update --connector cdc-oracle-source-pdb-cloud --
      "oracle.username": "C##MYUSER",
      "oracle.password": "mypassword",
      "start.from":"snapshot",
-
+     "enable.metrics.collection": "true",
      "redo.log.topic.name": "redo-log-topic",
      "redo.log.consumer.bootstrap.servers": "\${file:/data:bootstrap.servers}",
      "redo.log.consumer.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\${file:/data:sasl.username}\" password=\"\${file:/data:sasl.password}\";",
