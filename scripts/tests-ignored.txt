@@ -11,3 +11,6 @@ cdc-oracle21-pdb-table-mtls-db-auth.sh
 start-ldaps.sh
 update_run.sh
 get_logminer_memory_stats.sh
+# filepulse always getting issue with buckets
+s3-csv.sh
+s3-json.sh
