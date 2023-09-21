@@ -1228,7 +1228,7 @@ playground_repro_bootstrap_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--producer, -p PRODUCER-TYPE")"
-    printf "    ♨️ Java producer type to use\n    \n    One of avro, avro-with-key, protobuf, protobuf-with-key, json-schema,\n    json-schema-with-key\n    \n    🎓 Tip: 'with-key' will also produce key with selected converter, otherwise\n    LongConverter is used\n"
+    printf "    ♨️ Java producer type to use\n    \n    One of avro, avro-with-key, protobuf, protobuf-with-key, json-schema,\n    json-schema-with-key\n    \n    🎓 Tip: Most of times, it's much simpler to use 'playground topic produce'.\n    Use java producer only if you have very specific requirements such as\n    specifying record timestamp, use key with schema or to do perf testing\n    \n    🎓 Tip: 'with-key' will also produce key with selected converter, otherwise\n    LongConverter is used\n"
     printf "    Allowed: none, avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key\n"
     printf "    Default: none\n"
     echo
