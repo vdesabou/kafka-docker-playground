@@ -298,6 +298,7 @@ There is also a Confluent Cloud version available [here](https://github.com/vdes
 ## 👾 Other Playgrounds
 
 - 📃 [How to write logs to files when using docker-compose](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/write-logs-to-files) :other/write-logs-to-files:
+- 📃 [How to write connect logs to a kafka topic](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/write-logs-to-topic) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 📢 [Publish logs to kafka with Elastic Filebeat](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/filebeat-to-kafka) :other/filebeat-to-kafka:
 - 💠 [.NET](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/client-dotnet) client (producer/consumer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 🐚 [KafkaJS](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/client-kafkajs) client (producer/consumer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
