@@ -1,0 +1,4 @@
+*.tgz
+*.txt
+current_scn
+debezium-connector-oracle

@@ -1,0 +1,38 @@
+---
+version: '3.5'
+services:
+
+  sql-datagen:
+    build:
+      context: ../../connect/connect-debezium-oracle19-source/oracle-datagen/
+    hostname: sql-datagen
+    container_name: sql-datagen
+    profiles:
+    - sql_datagen
+    volumes:
+      - ../../connect/connect-debezium-oracle19-source/oracle-datagen//target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
+
+  oracle:
+    # You need to build this image first, following the instructions at
+    # https://github.com/oracle/docker-images/blob/master/OracleDatabase/SingleInstance/README.md
+    image: ${ORACLE_IMAGE}
+    hostname: oracle
+    container_name: oracle
+    ports:
+      - "1521:1521"
+    volumes:
+      - ../../connect/connect-debezium-oracle19-source/ora-setup-scripts-cdb-table:/opt/oracle/scripts/setup
+    environment:
+      ORACLE_PWD: Admin123
+
+  connect:
+    volumes:
+      - ../../connect/connect-debezium-oracle19-source/debezium-connector-oracle:/usr/share/confluent-hub-components/debezium-connector-oracle/jars
+      - ../../connect/connect-debezium-oracle19-source/ojdbc8.jar:/usr/share/confluent-hub-components/debezium-connector-oracle/lib/ojdbc8.jar
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - oracle
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components
