@@ -41,9 +41,9 @@ set +e
 playground topic delete --topic MyKafkaTopicName
 set -e
 
-docker-compose build
-docker-compose down -v --remove-orphans
-docker-compose up -d
+docker compose build
+docker compose down -v --remove-orphans
+docker compose up -d
 
 sleep 5
 

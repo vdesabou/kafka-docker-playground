@@ -43,7 +43,7 @@ log "🔐 Generate keys and certificates used for SSL"
 docker run -u0 --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "/tmp/certs-create.sh > /dev/null 2>&1 $CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
 cd ${DIR}
 
-docker-compose -f "${PWD}/docker-compose.yml" up -d
+docker compose -f "${PWD}/docker-compose.yml" up -d
 
 log "Creating topic rest-proxy-security-plugin in Confluent Cloud (auto.create.topics.enable=false)"
 set +e

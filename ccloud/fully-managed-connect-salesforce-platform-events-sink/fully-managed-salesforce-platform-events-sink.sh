@@ -56,9 +56,9 @@ set +e
 playground topic delete --topic sfdc-platform-events
 set -e
 
-docker-compose build
-docker-compose down -v --remove-orphans
-docker-compose up -d
+docker compose build
+docker compose down -v --remove-orphans
+docker compose up -d
 
 sleep 5
 

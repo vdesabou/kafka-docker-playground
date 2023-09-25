@@ -326,7 +326,7 @@ function version_gt() {
 }
 
 function get_docker_compose_version() {
-  docker-compose version | grep "^docker-compose version" | cut -d' ' -f3 | cut -d',' -f1
+  docker compose version | grep "^Docker Compose version" | cut -d' ' -f3 | cut -d',' -f1
 }
 
 function check_docker_compose_version() {
@@ -334,7 +334,7 @@ function check_docker_compose_version() {
   DOCKER_COMPOSE_VER=$(get_docker_compose_version)
 
   if version_gt $REQUIRED_DOCKER_COMPOSE_VER $DOCKER_COMPOSE_VER; then
-    logerror "docker-compose version ${REQUIRED_DOCKER_COMPOSE_VER} or greater is required. Current reported version: ${DOCKER_COMPOSE_VER}"
+    logerror "docker compose version ${REQUIRED_DOCKER_COMPOSE_VER} or greater is required. Current reported version: ${DOCKER_COMPOSE_VER}"
     exit 1
   fi
 }

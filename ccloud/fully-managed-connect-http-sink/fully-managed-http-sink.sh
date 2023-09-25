@@ -14,9 +14,9 @@ else
      exit 1
 fi
 
-docker-compose -f docker-compose.noauth.yml build
-docker-compose -f docker-compose.noauth.yml down -v --remove-orphans
-docker-compose -f docker-compose.noauth.yml up -d
+docker compose -f docker-compose.noauth.yml build
+docker compose -f docker-compose.noauth.yml down -v --remove-orphans
+docker compose -f docker-compose.noauth.yml up -d
 
 sleep 5
 

@@ -18,9 +18,9 @@ do
      set -e
 done
 
-docker-compose down -v --remove-orphans
-docker-compose build
-docker-compose up -d
+docker compose down -v --remove-orphans
+docker compose build
+docker compose up -d
 
 sleep 30
 

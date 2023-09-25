@@ -27,9 +27,9 @@ function wait_for_um () {
 }
 
 
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.yml" down -v --remove-orphans
+docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.yml" down -v --remove-orphans
 log "Starting up SAG Universal Messaging container to get Client libraries"
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.yml" up -d umserver
+docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.yml" up -d umserver
 
 wait_for_um
 log "Universal Messaging Realm Server is up"
@@ -43,7 +43,7 @@ then
      docker cp umserver:/opt/softwareag/UniversalMessaging/lib/nJMS.jar nJMS.jar
 fi
 
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.yml" up -d
+docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.yml" up -d
 
 ../../scripts/wait-for-connect-and-controlcenter.sh
 

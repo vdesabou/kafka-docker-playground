@@ -74,9 +74,9 @@ AZURE_SAS_KEY=$(az servicebus namespace authorization-rule keys list \
     --namespace-name $AZURE_SERVICE_BUS_NAMESPACE \
     --name "RootManageSharedAccessKey" | jq -r '.primaryKey')
 
-docker-compose build
-docker-compose down -v --remove-orphans
-docker-compose up -d
+docker compose build
+docker compose down -v --remove-orphans
+docker compose up -d
 
 
 connector_name="AzureServiceBusSource"

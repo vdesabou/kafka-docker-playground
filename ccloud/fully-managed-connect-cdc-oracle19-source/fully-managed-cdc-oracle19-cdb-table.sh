@@ -43,9 +43,9 @@ playground topic delete --topic ORCLCDB.C__MYUSER.CUSTOMERS
 playground topic delete --topic redo-log-topic
 set -e
 
-docker-compose build
-docker-compose down -v --remove-orphans
-docker-compose up -d
+docker compose build
+docker compose down -v --remove-orphans
+docker compose up -d
 
 # Verify Oracle DB has started within MAX_WAIT seconds
 MAX_WAIT=2500

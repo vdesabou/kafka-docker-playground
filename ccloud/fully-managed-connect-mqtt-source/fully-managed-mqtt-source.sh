@@ -41,9 +41,9 @@ set +e
 playground topic delete --topic mqtt-source-1
 set -e
 
-docker-compose build
-docker-compose down -v --remove-orphans
-docker-compose up -d
+docker compose build
+docker compose down -v --remove-orphans
+docker compose up -d
 
 sleep 5
 

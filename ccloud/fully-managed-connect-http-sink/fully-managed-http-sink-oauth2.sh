@@ -37,9 +37,9 @@ else
      exit 1
 fi
 
-docker-compose -f docker-compose.oauth2.yml build
-docker-compose -f docker-compose.oauth2.yml down -v --remove-orphans
-docker-compose -f docker-compose.oauth2.yml up -d
+docker compose -f docker-compose.oauth2.yml build
+docker compose -f docker-compose.oauth2.yml down -v --remove-orphans
+docker compose -f docker-compose.oauth2.yml up -d
 
 sleep 5
 

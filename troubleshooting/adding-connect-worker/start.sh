@@ -37,7 +37,7 @@ curl --request GET \
   --header 'accept: application/json' | jq
 
 log "Adding a second connect worker"
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.yml" -f "${PWD}/docker-compose.add-connect-worker.yml" up -d
+docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.yml" -f "${PWD}/docker-compose.add-connect-worker.yml" up -d
 
 ../../scripts/wait-for-connect-and-controlcenter.sh connect2 $@
 

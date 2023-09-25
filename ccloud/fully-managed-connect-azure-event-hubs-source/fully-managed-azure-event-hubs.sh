@@ -80,9 +80,9 @@ AZURE_EVENT_CONNECTION_STRING=$(az eventhubs namespace authorization-rule keys l
     --namespace-name $AZURE_EVENT_HUBS_NAMESPACE \
     --name "RootManageSharedAccessKey" | jq -r '.primaryConnectionString')
     
-docker-compose build
-docker-compose down -v --remove-orphans
-docker-compose up -d
+docker compose build
+docker compose down -v --remove-orphans
+docker compose up -d
 
 connector_name="AzureEventHubsSource"
 set +e

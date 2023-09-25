@@ -25,8 +25,8 @@ log "Cleanup schemas-security-plugin topic"
 playground topic delete --topic schemas-security-plugin
 set -e
 
-docker-compose -f "${PWD}/docker-compose.yml" down
-docker-compose -f "${PWD}/docker-compose.yml" up -d
+docker compose -f "${PWD}/docker-compose.yml" down
+docker compose -f "${PWD}/docker-compose.yml" up -d
 
 sleep 10
 

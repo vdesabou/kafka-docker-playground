@@ -9,7 +9,7 @@ export ENABLE_KSQLDB=true
 
 #${DIR}/../../environment/sasl-plain/start.sh "${PWD}/docker-compose.plaintext.autherror.yml"
 
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-plain/docker-compose.yml -f ${DIR}/docker-compose.plaintext.autherror.yml --profile control-center --profile ksqldb up -d zookeeper broker schema-registry connect
+docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-plain/docker-compose.yml -f ${DIR}/docker-compose.plaintext.autherror.yml --profile control-center --profile ksqldb up -d zookeeper broker schema-registry connect
 
 ../../scripts/wait-for-connect-and-controlcenter.sh
 
@@ -28,7 +28,7 @@ docker exec broker kafka-acls --bootstrap-server broker:9092 --add --allow-princ
 # Allow ksqlDB to produce to the command topic:
 docker exec broker kafka-acls --bootstrap-server broker:9092 --add --allow-principal User:ksqldb --producer --transactional-id '*' --topic _confluent-ksql-playground__command_topic --command-config /tmp/client.properties
 
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-plain/docker-compose.yml -f ${DIR}/docker-compose.plaintext.autherror.yml --profile control-center --profile ksqldb up -d
+docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-plain/docker-compose.yml -f ${DIR}/docker-compose.plaintext.autherror.yml --profile control-center --profile ksqldb up -d
 
 log "Sleep 60 seconds to let ksql to start"
 sleep 60

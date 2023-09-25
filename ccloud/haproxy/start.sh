@@ -203,9 +203,9 @@ fi
 log "Generating haproxy.cfg file based on Kafkacat results"
 generate_haproxy_config
 
-docker-compose -f "${PWD}/docker-compose.yml" down
-docker-compose -f "${PWD}/docker-compose.yml" build
-docker-compose -f "${PWD}/docker-compose.yml" up -d
+docker compose -f "${PWD}/docker-compose.yml" down
+docker compose -f "${PWD}/docker-compose.yml" build
+docker compose -f "${PWD}/docker-compose.yml" up -d
 
 log "Blocking traffic for all endpoints"
 block_traffic_for_all_endpoints

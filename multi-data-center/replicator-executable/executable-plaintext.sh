@@ -19,7 +19,7 @@ log "Sending sales in US cluster"
 seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-us kafka-console-producer --broker-list localhost:9092 --topic sales_US
 
 log "Starting replicator instances"
-docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml -f docker-compose.mdc-plaintext.replicator.yml up -d
+docker compose -f ../../environment/mdc-plaintext/docker-compose.yml -f docker-compose.mdc-plaintext.replicator.yml up -d
 
 ../../scripts/wait-for-connect-and-controlcenter.sh replicator-us $@
 ../../scripts/wait-for-connect-and-controlcenter.sh replicator-europe $@
