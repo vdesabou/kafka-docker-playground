@@ -144,16 +144,32 @@ insert into FOO (f1) values ('value2');
 insert into FOO (f1) values ('value3');
 EOF
 
+log "Create a view MYVIEWFORFOO"
+docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
+USE ROLE $PLAYGROUND_CONNECTOR_ROLE;
+USE DATABASE $PLAYGROUND_DB;
+USE SCHEMA PUBLIC;
+USE WAREHOUSE $PLAYGROUND_WAREHOUSE;
+create or replace view MYVIEWFORFOO as select id,f1, convert_timezone('UTC', update_ts) as update_ts from FOO;
+EOF
+
+docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
+USE ROLE SECURITYADMIN;
+grant select on view $PLAYGROUND_DB.PUBLIC.MYVIEWFORFOO to role $PLAYGROUND_CONNECTOR_ROLE;
+EOF
 
 # https://docs.snowflake.com/en/user-guide/jdbc-configure.html#jdbc-driver-connection-string
 CONNECTION_URL="jdbc:snowflake://$SNOWFLAKE_ACCOUNT_NAME.snowflakecomputing.com/?warehouse=$PLAYGROUND_WAREHOUSE&db=$PLAYGROUND_DB&role=$PLAYGROUND_CONNECTOR_ROLE&schema=PUBLIC&user=$PLAYGROUND_USER&private_key_file=/tmp/snowflake_key.p8&private_key_file_pwd=confluent&tracing=ALL"
+VIEW="$PLAYGROUND_DB.PUBLIC.MYVIEWFORFOO"
+
 log "Creating JDBC Snowflake Source connector"
 playground connector create-or-update --connector jdbc-snowflake-source << EOF
 {
      "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
      "tasks.max": "1",
      "connection.url": "$CONNECTION_URL",
-     "table.whitelist": "FOO",
+     "table.whitelist": "$VIEW",
+     "table.types": "VIEW",
      "mode": "timestamp+incrementing",
      "timestamp.column.name": "UPDATE_TS",
      "incrementing.column.name": "ID",
@@ -166,26 +182,5 @@ EOF
 
 sleep 15
 
-log "Verifying topic snowflake-FOO"
-playground topic consume --topic snowflake-FOO --min-expected-messages 3 --timeout 60
-
-
-# FIXTHIS: infinite loop
-# 17:41:36 ℹ️ ✨ Display content of topic snowflake-FOO, it contains 15 messages
-# 17:41:36 ℹ️ 🔮🙅 topic is not using any schema for key
-# 17:41:36 ℹ️ 🔮🔰 topic is using avro for value
-# CreateTime: 2023-09-26 17:41:12.102|Partition:0|Offset:0|NO_HEADERS|null|{"ID":{"long":1},"F1":{"string":"value1"},"UPDATE_TS":{"long":1695717662246}}|schema_id=1
-# CreateTime: 2023-09-26 17:41:12.105|Partition:0|Offset:1|NO_HEADERS|null|{"ID":{"long":2},"F1":{"string":"value2"},"UPDATE_TS":{"long":1695717663244}}|schema_id=1
-# CreateTime: 2023-09-26 17:41:12.105|Partition:0|Offset:2|NO_HEADERS|null|{"ID":{"long":3},"F1":{"string":"value3"},"UPDATE_TS":{"long":1695717664026}}|schema_id=1
-# CreateTime: 2023-09-26 17:41:17.117|Partition:0|Offset:3|NO_HEADERS|null|{"ID":{"long":1},"F1":{"string":"value1"},"UPDATE_TS":{"long":1695717662246}}|schema_id=1
-# CreateTime: 2023-09-26 17:41:17.117|Partition:0|Offset:4|NO_HEADERS|null|{"ID":{"long":2},"F1":{"string":"value2"},"UPDATE_TS":{"long":1695717663244}}|schema_id=1
-# CreateTime: 2023-09-26 17:41:17.117|Partition:0|Offset:5|NO_HEADERS|null|{"ID":{"long":3},"F1":{"string":"value3"},"UPDATE_TS":{"long":1695717664026}}|schema_id=1
-# CreateTime: 2023-09-26 17:41:22.626|Partition:0|Offset:6|NO_HEADERS|null|{"ID":{"long":1},"F1":{"string":"value1"},"UPDATE_TS":{"long":1695717662246}}|schema_id=1
-# CreateTime: 2023-09-26 17:41:22.626|Partition:0|Offset:7|NO_HEADERS|null|{"ID":{"long":2},"F1":{"string":"value2"},"UPDATE_TS":{"long":1695717663244}}|schema_id=1
-# CreateTime: 2023-09-26 17:41:22.627|Partition:0|Offset:8|NO_HEADERS|null|{"ID":{"long":3},"F1":{"string":"value3"},"UPDATE_TS":{"long":1695717664026}}|schema_id=1
-# CreateTime: 2023-09-26 17:41:28.91|Partition:0|Offset:9|NO_HEADERS|null|{"ID":{"long":1},"F1":{"string":"value1"},"UPDATE_TS":{"long":1695717662246}}|schema_id=1
-# CreateTime: 2023-09-26 17:41:28.92|Partition:0|Offset:10|NO_HEADERS|null|{"ID":{"long":2},"F1":{"string":"value2"},"UPDATE_TS":{"long":1695717663244}}|schema_id=1
-# CreateTime: 2023-09-26 17:41:28.92|Partition:0|Offset:11|NO_HEADERS|null|{"ID":{"long":3},"F1":{"string":"value3"},"UPDATE_TS":{"long":1695717664026}}|schema_id=1
-# CreateTime: 2023-09-26 17:41:33.533|Partition:0|Offset:12|NO_HEADERS|null|{"ID":{"long":1},"F1":{"string":"value1"},"UPDATE_TS":{"long":1695717662246}}|schema_id=1
-# CreateTime: 2023-09-26 17:41:33.533|Partition:0|Offset:13|NO_HEADERS|null|{"ID":{"long":2},"F1":{"string":"value2"},"UPDATE_TS":{"long":1695717663244}}|schema_id=1
-# CreateTime: 2023-09-26 17:41:33.533|Partition:0|Offset:14|NO_HEADERS|null|{"
+log "Verifying topic snowflake-MYVIEWFORFOO"
+playground topic consume --topic snowflake-MYVIEWFORFOO --min-expected-messages 3 --timeout 60
