@@ -169,3 +169,23 @@ sleep 15
 log "Verifying topic snowflake-FOO"
 playground topic consume --topic snowflake-FOO --min-expected-messages 3 --timeout 60
 
+
+# FIXTHIS: infinite loop
+# 17:41:36 ℹ️ ✨ Display content of topic snowflake-FOO, it contains 15 messages
+# 17:41:36 ℹ️ 🔮🙅 topic is not using any schema for key
+# 17:41:36 ℹ️ 🔮🔰 topic is using avro for value
+# CreateTime: 2023-09-26 17:41:12.102|Partition:0|Offset:0|NO_HEADERS|null|{"ID":{"long":1},"F1":{"string":"value1"},"UPDATE_TS":{"long":1695717662246}}|schema_id=1
+# CreateTime: 2023-09-26 17:41:12.105|Partition:0|Offset:1|NO_HEADERS|null|{"ID":{"long":2},"F1":{"string":"value2"},"UPDATE_TS":{"long":1695717663244}}|schema_id=1
+# CreateTime: 2023-09-26 17:41:12.105|Partition:0|Offset:2|NO_HEADERS|null|{"ID":{"long":3},"F1":{"string":"value3"},"UPDATE_TS":{"long":1695717664026}}|schema_id=1
+# CreateTime: 2023-09-26 17:41:17.117|Partition:0|Offset:3|NO_HEADERS|null|{"ID":{"long":1},"F1":{"string":"value1"},"UPDATE_TS":{"long":1695717662246}}|schema_id=1
+# CreateTime: 2023-09-26 17:41:17.117|Partition:0|Offset:4|NO_HEADERS|null|{"ID":{"long":2},"F1":{"string":"value2"},"UPDATE_TS":{"long":1695717663244}}|schema_id=1
+# CreateTime: 2023-09-26 17:41:17.117|Partition:0|Offset:5|NO_HEADERS|null|{"ID":{"long":3},"F1":{"string":"value3"},"UPDATE_TS":{"long":1695717664026}}|schema_id=1
+# CreateTime: 2023-09-26 17:41:22.626|Partition:0|Offset:6|NO_HEADERS|null|{"ID":{"long":1},"F1":{"string":"value1"},"UPDATE_TS":{"long":1695717662246}}|schema_id=1
+# CreateTime: 2023-09-26 17:41:22.626|Partition:0|Offset:7|NO_HEADERS|null|{"ID":{"long":2},"F1":{"string":"value2"},"UPDATE_TS":{"long":1695717663244}}|schema_id=1
+# CreateTime: 2023-09-26 17:41:22.627|Partition:0|Offset:8|NO_HEADERS|null|{"ID":{"long":3},"F1":{"string":"value3"},"UPDATE_TS":{"long":1695717664026}}|schema_id=1
+# CreateTime: 2023-09-26 17:41:28.91|Partition:0|Offset:9|NO_HEADERS|null|{"ID":{"long":1},"F1":{"string":"value1"},"UPDATE_TS":{"long":1695717662246}}|schema_id=1
+# CreateTime: 2023-09-26 17:41:28.92|Partition:0|Offset:10|NO_HEADERS|null|{"ID":{"long":2},"F1":{"string":"value2"},"UPDATE_TS":{"long":1695717663244}}|schema_id=1
+# CreateTime: 2023-09-26 17:41:28.92|Partition:0|Offset:11|NO_HEADERS|null|{"ID":{"long":3},"F1":{"string":"value3"},"UPDATE_TS":{"long":1695717664026}}|schema_id=1
+# CreateTime: 2023-09-26 17:41:33.533|Partition:0|Offset:12|NO_HEADERS|null|{"ID":{"long":1},"F1":{"string":"value1"},"UPDATE_TS":{"long":1695717662246}}|schema_id=1
+# CreateTime: 2023-09-26 17:41:33.533|Partition:0|Offset:13|NO_HEADERS|null|{"ID":{"long":2},"F1":{"string":"value2"},"UPDATE_TS":{"long":1695717663244}}|schema_id=1
+# CreateTime: 2023-09-26 17:41:33.533|Partition:0|Offset:14|NO_HEADERS|null|{"
