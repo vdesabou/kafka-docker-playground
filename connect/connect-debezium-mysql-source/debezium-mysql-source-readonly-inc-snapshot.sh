@@ -135,34 +135,34 @@ log "Adding customers table to the connector"
 
 playground connector create-or-update --connector debezium-mysql-source << EOF
 {
-               "connector.class": "io.debezium.connector.mysql.MySqlConnector",
-                    "tasks.max": "1",
-                    "database.hostname": "mysql",
-                    "database.port": "3306",
-                    "database.user": "debezium",
-                    "database.password": "dbz",
-                    "database.server.id": "223344",
-                    "database.server.name": "server1",
+  "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+  "tasks.max": "1",
+  "database.hostname": "mysql",
+  "database.port": "3306",
+  "database.user": "debezium",
+  "database.password": "dbz",
+  "database.server.id": "223344",
+  "database.server.name": "server1",
 
-                    "database.names" : "mydb",
-                    "_comment": "old version before 2.x",
-                    "database.server.name": "server1",
-                    "database.history.kafka.bootstrap.servers": "broker:9092",
-                    "database.history.kafka.topic": "schema-changes.mydb",
-                    "_comment": "new version since 2.x",
-                    "topic.prefix": "server1",
-                    "schema.history.internal.kafka.bootstrap.servers": "broker:9092",
-                    "schema.history.internal.kafka.topic": "schema-changes.mydb",
+  "database.names" : "mydb",
+  "_comment": "old version before 2.x",
+  "database.server.name": "server1",
+  "database.history.kafka.bootstrap.servers": "broker:9092",
+  "database.history.kafka.topic": "schema-changes.mydb",
+  "_comment": "new version since 2.x",
+  "topic.prefix": "server1",
+  "schema.history.internal.kafka.bootstrap.servers": "broker:9092",
+  "schema.history.internal.kafka.topic": "schema-changes.mydb",
 
-                    "table.include.list": "mydb.team,mydb.customers",
-                    "read.only": "true",
-                    "signal.kafka.topic": "dbz-signals",
-                    "signal.kafka.bootstrap.servers": "broker:9092",
-                    "transforms": "RemoveDots",
-                    "transforms.RemoveDots.type": "org.apache.kafka.connect.transforms.RegexRouter",
-                    "transforms.RemoveDots.regex": "(.*)\\\\.(.*)\\\\.(.*)",
-                    "transforms.RemoveDots.replacement": "\$1_\$2_\$3"
-          }
+  "table.include.list": "mydb.team,mydb.customers",
+  "read.only": "true",
+  "signal.kafka.topic": "dbz-signals",
+  "signal.kafka.bootstrap.servers": "broker:9092",
+  "transforms": "RemoveDots",
+  "transforms.RemoveDots.type": "org.apache.kafka.connect.transforms.RegexRouter",
+  "transforms.RemoveDots.regex": "(.*)\\\\.(.*)\\\\.(.*)",
+  "transforms.RemoveDots.replacement": "\$1_\$2_\$3"
+  }
 EOF
 
 log "insert a record in customers"
