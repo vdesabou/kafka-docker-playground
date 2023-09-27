@@ -21,7 +21,7 @@ services:
       - schema-registry
       - ibmmq
     volumes:
-        - ../../connect/connect-ibm-mq-source/com.ibm.mq.allclient.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq/lib/com.ibm.mq.allclient.jar
-        - ../../connect/connect-ibm-mq-source/jms.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq/lib/jms.jar
+      - ../../connect/connect-ibm-mq-source/com.ibm.mq.allclient-9.3.3.0.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq/lib/com.ibm.mq.allclient-9.3.3.0.jar
+      - ../../connect/connect-ibm-mq-source/jms-1.1.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq/lib/jms-1.1.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq

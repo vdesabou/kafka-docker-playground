@@ -72,3 +72,4 @@ github_ssh_key_file
 ._github_ssh_key_file
 confluent-hub
 *.jfr
+.idea
