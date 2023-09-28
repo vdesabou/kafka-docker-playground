@@ -237,7 +237,10 @@ do
   if [ ! -n "$tail" ]
   then
     nottailing1="--from-beginning --max-messages $nb_messages"
-    nottailing2="timeout $timeout"
+    if [[ ! -n "$timestamp_field" ]]
+    then
+      nottailing2="timeout $timeout"
+    fi
   fi
 
   if [ "$max_messages" != "50" ]
