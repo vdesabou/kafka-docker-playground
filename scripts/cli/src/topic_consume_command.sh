@@ -288,8 +288,10 @@ do
 
   if [[ -n "$timestamp_field" ]]
   then
-     latency_csv="$tmp_dir/latency.csv"
-     latency_png="$tmp_dir/latency.png"
+    rm -rf /tmp/latency
+    mkdir -p /tmp/latency
+    latency_csv="/tmp/latency/latency.csv"
+    latency_png="/tmp/latency/latency.png"
   fi
   found=0
   first_record=1
@@ -424,7 +426,7 @@ done
 if [[ -n "$timestamp_field" ]]
 then
   log "Plot data using gnuplot, see ${latency_png}"
-  docker run --rm -i -v $tmp_dir:/work remuslazar/gnuplot -e \
+  docker run --rm -i -v /tmp/latency:/work remuslazar/gnuplot -e \
   "
   set grid;
   set datafile separator ',';

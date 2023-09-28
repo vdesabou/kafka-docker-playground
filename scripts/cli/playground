@@ -5075,7 +5075,7 @@ function version_gt() {
 }
 
 function get_docker_compose_version() {
-  docker-compose version | grep "^docker-compose version" | cut -d' ' -f3 | cut -d',' -f1
+  docker compose version | grep "^Docker Compose version" | cut -d' ' -f3 | cut -d',' -f1
 }
 
 function check_docker_compose_version() {
@@ -5083,7 +5083,7 @@ function check_docker_compose_version() {
   DOCKER_COMPOSE_VER=$(get_docker_compose_version)
 
   if version_gt $REQUIRED_DOCKER_COMPOSE_VER $DOCKER_COMPOSE_VER; then
-    logerror "docker-compose version ${REQUIRED_DOCKER_COMPOSE_VER} or greater is required. Current reported version: ${DOCKER_COMPOSE_VER}"
+    logerror "docker compose version ${REQUIRED_DOCKER_COMPOSE_VER} or greater is required. Current reported version: ${DOCKER_COMPOSE_VER}"
     exit 1
   fi
 }
@@ -11705,8 +11705,10 @@ playground_topic_consume_command() {
 
     if [[ -n "$timestamp_field" ]]
     then
-       latency_csv="$tmp_dir/latency.csv"
-       latency_png="$tmp_dir/latency.png"
+      rm -rf /tmp/latency
+      mkdir -p /tmp/latency
+      latency_csv="/tmp/latency/latency.csv"
+      latency_png="/tmp/latency/latency.png"
     fi
     found=0
     first_record=1
@@ -11841,7 +11843,7 @@ playground_topic_consume_command() {
   if [[ -n "$timestamp_field" ]]
   then
     log "Plot data using gnuplot, see ${latency_png}"
-    docker run --rm -i -v $tmp_dir:/work remuslazar/gnuplot -e \
+    docker run --rm -i -v /tmp/latency:/work remuslazar/gnuplot -e \
     "
     set grid;
     set datafile separator ',';
