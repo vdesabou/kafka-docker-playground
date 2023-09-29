@@ -1,0 +1,2587 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Kafka resource usage and throughput",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "gnetId": 721,
+  "graphTooltip": 0,
+  "id": 8,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": true,
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 144,
+      "panels": [
+        {
+          "datasource": "Prometheus",
+          "description": "Maximum lag in messages between the replicas on the destination cluster and the leader replica on the source cluster. Provides an indication of overall cluster link health and a relative measure of whether the destination cluster is lagging behind.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 1
+          },
+          "id": 146,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "kafka_server_cluster_link_fetcher_manager_maxlag{link_name=~\"$link\",env=~\"$env\",instance=~\"$instance\"}",
+              "interval": "",
+              "legendFormat": "{{link_name}}-{{instance}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Max Lag",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "description": "Number of dead threads of type ClusterLinkThread, where a dead thread is indicative of an issue with fetching from the source cluster for a partition.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 1
+          },
+          "id": 147,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "kafka_server_cluster_link_fetcher_manager_deadthreadcount{link_name=~\"$link\",env=~\"$env\",instance=~\"$instance\"}",
+              "interval": "",
+              "legendFormat": "{{link_name}}-{{instance}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Dead Thread Count",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 9
+          },
+          "id": 148,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "kafka_server_cluster_link_fetcher_manager_totalfetchrate{link_name=~\"$link\",env=~\"$env\",instance=~\"$instance\"}",
+              "interval": "",
+              "legendFormat": "{{link_name}}-{{instance}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Total Fetch Rate",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "description": "Number of failed mirror partitions for which the broker is leader. A partition may be in a failed state if the source partition’s epoch has gone backwards; for example, if the topic was recreated.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 9
+          },
+          "id": 149,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "kafka_server_cluster_link_fetcher_manager_failedpartitionscount{link_name=~\"$link\",env=~\"$env\",instance=~\"$instance\"}",
+              "interval": "",
+              "legendFormat": "{{link_name}}-{{instance}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Failed Partitions Count",
+          "type": "timeseries"
+        }
+      ],
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "refId": "A"
+        }
+      ],
+      "title": "Cluster Link Fetcher",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 1
+      },
+      "id": 134,
+      "panels": [
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 2
+          },
+          "id": 136,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "kafka_server_replicamanager_throttledclusterlinkreplicaspersec{env=~\"$env\",instance=~\"$instance\"}",
+              "interval": "",
+              "legendFormat": "{{instance}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Throttled Link Replica Per Sec",
+          "type": "timeseries"
+        }
+      ],
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "refId": "A"
+        }
+      ],
+      "title": "Replica Manager",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 2
+      },
+      "id": 42,
+      "panels": [
+        {
+          "datasource": "Prometheus",
+          "description": "Provides metrics on delayed operations on the cluster link.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 3
+          },
+          "id": 132,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {},
+            "textMode": "auto"
+          },
+          "pluginVersion": "8.5.16",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(kafka_server_delayedoperationpurgatory_purgatorysize{delayedoperation=\"ClusterLink\"})",
+              "interval": "",
+              "legendFormat": "DelayedOperations",
+              "refId": "A"
+            }
+          ],
+          "title": "Delayed operations ",
+          "type": "stat"
+        },
+        {
+          "datasource": "Prometheus",
+          "description": "Depending on the request name, provides statistics on requests on the cluster link, including requests and response times, time requests wait in the queue, size of requests (bytes), and so forth.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 3
+          },
+          "id": 131,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(kafka_network_requestmetrics_requestbytes{request=\"CreateClusterLinks\"})",
+              "interval": "",
+              "legendFormat": "CreateClusterLinks",
+              "refId": "A"
+            },
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(kafka_network_requestmetrics_requestbytes{request=\"DeleteClusterLinks\"})",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "DeleteClusterLinks",
+              "refId": "B"
+            },
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(kafka_network_requestmetrics_requestbytes{request=\"ListClusterLinks\"})",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "ListClusterLinks",
+              "refId": "C"
+            }
+          ],
+          "title": "Request Bytes",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "description": "Depending on the request name, provides statistics on requests on the cluster link, including requests and response times, time requests wait in the queue, size of requests (bytes), and so forth.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Bytes/s",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "links": [],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "Bps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 11
+          },
+          "id": 129,
+          "links": [],
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "lastNotNull",
+                "max"
+              ],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_totaltimems{request=\"CreateClusterLinks\"}[5m]))",
+              "format": "time_series",
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "CreateClusterLinks",
+              "metric": "kafka_server_brokertopicmetrics_bytesinpersec",
+              "refId": "A",
+              "step": 4
+            },
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_totaltimems{request=\"DeleteClusterLinks\"}[5m]))",
+              "format": "time_series",
+              "hide": false,
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "DeleteClusterLinks",
+              "metric": "kafka_server_brokertopicmetrics_bytesinpersec",
+              "refId": "B",
+              "step": 4
+            },
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_totaltimems{request=\"ListClusterLinks\"}[5m]))",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "ListClusterLinks",
+              "refId": "C"
+            }
+          ],
+          "title": "Total Time Ms",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "description": "Depending on the request name, provides statistics on requests on the cluster link, including requests and response times, time requests wait in the queue, size of requests (bytes), and so forth.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Bytes/s",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "links": [],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "Bps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 11
+          },
+          "id": 84,
+          "links": [],
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "lastNotNull",
+                "max"
+              ],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_localtimems{request=\"CreateClusterLinks\"}[5m]))",
+              "format": "time_series",
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "CreateClusterLinks",
+              "metric": "kafka_server_brokertopicmetrics_bytesinpersec",
+              "refId": "A",
+              "step": 4
+            },
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_localtimems{request=\"DeleteClusterLinks\"}[5m]))",
+              "format": "time_series",
+              "hide": false,
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "DeleteClusterLinks",
+              "metric": "kafka_server_brokertopicmetrics_bytesinpersec",
+              "refId": "B",
+              "step": 4
+            },
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_localtimems{request=\"ListClusterLinks\"}[5m]))",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "ListClusterLinks",
+              "refId": "C"
+            }
+          ],
+          "title": "Local Time Ms",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "description": "Depending on the request name, provides statistics on requests on the cluster link, including requests and response times, time requests wait in the queue, size of requests (bytes), and so forth.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Bytes/s",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "links": [],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "Bps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 11
+          },
+          "id": 124,
+          "links": [],
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "lastNotNull",
+                "max"
+              ],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_requestqueuetimems{request=\"CreateClusterLinks\"}[5m]))",
+              "format": "time_series",
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "CreateClusterLinks",
+              "metric": "kafka_server_brokertopicmetrics_bytesinpersec",
+              "refId": "A",
+              "step": 4
+            },
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_requestqueuetimems{request=\"DeleteClusterLinks\"}[5m]))",
+              "format": "time_series",
+              "hide": false,
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "DeleteClusterLinks",
+              "metric": "kafka_server_brokertopicmetrics_bytesinpersec",
+              "refId": "B",
+              "step": 4
+            },
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_requestqueuetimems{request=\"ListClusterLinks\"}[5m]))",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "ListClusterLinks",
+              "refId": "C"
+            }
+          ],
+          "title": "Request Queue Time Ms",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "description": "Depending on the request name, provides statistics on requests on the cluster link, including requests and response times, time requests wait in the queue, size of requests (bytes), and so forth.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Bytes/s",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "links": [],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "Bps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 19
+          },
+          "id": 125,
+          "links": [],
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "lastNotNull",
+                "max"
+              ],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_responsequeuetimems{request=\"CreateClusterLinks\"}[5m]))",
+              "format": "time_series",
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "CreateClusterLinks",
+              "metric": "kafka_server_brokertopicmetrics_bytesinpersec",
+              "refId": "A",
+              "step": 4
+            },
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_responsequeuetimems{request=\"DeleteClusterLinks\"}[5m]))",
+              "format": "time_series",
+              "hide": false,
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "DeleteClusterLinks",
+              "metric": "kafka_server_brokertopicmetrics_bytesinpersec",
+              "refId": "B",
+              "step": 4
+            },
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_responsequeuetimems{request=\"ListClusterLinks\"}[5m]))",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "ListClusterLinks",
+              "refId": "C"
+            }
+          ],
+          "title": "Response Queue Time Ms",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "description": "Depending on the request name, provides statistics on requests on the cluster link, including requests and response times, time requests wait in the queue, size of requests (bytes), and so forth.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Bytes/s",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "links": [],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "Bps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 19
+          },
+          "id": 123,
+          "links": [],
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "lastNotNull",
+                "max"
+              ],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_remotetimems{request=\"CreateClusterLinks\"}[5m]))",
+              "format": "time_series",
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "CreateClusterLinks",
+              "metric": "kafka_server_brokertopicmetrics_bytesinpersec",
+              "refId": "A",
+              "step": 4
+            },
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_remotetimems{request=\"DeleteClusterLinks\"}[5m]))",
+              "format": "time_series",
+              "hide": false,
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "DeleteClusterLinks",
+              "metric": "kafka_server_brokertopicmetrics_bytesinpersec",
+              "refId": "B",
+              "step": 4
+            },
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_remotetimems{request=\"ListClusterLinks\"}[5m]))",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "ListClusterLinks",
+              "refId": "C"
+            }
+          ],
+          "title": "Remote Time Ms",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "description": "Depending on the request name, provides statistics on requests on the cluster link, including requests and response times, time requests wait in the queue, size of requests (bytes), and so forth.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Bytes/s",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "links": [],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "Bps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 19
+          },
+          "id": 127,
+          "links": [],
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "lastNotNull",
+                "max"
+              ],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_responsesendtimems{request=\"CreateClusterLinks\"}[5m]))",
+              "format": "time_series",
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "CreateClusterLinks",
+              "metric": "kafka_server_brokertopicmetrics_bytesinpersec",
+              "refId": "A",
+              "step": 4
+            },
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_responsesendtimems{request=\"DeleteClusterLinks\"}[5m]))",
+              "format": "time_series",
+              "hide": false,
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "DeleteClusterLinks",
+              "metric": "kafka_server_brokertopicmetrics_bytesinpersec",
+              "refId": "B",
+              "step": 4
+            },
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_responsesendtimems{request=\"ListClusterLinks\"}[5m]))",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "ListClusterLinks",
+              "refId": "C"
+            }
+          ],
+          "title": "Response Send Time Ms",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "description": "Depending on the request name, provides statistics on requests on the cluster link, including requests and response times, time requests wait in the queue, size of requests (bytes), and so forth.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "Bytes/s",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "links": [],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "Bps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 27
+          },
+          "id": 128,
+          "links": [],
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "lastNotNull",
+                "max"
+              ],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_throttletimems{request=\"CreateClusterLinks\"}[5m]))",
+              "format": "time_series",
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "CreateClusterLinks",
+              "metric": "kafka_server_brokertopicmetrics_bytesinpersec",
+              "refId": "A",
+              "step": 4
+            },
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_throttletimems{request=\"DeleteClusterLinks\"}[5m]))",
+              "format": "time_series",
+              "hide": false,
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "DeleteClusterLinks",
+              "metric": "kafka_server_brokertopicmetrics_bytesinpersec",
+              "refId": "B",
+              "step": 4
+            },
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_throttletimems{request=\"ListClusterLinks\"}[5m]))",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "ListClusterLinks",
+              "refId": "C"
+            }
+          ],
+          "title": "Throttle Time Ms",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "description": "Depending on the request name, provides statistics on requests on the cluster link, including requests and response times, time requests wait in the queue, size of requests (bytes), and so forth.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "Bytes/s",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "links": [],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "Bps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 27
+          },
+          "id": 126,
+          "links": [],
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "lastNotNull",
+                "max"
+              ],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_responsesendiotimems{request=\"CreateClusterLinks\"}[5m]))",
+              "format": "time_series",
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "CreateClusterLinks",
+              "metric": "kafka_server_brokertopicmetrics_bytesinpersec",
+              "refId": "A",
+              "step": 4
+            },
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_responsesendiotimems{request=\"DeleteClusterLinks\"}[5m]))",
+              "format": "time_series",
+              "hide": false,
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "DeleteClusterLinks",
+              "metric": "kafka_server_brokertopicmetrics_bytesinpersec",
+              "refId": "B",
+              "step": 4
+            },
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "sum(rate(kafka_network_requestmetrics_responsesendiotimems{request=\"ListClusterLinks\"}[5m]))",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "ListClusterLinks",
+              "refId": "C"
+            }
+          ],
+          "title": "Response Send IO Time Ms",
+          "type": "timeseries"
+        }
+      ],
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "refId": "A"
+        }
+      ],
+      "title": "Request Metrics ",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 138,
+      "panels": [
+        {
+          "datasource": "Prometheus",
+          "description": "Number of mirrored partitions that are blocked on fetching data due to issues on the source cluster.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 4
+          },
+          "id": 140,
+          "options": {
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true,
+            "text": {}
+          },
+          "pluginVersion": "8.5.16",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "kafka_server_replicamanager_blockedonmirrorsourcepartitioncount{env=~\"$env\"}",
+              "interval": "",
+              "legendFormat": " {{instance}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Mirrored Partitions Blocked",
+          "type": "gauge"
+        },
+        {
+          "datasource": "Prometheus",
+          "description": "Number of mirrored partitions that are under replicated.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 4
+          },
+          "id": 141,
+          "options": {
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true,
+            "text": {}
+          },
+          "pluginVersion": "8.5.16",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum(kafka_server_replicamanager_underreplicatedmirrorpartitions{env=~\"$env\"})",
+              "interval": "",
+              "legendFormat": "",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Mirrored Topic under replicated.",
+          "type": "gauge"
+        },
+        {
+          "datasource": "Prometheus",
+          "description": "Number of mirrored partitions that are under min ISR.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 12
+          },
+          "id": 142,
+          "options": {
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true,
+            "text": {}
+          },
+          "pluginVersion": "8.5.16",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum(kafka_server_replicamanager_underminisrmirrorpartitioncount{env=~\"$env\"})",
+              "interval": "",
+              "legendFormat": "",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Mirrored Topic under min isr.",
+          "type": "gauge"
+        },
+        {
+          "datasource": "Prometheus",
+          "description": "Number of actively mirrored partitions for which the broker is leader",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 12
+          },
+          "id": 150,
+          "options": {
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true,
+            "text": {}
+          },
+          "pluginVersion": "8.5.16",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum(kafka_server_cluster_link_metrics_mirror_partition_count{link_name=~\"$link\",env=~\"$env\"})",
+              "interval": "",
+              "legendFormat": "{{link_name}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Mirror Partition Count",
+          "type": "gauge"
+        },
+        {
+          "datasource": "Prometheus",
+          "description": "Rate per second and total number of consumer offsets committed for a cluster link.\n\nHelps verify if offset migration is happening correctly, a critical metric for failover readiness scenarios.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 20
+          },
+          "id": 151,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "kafka_server_cluster_link_metrics_consumer_offset_committed_rate{link_name=~\"$link\",env=~\"$env\",instance=~\"$instance\"}",
+              "interval": "",
+              "legendFormat": "{{link_name}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Consumer offsets committed rate",
+          "type": "timeseries"
+        }
+      ],
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "refId": "A"
+        }
+      ],
+      "title": "Destination Cluster",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 153,
+      "panels": [
+        {
+          "datasource": "Prometheus",
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 5
+          },
+          "id": 154,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "kafka_server_cluster_link_source_metrics_fetch_request_byte_total{env=~\"$env\",instance=~\"$instance\"}",
+              "interval": "",
+              "legendFormat": "{{link_id}}",
+              "refId": "A"
+            }
+          ],
+          "title": "request-byte-total",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 5
+          },
+          "id": 156,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "kafka_server_cluster_link_source_metrics_fetch_request_total{env=~\"$env\",instance=~\"$instance\"}",
+              "interval": "",
+              "legendFormat": "{{link_id}}",
+              "refId": "A"
+            }
+          ],
+          "title": "request-total",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "description": "\n\nHelps verify if offset migration is happening correctly, a critical metric for failover readiness scenarios.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 13
+          },
+          "id": 155,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "kafka_server_cluster_link_source_metrics_fetch_response_byte_total{env=~\"$env\",instance=~\"$instance\"}",
+              "interval": "",
+              "legendFormat": "{{link_id}}",
+              "refId": "A"
+            }
+          ],
+          "title": "response-byte-total",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 13
+          },
+          "id": 157,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "exemplar": true,
+              "expr": "kafka_server_cluster_link_source_metrics_fetch_response_time_ns_avg{env=~\"$env\",instance=~\"$instance\"}",
+              "interval": "",
+              "legendFormat": "{{link_id}}",
+              "refId": "A"
+            }
+          ],
+          "title": "response-time-ns-avg",
+          "type": "timeseries"
+        }
+      ],
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "refId": "A"
+        }
+      ],
+      "title": "Source Cluster",
+      "type": "row"
+    }
+  ],
+  "refresh": "",
+  "revision": 1,
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "dev",
+          "value": "dev"
+        },
+        "datasource": "Prometheus",
+        "definition": "label_values(env)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Environment",
+        "multi": false,
+        "name": "env",
+        "options": [],
+        "query": {
+          "query": "label_values(env)",
+          "refId": "Prometheus-env-Variable-Query"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "Prometheus",
+        "definition": "label_values(kafka_server_replicamanager_blockedonmirrorsourcepartitioncount{env=\"${env}\"}, instance)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Instance",
+        "multi": true,
+        "name": "instance",
+        "options": [],
+        "query": {
+          "query": "label_values(kafka_server_replicamanager_blockedonmirrorsourcepartitioncount{env=\"${env}\"}, instance)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": "",
+        "current": {
+          "selected": true,
+          "text": [
+            "0.95"
+          ],
+          "value": [
+            "0.95"
+          ]
+        },
+        "datasource": "Prometheus",
+        "definition": "label_values(quantile)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Percentile",
+        "multi": true,
+        "name": "percentile",
+        "options": [],
+        "query": {
+          "query": "label_values(quantile)",
+          "refId": "Prometheus-percentile-Variable-Query"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "Prometheus",
+        "definition": "label_values(kafka_log_log_size,topic)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "topic",
+        "multi": true,
+        "name": "topic",
+        "options": [],
+        "query": {
+          "query": "label_values(kafka_log_log_size,topic)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "Prometheus",
+        "definition": "label_values(kafka_server_cluster_link_fetcher_manager_maxlag,link_name)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "link",
+        "multi": true,
+        "name": "link",
+        "options": [],
+        "query": {
+          "query": "label_values(kafka_server_cluster_link_fetcher_manager_maxlag,link_name)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-12h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "1h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d"
+    ]
+  },
+  "timezone": "browser",
+  "title": "Cluster Linking",
+  "uid": "GxJsYfT4k",
+  "version": 11,
+  "weekStart": ""
+}

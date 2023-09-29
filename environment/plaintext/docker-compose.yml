@@ -160,6 +160,8 @@ services:
     ports:
       - "8081:8081"
       - "10001:10001"
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
     environment:
       SCHEMA_REGISTRY_JMX_PORT: 10001
       SCHEMA_REGISTRY_JMX_HOSTNAME: localhost
@@ -172,8 +174,10 @@ services:
       # SCHEMA_REGISTRY_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
       # https://github.com/confluentinc/schema-registry/issues/2213
       SCHEMA_REGISTRY_SCHEMA_PROVIDERS_AVRO_VALIDATE_DEFAULTS: "true"
+      EXTRA_ARGS: ${GRAFANA_AGENT_SR}
       PYROSCOPE_APPLICATION_NAME: "schema-registry"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
+
   connect:
     image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
     hostname: connect
@@ -394,6 +398,8 @@ services:
     ports:
       - "8088:8088"
       - "10003:10003"
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
     profiles:
     - ksqldb
     environment:
@@ -421,6 +427,9 @@ services:
       # KSQL_CONFLUENT_TELEMETRY_ENABLED: 'true'
       # KSQL_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
       # KSQL_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
+      EXTRA_ARGS: ${GRAFANA_AGENT_KSQLDB}
+      PYROSCOPE_APPLICATION_NAME: "ksqldb-server"
+      PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
   ksqldb-cli:
     image: ${CP_KSQL_CLI_IMAGE}
@@ -475,7 +484,7 @@ services:
       # CONTROL_CENTER_ID: 32
 
   kafka-lag-exporter:
-    image: lightbend/kafka-lag-exporter:0.6.8
+    image: seglo/kafka-lag-exporter:0.7.1
     hostname: kafka-lag-exporter
     container_name: kafka-lag-exporter
     profiles:
@@ -497,7 +506,7 @@ services:
       - 9093:9093
 
   node-exporter:
-    image: prom/node-exporter:latest
+    image: prom/node-exporter:v1.2.2
     hostname: node-exporter
     container_name: node-exporter
     profiles:
@@ -507,13 +516,13 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     command:
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.ignored-mount-points'
-      - '^(aufs|proc|nsfs|shm|cgroup|tmpfs|binfmt_misc|debugfs|devpts|fusectl|hugetlbfs|fuse.lxcfs|mqueue|pstore|securityfs|sysfs|autofs|devtmpfs|configfs)'
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.ignored-mount-points"
+      - "^(aufs|proc|nsfs|shm|cgroup|tmpfs|binfmt_misc|debugfs|devpts|fusectl|hugetlbfs|fuse.lxcfs|mqueue|pstore|securityfs|sysfs|autofs|devtmpfs|configfs)"
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.29.2
     hostname: prometheus
     container_name: prometheus
     profiles:
@@ -528,13 +537,15 @@ services:
       - alertmanager
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:8.1.3
     hostname: grafana
     container_name: grafana
     profiles:
       - "grafana"
     environment:
-      GF_INSTALL_PLUGINS: grafana-piechart-panel
+      - "GF_SECURITY_ADMIN_USER=admin"
+      - "GF_SECURITY_ADMIN_PASSWORD=password"
+      - "GF_USERS_ALLOW_SIGN_UP=false"
     ports:
       - 3000:3000
     volumes:

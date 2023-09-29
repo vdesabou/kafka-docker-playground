@@ -96,12 +96,16 @@ then
   export GRAFANA_AGENT_CONNECT=""
   export GRAFANA_AGENT_PRODUCER=""
   export GRAFANA_AGENT_CONSUMER=""
+  export GRAFANA_AGENT_SR=""
+  export GRAFANA_AGENT_KSQLDB=""
 else
-  export GRAFANA_AGENT_ZK="-javaagent:/usr/share/jmx_exporter/pyroscope-0.11.2.jar -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/zookeeper.yml"
-  export GRAFANA_AGENT_BROKER="-javaagent:/usr/share/jmx_exporter/pyroscope-0.11.2.jar -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/broker.yml"
-  export GRAFANA_AGENT_CONNECT="-javaagent:/usr/share/jmx_exporter/pyroscope-0.11.2.jar -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/connect.yml"
-  export GRAFANA_AGENT_PRODUCER="-javaagent:/usr/share/jmx_exporter/pyroscope-0.11.2.jar -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/kafka-producer.yml"
-  export GRAFANA_AGENT_CONSUMER="-javaagent:/usr/share/jmx_exporter/pyroscope-0.11.2.jar -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/kafka-consumer.yml"
+  export GRAFANA_AGENT_ZK="-javaagent:/usr/share/jmx_exporter/pyroscope-0.11.2.jar -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.20.0.jar=1234:/usr/share/jmx_exporter/zookeeper.yml"
+  export GRAFANA_AGENT_BROKER="-javaagent:/usr/share/jmx_exporter/pyroscope-0.11.2.jar -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.20.0.jar=1234:/usr/share/jmx_exporter/kafka_broker.yml"
+  export GRAFANA_AGENT_CONNECT="-javaagent:/usr/share/jmx_exporter/pyroscope-0.11.2.jar -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.20.0.jar=1234:/usr/share/jmx_exporter/kafka_connect.yml"
+  export GRAFANA_AGENT_PRODUCER="-javaagent:/usr/share/jmx_exporter/pyroscope-0.11.2.jar -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.20.0.jar=1234:/usr/share/jmx_exporter/kafka-producer.yml"
+  export GRAFANA_AGENT_CONSUMER="-javaagent:/usr/share/jmx_exporter/pyroscope-0.11.2.jar -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.20.0.jar=1234:/usr/share/jmx_exporter/kafka-consumer.yml"
+  export GRAFANA_AGENT_SR="-javaagent:/usr/share/jmx_exporter/pyroscope-0.11.2.jar -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.20.0.jar=1234:/usr/share/jmx_exporter/confluent_schemaregistry.yml"
+  export GRAFANA_AGENT_KSQLDB="-javaagent:/usr/share/jmx_exporter/pyroscope-0.11.2.jar -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.20.0.jar=1234:/usr/share/jmx_exporter/confluent_ksql.yml"
 fi
 
 # Migrate SimpleAclAuthorizer to AclAuthorizer #1276
