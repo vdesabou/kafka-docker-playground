@@ -23,7 +23,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 11,
-  "iteration": 1696026802426,
+  "iteration": 1696027435780,
   "links": [],
   "panels": [
     {
@@ -404,46 +404,18 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"current-scn\"}",
-          "format": "time_series",
+          "expr": "sum(kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"offset-scn\"}) by (connector) - sum(kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"current-scn\"}) by (connector)",
           "hide": false,
           "instant": false,
           "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "current-scn",
+          "legendFormat": "{{connector}}",
           "refId": "A"
-        },
-        {
-          "exemplar": true,
-          "expr": "kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"offset-scn\"}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "offset-scn",
-          "refId": "B"
         }
       ],
       "timeFrom": null,
       "timeShift": null,
       "title": "current-scn - offset-scn",
-      "transformations": [
-        {
-          "id": "calculateField",
-          "options": {
-            "alias": " {{connector}}",
-            "binary": {
-              "left": "current-scn",
-              "operator": "-",
-              "reducer": "sum",
-              "right": "offset-scn"
-            },
-            "mode": "binary",
-            "reduce": {
-              "reducer": "sum"
-            },
-            "replaceFields": true
-          }
-        }
-      ],
+      "transformations": [],
       "type": "stat"
     },
     {
@@ -458,7 +430,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
-            "drawStyle": "bars",
+            "drawStyle": "line",
             "fillOpacity": 0,
             "gradientMode": "none",
             "hideFrom": {
@@ -503,7 +475,7 @@
         "x": 12,
         "y": 15
       },
-      "id": 230,
+      "id": 235,
       "links": [],
       "options": {
         "legend": {
@@ -519,45 +491,18 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"current-scn\"}",
-          "format": "time_series",
+          "expr": "sum(kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"offset-scn\"}) by (connector) - sum(kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"current-scn\"}) by (connector)",
           "hide": false,
           "instant": false,
           "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "current-scn",
+          "legendFormat": "{{connector}}",
           "refId": "A"
-        },
-        {
-          "exemplar": true,
-          "expr": "kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"offset-scn\"}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "offset-scn",
-          "refId": "B"
         }
       ],
       "timeFrom": null,
       "timeShift": null,
       "title": "current-scn - offset-scn",
-      "transformations": [
-        {
-          "id": "calculateField",
-          "options": {
-            "binary": {
-              "left": "current-scn",
-              "operator": "-",
-              "reducer": "sum",
-              "right": "offset-scn"
-            },
-            "mode": "binary",
-            "reduce": {
-              "reducer": "sum"
-            },
-            "replaceFields": true
-          }
-        }
-      ],
+      "transformations": [],
       "type": "timeseries"
     },
     {
@@ -610,45 +555,20 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"logmining-session-end-scn\"}",
+          "expr": "sum(kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"logmining-session-end-scn\"}) by (connector) - sum(kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"logmining-session-start-scn\"}) by (connector)",
           "format": "time_series",
           "hide": false,
           "instant": false,
           "interval": "",
           "intervalFactor": 1,
-          "legendFormat": "logmining-session-end-scn",
+          "legendFormat": "{{connector}}",
           "refId": "A"
-        },
-        {
-          "exemplar": true,
-          "expr": "kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"logmining-session-start-scn\"}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "logmining-session-start-scn",
-          "refId": "B"
         }
       ],
       "timeFrom": null,
       "timeShift": null,
       "title": "Current Log Mining Range (mining_end_scn - mining_start_scn)",
-      "transformations": [
-        {
-          "id": "calculateField",
-          "options": {
-            "binary": {
-              "left": "logmining-session-end-scn",
-              "operator": "-",
-              "reducer": "sum",
-              "right": "logmining-session-start-scn"
-            },
-            "mode": "binary",
-            "reduce": {
-              "reducer": "sum"
-            },
-            "replaceFields": true
-          }
-        }
-      ],
+      "transformations": [],
       "type": "stat"
     },
     {
@@ -708,7 +628,7 @@
         "x": 12,
         "y": 22
       },
-      "id": 231,
+      "id": 236,
       "links": [],
       "options": {
         "legend": {
@@ -724,45 +644,20 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"logmining-session-end-scn\"}",
+          "expr": "sum(kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"logmining-session-end-scn\"}) by (connector) - sum(kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"logmining-session-start-scn\"}) by (connector)",
           "format": "time_series",
           "hide": false,
           "instant": false,
           "interval": "",
           "intervalFactor": 1,
-          "legendFormat": "logmining-session-end-scn",
+          "legendFormat": "{{connector}}",
           "refId": "A"
-        },
-        {
-          "exemplar": true,
-          "expr": "kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"logmining-session-start-scn\"}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "logmining-session-start-scn",
-          "refId": "B"
         }
       ],
       "timeFrom": null,
       "timeShift": null,
       "title": "Log Mining Range (mining_end_scn - mining_start_scn)",
-      "transformations": [
-        {
-          "id": "calculateField",
-          "options": {
-            "binary": {
-              "left": "logmining-session-end-scn",
-              "operator": "-",
-              "reducer": "sum",
-              "right": "logmining-session-start-scn"
-            },
-            "mode": "binary",
-            "reduce": {
-              "reducer": "sum"
-            },
-            "replaceFields": true
-          }
-        }
-      ],
+      "transformations": [],
       "type": "timeseries"
     },
     {
@@ -1195,7 +1090,7 @@
       {
         "allValue": null,
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "All",
           "value": "$__all"
         },
@@ -1259,7 +1154,7 @@
     ]
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {
@@ -1290,5 +1185,5 @@
   "timezone": "",
   "title": "Confluent Oracle CDC",
   "uid": "AEaSQ97yz",
-  "version": 5
+  "version": 8
 }
