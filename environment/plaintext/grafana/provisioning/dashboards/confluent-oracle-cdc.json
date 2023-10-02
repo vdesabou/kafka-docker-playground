@@ -22,8 +22,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 11,
-  "iteration": 1696175464688,
+  "id": 6,
+  "iteration": 1696239041326,
   "links": [],
   "panels": [
     {
@@ -222,7 +222,7 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 9,
+        "w": 4,
         "x": 0,
         "y": 8
       },
@@ -314,8 +314,8 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 15,
-        "x": 9,
+        "w": 20,
+        "x": 4,
         "y": 8
       },
       "id": 235,
@@ -373,74 +373,8 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 6,
+        "w": 4,
         "x": 0,
-        "y": 15
-      },
-      "id": 232,
-      "links": [],
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.1.3",
-      "targets": [
-        {
-          "exemplar": true,
-          "expr": "sum(kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"logmining-session-end-scn\"}) by (connector) - sum(kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"logmining-session-start-scn\"}) by (connector)",
-          "format": "time_series",
-          "hide": false,
-          "instant": false,
-          "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "{{connector}}",
-          "refId": "A"
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Current Log Mining Range (mining_end_scn - mining_start_scn)",
-      "transformations": [],
-      "type": "stat"
-    },
-    {
-      "datasource": "Prometheus",
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "links": [],
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 3,
-        "x": 6,
         "y": 15
       },
       "id": 237,
@@ -476,7 +410,7 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Count of redo log files in logminer session",
+      "title": "Count of redo log files in log miner session",
       "type": "stat"
     },
     {
@@ -532,8 +466,162 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 15,
-        "x": 9,
+        "w": 7,
+        "x": 4,
+        "y": 15
+      },
+      "id": 239,
+      "links": [],
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "pluginVersion": "8.1.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"logmining-session-redo-log-files-count\"}",
+          "format": "time_series",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "{{connector}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Count of redo log files in log miner session",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 11,
+        "y": 15
+      },
+      "id": 232,
+      "links": [],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.1.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"logmining-session-end-scn\"}) by (connector) - sum(kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"logmining-session-start-scn\"}) by (connector)",
+          "format": "time_series",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "{{connector}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Current Log Mining Range (mining_end_scn - mining_start_scn)",
+      "transformations": [],
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 9,
+        "x": 15,
         "y": 15
       },
       "id": 236,
@@ -593,7 +681,7 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 3,
+        "w": 4,
         "x": 0,
         "y": 22
       },
@@ -652,79 +740,14 @@
               }
             ]
           },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 3,
-        "x": 3,
-        "y": 22
-      },
-      "id": 238,
-      "links": [],
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.1.3",
-      "targets": [
-        {
-          "exemplar": true,
-          "expr": "kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"count_processed_transactions_in_cache\"}",
-          "format": "time_series",
-          "hide": false,
-          "instant": false,
-          "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "{{connector}}",
-          "refId": "A"
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Processed Transactions in Cache",
-      "type": "stat"
-    },
-    {
-      "datasource": "Prometheus",
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "links": [],
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
           "unit": "ms"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 7,
-        "w": 3,
-        "x": 6,
+        "w": 4,
+        "x": 4,
         "y": 22
       },
       "id": 228,
@@ -761,6 +784,71 @@
       "timeFrom": null,
       "timeShift": null,
       "title": "Current Age of Oldest Transaction in Buffer",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 8,
+        "y": 22
+      },
+      "id": 238,
+      "links": [],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.1.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"count_processed_transactions_in_cache\"}",
+          "format": "time_series",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "{{connector}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Processed Transactions in Cache",
       "type": "stat"
     },
     {
@@ -816,8 +904,8 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 15,
-        "x": 9,
+        "w": 12,
+        "x": 12,
         "y": 22
       },
       "id": 226,
@@ -1284,7 +1372,7 @@
     ]
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {
@@ -1315,5 +1403,5 @@
   "timezone": "",
   "title": "Confluent Oracle CDC",
   "uid": "AEaSQ97yz",
-  "version": 8
+  "version": 3
 }
