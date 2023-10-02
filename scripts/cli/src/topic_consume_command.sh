@@ -243,7 +243,7 @@ do
     fi
   fi
 
-  if [ "$max_messages" != "50" ]
+  if [ "$max_messages" != "10" ]
   then
     nottailing2=""
   fi

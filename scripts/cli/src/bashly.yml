@@ -1112,9 +1112,9 @@ commands:
         arg: max-messages
         validate: integer
         required: false
-        default: "50"
+        default: "10"
         help: |-
-          Max number of messages to display (default is 50)
+          Max number of messages to display (default is 10)
       - long: --min-expected-messages
         arg: min-expected-messages
         validate: integer

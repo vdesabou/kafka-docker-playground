@@ -2673,8 +2673,8 @@ playground_topic_consume_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--max-messages MAX-MESSAGES")"
-    printf "    Max number of messages to display (default is 50)\n"
-    printf "    Default: 50\n"
+    printf "    Max number of messages to display (default is 10)\n"
+    printf "    Default: 10\n"
     echo
 
     # :flag.usage
@@ -11660,7 +11660,7 @@ playground_topic_consume_command() {
       fi
     fi
 
-    if [ "$max_messages" != "50" ]
+    if [ "$max_messages" != "10" ]
     then
       nottailing2=""
     fi
@@ -19214,7 +19214,7 @@ playground_topic_consume_parse_requirements() {
   done
 
   # :command.default_assignments
-  [[ -n ${args['--max-messages']:-} ]] || args['--max-messages']="50"
+  [[ -n ${args['--max-messages']:-} ]] || args['--max-messages']="10"
   [[ -n ${args['--min-expected-messages']:-} ]] || args['--min-expected-messages']=""
   [[ -n ${args['--grep']:-} ]] || args['--grep']=""
   [[ -n ${args['--timeout']:-} ]] || args['--timeout']="60"
