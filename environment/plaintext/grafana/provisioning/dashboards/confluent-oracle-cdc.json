@@ -22,8 +22,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 6,
-  "iteration": 1696239041326,
+  "id": 1,
+  "iteration": 1696242847587,
   "links": [],
   "panels": [
     {
@@ -1403,5 +1403,5 @@
   "timezone": "",
   "title": "Confluent Oracle CDC",
   "uid": "AEaSQ97yz",
-  "version": 3
+  "version": 2
 }
