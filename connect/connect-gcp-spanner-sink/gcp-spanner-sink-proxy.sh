@@ -103,19 +103,19 @@ docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -
 log "Creating GCP Spanner Sink connector"
 playground connector create-or-update --connector gcp-spanner-sink << EOF
 {
-               "connector.class": "io.confluent.connect.gcp.spanner.SpannerSinkConnector",
-               "tasks.max" : "1",
-               "topics" : "products",
-               "auto.create" : "true",
-               "table.name.format" : "kafka_\${topic}",
-               "gcp.spanner.instance.id" : "$INSTANCE",
-               "gcp.spanner.database.id" : "$DATABASE",
-               "gcp.spanner.credentials.path" : "/tmp/keyfile.json",
-               "gcp.spanner.proxy.url": "https://nginx-proxy:8888",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+  "connector.class": "io.confluent.connect.gcp.spanner.SpannerSinkConnector",
+  "tasks.max" : "1",
+  "topics" : "products",
+  "auto.create" : "true",
+  "table.name.format" : "kafka_\${topic}",
+  "gcp.spanner.instance.id" : "$INSTANCE",
+  "gcp.spanner.database.id" : "$DATABASE",
+  "gcp.spanner.credentials.path" : "/tmp/keyfile.json",
+  "gcp.spanner.proxy.url": "https://nginx-proxy:8888",
+  "confluent.license": "",
+  "confluent.topic.bootstrap.servers": "broker:9092",
+  "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 60

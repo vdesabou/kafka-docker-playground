@@ -38,29 +38,29 @@ fi
 log "Creating HDFS Sink connector"
 playground connector create-or-update --connector hdfs3-sink << EOF
 {
-               "connector.class":"io.confluent.connect.hdfs3.Hdfs3SinkConnector",
-               "tasks.max":"1",
-               "topics":"test_hdfs",
-               "store.url":"hdfs://hadoop.kerberos-demo.local:9000",
-               "flush.size":"3",
-               "hadoop.conf.dir":"/etc/hadoop/",
-               "partitioner.class":"io.confluent.connect.storage.partitioner.FieldPartitioner",
-               "partition.field.name":"f1",
-               "rotate.interval.ms":"120000",
-               "hadoop.home":"/usr/local/hadoop",
-               "logs.dir":"/logs",
-               "hdfs.authentication.kerberos": "true",
-               "connect.hdfs.principal": "connect/connect.kerberos-demo.local@EXAMPLE.COM",
-               "connect.hdfs.keytab": "/tmp/connect.keytab",
-               "hdfs.namenode.principal": "nn/hadoop.kerberos-demo.local@EXAMPLE.COM",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "key.converter":"org.apache.kafka.connect.storage.StringConverter",
-               "value.converter":"io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url":"http://schema-registry:8081",
-               "schema.compatibility":"BACKWARD"
-          }
+  "connector.class":"io.confluent.connect.hdfs3.Hdfs3SinkConnector",
+  "tasks.max":"1",
+  "topics":"test_hdfs",
+  "store.url":"hdfs://hadoop.kerberos-demo.local:9000",
+  "flush.size":"3",
+  "hadoop.conf.dir":"/etc/hadoop/",
+  "partitioner.class":"io.confluent.connect.storage.partitioner.FieldPartitioner",
+  "partition.field.name":"f1",
+  "rotate.interval.ms":"120000",
+  "hadoop.home":"/usr/local/hadoop",
+  "logs.dir":"/logs",
+  "hdfs.authentication.kerberos": "true",
+  "connect.hdfs.principal": "connect/connect.kerberos-demo.local@EXAMPLE.COM",
+  "connect.hdfs.keytab": "/tmp/connect.keytab",
+  "hdfs.namenode.principal": "nn/hadoop.kerberos-demo.local@EXAMPLE.COM",
+  "confluent.license": "",
+  "confluent.topic.bootstrap.servers": "broker:9092",
+  "confluent.topic.replication.factor": "1",
+  "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+  "value.converter":"io.confluent.connect.avro.AvroConverter",
+  "value.converter.schema.registry.url":"http://schema-registry:8081",
+  "schema.compatibility":"BACKWARD"
+}
 EOF
 
 log "Sending messages to topic test_hdfs"

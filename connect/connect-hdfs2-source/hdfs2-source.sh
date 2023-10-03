@@ -18,27 +18,27 @@ docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -chmod 777  /"
 log "Creating HDFS Sink connector"
 playground connector create-or-update --connector hdfs-sink << EOF
 {
-               "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
-               "tasks.max":"1",
-               "topics":"test_hdfs",
-               "store.url":"hdfs://namenode:8020",
-               "flush.size":"3",
-               "hadoop.conf.dir":"/etc/hadoop/",
-               "partitioner.class":"io.confluent.connect.hdfs.partitioner.FieldPartitioner",
-               "partition.field.name":"f1",
-               "rotate.interval.ms":"120000",
-               "logs.dir":"/tmp",
-               "hive.integration": "true",
-               "hive.metastore.uris": "thrift://hive-metastore:9083",
-               "hive.database": "testhive",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "key.converter":"org.apache.kafka.connect.storage.StringConverter",
-               "value.converter":"io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url":"http://schema-registry:8081",
-               "schema.compatibility":"BACKWARD"
-          }
+  "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
+  "tasks.max":"1",
+  "topics":"test_hdfs",
+  "store.url":"hdfs://namenode:8020",
+  "flush.size":"3",
+  "hadoop.conf.dir":"/etc/hadoop/",
+  "partitioner.class":"io.confluent.connect.hdfs.partitioner.FieldPartitioner",
+  "partition.field.name":"f1",
+  "rotate.interval.ms":"120000",
+  "logs.dir":"/tmp",
+  "hive.integration": "true",
+  "hive.metastore.uris": "thrift://hive-metastore:9083",
+  "hive.database": "testhive",
+  "confluent.license": "",
+  "confluent.topic.bootstrap.servers": "broker:9092",
+  "confluent.topic.replication.factor": "1",
+  "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+  "value.converter":"io.confluent.connect.avro.AvroConverter",
+  "value.converter.schema.registry.url":"http://schema-registry:8081",
+  "schema.compatibility":"BACKWARD"
+}
 EOF
 
 

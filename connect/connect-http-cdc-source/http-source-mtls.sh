@@ -11,16 +11,16 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.mtl
 log "Creating http-source connector"
 playground connector create-or-update --connector http-cdc-sourc2e << EOF
 {
-               "tasks.max": "1",
-               "connector.class": "com.github.castorm.kafka.connect.http.HttpSourceConnector",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "http.request.url": "https://http-service-mtls-auth:8443/api/messages",
-               "kafka.topic": "http-topic-messages",
+     "tasks.max": "1",
+     "connector.class": "com.github.castorm.kafka.connect.http.HttpSourceConnector",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "http.request.url": "https://http-service-mtls-auth:8443/api/messages",
+     "kafka.topic": "http-topic-messages",
 
-               "http.client.keystore": "/tmp/keystore.http-service-mtls-auth.p12",
-               "http.client.keystore.password": "confluent"
-          }
+     "http.client.keystore": "/tmp/keystore.http-service-mtls-auth.p12",
+     "http.client.keystore.password": "confluent"
+}
 EOF
 
 

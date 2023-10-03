@@ -11,13 +11,13 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.no-
 log "Creating http-source connector"
 playground connector create-or-update --connector http-cdc-source << EOF
 {
-               "tasks.max": "1",
-               "connector.class": "com.github.castorm.kafka.connect.http.HttpSourceConnector",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "http.request.url": "http://httpserver:8080/api/messages",
-               "kafka.topic": "http-topic-messages"
-          }
+     "tasks.max": "1",
+     "connector.class": "com.github.castorm.kafka.connect.http.HttpSourceConnector",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "http.request.url": "http://httpserver:8080/api/messages",
+     "kafka.topic": "http-topic-messages"
+}
 EOF
 
 
