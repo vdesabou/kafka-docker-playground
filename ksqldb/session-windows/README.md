@@ -14,4 +14,4 @@ $ playground run -f start<tab>
 
 ## Resources
 https://docs.ksqldb.io/en/latest/concepts/time-and-windows-in-ksqldb-queries/#session-window
-https://developer.confluent.io/tutorials/create-tumbling-windows/ksql.html
+https://developer.confluent.io/tutorials/create-session-windows/confluent.html

@@ -308,6 +308,7 @@ There is also a Confluent Cloud version available [here](https://github.com/vdes
 - [how ksqlDB handles schema evolution](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/schema-evolution) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [How to create tumbling windows](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/tumbling-windows) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [How to create session windows](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/session-windows) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
+- [How to create hopping windows](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/hopping-windows) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [KsqlDB UDF Logging examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/udf-logging) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [Materialized view/cache example](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/materialized-view) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 
