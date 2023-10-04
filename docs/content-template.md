@@ -298,14 +298,16 @@ There is also a Confluent Cloud version available [here](https://github.com/vdes
 
 ## 🎏 KSQL
 - [Quickstart example](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/quickstart-example) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
+- [Simple examples using a vanilla Java producer/consumer (JSON, Avro, Proto, JSON_SR)](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/simple-example-vanilla-producer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [How to join a stream and a stream](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/stream-stream-join) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [How to join a stream and a table](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/stream-table-join#how-to-join-a-stream-and-a-lookup-table) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [How to join a table and a table](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/table-table-join) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [Stream-Table join failure due to timestamp](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/stream-table-join-timestamp-based-join-failure) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [Foreign-key table-table joins](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/foreign-key-table-table-join) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
-- [Simple examples using a vanilla Java producer/consumer (JSON, Avro, Proto, JSON_SR)](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/simple-example-vanilla-producer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [ksqlDB Schema Inference with ID](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/schema-inference-with-id) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [how ksqlDB handles schema evolution](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/schema-evolution) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
+- [How to create tumbling windows](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/tumbling-windows) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
+- [How to create session windows](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/session-windows) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [KsqlDB UDF Logging examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/udf-logging) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [Materialized view/cache example](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/materialized-view) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 
@@ -329,4 +331,4 @@ There is also a Confluent Cloud version available [here](https://github.com/vdes
 - 🚏 [How to use kafka-avro-console-producer and kafka-avro-console-consumer when Schema Registry is behind a proxy](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/http-proxy-schema-registry) :other/http-proxy-schema-registry:
 - 🪦 [Recovery from schema hard deletion](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/recover-from-schema-hard-deletion) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 🔍 [ksqlDB Schema Inference with ID](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/schema-inference-with-id) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
-- 💬 [MQTT Proxy](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/mqtt-proxy) :other/mqtt-proxy:- 💬 [MQTT Proxy](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/mqtt-proxy) :other/mqtt-proxy:
+- 💬 [MQTT Proxy](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/mqtt-proxy) :other/mqtt-proxy:
