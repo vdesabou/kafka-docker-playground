@@ -310,6 +310,7 @@ There is also a Confluent Cloud version available [here](https://github.com/vdes
 - [How to create session windows](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/session-windows) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [How to create hopping windows](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/hopping-windows) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [KsqlDB UDF Logging examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/udf-logging) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
+- [How to rekey a stream with a value](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/rekey-stream-with-value) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [Materialized view/cache example](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/materialized-view) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [Why tombstone is not propagated to table derived from CTAS in ksqlDB](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/tombstone-propagated-table) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 
