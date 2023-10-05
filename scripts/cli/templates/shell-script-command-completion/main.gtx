@@ -1,0 +1,11 @@
+# https://github.com/DannyBen/bashly/blob/master/lib/bashly/script/command.rb
+# https://www.rubydoc.info/gems/gtx
+
+> name: {{ full_name }}
+> description: {{ help.sanitize_for_print }}
+> usage: {{ usage_string.sanitize_for_print }}
+> options: []
+> inheritedOptions:
+> subcommands:
+
+

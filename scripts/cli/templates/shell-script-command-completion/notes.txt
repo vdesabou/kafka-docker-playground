@@ -1,0 +1,8 @@
+cd /Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/cli
+
+bashly render templates/shell-script-command-completion .
+yq -o=json playground.yaml > playground.json
+
+{ printf "["; cat playground.json | jq -c; cat templates/shell-script-command-completion/general_end.json; } > general.json
+gzip -f general.json
+cd -
