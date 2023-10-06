@@ -1,14 +1,16 @@
 >   - name: {{ name }}
 >     description: {{ help.sanitize_for_print }}
 >     usage: {{ usage_string.sanitize_for_print }}
->     options:
 if flags.any?
+>     options:
   flags.each do |flag|
     >     - names:
     >       - {{ flag.name }}
     >       argument: ""
     >       description: {{ flag.help.gsub("\n", '. ').gsub(":", ' ') }}
   end
+else
+>     options: []
 end
 >     subcommands:
 >
