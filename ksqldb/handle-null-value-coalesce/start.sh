@@ -45,6 +45,15 @@ SELECT COALESCE(A->B->C->descC, 'DEFAULT') descC
 FROM myStructureJSON;
 EOF
 
+#Pre 0.26 there was a bug in deferencing -> https://github.com/confluentinc/ksql/issues/7185
+#The sql to select would be
+# select case when A is null then 'DEFAULT'
+#             when A->B is null then 'DEFAULT'
+#             when A->B->C is null then 'DEFAULT'
+#             else coalesce(A->B->C->descC,'DEFAULT')
+#         end descC from structureJson emit changes;
+
+
 # Expected output:
 # +-----+
 # |DESCC|
