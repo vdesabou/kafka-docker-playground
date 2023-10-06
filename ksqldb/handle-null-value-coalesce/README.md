@@ -25,3 +25,7 @@ $ playground run -f start<tab>
 
 ## Resources
 https://docs.ksqldb.io/en/latest/developer-guide/ksqldb-reference/scalar-functions/#coalesce
+
+## Notes
+Pre 0.26 there was a bug in de-referencing -> https://github.com/confluentinc/ksql/issues/7185
+
