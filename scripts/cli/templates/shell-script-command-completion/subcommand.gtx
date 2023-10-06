@@ -10,3 +10,5 @@ if flags.any?
     >       description: {{ flag.help.gsub("\n", '. ').gsub(":", ' ') }}
   end
 end
+>     subcommands:
+>

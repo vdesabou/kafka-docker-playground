@@ -10,11 +10,26 @@ File.open("#{target}/playground.yaml", "w") do |file|
 end
 
 template = "#{source}/subcommand.gtx"
-gtx = GTX.load_file template
+gtxsub = GTX.load_file template
+
+template = "#{source}/subsubcommand.gtx"
+gtxsubsub = GTX.load_file template
 
 # Append to a file for each subcommand
 command.deep_commands.reject(&:private).each do |subcommand|
-  File.open("#{target}/playground.yaml", "a") do |file|
-    file.write(gtx.parse(subcommand))
+
+  if subcommand.commands.any?
+    File.open("#{target}/playground.yaml", "a") do |file|
+      file.write(gtxsub.parse(subcommand))
+    end
+    subcommand.commands.reject(&:private).each do |subsubcommand|
+      File.open("#{target}/playground.yaml", "a") do |file|
+        file.write(gtxsubsub.parse(subsubcommand))
+      end
+    end
+  else
+    # File.open("#{target}/playground.yaml", "a") do |file|
+    #   file.write(gtxsub.parse(subcommand))
+    # end
   end
 end
