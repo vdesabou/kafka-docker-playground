@@ -39,8 +39,6 @@ services:
     environment:
       HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:postgresql://hive-metastore/metastore"
       SERVICE_PRECONDITION: "hive-metastore:9083"
-    ports:
-      - "10000:10000"
 
   hive-metastore:
     hostname: hive-metastore
@@ -74,7 +72,7 @@ services:
       - hive-server
       - presto-coordinator
     volumes:
-        - ../../connect/connect-jdbc-hive-sink/hive.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/hive.jar
+        - ../../connect/connect-jdbc-hive-sink/hive-jdbc-3.1.2-standalone.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/hive-jdbc-3.1.2-standalone.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
 

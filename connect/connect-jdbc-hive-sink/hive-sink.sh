@@ -64,7 +64,29 @@ playground connector create-or-update --connector jdbc-hive-sink << EOF
 }
 EOF
 
-#
+# [2023-10-09 11:13:45,400] WARN [jdbc-hive-sink|task-0] Write of 10 records failed, remainingRetries=8 (io.confluent.connect.jdbc.sink.JdbcSinkTask:101)
+# java.sql.SQLFeatureNotSupportedException: Method not supported
+#         at org.apache.hive.jdbc.HivePreparedStatement.addBatch(HivePreparedStatement.java:78)
+#         at io.confluent.connect.jdbc.sink.PreparedStatementBinder.bindRecord(PreparedStatementBinder.java:115)
+#         at io.confluent.connect.jdbc.sink.BufferedRecords.flush(BufferedRecords.java:183)
+#         at io.confluent.connect.jdbc.sink.JdbcDbWriter.write(JdbcDbWriter.java:80)
+#         at io.confluent.connect.jdbc.sink.JdbcSinkTask.put(JdbcSinkTask.java:90)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:593)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:340)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:238)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:207)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:229)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:284)
+#         at org.apache.kafka.connect.runtime.isolation.Plugins.lambda$withClassLoader$1(Plugins.java:181)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+#         Suppressed: java.sql.SQLFeatureNotSupportedException: Method not supported
+#                 at org.apache.hive.jdbc.HiveConnection.rollback(HiveConnection.java:1340)
+#                 at io.confluent.connect.jdbc.sink.JdbcDbWriter.write(JdbcDbWriter.java:86)
+#                 ... 13 more
 
 sleep 10
 
