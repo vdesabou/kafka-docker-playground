@@ -5,7 +5,6 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 logerror "addBatch() method is not implemented on Hive"
-exit 1
 
 if [ ! -f ${DIR}/hive-jdbc-3.1.2-standalone.jar ]
 then
