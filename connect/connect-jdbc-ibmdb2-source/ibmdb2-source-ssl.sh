@@ -130,16 +130,16 @@ EOF
 log "Creating JDBC IBM DB2 source connector"
 playground connector create-or-update --connector ibmdb2-source << EOF
 {
-               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-               "tasks.max": "1",
-               "connection.url":"jdbc:db2://ibmdb2:50002/sample:retrieveMessagesFromServerOnGetMessage=true;sslConnection=true;sslTrustStoreLocation=/etc/kafka/secrets/truststore.jks;sslTrustStorePassword=confluent;sslTrustStoreType=JKS;",
-               "connection.user":"db2inst1",
-               "connection.password":"passw0rd",
-               "mode": "bulk",
-               "topic.prefix": "db2-",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
-          }
+  "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+  "tasks.max": "1",
+  "connection.url":"jdbc:db2://ibmdb2:50002/sample:retrieveMessagesFromServerOnGetMessage=true;sslConnection=true;sslTrustStoreLocation=/etc/kafka/secrets/truststore.jks;sslTrustStorePassword=confluent;sslTrustStoreType=JKS;",
+  "connection.user":"db2inst1",
+  "connection.password":"passw0rd",
+  "mode": "bulk",
+  "topic.prefix": "db2-",
+  "errors.log.enable": "true",
+  "errors.log.include.messages": "true"
+}
 EOF
 
 sleep 15
