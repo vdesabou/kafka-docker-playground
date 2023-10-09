@@ -4,7 +4,6 @@ services:
 
   connect:
     volumes:
-      - ../../environment/2way-ssl/security:/etc/kafka/secrets
       - ../../other/write-logs-to-topic/log4j-2way-ssl.properties:/tmp/connect/log4j.properties
     environment:
       KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/tmp/connect/log4j.properties"

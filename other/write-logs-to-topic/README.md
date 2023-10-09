@@ -7,6 +7,12 @@ To run:
 $ playground run -f start-plaintext<tab>
 ```
 
+or
+
+```
+$ playground run -f start-2way-ssl<tab>
+```
+
 Example using `docker-compose` on how to write logs to files by providing custom `log4j.properties` files.
 
 ```yml
