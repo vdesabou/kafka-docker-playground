@@ -23,7 +23,6 @@ code --uninstall-extension extension.vsix
 code --disable-extension extension.vsix
 code --install-extension extension.vsix
 
-code --enable-extension extension.vsix
 cd -
 
 

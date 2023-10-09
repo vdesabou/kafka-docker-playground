@@ -4,7 +4,7 @@
 To run:
 
 ```
-$ playground run -f start<tab>
+$ playground run -f start-plaintext<tab>
 ```
 
 Example using `docker-compose` on how to write logs to files by providing custom `log4j.properties` files.
