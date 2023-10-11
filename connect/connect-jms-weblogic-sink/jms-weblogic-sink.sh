@@ -64,21 +64,21 @@ EOF
 log "Creating JMS weblogic sink connector"
 playground connector create-or-update --connector weblogic-topic-sink << EOF
 {
-               "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
-               "topics": "sink-messages",
-               "java.naming.factory.initial": "weblogic.jndi.WLInitialContextFactory",
-               "java.naming.provider.url": "t3://weblogic-jms:7001",
-               "java.naming.security.principal": "weblogic",
-               "java.naming.security.credentials": "welcome1",
-               "connection.factory.name": "myFactory",
-               "jms.destination.name": "myJMSServer/mySystemModule!myJMSServer@MyDistributedQueue",
-               "jms.destination.type": "queue",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+     "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
+     "topics": "sink-messages",
+     "java.naming.factory.initial": "weblogic.jndi.WLInitialContextFactory",
+     "java.naming.provider.url": "t3://weblogic-jms:7001",
+     "java.naming.security.principal": "weblogic",
+     "java.naming.security.credentials": "welcome1",
+     "connection.factory.name": "myFactory",
+     "jms.destination.name": "myJMSServer/mySystemModule!myJMSServer@MyDistributedQueue",
+     "jms.destination.type": "queue",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
      
 sleep 5
