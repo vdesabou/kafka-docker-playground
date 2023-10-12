@@ -750,7 +750,7 @@ subcommands:
         - names:
           - --producer
           - -p
-          argument: '''none'''
+          argument: none
           description: | 
             ♨️ Java producer type to use
             
@@ -769,7 +769,7 @@ subcommands:
         - names:
           - --nb-producers
           - -n
-          argument: ''''''
+          argument: 
           description: | 
             2️⃣ Number of java producers to generate
             
@@ -825,7 +825,7 @@ subcommands:
     - names:
       - --container
       - -c
-      argument: '''connect'''
+      argument: connect
       description: | 
         🐳 Container name
         
@@ -861,7 +861,7 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: '''connect'''
+          argument: connect
           description: | 
             🐳 Container name
             
@@ -888,7 +888,7 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: '''connect'''
+          argument: connect
           description: | 
             🐳 Container name
             
@@ -904,7 +904,7 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: '''connect'''
+          argument: connect
           description: | 
             🐳 Container name
             
@@ -920,7 +920,7 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: '''connect'''
+          argument: connect
           description: | 
             🐳 Container name
             
@@ -934,7 +934,7 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: '''connect'''
+          argument: connect
           description: | 
             🐳 Container name
             
@@ -948,7 +948,7 @@ subcommands:
             
         - names:
           - --duration
-          argument: '''30'''
+          argument: 30
           description: | 
             Duration of the dump (default is 30 seconds).
             
@@ -962,7 +962,7 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: '''connect'''
+          argument: connect
           description: | 
             🐳 Container name
             
@@ -1004,7 +1004,7 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: '''connect'''
+          argument: connect
           description: | 
             🐳 Container name
             
@@ -1078,7 +1078,7 @@ subcommands:
     - names:
       - --component
       - -c
-      argument: '''connect'''
+      argument: connect
       description: | 
         Component name
         
@@ -1132,7 +1132,7 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: '''connect'''
+          argument: connect
           description: | 
             🐳 Container name
             
@@ -1159,7 +1159,7 @@ subcommands:
         - names:
           - --max-wait
           - -m
-          argument: '''600'''
+          argument: 600
           description: | 
             ⏳ Max time in seconds to wait when using --wait-for-log (default 600s)
             
@@ -1175,7 +1175,7 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: '''connect'''
+          argument: connect
           description: | 
             🐳 Container name
             
@@ -1184,7 +1184,7 @@ subcommands:
         - names:
           - --shell
           - -s
-          argument: '''bash'''
+          argument: bash
           description: | 
             💾 Shell to use (default is bash)
             
@@ -1200,7 +1200,7 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: '''connect'''
+          argument: connect
           description: | 
             🐳 Container name
             
@@ -1222,7 +1222,7 @@ subcommands:
             
         - names:
           - --shell
-          argument: '''bash'''
+          argument: bash
           description: | 
             💾 Shell to use (default is bash)
             
@@ -1238,7 +1238,7 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: '''connect'''
+          argument: connect
           description: | 
             🐳 Container name
             
@@ -1252,7 +1252,7 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: '''connect'''
+          argument: connect
           description: | 
             🐳 Container name
             
@@ -1266,7 +1266,7 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: '''connect'''
+          argument: connect
           description: | 
             🐳 Container name
             
@@ -1280,7 +1280,7 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: '''connect'''
+          argument: connect
           description: | 
             🐳 Container name
             
@@ -1364,7 +1364,7 @@ subcommands:
             
         - names:
           - --max-messages
-          argument: '''10'''
+          argument: 10
           description: | 
             Max number of messages to display (default is 10)
             
@@ -1372,7 +1372,7 @@ subcommands:
             
         - names:
           - --min-expected-messages
-          argument: ''''''
+          argument: 
           description: | 
             Minimum expected number of messages to be present in topic, returns an error if this is not the case
             
@@ -1382,7 +1382,7 @@ subcommands:
             
         - names:
           - --grep
-          argument: ''''''
+          argument: 
           description: | 
             Verify that topic content contains record which contains specified string
             
@@ -1390,7 +1390,7 @@ subcommands:
             
         - names:
           - --timeout
-          argument: '''60'''
+          argument: 60
           description: | 
             Max number of seconds to wait when --min-expected-messages is used.
             
@@ -1419,7 +1419,7 @@ subcommands:
         options:
         - names:
           - --input
-          argument: '''-'''
+          argument: INPUT
           description: | 
             🔥 You can either:
             
@@ -1451,7 +1451,7 @@ subcommands:
             
         - names:
           - --nb-messages
-          argument: '''1'''
+          argument: 1
           description: | 
             💯 Number of messages to produce (default is 1)
             
@@ -1459,7 +1459,7 @@ subcommands:
             
         - names:
           - --nb-partitions
-          argument: ''''''
+          argument: 
           description: | 
             🔢 Number of partitions for the topic. (default is 1)
             
@@ -1572,7 +1572,7 @@ subcommands:
             
         - names:
           - --record-size
-          argument: '''0'''
+          argument: 0
           description: | 
             🏋️ Record size in bytes, eg. 1048576 for 1MB
             
@@ -1596,7 +1596,7 @@ subcommands:
             
         - names:
           - --nb-partitions
-          argument: ''''''
+          argument: 
           description: | 
             Number of partitions for the topic. (default is 1)
             

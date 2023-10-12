@@ -11,8 +11,8 @@ if flag.short
     >           - {{ flag.short }}
 end
 
-      if flag.default
-    >           argument: '''{{ flag.default }}'''
+      if flag.default && flag.default != '-'
+    >           argument: {{ flag.default }}
       elsif flag.allowed
     >           argument: [{{ flag.allowed.join(', ') }}]
       elsif flag.name == "--file"

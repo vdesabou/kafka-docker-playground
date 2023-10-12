@@ -577,7 +577,7 @@
                 "--producer",
                 "-p"
               ],
-              "argument": "'none'",
+              "argument": "none",
               "description": "♨️ Java producer type to use\n\nOne of avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key\n\n🎓 Tip: Most of times, it's much simpler to use 'playground topic produce'. Use java producer only if you have very specific requirements such as specifying record timestamp, use key with schema or to do perf testing\n\n🎓 Tip: 'with-key' will also produce key with selected converter, otherwise LongConverter is used\n\nDefault value: none\n\nAllowed values: none, avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key\n\nConflicts with: --pipeline\n"
             },
             {
@@ -585,7 +585,7 @@
                 "--nb-producers",
                 "-n"
               ],
-              "argument": "''",
+              "argument": null,
               "description": "2️⃣ Number of java producers to generate\n\nDefault value: \n"
             },
             {
@@ -637,7 +637,7 @@
             "--container",
             "-c"
           ],
-          "argument": "'connect'",
+          "argument": "connect",
           "description": "🐳 Container name\n\nDefault value: connect\n"
         }
       ],
@@ -675,7 +675,7 @@
                 "--container",
                 "-c"
               ],
-              "argument": "'connect'",
+              "argument": "connect",
               "description": "🐳 Container name\n\nDefault value: connect\n"
             }
           ]
@@ -696,7 +696,7 @@
                 "--container",
                 "-c"
               ],
-              "argument": "'connect'",
+              "argument": "connect",
               "description": "🐳 Container name\n\nDefault value: connect\n"
             }
           ]
@@ -711,7 +711,7 @@
                 "--container",
                 "-c"
               ],
-              "argument": "'connect'",
+              "argument": "connect",
               "description": "🐳 Container name\n\nDefault value: connect\n"
             }
           ]
@@ -726,7 +726,7 @@
                 "--container",
                 "-c"
               ],
-              "argument": "'connect'",
+              "argument": "connect",
               "description": "🐳 Container name\n\nDefault value: connect\n"
             }
           ]
@@ -741,7 +741,7 @@
                 "--container",
                 "-c"
               ],
-              "argument": "'connect'",
+              "argument": "connect",
               "description": "🐳 Container name\n\nDefault value: connect\n"
             },
             {
@@ -755,7 +755,7 @@
               "names": [
                 "--duration"
               ],
-              "argument": "'30'",
+              "argument": 30,
               "description": "Duration of the dump (default is 30 seconds).\n\nDefault value: 30\n"
             }
           ]
@@ -770,7 +770,7 @@
                 "--container",
                 "-c"
               ],
-              "argument": "'connect'",
+              "argument": "connect",
               "description": "🐳 Container name\n\nDefault value: connect\n"
             },
             {
@@ -809,7 +809,7 @@
                 "--container",
                 "-c"
               ],
-              "argument": "'connect'",
+              "argument": "connect",
               "description": "🐳 Container name\n\nDefault value: connect\n"
             },
             {
@@ -893,7 +893,7 @@
             "--component",
             "-c"
           ],
-          "argument": "'connect'",
+          "argument": "connect",
           "description": "Component name\n\nDefault value: connect\n\nAllowed values: zookeeper, broker, connect, schema-registry\n"
         },
         {
@@ -949,7 +949,7 @@
                 "--container",
                 "-c"
               ],
-              "argument": "'connect'",
+              "argument": "connect",
               "description": "🐳 Container name\n\nDefault value: connect\n"
             },
             {
@@ -973,7 +973,7 @@
                 "--max-wait",
                 "-m"
               ],
-              "argument": "'600'",
+              "argument": 600,
               "description": "⏳ Max time in seconds to wait when using --wait-for-log (default 600s)\n\nDefault value: 600\n\nConflicts with: --open\n"
             }
           ]
@@ -988,7 +988,7 @@
                 "--container",
                 "-c"
               ],
-              "argument": "'connect'",
+              "argument": "connect",
               "description": "🐳 Container name\n\nDefault value: connect\n"
             },
             {
@@ -996,7 +996,7 @@
                 "--shell",
                 "-s"
               ],
-              "argument": "'bash'",
+              "argument": "bash",
               "description": "💾 Shell to use (default is bash)\n\nDefault value: bash\n\nAllowed values: bash, sh, ksh, zsh\n"
             }
           ]
@@ -1011,7 +1011,7 @@
                 "--container",
                 "-c"
               ],
-              "argument": "'connect'",
+              "argument": "connect",
               "description": "🐳 Container name\n\nDefault value: connect\n"
             },
             {
@@ -1032,7 +1032,7 @@
               "names": [
                 "--shell"
               ],
-              "argument": "'bash'",
+              "argument": "bash",
               "description": "💾 Shell to use (default is bash)\n\nDefault value: bash\n\nAllowed values: bash, sh, ksh, zsh\n"
             }
           ]
@@ -1047,7 +1047,7 @@
                 "--container",
                 "-c"
               ],
-              "argument": "'connect'",
+              "argument": "connect",
               "description": "🐳 Container name\n\nDefault value: connect\n"
             }
           ]
@@ -1062,7 +1062,7 @@
                 "--container",
                 "-c"
               ],
-              "argument": "'connect'",
+              "argument": "connect",
               "description": "🐳 Container name\n\nDefault value: connect\n"
             }
           ]
@@ -1077,7 +1077,7 @@
                 "--container",
                 "-c"
               ],
-              "argument": "'connect'",
+              "argument": "connect",
               "description": "🐳 Container name\n\nDefault value: connect\n"
             }
           ]
@@ -1092,7 +1092,7 @@
                 "--container",
                 "-c"
               ],
-              "argument": "'connect'",
+              "argument": "connect",
               "description": "🐳 Container name\n\nDefault value: connect\n"
             }
           ]
@@ -1196,28 +1196,28 @@
               "names": [
                 "--max-messages"
               ],
-              "argument": "'10'",
+              "argument": 10,
               "description": "Max number of messages to display (default is 10)\n\nDefault value: 10\n"
             },
             {
               "names": [
                 "--min-expected-messages"
               ],
-              "argument": "''",
+              "argument": null,
               "description": "Minimum expected number of messages to be present in topic, returns an error if this is not the case\n\nNote: --topic should be specified in this case.\n\nDefault value: \n"
             },
             {
               "names": [
                 "--grep"
               ],
-              "argument": "''",
+              "argument": null,
               "description": "Verify that topic content contains record which contains specified string\n\nDefault value: \n"
             },
             {
               "names": [
                 "--timeout"
               ],
-              "argument": "'60'",
+              "argument": 60,
               "description": "Max number of seconds to wait when --min-expected-messages is used.\n\nDefault is 60 seconds\n\nDefault value: 60\n"
             },
             {
@@ -1245,7 +1245,7 @@
               "names": [
                 "--input"
               ],
-              "argument": "'-'",
+              "argument": "INPUT",
               "description": "🔥 You can either:\n\n* Set your own schema (avro, json-schema, protobuf) with stdin (see example section). \n\n* You can also generate json data using json or sql format using syntax from https://github.com/MaterializeInc/datagen\n\n* Use completion to select predefined schemas (or use your own schema file) 🎓 Tip: use <tab> completion to trigger fzf completion\n\n* Directly set payload (\"%g\" can be used to generate a counter)\n\nDefault value: -\n"
             },
             {
@@ -1268,14 +1268,14 @@
               "names": [
                 "--nb-messages"
               ],
-              "argument": "'1'",
+              "argument": 1,
               "description": "💯 Number of messages to produce (default is 1)\n\nDefault value: 1\n"
             },
             {
               "names": [
                 "--nb-partitions"
               ],
-              "argument": "''",
+              "argument": null,
               "description": "🔢 Number of partitions for the topic. (default is 1)\n\n❌ Important: If topic is existing, it will be re-created before producing to topic.\n\nDefault value: \n"
             },
             {
@@ -1379,7 +1379,7 @@
               "names": [
                 "--record-size"
               ],
-              "argument": "'0'",
+              "argument": 0,
               "description": "🏋️ Record size in bytes, eg. 1048576 for 1MB\n\n📢 If size is > 1Mb, --producer-property max.request.size and topic max.message.bytes will be automatically set to support the record size.\n\nDefault value: 0\n"
             }
           ]
@@ -1401,7 +1401,7 @@
               "names": [
                 "--nb-partitions"
               ],
-              "argument": "''",
+              "argument": null,
               "description": "Number of partitions for the topic. (default is 1)\n\nDefault value: \n"
             }
           ]
