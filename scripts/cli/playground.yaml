@@ -1,0 +1,984 @@
+name: playground
+description: 🧠 CLI for Kafka Docker Playground 🐳\n\n👉 Check documentation https://kafka-docker-playground.io/#/cli
+usage: playground COMMAND
+options: []
+inheritedOptions: []
+subcommands:
+  - name: help
+    description: Show help about a command
+    usage: playground help [COMMAND]
+    options: []
+    subcommands:
+  - name: run
+    description: 🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)
+    usage: playground run [OPTIONS] [ARGUMENTS...]
+    options:
+    - names:
+      - --file
+      argument: ""
+      description: 🔖 Example file to run. . ❕ It must be absolute full path. . 🎓 Tip  use <tab> completion to trigger fzf completion
+    - names:
+      - --open
+      argument: ""
+      description: 📖 Opening example file with text editor set with config.ini (default is code)
+    - names:
+      - --tag
+      argument: ""
+      description: 🎯 Confluent Platform (CP) version to use. . Must be greater or equal to 5.0.0
+    - names:
+      - --connector-tag
+      argument: ""
+      description: 🔗 Connector version to use. . By default, for each connector, the latest available version on Confluent Hub is used
+    - names:
+      - --connector-zip
+      argument: ""
+      description: 🤐 Connector zip to use. . ❕ It must be absolute full path. . 🎓 Tip  use <tab> completion to trigger fzf completion .         use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+    - names:
+      - --connector-jar
+      argument: ""
+      description: ♨️ Connector jar to use. . ❕ It must be absolute full path. . 🎓 Tip  use <tab> completion to trigger fzf completion .         use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+    - names:
+      - --enable-ksqldb
+      argument: ""
+      description: 🚀 Enable ksqlDB. . By default, ksqldb-server and ksqldb-cli containers are not started for every test
+    - names:
+      - --enable-control-center
+      argument: ""
+      description: 💠 Enable Control Center. . By default, control-center container is not started for every test. . Control Center is reachable at http //127.0.0.1 9021
+    - names:
+      - --enable-conduktor
+      argument: ""
+      description: 🐺 Enable Conduktor Platform. . By default, Conduktor Platform container is not started for every test. . Conduktor is reachable at http //127.0.0.1 8080/console (admin/admin)
+    - names:
+      - --enable-multiple-brokers
+      argument: ""
+      description: 3️⃣ Enable multiple brokers. . By default, there is only one broker node enabled
+    - names:
+      - --enable-multiple-connect-workers
+      argument: ""
+      description: 🥉 Enable multiple connect node. . By default, there is only one connect node enabled. . It only works when plaintext environment is used
+    - names:
+      - --enable-jmx-grafana
+      argument: ""
+      description: Enable Grafana, Prometheus and Pyroscope. . 📊 Grafana is reachable at http //127.0.0.1 3000. 🛡️ Prometheus is reachable at http //127.0.0.1 9090. 📛 Pyroscope is reachable at http //127.0.0.1 4040
+    - names:
+      - --enable-kcat
+      argument: ""
+      description: 🐈‍⬛ Enable kcat. . You can use it with . . $ docker exec kcat kcat -b broker 9092 -L
+    - names:
+      - --enable-sr-maven-plugin-app
+      argument: ""
+      description: 🔰 Enable Schema Registry Maven plugin App
+    - names:
+      - --enable-sql-datagen
+      argument: ""
+      description: 🌪️ Enable SQL Datagen injection. . This only works for Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with JDBC and Debezium
+    subcommands:
+  - name: re-run
+    description: ⚡ Simply re-run last example you ran with <playground run> or <playground run-ccloud>
+    usage: playground re-run [OPTIONS] [ARGUMENTS...]
+    options:
+    - names:
+      - --clear
+      argument: ""
+      description: 🧼 Clear any previous flags
+    - names:
+      - --tag
+      argument: ""
+      description: 🎯 Confluent Platform (CP) version to use. . Must be greater or equal to 5.0.0
+    - names:
+      - --connector-tag
+      argument: ""
+      description: 🔗 Connector version to use. . By default, for each connector, the latest available version on Confluent Hub is used
+    - names:
+      - --connector-zip
+      argument: ""
+      description: 🤐 Connector zip to use. . ❕ It must be absolute full path. . 🎓 Tip  use <tab> completion to trigger fzf completion .         use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+    - names:
+      - --connector-jar
+      argument: ""
+      description: ♨️ Connector jar to use. . ❕ It must be absolute full path. . 🎓 Tip  use <tab> completion to trigger fzf completion .         use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+    - names:
+      - --enable-ksqldb
+      argument: ""
+      description: 🚀 Enable ksqlDB. . By default, ksqldb-server and ksqldb-cli containers are not started for every test
+    - names:
+      - --enable-control-center
+      argument: ""
+      description: 💠 Enable Control Center. . By default, control-center container is not started for every test. . Control Center is reachable at http //127.0.0.1 9021
+    - names:
+      - --enable-conduktor
+      argument: ""
+      description: 🐺 Enable Conduktor Platform. . By default, Conduktor Platform container is not started for every test. . Conduktor is reachable at http //127.0.0.1 8080/console (admin/admin)
+    - names:
+      - --enable-multiple-brokers
+      argument: ""
+      description: 3️⃣ Enable multiple brokers. . By default, there is only one broker node enabled
+    - names:
+      - --enable-multiple-connect-workers
+      argument: ""
+      description: 🥉 Enable multiple connect node. . By default, there is only one connect node enabled. . It only works when plaintext environment is used
+    - names:
+      - --enable-jmx-grafana
+      argument: ""
+      description: Enable Grafana, Prometheus and Pyroscope. . 📊 Grafana is reachable at http //127.0.0.1 3000. 🛡️ Prometheus is reachable at http //127.0.0.1 9090. 📛 Pyroscope is reachable at http //127.0.0.1 4040
+    - names:
+      - --enable-kcat
+      argument: ""
+      description: 🐈‍⬛ Enable kcat. . You can use it with . . $ docker exec kcat kcat -b broker 9092 -L
+    - names:
+      - --enable-sr-maven-plugin-app
+      argument: ""
+      description: 🔰 Enable Schema Registry Maven plugin App
+    - names:
+      - --enable-sql-datagen
+      argument: ""
+      description: 🌪️ Enable SQL Datagen injection. . This only works for Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with JDBC and Debezium
+    subcommands:
+  - name: run-ccloud
+    description: ⛅ Run any Confluent Cloud (ccloud) example\n\nAll you have to do is to be already logged in with confluent CLI.\n\nBy default, a new Confluent Cloud environment with a Cluster will be created.\n\nYou can configure the new cluster by setting:\n\n--cluster-cloud (or CLUSTER_CLOUD environment variable)\n--cluster-region (or CLUSTER_REGION environment variable)\n--cluster-environment (or ENVIRONMENT environment variable)\n\nIn case you want to use your own existing cluster, you need to setup, in addition to previous ones:\n\n--cluster-name (or CLUSTER_NAME environment variable)\n--cluster-creds (or CLUSTER_CREDS environment variable)\n--cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable)
+    usage: playground run-ccloud [OPTIONS] [ARGUMENTS...]
+    options:
+    - names:
+      - --file
+      argument: ""
+      description: 🔖 Example file to run. . ❕ It must be absolute full path. . 🎓 Tip  use <tab> completion to trigger fzf completion
+    - names:
+      - --open
+      argument: ""
+      description: 📖 Opening example file with text editor set with config.ini (default is code)
+    - names:
+      - --tag
+      argument: ""
+      description: 🎯 Confluent Platform (CP) version to use. . Must be greater or equal to 5.0.0
+    - names:
+      - --connector-tag
+      argument: ""
+      description: 🔗 Connector version to use. . By default, for each connector, the latest available version on Confluent Hub is used
+    - names:
+      - --connector-zip
+      argument: ""
+      description: 🤐 Connector zip to use. . ❕ It must be absolute full path. . 🎓 Tip  use <tab> completion to trigger fzf completion .         use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+    - names:
+      - --connector-jar
+      argument: ""
+      description: ♨️ Connector jar to use. . ❕ It must be absolute full path. . 🎓 Tip  use <tab> completion to trigger fzf completion .         use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+    - names:
+      - --enable-control-center
+      argument: ""
+      description: 💠 Enable Control Center. . By default, control-center container is not started for every test. . Control Center is reachable at http //127.0.0.1 9021
+    - names:
+      - --enable-conduktor
+      argument: ""
+      description: 🐺 Enable Conduktor Platform. . By default, Conduktor Platform container is not started for every test. . Conduktor is reachable at http //127.0.0.1 8080/console (admin/admin)
+    - names:
+      - --enable-kcat
+      argument: ""
+      description: 🐈‍⬛ Enable kcat. . You can use it with . . $ docker exec kcat kcat -b broker 9092 -L
+    - names:
+      - --cluster-cloud
+      argument: ""
+      description: 🌤 The cloud provider  aws, gcp or azure. Default is aws. . 🎓 Tip  you can also use CLUSTER_CLOUD environment variable
+    - names:
+      - --cluster-region
+      argument: ""
+      description: 🗺 The Cloud region. . . 🎓 Tip  you can also use CLUSTER_REGION environment variable
+    - names:
+      - --cluster-environment
+      argument: ""
+      description: 🌐 The environment id where want your new cluster (example  env-xxxxx). . ℹ️ Optional, if not set, new environment will be created. . 🎓 Tip  you can also use ENVIRONMENT environment variable
+    - names:
+      - --cluster-name
+      argument: ""
+      description: 🎰 The cluster name. . . ❣️ Only required if you want to use your own existing cluster. . 🎓 Tip  you can also use CLUSTER_NAME environment variable
+    - names:
+      - --cluster-creds
+      argument: ""
+      description: 🔒 The Kafka api key and secret to use, it should be separated with semi-colon (example  <API_KEY> <API_KEY_SECRET>). . ❣️ Only required if you want to use your own existing cluster. . 🎓 Tip  you can also use CLUSTER_CREDS environment variable
+    - names:
+      - --cluster-schema-registry-creds
+      argument: ""
+      description: 🔒 The Schema Registry api key and secret to use, it should be separated with semi-colon (example  <SR_API_KEY> <SR_API_KEY_SECRET>). . ℹ️ Optional, if not set, new credentials will be created. . ❣️ Only required if you want to use your own existing cluster. . 🎓 Tip  you can also use SCHEMA_REGISTRY_CREDS environment variable
+    subcommands:
+  - name: open
+    description: 👐 When --file is not provided, simply open last example you ran with <playground run> or <playground run-ccloud>\n\nOtherwise, open any file from the playground using --file.
+    usage: playground open [OPTIONS]
+    options:
+    - names:
+      - --file
+      argument: ""
+      description: 🔎 Search any file and open it.. . ❕ It must be absolute full path. . 🎓 Tip  use <tab> completion to trigger fzf completion
+    subcommands:
+  - name: stop
+    description: 🛑 Stop currently running example
+    usage: playground stop
+    options: []
+    subcommands:
+  - name: open-docs
+    description: 🧑‍🎓 Open Confluent documentation of currently running example
+    usage: playground open-docs [OPTIONS]
+    options:
+    - names:
+      - --only-show-url
+      argument: ""
+      description: 🌐 Only show url
+    subcommands:
+  - name: repro
+    description: 👷‍♂️ Reproduction model commands
+    usage: playground repro COMMAND
+    options: []
+    subcommands:
+      - name: export
+        description: 📤 Export as tgz file uncommitted reproduction models from the folder of current reproduction model
+        usage: playground repro export [OPTIONS]
+        options:
+        - names:
+          - --all
+          argument: ""
+          description: Export all uncommitted reproduction models
+      - name: import
+        description: 📥 Import tgz file which was created with export command
+        usage: playground repro import [OPTIONS]
+        options:
+        - names:
+          - --file
+          argument: ""
+          description: 🤐 playground_repro_export.tgz file. . ❕ It must be absolute full path. . 🎓 Tip  use <tab> completion to trigger fzf completion .         use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+      - name: bootstrap
+        description: 🛠  Bootstrap reproduction model\n\n👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%f0%9f%9b%a0-bootstrap-reproduction-model
+        usage: playground repro bootstrap [OPTIONS] [ARGUMENTS...]
+        options:
+        - names:
+          - --tag
+          argument: ""
+          description: 🎯 Confluent Platform (CP) version to use. . Must be greater or equal to 5.0.0
+        - names:
+          - --connector-tag
+          argument: ""
+          description: 🔗 Connector version to use. . By default, for each connector, the latest available version on Confluent Hub is used
+        - names:
+          - --connector-zip
+          argument: ""
+          description: 🤐 Connector zip to use. . ❕ It must be absolute full path. . 🎓 Tip  use <tab> completion to trigger fzf completion .         use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+        - names:
+          - --connector-jar
+          argument: ""
+          description: ♨️ Connector jar to use. . ❕ It must be absolute full path. . 🎓 Tip  use <tab> completion to trigger fzf completion .         use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+        - names:
+          - --enable-ksqldb
+          argument: ""
+          description: 🚀 Enable ksqlDB. . By default, ksqldb-server and ksqldb-cli containers are not started for every test
+        - names:
+          - --enable-control-center
+          argument: ""
+          description: 💠 Enable Control Center. . By default, control-center container is not started for every test. . Control Center is reachable at http //127.0.0.1 9021
+        - names:
+          - --enable-conduktor
+          argument: ""
+          description: 🐺 Enable Conduktor Platform. . By default, Conduktor Platform container is not started for every test. . Conduktor is reachable at http //127.0.0.1 8080/console (admin/admin)
+        - names:
+          - --enable-multiple-brokers
+          argument: ""
+          description: 3️⃣ Enable multiple brokers. . By default, there is only one broker node enabled
+        - names:
+          - --enable-multiple-connect-workers
+          argument: ""
+          description: 🥉 Enable multiple connect node. . By default, there is only one connect node enabled. . It only works when plaintext environment is used
+        - names:
+          - --enable-jmx-grafana
+          argument: ""
+          description: Enable Grafana, Prometheus and Pyroscope. . 📊 Grafana is reachable at http //127.0.0.1 3000. 🛡️ Prometheus is reachable at http //127.0.0.1 9090. 📛 Pyroscope is reachable at http //127.0.0.1 4040
+        - names:
+          - --enable-kcat
+          argument: ""
+          description: 🐈‍⬛ Enable kcat. . You can use it with . . $ docker exec kcat kcat -b broker 9092 -L
+        - names:
+          - --enable-sr-maven-plugin-app
+          argument: ""
+          description: 🔰 Enable Schema Registry Maven plugin App
+        - names:
+          - --enable-sql-datagen
+          argument: ""
+          description: 🌪️ Enable SQL Datagen injection. . This only works for Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with JDBC and Debezium
+        - names:
+          - --cluster-region
+          argument: ""
+          description: 🗺 The Cloud region. . . 🎓 Tip  you can also use CLUSTER_REGION environment variable
+        - names:
+          - --cluster-environment
+          argument: ""
+          description: 🌐 The environment id where want your new cluster (example  env-xxxxx). . ℹ️ Optional, if not set, new environment will be created. . 🎓 Tip  you can also use ENVIRONMENT environment variable
+        - names:
+          - --cluster-name
+          argument: ""
+          description: 🎰 The cluster name. . . ❣️ Only required if you want to use your own existing cluster. . 🎓 Tip  you can also use CLUSTER_NAME environment variable
+        - names:
+          - --cluster-creds
+          argument: ""
+          description: 🔒 The Kafka api key and secret to use, it should be separated with semi-colon (example  <API_KEY> <API_KEY_SECRET>). . ❣️ Only required if you want to use your own existing cluster. . 🎓 Tip  you can also use CLUSTER_CREDS environment variable
+        - names:
+          - --cluster-schema-registry-creds
+          argument: ""
+          description: 🔒 The Schema Registry api key and secret to use, it should be separated with semi-colon (example  <SR_API_KEY> <SR_API_KEY_SECRET>). . ℹ️ Optional, if not set, new credentials will be created. . ❣️ Only required if you want to use your own existing cluster. . 🎓 Tip  you can also use SCHEMA_REGISTRY_CREDS environment variable
+        - names:
+          - --file
+          argument: ""
+          description: 🔖 Example file to use as basis. . ❕ It must be absolute full path. . 🎓 Tip  use <tab> completion to trigger fzf completion
+        - names:
+          - --description
+          argument: ""
+          description: 💭 Description for the reproduction model
+        - names:
+          - --producer
+          argument: ""
+          description: ♨️ Java producer type to use. . One of avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key. . 🎓 Tip  Most of times, it's much simpler to use 'playground topic produce'. Use java producer only if you have very specific requirements such as specifying record timestamp, use key with schema or to do perf testing. . 🎓 Tip  'with-key' will also produce key with selected converter, otherwise LongConverter is used
+        - names:
+          - --nb-producers
+          argument: ""
+          description: 2️⃣ Number of java producers to generate
+        - names:
+          - --producer-schema-key
+          argument: ""
+          description: 🔰 Schema to use for the key. . ✨ Copy and paste the schema you want to use for the key, save and close the file to continue
+        - names:
+          - --producer-schema-value
+          argument: ""
+          description: 🔰 Schema to use for the value. . ✨ Copy and paste the schema you want to use for the key, save and close the file to continue
+        - names:
+          - --custom-smt
+          argument: ""
+          description: ⚙️ Add a custom SMT (which is a no-op)
+        - names:
+          - --pipeline
+          argument: ""
+          description: 🔖 Sink example file to use for creating a pipeline. . ❕ It must be absolute full path. . . 🎓 Tip  use <tab> completion to trigger fzf completion
+  - name: get-docker-compose
+    description: 🐋 Get docker-compose
+    usage: playground get-docker-compose
+    options: []
+    subcommands:
+  - name: get-properties
+    description: 📝 Get properties file from a container\n\n👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%93%9d-see-properties-file
+    usage: playground get-properties [OPTIONS]
+    options:
+    - names:
+      - --container
+      argument: ""
+      description: 🐳 Container name
+    subcommands:
+  - name: get-all-schemas
+    description: 🔰 Get all schemas versions for all subjects
+    usage: playground get-all-schemas [OPTIONS]
+    options:
+    - names:
+      - --open
+      argument: ""
+      description: 🔖 Save output to a file and open with text editor set with config.ini (default is code)
+    subcommands:
+  - name: debug
+    description: 🐞 Debug commands
+    usage: playground debug COMMAND
+    options: []
+    subcommands:
+      - name: enable-remote-debugging
+        description: ✨ Enable java remote debugging for container\n\n👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%e2%9c%a8-remote-debugging
+        usage: playground debug enable-remote-debugging [OPTIONS]
+        options:
+        - names:
+          - --container
+          argument: ""
+          description: 🐳 Container name
+      - name: testssl
+        description: 🔐 Testing TLS/SSL encryption using https://testssl.sh/\n\ntestssl <URI>, where <URI> is:\n\nhost|host:port|URL|URL:port   port 443 is default, URL can only contain HTTPS protocol
+        usage: playground debug testssl [ARGUMENTS]
+        options: []
+      - name: generate-diagnostics
+        description: ⛑️ Generate a diagnostic bundle with Diagnostics Bundle Tool\n\n⚠️ only connect and broker containers are supported for now\n\nsee https://docs.confluent.io/platform/current/tools/diagnostics-tool.html#collect-diagnostics
+        usage: playground debug generate-diagnostics [OPTIONS]
+        options:
+        - names:
+          - --container
+          argument: ""
+          description: 🐳 Container name
+      - name: thread-dump
+        description: 🎯 Take a java thread dump\n\n🔖 It will save output to a file and open with text editor set with config.ini (default is code)
+        usage: playground debug thread-dump [OPTIONS]
+        options:
+        - names:
+          - --container
+          argument: ""
+          description: 🐳 Container name
+      - name: heap-dump
+        description: 👻 Take a heap dump\n\n🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/) can be used to read the file.
+        usage: playground debug heap-dump [OPTIONS]
+        options:
+        - names:
+          - --container
+          argument: ""
+          description: 🐳 Container name
+      - name: tcp-dump
+        description: 🕵️‍♂️ Take a tcp dump (sniffing network)
+        usage: playground debug tcp-dump [OPTIONS]
+        options:
+        - names:
+          - --container
+          argument: ""
+          description: 🐳 Container name
+        - names:
+          - --port
+          argument: ""
+          description: Port on which tcp dump should be done, if not set sniffing is done on every port
+        - names:
+          - --duration
+          argument: ""
+          description: Duration of the dump (default is 30 seconds).
+      - name: block-traffic
+        description: 🚫 Blocking traffic using iptables
+        usage: playground debug block-traffic [OPTIONS]
+        options:
+        - names:
+          - --container
+          argument: ""
+          description: 🐳 Container name
+        - names:
+          - --destination
+          argument: ""
+          description: Destination  it could be an ip address, a container name or a hostname
+        - names:
+          - --port
+          argument: ""
+          description: Port on which tcp traffic should be blocked
+        - names:
+          - --action
+          argument: ""
+          description: 🟢 start or stop
+      - name: flight-recorder
+        description: 🛩️ Record flight recorder\n\nRead more about it at https://www.baeldung.com/java-flight-recorder-monitoring\n\nOpen the jfr file with JDK Mission Control JMC(https://jdk.java.net/jmc/)
+        usage: playground debug flight-recorder [OPTIONS]
+        options:
+        - names:
+          - --container
+          argument: ""
+          description: 🐳 Container name
+        - names:
+          - --action
+          argument: ""
+          description: 🟢 start or stop
+      - name: log-level
+        description: 🧬 Set log level for any package
+        usage: playground debug log-level COMMAND
+        options: []
+  - name: log-level
+    description: 🧬 Set log level for any package
+    usage: playground debug log-level COMMAND
+    options: []
+    subcommands:
+      - name: get
+        description: Get log levels
+        usage: playground debug log-level get [OPTIONS]
+        options:
+        - names:
+          - --package
+          argument: ""
+          description: Package name
+      - name: set
+        description: Set log level for specific logger
+        usage: playground debug log-level set [OPTIONS]
+        options:
+        - names:
+          - --package
+          argument: ""
+          description: 📦 Package name
+        - names:
+          - --level
+          argument: ""
+          description: ❕Log level
+  - name: get-jmx-metrics
+    description: 🔢 Get JMX metrics from a component\n\n👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics
+    usage: playground get-jmx-metrics [OPTIONS]
+    options:
+    - names:
+      - --component
+      argument: ""
+      description: Component name
+    - names:
+      - --open
+      argument: ""
+      description: 🔖 Save output to a file and open with text editor set with config.ini (default is code)
+    - names:
+      - --domain
+      argument: ""
+      description: Domain name
+    subcommands:
+  - name: container
+    description: 🐳 Container commands
+    usage: playground container COMMAND
+    options: []
+    subcommands:
+      - name: recreate
+        description: 💫 Recreate container(s)\n\n👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%e2%99%bb%ef%b8%8f-re-create-containers
+        usage: playground container recreate
+        options: []
+      - name: get-ip-addresses
+        description: 🖥️  Get ip address of running containers
+        usage: playground container get-ip-addresses
+        options: []
+      - name: kill-all
+        description: 💀 Kill all containers
+        usage: playground container kill-all
+        options: []
+      - name: logs
+        description: 🕵️  Tail and follow container logs
+        usage: playground container logs [OPTIONS]
+        options:
+        - names:
+          - --container
+          argument: ""
+          description: 🐳 Container name
+        - names:
+          - --open
+          argument: ""
+          description: 🔖 Save output to a file and open with text editor set with config.ini (default is code)
+        - names:
+          - --wait-for-log
+          argument: ""
+          description: 😴 Wait until log appears
+        - names:
+          - --max-wait
+          argument: ""
+          description: ⏳ Max time in seconds to wait when using --wait-for-log (default 600s)
+      - name: ssh
+        description: 🛬 SSH into container
+        usage: playground container ssh [OPTIONS]
+        options:
+        - names:
+          - --container
+          argument: ""
+          description: 🐳 Container name
+        - names:
+          - --shell
+          argument: ""
+          description: 💾 Shell to use (default is bash)
+      - name: exec
+        description: 🪄  Execute command in a container
+        usage: playground container exec [OPTIONS]
+        options:
+        - names:
+          - --container
+          argument: ""
+          description: 🐳 Container name
+        - names:
+          - --command
+          argument: ""
+          description: 📲 Command to execute
+        - names:
+          - --root
+          argument: ""
+          description: 👑 Run command as root
+        - names:
+          - --shell
+          argument: ""
+          description: 💾 Shell to use (default is bash)
+      - name: restart
+        description: 🔁 Restart a container
+        usage: playground container restart [OPTIONS]
+        options:
+        - names:
+          - --container
+          argument: ""
+          description: 🐳 Container name
+      - name: pause
+        description: ⏸️  Pause a container
+        usage: playground container pause [OPTIONS]
+        options:
+        - names:
+          - --container
+          argument: ""
+          description: 🐳 Container name
+      - name: resume
+        description: ⏯️  Resume a container
+        usage: playground container resume [OPTIONS]
+        options:
+        - names:
+          - --container
+          argument: ""
+          description: 🐳 Container name
+      - name: kill
+        description: 🔫 Kill a container
+        usage: playground container kill [OPTIONS]
+        options:
+        - names:
+          - --container
+          argument: ""
+          description: 🐳 Container name
+  - name: topic
+    description: 🗳 Topic commands
+    usage: playground topic COMMAND
+    options: []
+    subcommands:
+      - name: get-number-records
+        description: 💯 Get number of records in a topic
+        usage: playground topic get-number-records [OPTIONS]
+        options:
+        - names:
+          - --topic
+          argument: ""
+          description: 🗳 Topic name
+      - name: display-consumer-offsets
+        description: 📭 Display content of __consumer_offsets topic
+        usage: playground topic display-consumer-offsets
+        options: []
+      - name: describe
+        description: 🔬 Describe topic
+        usage: playground topic describe [OPTIONS]
+        options:
+        - names:
+          - --topic
+          argument: ""
+          description: 🗳 Topic name
+      - name: set-schema-compatibility
+        description: 🛡️ Change topic's schema compatibility
+        usage: playground topic set-schema-compatibility [OPTIONS]
+        options:
+        - names:
+          - --topic
+          argument: ""
+          description: 🗳 Topic name
+        - names:
+          - --compatibility
+          argument: ""
+          description: Schema Registry compatibility rule
+      - name: consume
+        description: 📥 Consume topic from beginning
+        usage: playground topic consume [OPTIONS]
+        options:
+        - names:
+          - --verbose
+          argument: ""
+          description: 🐞 Show command being ran.
+        - names:
+          - --topic
+          argument: ""
+          description: 🗳 Topic name
+        - names:
+          - --max-messages
+          argument: ""
+          description: Max number of messages to display (default is 10)
+        - names:
+          - --min-expected-messages
+          argument: ""
+          description: Minimum expected number of messages to be present in topic, returns an error if this is not the case. . Note  --topic should be specified in this case.
+        - names:
+          - --grep
+          argument: ""
+          description: Verify that topic content contains record which contains specified string
+        - names:
+          - --timeout
+          argument: ""
+          description: Max number of seconds to wait when --min-expected-messages is used.. . Default is 60 seconds
+        - names:
+          - --tail
+          argument: ""
+          description: Tail on logs.
+        - names:
+          - --plot-latencies-timestamp-field
+          argument: ""
+          description: 🗳 Timestamp field name that represents when record was created in source system
+      - name: produce
+        description: 📤 Produce to a topic
+        usage: playground topic produce [OPTIONS]
+        options:
+        - names:
+          - --input
+          argument: ""
+          description: 🔥 You can either . . * Set your own schema (avro, json-schema, protobuf) with stdin (see example section). . . * You can also generate json data using json or sql format using syntax from https //github.com/MaterializeInc/datagen. . * Use completion to select predefined schemas (or use your own schema file) 🎓 Tip  use <tab> completion to trigger fzf completion. . * Directly set payload ("%g" can be used to generate a counter)
+        - names:
+          - --verbose
+          argument: ""
+          description: 🐞 Show command being ran.
+        - names:
+          - --topic
+          argument: ""
+          description: 🗳 Topic name
+        - names:
+          - --nb-messages
+          argument: ""
+          description: 💯 Number of messages to produce (default is 1)
+        - names:
+          - --nb-partitions
+          argument: ""
+          description: 🔢 Number of partitions for the topic. (default is 1). . ❌ Important  If topic is existing, it will be re-created before producing to topic.
+        - names:
+          - --compatibility
+          argument: ""
+          description: Schema Registry compatibility rule
+        - names:
+          - --value-subject-name-strategy
+          argument: ""
+          description: Value Subject Name Strategy
+        - names:
+          - --key
+          argument: ""
+          description: 🗝️ Key to use. If not set, no key is used.. . If the key contain a number, it will be used as starting point and incremented for each record. . . Example  key1 will start with key1, then key2, etc... Example  mykey-10-suffix will start with mykey-10-suffix then mykey-11-suffix, etc... . "%g" can also be used to generate a counter. . Example  key%g will start with key1, then key2, etc... . Otherwise, the key will be same for all records.
+        - names:
+          - --headers
+          argument: ""
+          description: 🚏 Headers to use for all records. If not set, no header is used.. . Example  --headers "header1 value1,header2 value2". . Note  CP 7.2+ is required.
+        - names:
+          - --forced-value
+          argument: ""
+          description: ☢️ Value to use for all records. . . 🎓 Tip  use --generate-only first with avro, json-schema or protobuf to get skeleton of messages and then use --forced-value to send the message you need. 
+        - names:
+          - --generate-only
+          argument: ""
+          description: 🚪 Only generate messages without sending to kafka topic.. . Used with --forced-value, this is a powerful way to send specific messages.
+        - names:
+          - --tombstone
+          argument: ""
+          description: ⚰️ Generate tombstone (record with null value). . . --key must be set when this flag is used.. . Note  CP 7.2+ is required.
+        - names:
+          - --validate
+          argument: ""
+          description: ☑️ Validate schema according to connect sink converter used
+        - names:
+          - --validate-config
+          argument: ""
+          description: 🔩 Converter configuration parameters to use . . See docs  https //docs.confluent.io/platform/current/schema-registry/connect.html#using-kconnect-long-with-sr. . 🎓 Tip  you can pass multiple parameters by specifying --validate-config multiple times
+        - names:
+          - --producer-property
+          argument: ""
+          description: 🔩 Producer configuration parameters to use . . See docs  https //docs.confluent.io/platform/current/installation/configuration/producer-configs.html#cp-config-producer. . 🎓 Tip  you can pass multiple parameters by specifying --producer-property multiple times. . Example  --producer-property "max.request.size=990485760" --producer-property "client.id=myid"
+        - names:
+          - --record-size
+          argument: ""
+          description: 🏋️ Record size in bytes, eg. 1048576 for 1MB. . 📢 If size is > 1Mb, --producer-property max.request.size and topic max.message.bytes will be automatically set to support the record size.
+      - name: create
+        description: 🆕 Create topic
+        usage: playground topic create [OPTIONS] [ARGUMENTS...]
+        options:
+        - names:
+          - --topic
+          argument: ""
+          description: 🗳 Topic name
+        - names:
+          - --nb-partitions
+          argument: ""
+          description: Number of partitions for the topic. (default is 1)
+      - name: delete
+        description: ❌ Delete topic
+        usage: playground topic delete [OPTIONS]
+        options:
+        - names:
+          - --topic
+          argument: ""
+          description: 🗳 Topic name
+      - name: alter
+        description: 🪛 Alter topic config
+        usage: playground topic alter [OPTIONS] [ARGUMENTS...]
+        options:
+        - names:
+          - --topic
+          argument: ""
+          description: 🗳 Topic name
+  - name: ccloud-connector
+    description: 🔗☁️ Fully Managed Connector commands
+    usage: playground ccloud-connector COMMAND
+    options: []
+    subcommands:
+      - name: status
+        description: 🧩 Show status of all connectors
+        usage: playground ccloud-connector status [OPTIONS]
+        options:
+        - names:
+          - --connector
+          argument: ""
+          description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
+      - name: plugins
+        description: 🎨 Show all plugins installed
+        usage: playground ccloud-connector plugins
+        options: []
+      - name: pause
+        description: ⏸️  Pause connector
+        usage: playground ccloud-connector pause [OPTIONS]
+        options:
+        - names:
+          - --connector
+          argument: ""
+          description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
+      - name: resume
+        description: ⏯️  Resume connector
+        usage: playground ccloud-connector resume [OPTIONS]
+        options:
+        - names:
+          - --connector
+          argument: ""
+          description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
+      - name: delete
+        description: 🗑️  Delete connector
+        usage: playground ccloud-connector delete [OPTIONS]
+        options:
+        - names:
+          - --connector
+          argument: ""
+          description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
+      - name: show-lag
+        description: 🐢 Show lag of sink connector
+        usage: playground ccloud-connector show-lag [OPTIONS]
+        options:
+        - names:
+          - --connector
+          argument: ""
+          description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
+        - names:
+          - --wait-for-zero-lag
+          argument: ""
+          description: 😴 Wait until lag becomes 0
+      - name: show-config
+        description: 🧰 Show current connector config
+        usage: playground ccloud-connector show-config [OPTIONS]
+        options:
+        - names:
+          - --connector
+          argument: ""
+          description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
+      - name: show-config-parameters
+        description: 🔩 Show all possible configuration parameters of connector
+        usage: playground ccloud-connector show-config-parameters [OPTIONS]
+        options:
+        - names:
+          - --connector
+          argument: ""
+          description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
+        - names:
+          - --open
+          argument: ""
+          description: 🔖 Save output to a file and open with text editor set with config.ini (default is code)
+        - names:
+          - --force-refresh
+          argument: ""
+          description: ☢️ Force refresh.
+      - name: create-or-update
+        description: 🧑‍🎨  Create or update connector
+        usage: playground ccloud-connector create-or-update [JSON] [OPTIONS]
+        options:
+        - names:
+          - --connector
+          argument: ""
+          description: 🔗 Connector name
+  - name: connector
+    description: 🔗 Connector commands
+    usage: playground connector COMMAND
+    options: []
+    subcommands:
+      - name: status
+        description: 🧩 Show status of all connectors
+        usage: playground connector status [OPTIONS]
+        options:
+        - names:
+          - --connector
+          argument: ""
+          description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
+      - name: plugins
+        description: 🎨 Show all plugins installed
+        usage: playground connector plugins
+        options: []
+      - name: pause
+        description: ⏸️  Pause connector
+        usage: playground connector pause [OPTIONS]
+        options:
+        - names:
+          - --connector
+          argument: ""
+          description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
+      - name: versions
+        description: 🧞 Get current and latest version available on Confluent Hub for connector(s) used in example
+        usage: playground connector versions
+        options: []
+      - name: restart
+        description: ♻️  Restart connector
+        usage: playground connector restart [OPTIONS]
+        options:
+        - names:
+          - --connector
+          argument: ""
+          description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
+      - name: resume
+        description: ⏯️  Resume connector
+        usage: playground connector resume [OPTIONS]
+        options:
+        - names:
+          - --connector
+          argument: ""
+          description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
+      - name: delete
+        description: 🗑️  Delete connector
+        usage: playground connector delete [OPTIONS]
+        options:
+        - names:
+          - --connector
+          argument: ""
+          description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
+      - name: show-lag
+        description: 🐢 Show lag of sink connector
+        usage: playground connector show-lag [OPTIONS]
+        options:
+        - names:
+          - --connector
+          argument: ""
+          description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
+        - names:
+          - --wait-for-zero-lag
+          argument: ""
+          description: 😴 Wait until lag becomes 0
+      - name: show-config
+        description: 🧰 Show current connector config
+        usage: playground connector show-config [OPTIONS]
+        options:
+        - names:
+          - --connector
+          argument: ""
+          description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
+      - name: show-config-parameters
+        description: 🔩 Show all possible configuration parameters of connector
+        usage: playground connector show-config-parameters [OPTIONS]
+        options:
+        - names:
+          - --connector
+          argument: ""
+          description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
+        - names:
+          - --open
+          argument: ""
+          description: 🔖 Save output to a file and open with text editor set with config.ini (default is code)
+        - names:
+          - --force-refresh
+          argument: ""
+          description: ☢️ Force refresh.
+      - name: log-level
+        description: 🧬 Set connect log level
+        usage: playground connector log-level [OPTIONS]
+        options:
+        - names:
+          - --connector
+          argument: ""
+          description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
+        - names:
+          - --level
+          argument: ""
+          description: ❕Log level
+      - name: create-or-update
+        description: 🧑‍🎨  Create or update connector
+        usage: playground connector create-or-update [JSON] [OPTIONS]
+        options:
+        - names:
+          - --connector
+          argument: ""
+          description: 🔗 Connector name
+        - names:
+          - --level
+          argument: ""
+          description: ❕Log level
+        - names:
+          - --package
+          argument: ""
+          description: Package name
