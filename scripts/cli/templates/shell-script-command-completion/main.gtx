@@ -5,7 +5,7 @@
 > description: {{ help.sanitize_for_print }}
 > usage: {{ usage_string.sanitize_for_print }}
 > options: []
-> inheritedOptions:
+> inheritedOptions: []
 > subcommands:
 
 

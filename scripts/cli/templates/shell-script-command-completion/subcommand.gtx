@@ -6,6 +6,9 @@ if flags.any?
   flags.each do |flag|
     >     - names:
     >       - {{ flag.name }}
+if flag.short
+    >       - {{ flag.short }}
+end
     >       argument: ""
     >       description: {{ flag.help.gsub("\n", '. ').gsub(":", ' ') }}
   end

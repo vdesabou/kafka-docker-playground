@@ -26,5 +26,5 @@ code --install-extension extension.vsix
 cd -
 
 
-
+# https://github.com/yamaton/h2o-curated-data/blob/main/general/yaml/minikube.yaml
 
