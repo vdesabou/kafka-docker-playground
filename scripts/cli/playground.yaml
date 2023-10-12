@@ -21,7 +21,7 @@ subcommands:
     - names:
       - --file
       - -f
-      argument: ""
+      argument: FILE
       description: | 
         🔖 Example file to run
         
@@ -314,7 +314,7 @@ subcommands:
     - names:
       - --file
       - -f
-      argument: ""
+      argument: FILE
       description: | 
         🔖 Example file to run
         
@@ -470,7 +470,7 @@ subcommands:
     - names:
       - --file
       - -f
-      argument: ""
+      argument: FILE
       description: | 
         🔎 Search any file and open it.
         
@@ -522,7 +522,7 @@ subcommands:
         - names:
           - --file
           - -f
-          argument: ""
+          argument: FILE
           description: | 
             🤐 playground_repro_export.tgz file
             
@@ -711,7 +711,7 @@ subcommands:
         - names:
           - --file
           - -f
-          argument: ""
+          argument: FILE
           description: | 
             🔖 Example file to use as basis
             
