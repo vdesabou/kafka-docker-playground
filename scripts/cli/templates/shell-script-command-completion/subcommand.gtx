@@ -10,7 +10,8 @@ if flag.short
     >       - {{ flag.short }}
 end
     >       argument: ""
-    >       description: {{ flag.help.gsub("\n", '. ').gsub(":", ' ') }}
+    >       description: | 
+    >         {{ flag.help.gsub("\n", "\n        ").gsub(":", ' ') }}
   end
 else
 >     options: []
