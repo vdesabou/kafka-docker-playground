@@ -5,7 +5,7 @@ yq -o=json playground.yaml > playground.json
 
 { printf "["; cat playground.json | jq -c; cat templates/shell-script-command-completion/general_end.json; } | tr -d '\n' > general.json
 
-#cat general.json | jq .
+cat general.json | jq .
 gzip -f general.json
 
 rm -rf extension

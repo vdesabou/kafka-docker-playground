@@ -578,7 +578,7 @@
                 "-p"
               ],
               "argument": "'none'",
-              "description": "♨️ Java producer type to use\n\nOne of avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key\n\n🎓 Tip  Most of times, it's much simpler to use 'playground topic produce'. Use java producer only if you have very specific requirements such as specifying record timestamp, use key with schema or to do perf testing\n\n🎓 Tip  'with-key' will also produce key with selected converter, otherwise LongConverter is used\n\nDefault value: none\nAllowed values: none, avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key\nConflicts with: --pipeline\n"
+              "description": "♨️ Java producer type to use\n\nOne of avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key\n\n🎓 Tip  Most of times, it's much simpler to use 'playground topic produce'. Use java producer only if you have very specific requirements such as specifying record timestamp, use key with schema or to do perf testing\n\n🎓 Tip  'with-key' will also produce key with selected converter, otherwise LongConverter is used\n\nDefault value: none\n\nAllowed values: none, avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key\n\nConflicts with: --pipeline\n"
             },
             {
               "names": [
@@ -795,7 +795,7 @@
                 "start",
                 "stop"
               ],
-              "description": "🟢 start or stop\n\nRequired: ✓ Yes\nAllowed values: start, stop\n"
+              "description": "🟢 start or stop\n\nRequired: ✓ Yes\n\nAllowed values: start, stop\n"
             }
           ]
         },
@@ -820,7 +820,7 @@
                 "start",
                 "stop"
               ],
-              "description": "🟢 start or stop\n\nRequired: ✓ Yes\nAllowed values: start, stop\n"
+              "description": "🟢 start or stop\n\nRequired: ✓ Yes\n\nAllowed values: start, stop\n"
             }
           ]
         },
@@ -877,7 +877,7 @@
                 "DEBUG",
                 "TRACE"
               ],
-              "description": "❕Log level\n\nRequired: ✓ Yes\nAllowed values: INFO, WARN, DEBUG, TRACE\n"
+              "description": "❕Log level\n\nRequired: ✓ Yes\n\nAllowed values: INFO, WARN, DEBUG, TRACE\n"
             }
           ]
         }
@@ -894,7 +894,7 @@
             "-c"
           ],
           "argument": "'connect'",
-          "description": "Component name\n\nDefault value: connect\nAllowed values: zookeeper, broker, connect, schema-registry\n"
+          "description": "Component name\n\nDefault value: connect\n\nAllowed values: zookeeper, broker, connect, schema-registry\n"
         },
         {
           "names": [
@@ -974,7 +974,7 @@
                 "-m"
               ],
               "argument": "'600'",
-              "description": "⏳ Max time in seconds to wait when using --wait-for-log (default 600s)\n\nDefault value: 600\nConflicts with: --open\n"
+              "description": "⏳ Max time in seconds to wait when using --wait-for-log (default 600s)\n\nDefault value: 600\n\nConflicts with: --open\n"
             }
           ]
         },
@@ -997,7 +997,7 @@
                 "-s"
               ],
               "argument": "'bash'",
-              "description": "💾 Shell to use (default is bash)\n\nDefault value: bash\nAllowed values: bash, sh, ksh, zsh\n"
+              "description": "💾 Shell to use (default is bash)\n\nDefault value: bash\n\nAllowed values: bash, sh, ksh, zsh\n"
             }
           ]
         },
@@ -1033,7 +1033,7 @@
                 "--shell"
               ],
               "argument": "'bash'",
-              "description": "💾 Shell to use (default is bash)\n\nDefault value: bash\nAllowed values: bash, sh, ksh, zsh\n"
+              "description": "💾 Shell to use (default is bash)\n\nDefault value: bash\n\nAllowed values: bash, sh, ksh, zsh\n"
             }
           ]
         },
@@ -1167,7 +1167,7 @@
                 "FULL_TRANSITIVE",
                 "NONE"
               ],
-              "description": "Schema Registry compatibility rule\n\nRequired: ✓ Yes\nAllowed values: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE\n"
+              "description": "Schema Registry compatibility rule\n\nRequired: ✓ Yes\n\nAllowed values: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE\n"
             }
           ]
         },
@@ -1366,7 +1366,7 @@
                 "wrapper.for.nullables=true",
                 "wrapper.for.raw.primitives=false"
               ],
-              "description": "🔩 Converter configuration parameters to use \n\nSee docs  https //docs.confluent.io/platform/current/schema-registry/connect.html#using-kconnect-long-with-sr\n\n🎓 Tip  you can pass multiple parameters by specifying --validate-config multiple times\n\nRepeatable: ✓ Yes\nAllowed values: scrub.invalid.names=true, enhanced.avro.schema.support=true, connect.meta.data=false, object.additional.properties=false, use.optional.for.nonrequired=true, ignore.default.for.nullables=true, generalized.sum.type.support=true, enhanced.protobuf.schema.support=true, generate.index.for.unions=false, int.for.enums=true, optional.for.nullables=true, generate.struct.for.nulls=true, wrapper.for.nullables=true, wrapper.for.raw.primitives=false\n"
+              "description": "🔩 Converter configuration parameters to use \n\nSee docs  https //docs.confluent.io/platform/current/schema-registry/connect.html#using-kconnect-long-with-sr\n\n🎓 Tip  you can pass multiple parameters by specifying --validate-config multiple times\n\nRepeatable: ✓ Yes\n\nAllowed values: scrub.invalid.names=true, enhanced.avro.schema.support=true, connect.meta.data=false, object.additional.properties=false, use.optional.for.nonrequired=true, ignore.default.for.nullables=true, generalized.sum.type.support=true, enhanced.protobuf.schema.support=true, generate.index.for.unions=false, int.for.enums=true, optional.for.nullables=true, generate.struct.for.nulls=true, wrapper.for.nullables=true, wrapper.for.raw.primitives=false\n"
             },
             {
               "names": [
@@ -1778,7 +1778,7 @@
                 "DEBUG",
                 "TRACE"
               ],
-              "description": "❕Log level\n\nRequired: ✓ Yes\nAllowed values: INFO, WARN, DEBUG, TRACE\n"
+              "description": "❕Log level\n\nRequired: ✓ Yes\n\nAllowed values: INFO, WARN, DEBUG, TRACE\n"
             }
           ]
         },
