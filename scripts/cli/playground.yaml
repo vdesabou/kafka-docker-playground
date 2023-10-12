@@ -39,7 +39,7 @@ subcommands:
         
     - names:
       - --tag
-      argument: ""
+      argument: TAG
       description: | 
         🎯 Confluent Platform (CP) version to use
         
@@ -47,7 +47,7 @@ subcommands:
         
     - names:
       - --connector-tag
-      argument: ""
+      argument: CONNECTOR_TAG
       description: | 
         🔗 Connector version to use
         
@@ -56,7 +56,7 @@ subcommands:
         Conflicts with: --connector-zip
     - names:
       - --connector-zip
-      argument: ""
+      argument: CONNECTOR_ZIP
       description: | 
         🤐 Connector zip to use
         
@@ -68,7 +68,7 @@ subcommands:
         Conflicts with: --connector-tag
     - names:
       - --connector-jar
-      argument: ""
+      argument: CONNECTOR_JAR
       description: | 
         ♨️ Connector jar to use
         
@@ -171,7 +171,7 @@ subcommands:
         
     - names:
       - --tag
-      argument: ""
+      argument: TAG
       description: | 
         🎯 Confluent Platform (CP) version to use
         
@@ -179,7 +179,7 @@ subcommands:
         
     - names:
       - --connector-tag
-      argument: ""
+      argument: CONNECTOR_TAG
       description: | 
         🔗 Connector version to use
         
@@ -188,7 +188,7 @@ subcommands:
         Conflicts with: --connector-zip
     - names:
       - --connector-zip
-      argument: ""
+      argument: CONNECTOR_ZIP
       description: | 
         🤐 Connector zip to use
         
@@ -200,7 +200,7 @@ subcommands:
         Conflicts with: --connector-tag
     - names:
       - --connector-jar
-      argument: ""
+      argument: CONNECTOR_JAR
       description: | 
         ♨️ Connector jar to use
         
@@ -332,7 +332,7 @@ subcommands:
         
     - names:
       - --tag
-      argument: ""
+      argument: TAG
       description: | 
         🎯 Confluent Platform (CP) version to use
         
@@ -340,7 +340,7 @@ subcommands:
         
     - names:
       - --connector-tag
-      argument: ""
+      argument: CONNECTOR_TAG
       description: | 
         🔗 Connector version to use
         
@@ -349,7 +349,7 @@ subcommands:
         Conflicts with: --connector-zip
     - names:
       - --connector-zip
-      argument: ""
+      argument: CONNECTOR_ZIP
       description: | 
         🤐 Connector zip to use
         
@@ -361,7 +361,7 @@ subcommands:
         Conflicts with: --connector-tag
     - names:
       - --connector-jar
-      argument: ""
+      argument: CONNECTOR_JAR
       description: | 
         ♨️ Connector jar to use
         
@@ -411,7 +411,7 @@ subcommands:
         Allowed values: aws, gcp, azure
     - names:
       - --cluster-region
-      argument: ""
+      argument: CLUSTER-REGION
       description: | 
         🗺 The Cloud region. 
         
@@ -419,7 +419,7 @@ subcommands:
         
     - names:
       - --cluster-environment
-      argument: ""
+      argument: CLUSTER-ENVIRONMENT
       description: | 
         🌐 The environment id where want your new cluster (example  env-xxxxx)
         
@@ -429,7 +429,7 @@ subcommands:
         
     - names:
       - --cluster-name
-      argument: ""
+      argument: CLUSTER-NAME
       description: | 
         🎰 The cluster name. 
         
@@ -439,7 +439,7 @@ subcommands:
         
     - names:
       - --cluster-creds
-      argument: ""
+      argument: CLUSTER-CREDS
       description: | 
         🔒 The Kafka api key and secret to use, it should be separated with semi-colon (example  <API_KEY> <API_KEY_SECRET>)
         
@@ -449,7 +449,7 @@ subcommands:
         
     - names:
       - --cluster-schema-registry-creds
-      argument: ""
+      argument: CLUSTER-SCHEMA-REGISTRY-CREDS
       description: | 
         🔒 The Schema Registry api key and secret to use, it should be separated with semi-colon (example  <SR_API_KEY> <SR_API_KEY_SECRET>)
         
@@ -540,7 +540,7 @@ subcommands:
         options:
         - names:
           - --tag
-          argument: ""
+          argument: TAG
           description: | 
             🎯 Confluent Platform (CP) version to use
             
@@ -548,7 +548,7 @@ subcommands:
             
         - names:
           - --connector-tag
-          argument: ""
+          argument: CONNECTOR_TAG
           description: | 
             🔗 Connector version to use
             
@@ -557,7 +557,7 @@ subcommands:
             Conflicts with: --connector-zip
         - names:
           - --connector-zip
-          argument: ""
+          argument: CONNECTOR_ZIP
           description: | 
             🤐 Connector zip to use
             
@@ -569,7 +569,7 @@ subcommands:
             Conflicts with: --connector-tag
         - names:
           - --connector-jar
-          argument: ""
+          argument: CONNECTOR_JAR
           description: | 
             ♨️ Connector jar to use
             
@@ -660,7 +660,7 @@ subcommands:
             
         - names:
           - --cluster-region
-          argument: ""
+          argument: CLUSTER-REGION
           description: | 
             🗺 The Cloud region. 
             
@@ -668,7 +668,7 @@ subcommands:
             
         - names:
           - --cluster-environment
-          argument: ""
+          argument: CLUSTER-ENVIRONMENT
           description: | 
             🌐 The environment id where want your new cluster (example  env-xxxxx)
             
@@ -678,7 +678,7 @@ subcommands:
             
         - names:
           - --cluster-name
-          argument: ""
+          argument: CLUSTER-NAME
           description: | 
             🎰 The cluster name. 
             
@@ -688,7 +688,7 @@ subcommands:
             
         - names:
           - --cluster-creds
-          argument: ""
+          argument: CLUSTER-CREDS
           description: | 
             🔒 The Kafka api key and secret to use, it should be separated with semi-colon (example  <API_KEY> <API_KEY_SECRET>)
             
@@ -698,7 +698,7 @@ subcommands:
             
         - names:
           - --cluster-schema-registry-creds
-          argument: ""
+          argument: CLUSTER-SCHEMA-REGISTRY-CREDS
           description: | 
             🔒 The Schema Registry api key and secret to use, it should be separated with semi-colon (example  <SR_API_KEY> <SR_API_KEY_SECRET>)
             
@@ -723,7 +723,7 @@ subcommands:
         - names:
           - --description
           - -d
-          argument: ""
+          argument: DESCRIPTION
           description: | 
             💭 Description for the reproduction model
             
@@ -776,7 +776,7 @@ subcommands:
             
         - names:
           - --pipeline
-          argument: ""
+          argument: SINK_FILE
           description: | 
             🔖 Sink example file to use for creating a pipeline
             
@@ -912,7 +912,7 @@ subcommands:
             Default value: connect
         - names:
           - --port
-          argument: ""
+          argument: PORT
           description: | 
             Port on which tcp dump should be done, if not set sniffing is done on every port
             
@@ -938,14 +938,14 @@ subcommands:
             Default value: connect
         - names:
           - --destination
-          argument: ""
+          argument: DESTINATION
           description: | 
             Destination  it could be an ip address, a container name or a hostname
             
             Required: ✓ Yes
         - names:
           - --port
-          argument: ""
+          argument: PORT
           description: | 
             Port on which tcp traffic should be blocked
             
@@ -1001,7 +1001,7 @@ subcommands:
         - names:
           - --package
           - -p
-          argument: ""
+          argument: PACKAGE
           description: | 
             Package name
             
@@ -1013,7 +1013,7 @@ subcommands:
         - names:
           - --package
           - -p
-          argument: ""
+          argument: PACKAGE
           description: | 
             📦 Package name
             
@@ -1053,7 +1053,7 @@ subcommands:
     - names:
       - --domain
       - -d
-      argument: ""
+      argument: DOMAIN
       description: | 
         Domain name
         
@@ -1105,7 +1105,7 @@ subcommands:
         - names:
           - --wait-for-log
           - -w
-          argument: ""
+          argument: LOG
           description: | 
             😴 Wait until log appears
             
@@ -1156,7 +1156,7 @@ subcommands:
             Default value: connect
         - names:
           - --command
-          argument: ""
+          argument: COMMAND
           description: | 
             📲 Command to execute
             
@@ -1241,7 +1241,7 @@ subcommands:
         - names:
           - --topic
           - -t
-          argument: ""
+          argument: TOPIC
           description: | 
             🗳 Topic name
             
@@ -1258,7 +1258,7 @@ subcommands:
         - names:
           - --topic
           - -t
-          argument: ""
+          argument: TOPIC
           description: | 
             🗳 Topic name
             
@@ -1270,7 +1270,7 @@ subcommands:
         - names:
           - --topic
           - -t
-          argument: ""
+          argument: TOPIC
           description: | 
             🗳 Topic name
             
@@ -1297,7 +1297,7 @@ subcommands:
         - names:
           - --topic
           - -t
-          argument: ""
+          argument: TOPIC
           description: | 
             🗳 Topic name
             
@@ -1342,7 +1342,7 @@ subcommands:
             Conflicts with: --min-expected-messages, --max-messages
         - names:
           - --plot-latencies-timestamp-field
-          argument: ""
+          argument: TIMESTAMP
           description: | 
             🗳 Timestamp field name that represents when record was created in source system
             
@@ -1376,7 +1376,7 @@ subcommands:
         - names:
           - --topic
           - -t
-          argument: ""
+          argument: TOPIC
           description: | 
             🗳 Topic name
             
@@ -1413,7 +1413,7 @@ subcommands:
             Allowed values: TopicNameStrategy, RecordNameStrategy, TopicRecordNameStrategy
         - names:
           - --key
-          argument: ""
+          argument: KEY
           description: | 
             🗝️ Key to use. If not set, no key is used.
             
@@ -1430,7 +1430,7 @@ subcommands:
             
         - names:
           - --headers
-          argument: ""
+          argument: HEADERS
           description: | 
             🚏 Headers to use for all records. If not set, no header is used.
             
@@ -1440,7 +1440,7 @@ subcommands:
             
         - names:
           - --forced-value
-          argument: ""
+          argument: FORCED-VALUE
           description: | 
             ☢️ Value to use for all records. 
             
@@ -1484,7 +1484,7 @@ subcommands:
             Allowed values: scrub.invalid.names=true, enhanced.avro.schema.support=true, connect.meta.data=false, object.additional.properties=false, use.optional.for.nonrequired=true, ignore.default.for.nullables=true, generalized.sum.type.support=true, enhanced.protobuf.schema.support=true, generate.index.for.unions=false, int.for.enums=true, optional.for.nullables=true, generate.struct.for.nulls=true, wrapper.for.nullables=true, wrapper.for.raw.primitives=false
         - names:
           - --producer-property
-          argument: ""
+          argument: PRODUCER-PROPERTY
           description: | 
             🔩 Producer configuration parameters to use 
             
@@ -1512,7 +1512,7 @@ subcommands:
         - names:
           - --topic
           - -t
-          argument: ""
+          argument: TOPIC
           description: | 
             🗳 Topic name
             
@@ -1532,7 +1532,7 @@ subcommands:
         - names:
           - --topic
           - -t
-          argument: ""
+          argument: TOPIC
           description: | 
             🗳 Topic name
             
@@ -1545,7 +1545,7 @@ subcommands:
         - names:
           - --topic
           - -t
-          argument: ""
+          argument: TOPIC
           description: | 
             🗳 Topic name
             
@@ -1564,7 +1564,7 @@ subcommands:
         - names:
           - --connector
           - -c
-          argument: ""
+          argument: CONNECTOR
           description: | 
             🔗 Connector name
             
@@ -1583,7 +1583,7 @@ subcommands:
         - names:
           - --connector
           - -c
-          argument: ""
+          argument: CONNECTOR
           description: | 
             🔗 Connector name
             
@@ -1597,7 +1597,7 @@ subcommands:
         - names:
           - --connector
           - -c
-          argument: ""
+          argument: CONNECTOR
           description: | 
             🔗 Connector name
             
@@ -1611,7 +1611,7 @@ subcommands:
         - names:
           - --connector
           - -c
-          argument: ""
+          argument: CONNECTOR
           description: | 
             🔗 Connector name
             
@@ -1625,7 +1625,7 @@ subcommands:
         - names:
           - --connector
           - -c
-          argument: ""
+          argument: CONNECTOR
           description: | 
             🔗 Connector name
             
@@ -1645,7 +1645,7 @@ subcommands:
         - names:
           - --connector
           - -c
-          argument: ""
+          argument: CONNECTOR
           description: | 
             🔗 Connector name
             
@@ -1659,7 +1659,7 @@ subcommands:
         - names:
           - --connector
           - -c
-          argument: ""
+          argument: CONNECTOR
           description: | 
             🔗 Connector name
             
@@ -1686,7 +1686,7 @@ subcommands:
         - names:
           - --connector
           - -c
-          argument: ""
+          argument: CONNECTOR
           description: | 
             🔗 Connector name
             
@@ -1705,7 +1705,7 @@ subcommands:
         - names:
           - --connector
           - -c
-          argument: ""
+          argument: CONNECTOR
           description: | 
             🔗 Connector name
             
@@ -1724,7 +1724,7 @@ subcommands:
         - names:
           - --connector
           - -c
-          argument: ""
+          argument: CONNECTOR
           description: | 
             🔗 Connector name
             
@@ -1743,7 +1743,7 @@ subcommands:
         - names:
           - --connector
           - -c
-          argument: ""
+          argument: CONNECTOR
           description: | 
             🔗 Connector name
             
@@ -1757,7 +1757,7 @@ subcommands:
         - names:
           - --connector
           - -c
-          argument: ""
+          argument: CONNECTOR
           description: | 
             🔗 Connector name
             
@@ -1771,7 +1771,7 @@ subcommands:
         - names:
           - --connector
           - -c
-          argument: ""
+          argument: CONNECTOR
           description: | 
             🔗 Connector name
             
@@ -1785,7 +1785,7 @@ subcommands:
         - names:
           - --connector
           - -c
-          argument: ""
+          argument: CONNECTOR
           description: | 
             🔗 Connector name
             
@@ -1805,7 +1805,7 @@ subcommands:
         - names:
           - --connector
           - -c
-          argument: ""
+          argument: CONNECTOR
           description: | 
             🔗 Connector name
             
@@ -1819,7 +1819,7 @@ subcommands:
         - names:
           - --connector
           - -c
-          argument: ""
+          argument: CONNECTOR
           description: | 
             🔗 Connector name
             
@@ -1846,7 +1846,7 @@ subcommands:
         - names:
           - --connector
           - -c
-          argument: ""
+          argument: CONNECTOR
           description: | 
             🔗 Connector name
             
@@ -1869,7 +1869,7 @@ subcommands:
         - names:
           - --connector
           - -c
-          argument: ""
+          argument: CONNECTOR
           description: | 
             🔗 Connector name
             
@@ -1885,7 +1885,7 @@ subcommands:
         - names:
           - --package
           - -p
-          argument: ""
+          argument: PACKAGE
           description: | 
             Package name
             

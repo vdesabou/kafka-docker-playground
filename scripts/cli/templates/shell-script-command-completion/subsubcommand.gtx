@@ -17,6 +17,8 @@ end
     >           argument: [{{ flag.allowed.join(', ') }}]
       elsif flag.name == "--file"
     >           argument: FILE
+      elsif flag.arg
+    >           argument: {{ flag.arg.upcase }}
       else
     >           argument: ""
       end
