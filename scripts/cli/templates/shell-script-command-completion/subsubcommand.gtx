@@ -1,5 +1,6 @@
 >       - name: {{ name }}
->         description: {{ help.sanitize_for_print }}
+>         description: | 
+>           {{ help.gsub("\n", "\n            ").gsub(":", ' ') }}
 >         usage: {{ usage_string.sanitize_for_print }}
 if flags.any?
 >         options:

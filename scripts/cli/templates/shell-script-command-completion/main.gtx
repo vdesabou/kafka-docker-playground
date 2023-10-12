@@ -2,7 +2,8 @@
 # https://www.rubydoc.info/gems/gtx
 
 > name: {{ full_name }}
-> description: {{ help.sanitize_for_print }}
+> description: | 
+>   {{ help.gsub("\n", "\n  ").gsub(":", ' ') }}
 > usage: {{ usage_string.sanitize_for_print }}
 > options: []
 > inheritedOptions: []
