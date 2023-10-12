@@ -28,12 +28,15 @@ subcommands:
         ❕ It must be absolute full path
         
         🎓 Tip  use <tab> completion to trigger fzf completion
+        
+        Required: ✓ Yes
     - names:
       - --open
       - -o
       argument: ""
       description: | 
         📖 Opening example file with text editor set with config.ini (default is code)
+        
     - names:
       - --tag
       argument: ""
@@ -41,6 +44,7 @@ subcommands:
         🎯 Confluent Platform (CP) version to use
         
         Must be greater or equal to 5.0.0
+        
     - names:
       - --connector-tag
       argument: ""
@@ -48,6 +52,8 @@ subcommands:
         🔗 Connector version to use
         
         By default, for each connector, the latest available version on Confluent Hub is used
+        
+        Conflicts with: --connector-zip
     - names:
       - --connector-zip
       argument: ""
@@ -58,6 +64,8 @@ subcommands:
         
         🎓 Tip  use <tab> completion to trigger fzf completion 
                 use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+        
+        Conflicts with: --connector-tag
     - names:
       - --connector-jar
       argument: ""
@@ -68,6 +76,7 @@ subcommands:
         
         🎓 Tip  use <tab> completion to trigger fzf completion 
                 use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+        
     - names:
       - --enable-ksqldb
       argument: ""
@@ -75,6 +84,7 @@ subcommands:
         🚀 Enable ksqlDB
         
         By default, ksqldb-server and ksqldb-cli containers are not started for every test
+        
     - names:
       - --enable-control-center
       argument: ""
@@ -84,6 +94,7 @@ subcommands:
         By default, control-center container is not started for every test
         
         Control Center is reachable at http //127.0.0.1 9021
+        
     - names:
       - --enable-conduktor
       argument: ""
@@ -93,6 +104,7 @@ subcommands:
         By default, Conduktor Platform container is not started for every test
         
         Conduktor is reachable at http //127.0.0.1 8080/console (admin/admin)
+        
     - names:
       - --enable-multiple-brokers
       argument: ""
@@ -100,6 +112,7 @@ subcommands:
         3️⃣ Enable multiple brokers
         
         By default, there is only one broker node enabled
+        
     - names:
       - --enable-multiple-connect-workers
       argument: ""
@@ -109,6 +122,7 @@ subcommands:
         By default, there is only one connect node enabled
         
         It only works when plaintext environment is used
+        
     - names:
       - --enable-jmx-grafana
       argument: ""
@@ -118,6 +132,7 @@ subcommands:
         📊 Grafana is reachable at http //127.0.0.1 3000
         🛡️ Prometheus is reachable at http //127.0.0.1 9090
         📛 Pyroscope is reachable at http //127.0.0.1 4040
+        
     - names:
       - --enable-kcat
       argument: ""
@@ -127,11 +142,13 @@ subcommands:
         You can use it with 
         
         $ docker exec kcat kcat -b broker 9092 -L
+        
     - names:
       - --enable-sr-maven-plugin-app
       argument: ""
       description: | 
         🔰 Enable Schema Registry Maven plugin App
+        
     - names:
       - --enable-sql-datagen
       argument: ""
@@ -139,6 +156,7 @@ subcommands:
         🌪️ Enable SQL Datagen injection
         
         This only works for Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with JDBC and Debezium
+        
     subcommands:
   - name: re-run
     description: | 
@@ -150,6 +168,7 @@ subcommands:
       argument: ""
       description: | 
         🧼 Clear any previous flags
+        
     - names:
       - --tag
       argument: ""
@@ -157,6 +176,7 @@ subcommands:
         🎯 Confluent Platform (CP) version to use
         
         Must be greater or equal to 5.0.0
+        
     - names:
       - --connector-tag
       argument: ""
@@ -164,6 +184,8 @@ subcommands:
         🔗 Connector version to use
         
         By default, for each connector, the latest available version on Confluent Hub is used
+        
+        Conflicts with: --connector-zip
     - names:
       - --connector-zip
       argument: ""
@@ -174,6 +196,8 @@ subcommands:
         
         🎓 Tip  use <tab> completion to trigger fzf completion 
                 use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+        
+        Conflicts with: --connector-tag
     - names:
       - --connector-jar
       argument: ""
@@ -184,6 +208,7 @@ subcommands:
         
         🎓 Tip  use <tab> completion to trigger fzf completion 
                 use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+        
     - names:
       - --enable-ksqldb
       argument: ""
@@ -191,6 +216,7 @@ subcommands:
         🚀 Enable ksqlDB
         
         By default, ksqldb-server and ksqldb-cli containers are not started for every test
+        
     - names:
       - --enable-control-center
       argument: ""
@@ -200,6 +226,7 @@ subcommands:
         By default, control-center container is not started for every test
         
         Control Center is reachable at http //127.0.0.1 9021
+        
     - names:
       - --enable-conduktor
       argument: ""
@@ -209,6 +236,7 @@ subcommands:
         By default, Conduktor Platform container is not started for every test
         
         Conduktor is reachable at http //127.0.0.1 8080/console (admin/admin)
+        
     - names:
       - --enable-multiple-brokers
       argument: ""
@@ -216,6 +244,7 @@ subcommands:
         3️⃣ Enable multiple brokers
         
         By default, there is only one broker node enabled
+        
     - names:
       - --enable-multiple-connect-workers
       argument: ""
@@ -225,6 +254,7 @@ subcommands:
         By default, there is only one connect node enabled
         
         It only works when plaintext environment is used
+        
     - names:
       - --enable-jmx-grafana
       argument: ""
@@ -234,6 +264,7 @@ subcommands:
         📊 Grafana is reachable at http //127.0.0.1 3000
         🛡️ Prometheus is reachable at http //127.0.0.1 9090
         📛 Pyroscope is reachable at http //127.0.0.1 4040
+        
     - names:
       - --enable-kcat
       argument: ""
@@ -243,11 +274,13 @@ subcommands:
         You can use it with 
         
         $ docker exec kcat kcat -b broker 9092 -L
+        
     - names:
       - --enable-sr-maven-plugin-app
       argument: ""
       description: | 
         🔰 Enable Schema Registry Maven plugin App
+        
     - names:
       - --enable-sql-datagen
       argument: ""
@@ -255,6 +288,7 @@ subcommands:
         🌪️ Enable SQL Datagen injection
         
         This only works for Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with JDBC and Debezium
+        
     subcommands:
   - name: run-ccloud
     description: | 
@@ -287,12 +321,15 @@ subcommands:
         ❕ It must be absolute full path
         
         🎓 Tip  use <tab> completion to trigger fzf completion
+        
+        Required: ✓ Yes
     - names:
       - --open
       - -o
       argument: ""
       description: | 
         📖 Opening example file with text editor set with config.ini (default is code)
+        
     - names:
       - --tag
       argument: ""
@@ -300,6 +337,7 @@ subcommands:
         🎯 Confluent Platform (CP) version to use
         
         Must be greater or equal to 5.0.0
+        
     - names:
       - --connector-tag
       argument: ""
@@ -307,6 +345,8 @@ subcommands:
         🔗 Connector version to use
         
         By default, for each connector, the latest available version on Confluent Hub is used
+        
+        Conflicts with: --connector-zip
     - names:
       - --connector-zip
       argument: ""
@@ -317,6 +357,8 @@ subcommands:
         
         🎓 Tip  use <tab> completion to trigger fzf completion 
                 use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+        
+        Conflicts with: --connector-tag
     - names:
       - --connector-jar
       argument: ""
@@ -327,6 +369,7 @@ subcommands:
         
         🎓 Tip  use <tab> completion to trigger fzf completion 
                 use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+        
     - names:
       - --enable-control-center
       argument: ""
@@ -336,6 +379,7 @@ subcommands:
         By default, control-center container is not started for every test
         
         Control Center is reachable at http //127.0.0.1 9021
+        
     - names:
       - --enable-conduktor
       argument: ""
@@ -345,6 +389,7 @@ subcommands:
         By default, Conduktor Platform container is not started for every test
         
         Conduktor is reachable at http //127.0.0.1 8080/console (admin/admin)
+        
     - names:
       - --enable-kcat
       argument: ""
@@ -354,13 +399,16 @@ subcommands:
         You can use it with 
         
         $ docker exec kcat kcat -b broker 9092 -L
+        
     - names:
       - --cluster-cloud
-      argument: ""
+      argument: [aws, gcp, azure]
       description: | 
         🌤 The cloud provider  aws, gcp or azure. Default is aws
         
         🎓 Tip  you can also use CLUSTER_CLOUD environment variable
+        
+        Allowed values: aws, gcp, azure
     - names:
       - --cluster-region
       argument: ""
@@ -368,6 +416,7 @@ subcommands:
         🗺 The Cloud region. 
         
         🎓 Tip  you can also use CLUSTER_REGION environment variable
+        
     - names:
       - --cluster-environment
       argument: ""
@@ -377,6 +426,7 @@ subcommands:
         ℹ️ Optional, if not set, new environment will be created
         
         🎓 Tip  you can also use ENVIRONMENT environment variable
+        
     - names:
       - --cluster-name
       argument: ""
@@ -386,6 +436,7 @@ subcommands:
         ❣️ Only required if you want to use your own existing cluster
         
         🎓 Tip  you can also use CLUSTER_NAME environment variable
+        
     - names:
       - --cluster-creds
       argument: ""
@@ -395,6 +446,7 @@ subcommands:
         ❣️ Only required if you want to use your own existing cluster
         
         🎓 Tip  you can also use CLUSTER_CREDS environment variable
+        
     - names:
       - --cluster-schema-registry-creds
       argument: ""
@@ -406,6 +458,7 @@ subcommands:
         ❣️ Only required if you want to use your own existing cluster
         
         🎓 Tip  you can also use SCHEMA_REGISTRY_CREDS environment variable
+        
     subcommands:
   - name: open
     description: | 
@@ -424,6 +477,7 @@ subcommands:
         ❕ It must be absolute full path
         
         🎓 Tip  use <tab> completion to trigger fzf completion
+        
     subcommands:
   - name: stop
     description: | 
@@ -441,6 +495,7 @@ subcommands:
       argument: ""
       description: | 
         🌐 Only show url
+        
     subcommands:
   - name: repro
     description: | 
@@ -458,6 +513,7 @@ subcommands:
           argument: ""
           description: | 
             Export all uncommitted reproduction models
+            
       - name: import
         description: | 
           📥 Import tgz file which was created with export command
@@ -474,6 +530,7 @@ subcommands:
             
             🎓 Tip  use <tab> completion to trigger fzf completion 
                     use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+            
       - name: bootstrap
         description: | 
           🛠  Bootstrap reproduction model
@@ -488,6 +545,7 @@ subcommands:
             🎯 Confluent Platform (CP) version to use
             
             Must be greater or equal to 5.0.0
+            
         - names:
           - --connector-tag
           argument: ""
@@ -495,6 +553,8 @@ subcommands:
             🔗 Connector version to use
             
             By default, for each connector, the latest available version on Confluent Hub is used
+            
+            Conflicts with: --connector-zip
         - names:
           - --connector-zip
           argument: ""
@@ -505,6 +565,8 @@ subcommands:
             
             🎓 Tip  use <tab> completion to trigger fzf completion 
                     use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+            
+            Conflicts with: --connector-tag
         - names:
           - --connector-jar
           argument: ""
@@ -515,6 +577,7 @@ subcommands:
             
             🎓 Tip  use <tab> completion to trigger fzf completion 
                     use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+            
         - names:
           - --enable-ksqldb
           argument: ""
@@ -522,6 +585,7 @@ subcommands:
             🚀 Enable ksqlDB
             
             By default, ksqldb-server and ksqldb-cli containers are not started for every test
+            
         - names:
           - --enable-control-center
           argument: ""
@@ -531,6 +595,7 @@ subcommands:
             By default, control-center container is not started for every test
             
             Control Center is reachable at http //127.0.0.1 9021
+            
         - names:
           - --enable-conduktor
           argument: ""
@@ -540,6 +605,7 @@ subcommands:
             By default, Conduktor Platform container is not started for every test
             
             Conduktor is reachable at http //127.0.0.1 8080/console (admin/admin)
+            
         - names:
           - --enable-multiple-brokers
           argument: ""
@@ -547,6 +613,7 @@ subcommands:
             3️⃣ Enable multiple brokers
             
             By default, there is only one broker node enabled
+            
         - names:
           - --enable-multiple-connect-workers
           argument: ""
@@ -556,6 +623,7 @@ subcommands:
             By default, there is only one connect node enabled
             
             It only works when plaintext environment is used
+            
         - names:
           - --enable-jmx-grafana
           argument: ""
@@ -565,6 +633,7 @@ subcommands:
             📊 Grafana is reachable at http //127.0.0.1 3000
             🛡️ Prometheus is reachable at http //127.0.0.1 9090
             📛 Pyroscope is reachable at http //127.0.0.1 4040
+            
         - names:
           - --enable-kcat
           argument: ""
@@ -574,11 +643,13 @@ subcommands:
             You can use it with 
             
             $ docker exec kcat kcat -b broker 9092 -L
+            
         - names:
           - --enable-sr-maven-plugin-app
           argument: ""
           description: | 
             🔰 Enable Schema Registry Maven plugin App
+            
         - names:
           - --enable-sql-datagen
           argument: ""
@@ -586,6 +657,7 @@ subcommands:
             🌪️ Enable SQL Datagen injection
             
             This only works for Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with JDBC and Debezium
+            
         - names:
           - --cluster-region
           argument: ""
@@ -593,6 +665,7 @@ subcommands:
             🗺 The Cloud region. 
             
             🎓 Tip  you can also use CLUSTER_REGION environment variable
+            
         - names:
           - --cluster-environment
           argument: ""
@@ -602,6 +675,7 @@ subcommands:
             ℹ️ Optional, if not set, new environment will be created
             
             🎓 Tip  you can also use ENVIRONMENT environment variable
+            
         - names:
           - --cluster-name
           argument: ""
@@ -611,6 +685,7 @@ subcommands:
             ❣️ Only required if you want to use your own existing cluster
             
             🎓 Tip  you can also use CLUSTER_NAME environment variable
+            
         - names:
           - --cluster-creds
           argument: ""
@@ -620,6 +695,7 @@ subcommands:
             ❣️ Only required if you want to use your own existing cluster
             
             🎓 Tip  you can also use CLUSTER_CREDS environment variable
+            
         - names:
           - --cluster-schema-registry-creds
           argument: ""
@@ -631,6 +707,7 @@ subcommands:
             ❣️ Only required if you want to use your own existing cluster
             
             🎓 Tip  you can also use SCHEMA_REGISTRY_CREDS environment variable
+            
         - names:
           - --file
           - -f
@@ -641,16 +718,20 @@ subcommands:
             ❕ It must be absolute full path
             
             🎓 Tip  use <tab> completion to trigger fzf completion
+            
+            Required: ✓ Yes
         - names:
           - --description
           - -d
           argument: ""
           description: | 
             💭 Description for the reproduction model
+            
+            Required: ✓ Yes
         - names:
           - --producer
           - -p
-          argument: ""
+          argument: '''none'''
           description: | 
             ♨️ Java producer type to use
             
@@ -659,12 +740,18 @@ subcommands:
             🎓 Tip  Most of times, it's much simpler to use 'playground topic produce'. Use java producer only if you have very specific requirements such as specifying record timestamp, use key with schema or to do perf testing
             
             🎓 Tip  'with-key' will also produce key with selected converter, otherwise LongConverter is used
+            
+            Default value: none
+            Allowed values: none, avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key
+            Conflicts with: --pipeline
         - names:
           - --nb-producers
           - -n
-          argument: ""
+          argument: ''''''
           description: | 
             2️⃣ Number of java producers to generate
+            
+            Default value: 
         - names:
           - --producer-schema-key
           argument: ""
@@ -672,6 +759,7 @@ subcommands:
             🔰 Schema to use for the key
             
             ✨ Copy and paste the schema you want to use for the key, save and close the file to continue
+            
         - names:
           - --producer-schema-value
           argument: ""
@@ -679,11 +767,13 @@ subcommands:
             🔰 Schema to use for the value
             
             ✨ Copy and paste the schema you want to use for the key, save and close the file to continue
+            
         - names:
           - --custom-smt
           argument: ""
           description: | 
             ⚙️ Add a custom SMT (which is a no-op)
+            
         - names:
           - --pipeline
           argument: ""
@@ -693,6 +783,8 @@ subcommands:
             ❕ It must be absolute full path. 
             
             🎓 Tip  use <tab> completion to trigger fzf completion
+            
+            Conflicts with: --producer
   - name: get-docker-compose
     description: | 
         🐋 Get docker-compose
@@ -709,9 +801,11 @@ subcommands:
     - names:
       - --container
       - -c
-      argument: ""
+      argument: '''connect'''
       description: | 
         🐳 Container name
+        
+        Default value: connect
     subcommands:
   - name: get-all-schemas
     description: | 
@@ -724,6 +818,7 @@ subcommands:
       argument: ""
       description: | 
         🔖 Save output to a file and open with text editor set with config.ini (default is code)
+        
     subcommands:
   - name: debug
     description: | 
@@ -741,9 +836,11 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: ""
+          argument: '''connect'''
           description: | 
             🐳 Container name
+            
+            Default value: connect
       - name: testssl
         description: | 
           🔐 Testing TLS/SSL encryption using https //testssl.sh/
@@ -765,9 +862,11 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: ""
+          argument: '''connect'''
           description: | 
             🐳 Container name
+            
+            Default value: connect
       - name: thread-dump
         description: | 
           🎯 Take a java thread dump
@@ -778,9 +877,11 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: ""
+          argument: '''connect'''
           description: | 
             🐳 Container name
+            
+            Default value: connect
       - name: heap-dump
         description: | 
           👻 Take a heap dump
@@ -791,9 +892,11 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: ""
+          argument: '''connect'''
           description: | 
             🐳 Container name
+            
+            Default value: connect
       - name: tcp-dump
         description: | 
           🕵️‍♂️ Take a tcp dump (sniffing network)
@@ -802,19 +905,24 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: ""
+          argument: '''connect'''
           description: | 
             🐳 Container name
+            
+            Default value: connect
         - names:
           - --port
           argument: ""
           description: | 
             Port on which tcp dump should be done, if not set sniffing is done on every port
+            
         - names:
           - --duration
-          argument: ""
+          argument: '''30'''
           description: | 
             Duration of the dump (default is 30 seconds).
+            
+            Default value: 30
       - name: block-traffic
         description: | 
           🚫 Blocking traffic using iptables
@@ -823,24 +931,32 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: ""
+          argument: '''connect'''
           description: | 
             🐳 Container name
+            
+            Default value: connect
         - names:
           - --destination
           argument: ""
           description: | 
             Destination  it could be an ip address, a container name or a hostname
+            
+            Required: ✓ Yes
         - names:
           - --port
           argument: ""
           description: | 
             Port on which tcp traffic should be blocked
+            
         - names:
           - --action
-          argument: ""
+          argument: [start, stop]
           description: | 
             🟢 start or stop
+            
+            Required: ✓ Yes
+            Allowed values: start, stop
       - name: flight-recorder
         description: | 
           🛩️ Record flight recorder
@@ -853,14 +969,19 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: ""
+          argument: '''connect'''
           description: | 
             🐳 Container name
+            
+            Default value: connect
         - names:
           - --action
-          argument: ""
+          argument: [start, stop]
           description: | 
             🟢 start or stop
+            
+            Required: ✓ Yes
+            Allowed values: start, stop
       - name: log-level
         description: | 
           🧬 Set log level for any package
@@ -883,6 +1004,7 @@ subcommands:
           argument: ""
           description: | 
             Package name
+            
       - name: set
         description: | 
           Set log level for specific logger
@@ -894,12 +1016,17 @@ subcommands:
           argument: ""
           description: | 
             📦 Package name
+            
+            Required: ✓ Yes
         - names:
           - --level
           - -l
-          argument: ""
+          argument: [INFO, WARN, DEBUG, TRACE]
           description: | 
             ❕Log level
+            
+            Required: ✓ Yes
+            Allowed values: INFO, WARN, DEBUG, TRACE
   - name: get-jmx-metrics
     description: | 
         🔢 Get JMX metrics from a component
@@ -910,21 +1037,26 @@ subcommands:
     - names:
       - --component
       - -c
-      argument: ""
+      argument: '''connect'''
       description: | 
         Component name
+        
+        Default value: connect
+        Allowed values: zookeeper, broker, connect, schema-registry
     - names:
       - --open
       - -o
       argument: ""
       description: | 
         🔖 Save output to a file and open with text editor set with config.ini (default is code)
+        
     - names:
       - --domain
       - -d
       argument: ""
       description: | 
         Domain name
+        
     subcommands:
   - name: container
     description: | 
@@ -957,27 +1089,36 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: ""
+          argument: '''connect'''
           description: | 
             🐳 Container name
+            
+            Default value: connect
         - names:
           - --open
           - -o
           argument: ""
           description: | 
             🔖 Save output to a file and open with text editor set with config.ini (default is code)
+            
+            Conflicts with: --wait-for-log
         - names:
           - --wait-for-log
           - -w
           argument: ""
           description: | 
             😴 Wait until log appears
+            
+            Conflicts with: --open
         - names:
           - --max-wait
           - -m
-          argument: ""
+          argument: '''600'''
           description: | 
             ⏳ Max time in seconds to wait when using --wait-for-log (default 600s)
+            
+            Default value: 600
+            Conflicts with: --open
       - name: ssh
         description: | 
           🛬 SSH into container
@@ -986,15 +1127,20 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: ""
+          argument: '''connect'''
           description: | 
             🐳 Container name
+            
+            Default value: connect
         - names:
           - --shell
           - -s
-          argument: ""
+          argument: '''bash'''
           description: | 
             💾 Shell to use (default is bash)
+            
+            Default value: bash
+            Allowed values: bash, sh, ksh, zsh
       - name: exec
         description: | 
           🪄  Execute command in a container
@@ -1003,24 +1149,32 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: ""
+          argument: '''connect'''
           description: | 
             🐳 Container name
+            
+            Default value: connect
         - names:
           - --command
           argument: ""
           description: | 
             📲 Command to execute
+            
+            Required: ✓ Yes
         - names:
           - --root
           argument: ""
           description: | 
             👑 Run command as root
+            
         - names:
           - --shell
-          argument: ""
+          argument: '''bash'''
           description: | 
             💾 Shell to use (default is bash)
+            
+            Default value: bash
+            Allowed values: bash, sh, ksh, zsh
       - name: restart
         description: | 
           🔁 Restart a container
@@ -1029,9 +1183,11 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: ""
+          argument: '''connect'''
           description: | 
             🐳 Container name
+            
+            Default value: connect
       - name: pause
         description: | 
           ⏸️  Pause a container
@@ -1040,9 +1196,11 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: ""
+          argument: '''connect'''
           description: | 
             🐳 Container name
+            
+            Default value: connect
       - name: resume
         description: | 
           ⏯️  Resume a container
@@ -1051,9 +1209,11 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: ""
+          argument: '''connect'''
           description: | 
             🐳 Container name
+            
+            Default value: connect
       - name: kill
         description: | 
           🔫 Kill a container
@@ -1062,9 +1222,11 @@ subcommands:
         - names:
           - --container
           - -c
-          argument: ""
+          argument: '''connect'''
           description: | 
             🐳 Container name
+            
+            Default value: connect
   - name: topic
     description: | 
         🗳 Topic commands
@@ -1082,6 +1244,7 @@ subcommands:
           argument: ""
           description: | 
             🗳 Topic name
+            
       - name: display-consumer-offsets
         description: | 
           📭 Display content of __consumer_offsets topic
@@ -1098,6 +1261,7 @@ subcommands:
           argument: ""
           description: | 
             🗳 Topic name
+            
       - name: set-schema-compatibility
         description: | 
           🛡️ Change topic's schema compatibility
@@ -1109,11 +1273,15 @@ subcommands:
           argument: ""
           description: | 
             🗳 Topic name
+            
         - names:
           - --compatibility
-          argument: ""
+          argument: [BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE]
           description: | 
             Schema Registry compatibility rule
+            
+            Required: ✓ Yes
+            Allowed values: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE
       - name: consume
         description: | 
           📥 Consume topic from beginning
@@ -1125,46 +1293,59 @@ subcommands:
           argument: ""
           description: | 
             🐞 Show command being ran.
+            
         - names:
           - --topic
           - -t
           argument: ""
           description: | 
             🗳 Topic name
+            
         - names:
           - --max-messages
-          argument: ""
+          argument: '''10'''
           description: | 
             Max number of messages to display (default is 10)
+            
+            Default value: 10
         - names:
           - --min-expected-messages
-          argument: ""
+          argument: ''''''
           description: | 
             Minimum expected number of messages to be present in topic, returns an error if this is not the case
             
             Note  --topic should be specified in this case.
+            
+            Default value: 
         - names:
           - --grep
-          argument: ""
+          argument: ''''''
           description: | 
             Verify that topic content contains record which contains specified string
+            
+            Default value: 
         - names:
           - --timeout
-          argument: ""
+          argument: '''60'''
           description: | 
             Max number of seconds to wait when --min-expected-messages is used.
             
             Default is 60 seconds
+            
+            Default value: 60
         - names:
           - --tail
           argument: ""
           description: | 
             Tail on logs.
+            
+            Conflicts with: --min-expected-messages, --max-messages
         - names:
           - --plot-latencies-timestamp-field
           argument: ""
           description: | 
             🗳 Timestamp field name that represents when record was created in source system
+            
       - name: produce
         description: | 
           📤 Produce to a topic
@@ -1172,7 +1353,7 @@ subcommands:
         options:
         - names:
           - --input
-          argument: ""
+          argument: '''-'''
           description: | 
             🔥 You can either 
             
@@ -1183,40 +1364,53 @@ subcommands:
             * Use completion to select predefined schemas (or use your own schema file) 🎓 Tip  use <tab> completion to trigger fzf completion
             
             * Directly set payload ("%g" can be used to generate a counter)
+            
+            Default value: -
         - names:
           - --verbose
           - -v
           argument: ""
           description: | 
             🐞 Show command being ran.
+            
         - names:
           - --topic
           - -t
           argument: ""
           description: | 
             🗳 Topic name
+            
+            Required: ✓ Yes
         - names:
           - --nb-messages
-          argument: ""
+          argument: '''1'''
           description: | 
             💯 Number of messages to produce (default is 1)
+            
+            Default value: 1
         - names:
           - --nb-partitions
-          argument: ""
+          argument: ''''''
           description: | 
             🔢 Number of partitions for the topic. (default is 1)
             
             ❌ Important  If topic is existing, it will be re-created before producing to topic.
+            
+            Default value: 
         - names:
           - --compatibility
-          argument: ""
+          argument: [BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE]
           description: | 
             Schema Registry compatibility rule
+            
+            Allowed values: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE
         - names:
           - --value-subject-name-strategy
-          argument: ""
+          argument: [TopicNameStrategy, RecordNameStrategy, TopicRecordNameStrategy]
           description: | 
             Value Subject Name Strategy
+            
+            Allowed values: TopicNameStrategy, RecordNameStrategy, TopicRecordNameStrategy
         - names:
           - --key
           argument: ""
@@ -1233,6 +1427,7 @@ subcommands:
             Example  key%g will start with key1, then key2, etc..
             
             Otherwise, the key will be same for all records.
+            
         - names:
           - --headers
           argument: ""
@@ -1242,6 +1437,7 @@ subcommands:
             Example  --headers "header1 value1,header2 value2"
             
             Note  CP 7.2+ is required.
+            
         - names:
           - --forced-value
           argument: ""
@@ -1249,6 +1445,7 @@ subcommands:
             ☢️ Value to use for all records. 
             
             🎓 Tip  use --generate-only first with avro, json-schema or protobuf to get skeleton of messages and then use --forced-value to send the message you need. 
+            
         - names:
           - --generate-only
           argument: ""
@@ -1256,6 +1453,7 @@ subcommands:
             🚪 Only generate messages without sending to kafka topic.
             
             Used with --forced-value, this is a powerful way to send specific messages.
+            
         - names:
           - --tombstone
           argument: ""
@@ -1265,20 +1463,25 @@ subcommands:
             --key must be set when this flag is used.
             
             Note  CP 7.2+ is required.
+            
         - names:
           - --validate
           argument: ""
           description: | 
             ☑️ Validate schema according to connect sink converter used
+            
         - names:
           - --validate-config
-          argument: ""
+          argument: [scrub.invalid.names=true, enhanced.avro.schema.support=true, connect.meta.data=false, object.additional.properties=false, use.optional.for.nonrequired=true, ignore.default.for.nullables=true, generalized.sum.type.support=true, enhanced.protobuf.schema.support=true, generate.index.for.unions=false, int.for.enums=true, optional.for.nullables=true, generate.struct.for.nulls=true, wrapper.for.nullables=true, wrapper.for.raw.primitives=false]
           description: | 
             🔩 Converter configuration parameters to use 
             
             See docs  https //docs.confluent.io/platform/current/schema-registry/connect.html#using-kconnect-long-with-sr
             
             🎓 Tip  you can pass multiple parameters by specifying --validate-config multiple times
+            
+            Repeatable: ✓ Yes
+            Allowed values: scrub.invalid.names=true, enhanced.avro.schema.support=true, connect.meta.data=false, object.additional.properties=false, use.optional.for.nonrequired=true, ignore.default.for.nullables=true, generalized.sum.type.support=true, enhanced.protobuf.schema.support=true, generate.index.for.unions=false, int.for.enums=true, optional.for.nullables=true, generate.struct.for.nulls=true, wrapper.for.nullables=true, wrapper.for.raw.primitives=false
         - names:
           - --producer-property
           argument: ""
@@ -1290,13 +1493,17 @@ subcommands:
             🎓 Tip  you can pass multiple parameters by specifying --producer-property multiple times
             
             Example  --producer-property "max.request.size=990485760" --producer-property "client.id=myid"
+            
+            Repeatable: ✓ Yes
         - names:
           - --record-size
-          argument: ""
+          argument: '''0'''
           description: | 
             🏋️ Record size in bytes, eg. 1048576 for 1MB
             
             📢 If size is > 1Mb, --producer-property max.request.size and topic max.message.bytes will be automatically set to support the record size.
+            
+            Default value: 0
       - name: create
         description: | 
           🆕 Create topic
@@ -1308,11 +1515,15 @@ subcommands:
           argument: ""
           description: | 
             🗳 Topic name
+            
+            Required: ✓ Yes
         - names:
           - --nb-partitions
-          argument: ""
+          argument: ''''''
           description: | 
             Number of partitions for the topic. (default is 1)
+            
+            Default value: 
       - name: delete
         description: | 
           ❌ Delete topic
@@ -1324,6 +1535,8 @@ subcommands:
           argument: ""
           description: | 
             🗳 Topic name
+            
+            Required: ✓ Yes
       - name: alter
         description: | 
           🪛 Alter topic config
@@ -1335,6 +1548,8 @@ subcommands:
           argument: ""
           description: | 
             🗳 Topic name
+            
+            Required: ✓ Yes
   - name: ccloud-connector
     description: | 
         🔗☁️ Fully Managed Connector commands
@@ -1354,6 +1569,7 @@ subcommands:
             🔗 Connector name
             
             🎓 Tip  If not specified, the command will apply to all connectors
+            
       - name: plugins
         description: | 
           🎨 Show all plugins installed
@@ -1372,6 +1588,7 @@ subcommands:
             🔗 Connector name
             
             🎓 Tip  If not specified, the command will apply to all connectors
+            
       - name: resume
         description: | 
           ⏯️  Resume connector
@@ -1385,6 +1602,7 @@ subcommands:
             🔗 Connector name
             
             🎓 Tip  If not specified, the command will apply to all connectors
+            
       - name: delete
         description: | 
           🗑️  Delete connector
@@ -1398,6 +1616,7 @@ subcommands:
             🔗 Connector name
             
             🎓 Tip  If not specified, the command will apply to all connectors
+            
       - name: show-lag
         description: | 
           🐢 Show lag of sink connector
@@ -1411,11 +1630,13 @@ subcommands:
             🔗 Connector name
             
             🎓 Tip  If not specified, the command will apply to all connectors
+            
         - names:
           - --wait-for-zero-lag
           argument: ""
           description: | 
             😴 Wait until lag becomes 0
+            
       - name: show-config
         description: | 
           🧰 Show current connector config
@@ -1429,6 +1650,7 @@ subcommands:
             🔗 Connector name
             
             🎓 Tip  If not specified, the command will apply to all connectors
+            
       - name: show-config-parameters
         description: | 
           🔩 Show all possible configuration parameters of connector
@@ -1442,17 +1664,20 @@ subcommands:
             🔗 Connector name
             
             🎓 Tip  If not specified, the command will apply to all connectors
+            
         - names:
           - --open
           - -o
           argument: ""
           description: | 
             🔖 Save output to a file and open with text editor set with config.ini (default is code)
+            
         - names:
           - --force-refresh
           argument: ""
           description: | 
             ☢️ Force refresh.
+            
       - name: create-or-update
         description: | 
           🧑‍🎨  Create or update connector
@@ -1464,6 +1689,8 @@ subcommands:
           argument: ""
           description: | 
             🔗 Connector name
+            
+            Required: ✓ Yes
   - name: connector
     description: | 
         🔗 Connector commands
@@ -1483,6 +1710,7 @@ subcommands:
             🔗 Connector name
             
             🎓 Tip  If not specified, the command will apply to all connectors
+            
       - name: plugins
         description: | 
           🎨 Show all plugins installed
@@ -1501,6 +1729,7 @@ subcommands:
             🔗 Connector name
             
             🎓 Tip  If not specified, the command will apply to all connectors
+            
       - name: versions
         description: | 
           🧞 Get current and latest version available on Confluent Hub for connector(s) used in example
@@ -1519,6 +1748,7 @@ subcommands:
             🔗 Connector name
             
             🎓 Tip  If not specified, the command will apply to all connectors
+            
       - name: resume
         description: | 
           ⏯️  Resume connector
@@ -1532,6 +1762,7 @@ subcommands:
             🔗 Connector name
             
             🎓 Tip  If not specified, the command will apply to all connectors
+            
       - name: delete
         description: | 
           🗑️  Delete connector
@@ -1545,6 +1776,7 @@ subcommands:
             🔗 Connector name
             
             🎓 Tip  If not specified, the command will apply to all connectors
+            
       - name: show-lag
         description: | 
           🐢 Show lag of sink connector
@@ -1558,11 +1790,13 @@ subcommands:
             🔗 Connector name
             
             🎓 Tip  If not specified, the command will apply to all connectors
+            
         - names:
           - --wait-for-zero-lag
           argument: ""
           description: | 
             😴 Wait until lag becomes 0
+            
       - name: show-config
         description: | 
           🧰 Show current connector config
@@ -1576,6 +1810,7 @@ subcommands:
             🔗 Connector name
             
             🎓 Tip  If not specified, the command will apply to all connectors
+            
       - name: show-config-parameters
         description: | 
           🔩 Show all possible configuration parameters of connector
@@ -1589,17 +1824,20 @@ subcommands:
             🔗 Connector name
             
             🎓 Tip  If not specified, the command will apply to all connectors
+            
         - names:
           - --open
           - -o
           argument: ""
           description: | 
             🔖 Save output to a file and open with text editor set with config.ini (default is code)
+            
         - names:
           - --force-refresh
           argument: ""
           description: | 
             ☢️ Force refresh.
+            
       - name: log-level
         description: | 
           🧬 Set connect log level
@@ -1613,12 +1851,16 @@ subcommands:
             🔗 Connector name
             
             🎓 Tip  If not specified, the command will apply to all connectors
+            
         - names:
           - --level
           - -l
-          argument: ""
+          argument: [INFO, WARN, DEBUG, TRACE]
           description: | 
             ❕Log level
+            
+            Required: ✓ Yes
+            Allowed values: INFO, WARN, DEBUG, TRACE
       - name: create-or-update
         description: | 
           🧑‍🎨  Create or update connector
@@ -1630,15 +1872,20 @@ subcommands:
           argument: ""
           description: | 
             🔗 Connector name
+            
+            Required: ✓ Yes
         - names:
           - --level
           - -l
-          argument: ""
+          argument: [INFO, WARN, DEBUG, TRACE]
           description: | 
             ❕Log level
+            
+            Allowed values: INFO, WARN, DEBUG, TRACE
         - names:
           - --package
           - -p
           argument: ""
           description: | 
             Package name
+            

@@ -10,7 +10,7 @@ gzip -f general.json
 
 rm -rf extension
 mkdir extension
-curl -L https://tetradresearch.gallery.vsassets.io/_apis/public/gallery/publisher/tetradresearch/extension//vscode-h2o/0.2.12/assetbyname/Microsoft.VisualStudio.Services.VSIXPackage -o extension/extension.zip
+curl -L https://tetradresearch.gallery.vsassets.io/_apis/public/gallery/publisher/tetradresearch/extension//vscode-h2o/0.2.13/assetbyname/Microsoft.VisualStudio.Services.VSIXPackage -o extension/extension.zip
 unzip extension/extension.zip
 
 
@@ -20,7 +20,6 @@ rm -f extension.vsix
 mv extension.zip extension.vsix
 
 code --uninstall-extension extension.vsix
-code --disable-extension extension.vsix
 code --install-extension extension.vsix
 
 cd -

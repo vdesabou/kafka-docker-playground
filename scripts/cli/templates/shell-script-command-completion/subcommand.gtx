@@ -10,9 +10,34 @@ if flags.any?
 if flag.short
     >       - {{ flag.short }}
 end
+
+      if flag.default
+    >       argument: '''{{ flag.default }}'''
+      elsif flag.allowed
+    >       argument: [{{ flag.allowed.join(', ') }}]
+      else
     >       argument: ""
+      end
+
+    
     >       description: | 
     >         {{ flag.help.gsub("\n", "\n        ").gsub(":", ' ') }}
+    >         
+      if flag.required
+    >         Required: ✓ Yes
+      end
+      if flag.repeatable
+    >         Repeatable: ✓ Yes
+      end
+      if flag.default
+    >         Default value: {{ flag.default }}
+      end
+      if flag.allowed
+    >         Allowed values: {{ flag.allowed.join(', ') }}
+      end
+      if flag.conflicts
+    >         Conflicts with: {{ flag.conflicts.join(', ') }}
+      end
   end
 else
 >     options: []
