@@ -15,10 +15,12 @@ subcommands:
     options:
     - names:
       - --file
+      - -f
       argument: ""
       description: 🔖 Example file to run. . ❕ It must be absolute full path. . 🎓 Tip  use <tab> completion to trigger fzf completion
     - names:
       - --open
+      - -o
       argument: ""
       description: 📖 Opening example file with text editor set with config.ini (default is code)
     - names:
@@ -141,10 +143,12 @@ subcommands:
     options:
     - names:
       - --file
+      - -f
       argument: ""
       description: 🔖 Example file to run. . ❕ It must be absolute full path. . 🎓 Tip  use <tab> completion to trigger fzf completion
     - names:
       - --open
+      - -o
       argument: ""
       description: 📖 Opening example file with text editor set with config.ini (default is code)
     - names:
@@ -206,6 +210,7 @@ subcommands:
     options:
     - names:
       - --file
+      - -f
       argument: ""
       description: 🔎 Search any file and open it.. . ❕ It must be absolute full path. . 🎓 Tip  use <tab> completion to trigger fzf completion
     subcommands:
@@ -242,6 +247,7 @@ subcommands:
         options:
         - names:
           - --file
+          - -f
           argument: ""
           description: 🤐 playground_repro_export.tgz file. . ❕ It must be absolute full path. . 🎓 Tip  use <tab> completion to trigger fzf completion .         use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
       - name: bootstrap
@@ -322,18 +328,22 @@ subcommands:
           description: 🔒 The Schema Registry api key and secret to use, it should be separated with semi-colon (example  <SR_API_KEY> <SR_API_KEY_SECRET>). . ℹ️ Optional, if not set, new credentials will be created. . ❣️ Only required if you want to use your own existing cluster. . 🎓 Tip  you can also use SCHEMA_REGISTRY_CREDS environment variable
         - names:
           - --file
+          - -f
           argument: ""
           description: 🔖 Example file to use as basis. . ❕ It must be absolute full path. . 🎓 Tip  use <tab> completion to trigger fzf completion
         - names:
           - --description
+          - -d
           argument: ""
           description: 💭 Description for the reproduction model
         - names:
           - --producer
+          - -p
           argument: ""
           description: ♨️ Java producer type to use. . One of avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key. . 🎓 Tip  Most of times, it's much simpler to use 'playground topic produce'. Use java producer only if you have very specific requirements such as specifying record timestamp, use key with schema or to do perf testing. . 🎓 Tip  'with-key' will also produce key with selected converter, otherwise LongConverter is used
         - names:
           - --nb-producers
+          - -n
           argument: ""
           description: 2️⃣ Number of java producers to generate
         - names:
@@ -363,6 +373,7 @@ subcommands:
     options:
     - names:
       - --container
+      - -c
       argument: ""
       description: 🐳 Container name
     subcommands:
@@ -372,6 +383,7 @@ subcommands:
     options:
     - names:
       - --open
+      - -o
       argument: ""
       description: 🔖 Save output to a file and open with text editor set with config.ini (default is code)
     subcommands:
@@ -386,6 +398,7 @@ subcommands:
         options:
         - names:
           - --container
+          - -c
           argument: ""
           description: 🐳 Container name
       - name: testssl
@@ -398,6 +411,7 @@ subcommands:
         options:
         - names:
           - --container
+          - -c
           argument: ""
           description: 🐳 Container name
       - name: thread-dump
@@ -406,6 +420,7 @@ subcommands:
         options:
         - names:
           - --container
+          - -c
           argument: ""
           description: 🐳 Container name
       - name: heap-dump
@@ -414,6 +429,7 @@ subcommands:
         options:
         - names:
           - --container
+          - -c
           argument: ""
           description: 🐳 Container name
       - name: tcp-dump
@@ -422,6 +438,7 @@ subcommands:
         options:
         - names:
           - --container
+          - -c
           argument: ""
           description: 🐳 Container name
         - names:
@@ -438,6 +455,7 @@ subcommands:
         options:
         - names:
           - --container
+          - -c
           argument: ""
           description: 🐳 Container name
         - names:
@@ -458,6 +476,7 @@ subcommands:
         options:
         - names:
           - --container
+          - -c
           argument: ""
           description: 🐳 Container name
         - names:
@@ -479,6 +498,7 @@ subcommands:
         options:
         - names:
           - --package
+          - -p
           argument: ""
           description: Package name
       - name: set
@@ -487,10 +507,12 @@ subcommands:
         options:
         - names:
           - --package
+          - -p
           argument: ""
           description: 📦 Package name
         - names:
           - --level
+          - -l
           argument: ""
           description: ❕Log level
   - name: get-jmx-metrics
@@ -499,14 +521,17 @@ subcommands:
     options:
     - names:
       - --component
+      - -c
       argument: ""
       description: Component name
     - names:
       - --open
+      - -o
       argument: ""
       description: 🔖 Save output to a file and open with text editor set with config.ini (default is code)
     - names:
       - --domain
+      - -d
       argument: ""
       description: Domain name
     subcommands:
@@ -533,18 +558,22 @@ subcommands:
         options:
         - names:
           - --container
+          - -c
           argument: ""
           description: 🐳 Container name
         - names:
           - --open
+          - -o
           argument: ""
           description: 🔖 Save output to a file and open with text editor set with config.ini (default is code)
         - names:
           - --wait-for-log
+          - -w
           argument: ""
           description: 😴 Wait until log appears
         - names:
           - --max-wait
+          - -m
           argument: ""
           description: ⏳ Max time in seconds to wait when using --wait-for-log (default 600s)
       - name: ssh
@@ -553,10 +582,12 @@ subcommands:
         options:
         - names:
           - --container
+          - -c
           argument: ""
           description: 🐳 Container name
         - names:
           - --shell
+          - -s
           argument: ""
           description: 💾 Shell to use (default is bash)
       - name: exec
@@ -565,6 +596,7 @@ subcommands:
         options:
         - names:
           - --container
+          - -c
           argument: ""
           description: 🐳 Container name
         - names:
@@ -585,6 +617,7 @@ subcommands:
         options:
         - names:
           - --container
+          - -c
           argument: ""
           description: 🐳 Container name
       - name: pause
@@ -593,6 +626,7 @@ subcommands:
         options:
         - names:
           - --container
+          - -c
           argument: ""
           description: 🐳 Container name
       - name: resume
@@ -601,6 +635,7 @@ subcommands:
         options:
         - names:
           - --container
+          - -c
           argument: ""
           description: 🐳 Container name
       - name: kill
@@ -609,6 +644,7 @@ subcommands:
         options:
         - names:
           - --container
+          - -c
           argument: ""
           description: 🐳 Container name
   - name: topic
@@ -622,6 +658,7 @@ subcommands:
         options:
         - names:
           - --topic
+          - -t
           argument: ""
           description: 🗳 Topic name
       - name: display-consumer-offsets
@@ -634,6 +671,7 @@ subcommands:
         options:
         - names:
           - --topic
+          - -t
           argument: ""
           description: 🗳 Topic name
       - name: set-schema-compatibility
@@ -642,6 +680,7 @@ subcommands:
         options:
         - names:
           - --topic
+          - -t
           argument: ""
           description: 🗳 Topic name
         - names:
@@ -654,10 +693,12 @@ subcommands:
         options:
         - names:
           - --verbose
+          - -v
           argument: ""
           description: 🐞 Show command being ran.
         - names:
           - --topic
+          - -t
           argument: ""
           description: 🗳 Topic name
         - names:
@@ -694,10 +735,12 @@ subcommands:
           description: 🔥 You can either . . * Set your own schema (avro, json-schema, protobuf) with stdin (see example section). . . * You can also generate json data using json or sql format using syntax from https //github.com/MaterializeInc/datagen. . * Use completion to select predefined schemas (or use your own schema file) 🎓 Tip  use <tab> completion to trigger fzf completion. . * Directly set payload ("%g" can be used to generate a counter)
         - names:
           - --verbose
+          - -v
           argument: ""
           description: 🐞 Show command being ran.
         - names:
           - --topic
+          - -t
           argument: ""
           description: 🗳 Topic name
         - names:
@@ -758,6 +801,7 @@ subcommands:
         options:
         - names:
           - --topic
+          - -t
           argument: ""
           description: 🗳 Topic name
         - names:
@@ -770,6 +814,7 @@ subcommands:
         options:
         - names:
           - --topic
+          - -t
           argument: ""
           description: 🗳 Topic name
       - name: alter
@@ -778,6 +823,7 @@ subcommands:
         options:
         - names:
           - --topic
+          - -t
           argument: ""
           description: 🗳 Topic name
   - name: ccloud-connector
@@ -791,6 +837,7 @@ subcommands:
         options:
         - names:
           - --connector
+          - -c
           argument: ""
           description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
       - name: plugins
@@ -803,6 +850,7 @@ subcommands:
         options:
         - names:
           - --connector
+          - -c
           argument: ""
           description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
       - name: resume
@@ -811,6 +859,7 @@ subcommands:
         options:
         - names:
           - --connector
+          - -c
           argument: ""
           description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
       - name: delete
@@ -819,6 +868,7 @@ subcommands:
         options:
         - names:
           - --connector
+          - -c
           argument: ""
           description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
       - name: show-lag
@@ -827,6 +877,7 @@ subcommands:
         options:
         - names:
           - --connector
+          - -c
           argument: ""
           description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
         - names:
@@ -839,6 +890,7 @@ subcommands:
         options:
         - names:
           - --connector
+          - -c
           argument: ""
           description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
       - name: show-config-parameters
@@ -847,10 +899,12 @@ subcommands:
         options:
         - names:
           - --connector
+          - -c
           argument: ""
           description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
         - names:
           - --open
+          - -o
           argument: ""
           description: 🔖 Save output to a file and open with text editor set with config.ini (default is code)
         - names:
@@ -863,6 +917,7 @@ subcommands:
         options:
         - names:
           - --connector
+          - -c
           argument: ""
           description: 🔗 Connector name
   - name: connector
@@ -876,6 +931,7 @@ subcommands:
         options:
         - names:
           - --connector
+          - -c
           argument: ""
           description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
       - name: plugins
@@ -888,6 +944,7 @@ subcommands:
         options:
         - names:
           - --connector
+          - -c
           argument: ""
           description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
       - name: versions
@@ -900,6 +957,7 @@ subcommands:
         options:
         - names:
           - --connector
+          - -c
           argument: ""
           description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
       - name: resume
@@ -908,6 +966,7 @@ subcommands:
         options:
         - names:
           - --connector
+          - -c
           argument: ""
           description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
       - name: delete
@@ -916,6 +975,7 @@ subcommands:
         options:
         - names:
           - --connector
+          - -c
           argument: ""
           description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
       - name: show-lag
@@ -924,6 +984,7 @@ subcommands:
         options:
         - names:
           - --connector
+          - -c
           argument: ""
           description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
         - names:
@@ -936,6 +997,7 @@ subcommands:
         options:
         - names:
           - --connector
+          - -c
           argument: ""
           description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
       - name: show-config-parameters
@@ -944,10 +1006,12 @@ subcommands:
         options:
         - names:
           - --connector
+          - -c
           argument: ""
           description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
         - names:
           - --open
+          - -o
           argument: ""
           description: 🔖 Save output to a file and open with text editor set with config.ini (default is code)
         - names:
@@ -960,10 +1024,12 @@ subcommands:
         options:
         - names:
           - --connector
+          - -c
           argument: ""
           description: 🔗 Connector name. . 🎓 Tip  If not specified, the command will apply to all connectors
         - names:
           - --level
+          - -l
           argument: ""
           description: ❕Log level
       - name: create-or-update
@@ -972,13 +1038,16 @@ subcommands:
         options:
         - names:
           - --connector
+          - -c
           argument: ""
           description: 🔗 Connector name
         - names:
           - --level
+          - -l
           argument: ""
           description: ❕Log level
         - names:
           - --package
+          - -p
           argument: ""
           description: Package name
