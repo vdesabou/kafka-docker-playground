@@ -1,6 +1,6 @@
 >   - name: {{ name }}
 >     description: | 
->         {{ help.gsub("\n", "\n        ").gsub(":", ' ') }}
+>         {{ help.gsub("\n", "\n        ").gsub(":", "\:") }}
 >     usage: {{ usage_string.sanitize_for_print }}
 if flags.any?
 >     options:
@@ -25,7 +25,7 @@ end
 
     
     >       description: | 
-    >         {{ flag.help.gsub("\n", "\n        ").gsub(":", ' ') }}
+    >         {{ flag.help.gsub("\n", "\n        ").gsub(":", "\:") }}
     >         
       if flag.required
     >         Required: ✓ Yes

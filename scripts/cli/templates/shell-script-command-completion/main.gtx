@@ -3,7 +3,7 @@
 
 > name: {{ full_name }}
 > description: | 
->   {{ help.gsub("\n", "\n  ").gsub(":", ' ') }}
+>   {{ help.gsub("\n", "\n  ").gsub(":", "\:") }}
 > usage: {{ usage_string.sanitize_for_print }}
 > options: []
 > inheritedOptions: []

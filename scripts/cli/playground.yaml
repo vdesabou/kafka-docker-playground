@@ -2,7 +2,7 @@ name: playground
 description: | 
   🧠 CLI for Kafka Docker Playground 🐳
   
-  👉 Check documentation https //kafka-docker-playground.io/#/cli
+  👉 Check documentation https://kafka-docker-playground.io/#/cli
 usage: playground COMMAND
 options: []
 inheritedOptions: []
@@ -27,7 +27,7 @@ subcommands:
         
         ❕ It must be absolute full path
         
-        🎓 Tip  use <tab> completion to trigger fzf completion
+        🎓 Tip: use <tab> completion to trigger fzf completion
         
         Required: ✓ Yes
         
@@ -64,8 +64,8 @@ subcommands:
         
         ❕ It must be absolute full path
         
-        🎓 Tip  use <tab> completion to trigger fzf completion 
-                use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+        🎓 Tip: use <tab> completion to trigger fzf completion 
+                use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
         
         Conflicts with: --connector-tag
         
@@ -77,8 +77,8 @@ subcommands:
         
         ❕ It must be absolute full path
         
-        🎓 Tip  use <tab> completion to trigger fzf completion 
-                use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+        🎓 Tip: use <tab> completion to trigger fzf completion 
+                use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
         
     - names:
       - --enable-ksqldb
@@ -96,7 +96,7 @@ subcommands:
         
         By default, control-center container is not started for every test
         
-        Control Center is reachable at http //127.0.0.1 9021
+        Control Center is reachable at http://127.0.0.1:9021
         
     - names:
       - --enable-conduktor
@@ -106,7 +106,7 @@ subcommands:
         
         By default, Conduktor Platform container is not started for every test
         
-        Conduktor is reachable at http //127.0.0.1 8080/console (admin/admin)
+        Conduktor is reachable at http://127.0.0.1:8080/console (admin/admin)
         
     - names:
       - --enable-multiple-brokers
@@ -132,11 +132,11 @@ subcommands:
       description: | 
         Enable Grafana, Prometheus and Pyroscope
         
-        📊 Grafana is reachable at http //127.0.0.1 3000
+        📊 Grafana is reachable at http://127.0.0.1:3000
         
-        🛡️ Prometheus is reachable at http //127.0.0.1 9090
+        🛡️ Prometheus is reachable at http://127.0.0.1:9090
         
-        📛 Pyroscope is reachable at http //127.0.0.1 4040
+        📛 Pyroscope is reachable at http://127.0.0.1:4040
         
     - names:
       - --enable-kcat
@@ -144,9 +144,9 @@ subcommands:
       description: | 
         🐈‍⬛ Enable kcat
         
-        You can use it with 
+        You can use it with:
         
-        $ docker exec kcat kcat -b broker 9092 -L
+        $ docker exec kcat kcat -b broker:9092 -L
         
     - names:
       - --enable-sr-maven-plugin-app
@@ -200,8 +200,8 @@ subcommands:
         
         ❕ It must be absolute full path
         
-        🎓 Tip  use <tab> completion to trigger fzf completion 
-                use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+        🎓 Tip: use <tab> completion to trigger fzf completion 
+                use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
         
         Conflicts with: --connector-tag
         
@@ -213,8 +213,8 @@ subcommands:
         
         ❕ It must be absolute full path
         
-        🎓 Tip  use <tab> completion to trigger fzf completion 
-                use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+        🎓 Tip: use <tab> completion to trigger fzf completion 
+                use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
         
     - names:
       - --enable-ksqldb
@@ -232,7 +232,7 @@ subcommands:
         
         By default, control-center container is not started for every test
         
-        Control Center is reachable at http //127.0.0.1 9021
+        Control Center is reachable at http://127.0.0.1:9021
         
     - names:
       - --enable-conduktor
@@ -242,7 +242,7 @@ subcommands:
         
         By default, Conduktor Platform container is not started for every test
         
-        Conduktor is reachable at http //127.0.0.1 8080/console (admin/admin)
+        Conduktor is reachable at http://127.0.0.1:8080/console (admin/admin)
         
     - names:
       - --enable-multiple-brokers
@@ -268,11 +268,11 @@ subcommands:
       description: | 
         Enable Grafana, Prometheus and Pyroscope
         
-        📊 Grafana is reachable at http //127.0.0.1 3000
+        📊 Grafana is reachable at http://127.0.0.1:3000
         
-        🛡️ Prometheus is reachable at http //127.0.0.1 9090
+        🛡️ Prometheus is reachable at http://127.0.0.1:9090
         
-        📛 Pyroscope is reachable at http //127.0.0.1 4040
+        📛 Pyroscope is reachable at http://127.0.0.1:4040
         
     - names:
       - --enable-kcat
@@ -280,9 +280,9 @@ subcommands:
       description: | 
         🐈‍⬛ Enable kcat
         
-        You can use it with 
+        You can use it with:
         
-        $ docker exec kcat kcat -b broker 9092 -L
+        $ docker exec kcat kcat -b broker:9092 -L
         
     - names:
       - --enable-sr-maven-plugin-app
@@ -307,13 +307,13 @@ subcommands:
         
         By default, a new Confluent Cloud environment with a Cluster will be created.
         
-        You can configure the new cluster by setting 
+        You can configure the new cluster by setting:
         
         --cluster-cloud (or CLUSTER_CLOUD environment variable)
         --cluster-region (or CLUSTER_REGION environment variable)
         --cluster-environment (or ENVIRONMENT environment variable)
         
-        In case you want to use your own existing cluster, you need to setup, in addition to previous ones 
+        In case you want to use your own existing cluster, you need to setup, in addition to previous ones:
         
         --cluster-name (or CLUSTER_NAME environment variable)
         --cluster-creds (or CLUSTER_CREDS environment variable)
@@ -329,7 +329,7 @@ subcommands:
         
         ❕ It must be absolute full path
         
-        🎓 Tip  use <tab> completion to trigger fzf completion
+        🎓 Tip: use <tab> completion to trigger fzf completion
         
         Required: ✓ Yes
         
@@ -366,8 +366,8 @@ subcommands:
         
         ❕ It must be absolute full path
         
-        🎓 Tip  use <tab> completion to trigger fzf completion 
-                use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+        🎓 Tip: use <tab> completion to trigger fzf completion 
+                use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
         
         Conflicts with: --connector-tag
         
@@ -379,8 +379,8 @@ subcommands:
         
         ❕ It must be absolute full path
         
-        🎓 Tip  use <tab> completion to trigger fzf completion 
-                use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+        🎓 Tip: use <tab> completion to trigger fzf completion 
+                use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
         
     - names:
       - --enable-control-center
@@ -390,7 +390,7 @@ subcommands:
         
         By default, control-center container is not started for every test
         
-        Control Center is reachable at http //127.0.0.1 9021
+        Control Center is reachable at http://127.0.0.1:9021
         
     - names:
       - --enable-conduktor
@@ -400,7 +400,7 @@ subcommands:
         
         By default, Conduktor Platform container is not started for every test
         
-        Conduktor is reachable at http //127.0.0.1 8080/console (admin/admin)
+        Conduktor is reachable at http://127.0.0.1:8080/console (admin/admin)
         
     - names:
       - --enable-kcat
@@ -408,17 +408,17 @@ subcommands:
       description: | 
         🐈‍⬛ Enable kcat
         
-        You can use it with 
+        You can use it with:
         
-        $ docker exec kcat kcat -b broker 9092 -L
+        $ docker exec kcat kcat -b broker:9092 -L
         
     - names:
       - --cluster-cloud
       argument: [aws, gcp, azure]
       description: | 
-        🌤 The cloud provider  aws, gcp or azure. Default is aws
+        🌤 The cloud provider: aws, gcp or azure. Default is aws
         
-        🎓 Tip  you can also use CLUSTER_CLOUD environment variable
+        🎓 Tip: you can also use CLUSTER_CLOUD environment variable
         
         Allowed values: aws, gcp, azure
         
@@ -428,17 +428,17 @@ subcommands:
       description: | 
         🗺 The Cloud region. 
         
-        🎓 Tip  you can also use CLUSTER_REGION environment variable
+        🎓 Tip: you can also use CLUSTER_REGION environment variable
         
     - names:
       - --cluster-environment
       argument: CLUSTER-ENVIRONMENT
       description: | 
-        🌐 The environment id where want your new cluster (example  env-xxxxx)
+        🌐 The environment id where want your new cluster (example: env-xxxxx)
         
         ℹ️ Optional, if not set, new environment will be created
         
-        🎓 Tip  you can also use ENVIRONMENT environment variable
+        🎓 Tip: you can also use ENVIRONMENT environment variable
         
     - names:
       - --cluster-name
@@ -448,29 +448,29 @@ subcommands:
         
         ❣️ Only required if you want to use your own existing cluster
         
-        🎓 Tip  you can also use CLUSTER_NAME environment variable
+        🎓 Tip: you can also use CLUSTER_NAME environment variable
         
     - names:
       - --cluster-creds
       argument: CLUSTER-CREDS
       description: | 
-        🔒 The Kafka api key and secret to use, it should be separated with semi-colon (example  <API_KEY> <API_KEY_SECRET>)
+        🔒 The Kafka api key and secret to use, it should be separated with semi-colon (example: <API_KEY>:<API_KEY_SECRET>)
         
         ❣️ Only required if you want to use your own existing cluster
         
-        🎓 Tip  you can also use CLUSTER_CREDS environment variable
+        🎓 Tip: you can also use CLUSTER_CREDS environment variable
         
     - names:
       - --cluster-schema-registry-creds
       argument: CLUSTER-SCHEMA-REGISTRY-CREDS
       description: | 
-        🔒 The Schema Registry api key and secret to use, it should be separated with semi-colon (example  <SR_API_KEY> <SR_API_KEY_SECRET>)
+        🔒 The Schema Registry api key and secret to use, it should be separated with semi-colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)
         
         ℹ️ Optional, if not set, new credentials will be created
         
         ❣️ Only required if you want to use your own existing cluster
         
-        🎓 Tip  you can also use SCHEMA_REGISTRY_CREDS environment variable
+        🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable
         
     subcommands:
   - name: open
@@ -489,7 +489,7 @@ subcommands:
         
         ❕ It must be absolute full path
         
-        🎓 Tip  use <tab> completion to trigger fzf completion
+        🎓 Tip: use <tab> completion to trigger fzf completion
         
     subcommands:
   - name: stop
@@ -541,14 +541,14 @@ subcommands:
             
             ❕ It must be absolute full path
             
-            🎓 Tip  use <tab> completion to trigger fzf completion 
-                    use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+            🎓 Tip: use <tab> completion to trigger fzf completion 
+                    use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
             
       - name: bootstrap
         description: | 
           🛠  Bootstrap reproduction model
             
-            👉 Check documentation https //kafka-docker-playground.io/#/reusables?id=%f0%9f%9b%a0-bootstrap-reproduction-model
+            👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%f0%9f%9b%a0-bootstrap-reproduction-model
         usage: playground repro bootstrap [OPTIONS] [ARGUMENTS...]
         options:
         - names:
@@ -577,8 +577,8 @@ subcommands:
             
             ❕ It must be absolute full path
             
-            🎓 Tip  use <tab> completion to trigger fzf completion 
-                    use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+            🎓 Tip: use <tab> completion to trigger fzf completion 
+                    use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
             
             Conflicts with: --connector-tag
             
@@ -590,8 +590,8 @@ subcommands:
             
             ❕ It must be absolute full path
             
-            🎓 Tip  use <tab> completion to trigger fzf completion 
-                    use folder_zip_or_jar (default  ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+            🎓 Tip: use <tab> completion to trigger fzf completion 
+                    use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
             
         - names:
           - --enable-ksqldb
@@ -609,7 +609,7 @@ subcommands:
             
             By default, control-center container is not started for every test
             
-            Control Center is reachable at http //127.0.0.1 9021
+            Control Center is reachable at http://127.0.0.1:9021
             
         - names:
           - --enable-conduktor
@@ -619,7 +619,7 @@ subcommands:
             
             By default, Conduktor Platform container is not started for every test
             
-            Conduktor is reachable at http //127.0.0.1 8080/console (admin/admin)
+            Conduktor is reachable at http://127.0.0.1:8080/console (admin/admin)
             
         - names:
           - --enable-multiple-brokers
@@ -645,11 +645,11 @@ subcommands:
           description: | 
             Enable Grafana, Prometheus and Pyroscope
             
-            📊 Grafana is reachable at http //127.0.0.1 3000
+            📊 Grafana is reachable at http://127.0.0.1:3000
             
-            🛡️ Prometheus is reachable at http //127.0.0.1 9090
+            🛡️ Prometheus is reachable at http://127.0.0.1:9090
             
-            📛 Pyroscope is reachable at http //127.0.0.1 4040
+            📛 Pyroscope is reachable at http://127.0.0.1:4040
             
         - names:
           - --enable-kcat
@@ -657,9 +657,9 @@ subcommands:
           description: | 
             🐈‍⬛ Enable kcat
             
-            You can use it with 
+            You can use it with:
             
-            $ docker exec kcat kcat -b broker 9092 -L
+            $ docker exec kcat kcat -b broker:9092 -L
             
         - names:
           - --enable-sr-maven-plugin-app
@@ -681,17 +681,17 @@ subcommands:
           description: | 
             🗺 The Cloud region. 
             
-            🎓 Tip  you can also use CLUSTER_REGION environment variable
+            🎓 Tip: you can also use CLUSTER_REGION environment variable
             
         - names:
           - --cluster-environment
           argument: CLUSTER-ENVIRONMENT
           description: | 
-            🌐 The environment id where want your new cluster (example  env-xxxxx)
+            🌐 The environment id where want your new cluster (example: env-xxxxx)
             
             ℹ️ Optional, if not set, new environment will be created
             
-            🎓 Tip  you can also use ENVIRONMENT environment variable
+            🎓 Tip: you can also use ENVIRONMENT environment variable
             
         - names:
           - --cluster-name
@@ -701,29 +701,29 @@ subcommands:
             
             ❣️ Only required if you want to use your own existing cluster
             
-            🎓 Tip  you can also use CLUSTER_NAME environment variable
+            🎓 Tip: you can also use CLUSTER_NAME environment variable
             
         - names:
           - --cluster-creds
           argument: CLUSTER-CREDS
           description: | 
-            🔒 The Kafka api key and secret to use, it should be separated with semi-colon (example  <API_KEY> <API_KEY_SECRET>)
+            🔒 The Kafka api key and secret to use, it should be separated with semi-colon (example: <API_KEY>:<API_KEY_SECRET>)
             
             ❣️ Only required if you want to use your own existing cluster
             
-            🎓 Tip  you can also use CLUSTER_CREDS environment variable
+            🎓 Tip: you can also use CLUSTER_CREDS environment variable
             
         - names:
           - --cluster-schema-registry-creds
           argument: CLUSTER-SCHEMA-REGISTRY-CREDS
           description: | 
-            🔒 The Schema Registry api key and secret to use, it should be separated with semi-colon (example  <SR_API_KEY> <SR_API_KEY_SECRET>)
+            🔒 The Schema Registry api key and secret to use, it should be separated with semi-colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)
             
             ℹ️ Optional, if not set, new credentials will be created
             
             ❣️ Only required if you want to use your own existing cluster
             
-            🎓 Tip  you can also use SCHEMA_REGISTRY_CREDS environment variable
+            🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable
             
         - names:
           - --file
@@ -734,7 +734,7 @@ subcommands:
             
             ❕ It must be absolute full path
             
-            🎓 Tip  use <tab> completion to trigger fzf completion
+            🎓 Tip: use <tab> completion to trigger fzf completion
             
             Required: ✓ Yes
             
@@ -756,9 +756,9 @@ subcommands:
             
             One of avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key
             
-            🎓 Tip  Most of times, it's much simpler to use 'playground topic produce'. Use java producer only if you have very specific requirements such as specifying record timestamp, use key with schema or to do perf testing
+            🎓 Tip: Most of times, it's much simpler to use 'playground topic produce'. Use java producer only if you have very specific requirements such as specifying record timestamp, use key with schema or to do perf testing
             
-            🎓 Tip  'with-key' will also produce key with selected converter, otherwise LongConverter is used
+            🎓 Tip: 'with-key' will also produce key with selected converter, otherwise LongConverter is used
             
             Default value: none
             
@@ -805,7 +805,7 @@ subcommands:
             
             ❕ It must be absolute full path. 
             
-            🎓 Tip  use <tab> completion to trigger fzf completion
+            🎓 Tip: use <tab> completion to trigger fzf completion
             
             Conflicts with: --producer
             
@@ -819,7 +819,7 @@ subcommands:
     description: | 
         📝 Get properties file from a container
         
-        👉 Check documentation https //kafka-docker-playground.io/#/how-to-use?id=%f0%9f%93%9d-see-properties-file
+        👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%93%9d-see-properties-file
     usage: playground get-properties [OPTIONS]
     options:
     - names:
@@ -855,7 +855,7 @@ subcommands:
         description: | 
           ✨ Enable java remote debugging for container
             
-            👉 Check documentation https //kafka-docker-playground.io/#/reusables?id=%e2%9c%a8-remote-debugging
+            👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%e2%9c%a8-remote-debugging
         usage: playground debug enable-remote-debugging [OPTIONS]
         options:
         - names:
@@ -869,11 +869,11 @@ subcommands:
             
       - name: testssl
         description: | 
-          🔐 Testing TLS/SSL encryption using https //testssl.sh/
+          🔐 Testing TLS/SSL encryption using https://testssl.sh/
             
-            testssl <URI>, where <URI> is 
+            testssl <URI>, where <URI> is:
             
-            host|host port|URL|URL port   port 443 is default, URL can only contain HTTPS protocol
+            host|host:port|URL|URL:port   port 443 is default, URL can only contain HTTPS protocol
         usage: playground debug testssl [ARGUMENTS]
         options: []
       - name: generate-diagnostics
@@ -882,7 +882,7 @@ subcommands:
             
             ⚠️ only connect and broker containers are supported for now
             
-            see https //docs.confluent.io/platform/current/tools/diagnostics-tool.html#collect-diagnostics
+            see https://docs.confluent.io/platform/current/tools/diagnostics-tool.html#collect-diagnostics
         usage: playground debug generate-diagnostics [OPTIONS]
         options:
         - names:
@@ -914,7 +914,7 @@ subcommands:
         description: | 
           👻 Take a heap dump
             
-            🔖 It will save output to a .hprof file. VisualVM (https //visualvm.github.io/) or MAT (https //www.eclipse.org/mat/) can be used to read the file.
+            🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/) can be used to read the file.
         usage: playground debug heap-dump [OPTIONS]
         options:
         - names:
@@ -972,7 +972,7 @@ subcommands:
           - --destination
           argument: DESTINATION
           description: | 
-            Destination  it could be an ip address, a container name or a hostname
+            Destination: it could be an ip address, a container name or a hostname
             
             Required: ✓ Yes
             
@@ -996,9 +996,9 @@ subcommands:
         description: | 
           🛩️ Record flight recorder
             
-            Read more about it at https //www.baeldung.com/java-flight-recorder-monitoring
+            Read more about it at https://www.baeldung.com/java-flight-recorder-monitoring
             
-            Open the jfr file with JDK Mission Control JMC(https //jdk.java.net/jmc/)
+            Open the jfr file with JDK Mission Control JMC(https://jdk.java.net/jmc/)
         usage: playground debug flight-recorder [OPTIONS]
         options:
         - names:
@@ -1072,7 +1072,7 @@ subcommands:
     description: | 
         🔢 Get JMX metrics from a component
         
-        👉 Check documentation https //kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics
+        👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics
     usage: playground get-jmx-metrics [OPTIONS]
     options:
     - names:
@@ -1111,7 +1111,7 @@ subcommands:
         description: | 
           💫 Recreate container(s)
             
-            👉 Check documentation https //kafka-docker-playground.io/#/how-to-use?id=%e2%99%bb%ef%b8%8f-re-create-containers
+            👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%e2%99%bb%ef%b8%8f-re-create-containers
         usage: playground container recreate
         options: []
       - name: get-ip-addresses
@@ -1376,7 +1376,7 @@ subcommands:
           description: | 
             Minimum expected number of messages to be present in topic, returns an error if this is not the case
             
-            Note  --topic should be specified in this case.
+            Note: --topic should be specified in this case.
             
             Default value: 
             
@@ -1421,13 +1421,13 @@ subcommands:
           - --input
           argument: '''-'''
           description: | 
-            🔥 You can either 
+            🔥 You can either:
             
             * Set your own schema (avro, json-schema, protobuf) with stdin (see example section). 
             
-            * You can also generate json data using json or sql format using syntax from https //github.com/MaterializeInc/datagen
+            * You can also generate json data using json or sql format using syntax from https://github.com/MaterializeInc/datagen
             
-            * Use completion to select predefined schemas (or use your own schema file) 🎓 Tip  use <tab> completion to trigger fzf completion
+            * Use completion to select predefined schemas (or use your own schema file) 🎓 Tip: use <tab> completion to trigger fzf completion
             
             * Directly set payload ("%g" can be used to generate a counter)
             
@@ -1463,7 +1463,7 @@ subcommands:
           description: | 
             🔢 Number of partitions for the topic. (default is 1)
             
-            ❌ Important  If topic is existing, it will be re-created before producing to topic.
+            ❌ Important: If topic is existing, it will be re-created before producing to topic.
             
             Default value: 
             
@@ -1491,12 +1491,12 @@ subcommands:
             
             If the key contain a number, it will be used as starting point and incremented for each record. 
             
-            Example  key1 will start with key1, then key2, etc..
-            Example  mykey-10-suffix will start with mykey-10-suffix then mykey-11-suffix, etc..
+            Example: key1 will start with key1, then key2, etc..
+            Example: mykey-10-suffix will start with mykey-10-suffix then mykey-11-suffix, etc..
             
             "%g" can also be used to generate a counter
             
-            Example  key%g will start with key1, then key2, etc..
+            Example: key%g will start with key1, then key2, etc..
             
             Otherwise, the key will be same for all records.
             
@@ -1506,9 +1506,9 @@ subcommands:
           description: | 
             🚏 Headers to use for all records. If not set, no header is used.
             
-            Example  --headers "header1 value1,header2 value2"
+            Example: --headers "header1:value1,header2:value2"
             
-            Note  CP 7.2+ is required.
+            Note: CP 7.2+ is required.
             
         - names:
           - --forced-value
@@ -1516,7 +1516,7 @@ subcommands:
           description: | 
             ☢️ Value to use for all records. 
             
-            🎓 Tip  use --generate-only first with avro, json-schema or protobuf to get skeleton of messages and then use --forced-value to send the message you need. 
+            🎓 Tip: use --generate-only first with avro, json-schema or protobuf to get skeleton of messages and then use --forced-value to send the message you need. 
             
         - names:
           - --generate-only
@@ -1534,7 +1534,7 @@ subcommands:
             
             --key must be set when this flag is used.
             
-            Note  CP 7.2+ is required.
+            Note: CP 7.2+ is required.
             
         - names:
           - --validate
@@ -1548,9 +1548,9 @@ subcommands:
           description: | 
             🔩 Converter configuration parameters to use 
             
-            See docs  https //docs.confluent.io/platform/current/schema-registry/connect.html#using-kconnect-long-with-sr
+            See docs: https://docs.confluent.io/platform/current/schema-registry/connect.html#using-kconnect-long-with-sr
             
-            🎓 Tip  you can pass multiple parameters by specifying --validate-config multiple times
+            🎓 Tip: you can pass multiple parameters by specifying --validate-config multiple times
             
             Repeatable: ✓ Yes
             
@@ -1562,11 +1562,11 @@ subcommands:
           description: | 
             🔩 Producer configuration parameters to use 
             
-            See docs  https //docs.confluent.io/platform/current/installation/configuration/producer-configs.html#cp-config-producer
+            See docs: https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html#cp-config-producer
             
-            🎓 Tip  you can pass multiple parameters by specifying --producer-property multiple times
+            🎓 Tip: you can pass multiple parameters by specifying --producer-property multiple times
             
-            Example  --producer-property "max.request.size=990485760" --producer-property "client.id=myid"
+            Example: --producer-property "max.request.size=990485760" --producer-property "client.id=myid"
             
             Repeatable: ✓ Yes
             
@@ -1648,7 +1648,7 @@ subcommands:
           description: | 
             🔗 Connector name
             
-            🎓 Tip  If not specified, the command will apply to all connectors
+            🎓 Tip: If not specified, the command will apply to all connectors
             
       - name: plugins
         description: | 
@@ -1667,7 +1667,7 @@ subcommands:
           description: | 
             🔗 Connector name
             
-            🎓 Tip  If not specified, the command will apply to all connectors
+            🎓 Tip: If not specified, the command will apply to all connectors
             
       - name: resume
         description: | 
@@ -1681,7 +1681,7 @@ subcommands:
           description: | 
             🔗 Connector name
             
-            🎓 Tip  If not specified, the command will apply to all connectors
+            🎓 Tip: If not specified, the command will apply to all connectors
             
       - name: delete
         description: | 
@@ -1695,7 +1695,7 @@ subcommands:
           description: | 
             🔗 Connector name
             
-            🎓 Tip  If not specified, the command will apply to all connectors
+            🎓 Tip: If not specified, the command will apply to all connectors
             
       - name: show-lag
         description: | 
@@ -1709,7 +1709,7 @@ subcommands:
           description: | 
             🔗 Connector name
             
-            🎓 Tip  If not specified, the command will apply to all connectors
+            🎓 Tip: If not specified, the command will apply to all connectors
             
         - names:
           - --wait-for-zero-lag
@@ -1729,7 +1729,7 @@ subcommands:
           description: | 
             🔗 Connector name
             
-            🎓 Tip  If not specified, the command will apply to all connectors
+            🎓 Tip: If not specified, the command will apply to all connectors
             
       - name: show-config-parameters
         description: | 
@@ -1743,7 +1743,7 @@ subcommands:
           description: | 
             🔗 Connector name
             
-            🎓 Tip  If not specified, the command will apply to all connectors
+            🎓 Tip: If not specified, the command will apply to all connectors
             
         - names:
           - --open
@@ -1790,7 +1790,7 @@ subcommands:
           description: | 
             🔗 Connector name
             
-            🎓 Tip  If not specified, the command will apply to all connectors
+            🎓 Tip: If not specified, the command will apply to all connectors
             
       - name: plugins
         description: | 
@@ -1809,7 +1809,7 @@ subcommands:
           description: | 
             🔗 Connector name
             
-            🎓 Tip  If not specified, the command will apply to all connectors
+            🎓 Tip: If not specified, the command will apply to all connectors
             
       - name: versions
         description: | 
@@ -1828,7 +1828,7 @@ subcommands:
           description: | 
             🔗 Connector name
             
-            🎓 Tip  If not specified, the command will apply to all connectors
+            🎓 Tip: If not specified, the command will apply to all connectors
             
       - name: resume
         description: | 
@@ -1842,7 +1842,7 @@ subcommands:
           description: | 
             🔗 Connector name
             
-            🎓 Tip  If not specified, the command will apply to all connectors
+            🎓 Tip: If not specified, the command will apply to all connectors
             
       - name: delete
         description: | 
@@ -1856,7 +1856,7 @@ subcommands:
           description: | 
             🔗 Connector name
             
-            🎓 Tip  If not specified, the command will apply to all connectors
+            🎓 Tip: If not specified, the command will apply to all connectors
             
       - name: show-lag
         description: | 
@@ -1870,7 +1870,7 @@ subcommands:
           description: | 
             🔗 Connector name
             
-            🎓 Tip  If not specified, the command will apply to all connectors
+            🎓 Tip: If not specified, the command will apply to all connectors
             
         - names:
           - --wait-for-zero-lag
@@ -1890,7 +1890,7 @@ subcommands:
           description: | 
             🔗 Connector name
             
-            🎓 Tip  If not specified, the command will apply to all connectors
+            🎓 Tip: If not specified, the command will apply to all connectors
             
       - name: show-config-parameters
         description: | 
@@ -1904,7 +1904,7 @@ subcommands:
           description: | 
             🔗 Connector name
             
-            🎓 Tip  If not specified, the command will apply to all connectors
+            🎓 Tip: If not specified, the command will apply to all connectors
             
         - names:
           - --open
@@ -1931,7 +1931,7 @@ subcommands:
           description: | 
             🔗 Connector name
             
-            🎓 Tip  If not specified, the command will apply to all connectors
+            🎓 Tip: If not specified, the command will apply to all connectors
             
         - names:
           - --level
