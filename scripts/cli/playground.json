@@ -101,7 +101,7 @@
             "--enable-jmx-grafana"
           ],
           "argument": "",
-          "description": "Enable Grafana, Prometheus and Pyroscope\n\n📊 Grafana is reachable at http //127.0.0.1 3000\n🛡️ Prometheus is reachable at http //127.0.0.1 9090\n📛 Pyroscope is reachable at http //127.0.0.1 4040\n"
+          "description": "Enable Grafana, Prometheus and Pyroscope\n\n📊 Grafana is reachable at http //127.0.0.1 3000\n\n🛡️ Prometheus is reachable at http //127.0.0.1 9090\n\n📛 Pyroscope is reachable at http //127.0.0.1 4040\n"
         },
         {
           "names": [
@@ -207,7 +207,7 @@
             "--enable-jmx-grafana"
           ],
           "argument": "",
-          "description": "Enable Grafana, Prometheus and Pyroscope\n\n📊 Grafana is reachable at http //127.0.0.1 3000\n🛡️ Prometheus is reachable at http //127.0.0.1 9090\n📛 Pyroscope is reachable at http //127.0.0.1 4040\n"
+          "description": "Enable Grafana, Prometheus and Pyroscope\n\n📊 Grafana is reachable at http //127.0.0.1 3000\n\n🛡️ Prometheus is reachable at http //127.0.0.1 9090\n\n📛 Pyroscope is reachable at http //127.0.0.1 4040\n"
         },
         {
           "names": [
@@ -498,7 +498,7 @@
                 "--enable-jmx-grafana"
               ],
               "argument": "",
-              "description": "Enable Grafana, Prometheus and Pyroscope\n\n📊 Grafana is reachable at http //127.0.0.1 3000\n🛡️ Prometheus is reachable at http //127.0.0.1 9090\n📛 Pyroscope is reachable at http //127.0.0.1 4040\n"
+              "description": "Enable Grafana, Prometheus and Pyroscope\n\n📊 Grafana is reachable at http //127.0.0.1 3000\n\n🛡️ Prometheus is reachable at http //127.0.0.1 9090\n\n📛 Pyroscope is reachable at http //127.0.0.1 4040\n"
             },
             {
               "names": [
