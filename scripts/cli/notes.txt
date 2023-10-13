@@ -12,6 +12,10 @@ bashly render :markdown docs
 cat /Users/vsaboulin/Documents/github/kafka-docker-playground-docs/docs/cli-template.md > /Users/vsaboulin/Documents/github/kafka-docker-playground-docs/docs/cli.md
 cat /Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/cli/docs/index.md >> /Users/vsaboulin/Documents/github/kafka-docker-playground-docs/docs/cli.md
 mv /Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/cli/docs/*.md /Users/vsaboulin/Documents/github/kafka-docker-playground-docs/docs/
+
+bashly render templates/shell-script-command-completion .
+yq -o=json playground.yaml > playground.json
+
 cd -
 
 #asciinema rec -c /bin/zsh /tmp/asciinema.cast --overwrite
