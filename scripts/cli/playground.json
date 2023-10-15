@@ -1239,6 +1239,13 @@
               ],
               "argument": "TIMESTAMP",
               "description": "🗳 Timestamp field name that represents when record was created in source system\n"
+            },
+            {
+              "names": [
+                "--subject"
+              ],
+              "argument": "SUBJECT",
+              "description": "📛 Subject for value in schema-registry to use (useful when data was produced with --value-subject-name-strategy other than TopicNameStrategy)\n\nNote: --topic should be specified in this case.\n"
             }
           ]
         },

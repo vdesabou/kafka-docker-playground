@@ -6,6 +6,7 @@ min_expected_messages="${args[--min-expected-messages]}"
 timeout="${args[--timeout]}"
 tail="${args[--tail]}"
 timestamp_field="${args[--plot-latencies-timestamp-field]}"
+subject="${args[--subject]}"
 
 environment=`get_environment_used`
 
@@ -78,6 +79,11 @@ then
     if [[ -n "$min_expected_messages" ]]
     then
       logerror "--min-expected-messages was provided without specifying --topic"
+      exit 1
+    fi
+    if [[ -n "$subject" ]]
+    then
+      logerror "--subject was provided without specifying --topic"
       exit 1
     fi
     if [[ -n "$tail" ]]
@@ -201,11 +207,19 @@ do
     log "🔮🙅 topic is not using any schema for key"
   fi
 
+  if [[ -n "$subject" ]]
+  then
+    log "📛 subject is set with $subject"
+    value_subject="${subject}"
+  else
+    value_subject="${topic}-value"
+  fi
+
   value_type=""
-  version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-value/versions/1" | jq -r .version)
+  version=$(curl $sr_security -s "${sr_url}/subjects/${value_subject}/versions/1" | jq -r .version)
   if [ "$version" != "null" ]
   then
-    schema_type=$(curl $sr_security -s "${sr_url}/subjects/${topic}-value/versions/1"  | jq -r .schemaType)
+    schema_type=$(curl $sr_security -s "${sr_url}/subjects/${value_subject}/versions/1"  | jq -r .schemaType)
     case "${schema_type}" in
       JSON)
         value_type="json-schema"

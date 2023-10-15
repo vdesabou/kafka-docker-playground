@@ -40,6 +40,10 @@ commands:
   - long: --skip-connect-internal-topics
     required: false
 
+- name: get-subject-list
+  help: Return some completion for subject list
+  private: true
+
 - name: get-examples-list-with-fzf
   help: Return some completion for examples list
   private: true
@@ -1168,6 +1172,16 @@ commands:
         arg: timestamp
         help: |-
           🗳 Timestamp field name that represents when record was created in source system
+
+      - long: --subject
+        required: false
+        arg: subject
+        completions:
+          - $(playground get-subject-list)
+        help: |-
+          📛 Subject for value in schema-registry to use (useful when data was produced with --value-subject-name-strategy other than TopicNameStrategy)
+          
+          Note: --topic should be specified in this case.
 
     - name: produce
       filters:
