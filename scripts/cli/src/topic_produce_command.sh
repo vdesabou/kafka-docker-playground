@@ -456,7 +456,7 @@ set +e
 grep "does not exist" $tmp_dir/result.log > /dev/null 2>&1
 if [ $? == 0 ]
 then
-    logwarn "topic $topic does not exist !"
+    log "✨ topic $topic does not exist, it will be created.."
     if [[ "$environment" == "environment" ]]
     then
         if [ "$nb_partitions" != "" ]
