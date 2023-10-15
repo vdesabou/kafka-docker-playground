@@ -851,6 +851,19 @@ subcommands:
     usage: playground debug COMMAND
     options: []
     subcommands:
+      - name: install-vscode-extension
+        description: | 
+          🪄 Install a slightly modified version of "Shell Script Command Completion" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)
+            
+            After installation, install "playground" command:
+            
+            * Go on a .sh file
+            
+            * Type Ctrl+Shift+P (or ⌘+⇧+P on macOS) and choose "Shell Completion: Load Command Spec (experimental)"" and then type "playground"
+            
+            👉 Check documentation https://kafka-docker-playground.io/#/cli?id=%f0%9f%aa%84-setup-shell-script-command-completion-visual-studio-code-extension
+        usage: playground debug install-vscode-extension
+        options: []
       - name: enable-remote-debugging
         description: | 
           ✨ Enable java remote debugging for container
