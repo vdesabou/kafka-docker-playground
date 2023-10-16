@@ -316,6 +316,7 @@ There is also a Confluent Cloud version available [here](https://github.com/vdes
 - [How to handle NULL value with COALESCE](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/handle-null-value-coalesce) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [How to handle empty array or null value within EXPLODE function using CASE](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/handle-empty-array-explode) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [Materialized view/cache example](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/materialized-view) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
+- [Select Query from Materialized table by composite Primary key](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/composite-pkey-materialized-table) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [Why tombstone is not propagated to table derived from CTAS in ksqlDB](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/tombstone-propagated-table) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 
 ## 👾 Other Playgrounds
