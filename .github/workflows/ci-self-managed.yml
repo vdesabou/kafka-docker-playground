@@ -112,7 +112,6 @@ jobs:
           DD_APP_KEY: ${{ secrets.DD_APP_KEY}}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN}}
           JIRA_URL: ${{ secrets.JIRA_URL}}
           JIRA_USERNAME: ${{ secrets.JIRA_USERNAME}}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN}}

@@ -26,16 +26,8 @@ else
 fi
 cd -
 
-if [ ! -z "$GITHUB_RUN_NUMBER" ]
-then
-     # running with github actions
-
-     
-     # if this is github actions
-     log "Removing all data"
-     docker run -p 9005:9005 -e FIREBASE_TOKEN="$FIREBASE_TOKEN" -e PROJECT=$GCP_PROJECT -i kamshak/firebase-tools-docker firebase database:remove / -y --token "$FIREBASE_TOKEN" --project "$GCP_PROJECT"
-fi
-
+log "Removing all data"
+docker run -v $PWD/../../connect/connect-gcp-firebase-sink/keyfile.json:/tmp/keyfile.json -e GOOGLE_APPLICATION_CREDENTIALS="/tmp/keyfile.json" -e PROJECT=$GCP_PROJECT -i andreysenov/firebase-tools firebase database:remove / --project "$GCP_PROJECT" --force
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
@@ -92,14 +84,7 @@ playground topic produce -t songs --nb-messages 3 --key "songId%g" << 'EOF'
 }
 EOF
 
-log "Follow README to verify data is in Firebase"
-
-if [ ! -z "$GITHUB_RUN_NUMBER" ]
-then
-     # if this is github actions
-     log "Verifying data is in Firebase"
-     docker run -p 9005:9005 -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$GCP_PROJECT -i kamshak/firebase-tools-docker firebase database:get / --token "$FIREBASE_TOKEN" --project "$GCP_PROJECT" | jq . > /tmp/result.log  2>&1
-     cat /tmp/result.log
-     grep "artist" /tmp/result.log
-fi
-
+log "Verifying data is in Firebase"
+docker run -v $PWD/../../connect/connect-gcp-firebase-sink/keyfile.json:/tmp/keyfile.json -e GOOGLE_APPLICATION_CREDENTIALS="/tmp/keyfile.json" -e PROJECT=$GCP_PROJECT -i andreysenov/firebase-tools firebase database:get / --project "$GCP_PROJECT" | jq . > /tmp/result.log  2>&1
+cat /tmp/result.log
+grep "artist" /tmp/result.log

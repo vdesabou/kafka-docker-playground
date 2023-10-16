@@ -24,6 +24,9 @@ else
     fi
 fi
 
+log "Removing all data"
+docker run -v $PWD/../../ccloud/connect-gcp-firebase-sink/keyfile.json:/tmp/keyfile.json -e GOOGLE_APPLICATION_CREDENTIALS="/tmp/keyfile.json" -e PROJECT=$GCP_PROJECT -i andreysenov/firebase-tools firebase database:remove / --project "$GCP_PROJECT" --force
+
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.yml"
 
 if [ -f /tmp/delta_configs/env.delta ]
@@ -101,12 +104,7 @@ playground topic produce -t songs --nb-messages 3 --key "songId%g" << 'EOF'
 }
 EOF
 
-log "Follow README to verify data is in Firebase"
-
-if [ ! -z "$GITHUB_RUN_NUMBER" ]
-then
-     log "Verifying data is in Firebase"
-     docker run -p 9005:9005 -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$GCP_PROJECT -i kamshak/firebase-tools-docker firebase database:get / --token "$FIREBASE_TOKEN" --project "$GCP_PROJECT" | jq . > /tmp/result.log  2>&1
-     cat /tmp/result.log
-     grep "artist" /tmp/result.log
-fi
+log "Verifying data is in Firebase"
+docker run -v $PWD/../../ccloud/connect-gcp-firebase-sink/keyfile.json:/tmp/keyfile.json -e GOOGLE_APPLICATION_CREDENTIALS="/tmp/keyfile.json" -e PROJECT=$GCP_PROJECT -i andreysenov/firebase-tools firebase database:get / --project "$GCP_PROJECT" | jq . > /tmp/result.log  2>&1
+cat /tmp/result.log
+grep "artist" /tmp/result.log
