@@ -4,7 +4,6 @@ services:
 
   broker:
     environment:
-      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=DEBUG"
       KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
       KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
