@@ -51,7 +51,9 @@ playground ccloud-connector delete --connector $connector_name
 set -e
 
 log "Set webserver to reply with 200"
-curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006
+curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006/set-response-error-code
+# curl -X PUT -H "Content-Type: application/json" --data '{"delay": 2000}' http://localhost:9006/set-response-time
+# curl -X PUT -H "Content-Type: application/json" --data '{"message":"Hello, World!"}' http://localhost:9006/set-response-body
 
 log "Creating fully managed connector"
 playground ccloud-connector create-or-update --connector $connector_name << EOF
