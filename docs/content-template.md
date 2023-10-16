@@ -336,7 +336,7 @@ There is also a Confluent Cloud version available [here](https://github.com/vdes
 - 🕹 [AVRO examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-format-avro) including a JAVA producer :other/schema-format-avro:
 - 🧩 [Protobuf examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-format-protobuf) including a JAVA producer :other/schema-format-protobuf:
 - 🎱 [JSON Schema examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-format-json-schema) including a JAVA producer :other/schema-format-json-schema:
-- 🚏 [How to use kafka-avro-console-producer and kafka-avro-console-consumer when Schema Registry is behind a proxy](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/http-proxy-schema-registry) :other/http-proxy-schema-registry:
+- 🚏 [How to use kafka-avro-console-producer and kafka-avro-console-consumer when Schema Registry is behind a proxy](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/http-proxy-schema-registry) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 🪦 [Recovery from schema hard deletion](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/recover-from-schema-hard-deletion) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 🔍 [ksqlDB Schema Inference with ID](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/schema-inference-with-id) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 💬 [MQTT Proxy](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/mqtt-proxy) :other/mqtt-proxy:
