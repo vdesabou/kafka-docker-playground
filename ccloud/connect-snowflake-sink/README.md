@@ -12,6 +12,24 @@ Quickly test [Snowflake Sink](https://docs.snowflake.com/en/user-guide/kafka-con
 
 Go to [Snowflake](https://www.snowflake.com) and register an account. You'll receive an email to setup your account and access to a 30 day trial instance.
 
+To get the `SNOWFLAKE_ACCOUNT_NAME`, go there and click on url:
+
+![ui](ui.jpg)
+
+This will give you an url like:
+
+```
+https://<SNOWFLAKE_ACCOUNT_NAME>.snowflakecomputing.com
+```
+
+Example:
+
+```
+https://of77992.eu-west-2.aws.snowflakecomputing.com
+```
+
+`SNOWFLAKE_ACCOUNT_NAME` should be set with `of77992.eu-west-2.aws`
+
 ## How to run
 
 Simply run:
