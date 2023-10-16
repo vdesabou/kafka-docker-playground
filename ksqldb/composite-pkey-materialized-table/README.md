@@ -12,7 +12,7 @@ WHERE TRANSACTION->CUSTOMER_ID=140 and TRANSACTION->PRODUCT_ID IS NULL and TRANS
 EMIT CHANGES LIMIT 1;
 ```
 
-Please note it will not work with Pull Query. With Pull Query, it will fail with `Unsupported expression in WHERE clause`:
+Please note it will **not** work with Pull Query. With Pull Query, it will fail with `Unsupported expression in WHERE clause`:
 ```
 SELECT * FROM TRANSACTIONS
 WHERE TRANSACTION->CUSTOMER_ID=140 and TRANSACTION->PRODUCT_ID IS NULL and TRANSACTION->TXN_ID=500007;
@@ -32,7 +32,7 @@ You can set directly a STRUCT() in the key. For example:
 SELECT * FROM TRANSACTIONS_MV2
 WHERE TRANSACTION = STRUCT(CUSTOMER_ID:='123', PRODUCT_ID:='10005', TXN_ID:='500005');
 ```
-However, ksqlDB will not support if one the of field of your multi-column key is null as you can't set a null value in this expression.
+However, ksqlDB will **not** support if one the of field of your multi-column key is null as you can't set a null value in this expression.
 
 About the performances:
 Querying on your composite key will generate a full scan of your table.
