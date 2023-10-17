@@ -1,0 +1,24 @@
+---
+version: '3.5'
+services:
+  mariadb:
+    image: mariadb:latest
+    hostname: mariadb
+    container_name: mariadb
+    environment:
+      MARIADB_ROOT_PASSWORD: password
+      MARIADB_DATABASE: db
+      MARIADB_USER: user
+      MARIADB_PASSWORD: password
+      MARIADB_ROOT_HOST: 172.%  # Allow docker containers to connect to mariadb
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - mariadb
+    volumes:
+        - ../../connect/connect-jdbc-mariadb-sink/mariadb-java-client-3.2.0.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mariadb-java-client-3.2.0.jar
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
