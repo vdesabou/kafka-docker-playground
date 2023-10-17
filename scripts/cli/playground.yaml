@@ -1391,6 +1391,11 @@ subcommands:
           📭 Display content of __consumer_offsets topic
         usage: playground topic display-consumer-offsets
         options: []
+      - name: list
+        description: | 
+          🔘 List topics
+        usage: playground topic list
+        options: []
       - name: describe
         description: | 
           🔬 Describe topic

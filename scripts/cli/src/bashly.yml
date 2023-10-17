@@ -1215,6 +1215,11 @@ commands:
       help: |-
         📭 Display content of __consumer_offsets topic
 
+    - name: list
+      group: Topic
+      help: |-
+        🔘 List topics
+
     - name: describe
       group: Topic
       help: |-

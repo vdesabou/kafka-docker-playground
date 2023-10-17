@@ -1203,6 +1203,12 @@
           "options": []
         },
         {
+          "name": "list",
+          "description": "🔘 List topics\n",
+          "usage": "playground topic list",
+          "options": []
+        },
+        {
           "name": "describe",
           "description": "🔬 Describe topic\n",
           "usage": "playground topic describe [OPTIONS]",

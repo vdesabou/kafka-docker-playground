@@ -94,6 +94,7 @@ playground_usage() {
   printf "  %s   🗳 Topic commands\n" "$(green "topic")                                  "
   [[ -n $long_usage ]] && printf "  %s   💯 Get number of records in a topic\n" "$(green "topic get-number-records")               "
   [[ -n $long_usage ]] && printf "  %s   📭 Display content of __consumer_offsets topic\n" "$(green "topic display-consumer-offsets")         "
+  [[ -n $long_usage ]] && printf "  %s   🔘 List topics\n" "$(green "topic list")                             "
   [[ -n $long_usage ]] && printf "  %s   🔬 Describe topic\n" "$(green "topic describe")                         "
   [[ -n $long_usage ]] && printf "  %s   🛡️ Change topic's schema compatibility\n" "$(green "topic set-schema-compatibility")         "
   [[ -n $long_usage ]] && printf "  %s   📥 Consume topic from beginning\n" "$(green "topic consume")                          "
@@ -2689,6 +2690,7 @@ playground_topic_usage() {
   printf "%s\n" "$(bold "Topic commands:")"
   printf "  %s   💯 Get number of records in a topic\n" "$(green "get-number-records")      "
   printf "  %s   📭 Display content of __consumer_offsets topic\n" "$(green "display-consumer-offsets")"
+  printf "  %s   🔘 List topics\n" "$(green "list")                    "
   printf "  %s   🔬 Describe topic\n" "$(green "describe")                "
   printf "  %s   🛡️ Change topic's schema compatibility\n" "$(green "set-schema-compatibility")"
   printf "  %s   📥 Consume topic from beginning\n" "$(green "consume")                 "
@@ -2766,6 +2768,35 @@ playground_topic_display_consumer_offsets_usage() {
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground topic display-consumer-offsets\n"
   printf "  playground topic display-consumer-offsets --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_list_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground topic list - 🔘 List topics\n"
+    echo
+
+  else
+    printf "playground topic list - 🔘 List topics\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic list\n"
+  printf "  playground topic list --help | -h\n"
   echo
 
   # :command.long_usage
@@ -11712,6 +11743,13 @@ playground_topic_display_consumer_offsets_command() {
 }
 
 # :command.function
+playground_topic_list_command() {
+  # src/topic_list_command.sh
+  log "🔘 List of topics (internal topics are excluded)"
+  playground get-topic-list --skip-connect-internal-topics
+}
+
+# :command.function
 playground_topic_describe_command() {
   # src/topic_describe_command.sh
   topic="${args[--topic]}"
@@ -19522,6 +19560,13 @@ playground_topic_parse_requirements() {
       shift $#
       ;;
 
+    list)
+      action="list"
+      shift
+      playground_topic_list_parse_requirements "$@"
+      shift $#
+      ;;
+
     describe)
       action="describe"
       shift
@@ -19692,6 +19737,50 @@ playground_topic_display_consumer_offsets_parse_requirements() {
 
   # :command.command_filter
   action="topic display-consumer-offsets"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_topic_list_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="topic list"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -22344,6 +22433,7 @@ run() {
     "topic") playground_topic_command ;;
     "topic get-number-records") playground_topic_get_number_records_command ;;
     "topic display-consumer-offsets") playground_topic_display_consumer_offsets_command ;;
+    "topic list") playground_topic_list_command ;;
     "topic describe") playground_topic_describe_command ;;
     "topic set-schema-compatibility") playground_topic_set_schema_compatibility_command ;;
     "topic consume") playground_topic_consume_command ;;
