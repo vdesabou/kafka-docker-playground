@@ -315,13 +315,19 @@ playground_get_subject_list_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground get-subject-list\n"
+  printf "  playground get-subject-list [OPTIONS]\n"
   printf "  playground get-subject-list --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
     printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--deleted")"
+    printf "    🧟 Include soft deleted schemas\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -1455,6 +1461,11 @@ playground_schema_get_usage() {
     printf "    📛 Subject name\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--deleted")"
+    printf "    🧟 Include soft deleted subjects\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -1464,6 +1475,7 @@ playground_schema_get_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground schema get\n"
     printf "  playground schema get --subject <SUBJECT>\n"
+    printf "  playground schema get --deleted\n"
     echo
 
   fi
@@ -8508,11 +8520,17 @@ playground_get_topic_list_command() {
 playground_get_subject_list_command() {
   # src/get_subject_list_command.sh
   ret=$(get_sr_url_and_security)
+  deleted="${args[--deleted]}"
 
   sr_url=$(echo "$ret" | cut -d "@" -f 1)
   sr_security=$(echo "$ret" | cut -d "@" -f 2)
 
-  curl $sr_security -s "${sr_url}/subjects" | jq -r '.[]'
+  if [[ -n "$deleted" ]]
+  then
+      curl $sr_security -s "${sr_url}/subjects?deleted=true" | jq -r '.[]'
+  else
+      curl $sr_security -s "${sr_url}/subjects" | jq -r '.[]'
+  fi
 }
 
 # :command.function
@@ -10638,6 +10656,7 @@ playground_get_properties_command() {
 playground_schema_get_command() {
   # src/schema_get_command.sh
   subject="${args[--subject]}"
+  deleted="${args[--deleted]}"
 
   ret=$(get_sr_url_and_security)
 
@@ -10647,7 +10666,18 @@ playground_schema_get_command() {
   if [[ ! -n "$subject" ]]
   then
       log "✨ --subject flag was not provided, applying command to all subjects"
-      subject=$(playground get-subject-list)
+      if [[ -n "$deleted" ]]
+      then
+          subject=$(playground get-subject-list)
+          echo "$subject" > /tmp/subjects-all
+          log "🧟 deleted subjects are included"
+          subject=$(playground get-subject-list --deleted)
+          echo "$subject" > /tmp/subjects-deleted-tmp
+
+          sort /tmp/subjects-all /tmp/subjects-deleted-tmp | uniq -u > /tmp/subjects-deleted
+      else
+          subject=$(playground get-subject-list)
+      fi
       if [ "$subject" == "" ]
       then
           logerror "❌ No subject found !"
@@ -10655,24 +10685,35 @@ playground_schema_get_command() {
       fi
   fi
 
+  maybe_include_deleted=""
+  if [[ -n "$deleted" ]]
+  then
+      maybe_include_deleted="?deleted=true"
+  fi
+
   items=($subject)
   for subject in ${items[@]}
   do
-      versions=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions")
+      versions=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions$maybe_include_deleted")
 
       for version in $(echo "${versions}" | jq -r '.[]')
       do
-          schema_type=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}"  | jq -r .schemaType)
+          schema_type=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}$maybe_include_deleted" | jq -r .schemaType)
           case "${schema_type}" in
           JSON|null)
-              schema=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}/schema" | jq .)
+              schema=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}/schema$maybe_include_deleted" | jq .)
           ;;
           PROTOBUF)
-              schema=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}/schema")
+              schema=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}/schema$maybe_include_deleted")
           ;;
           esac
 
-          log "🔰 subject ${subject} 💯 version ${version}"
+          if ! grep "${subject}" /tmp/subjects-deleted
+          then
+              log "🔰 subject ${subject} 💯 version ${version}"
+          else
+              log "🧟 (deleted) subject ${subject} 💯 version ${version}"
+          fi
 
           echo "${schema}"
       done
@@ -15015,6 +15056,13 @@ playground_get_subject_list_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --deleted)
+
+        # :flag.case_no_arg
+        args['--deleted']=1
+        shift
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
@@ -17235,6 +17283,14 @@ playground_schema_get_parse_requirements() {
           printf "%s\n" "--subject requires an argument: --subject SUBJECT" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --deleted)
+
+        # :flag.case_no_arg
+        args['--deleted']=1
+        shift
         ;;
 
       -?*)

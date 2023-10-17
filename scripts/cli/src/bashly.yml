@@ -43,6 +43,11 @@ commands:
 - name: get-subject-list
   help: Return some completion for subject list
   private: true
+  flags:
+  - long: --deleted
+    required: false
+    help: |-
+      🧟 Include soft deleted schemas
 
 - name: get-examples-list-with-fzf
   help: Return some completion for examples list
@@ -688,10 +693,14 @@ commands:
         help: |-
           📛 Subject name
 
-      # todo: add deleted flag
+      - long: --deleted
+        required: false
+        help: |-
+          🧟 Include soft deleted subjects
     examples:
     - playground schema get
     - playground schema get --subject <SUBJECT>
+    - playground schema get --deleted
 
   - name: register
     group: Schema

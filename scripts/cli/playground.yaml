@@ -849,6 +849,12 @@ subcommands:
           description: | 
             📛 Subject name
             
+        - names:
+          - --deleted
+          argument: ""
+          description: | 
+            🧟 Include soft deleted subjects
+            
       - name: register
         description: | 
           ⏺️ Register a schema in specified subject

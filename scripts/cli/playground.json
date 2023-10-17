@@ -660,6 +660,13 @@
               ],
               "argument": "SUBJECT",
               "description": "📛 Subject name\n"
+            },
+            {
+              "names": [
+                "--deleted"
+              ],
+              "argument": "",
+              "description": "🧟 Include soft deleted subjects\n"
             }
           ]
         },
