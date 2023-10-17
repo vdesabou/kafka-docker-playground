@@ -5,6 +5,25 @@
 With Apache Avro, you can set a field as an UNION of two types. A union datatype is used whenever the field has one or more datatypes. For example, ["null", "string"] declares a schema which may be either a null or string.
 
 Union type can be useful for Optional fields:
+```
+{
+  "type":"record",
+  "name":"myrecord",
+  "fields":[
+    { "name":"id", "type":"int"},
+    { "name":"product", "type":"string"},
+    { "name":"quantity", "type":"int"},
+    {
+      "name":"description",
+      "type":[
+        "null",
+        "string"
+      ],
+      "default":null
+    }
+  ]
+}
+```
 
 But it can be also useful for putting several Event Types in the same topic:
 ```
