@@ -10740,7 +10740,7 @@ playground_schema_register_command() {
   sr_security=$(echo "$ret" | cut -d "@" -f 2)
 
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-  #trap 'rm -rf $tmp_dir' EXIT
+  trap 'rm -rf $tmp_dir' EXIT
   #log "tmp_dir is $tmp_dir"
   schema_file=$tmp_dir/value_schema
 
@@ -12004,10 +12004,10 @@ playground_topic_consume_command() {
       log "📈 plotting results.."
     fi
     key_type=""
-    version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/1" | jq -r .version)
+    version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/latest" | jq -r .version)
     if [ "$version" != "null" ]
     then
-      schema_type=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/1" | jq -r .schemaType)
+      schema_type=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/latest" | jq -r .schemaType)
       case "${schema_type}" in
         JSON)
           key_type="json-schema"
@@ -12038,10 +12038,10 @@ playground_topic_consume_command() {
     fi
 
     value_type=""
-    version=$(curl $sr_security -s "${sr_url}/subjects/${value_subject}/versions/1" | jq -r .version)
+    version=$(curl $sr_security -s "${sr_url}/subjects/${value_subject}/versions/latest" | jq -r .version)
     if [ "$version" != "null" ]
     then
-      schema_type=$(curl $sr_security -s "${sr_url}/subjects/${value_subject}/versions/1"  | jq -r .schemaType)
+      schema_type=$(curl $sr_security -s "${sr_url}/subjects/${value_subject}/versions/latest"  | jq -r .schemaType)
       case "${schema_type}" in
         JSON)
           value_type="json-schema"

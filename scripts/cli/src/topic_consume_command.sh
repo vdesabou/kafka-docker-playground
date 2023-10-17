@@ -184,10 +184,10 @@ do
     log "📈 plotting results.."
   fi
   key_type=""
-  version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/1" | jq -r .version)
+  version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/latest" | jq -r .version)
   if [ "$version" != "null" ]
   then
-    schema_type=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/1" | jq -r .schemaType)
+    schema_type=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/latest" | jq -r .schemaType)
     case "${schema_type}" in
       JSON)
         key_type="json-schema"
@@ -218,10 +218,10 @@ do
   fi
 
   value_type=""
-  version=$(curl $sr_security -s "${sr_url}/subjects/${value_subject}/versions/1" | jq -r .version)
+  version=$(curl $sr_security -s "${sr_url}/subjects/${value_subject}/versions/latest" | jq -r .version)
   if [ "$version" != "null" ]
   then
-    schema_type=$(curl $sr_security -s "${sr_url}/subjects/${value_subject}/versions/1"  | jq -r .schemaType)
+    schema_type=$(curl $sr_security -s "${sr_url}/subjects/${value_subject}/versions/latest"  | jq -r .schemaType)
     case "${schema_type}" in
       JSON)
         value_type="json-schema"
