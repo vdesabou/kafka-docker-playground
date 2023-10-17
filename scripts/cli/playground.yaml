@@ -1502,6 +1502,14 @@ subcommands:
             
             Note: --topic should be specified in this case.
             
+        - names:
+          - --max-characters
+          argument: 2500
+          description: | 
+            Max characters per message to display (default is 2500)
+            
+            Default value: 2500
+            
       - name: produce
         description: | 
           📤 Produce to a topic

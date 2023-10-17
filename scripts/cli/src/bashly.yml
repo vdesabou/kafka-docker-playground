@@ -1306,6 +1306,14 @@ commands:
           
           Note: --topic should be specified in this case.
 
+      - long: --max-characters
+        arg: max-characters
+        validate: integer
+        required: false
+        default: "2500"
+        help: |-
+          Max characters per message to display (default is 2500)
+
     - name: produce
       filters:
       - schema_registry_running

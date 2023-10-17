@@ -2927,6 +2927,12 @@ playground_topic_consume_usage() {
     printf "    📛 Subject for value in schema-registry to use (useful when data was produced\n    with --value-subject-name-strategy other than TopicNameStrategy)\n    \n    Note: --topic should be specified in this case.\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-characters MAX-CHARACTERS")"
+    printf "    Max characters per message to display (default is 2500)\n"
+    printf "    Default: 2500\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -11818,6 +11824,7 @@ playground_topic_consume_command() {
   tail="${args[--tail]}"
   timestamp_field="${args[--plot-latencies-timestamp-field]}"
   subject="${args[--subject]}"
+  max_characters="${args[--max-characters]}"
 
   environment=`get_environment_used`
 
@@ -12126,7 +12133,6 @@ playground_topic_consume_command() {
     found=0
     first_record=1
     is_base64=0
-    size_limit_to_show=2500
     # Loop through each line in the named pipe
     while read -r line
     do
@@ -12193,11 +12199,11 @@ playground_topic_consume_command() {
           if [ $display_line -eq 1 ]
           then
             payload=$(echo "$line_with_date" | cut -d "|" -f 6)
-            if [ ${#payload} -lt $size_limit_to_show ]
+            if [ ${#payload} -lt $max_characters ]
             then
               echo "$line_with_date"
             else
-              echo "$line_with_date" | cut -c 1-$size_limit_to_show | awk "{print \$0 \"...<truncated, only showing first $size_limit_to_show characters, out of ${#payload}>...\"}"
+              echo "$line_with_date" | cut -c 1-$max_characters | awk "{print \$0 \"...<truncated, only showing first $max_characters characters, out of ${#payload}>...\"}"
             fi
           fi
         fi
@@ -12233,11 +12239,11 @@ playground_topic_consume_command() {
         if [ $display_line -eq 1 ]
         then
           payload=$(echo "$line" | cut -d "|" -f 6)
-          if [ ${#payload} -lt $size_limit_to_show ]
+          if [ ${#payload} -lt $max_characters ]
           then
             echo "$line"
           else
-            echo "$line" | cut -c 1-$size_limit_to_show | awk "{print \$0 \"...<truncated, only showing first $size_limit_to_show characters, out of ${#payload}>...\"}"
+            echo "$line" | cut -c 1-$max_characters | awk "{print \$0 \"...<truncated, only showing first $max_characters characters, out of ${#payload}>...\"}"
           fi
         fi
       fi
@@ -20025,6 +20031,26 @@ playground_topic_consume_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --max-characters)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_integer "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--max-characters MAX-CHARACTERS" "$(validate_integer "$2")" >&2
+            exit 1
+          fi
+
+          args['--max-characters']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-characters requires an argument: --max-characters MAX-CHARACTERS" >&2
+          exit 1
+        fi
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -20046,6 +20072,7 @@ playground_topic_consume_parse_requirements() {
   [[ -n ${args['--min-expected-messages']:-} ]] || args['--min-expected-messages']=""
   [[ -n ${args['--grep']:-} ]] || args['--grep']=""
   [[ -n ${args['--timeout']:-} ]] || args['--timeout']="60"
+  [[ -n ${args['--max-characters']:-} ]] || args['--max-characters']="2500"
 
   # :command.user_filter
   filter_error=$(filter_schema_registry_running)

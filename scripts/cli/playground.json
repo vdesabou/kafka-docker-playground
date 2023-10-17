@@ -1316,6 +1316,13 @@
               ],
               "argument": "SUBJECT",
               "description": "📛 Subject for value in schema-registry to use (useful when data was produced with --value-subject-name-strategy other than TopicNameStrategy)\n\nNote: --topic should be specified in this case.\n"
+            },
+            {
+              "names": [
+                "--max-characters"
+              ],
+              "argument": 2500,
+              "description": "Max characters per message to display (default is 2500)\n\nDefault value: 2500\n"
             }
           ]
         },

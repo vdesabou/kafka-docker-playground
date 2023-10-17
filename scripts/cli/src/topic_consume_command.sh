@@ -7,6 +7,7 @@ timeout="${args[--timeout]}"
 tail="${args[--tail]}"
 timestamp_field="${args[--plot-latencies-timestamp-field]}"
 subject="${args[--subject]}"
+max_characters="${args[--max-characters]}"
 
 environment=`get_environment_used`
 
@@ -313,7 +314,6 @@ do
   found=0
   first_record=1
   is_base64=0
-  size_limit_to_show=2500
   # Loop through each line in the named pipe
   while read -r line
   do
@@ -380,11 +380,11 @@ do
         if [ $display_line -eq 1 ]
         then
           payload=$(echo "$line_with_date" | cut -d "|" -f 6)
-          if [ ${#payload} -lt $size_limit_to_show ]
+          if [ ${#payload} -lt $max_characters ]
           then
             echo "$line_with_date"
           else
-            echo "$line_with_date" | cut -c 1-$size_limit_to_show | awk "{print \$0 \"...<truncated, only showing first $size_limit_to_show characters, out of ${#payload}>...\"}"
+            echo "$line_with_date" | cut -c 1-$max_characters | awk "{print \$0 \"...<truncated, only showing first $max_characters characters, out of ${#payload}>...\"}"
           fi
         fi
       fi
@@ -420,11 +420,11 @@ do
       if [ $display_line -eq 1 ]
       then
         payload=$(echo "$line" | cut -d "|" -f 6)
-        if [ ${#payload} -lt $size_limit_to_show ]
+        if [ ${#payload} -lt $max_characters ]
         then
           echo "$line"
         else
-          echo "$line" | cut -c 1-$size_limit_to_show | awk "{print \$0 \"...<truncated, only showing first $size_limit_to_show characters, out of ${#payload}>...\"}"
+          echo "$line" | cut -c 1-$max_characters | awk "{print \$0 \"...<truncated, only showing first $max_characters characters, out of ${#payload}>...\"}"
         fi
       fi
     fi

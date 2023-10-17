@@ -729,7 +729,7 @@ _playground_completions() {
       ;;
 
     'topic consume'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--grep --help --max-messages --min-expected-messages --plot-latencies-timestamp-field --subject --tail --timeout --topic --verbose -h -t -v")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--grep --help --max-characters --max-messages --min-expected-messages --plot-latencies-timestamp-field --subject --tail --timeout --topic --verbose -h -t -v")" -- "$cur" )
       ;;
 
     'debug testssl'*)
