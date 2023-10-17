@@ -687,6 +687,8 @@ commands:
           - $(playground get-subject-list)
         help: |-
           📛 Subject name
+
+      # todo: add deleted flag
     examples:
     - playground schema get
     - playground schema get --subject <SUBJECT>
@@ -699,7 +701,8 @@ commands:
     help: |-
       ⏺️ Register a schema in specified subject
     flags:
-      - long: --subject
+      - &subject_required
+        long: --subject
         required: true
         arg: subject
         completions:
@@ -765,6 +768,43 @@ commands:
           ]
       }
       EOF
+
+  - name: delete
+    group: Schema
+    help: |-
+      🧟 Delete schema
+    flags:
+    - &subject_not_required
+      long: --subject
+      required: false
+      arg: subject
+      completions:
+        - $(playground get-subject-list)
+      help: |-
+        📛 Subject name
+    - long: --id
+      required: false
+      validate: integer
+      arg: id
+      help: |-
+        1️⃣ schema id
+      conflicts:
+        - --subject
+        - --version
+    - long: --version
+      required: false
+      validate: integer
+      arg: version
+      help: |-
+        🔢 schema version
+
+        Can only be used when --subject is provided
+    - long: --permanent
+      required: false
+      help: |-
+        💀 Hard delete for a specific version of the subject, which removes all associated metadata including the schema ID. 
+        
+        default is soft delete
 
 - name: debug
   expose: true

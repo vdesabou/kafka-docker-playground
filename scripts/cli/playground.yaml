@@ -881,6 +881,41 @@ subcommands:
             
             Default value: -
             
+      - name: delete
+        description: | 
+          🧟 Delete schema
+        usage: playground schema delete [OPTIONS]
+        options:
+        - names:
+          - --subject
+          argument: SUBJECT
+          description: | 
+            📛 Subject name
+            
+        - names:
+          - --id
+          argument: ID
+          description: | 
+            1️⃣ schema id
+            
+            Conflicts with: --subject, --version
+            
+        - names:
+          - --version
+          argument: VERSION
+          description: | 
+            🔢 schema version
+            
+            Can only be used when --subject is provided
+            
+        - names:
+          - --permanent
+          argument: ""
+          description: | 
+            💀 Hard delete for a specific version of the subject, which removes all associated metadata including the schema ID. 
+            
+            default is soft delete
+            
   - name: debug
     description: | 
         🐞 Debug commands
