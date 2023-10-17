@@ -27,7 +27,6 @@ docker exec -i connect kafka-avro-console-consumer --bootstrap-server broker:909
 
 
 # CASE 2 -> With Mutiple Event Types in the same Topic
-
 log "Register the Avro schema for Customer"
 # {
 #     "type": "record",
