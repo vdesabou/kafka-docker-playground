@@ -781,31 +781,22 @@ commands:
       completions:
         - $(playground get-subject-list)
       help: |-
-        📛 Subject name
-    - long: --id
-      required: false
-      validate: integer
-      arg: id
-      help: |-
-        1️⃣ schema id
-      conflicts:
-        - --subject
-        - --version
+        📛 Subject name to delete:
+          
+          if --version is provided, only that version will be deleted. Otherwise the complete subject will be deleted
     - long: --version
       required: false
       validate: integer
       arg: version
       help: |-
-        🔢 schema version
+        🔢 Schema version of the provided subject to delete
 
         Can only be used when --subject is provided
     - long: --permanent
       required: false
       help: |-
-        💀 Hard delete for a specific version of the subject, which removes all associated metadata including the schema ID. 
+        💀 Hard delete (default is soft delete)
         
-        default is soft delete
-
 - name: debug
   expose: true
   group: Debug

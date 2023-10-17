@@ -702,28 +702,21 @@
                 "--subject"
               ],
               "argument": "SUBJECT",
-              "description": "📛 Subject name\n"
-            },
-            {
-              "names": [
-                "--id"
-              ],
-              "argument": "ID",
-              "description": "1️⃣ schema id\n\nConflicts with: --subject, --version\n"
+              "description": "📛 Subject name to delete:\n  \n  if --version is provided, only that version will be deleted. Otherwise the complete subject will be deleted\n"
             },
             {
               "names": [
                 "--version"
               ],
               "argument": "VERSION",
-              "description": "🔢 schema version\n\nCan only be used when --subject is provided\n"
+              "description": "🔢 Schema version of the provided subject to delete\n\nCan only be used when --subject is provided\n"
             },
             {
               "names": [
                 "--permanent"
               ],
               "argument": "",
-              "description": "💀 Hard delete for a specific version of the subject, which removes all associated metadata including the schema ID. \n\ndefault is soft delete\n"
+              "description": "💀 Hard delete (default is soft delete)\n"
             }
           ]
         }

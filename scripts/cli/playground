@@ -1544,22 +1544,17 @@ playground_schema_delete_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--subject SUBJECT")"
-    printf "    📛 Subject name\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--id ID")"
-    printf "    1️⃣ schema id\n"
+    printf "    📛 Subject name to delete:\n      \n      if --version is provided, only that version will be deleted. Otherwise the\n    complete subject will be deleted\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--version VERSION")"
-    printf "    🔢 schema version\n    \n    Can only be used when --subject is provided\n"
+    printf "    🔢 Schema version of the provided subject to delete\n    \n    Can only be used when --subject is provided\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--permanent")"
-    printf "    💀 Hard delete for a specific version of the subject, which removes all\n    associated metadata including the schema ID.\n    \n    default is soft delete\n"
+    printf "    💀 Hard delete (default is soft delete)\n"
     echo
 
     # :command.usage_fixed_flags
@@ -10758,7 +10753,6 @@ playground_schema_delete_command() {
   # src/schema_delete_command.sh
   subject="${args[--subject]}"
   version="${args[--version]}"
-  id="${args[--id]}"
   permanent="${args[--permanent]}"
 
   ret=$(get_sr_url_and_security)
@@ -10789,42 +10783,12 @@ playground_schema_delete_command() {
           fi
       else
           logwarn "--version is not set, deleting all versions !"
-          versions=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions")
-          ret=$?
-          set -e
-          if [ $ret -eq 0 ]
+          log "🧟 Soft deleting subject 🔰 ${subject}"
+          curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}" | jq .
+          if [[ -n "$permanent" ]]
           then
-              if echo "$versions" | jq -r .error_code >/dev/null 2>&1
-              then
-                  error_code=$(echo "$versions" | jq -r .error_code)
-                  if [ "$error_code" != "null" ]
-                  then
-                      message=$(echo "$versions" | jq -r .message)
-                      logerror "Command failed with error code $error_code"
-                      logerror "$message"
-                      exit 1
-                  fi
-              else
-                  for version in $(echo "${versions}" | jq -r '.[]')
-                  do
-                      if test "$version" -eq "$version" 2>/dev/null
-                      then
-                          log "🧟 Soft deleting 💯 version ${version} from subject 🔰 ${subject}"
-                          curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}/versions/${version}" | jq .
-                          if [[ -n "$permanent" ]]
-                          then
-                              log "💀 Hard deleting 💯 version ${version} from subject 🔰 ${subject}"
-                              curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}/versions/${version}?permanent=true" | jq .
-                          fi
-                      else
-                          logerror "$version is not a number"
-                          exit 1
-                      fi
-                  done
-              fi
-          else
-              logerror "❌ curl request failed with error code $ret!"
-              exit 1
+              log "💀 Hard deleting  subject 🔰 ${subject}"
+              curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}?permanent=true" | jq .
           fi
       fi
   fi
@@ -17443,33 +17407,6 @@ playground_schema_delete_parse_requirements() {
           shift
         else
           printf "%s\n" "--subject requires an argument: --subject SUBJECT" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
-      --id)
-        # :flag.conflicts
-        for conflict in --subject --version; do
-          if [[ -n "${args[$conflict]:-}" ]]; then
-            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
-            exit 1
-          fi
-        done
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          # :flag.validations
-          if [[ -n $(validate_integer "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--id ID" "$(validate_integer "$2")" >&2
-            exit 1
-          fi
-
-          args['--id']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--id requires an argument: --id ID" >&2
           exit 1
         fi
         ;;
