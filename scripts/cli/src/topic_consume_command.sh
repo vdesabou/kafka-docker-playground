@@ -204,6 +204,7 @@ do
   if [ "$key_type" != "" ]
   then
     log "🔮🔰 topic is using $key_type for key"
+    playground schema get --subject ${topic}-key
   else
     log "🔮🙅 topic is not using any schema for key"
   fi
@@ -237,6 +238,7 @@ do
   if [ "$value_type" != "" ]
   then
     log "🔮🔰 topic is using $value_type for value"
+    playground schema get --subject ${value_subject}
   else
     log "🔮🙅 topic is not using any schema for value"
   fi
