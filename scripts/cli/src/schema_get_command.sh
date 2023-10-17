@@ -42,6 +42,7 @@ do
     for version in $(echo "${versions}" | jq -r '.[]')
     do
         schema_type=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}$maybe_include_deleted" | jq -r .schemaType)
+        id=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}$maybe_include_deleted" | jq -r .id)
         case "${schema_type}" in
         JSON|null)
             schema=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}/schema$maybe_include_deleted" | jq .)
@@ -53,9 +54,9 @@ do
 
         if ! grep "${subject}" /tmp/subjects-deleted
         then
-            log "🔰 subject ${subject} 💯 version ${version}"
+            log "🔰 subject ${subject} 💯 version ${version} (id $id)"
         else
-            log "🧟 (deleted) subject ${subject} 💯 version ${version}"
+            log "🧟 (deleted) subject ${subject} 💯 version ${version} (id $id)"
         fi
 
         echo "${schema}"
