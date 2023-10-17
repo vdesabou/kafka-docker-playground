@@ -2478,7 +2478,7 @@ function ccloud::create_ccloud_stack() {
 
   SCHEMA_REGISTRY_GEO="${SCHEMA_REGISTRY_GEO:-us}"
   SCHEMA_REGISTRY=$(ccloud::enable_schema_registry $CLUSTER_CLOUD $SCHEMA_REGISTRY_GEO)
-  SCHEMA_REGISTRY_ENDPOINT=$(confluent schema-registry cluster describe -o json | jq -r ".endpoint_url")
+
   # VINC: added
   if [[ -z "$SCHEMA_REGISTRY_CREDS" ]]
   then
@@ -2490,6 +2490,8 @@ function ccloud::create_ccloud_stack() {
     fi
     SCHEMA_REGISTRY_CREDS=$(ccloud::maybe_create_credentials_resource $SERVICE_ACCOUNT_ID $SCHEMA_REGISTRY)
   fi
+  
+  SCHEMA_REGISTRY_ENDPOINT=$(confluent schema-registry cluster describe -o json | jq -r ".endpoint_url")
 
   if [[ $NEED_ACLS -eq 1 ]]
   then
