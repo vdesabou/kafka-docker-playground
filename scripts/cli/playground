@@ -60,7 +60,8 @@ playground_usage() {
   echo
   printf "%s\n" "$(bold "Schema commands:")"
   printf "  %s   🔰 Schema commands\n" "$(green "schema")                                 "
-  [[ -n $long_usage ]] && printf "  %s   🔰 Get all schemas versions for all subjects\n" "$(green "schema get")                             "
+  [[ -n $long_usage ]] && printf "  %s   🔰 Get all schemas versions for specified subject (if --subject is not specified, all subjects will be used)\n" "$(green "schema get")                             "
+  [[ -n $long_usage ]] && printf "  %s   ⏺️ Register a schema in specified subject\n" "$(green "schema register")                        "
   echo
   printf "%s\n" "$(bold "Debug commands:")"
   printf "  %s   🐞 Debug commands\n" "$(green "debug")                                  "
@@ -1408,8 +1409,9 @@ playground_schema_usage() {
   printf "  playground schema [COMMAND] --help | -h\n"
   echo
   # :command.usage_commands
-  printf "%s\n" "$(bold "Kafka commands:")"
-  printf "  %s   🔰 Get all schemas versions for all subjects\n" "$(green "get")"
+  printf "%s\n" "$(bold "Schema commands:")"
+  printf "  %s   🔰 Get all schemas versions for specified subject (if --subject is not specified, all subjects will be used)\n" "$(green "get")     "
+  printf "  %s   ⏺️ Register a schema in specified subject\n" "$(green "register")"
   echo
 
   # :command.long_usage
@@ -1427,11 +1429,11 @@ playground_schema_usage() {
 # :command.usage
 playground_schema_get_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground schema get - 🔰 Get all schemas versions for all subjects\n"
+    printf "playground schema get - 🔰 Get all schemas versions for specified subject (if --subject is not specified, all subjects will be used)\n"
     echo
 
   else
-    printf "playground schema get - 🔰 Get all schemas versions for all subjects\n"
+    printf "playground schema get - 🔰 Get all schemas versions for specified subject (if --subject is not specified, all subjects will be used)\n"
     echo
 
   fi
@@ -1448,7 +1450,7 @@ playground_schema_get_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--subject SUBJECT")"
-    printf "    📛 Subject\n"
+    printf "    📛 Subject name\n"
     echo
 
     # :command.usage_fixed_flags
@@ -1460,6 +1462,57 @@ playground_schema_get_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground schema get\n"
     printf "  playground schema get --subject <SUBJECT>\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_schema_register_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground schema register - ⏺️ Register a schema in specified subject\n"
+    echo
+
+  else
+    printf "playground schema register - ⏺️ Register a schema in specified subject\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground schema register [OPTIONS]\n"
+  printf "  playground schema register --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--subject SUBJECT (required)")"
+    printf "    📛 Subject name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--input INPUT")"
+    printf "    🔥 You can either:\n    \n    * Set your own schema (avro, json-schema, protobuf) with stdin (see example\n    section).\n    \n    * Use completion to select predefined schemas (or use your own schema file)\n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    Default: -\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema register --subject test-protobuf << 'EOF'\n  syntax = \"proto3\";\n  \n  package com.github.vdesabou;\n  \n  message Customer {\n      int64 count = 1;\n      string first_name = 2;\n      string last_name = 3;\n      string address = 4;\n  }\n  EOF\n  \n  playground schema register --subject test-avro << 'EOF'\n  {\n      \"type\": \"record\",\n      \"namespace\": \"com.github.vdesabou\",\n      \"name\": \"Customer\",\n      \"fields\": [\n          {\n              \"name\": \"count\",\n              \"type\": \"long\",\n              \"doc\": \"count\"\n          },\n          {\n              \"name\": \"first_name\",\n              \"type\": \"string\",\n              \"doc\": \"First Name of Customer\"\n          },\n          {\n              \"name\": \"last_name\",\n              \"type\": \"string\",\n              \"doc\": \"Last Name of Customer\"\n          },\n          {\n              \"name\": \"address\",\n              \"type\": \"string\",\n              \"doc\": \"Address of Customer\"\n          }\n      ]\n  }\n  EOF\n"
     echo
 
   fi
@@ -10578,6 +10631,75 @@ playground_schema_get_command() {
 }
 
 # :command.function
+playground_schema_register_command() {
+  # src/schema_register_command.sh
+  subject="${args[--subject]}"
+  schema="${args[--input]}"
+  verbose="${args[--verbose]}"
+
+  ret=$(get_sr_url_and_security)
+
+  sr_url=$(echo "$ret" | cut -d "@" -f 1)
+  sr_security=$(echo "$ret" | cut -d "@" -f 2)
+
+  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+  #trap 'rm -rf $tmp_dir' EXIT
+  #log "tmp_dir is $tmp_dir"
+  schema_file=$tmp_dir/value_schema
+
+  if [ "$schema" = "-" ]
+  then
+      schema_content=$(cat "$schema")
+      echo "$schema_content" > $schema_file
+  else
+      if [[ $schema == @* ]]
+      then
+          # this is a schema file
+          argument_schema_file=$(echo "$schema" | cut -d "@" -f 2)
+          cp $argument_schema_file $schema_file
+      elif [ -f $schema ]
+      then
+          cp $schema $schema_file
+      else
+          schema_content=$schema
+          echo "$schema_content" > $schema_file
+      fi
+  fi
+
+  if grep -q "proto3" $schema_file
+  then
+      log "🔮 schema was identified as protobuf"
+      schema_type=PROTOBUF
+  elif grep -q "\"type\"\s*:\s*\"object\"" $schema_file
+  then
+      log "🔮 schema was identified as json schema"
+      schema_type=JSON
+  elif grep -q "\"type\"\s*:\s*\"record\"" $schema_file
+  then
+      log "🔮 schema was identified as avro"
+      schema_type=AVRO
+  else
+      logerror "❌ no known schema could be identified"
+      exit 1
+  fi
+
+  json="{\"schemaType\":\"$schema_type\"}"
+
+  content=$(cat $schema_file | tr -d '\n' | tr -s ' ')
+  json_new=$(echo $json | jq --arg content "$content" '. + { "schema": $content }')
+
+  log "⏺️ Registering schema to subject ${subject}"
+  if [[ -n "$verbose" ]]
+  then
+      set -x
+  fi
+  curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions" \
+      --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
+      --data "$json_new" | jq .
+
+}
+
+# :command.function
 playground_debug_install_vscode_extension_command() {
   # src/debug_install_vscode_extension_command.sh
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
@@ -16930,6 +17052,13 @@ playground_schema_parse_requirements() {
       shift $#
       ;;
 
+    register)
+      action="register"
+      shift
+      playground_schema_register_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_schema_usage >&2
@@ -17021,6 +17150,109 @@ playground_schema_get_parse_requirements() {
 
     esac
   done
+
+  # :command.user_filter
+  filter_error=$(filter_not_mdc_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_schema_register_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_schema_register_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="schema register"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --subject)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--subject']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--subject requires an argument: --subject SUBJECT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --input)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--input']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--input requires an argument: --input INPUT" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--subject']+x} ]]; then
+    printf "missing required flag: --subject SUBJECT\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--input']:-} ]] || args['--input']="-"
 
   # :command.user_filter
   filter_error=$(filter_not_mdc_environment)
@@ -21808,6 +22040,7 @@ run() {
     "get-properties") playground_get_properties_command ;;
     "schema") playground_schema_command ;;
     "schema get") playground_schema_get_command ;;
+    "schema register") playground_schema_register_command ;;
     "debug") playground_debug_command ;;
     "debug install-vscode-extension") playground_debug_install_vscode_extension_command ;;
     "debug enable-remote-debugging") playground_debug_enable_remote_debugging_command ;;

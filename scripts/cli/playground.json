@@ -651,7 +651,7 @@
       "subcommands": [
         {
           "name": "get",
-          "description": "🔰 Get all schemas versions for all subjects\n",
+          "description": "🔰 Get all schemas versions for specified subject (if --subject is not specified, all subjects will be used)\n",
           "usage": "playground schema get [OPTIONS]",
           "options": [
             {
@@ -659,7 +659,36 @@
                 "--subject"
               ],
               "argument": "SUBJECT",
-              "description": "📛 Subject\n"
+              "description": "📛 Subject name\n"
+            }
+          ]
+        },
+        {
+          "name": "register",
+          "description": "⏺️ Register a schema in specified subject\n",
+          "usage": "playground schema register [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--subject"
+              ],
+              "argument": "SUBJECT",
+              "description": "📛 Subject name\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
+                "--input"
+              ],
+              "argument": "INPUT",
+              "description": "🔥 You can either:\n\n* Set your own schema (avro, json-schema, protobuf) with stdin (see example section). \n\n* Use completion to select predefined schemas (or use your own schema file) 🎓 Tip: use <tab> completion to trigger fzf completion\n\nDefault value: -\n"
             }
           ]
         }
