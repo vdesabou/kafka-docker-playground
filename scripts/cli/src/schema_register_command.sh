@@ -8,7 +8,7 @@ sr_url=$(echo "$ret" | cut -d "@" -f 1)
 sr_security=$(echo "$ret" | cut -d "@" -f 2)
 
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-#trap 'rm -rf $tmp_dir' EXIT
+trap 'rm -rf $tmp_dir' EXIT
 #log "tmp_dir is $tmp_dir"
 schema_file=$tmp_dir/value_schema
 
