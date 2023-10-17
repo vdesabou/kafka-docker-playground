@@ -832,19 +832,23 @@ subcommands:
         Default value: connect
         
     subcommands:
-  - name: get-all-schemas
+  - name: schema
     description: | 
-        🔰 Get all schemas versions for all subjects
-    usage: playground get-all-schemas [OPTIONS]
-    options:
-    - names:
-      - --open
-      - -o
-      argument: ""
-      description: | 
-        🔖 Save output to a file and open with text editor set with config.ini (default is code)
-        
+        🔰 Schema commands
+    usage: playground schema COMMAND
+    options: []
     subcommands:
+      - name: get
+        description: | 
+          🔰 Get all schemas versions for all subjects
+        usage: playground schema get [OPTIONS]
+        options:
+        - names:
+          - --subject
+          argument: SUBJECT
+          description: | 
+            📛 Subject
+            
   - name: debug
     description: | 
         🐞 Debug commands

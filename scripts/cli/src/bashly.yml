@@ -664,21 +664,32 @@ commands:
   - playground get-properties --container broker
   - playground get-properties -c broker
 
-- name: get-all-schemas
-  group: Kafka
-  filters:
-  - not_mdc_environment
-  - schema_registry_running
+- name: schema
+  expose: true
+  group: Schema
   help: |-
-    🔰 Get all schemas versions for all subjects
-  flags:
-    - long: --open
-      short: -o
-      help: |- 
-        🔖 Save output to a file and open with text editor set with config.ini (default is code)
+     🔰 Schema commands
+  commands:
 
-  examples:
-  - playground get-all-schemas
+  - name: get
+    group: Kafka
+    filters:
+    - not_mdc_environment
+    - schema_registry_running
+    help: |-
+      🔰 Get all schemas versions for all subjects
+    flags:
+      - &subject
+        long: --subject
+        required: false
+        arg: subject
+        completions:
+          - $(playground get-subject-list)
+        help: |-
+          📛 Subject
+    examples:
+    - playground schema get
+    - playground schema get --subject <SUBJECT>
 
 - name: debug
   expose: true

@@ -644,20 +644,26 @@
       "subcommands": null
     },
     {
-      "name": "get-all-schemas",
-      "description": "🔰 Get all schemas versions for all subjects\n",
-      "usage": "playground get-all-schemas [OPTIONS]",
-      "options": [
+      "name": "schema",
+      "description": "🔰 Schema commands\n",
+      "usage": "playground schema COMMAND",
+      "options": [],
+      "subcommands": [
         {
-          "names": [
-            "--open",
-            "-o"
-          ],
-          "argument": "",
-          "description": "🔖 Save output to a file and open with text editor set with config.ini (default is code)\n"
+          "name": "get",
+          "description": "🔰 Get all schemas versions for all subjects\n",
+          "usage": "playground schema get [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--subject"
+              ],
+              "argument": "SUBJECT",
+              "description": "📛 Subject\n"
+            }
+          ]
         }
-      ],
-      "subcommands": null
+      ]
     },
     {
       "name": "debug",
