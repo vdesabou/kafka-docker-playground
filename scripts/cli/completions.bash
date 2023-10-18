@@ -673,7 +673,7 @@ _playground_completions() {
       ;;
 
     'schema register'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --input --subject --verbose -h -v")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --input --replace --subject --verbose -h -v")" -- "$cur" )
       ;;
 
     'connector pause'*)
