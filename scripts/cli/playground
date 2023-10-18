@@ -10868,18 +10868,22 @@ playground_schema_get_command() {
   sr_url=$(echo "$ret" | cut -d "@" -f 1)
   sr_security=$(echo "$ret" | cut -d "@" -f 2)
 
+  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
+  #log "tmp_dir is $tmp_dir"
+
   if [[ ! -n "$subject" ]]
   then
       log "✨ --subject flag was not provided, applying command to all subjects"
       if [[ -n "$deleted" ]]
       then
           subject=$(playground get-subject-list)
-          echo "$subject" > /tmp/subjects-all
+          echo "$subject" > $tmp_dir/subjects-all
           log "🧟 deleted subjects are included"
           subject=$(playground get-subject-list --deleted)
-          echo "$subject" > /tmp/subjects-deleted-tmp
+          echo "$subject" > $tmp_dir/subjects-deleted-tmp
 
-          sort /tmp/subjects-all /tmp/subjects-deleted-tmp | uniq -u > /tmp/subjects-deleted
+          sort $tmp_dir/subjects-all $tmp_dir/subjects-deleted-tmp | uniq -u > $tmp_dir/subjects-deleted
       else
           subject=$(playground get-subject-list)
       fi
@@ -10896,6 +10900,7 @@ playground_schema_get_command() {
       maybe_include_deleted="?deleted=true"
   fi
 
+  found=0
   items=($subject)
   for subject in ${items[@]}
   do
@@ -10914,16 +10919,26 @@ playground_schema_get_command() {
           ;;
           esac
 
-          if [ -f /tmp/subjects-deleted ] && grep "${subject}" /tmp/subjects-deleted
+          if [ -f $tmp_dir/subjects-deleted ] && grep "${subject}" $tmp_dir/subjects-deleted
           then
               log "🧟 (deleted) subject ${subject} 💯 version ${version} (id $id)"
           else
               log "🔰 subject ${subject} 💯 version ${version} (id $id)"
           fi
+          found=1
 
           echo "${schema}"
       done
   done
+
+  if [[ -n "$subject" ]]
+  then
+      if [ $found -eq 0 ]
+      then
+          logerror "❌ No schema found !"
+          exit 1
+      fi
+  fi
 }
 
 # :command.function
@@ -10991,7 +11006,6 @@ playground_schema_register_command() {
   --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
   --data "$json_new" | jq .)
   ret=$?
-  set -e
   if [ $ret -eq 0 ]
   then
       error_code=$(echo "$curl_output" | jq -r .error_code)
@@ -11011,7 +11025,20 @@ playground_schema_register_command() {
           if [[ -n "$replace" ]]
           then
               playground schema delete --subject $subject --version $version --permanent
+              playground schema set-mode --subject $subject --mode IMPORT
 
+              json_new2=$(echo $json_new | jq --arg id "$id" '. + { "id": $id }')
+              json_new3=$(echo $json_new2 | jq --arg version "$version" '. + { "version": $version }')
+
+              if [[ -n "$verbose" ]]
+              then
+                  set -x
+              fi
+              curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions" \
+                  --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
+                  --data "$json_new3" | jq .
+
+              playground schema set-mode --subject $subject --mode READWRITE
           else
               log "🚪 Skipping as schema already exists with id $id (version $version)"
               exit 0
@@ -11077,7 +11104,6 @@ playground_schema_get_compatibility_command() {
   log "🛡️ Get compatibility for subject ${subject}"
   curl_output=$(curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/config/${subject}")
   ret=$?
-  set -e
   if [ $ret -eq 0 ]
   then
       error_code=$(echo "$curl_output" | jq -r .error_code)
@@ -11109,7 +11135,25 @@ playground_schema_set_compatibility_command() {
   sr_security=$(echo "$ret" | cut -d "@" -f 2)
 
   log "🛡️ Set compatibility for subject ${subject} to $compatibility"
-  curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${subject}" | jq .
+  curl_output=$(curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${subject}" | jq .)
+  ret=$?
+  if [ $ret -eq 0 ]
+  then
+      error_code=$(echo "$curl_output" | jq -r .error_code)
+      if [ "$error_code" != "null" ]
+      then
+          message=$(echo "$curl_output" | jq -r .message)
+          logerror "Command failed with error code $error_code"
+          logerror "$message"
+          exit 1
+      else
+          compatibilityLevel=$(echo "$curl_output" | jq -r .compatibilityLevel)
+          echo "$compatibilityLevel"
+      fi
+  else
+      logerror "❌ curl request failed with error code $ret!"
+      exit 1
+  fi
 }
 
 # :command.function
@@ -11125,7 +11169,6 @@ playground_schema_get_mode_command() {
   log "🔏 Get mode for subject ${subject}"
   curl_output=$(curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/mode/${subject}")
   ret=$?
-  set -e
   if [ $ret -eq 0 ]
   then
       error_code=$(echo "$curl_output" | jq -r .error_code)
@@ -11157,7 +11200,25 @@ playground_schema_set_mode_command() {
   sr_security=$(echo "$ret" | cut -d "@" -f 2)
 
   log "🔏 Set mode for subject ${subject} to $mode"
-  curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"mode\": \"$mode\"}" "${sr_url}/mode/${subject}" | jq .
+  curl_output=$(curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"mode\": \"$mode\"}" "${sr_url}/mode/${subject}" | jq .)
+  ret=$?
+  if [ $ret -eq 0 ]
+  then
+      error_code=$(echo "$curl_output" | jq -r .error_code)
+      if [ "$error_code" != "null" ]
+      then
+          message=$(echo "$curl_output" | jq -r .message)
+          logerror "Command failed with error code $error_code"
+          logerror "$message"
+          exit 1
+      else
+          mode=$(echo "$curl_output" | jq -r .mode)
+          echo "$mode"
+      fi
+  else
+      logerror "❌ curl request failed with error code $ret!"
+      exit 1
+  fi
 }
 
 # :command.function

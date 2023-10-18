@@ -6,18 +6,22 @@ ret=$(get_sr_url_and_security)
 sr_url=$(echo "$ret" | cut -d "@" -f 1)
 sr_security=$(echo "$ret" | cut -d "@" -f 2)
 
+tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+trap 'rm -rf $tmp_dir' EXIT
+#log "tmp_dir is $tmp_dir"
+
 if [[ ! -n "$subject" ]]
 then
     log "✨ --subject flag was not provided, applying command to all subjects"
     if [[ -n "$deleted" ]]
     then
         subject=$(playground get-subject-list)
-        echo "$subject" > /tmp/subjects-all
+        echo "$subject" > $tmp_dir/subjects-all
         log "🧟 deleted subjects are included"
         subject=$(playground get-subject-list --deleted)
-        echo "$subject" > /tmp/subjects-deleted-tmp
+        echo "$subject" > $tmp_dir/subjects-deleted-tmp
 
-        sort /tmp/subjects-all /tmp/subjects-deleted-tmp | uniq -u > /tmp/subjects-deleted
+        sort $tmp_dir/subjects-all $tmp_dir/subjects-deleted-tmp | uniq -u > $tmp_dir/subjects-deleted
     else
         subject=$(playground get-subject-list)
     fi
@@ -34,6 +38,7 @@ then
     maybe_include_deleted="?deleted=true"
 fi
 
+found=0
 items=($subject)
 for subject in ${items[@]}
 do
@@ -52,13 +57,23 @@ do
         ;;
         esac
 
-        if [ -f /tmp/subjects-deleted ] && grep "${subject}" /tmp/subjects-deleted
+        if [ -f $tmp_dir/subjects-deleted ] && grep "${subject}" $tmp_dir/subjects-deleted
         then
             log "🧟 (deleted) subject ${subject} 💯 version ${version} (id $id)"
         else
             log "🔰 subject ${subject} 💯 version ${version} (id $id)"
         fi
+        found=1
 
         echo "${schema}"
     done
 done
+
+if [[ -n "$subject" ]]
+then
+    if [ $found -eq 0 ]
+    then
+        logerror "❌ No schema found !"
+        exit 1
+    fi
+fi

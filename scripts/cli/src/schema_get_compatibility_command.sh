@@ -8,7 +8,6 @@ sr_security=$(echo "$ret" | cut -d "@" -f 2)
 log "🛡️ Get compatibility for subject ${subject}"
 curl_output=$(curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/config/${subject}")
 ret=$?
-set -e
 if [ $ret -eq 0 ]
 then
     error_code=$(echo "$curl_output" | jq -r .error_code)

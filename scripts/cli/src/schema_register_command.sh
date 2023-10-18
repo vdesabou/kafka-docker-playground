@@ -60,7 +60,6 @@ curl_output=$(curl $sr_security --request POST -s "${sr_url}/subjects/${subject}
 --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
 --data "$json_new" | jq .)
 ret=$?
-set -e
 if [ $ret -eq 0 ]
 then
     error_code=$(echo "$curl_output" | jq -r .error_code)
@@ -80,7 +79,20 @@ then
         if [[ -n "$replace" ]]
         then
             playground schema delete --subject $subject --version $version --permanent
-            
+            playground schema set-mode --subject $subject --mode IMPORT
+    
+            json_new2=$(echo $json_new | jq --arg id "$id" '. + { "id": $id }')
+            json_new3=$(echo $json_new2 | jq --arg version "$version" '. + { "version": $version }')
+
+            if [[ -n "$verbose" ]]
+            then
+                set -x
+            fi
+            curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions" \
+                --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
+                --data "$json_new3" | jq .
+
+            playground schema set-mode --subject $subject --mode READWRITE
         else
             log "🚪 Skipping as schema already exists with id $id (version $version)"
             exit 0
