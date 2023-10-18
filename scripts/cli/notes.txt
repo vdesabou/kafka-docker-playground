@@ -7,7 +7,7 @@ bashly generate
 rm /Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/cli/completions.bash
 bashly add completions_script
 source /Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/cli/completions.bash
-bashly render :markdown docs
+bashly render templates/markdown docs
 
 cat /Users/vsaboulin/Documents/github/kafka-docker-playground-docs/docs/cli-template.md > /Users/vsaboulin/Documents/github/kafka-docker-playground-docs/docs/cli.md
 cat /Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/cli/docs/index.md >> /Users/vsaboulin/Documents/github/kafka-docker-playground-docs/docs/cli.md
