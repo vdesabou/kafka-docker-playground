@@ -929,6 +929,44 @@ subcommands:
             
             Allowed values: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE
             
+      - name: get-mode
+        description: | 
+          🔏 Get subject-level mode
+        usage: playground schema get-mode [OPTIONS]
+        options:
+        - names:
+          - --subject
+          argument: SUBJECT
+          description: | 
+            📛 Subject name
+            
+            Required: ✓ Yes
+            
+      - name: set-mode
+        description: | 
+          🔏 Set subject-level mode
+            
+            To enable mode changes on a Schema Registry cluster, you must also set mode.mutability=true in the Schema Registry properties file before starting Schema Registry
+        usage: playground schema set-mode [OPTIONS]
+        options:
+        - names:
+          - --subject
+          argument: SUBJECT
+          description: | 
+            📛 Subject name
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --mode
+          argument: [IMPORT, READONLY, READWRITE]
+          description: | 
+            Schema Registry mode
+            
+            Required: ✓ Yes
+            
+            Allowed values: IMPORT, READONLY, READWRITE
+            
       - name: delete
         description: | 
           🧟 Delete schema

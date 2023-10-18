@@ -64,6 +64,8 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   ⏺️ Register a schema in specified subject\n" "$(green "schema register")                        "
   [[ -n $long_usage ]] && printf "  %s   🛡️ Get subject-level compatibility\n" "$(green "schema get-compatibility")               "
   [[ -n $long_usage ]] && printf "  %s   🛡️ Set subject-level compatibility\n" "$(green "schema set-compatibility")               "
+  [[ -n $long_usage ]] && printf "  %s   🔏 Get subject-level mode\n" "$(green "schema get-mode")                        "
+  [[ -n $long_usage ]] && printf "  %s   🔏 Set subject-level mode\n" "$(green "schema set-mode")                        "
   [[ -n $long_usage ]] && printf "  %s   🧟 Delete schema\n" "$(green "schema delete")                          "
   echo
   printf "%s\n" "$(bold "Debug commands:")"
@@ -1424,6 +1426,8 @@ playground_schema_usage() {
   printf "  %s   ⏺️ Register a schema in specified subject\n" "$(green "register")         "
   printf "  %s   🛡️ Get subject-level compatibility\n" "$(green "get-compatibility")"
   printf "  %s   🛡️ Set subject-level compatibility\n" "$(green "set-compatibility")"
+  printf "  %s   🔏 Get subject-level mode\n" "$(green "get-mode")         "
+  printf "  %s   🔏 Set subject-level mode\n" "$(green "set-mode")         "
   printf "  %s   🧟 Delete schema\n" "$(green "delete")           "
   echo
 
@@ -1608,6 +1612,85 @@ playground_schema_set_compatibility_usage() {
     printf "  %s\n" "$(magenta "--compatibility COMPATIBILITY (required)")"
     printf "    Schema Registry compatibility rule\n"
     printf "    Allowed: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_schema_get_mode_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground schema get-mode - 🔏 Get subject-level mode\n"
+    echo
+
+  else
+    printf "playground schema get-mode - 🔏 Get subject-level mode\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground schema get-mode [OPTIONS]\n"
+  printf "  playground schema get-mode --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--subject SUBJECT (required)")"
+    printf "    📛 Subject name\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_schema_set_mode_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground schema set-mode\n"
+    echo
+
+    printf "  🔏 Set subject-level mode\n  \n  To enable mode changes on a Schema Registry cluster, you must also set\n  mode.mutability=true in the Schema Registry properties file before starting\n  Schema Registry\n"
+    echo
+
+  else
+    printf "playground schema set-mode - 🔏 Set subject-level mode\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground schema set-mode [OPTIONS]\n"
+  printf "  playground schema set-mode --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--subject SUBJECT (required)")"
+    printf "    📛 Subject name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--mode MODE (required)")"
+    printf "    Schema Registry mode\n"
+    printf "    Allowed: IMPORT, READONLY, READWRITE\n"
     echo
 
     # :command.usage_fixed_flags
@@ -11030,6 +11113,54 @@ playground_schema_set_compatibility_command() {
 }
 
 # :command.function
+playground_schema_get_mode_command() {
+  # src/schema_get_mode_command.sh
+  subject="${args[--subject]}"
+
+  ret=$(get_sr_url_and_security)
+
+  sr_url=$(echo "$ret" | cut -d "@" -f 1)
+  sr_security=$(echo "$ret" | cut -d "@" -f 2)
+
+  log "🔏 Get mode for subject ${subject}"
+  curl_output=$(curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/mode/${subject}")
+  ret=$?
+  set -e
+  if [ $ret -eq 0 ]
+  then
+      error_code=$(echo "$curl_output" | jq -r .error_code)
+      if [ "$error_code" != "null" ]
+      then
+          message=$(echo "$curl_output" | jq -r .message)
+          logerror "Command failed with error code $error_code"
+          logerror "$message"
+          exit 1
+      else
+          mode=$(echo "$curl_output" | jq -r .mode)
+          echo "$mode"
+      fi
+  else
+      logerror "❌ curl request failed with error code $ret!"
+      exit 1
+  fi
+}
+
+# :command.function
+playground_schema_set_mode_command() {
+  # src/schema_set_mode_command.sh
+  subject="${args[--subject]}"
+  mode="${args[--mode]}"
+
+  ret=$(get_sr_url_and_security)
+
+  sr_url=$(echo "$ret" | cut -d "@" -f 1)
+  sr_security=$(echo "$ret" | cut -d "@" -f 2)
+
+  log "🔏 Set mode for subject ${subject} to $mode"
+  curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"mode\": \"$mode\"}" "${sr_url}/mode/${subject}" | jq .
+}
+
+# :command.function
 playground_schema_delete_command() {
   # src/schema_delete_command.sh
   subject="${args[--subject]}"
@@ -17465,6 +17596,20 @@ playground_schema_parse_requirements() {
       shift $#
       ;;
 
+    get-mode)
+      action="get-mode"
+      shift
+      playground_schema_get_mode_parse_requirements "$@"
+      shift $#
+      ;;
+
+    set-mode)
+      action="set-mode"
+      shift
+      playground_schema_set_mode_parse_requirements "$@"
+      shift $#
+      ;;
+
     delete)
       action="delete"
       shift
@@ -17846,6 +17991,159 @@ playground_schema_set_compatibility_parse_requirements() {
   # :command.whitelist_filter
   if [[ ${args['--compatibility']} ]] && [[ ! ${args['--compatibility']} =~ ^(BACKWARD|BACKWARD_TRANSITIVE|FORWARD|FORWARD_TRANSITIVE|FULL|FULL_TRANSITIVE|NONE)$ ]]; then
     printf "%s\n" "--compatibility must be one of: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_schema_get_mode_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_schema_get_mode_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="schema get-mode"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --subject)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--subject']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--subject requires an argument: --subject SUBJECT" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--subject']+x} ]]; then
+    printf "missing required flag: --subject SUBJECT\n" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_schema_set_mode_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_schema_set_mode_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="schema set-mode"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --subject)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--subject']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--subject requires an argument: --subject SUBJECT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --mode)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--mode']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--mode requires an argument: --mode MODE" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--subject']+x} ]]; then
+    printf "missing required flag: --subject SUBJECT\n" >&2
+    exit 1
+  fi
+  if [[ -z ${args['--mode']+x} ]]; then
+    printf "missing required flag: --mode MODE\n" >&2
+    exit 1
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--mode']} ]] && [[ ! ${args['--mode']} =~ ^(IMPORT|READONLY|READWRITE)$ ]]; then
+    printf "%s\n" "--mode must be one of: IMPORT, READONLY, READWRITE" >&2
     exit 1
   fi
 
@@ -22783,6 +23081,8 @@ run() {
     "schema register") playground_schema_register_command ;;
     "schema get-compatibility") playground_schema_get_compatibility_command ;;
     "schema set-compatibility") playground_schema_set_compatibility_command ;;
+    "schema get-mode") playground_schema_get_mode_command ;;
+    "schema set-mode") playground_schema_set_mode_command ;;
     "schema delete") playground_schema_delete_command ;;
     "debug") playground_debug_command ;;
     "debug install-vscode-extension") playground_debug_install_vscode_extension_command ;;

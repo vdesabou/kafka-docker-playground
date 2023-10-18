@@ -750,6 +750,45 @@
           ]
         },
         {
+          "name": "get-mode",
+          "description": "🔏 Get subject-level mode\n",
+          "usage": "playground schema get-mode [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--subject"
+              ],
+              "argument": "SUBJECT",
+              "description": "📛 Subject name\n\nRequired: ✓ Yes\n"
+            }
+          ]
+        },
+        {
+          "name": "set-mode",
+          "description": "🔏 Set subject-level mode\n  \n  To enable mode changes on a Schema Registry cluster, you must also set mode.mutability=true in the Schema Registry properties file before starting Schema Registry\n",
+          "usage": "playground schema set-mode [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--subject"
+              ],
+              "argument": "SUBJECT",
+              "description": "📛 Subject name\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--mode"
+              ],
+              "argument": [
+                "IMPORT",
+                "READONLY",
+                "READWRITE"
+              ],
+              "description": "Schema Registry mode\n\nRequired: ✓ Yes\n\nAllowed values: IMPORT, READONLY, READWRITE\n"
+            }
+          ]
+        },
+        {
           "name": "delete",
           "description": "🧟 Delete schema\n",
           "usage": "playground schema delete [OPTIONS]",

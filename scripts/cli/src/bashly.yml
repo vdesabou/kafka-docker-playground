@@ -811,6 +811,31 @@ commands:
       help: |-
         Schema Registry compatibility rule
 
+  - name: get-mode
+    group: Schema
+    help: |-
+      🔏 Get subject-level mode
+    flags:
+    - *subject_required
+
+  - name: set-mode
+    group: Schema
+    help: |-
+      🔏 Set subject-level mode
+
+      To enable mode changes on a Schema Registry cluster, you must also set mode.mutability=true in the Schema Registry properties file before starting Schema Registry
+    flags:
+    - *subject_required
+    - long: --mode
+      arg: mode
+      allowed: 
+        - IMPORT
+        - READONLY
+        - READWRITE
+      required: true
+      help: |-
+        Schema Registry mode
+
   - name: delete
     group: Schema
     help: |-
