@@ -893,6 +893,42 @@ subcommands:
           description: | 
             💪 Force replace existing schema
             
+      - name: get-compatibility
+        description: | 
+          🛡️ Get subject-level compatibility
+        usage: playground schema get-compatibility [OPTIONS]
+        options:
+        - names:
+          - --subject
+          argument: SUBJECT
+          description: | 
+            📛 Subject name
+            
+            Required: ✓ Yes
+            
+      - name: set-compatibility
+        description: | 
+          🛡️ Set subject-level compatibility
+        usage: playground schema set-compatibility [OPTIONS]
+        options:
+        - names:
+          - --subject
+          argument: SUBJECT
+          description: | 
+            📛 Subject name
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --compatibility
+          argument: [BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE]
+          description: | 
+            Schema Registry compatibility rule
+            
+            Required: ✓ Yes
+            
+            Allowed values: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE
+            
       - name: delete
         description: | 
           🧟 Delete schema

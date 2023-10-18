@@ -707,6 +707,49 @@
           ]
         },
         {
+          "name": "get-compatibility",
+          "description": "🛡️ Get subject-level compatibility\n",
+          "usage": "playground schema get-compatibility [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--subject"
+              ],
+              "argument": "SUBJECT",
+              "description": "📛 Subject name\n\nRequired: ✓ Yes\n"
+            }
+          ]
+        },
+        {
+          "name": "set-compatibility",
+          "description": "🛡️ Set subject-level compatibility\n",
+          "usage": "playground schema set-compatibility [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--subject"
+              ],
+              "argument": "SUBJECT",
+              "description": "📛 Subject name\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--compatibility"
+              ],
+              "argument": [
+                "BACKWARD",
+                "BACKWARD_TRANSITIVE",
+                "FORWARD",
+                "FORWARD_TRANSITIVE",
+                "FULL",
+                "FULL_TRANSITIVE",
+                "NONE"
+              ],
+              "description": "Schema Registry compatibility rule\n\nRequired: ✓ Yes\n\nAllowed values: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE\n"
+            }
+          ]
+        },
+        {
           "name": "delete",
           "description": "🧟 Delete schema\n",
           "usage": "playground schema delete [OPTIONS]",

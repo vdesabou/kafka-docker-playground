@@ -77,8 +77,14 @@ then
         id=$(echo "$curl_output" | jq -r .id)
         version=$(echo "$curl_output" | jq -r .version)
 
-        log "🚪 Skipping as schema already exists with id $id (version $version)"
-        exit 0
+        if [[ -n "$replace" ]]
+        then
+            playground schema delete --subject $subject --version $version --permanent
+            
+        else
+            log "🚪 Skipping as schema already exists with id $id (version $version)"
+            exit 0
+        fi
     fi
 else
     logerror "❌ curl request failed with error code $ret!"

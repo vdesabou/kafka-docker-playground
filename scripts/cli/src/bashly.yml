@@ -783,6 +783,34 @@ commands:
       }
       EOF
 
+  - name: get-compatibility
+    group: Schema
+    help: |-
+      🛡️ Get subject-level compatibility
+    flags:
+    - *subject_required
+
+  - name: set-compatibility
+    group: Schema
+    help: |-
+      🛡️ Set subject-level compatibility
+    flags:
+    - *subject_required
+    - &compatibility-required
+      long: --compatibility
+      arg: compatibility
+      allowed: 
+        - BACKWARD
+        - BACKWARD_TRANSITIVE
+        - FORWARD
+        - FORWARD_TRANSITIVE
+        - FULL
+        - FULL_TRANSITIVE
+        - NONE
+      required: true
+      help: |-
+        Schema Registry compatibility rule
+
   - name: delete
     group: Schema
     help: |-
@@ -1240,19 +1268,7 @@ commands:
         🛡️ Change topic's schema compatibility
       flags:
       - *topic
-      - long: --compatibility
-        arg: compatibility
-        allowed: 
-          - BACKWARD
-          - BACKWARD_TRANSITIVE
-          - FORWARD
-          - FORWARD_TRANSITIVE
-          - FULL
-          - FULL_TRANSITIVE
-          - NONE
-        required: true
-        help: |-
-          Schema Registry compatibility rule
+      - *compatibility-required
           
     - name: consume
       filters:
