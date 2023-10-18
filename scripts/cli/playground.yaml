@@ -887,12 +887,6 @@ subcommands:
             
             Default value: -
             
-        - names:
-          - --replace
-          argument: ""
-          description: | 
-            💪 Force replace existing schema
-            
       - name: get-compatibility
         description: | 
           🛡️ Get subject-level compatibility

@@ -735,10 +735,6 @@ commands:
 
           * Use completion to select predefined schemas (or use your own schema file) 🎓 Tip: use <tab> completion to trigger fzf completion
 
-      - long: --replace
-        required: false
-        help: 💪 Force replace existing schema
-
     examples: |
       playground schema register --subject test-protobuf << 'EOF'
       syntax = "proto3";

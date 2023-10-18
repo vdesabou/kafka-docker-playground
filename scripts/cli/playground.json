@@ -696,13 +696,6 @@
               ],
               "argument": "INPUT",
               "description": "🔥 You can either:\n\n* Set your own schema (avro, json-schema, protobuf) with stdin (see example section). \n\n* Use completion to select predefined schemas (or use your own schema file) 🎓 Tip: use <tab> completion to trigger fzf completion\n\nDefault value: -\n"
-            },
-            {
-              "names": [
-                "--replace"
-              ],
-              "argument": "",
-              "description": "💪 Force replace existing schema\n"
             }
           ]
         },

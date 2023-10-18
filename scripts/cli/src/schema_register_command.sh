@@ -1,7 +1,6 @@
 subject="${args[--subject]}"
 schema="${args[--input]}"
 verbose="${args[--verbose]}"
-replace="${args[--replace]}"
 
 ret=$(get_sr_url_and_security)
 
@@ -75,28 +74,8 @@ then
     else
         id=$(echo "$curl_output" | jq -r .id)
         version=$(echo "$curl_output" | jq -r .version)
-
-        if [[ -n "$replace" ]]
-        then
-            playground schema delete --subject $subject --version $version --permanent
-            playground schema set-mode --subject $subject --mode IMPORT
-    
-            json_new2=$(echo $json_new | jq --arg id "$id" '. + { "id": $id }')
-            json_new3=$(echo $json_new2 | jq --arg version "$version" '. + { "version": $version }')
-
-            if [[ -n "$verbose" ]]
-            then
-                set -x
-            fi
-            curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions" \
-                --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
-                --data "$json_new3" | jq .
-
-            playground schema set-mode --subject $subject --mode READWRITE
-        else
-            log "🚪 Skipping as schema already exists with id $id (version $version)"
-            exit 0
-        fi
+        log "🚪 Skipping as schema already exists with id $id (version $version)"
+        exit 0
     fi
 else
     logerror "❌ curl request failed with error code $ret!"
@@ -111,37 +90,3 @@ fi
 curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions" \
     --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
     --data "$json_new" | jq .
-
-
-# # trying workaround
-
-# log "Hard delete schema id 1"
-# curl -X DELETE -H "Content-Type: application/json" http://localhost:8081/subjects/customer_avro-value/versions/1
-# curl -X DELETE -H "Content-Type: application/json" http://localhost:8081/subjects/customer_avro-value/versions/1?permanent=true
-
-# # https://docs.confluent.io/platform/6.2.4/schema-registry/develop/api.html#put--mode-(string-%20subject)
-# log "Set the subject to IMPORT mode"
-# curl --request PUT \
-#   --url http://localhost:8081/mode/customer_avro-value \
-#   --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
-#   --data '{
-#     "mode": "IMPORT"
-# }'
-
-# log "Re-register schema with id 1 and removing "default": {}"
-# escaped_json=$(jq -c -Rs '.' producer-repro-120245/src/main/resources/avro/customer-without-default.avsc)
-# cat << EOF > /tmp/final.json
-# {"schema":$escaped_json,"version": "1","id":"1"}
-# EOF
-# curl -X POST http://localhost:8081/subjects/customer_avro-value/versions \
-# --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
-# --data @/tmp/final.json
-
-
-# log "Set back the subject to READWRITE"
-# curl --request PUT \
-#   --url http://localhost:8081/mode/customer_avro-value \
-#   --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
-#   --data '{
-#     "mode": "READWRITE"
-# }'
