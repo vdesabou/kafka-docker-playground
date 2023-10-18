@@ -52,11 +52,11 @@ do
         ;;
         esac
 
-        if ! grep "${subject}" /tmp/subjects-deleted
+        if [ -f /tmp/subjects-deleted ] && grep "${subject}" /tmp/subjects-deleted
         then
-            log "🔰 subject ${subject} 💯 version ${version} (id $id)"
-        else
             log "🧟 (deleted) subject ${subject} 💯 version ${version} (id $id)"
+        else
+            log "🔰 subject ${subject} 💯 version ${version} (id $id)"
         fi
 
         echo "${schema}"
