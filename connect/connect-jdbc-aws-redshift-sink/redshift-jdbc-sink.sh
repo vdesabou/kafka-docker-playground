@@ -103,7 +103,7 @@ playground connector create-or-update --connector redshift-jdbc-sink << EOF
 {
   "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
   "tasks.max": "1",
-  "connection.url": "jdbc:postgresql://$CLUSTER:$PORT/dev?user=masteruser&password=myPassword1&ssl=false",
+  "connection.url": "jdbc:redshift://$CLUSTER:5439/dev?user=masteruser&password=myPassword1&ssl=false",
   "topics": "orders",
   "auto.create": "true"
 }
