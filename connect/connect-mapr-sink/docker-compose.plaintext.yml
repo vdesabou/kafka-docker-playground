@@ -27,7 +27,7 @@ services:
       testing_net:
         ipv4_address: 172.28.1.2
     volumes:
-      - ../../connect/connect-mapr-sink/mapr.repo:/etc/yum.repos.d/mapr_core.repo
+      - ../../connect/connect-mapr-sink/maprtech.repo:/etc/yum.repos.d/maprtech.repo 
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-maprdb
       KAFKA_OPTS: "-Dmapr.home.dir=/opt/mapr -Dmapr.library.flatclass -Djava.security.auth.login.config=/opt/mapr/conf/mapr.login.conf"

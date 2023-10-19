@@ -1,0 +1,17 @@
+[maprtech]
+name=HPE Ezmeral Data Fabric
+baseurl=https://package.ezmeral.hpe.com/releases/v6.1.1/redhat/
+username=:HPE_MAPR_EMAIL:
+password=:HPE_MAPR_TOKEN:
+enabled=1
+gpgcheck=1
+protect=1
+
+[maprecosystem]
+name=HPE Ezmeral Data Fabric
+baseurl=https://package.ezmeral.hpe.com/releases/MEP/MEP-6.1.1/redhat
+username=:HPE_MAPR_EMAIL:
+password=:HPE_MAPR_TOKEN:
+enabled=1
+gpgcheck=1
+protect=1

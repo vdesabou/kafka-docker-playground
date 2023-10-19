@@ -12,22 +12,42 @@ if ! version_gt $TAG_BASE "5.9.0"; then
     fi
 fi
 
+HPE_MAPR_EMAIL=${HPE_MAPR_EMAIL:-$1}
+HPE_MAPR_TOKEN=${HPE_MAPR_TOKEN:-$2}
+
+if [ -z "$HPE_MAPR_EMAIL" ]
+then
+     logerror "HPE_MAPR_EMAIL is not set. Export it as environment variable or pass it as argument"
+     exit 1
+fi
+
+if [ -z "$HPE_MAPR_TOKEN" ]
+then
+     logerror "HPE_MAPR_TOKEN is not set. Export it as environment variable or pass it as argument"
+     exit 1
+fi
+
+# generate data file for externalizing secrets
+sed -e "s|:HPE_MAPR_EMAIL:|$HPE_MAPR_EMAIL|g" \
+    -e "s|:HPE_MAPR_TOKEN:|$HPE_MAPR_TOKEN|g" \
+    ../../connect/connect-mapr-sink/maprtech.repo.template > ../../connect/connect-mapr-sink/maprtech.repo
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 # useful script
-# https://raw.githubusercontent.com/mapr-demos/mapr-db-60-getting-started/master/mapr_devsandbox_container_setup.sh
+# https://docs.ezmeral.hpe.com/datafabric-customer-managed/74/MapRContainerDevelopers/MapRContainerDevelopersOverview.html
 
 log "Installing Mapr Client"
 
 # RHEL
 # required deps for mapr-client
-docker exec -i --privileged --user root connect  bash -c "chmod a+rw /etc/yum.repos.d/mapr_core.repo"
+docker exec -i --privileged --user root connect  bash -c "chmod a+rw /etc/yum.repos.d/maprtech.repo"
 docker exec -i --privileged --user root connect  bash -c "rpm -i http://mirror.centos.org/centos/7/os/x86_64/Packages/mtools-4.0.18-5.el7.x86_64.rpm"
 docker exec -i --privileged --user root connect  bash -c "rpm -i http://mirror.centos.org/centos/7/os/x86_64/Packages/syslinux-4.05-15.el7.x86_64.rpm"
 
-docker exec -i --privileged --user root connect  bash -c "yum -y install --disablerepo='Confluent*' jre-1.8.0-openjdk hostname findutils net-tools"
+docker exec -i --privileged --user root connect  bash -c "yum -y install --disablerepo='Confluent*' --disablerepo='mapr*' jre-1.8.0-openjdk hostname findutils net-tools"
 
-docker exec -i --privileged --user root connect  bash -c "rpm --import https://package.mapr.com/releases/pub/maprgpg.key && yum -y update --disablerepo='Confluent*' && yum -y install mapr-client.x86_64"
+docker exec -i --privileged --user root connect  bash -c "wget --user=$HPE_MAPR_EMAIL --password=$HPE_MAPR_TOKEN -O mapr-pubkey.gpg https://package.ezmeral.hpe.com/releases/pub/maprgpg.key && rpm --import mapr-pubkey.gpg && yum -y update --disablerepo='Confluent*' && yum -y install mapr-client"
 
 CONNECT_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' connect)
 MAPR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mapr)
@@ -87,6 +107,8 @@ playground connector create-or-update --connector mapr-sink << EOF
 EOF
 
 sleep 70
+
+log "Mapper UI MCS is running at https://127.0.0.1:8443 (mapr/map)"
 
 log "Verify data is in Mapr"
 docker exec -i mapr bash -c "mapr dbshell" > /tmp/result.log  2>&1 <<-EOF
