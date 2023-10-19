@@ -166,7 +166,7 @@ do
         fi
         
         v=$(echo $image_version | sed -e 's/\./[.]/g')
-        for i in {1..10}; do
+        for i in {1..20}; do
           html_url=$(cat "/tmp/${gh_run_id}_${i}.json" | jq ".jobs |= map(select(.name | test(\"${v}.*${test}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url' | sed -e 's/^"//' -e 's/"$//')
           if [ "$html_url" != "" ] && [ "$html_url" != "null" ]; then 
               break
