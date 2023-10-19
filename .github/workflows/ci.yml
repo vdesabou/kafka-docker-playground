@@ -247,7 +247,8 @@ jobs:
           ORACLE_CONTAINER_REGISTRY_PASSWORD: ${{ secrets.ORACLE_CONTAINER_REGISTRY_PASSWORD}}
           GCP_KEYFILE_CONTENT: ${{ secrets.GCP_KEYFILE_CONTENT}}
           GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
-          
+          HPE_MAPR_EMAIL: ${{ secrets.HPE_MAPR_EMAIL}}
+          HPE_MAPR_TOKEN: ${{ secrets.HPE_MAPR_TOKEN}}
 
   execute_one_test:
     if: ${{ github.event.inputs.test_name != '' }}
@@ -411,7 +412,8 @@ jobs:
           ORACLE_CONTAINER_REGISTRY_PASSWORD: ${{ secrets.ORACLE_CONTAINER_REGISTRY_PASSWORD}}
           GCP_KEYFILE_CONTENT: ${{ secrets.GCP_KEYFILE_CONTENT}}
           GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
-          
+          HPE_MAPR_EMAIL: ${{ secrets.HPE_MAPR_EMAIL}}
+          HPE_MAPR_TOKEN: ${{ secrets.HPE_MAPR_TOKEN}}
 
   post-build:
     name: Cleanup resources and Update README
