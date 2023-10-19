@@ -1,0 +1,8 @@
+---
+version: '3.5'
+services:
+  proto_producer:
+    build:
+      context: ../../ksqldb/protobuf-without-schema-registry/proto-python-client
+    hostname: proto_producer
+    container_name: proto_producer

@@ -1,0 +1,10 @@
+syntax = "proto2";
+
+package protos.models;
+
+message User {
+  required string id = 1;
+  required string phone_number = 2;
+  required string name = 3;
+  optional string email = 4;
+}
