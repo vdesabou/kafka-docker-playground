@@ -2,13 +2,21 @@ DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 root_folder=${DIR_CLI}/../..
 
-
+tag="${args[--tag]}"
 connector_tag="${args[--connector-tag]}"
 connector_zip="${args[--connector-zip]}"
 connector_jar="${args[--connector-jar]}"
 
+flag_list=""
+if [[ -n "$tag" ]]
+then
+  flag_list="--tag=$tag"
+  export TAG=$tag
+fi
+
 if [[ -n "$connector_tag" ]]
 then
+  flag_list="$flag_list --connector-tag=$connector_tag"
   export CONNECTOR_TAG=$connector_tag
 fi
 
@@ -18,6 +26,7 @@ then
   then
     connector_zip=$(echo "$connector_zip" | cut -d "@" -f 2)
   fi
+  flag_list="$flag_list --connector-zip=$connector_zip"
   export CONNECTOR_ZIP=$connector_zip
 fi
 
@@ -27,6 +36,7 @@ then
   then
     connector_jar=$(echo "$connector_jar" | cut -d "@" -f 2)
   fi
+  flag_list="$flag_list --connector-jar=$connector_jar"
   export CONNECTOR_JAR=$connector_jar
 fi
 
@@ -57,14 +67,16 @@ then
     exit 0
 fi
 
-filename=$(basename -- "$test_file")
 test_file_directory="$(dirname "${test_file}")"
 cd ${test_file_directory}
 
 export DOCKER_COMPOSE_FILE_UPDATE_VERSION="$docker_compose_file"
 
-log "✨ Loading new version(s)"
-source ${DIR_CLI}/../../scripts/utils.sh
+log "✨ Loading new version(s) based on flags ⛳ $flag_list"
+playground container recreate
 
-log "🎯 Now restarting connect to use new version(s)"
-playground container restart --container connect
+if [[ -n "$connector_jar" ]] || [[ -n "$connector_zip" ]] || [[ -n "$connector_jar" ]]
+then
+    log "🧨 Detecting connector version change(s), restarting connect container to make sure new version(s) are used"
+    playground container restart --container connect
+fi

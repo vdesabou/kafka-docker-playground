@@ -28,7 +28,7 @@ then
 else
     if [ -z "$CP_KAFKA_IMAGE" ]
     then
-      if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ] && [ -z "$DOCKER_COMPOSE_FILE_UPDATE_VERSION" ]
+      if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ]
       then
         log "🚀 Using specified CP version $TAG"
       fi

@@ -43,6 +43,7 @@ playground_usage() {
   printf "  %s   🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)\n" "$(green "run")                                    "
   printf "  %s   ⚡ Simply re-run last example you ran with <playground run> or <playground run-ccloud>\n" "$(green "re-run")                                 "
   printf "  %s   ⛅ Run any Confluent Cloud (ccloud) example\n" "$(green "run-ccloud")                             "
+  printf "  %s   ✨ Update current confluent platform or connector(s) with new version(s)\n" "$(green "update-version")                         "
   printf "  %s   👐 When --file is not provided, simply open last example you ran with <playground run> or <playground run-ccloud>\n" "$(green "open")                                   "
   printf "  %s   🛑 Stop currently running example\n" "$(green "stop")                                   "
   printf "  %s   🧑‍🎓 Open Confluent documentation of currently running example\n" "$(green "open-docs")                              "
@@ -130,7 +131,6 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   🧰 Show current connector config\n" "$(green "connector show-config")                  "
   [[ -n $long_usage ]] && printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "connector show-config-parameters")       "
   [[ -n $long_usage ]] && printf "  %s   🧬 Set connect log level\n" "$(green "connector log-level")                    "
-  [[ -n $long_usage ]] && printf "  %s   ✨ Update currently running connector(s) with new version \n" "$(green "connector update-version")               "
   [[ -n $long_usage ]] && printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "connector create-or-update")             "
   echo
 
@@ -927,6 +927,56 @@ playground_run_ccloud_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground run-ccloud mqtt<tab> --cluster-cloud aws --cluster-region eu-west-3\n  --enable-control-center --connector-tag 1.2.3\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_update_version_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground update-version - ✨ Update current confluent platform or connector(s) with new version(s)\n"
+    echo
+
+  else
+    printf "playground update-version - ✨ Update current confluent platform or connector(s) with new version(s)\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground update-version [OPTIONS]\n"
+  printf "  playground update-version --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--tag TAG")"
+    printf "    🎯 Confluent Platform (CP) version to use\n    \n    Must be greater or equal to 5.0.0\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG")"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
+    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
+    printf "    ♨️ Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
     echo
 
   fi
@@ -3816,9 +3866,6 @@ playground_connector_usage() {
   printf "  %s   🧬 Set connect log level\n" "$(green "log-level")             "
   printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "create-or-update")      "
   echo
-  printf "%s\n" "$(bold "Run commands:")"
-  printf "  %s   ✨ Update currently running connector(s) with new version \n" "$(green "update-version")        "
-  echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
@@ -4225,51 +4272,6 @@ playground_connector_log_level_usage() {
     printf "  %s\n" "$(magenta "--level, -l LEVEL (required)")"
     printf "    ❕Log level\n"
     printf "    Allowed: INFO, WARN, DEBUG, TRACE\n"
-    echo
-
-    # :command.usage_fixed_flags
-    printf "  %s\n" "$(magenta "--help, -h")"
-    printf "    Show this help\n"
-    echo
-
-  fi
-}
-
-# :command.usage
-playground_connector_update_version_usage() {
-  if [[ -n $long_usage ]]; then
-    printf "playground connector update-version - ✨ Update currently running connector(s) with new version \n"
-    echo
-
-  else
-    printf "playground connector update-version - ✨ Update currently running connector(s) with new version \n"
-    echo
-
-  fi
-
-  printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground connector update-version [OPTIONS]\n"
-  printf "  playground connector update-version --help | -h\n"
-  echo
-
-  # :command.long_usage
-  if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "== Options ==")"
-
-    # :command.usage_flags
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG")"
-    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
-    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
-    printf "    ♨️ Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
     echo
 
     # :command.usage_fixed_flags
@@ -9432,6 +9434,94 @@ playground_run_ccloud_command() {
 }
 
 # :command.function
+playground_update_version_command() {
+  # src/update_version_command.sh
+  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+  root_folder=${DIR_CLI}/../..
+
+  tag="${args[--tag]}"
+  connector_tag="${args[--connector-tag]}"
+  connector_zip="${args[--connector-zip]}"
+  connector_jar="${args[--connector-jar]}"
+
+  flag_list=""
+  if [[ -n "$tag" ]]
+  then
+    flag_list="--tag=$tag"
+    export TAG=$tag
+  fi
+
+  if [[ -n "$connector_tag" ]]
+  then
+    flag_list="$flag_list --connector-tag=$connector_tag"
+    export CONNECTOR_TAG=$connector_tag
+  fi
+
+  if [[ -n "$connector_zip" ]]
+  then
+    if [[ $connector_zip == *"@"* ]]
+    then
+      connector_zip=$(echo "$connector_zip" | cut -d "@" -f 2)
+    fi
+    flag_list="$flag_list --connector-zip=$connector_zip"
+    export CONNECTOR_ZIP=$connector_zip
+  fi
+
+  if [[ -n "$connector_jar" ]]
+  then
+    if [[ $connector_jar == *"@"* ]]
+    then
+      connector_jar=$(echo "$connector_jar" | cut -d "@" -f 2)
+    fi
+    flag_list="$flag_list --connector-jar=$connector_jar"
+    export CONNECTOR_JAR=$connector_jar
+  fi
+
+  if [ ! -f /tmp/playground-run ]
+  then
+    logerror "File containing run command /tmp/playground-run does not exist!"
+    logerror "Make sure to use <playground run> command !"
+    exit 1
+  fi
+
+  test_file=$(cat /tmp/playground-run | awk '{ print $4}')
+
+  if [ ! -f $test_file ]
+  then
+
+    logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
+    logerror "Make sure to use <playground run> command !"
+    exit 1
+  fi
+
+  # determining the docker-compose file from from test_file
+  docker_compose_file=$(grep "environment" "$test_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
+  test_file_directory="$(dirname "${test_file}")"
+  docker_compose_file="${test_file_directory}/${docker_compose_file}"
+
+  if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
+  then
+      logwarn "Skipping as docker-compose override file could not be detemined"
+      exit 0
+  fi
+
+  test_file_directory="$(dirname "${test_file}")"
+  cd ${test_file_directory}
+
+  export DOCKER_COMPOSE_FILE_UPDATE_VERSION="$docker_compose_file"
+set -x
+  log "✨ Loading new version(s) based on flags ⛳ $flag_list"
+  playground container recreate
+
+  if [[ -n "$connector_jar" ]] || [[ -n "$connector_zip" ]] || [[ -n "$connector_jar" ]]
+  then
+      log "🧨 Detecting connector version change(s), restarting connect container to make sure new version(s) are used"
+      playground container restart --container connect
+  fi
+}
+
+# :command.function
 playground_open_command() {
   # src/open_command.sh
   test_file="${args[--file]}"
@@ -10875,8 +10965,10 @@ playground_repro_bootstrap_command() {
 playground_get_docker_compose_command() {
   # src/get_docker_compose_command.sh
   # keep CONNECT TAG and ORACLE_IMAGE
-  export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect | cut -d ":" -f 2)
-  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle)
+  set +e
+  export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect | cut -d ":" -f 2) 2> /dev/null
+  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle) 2> /dev/null
+  set -e
 
   if [ ! -f /tmp/playground-command ]
   then
@@ -11320,8 +11412,10 @@ playground_debug_enable_remote_debugging_command() {
   fi
 
   # keep CONNECT TAG and ORACLE_IMAGE
-  export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect | cut -d ":" -f 2)
-  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle)
+  set +e
+  export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect | cut -d ":" -f 2) 2> /dev/null
+  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle) 2> /dev/null
+  set -e
 
   if [ ! -f /tmp/playground-command ]
   then
@@ -11828,18 +11922,20 @@ playground_get_jmx_metrics_command() {
 # :command.function
 playground_container_recreate_command() {
   # src/container_recreate_command.sh
-  IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
+  export IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 
   # keep CONNECT TAG and ORACLE_IMAGE
-  export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect | cut -d ":" -f 2)
-  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle)
-
+  set +e
+  export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect | cut -d ":" -f 2) 2> /dev/null
+  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle) 2> /dev/null
+  set -e
   if [ ! -f /tmp/playground-command ]
   then
     logerror "File containing restart command /tmp/playground-command does not exist!"
     exit 1
   fi
 
+  log "💫 Recreate container(s)"
   bash /tmp/playground-command
 }
 
@@ -14820,81 +14916,6 @@ playground_connector_log_level_command() {
 }
 
 # :command.function
-playground_connector_update_version_command() {
-  # src/connector_update_version_command.sh
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-
-  root_folder=${DIR_CLI}/../..
-
-  connector_tag="${args[--connector-tag]}"
-  connector_zip="${args[--connector-zip]}"
-  connector_jar="${args[--connector-jar]}"
-
-  if [[ -n "$connector_tag" ]]
-  then
-    export CONNECTOR_TAG=$connector_tag
-  fi
-
-  if [[ -n "$connector_zip" ]]
-  then
-    if [[ $connector_zip == *"@"* ]]
-    then
-      connector_zip=$(echo "$connector_zip" | cut -d "@" -f 2)
-    fi
-    export CONNECTOR_ZIP=$connector_zip
-  fi
-
-  if [[ -n "$connector_jar" ]]
-  then
-    if [[ $connector_jar == *"@"* ]]
-    then
-      connector_jar=$(echo "$connector_jar" | cut -d "@" -f 2)
-    fi
-    export CONNECTOR_JAR=$connector_jar
-  fi
-
-  if [ ! -f /tmp/playground-run ]
-  then
-    logerror "File containing run command /tmp/playground-run does not exist!"
-    logerror "Make sure to use <playground run> command !"
-    exit 1
-  fi
-
-  test_file=$(cat /tmp/playground-run | awk '{ print $4}')
-
-  if [ ! -f $test_file ]
-  then
-
-    logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
-    logerror "Make sure to use <playground run> command !"
-    exit 1
-  fi
-
-  # determining the docker-compose file from from test_file
-  docker_compose_file=$(grep "environment" "$test_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
-  test_file_directory="$(dirname "${test_file}")"
-  docker_compose_file="${test_file_directory}/${docker_compose_file}"
-
-  if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
-  then
-      logwarn "Skipping as docker-compose override file could not be detemined"
-      exit 0
-  fi
-
-  filename=$(basename -- "$test_file")
-  test_file_directory="$(dirname "${test_file}")"
-  cd ${test_file_directory}
-
-  export DOCKER_COMPOSE_FILE_UPDATE_VERSION="$docker_compose_file"
-
-  log "✨ Loading new version(s)"
-  source ${DIR_CLI}/../../scripts/utils.sh
-
-  log "🎯 Now restarting connect to use new version(s)"
-  playground container restart --container connect
-}
-
-# :command.function
 playground_connector_create_or_update_command() {
   # src/connector_create_or_update_command.sh
   json=${args[json]}
@@ -15153,6 +15174,13 @@ parse_requirements() {
       action="run-ccloud"
       shift
       playground_run_ccloud_parse_requirements "$@"
+      shift $#
+      ;;
+
+    update-version)
+      action="update-version"
+      shift
+      playground_update_version_parse_requirements "$@"
       shift $#
       ;;
 
@@ -16732,6 +16760,134 @@ playground_run_ccloud_parse_requirements() {
     printf "%s\n" "--cluster-cloud must be one of: aws, gcp, azure" >&2
     exit 1
   fi
+
+}
+
+# :command.parse_requirements
+playground_update_version_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_update_version_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="update-version"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --tag)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_minimal_cp_version "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "$2")" >&2
+            exit 1
+          fi
+
+          args['--tag']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--tag requires an argument: --tag TAG" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector-tag)
+        # :flag.conflicts
+        if [[ -n "${args['--connector-zip']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--connector-zip" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector-tag']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector-tag requires an argument: --connector-tag CONNECTOR_TAG" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector-zip)
+        # :flag.conflicts
+        if [[ -n "${args['--connector-tag']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--connector-tag" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_file_exists_with_trick "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--connector-zip CONNECTOR_ZIP" "$(validate_file_exists_with_trick "$2")" >&2
+            exit 1
+          fi
+
+          args['--connector-zip']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector-zip requires an argument: --connector-zip CONNECTOR_ZIP" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector-jar)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_file_exists_with_trick "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--connector-jar CONNECTOR_JAR" "$(validate_file_exists_with_trick "$2")" >&2
+            exit 1
+          fi
+
+          args['--connector-jar']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector-jar requires an argument: --connector-jar CONNECTOR_JAR" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -22311,13 +22467,6 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
-    update-version)
-      action="update-version"
-      shift
-      playground_connector_update_version_parse_requirements "$@"
-      shift $#
-      ;;
-
     create-or-update)
       action="create-or-update"
       shift
@@ -23036,114 +23185,6 @@ playground_connector_log_level_parse_requirements() {
 }
 
 # :command.parse_requirements
-playground_connector_update_version_parse_requirements() {
-  # :command.fixed_flags_filter
-  while [[ $# -gt 0 ]]; do
-    case "${1:-}" in
-      --help | -h)
-        long_usage=yes
-        playground_connector_update_version_usage
-        exit
-        ;;
-
-      *)
-        break
-        ;;
-
-    esac
-  done
-
-  # :command.command_filter
-  action="connector update-version"
-
-  # :command.parse_requirements_while
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-      # :flag.case
-      --connector-tag)
-        # :flag.conflicts
-        if [[ -n "${args['--connector-zip']:-}" ]]; then
-          printf "conflicting options: %s cannot be used with %s\n" "$key" "--connector-zip" >&2
-          exit 1
-        fi
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-
-          args['--connector-tag']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--connector-tag requires an argument: --connector-tag CONNECTOR_TAG" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
-      --connector-zip)
-        # :flag.conflicts
-        if [[ -n "${args['--connector-tag']:-}" ]]; then
-          printf "conflicting options: %s cannot be used with %s\n" "$key" "--connector-tag" >&2
-          exit 1
-        fi
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          # :flag.validations
-          if [[ -n $(validate_file_exists_with_trick "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--connector-zip CONNECTOR_ZIP" "$(validate_file_exists_with_trick "$2")" >&2
-            exit 1
-          fi
-
-          args['--connector-zip']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--connector-zip requires an argument: --connector-zip CONNECTOR_ZIP" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
-      --connector-jar)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          # :flag.validations
-          if [[ -n $(validate_file_exists_with_trick "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--connector-jar CONNECTOR_JAR" "$(validate_file_exists_with_trick "$2")" >&2
-            exit 1
-          fi
-
-          args['--connector-jar']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--connector-jar requires an argument: --connector-jar CONNECTOR_JAR" >&2
-          exit 1
-        fi
-        ;;
-
-      -?*)
-        printf "invalid option: %s\n" "$key" >&2
-        exit 1
-        ;;
-
-      *)
-        # :command.parse_requirements_case
-        # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
-
-        ;;
-
-    esac
-  done
-
-}
-
-# :command.parse_requirements
 playground_connector_create_or_update_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
@@ -23304,6 +23345,7 @@ run() {
     "run") playground_run_command ;;
     "re-run") playground_re_run_command ;;
     "run-ccloud") playground_run_ccloud_command ;;
+    "update-version") playground_update_version_command ;;
     "open") playground_open_command ;;
     "stop") playground_stop_command ;;
     "open-docs") playground_open_docs_command ;;
@@ -23379,7 +23421,6 @@ run() {
     "connector show-config") playground_connector_show_config_command ;;
     "connector show-config-parameters") playground_connector_show_config_parameters_command ;;
     "connector log-level") playground_connector_log_level_command ;;
-    "connector update-version") playground_connector_update_version_command ;;
     "connector create-or-update") playground_connector_create_or_update_command ;;
   esac
 }

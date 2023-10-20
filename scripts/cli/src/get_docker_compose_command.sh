@@ -1,6 +1,8 @@
 # keep CONNECT TAG and ORACLE_IMAGE
-export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect | cut -d ":" -f 2)
-export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle)
+set +e
+export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect | cut -d ":" -f 2) 2> /dev/null
+export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle) 2> /dev/null
+set -e
 
 if [ ! -f /tmp/playground-command ]
 then

@@ -353,6 +353,42 @@
       "subcommands": null
     },
     {
+      "name": "update-version",
+      "description": "✨ Update current confluent platform or connector(s) with new version(s)\n",
+      "usage": "playground update-version [OPTIONS]",
+      "options": [
+        {
+          "names": [
+            "--tag"
+          ],
+          "argument": "TAG",
+          "description": "🎯 Confluent Platform (CP) version to use\n\nMust be greater or equal to 5.0.0\n"
+        },
+        {
+          "names": [
+            "--connector-tag"
+          ],
+          "argument": "CONNECTOR_TAG",
+          "description": "🔗 Connector version to use\n\nBy default, for each connector, the latest available version on Confluent Hub is used\n\nConflicts with: --connector-zip\n"
+        },
+        {
+          "names": [
+            "--connector-zip"
+          ],
+          "argument": "CONNECTOR_ZIP",
+          "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)\n\nConflicts with: --connector-tag\n"
+        },
+        {
+          "names": [
+            "--connector-jar"
+          ],
+          "argument": "CONNECTOR_JAR",
+          "description": "♨️ Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)\n"
+        }
+      ],
+      "subcommands": null
+    },
+    {
       "name": "open",
       "description": "👐 When --file is not provided, simply open last example you ran with <playground run> or <playground run-ccloud>\n\nOtherwise, open any file from the playground using --file.\n",
       "usage": "playground open [OPTIONS]",
@@ -1957,34 +1993,6 @@
                 "TRACE"
               ],
               "description": "❕Log level\n\nRequired: ✓ Yes\n\nAllowed values: INFO, WARN, DEBUG, TRACE\n"
-            }
-          ]
-        },
-        {
-          "name": "update-version",
-          "description": "✨ Update currently running connector(s) with new version \n",
-          "usage": "playground connector update-version [OPTIONS]",
-          "options": [
-            {
-              "names": [
-                "--connector-tag"
-              ],
-              "argument": "CONNECTOR_TAG",
-              "description": "🔗 Connector version to use\n\nBy default, for each connector, the latest available version on Confluent Hub is used\n\nConflicts with: --connector-zip\n"
-            },
-            {
-              "names": [
-                "--connector-zip"
-              ],
-              "argument": "CONNECTOR_ZIP",
-              "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)\n\nConflicts with: --connector-tag\n"
-            },
-            {
-              "names": [
-                "--connector-jar"
-              ],
-              "argument": "CONNECTOR_JAR",
-              "description": "♨️ Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)\n"
             }
           ]
         },
