@@ -71,12 +71,13 @@ ret=$?
 set -e
 if [ $ret -eq 0 ]
 then
-    error_code=$(echo "$curl_output" | jq -r .error.code)
+    error_code=$(echo "$curl_output" | jq -r .error_code)
     if [ "$error_code" != "null" ]
     then
-        message=$(echo "$curl_output" | jq -r .error.message)
+        message=$(echo "$curl_output" | jq -r .message)
         logerror "Command failed with error code $error_code"
         logerror "$message"
+        exit 1
     else
         if [ $is_create == 1 ]
         then

@@ -76,6 +76,7 @@ then
         message=$(echo "$curl_output" | jq -r .message)
         logerror "Command failed with error code $error_code"
         logerror "$message"
+        exit 1
     else
         if [[ -n "$level" ]]
         then
