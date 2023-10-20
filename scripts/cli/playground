@@ -2492,13 +2492,19 @@ playground_container_recreate_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground container recreate\n"
+  printf "  playground container recreate [OPTIONS]\n"
   printf "  playground container recreate --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
     printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--ignore-current-versions")"
+    printf "    Ignore current confluent platform version\n    \n    By default, the current version is used\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -9445,10 +9451,26 @@ playground_update_version_command() {
   connector_zip="${args[--connector-zip]}"
   connector_jar="${args[--connector-jar]}"
 
+  tag_changed=0
   flag_list=""
   if [[ -n "$tag" ]]
   then
-    flag_list="--tag=$tag"
+    current_tag=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
+
+    if [ "$current_tag" == "" ]
+    then
+      logerror "❌ Could not retrieve current cp version (--tag or TAG) being used"
+      exit 1
+    fi
+
+    if [ "$current_tag" == "$tag" ]
+    then
+      logwarn "--tag=$tag is same as current tag, ignoring..."
+    else
+      tag_changed=1
+      flag_list="--tag=$tag"
+    fi
+
     export TAG=$tag
   fi
 
@@ -9512,13 +9534,21 @@ playground_update_version_command() {
   export DOCKER_COMPOSE_FILE_UPDATE_VERSION="$docker_compose_file"
 
   log "✨ Loading new version(s) based on flags ⛳ $flag_list"
-  playground container recreate
+  if [ $tag_changed -eq 1 ]
+  then
+      log "💣 Detected confluent version change, restarting containers"
+      playground container recreate --ignore-current-versions
+  else
+      playground container recreate
+  fi
 
   if [[ -n "$connector_tag" ]] || [[ -n "$connector_zip" ]] || [[ -n "$connector_jar" ]]
   then
-      log "🧨 Detecting connector version change(s), restarting connect container to make sure new version(s) are used"
-      playground container restart --container connect
-
+      if [ $tag_changed -eq 0 ]
+      then
+          log "🧨 Detected connector version change(s), restarting connect container to make sure new version(s) are used"
+          playground container restart --container connect
+      fi
       sleep 4
 
       $root_folder/scripts/wait-for-connect-and-controlcenter.sh
@@ -9526,6 +9556,10 @@ playground_update_version_command() {
       sleep 8
 
       playground connector versions
+  else
+      sleep 4
+
+      $root_folder/scripts/wait-for-connect-and-controlcenter.sh
   fi
 }
 
@@ -10972,7 +11006,8 @@ playground_repro_bootstrap_command() {
 # :command.function
 playground_get_docker_compose_command() {
   # src/get_docker_compose_command.sh
-  # keep CONNECT TAG and ORACLE_IMAGE
+  # keep TAG, CONNECT TAG and ORACLE_IMAGE
+  export TAG=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
   export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
   export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
 
@@ -11417,7 +11452,8 @@ playground_debug_enable_remote_debugging_command() {
        source /tmp/delta_configs/env.delta
   fi
 
-  # keep CONNECT TAG and ORACLE_IMAGE
+  # keep TAG, CONNECT TAG and ORACLE_IMAGE
+  export TAG=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
   export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
   export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
 
@@ -11926,10 +11962,17 @@ playground_get_jmx_metrics_command() {
 # :command.function
 playground_container_recreate_command() {
   # src/container_recreate_command.sh
+  ignore_current_versions="${args[--ignore-current-versions]}"
+
   export IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 
-  # keep CONNECT TAG and ORACLE_IMAGE
-  export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+  if [[ ! -n "$ignore_current_versions" ]]
+  then
+    # keep TAG and CONNECT_TAG
+    export TAG=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
+    export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+  fi
+
   export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
 
   if [ ! -f /tmp/playground-command ]
@@ -19802,6 +19845,13 @@ playground_container_recreate_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --ignore-current-versions)
+
+        # :flag.case_no_arg
+        args['--ignore-current-versions']=1
+        shift
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2

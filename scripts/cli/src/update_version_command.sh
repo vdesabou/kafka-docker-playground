@@ -7,10 +7,26 @@ connector_tag="${args[--connector-tag]}"
 connector_zip="${args[--connector-zip]}"
 connector_jar="${args[--connector-jar]}"
 
+tag_changed=0
 flag_list=""
 if [[ -n "$tag" ]]
 then
-  flag_list="--tag=$tag"
+  current_tag=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
+
+  if [ "$current_tag" == "" ]
+  then
+    logerror "❌ Could not retrieve current cp version (--tag or TAG) being used"
+    exit 1
+  fi
+  
+  if [ "$current_tag" == "$tag" ]
+  then
+    logwarn "--tag=$tag is same as current tag, ignoring..."
+  else
+    tag_changed=1
+    flag_list="--tag=$tag"
+  fi
+
   export TAG=$tag
 fi
 
@@ -73,13 +89,21 @@ cd ${test_file_directory}
 export DOCKER_COMPOSE_FILE_UPDATE_VERSION="$docker_compose_file"
 
 log "✨ Loading new version(s) based on flags ⛳ $flag_list"
-playground container recreate
+if [ $tag_changed -eq 1 ]
+then
+    log "💣 Detected confluent version change, restarting containers"
+    playground container recreate --ignore-current-versions
+else
+    playground container recreate
+fi
 
 if [[ -n "$connector_tag" ]] || [[ -n "$connector_zip" ]] || [[ -n "$connector_jar" ]]
 then
-    log "🧨 Detecting connector version change(s), restarting connect container to make sure new version(s) are used"
-    playground container restart --container connect
-
+    if [ $tag_changed -eq 0 ]
+    then
+        log "🧨 Detected connector version change(s), restarting connect container to make sure new version(s) are used"
+        playground container restart --container connect
+    fi
     sleep 4
 
     $root_folder/scripts/wait-for-connect-and-controlcenter.sh
@@ -87,4 +111,8 @@ then
     sleep 8
 
     playground connector versions
+else
+    sleep 4
+
+    $root_folder/scripts/wait-for-connect-and-controlcenter.sh
 fi

@@ -1108,6 +1108,13 @@ commands:
         💫 Recreate container(s)
         
         👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%e2%99%bb%ef%b8%8f-re-create-containers
+      flags:
+      - long: --ignore-current-versions
+        required: false
+        help: |-
+          Ignore current confluent platform version
+
+          By default, the current version is used
 
     - name: get-ip-addresses
       group: Container

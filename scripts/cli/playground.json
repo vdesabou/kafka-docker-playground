@@ -1118,8 +1118,16 @@
         {
           "name": "recreate",
           "description": "💫 Recreate container(s)\n  \n  👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%e2%99%bb%ef%b8%8f-re-create-containers\n",
-          "usage": "playground container recreate",
-          "options": []
+          "usage": "playground container recreate [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--ignore-current-versions"
+              ],
+              "argument": "",
+              "description": "Ignore current confluent platform version\n\nBy default, the current version is used\n"
+            }
+          ]
         },
         {
           "name": "get-ip-addresses",
