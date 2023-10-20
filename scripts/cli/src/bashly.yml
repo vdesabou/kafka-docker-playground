@@ -1905,6 +1905,15 @@ commands:
     - *connector
     - *level
 
+  - name: update-version
+    group: Run
+    help: |-
+      ✨ Update currently running connector(s) with new version 
+    flags:
+    - *connector-tag
+    - *connector-zip
+    - *connector-jar
+
   - name: create-or-update
     help: 🧑‍🎨  Create or update connector
     args:

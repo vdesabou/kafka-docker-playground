@@ -11,7 +11,7 @@ then
     export TAG_BASE=$TAG
     if [ -z "$CP_KAFKA_IMAGE" ]
     then
-      if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ]
+      if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ] && [ -z "$DOCKER_COMPOSE_FILE_UPDATE_VERSION" ]
       then
         log "💫 Using default CP version $TAG"
         log "🎓 Use --tag option to specify different version, see https://kafka-docker-playground.io/#/how-to-use?id=🎯-for-confluent-platform-cp"
@@ -28,7 +28,7 @@ then
 else
     if [ -z "$CP_KAFKA_IMAGE" ]
     then
-      if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ]
+      if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ] && [ -z "$DOCKER_COMPOSE_FILE_UPDATE_VERSION" ]
       then
         log "🚀 Using specified CP version $TAG"
       fi
@@ -160,7 +160,10 @@ then
     fi
     # determining the connector from current path
     docker_compose_file=""
-    if [ -f "$PWD/$0" ]
+    if [ ! -z "$DOCKER_COMPOSE_FILE_UPDATE_VERSION" ]
+    then
+      docker_compose_file=$DOCKER_COMPOSE_FILE_UPDATE_VERSION
+    elif [ -f "$PWD/$0" ]
     then
       docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
     fi
@@ -293,7 +296,10 @@ else
     :
   else
     docker_compose_file=""
-    if [ -f "$PWD/$0" ]
+    if [ ! -z "$DOCKER_COMPOSE_FILE_UPDATE_VERSION" ]
+    then
+      docker_compose_file=$DOCKER_COMPOSE_FILE_UPDATE_VERSION
+    elif [ -f "$PWD/$0" ]
     then
       docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
     fi

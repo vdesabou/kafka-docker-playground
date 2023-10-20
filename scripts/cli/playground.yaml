@@ -2121,6 +2121,45 @@ subcommands:
             
             Allowed values: INFO, WARN, DEBUG, TRACE
             
+      - name: update-version
+        description: | 
+          ✨ Update currently running connector(s) with new version 
+        usage: playground connector update-version [OPTIONS]
+        options:
+        - names:
+          - --connector-tag
+          argument: CONNECTOR_TAG
+          description: | 
+            🔗 Connector version to use
+            
+            By default, for each connector, the latest available version on Confluent Hub is used
+            
+            Conflicts with: --connector-zip
+            
+        - names:
+          - --connector-zip
+          argument: CONNECTOR_ZIP
+          description: | 
+            🤐 Connector zip to use
+            
+            ❕ It must be absolute full path
+            
+            🎓 Tip: use <tab> completion to trigger fzf completion 
+                    use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+            
+            Conflicts with: --connector-tag
+            
+        - names:
+          - --connector-jar
+          argument: CONNECTOR_JAR
+          description: | 
+            ♨️ Connector jar to use
+            
+            ❕ It must be absolute full path
+            
+            🎓 Tip: use <tab> completion to trigger fzf completion 
+                    use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+            
       - name: create-or-update
         description: | 
           🧑‍🎨  Create or update connector

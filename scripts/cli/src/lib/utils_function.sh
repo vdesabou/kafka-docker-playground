@@ -176,6 +176,10 @@ function verify_installed()
 
 function maybe_create_image()
 {
+  if [ ! -z "$DOCKER_COMPOSE_FILE_UPDATE_VERSION" ]
+  then
+    return
+  fi
   set +e
   log "🧰 Checking if Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG} contains additional tools"
   log "🧰 it can take a while if image is downloaded for the first time"
