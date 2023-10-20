@@ -9533,12 +9533,19 @@ playground_update_version_command() {
 
   export DOCKER_COMPOSE_FILE_UPDATE_VERSION="$docker_compose_file"
 
-  log "✨ Loading new version(s) based on flags ⛳ $flag_list"
+  if [ "$flag_list" != "" ]
+  then
+    log "✨ Loading new version(s) based on flags ⛳ $flag_list"
+  else
+    log "✨ Loading new version(s) without any flags ⛳"
+  fi
+
   if [ $tag_changed -eq 1 ]
   then
       log "💣 Detected confluent version change, restarting containers"
       playground container recreate --ignore-current-versions
   else
+      # in case there is a change in docker-compose...
       playground container recreate
   fi
 
@@ -9546,14 +9553,14 @@ playground_update_version_command() {
   then
       if [ $tag_changed -eq 0 ]
       then
-          log "🧨 Detected connector version change(s), restarting connect container to make sure new version(s) are used"
+          log "🧩 a connector flag is set: restarting connect container to make sure new version(s) are used"
           playground container restart --container connect
       fi
-      sleep 4
+      sleep 5
 
       $root_folder/scripts/wait-for-connect-and-controlcenter.sh
 
-      sleep 8
+      sleep 10
 
       playground connector versions
   else
