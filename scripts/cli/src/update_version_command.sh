@@ -75,8 +75,16 @@ export DOCKER_COMPOSE_FILE_UPDATE_VERSION="$docker_compose_file"
 log "✨ Loading new version(s) based on flags ⛳ $flag_list"
 playground container recreate
 
-if [[ -n "$connector_jar" ]] || [[ -n "$connector_zip" ]] || [[ -n "$connector_jar" ]]
+if [[ -n "$connector_tag" ]] || [[ -n "$connector_zip" ]] || [[ -n "$connector_jar" ]]
 then
     log "🧨 Detecting connector version change(s), restarting connect container to make sure new version(s) are used"
     playground container restart --container connect
+
+    sleep 4
+
+    $root_folder/scripts/wait-for-connect-and-controlcenter.sh
+
+    sleep 8
+
+    playground connector versions
 fi

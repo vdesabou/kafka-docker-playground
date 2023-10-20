@@ -9510,14 +9510,22 @@ playground_update_version_command() {
   cd ${test_file_directory}
 
   export DOCKER_COMPOSE_FILE_UPDATE_VERSION="$docker_compose_file"
-set -x
+
   log "✨ Loading new version(s) based on flags ⛳ $flag_list"
   playground container recreate
 
-  if [[ -n "$connector_jar" ]] || [[ -n "$connector_zip" ]] || [[ -n "$connector_jar" ]]
+  if [[ -n "$connector_tag" ]] || [[ -n "$connector_zip" ]] || [[ -n "$connector_jar" ]]
   then
       log "🧨 Detecting connector version change(s), restarting connect container to make sure new version(s) are used"
       playground container restart --container connect
+
+      sleep 4
+
+      $root_folder/scripts/wait-for-connect-and-controlcenter.sh
+
+      sleep 8
+
+      playground connector versions
   fi
 }
 
@@ -10965,10 +10973,8 @@ playground_repro_bootstrap_command() {
 playground_get_docker_compose_command() {
   # src/get_docker_compose_command.sh
   # keep CONNECT TAG and ORACLE_IMAGE
-  set +e
-  export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect | cut -d ":" -f 2) 2> /dev/null
-  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle) 2> /dev/null
-  set -e
+  export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
 
   if [ ! -f /tmp/playground-command ]
   then
@@ -11412,10 +11418,8 @@ playground_debug_enable_remote_debugging_command() {
   fi
 
   # keep CONNECT TAG and ORACLE_IMAGE
-  set +e
-  export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect | cut -d ":" -f 2) 2> /dev/null
-  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle) 2> /dev/null
-  set -e
+  export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
 
   if [ ! -f /tmp/playground-command ]
   then
@@ -11925,16 +11929,15 @@ playground_container_recreate_command() {
   export IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 
   # keep CONNECT TAG and ORACLE_IMAGE
-  set +e
-  export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect | cut -d ":" -f 2) 2> /dev/null
-  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle) 2> /dev/null
-  set -e
+  export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
+
   if [ ! -f /tmp/playground-command ]
   then
     logerror "File containing restart command /tmp/playground-command does not exist!"
     exit 1
   fi
-
+  set +e
   log "💫 Recreate container(s)"
   bash /tmp/playground-command
 }
