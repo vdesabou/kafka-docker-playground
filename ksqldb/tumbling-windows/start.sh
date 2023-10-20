@@ -126,3 +126,98 @@ EOF
 # |Super Mario Bros.   |1                   |2019-07-09 18:00:00 |2019-07-10 00:00:00 |
 # Limit Reached
 # Query terminated
+
+log "Create a new example with out-of-order records"
+log "Create a new stream ratings-out-of-order"
+timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+CREATE STREAM ratings_out_of_order (title VARCHAR, release_year INT, rating DOUBLE, timestamp VARCHAR)
+    WITH (kafka_topic='ratings-outoforder',
+          timestamp='timestamp',
+          timestamp_format='yyyy-MM-dd HH:mm:ss',
+          partitions=1,
+          value_format='avro');
+EOF
+sleep 5
+
+log "Insert records to the stream"
+log "We insert records out of order"
+timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+INSERT INTO ratings_out_of_order (title, release_year, rating, timestamp) VALUES ('Die Hard', 1998, 5, '2019-07-09 14:01:00');
+INSERT INTO ratings_out_of_order (title, release_year, rating, timestamp) VALUES ('Die Hard', 1998, 6, '2019-07-09 14:03:00');
+--out-of-order event but inside the window
+INSERT INTO ratings_out_of_order (title, release_year, rating, timestamp) VALUES ('Die Hard', 1998, 7, '2019-07-09 14:01:00');
+INSERT INTO ratings_out_of_order (title, release_year, rating, timestamp) VALUES ('Die Hard', 1998, 1, '2019-07-09 14:08:00');
+--out-of-order event ouside of window and grace period so will be rejected
+INSERT INTO ratings_out_of_order (title, release_year, rating, timestamp) VALUES ('Die Hard', 1998, 2, '2019-07-09 14:02:00');
+INSERT INTO ratings_out_of_order (title, release_year, rating, timestamp) VALUES ('Die Hard', 1998, 8, '2019-07-09 14:11:00');
+--out-of-order event ouside of window and grace period so will be rejected
+INSERT INTO ratings_out_of_order (title, release_year, rating, timestamp) VALUES ('Die Hard', 1998, 8, '2019-07-09 14:07:00');
+INSERT INTO ratings_out_of_order (title, release_year, rating, timestamp) VALUES ('Die Hard', 1998, 8, '2019-07-09 14:15:00');
+INSERT INTO ratings_out_of_order (title, release_year, rating, timestamp) VALUES ('Die Hard', 1998, 8, '2019-07-09 14:18:00');
+INSERT INTO ratings_out_of_order (title, release_year, rating, timestamp) VALUES ('Die Hard', 1998, 8, '2019-07-09 14:20:00');
+--out-of-order event inside the window
+INSERT INTO ratings_out_of_order (title, release_year, rating, timestamp) VALUES ('Die Hard', 1998, 8, '2019-07-09 14:15:00');
+--out-of-order event oustide the window and grace period so will be rejected
+INSERT INTO ratings_out_of_order (title, release_year, rating, timestamp) VALUES ('Die Hard', 1998, 8, '2019-07-09 14:11:00');
+EOF
+
+# Wait for the stream to be initialized
+sleep 5
+
+log "Run a query to see how many ratings were given to each movie in tumbling, 5 minutes intervals + Grace Period of 1 minute"
+timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+SET 'auto.offset.reset' = 'earliest';
+
+SELECT title,
+       COUNT(*) AS rating_count,
+       TIMESTAMPTOSTRING(WINDOWSTART, 'yyy-MM-dd HH:mm:ss', 'UTC') as window_start,
+       TIMESTAMPTOSTRING(WINDOWEND, 'yyy-MM-dd HH:mm:ss', 'UTC') as window_end
+FROM ratings_out_of_order
+WINDOW TUMBLING (SIZE 5 MINUTES, GRACE PERIOD 1 minute)
+GROUP BY title
+EMIT CHANGES
+LIMIT 9;
+
+EOF
+# Expected output:
+# +-----+-----+-----+-----+
+# |TITLE|RATIN|WINDO|WINDO|
+# |     |G_COU|W_STA|W_END|
+# |     |NT   |RT   |     |
+# +-----+-----+-----+-----+
+# |Die H|1    |2019-|2019-|
+# |ard  |     |07-09|07-09|
+# |     |     | 14:0| 14:0|
+# |     |     |0:00 |5:00 |
+# |Die H|2    |2019-|2019-|
+# |ard  |     |07-09|07-09|
+# |     |     | 14:0| 14:0|
+# |     |     |0:00 |5:00 |
+# |Die H|3    |2019-|2019-|
+# |ard  |     |07-09|07-09|
+# |     |     | 14:0| 14:0|
+# |     |     |0:00 |5:00 |
+# |Die H|1    |2019-|2019-|
+# |ard  |     |07-09|07-09|
+# |     |     | 14:0| 14:1|
+# |     |     |5:00 |0:00 |
+# |Die H|1    |2019-|2019-|
+# |ard  |     |07-09|07-09|
+# |     |     | 14:1| 14:1|
+# |     |     |0:00 |5:00 |
+# |Die H|1    |2019-|2019-|
+# |ard  |     |07-09|07-09|
+# |     |     | 14:1| 14:2|
+# |     |     |5:00 |0:00 |
+# |Die H|2    |2019-|2019-|
+# |ard  |     |07-09|07-09|
+# |     |     | 14:1| 14:2|
+# |     |     |5:00 |0:00 |
+# |Die H|1    |2019-|2019-|
+# |ard  |     |07-09|07-09|
+# |     |     | 14:2| 14:2|
+# |     |     |0:00 |5:00 |
+# |Die H|3    |2019-|2019-|
+# |ard  |     |07-09|07-09|
+# |     |     | 14:1| 14:2|
+# |     |     |5:00 |0:00 |
