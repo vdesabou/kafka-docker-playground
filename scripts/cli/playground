@@ -14481,6 +14481,10 @@ playground_connector_versions_command() {
       logwarn "Skipping as it is not an example with connector"
       exit 0
   else
+      current_tag=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
+      log "🎯 Version currently used for confluent platform"
+      echo "$current_tag"
+
       my_array_connector_tag=($(echo $CONNECTOR_TAG | tr "," "\n"))
       for connector_path in ${connector_paths//,/ }
       do
