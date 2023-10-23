@@ -1,7 +1,7 @@
 name: playground
 version: 1.0.0
 dependencies:
-  docker: visit $(blue_underlined https://docs.docker.com/get-docker) to install
+  docker: visit https://docs.docker.com/get-docker to install
 help: |-
   🧠 CLI for Kafka Docker Playground 🐳
 
@@ -25,13 +25,13 @@ commands:
   help: Return some completion for ccloud connector list
   private: true
   dependencies:
-    confluent: visit $(blue_underlined https://docs.confluent.io/confluent-cli/current/overview.html) to install
+    confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
 
 - name: get-kafka-region-list
   help: Return some completion for confluent cloud kafka cluster region list
   private: true
   dependencies:
-    confluent: visit $(blue_underlined https://docs.confluent.io/confluent-cli/current/overview.html) to install
+    confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
 
 - name: get-topic-list
   help: Return some completion for topic list
@@ -104,7 +104,7 @@ commands:
 - name: bashly-reload
   private: true
   dependencies:
-    bashly: visit $(blue_underlined https://bashly.dannyb.co/installation/) to install
+    bashly: visit https://bashly.dannyb.co/installation/ to install
 
 - name: run
   group: Run
@@ -120,7 +120,7 @@ commands:
       playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
     required: false
   dependencies:
-    fzf: visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install
+    fzf: visit https://github.com/junegunn/fzf#installation to install
   help: |-
     🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)
 
@@ -283,7 +283,7 @@ commands:
       playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
     required: false
   dependencies:
-    fzf: visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install
+    fzf: visit https://github.com/junegunn/fzf#installation to install
   flags:
     - long: --clear
       required: false
@@ -320,8 +320,8 @@ commands:
       playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
     required: false
   dependencies:
-    fzf: visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install
-    confluent: visit $(blue_underlined https://docs.confluent.io/confluent-cli/current/overview.html) to install
+    fzf: visit https://github.com/junegunn/fzf#installation to install
+    confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
   help: |-
     ⛅ Run any Confluent Cloud (ccloud) example
 
@@ -446,7 +446,7 @@ commands:
 - name: open
   group: Run
   dependencies:
-    fzf: visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install
+    fzf: visit https://github.com/junegunn/fzf#installation to install
   help: |-
     👐 When --file is not provided, simply open last example you ran with <playground run> or <playground run-ccloud>
 
@@ -490,14 +490,14 @@ commands:
     help: 📁 Output folder where to generate bootstrapped files
     default: reproduction-models
   dependencies:
-    fzf: visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install
+    fzf: visit https://github.com/junegunn/fzf#installation to install
   commands:
 
   - name: export
     help: |-
       📤 Export as tgz file uncommitted reproduction models from the folder of current reproduction model
     dependencies:
-      git: visit $(blue_underlined https://git-scm.com/downloads) to install
+      git: visit https://git-scm.com/downloads to install
     flags:
       - long: --all
         required: false
@@ -891,7 +891,7 @@ commands:
     examples:
     - playground install-vscode-extension
     dependencies:
-      code: visit $(blue_underlined https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line) to install
+      code: visit https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line to install
 
   - name: enable-remote-debugging
     help: |-
@@ -1068,7 +1068,7 @@ commands:
     
     👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics
   dependencies:
-    java: visit $(blue_underlined https://openjdk.org/install/) to install
+    java: visit https://openjdk.org/install/ to install
   flags:
   - long: --component
     short: -c
@@ -1733,7 +1733,7 @@ commands:
   filters:
   - ccloud_environment
   dependencies:
-    confluent: visit $(blue_underlined https://docs.confluent.io/confluent-cli/current/overview.html) to install
+    confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
   help: |-
     🔗☁️ Fully Managed Connector commands
   environment_variables:

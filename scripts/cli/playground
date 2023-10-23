@@ -6386,12 +6386,9 @@ function create_or_get_oracle_image() {
     if [ $? -eq 0 ]
     then
         log "Downloading <s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar> from S3 bucket"
-        pwd
-        df
         aws s3 cp --only-show-errors "s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar" .
         if [ $? -eq 0 ]
         then
-          df
           log "📄 <s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar> was downloaded from S3 bucket"
           docker load -i $ORACLE_IMAGE.tar
           if [ $? -eq 0 ]
@@ -15119,7 +15116,7 @@ parse_requirements() {
     deps['docker']="$(command -v docker | head -n1)"
   else
     printf "missing dependency: docker\n" >&2
-    printf "%s\n" "visit $(blue_underlined https://docs.docker.com/get-docker) to install" >&2
+    printf "%s\n" "visit https://docs.docker.com/get-docker to install" >&2
     exit 1
   fi
 
@@ -15492,7 +15489,7 @@ playground_get_ccloud_connector_list_parse_requirements() {
     deps['confluent']="$(command -v confluent | head -n1)"
   else
     printf "missing dependency: confluent\n" >&2
-    printf "%s\n" "visit $(blue_underlined https://docs.confluent.io/confluent-cli/current/overview.html) to install" >&2
+    printf "%s\n" "visit https://docs.confluent.io/confluent-cli/current/overview.html to install" >&2
     exit 1
   fi
 
@@ -15545,7 +15542,7 @@ playground_get_kafka_region_list_parse_requirements() {
     deps['confluent']="$(command -v confluent | head -n1)"
   else
     printf "missing dependency: confluent\n" >&2
-    printf "%s\n" "visit $(blue_underlined https://docs.confluent.io/confluent-cli/current/overview.html) to install" >&2
+    printf "%s\n" "visit https://docs.confluent.io/confluent-cli/current/overview.html to install" >&2
     exit 1
   fi
 
@@ -15993,7 +15990,7 @@ playground_bashly_reload_parse_requirements() {
     deps['bashly']="$(command -v bashly | head -n1)"
   else
     printf "missing dependency: bashly\n" >&2
-    printf "%s\n" "visit $(blue_underlined https://bashly.dannyb.co/installation/) to install" >&2
+    printf "%s\n" "visit https://bashly.dannyb.co/installation/ to install" >&2
     exit 1
   fi
 
@@ -16046,7 +16043,7 @@ playground_run_parse_requirements() {
     deps['fzf']="$(command -v fzf | head -n1)"
   else
     printf "missing dependency: fzf\n" >&2
-    printf "%s\n" "visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install" >&2
+    printf "%s\n" "visit https://github.com/junegunn/fzf#installation to install" >&2
     exit 1
   fi
 
@@ -16295,7 +16292,7 @@ playground_re_run_parse_requirements() {
     deps['fzf']="$(command -v fzf | head -n1)"
   else
     printf "missing dependency: fzf\n" >&2
-    printf "%s\n" "visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install" >&2
+    printf "%s\n" "visit https://github.com/junegunn/fzf#installation to install" >&2
     exit 1
   fi
 
@@ -16518,7 +16515,7 @@ playground_run_ccloud_parse_requirements() {
     deps['fzf']="$(command -v fzf | head -n1)"
   else
     printf "missing dependency: fzf\n" >&2
-    printf "%s\n" "visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install" >&2
+    printf "%s\n" "visit https://github.com/junegunn/fzf#installation to install" >&2
     exit 1
   fi
 
@@ -16526,7 +16523,7 @@ playground_run_ccloud_parse_requirements() {
     deps['confluent']="$(command -v confluent | head -n1)"
   else
     printf "missing dependency: confluent\n" >&2
-    printf "%s\n" "visit $(blue_underlined https://docs.confluent.io/confluent-cli/current/overview.html) to install" >&2
+    printf "%s\n" "visit https://docs.confluent.io/confluent-cli/current/overview.html to install" >&2
     exit 1
   fi
 
@@ -16971,7 +16968,7 @@ playground_open_parse_requirements() {
     deps['fzf']="$(command -v fzf | head -n1)"
   else
     printf "missing dependency: fzf\n" >&2
-    printf "%s\n" "visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install" >&2
+    printf "%s\n" "visit https://github.com/junegunn/fzf#installation to install" >&2
     exit 1
   fi
 
@@ -17142,7 +17139,7 @@ playground_repro_parse_requirements() {
     deps['fzf']="$(command -v fzf | head -n1)"
   else
     printf "missing dependency: fzf\n" >&2
-    printf "%s\n" "visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install" >&2
+    printf "%s\n" "visit https://github.com/junegunn/fzf#installation to install" >&2
     exit 1
   fi
 
@@ -17232,7 +17229,7 @@ playground_repro_export_parse_requirements() {
     deps['git']="$(command -v git | head -n1)"
   else
     printf "missing dependency: git\n" >&2
-    printf "%s\n" "visit $(blue_underlined https://git-scm.com/downloads) to install" >&2
+    printf "%s\n" "visit https://git-scm.com/downloads to install" >&2
     exit 1
   fi
 
@@ -18723,7 +18720,7 @@ playground_debug_install_vscode_extension_parse_requirements() {
     deps['code']="$(command -v code | head -n1)"
   else
     printf "missing dependency: code\n" >&2
-    printf "%s\n" "visit $(blue_underlined https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line) to install" >&2
+    printf "%s\n" "visit https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line to install" >&2
     exit 1
   fi
 
@@ -19625,7 +19622,7 @@ playground_get_jmx_metrics_parse_requirements() {
     deps['java']="$(command -v java | head -n1)"
   else
     printf "missing dependency: java\n" >&2
-    printf "%s\n" "visit $(blue_underlined https://openjdk.org/install/) to install" >&2
+    printf "%s\n" "visit https://openjdk.org/install/ to install" >&2
     exit 1
   fi
 
@@ -21767,7 +21764,7 @@ playground_ccloud_connector_parse_requirements() {
     deps['confluent']="$(command -v confluent | head -n1)"
   else
     printf "missing dependency: confluent\n" >&2
-    printf "%s\n" "visit $(blue_underlined https://docs.confluent.io/confluent-cli/current/overview.html) to install" >&2
+    printf "%s\n" "visit https://docs.confluent.io/confluent-cli/current/overview.html to install" >&2
     exit 1
   fi
 
