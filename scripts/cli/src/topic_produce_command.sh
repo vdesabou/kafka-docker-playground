@@ -120,6 +120,10 @@ then
         exit 1
     fi
     log "🧟 Sending tombstone for key $key in topic $topic"
+    if [[ -n "$verbose" ]]
+    then
+        set -x
+    fi
     if [[ "$environment" == "environment" ]]
     then
         echo "$key|NULL" | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security --property parse.key=true --property key.separator="|" --property null.marker=NULL
