@@ -8831,8 +8831,25 @@ playground_get_ccloud_connector_list_command() {
   cluster=$(echo "$ret" | cut -d "@" -f 2)
   authorization=$(echo "$ret" | cut -d "@" -f 3)
 
-  curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors" \
-  --header "authorization: Basic $authorization" | jq -r '.[]' | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
+  curl_output=$(curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors" \
+  --header "authorization: Basic $authorization")
+  ret=$?
+  if [ $ret -eq 0 ]
+  then
+      error_code=$(echo "$curl_output" | jq -r .error_code)
+      if [ "$error_code" != "null" ]
+      then
+          message=$(echo "$curl_output" | jq -r .message)
+          logerror "Command failed with error code $error_code"
+          logerror "$message"
+          exit 1
+      else
+          echo "$curl_output" | jq -r '.[]' | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
+      fi
+  else
+      logerror "❌ curl request failed with error code $ret!"
+      exit 1
+  fi
 }
 
 # :command.function
@@ -13874,13 +13891,21 @@ playground_ccloud_connector_status_command() {
 
   if [[ ! -n "$connector" ]]
   then
+      set +e
       log "✨ --connector flag was not provided, applying command to all ccloud connectors"
       connector=$(playground get-ccloud-connector-list)
+      if [ $? -ne 0 ]
+      then
+          logerror "❌ Could not get list of connectors"
+          echo "$connector"
+          exit 1
+      fi
       if [ "$connector" == "" ]
       then
           logerror "💤 No ccloud connector is running !"
           exit 1
       fi
+      set -e
   fi
 
   items=($connector)
@@ -13919,13 +13944,21 @@ playground_ccloud_connector_pause_command() {
 
   if [[ ! -n "$connector" ]]
   then
+      set +e
       log "✨ --connector flag was not provided, applying command to all ccloud connectors"
       connector=$(playground get-ccloud-connector-list)
+      if [ $? -ne 0 ]
+      then
+          logerror "❌ Could not get list of connectors"
+          echo "$connector"
+          exit 1
+      fi
       if [ "$connector" == "" ]
       then
           logerror "💤 No ccloud connector is running !"
           exit 1
       fi
+      set -e
   fi
 
   items=($connector)
@@ -13953,13 +13986,21 @@ playground_ccloud_connector_resume_command() {
 
   if [[ ! -n "$connector" ]]
   then
+      set +e
       log "✨ --connector flag was not provided, applying command to all ccloud connectors"
       connector=$(playground get-ccloud-connector-list)
+      if [ $? -ne 0 ]
+      then
+          logerror "❌ Could not get list of connectors"
+          echo "$connector"
+          exit 1
+      fi
       if [ "$connector" == "" ]
       then
           logerror "💤 No ccloud connector is running !"
           exit 1
       fi
+      set -e
   fi
 
   items=($connector)
@@ -13990,11 +14031,18 @@ playground_ccloud_connector_delete_command() {
       logwarn "--connector flag was not provided, applying command to all ccloud connectors"
       check_if_continue
       connector=$(playground get-ccloud-connector-list)
+      if [ $? -ne 0 ]
+      then
+          logerror "❌ Could not get list of connectors"
+          echo "$connector"
+          exit 1
+      fi
       if [ "$connector" == "" ]
       then
           logerror "💤 No ccloud connector is running !"
           exit 1
       fi
+      set -e
   fi
 
   items=($connector)
@@ -14019,13 +14067,21 @@ playground_ccloud_connector_show_lag_command() {
 
   if [[ ! -n "$connector" ]]
   then
+      set +e
       log "✨ --connector flag was not provided, applying command to all ccloud connectors"
       connector=$(playground get-ccloud-connector-list)
+      if [ $? -ne 0 ]
+      then
+          logerror "❌ Could not get list of connectors"
+          echo "$connector"
+          exit 1
+      fi
       if [ "$connector" == "" ]
       then
           logerror "💤 No ccloud connector is running !"
           exit 1
       fi
+      set -e
   fi
 
   if [ -f /tmp/delta_configs/env.delta ]
@@ -14109,13 +14165,21 @@ playground_ccloud_connector_show_config_command() {
 
   if [[ ! -n "$connector" ]]
   then
+      set +e
       log "✨ --connector flag was not provided, applying command to all ccloud connectors"
       connector=$(playground get-ccloud-connector-list)
+      if [ $? -ne 0 ]
+      then
+          logerror "❌ Could not get list of connectors"
+          echo "$connector"
+          exit 1
+      fi
       if [ "$connector" == "" ]
       then
           logerror "💤 No ccloud connector is running !"
           exit 1
       fi
+      set -e
   fi
 
   items=($connector)
@@ -14145,13 +14209,21 @@ playground_ccloud_connector_show_config_parameters_command() {
 
   if [[ ! -n "$connector" ]]
   then
+      set +e
       log "✨ --connector flag was not provided, applying command to all ccloud connectors"
       connector=$(playground get-ccloud-connector-list)
+      if [ $? -ne 0 ]
+      then
+          logerror "❌ Could not get list of connectors"
+          echo "$connector"
+          exit 1
+      fi
       if [ "$connector" == "" ]
       then
           logerror "💤 No ccloud connector is running !"
           exit 1
       fi
+      set -e
   fi
 
   if [ -f /tmp/delta_configs/env.delta ]

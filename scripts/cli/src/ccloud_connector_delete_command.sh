@@ -11,11 +11,18 @@ then
     logwarn "--connector flag was not provided, applying command to all ccloud connectors"
     check_if_continue
     connector=$(playground get-ccloud-connector-list)
+    if [ $? -ne 0 ]
+    then
+        logerror "❌ Could not get list of connectors"
+        echo "$connector"
+        exit 1
+    fi
     if [ "$connector" == "" ]
     then
         logerror "💤 No ccloud connector is running !"
         exit 1
     fi
+    set -e
 fi
 
 items=($connector)

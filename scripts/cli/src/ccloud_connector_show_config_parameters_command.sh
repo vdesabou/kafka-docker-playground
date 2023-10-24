@@ -11,13 +11,21 @@ only_show_file_path="${args[--only-show-file-path]}"
 
 if [[ ! -n "$connector" ]]
 then
+    set +e
     log "✨ --connector flag was not provided, applying command to all ccloud connectors"
     connector=$(playground get-ccloud-connector-list)
+    if [ $? -ne 0 ]
+    then
+        logerror "❌ Could not get list of connectors"
+        echo "$connector"
+        exit 1
+    fi
     if [ "$connector" == "" ]
     then
         logerror "💤 No ccloud connector is running !"
         exit 1
     fi
+    set -e
 fi
 
 if [ -f /tmp/delta_configs/env.delta ]
