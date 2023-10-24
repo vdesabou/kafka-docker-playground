@@ -9,7 +9,22 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.ker
 sleep 20
 
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
+set +e
 docker exec hadoop bash -c "echo password | kinit && /usr/local/hadoop/bin/hdfs dfs -chmod 777  /"
+if [ $? -ne 0 ]
+then
+  playground container restart --container hadoop
+
+  sleep 20
+
+  docker exec hadoop bash -c "echo password | kinit && /usr/local/hadoop/bin/hdfs dfs -chmod 777  /"
+  if [ $? -ne 0 ]
+  then
+    logerror "failed to start hadoop !"
+    exit 1
+  fi
+fi
+set -e
 
 log "Add connect kerberos principal"
 docker exec -i kdc kadmin.local << EOF
