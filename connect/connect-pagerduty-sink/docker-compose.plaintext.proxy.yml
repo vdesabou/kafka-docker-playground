@@ -3,14 +3,15 @@
 version: '3.5'
 services:
 
-  nginx-proxy:
-    image: reiz/nginx_proxy:latest
-    hostname: nginx-proxy
-    container_name: nginx-proxy
+  squid:
+    image: ubuntu/squid
+    hostname: squid
+    container_name: squid
     ports:
       - "8888:8888"
     volumes:
-      - ../../connect/connect-pagerduty-sink/nginx-proxy/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
+      - ../../connect/connect-pagerduty-sink/squid/passwords:/etc/squid/passwords
+      - ../../connect/connect-pagerduty-sink/squid/squid.conf:/etc/squid/squid.conf
 
   connect:
     environment:
