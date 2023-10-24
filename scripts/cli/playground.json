@@ -13,6 +13,13 @@
       "subcommands": null
     },
     {
+      "name": "status",
+      "description": "🗺️ Show a status\n",
+      "usage": "playground status",
+      "options": [],
+      "subcommands": null
+    },
+    {
       "name": "run",
       "description": "🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)\n",
       "usage": "playground run [OPTIONS] [ARGUMENTS...]",
@@ -1796,6 +1803,13 @@
               ],
               "argument": "",
               "description": "☢️ Force refresh.\n"
+            },
+            {
+              "names": [
+                "--only-show-file-path"
+              ],
+              "argument": "",
+              "description": "📂 Only show the path of the file containing the configuration parameters\n"
             }
           ]
         },
@@ -1973,6 +1987,13 @@
               ],
               "argument": "",
               "description": "☢️ Force refresh.\n"
+            },
+            {
+              "names": [
+                "--only-show-file-path"
+              ],
+              "argument": "",
+              "description": "📂 Only show the path of the file containing the configuration parameters\n"
             }
           ]
         },

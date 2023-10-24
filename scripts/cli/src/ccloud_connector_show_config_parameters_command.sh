@@ -7,6 +7,7 @@ authorization=$(echo "$ret" | cut -d "@" -f 3)
 connector="${args[--connector]}"
 open="${args[--open]}"
 force_refresh="${args[--force-refresh]}"
+only_show_file_path="${args[--only-show-file-path]}"
 
 if [[ ! -n "$connector" ]]
 then
@@ -175,11 +176,11 @@ do
             fi
         fi
     else
-        # if [[ $(type -f bat 2>&1) =~ "not found" ]]
-        # then
+        if [[ -n "$only_show_file_path" ]]
+        then
+            echo "$filename"
+        else
             cat $filename
-        # else
-        #     bat $filename
-        # fi
+        fi
     fi
 done

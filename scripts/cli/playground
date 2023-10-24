@@ -38,6 +38,7 @@ playground_usage() {
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   Show help about a command\n" "$(green "help")                                   "
+  printf "  %s   🗺️ Show a status\n" "$(green "status")                                 "
   echo
   printf "%s\n" "$(bold "Run commands:")"
   printf "  %s   🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)\n" "$(green "run")                                    "
@@ -181,6 +182,35 @@ playground_help_usage() {
     # :argument.usage
     printf "  %s\n" "$(blue "COMMAND")"
     printf "    🆘 Help command\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_status_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground status - 🗺️ Show a status\n"
+    echo
+
+  else
+    printf "playground status - 🗺️ Show a status\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground status\n"
+  printf "  playground status --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
     echo
 
   fi
@@ -3784,6 +3814,11 @@ playground_ccloud_connector_show_config_parameters_usage() {
     printf "    ☢️ Force refresh.\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--only-show-file-path")"
+    printf "    📂 Only show the path of the file containing the configuration parameters\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -4237,6 +4272,11 @@ playground_connector_show_config_parameters_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--force-refresh")"
     printf "    ☢️ Force refresh.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--only-show-file-path")"
+    printf "    📂 Only show the path of the file containing the configuration parameters\n"
     echo
 
     # :command.usage_fixed_flags
@@ -8710,6 +8750,52 @@ playground_help_command() {
     exit 1
   fi
 
+}
+
+# :command.function
+playground_status_command() {
+  # src/status_command.sh
+  if [ ! -f /tmp/playground-run ]
+  then
+    logerror "File containing re-run command /tmp/playground-run does not exist!"
+    logerror "Make sure to use <playground run> command !"
+    exit 1
+  fi
+
+  test_file=$(cat /tmp/playground-run | awk '{ print $4}')
+
+  if [ ! -f $test_file ]
+  then
+
+  logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
+  logerror "Make sure to use <playground run> command !"
+  exit 1
+  fi
+
+  last_two_folders=$(basename $(dirname $(dirname $test_file)))/$(basename $(dirname $test_file))
+  filename=$(basename $test_file)
+  last_folder=$(basename $(dirname $test_file))
+
+  log "🚀 Running example "
+  echo $last_two_folders/$filename
+
+  playground open-docs --only-show-url
+
+  if [[ $filename == "fully-managed"* ]]
+  then
+      playground ccloud-connector status | grep -v "applying command to all connectors"
+      playground ccloud-connector show-config | grep -v "applying command to all connectors"
+      playground ccloud-connector show-config-parameters --only-show-file-path | grep -v "applying command to all connectors"
+  fi
+
+  if [[ $last_folder == "connect"* ]]
+  then
+      playground connector status | grep -v "applying command to all connectors"
+      playground connector show-config | grep -v "applying command to all connectors"
+      playground connector show-config-parameters --only-show-file-path | grep -v "applying command to all connectors"
+  fi
+
+  playground topic list
 }
 
 # :command.function
@@ -14027,6 +14113,7 @@ playground_ccloud_connector_show_config_parameters_command() {
   connector="${args[--connector]}"
   open="${args[--open]}"
   force_refresh="${args[--force-refresh]}"
+  only_show_file_path="${args[--only-show-file-path]}"
 
   if [[ ! -n "$connector" ]]
   then
@@ -14195,12 +14282,12 @@ playground_ccloud_connector_show_config_parameters_command() {
               fi
           fi
       else
-          # if [[ $(type -f bat 2>&1) =~ "not found" ]]
-          # then
+          if [[ -n "$only_show_file_path" ]]
+          then
+              echo "$filename"
+          else
               cat $filename
-          # else
-          #     bat $filename
-          # fi
+          fi
       fi
   done
 }
@@ -14760,6 +14847,7 @@ playground_connector_show_config_parameters_command() {
   # src/connector_show_config_parameters_command.sh
   open="${args[--open]}"
   force_refresh="${args[--force-refresh]}"
+  only_show_file_path="${args[--only-show-file-path]}"
 
   ret=$(get_connect_url_and_security)
 
@@ -14927,12 +15015,12 @@ playground_connector_show_config_parameters_command() {
               fi
           fi
       else
-          # if [[ $(type -f bat 2>&1) =~ "not found" ]]
-          # then
+          if [[ -n "$only_show_file_path" ]]
+          then
+              echo "$filename"
+          else
               cat $filename
-          # else
-          #     bat $filename
-          # fi
+          fi
       fi
   done
 }
@@ -15130,6 +15218,13 @@ parse_requirements() {
       action="help"
       shift
       playground_help_parse_requirements "$@"
+      shift $#
+      ;;
+
+    status)
+      action="status"
+      shift
+      playground_status_parse_requirements "$@"
       shift $#
       ;;
 
@@ -15414,6 +15509,50 @@ playground_help_parse_requirements() {
           printf "invalid argument: %s\n" "$key" >&2
           exit 1
         fi
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_status_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_status_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="status"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
 
         ;;
 
@@ -22336,6 +22475,14 @@ playground_ccloud_connector_show_config_parameters_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --only-show-file-path)
+
+        # :flag.case_no_arg
+        args['--only-show-file-path']=1
+        shift
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -23142,6 +23289,14 @@ playground_connector_show_config_parameters_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --only-show-file-path)
+
+        # :flag.case_no_arg
+        args['--only-show-file-path']=1
+        shift
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -23392,6 +23547,7 @@ run() {
 
   case "$action" in
     "help") playground_help_command ;;
+    "status") playground_status_command ;;
     "get-connector-list") playground_get_connector_list_command ;;
     "get-ccloud-connector-list") playground_get_ccloud_connector_list_command ;;
     "get-kafka-region-list") playground_get_kafka_region_list_command ;;

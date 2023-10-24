@@ -13,6 +13,12 @@ subcommands:
     usage: playground help [COMMAND]
     options: []
     subcommands:
+  - name: status
+    description: | 
+        🗺️ Show a status
+    usage: playground status
+    options: []
+    subcommands:
   - name: run
     description: | 
         🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)
@@ -1991,6 +1997,12 @@ subcommands:
           description: | 
             ☢️ Force refresh.
             
+        - names:
+          - --only-show-file-path
+          argument: ""
+          description: | 
+            📂 Only show the path of the file containing the configuration parameters
+            
       - name: create-or-update
         description: | 
           🧑‍🎨  Create or update connector
@@ -2151,6 +2163,12 @@ subcommands:
           argument: ""
           description: | 
             ☢️ Force refresh.
+            
+        - names:
+          - --only-show-file-path
+          argument: ""
+          description: | 
+            📂 Only show the path of the file containing the configuration parameters
             
       - name: log-level
         description: | 

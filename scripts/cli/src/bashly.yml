@@ -16,6 +16,9 @@ commands:
   - name: command
     help: 🆘 Help command
 
+- name: status
+  help: 🗺️ Show a status
+
 ### private commands for completion
 - name: get-connector-list
   help: Return some completion for connector list
@@ -1804,6 +1807,11 @@ commands:
       required: false
       help: |-
         ☢️ Force refresh.
+    -  &only_show_file_path
+      long: --only-show-file-path
+      required: false
+      help: |-
+        📂 Only show the path of the file containing the configuration parameters
 
   - name: create-or-update
     help: 🧑‍🎨  Create or update connector
@@ -1914,6 +1922,7 @@ commands:
       required: false
       help: |-
         ☢️ Force refresh.
+    - *only_show_file_path
 
   - name: log-level
     help: |-

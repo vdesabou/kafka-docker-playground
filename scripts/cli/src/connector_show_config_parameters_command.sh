@@ -1,5 +1,6 @@
 open="${args[--open]}"
 force_refresh="${args[--force-refresh]}"
+only_show_file_path="${args[--only-show-file-path]}"
 
 ret=$(get_connect_url_and_security)
 
@@ -167,11 +168,11 @@ do
             fi
         fi
     else
-        # if [[ $(type -f bat 2>&1) =~ "not found" ]]
-        # then
+        if [[ -n "$only_show_file_path" ]]
+        then
+            echo "$filename"
+        else
             cat $filename
-        # else
-        #     bat $filename
-        # fi
+        fi
     fi
 done
