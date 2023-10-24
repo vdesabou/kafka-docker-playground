@@ -847,7 +847,7 @@ playground_run_ccloud_usage() {
     printf "playground run-ccloud\n"
     echo
 
-    printf "  ⛅ Run any Confluent Cloud (ccloud) example\n  \n  All you have to do is to be already logged in with confluent CLI.\n  \n  By default, a new Confluent Cloud environment with a Cluster will be created.\n  \n  You can configure the new cluster by setting:\n  \n  --cluster-cloud (or CLUSTER_CLOUD environment variable)\n  --cluster-region (or CLUSTER_REGION environment variable)\n  --cluster-environment (or ENVIRONMENT environment variable)\n  \n  In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n  --cluster-name (or CLUSTER_NAME environment variable)\n  --cluster-creds (or CLUSTER_CREDS environment variable)\n  --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable)\n"
+    printf "  ⛅ Run any Confluent Cloud (ccloud) example\n  \n  All you have to do is to be already logged in with confluent CLI.\n  \n  By default, a new Confluent Cloud environment with a Cluster will be created.\n  \n  You can configure the new cluster by setting:\n  \n  --cluster-type (or CLUSTER_TYPEenvironment variable)\n  --cluster-cloud (or CLUSTER_CLOUD environment variable)\n  --cluster-region (or CLUSTER_REGION environment variable)\n  --cluster-environment (or ENVIRONMENT environment variable)\n  \n  In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n  --cluster-name (or CLUSTER_NAME environment variable)\n  --cluster-creds (or CLUSTER_CREDS environment variable)\n  --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable)\n"
     echo
 
   else
@@ -915,6 +915,12 @@ playground_run_ccloud_usage() {
     printf "  %s\n" "$(magenta "--cluster-cloud CLUSTER-CLOUD")"
     printf "    🌤 The cloud provider: aws, gcp or azure. Default is aws\n    \n    🎓 Tip: you can also use CLUSTER_CLOUD environment variable\n"
     printf "    Allowed: aws, gcp, azure\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-type CLUSTER-TYPE")"
+    printf "    🔋 The cluster type: basic, standard or dedicated. Default is basic\n    \n    🎓 Tip: you can also use CLUSTER_TYPE environment variable\n"
+    printf "    Allowed: basic, standard, dedicated\n"
     echo
 
     # :flag.usage
@@ -1316,6 +1322,12 @@ playground_repro_bootstrap_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-sql-datagen")"
     printf "    🌪️ Enable SQL Datagen injection\n    \n    This only works for Oracle, MySql, Postgres and Microsoft Sql Server source\n    connector examples with JDBC and Debezium\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-type CLUSTER-TYPE")"
+    printf "    🔋 The cluster type: basic, standard or dedicated. Default is basic\n    \n    🎓 Tip: you can also use CLUSTER_TYPE environment variable\n"
+    printf "    Allowed: basic, standard, dedicated\n"
     echo
 
     # :flag.usage
@@ -9324,6 +9336,7 @@ playground_run_ccloud_command() {
   enable_conduktor="${args[--enable-conduktor]}"
   enable_kcat="${args[--enable-kcat]}"
 
+  cluster_type="${args[--cluster-type]}"
   cluster_cloud="${args[--cluster-cloud]}"
   cluster_region="${args[--cluster-region]}"
   cluster_environment="${args[--cluster-environment]}"
@@ -9356,12 +9369,11 @@ playground_run_ccloud_command() {
 
   test_file_directory="$(dirname "${test_file}")"
   filename=$(basename -- "$test_file")
-  extension="${filename##*.}"
 
   base1="${test_file_directory##*/}" # connect-cdc-oracle12-source
   dir1="${test_file_directory%/*}" #connect
   dir2="${dir1##*/}/$base1" # connect/connect-cdc-oracle12-source
-  final_dir=$(echo $dir2 | tr '/' '-') # connect-connect-cdc-oracle12-source
+
   flag_list=""
   if [[ -n "$tag" ]]
   then
@@ -9411,6 +9423,17 @@ playground_run_ccloud_command() {
   then
     flag_list="$flag_list --enable-kcat"
     export ENABLE_KCAT=true
+  fi
+
+  if [[ -n "$cluster_type" ]]
+  then
+    flag_list="$flag_list --cluster-type $cluster_type"
+    export CLUSTER_TYPE=$cluster_type
+  else
+    if [ -z "$CLUSTER_TYPE" ]
+    then
+      export CLUSTER_TYPE="basic"
+    fi
   fi
 
   if [[ -n "$cluster_cloud" ]]
@@ -16830,6 +16853,21 @@ playground_run_ccloud_parse_requirements() {
         ;;
 
       # :flag.case
+      --cluster-type)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--cluster-type']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster-type requires an argument: --cluster-type CLUSTER-TYPE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --cluster-region)
 
         # :flag.case_arg
@@ -16955,6 +16993,10 @@ playground_run_ccloud_parse_requirements() {
   # :command.whitelist_filter
   if [[ ${args['--cluster-cloud']} ]] && [[ ! ${args['--cluster-cloud']} =~ ^(aws|gcp|azure)$ ]]; then
     printf "%s\n" "--cluster-cloud must be one of: aws, gcp, azure" >&2
+    exit 1
+  fi
+  if [[ ${args['--cluster-type']} ]] && [[ ! ${args['--cluster-type']} =~ ^(basic|standard|dedicated)$ ]]; then
+    printf "%s\n" "--cluster-type must be one of: basic, standard, dedicated" >&2
     exit 1
   fi
 
@@ -17655,6 +17697,21 @@ playground_repro_bootstrap_parse_requirements() {
         ;;
 
       # :flag.case
+      --cluster-type)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--cluster-type']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster-type requires an argument: --cluster-type CLUSTER-TYPE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --cluster-region)
 
         # :flag.case_arg
@@ -17915,6 +17972,10 @@ playground_repro_bootstrap_parse_requirements() {
   [[ -n ${args['--nb-producers']:-} ]] || args['--nb-producers']=""
 
   # :command.whitelist_filter
+  if [[ ${args['--cluster-type']} ]] && [[ ! ${args['--cluster-type']} =~ ^(basic|standard|dedicated)$ ]]; then
+    printf "%s\n" "--cluster-type must be one of: basic, standard, dedicated" >&2
+    exit 1
+  fi
   if [[ ${args['--producer']} ]] && [[ ! ${args['--producer']} =~ ^(none|avro|avro-with-key|protobuf|protobuf-with-key|json-schema|json-schema-with-key)$ ]]; then
     printf "%s\n" "--producer must be one of: none, avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key" >&2
     exit 1

@@ -333,7 +333,8 @@ commands:
     By default, a new Confluent Cloud environment with a Cluster will be created.
 
     You can configure the new cluster by setting:
-
+   
+    --cluster-type (or CLUSTER_TYPEenvironment variable)
     --cluster-cloud (or CLUSTER_CLOUD environment variable)
     --cluster-region (or CLUSTER_REGION environment variable)
     --cluster-environment (or ENVIRONMENT environment variable)
@@ -377,6 +378,15 @@ commands:
         🌤 The cloud provider: aws, gcp or azure. Default is aws
 
         🎓 Tip: you can also use CLUSTER_CLOUD environment variable
+    - &cluster-type
+      long: --cluster-type
+      required: false
+      arg: cluster-type
+      allowed: [basic, standard, dedicated]
+      help: |-
+        🔋 The cluster type: basic, standard or dedicated. Default is basic
+
+        🎓 Tip: you can also use CLUSTER_TYPE environment variable
     - &cluster-region
       long: --cluster-region
       required: false
@@ -556,6 +566,7 @@ commands:
     - *enable-kcat
     - *enable-sr-maven-plugin-app
     - *enable-sql-datagen
+    - *cluster-type
     - *cluster-region
     - *cluster-environment
     - *cluster-name

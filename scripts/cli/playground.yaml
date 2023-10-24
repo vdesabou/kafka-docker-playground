@@ -315,6 +315,7 @@ subcommands:
         
         You can configure the new cluster by setting:
         
+        --cluster-type (or CLUSTER_TYPEenvironment variable)
         --cluster-cloud (or CLUSTER_CLOUD environment variable)
         --cluster-region (or CLUSTER_REGION environment variable)
         --cluster-environment (or ENVIRONMENT environment variable)
@@ -427,6 +428,16 @@ subcommands:
         🎓 Tip: you can also use CLUSTER_CLOUD environment variable
         
         Allowed values: aws, gcp, azure
+        
+    - names:
+      - --cluster-type
+      argument: [basic, standard, dedicated]
+      description: | 
+        🔋 The cluster type: basic, standard or dedicated. Default is basic
+        
+        🎓 Tip: you can also use CLUSTER_TYPE environment variable
+        
+        Allowed values: basic, standard, dedicated
         
     - names:
       - --cluster-region
@@ -728,6 +739,16 @@ subcommands:
             🌪️ Enable SQL Datagen injection
             
             This only works for Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with JDBC and Debezium
+            
+        - names:
+          - --cluster-type
+          argument: [basic, standard, dedicated]
+          description: | 
+            🔋 The cluster type: basic, standard or dedicated. Default is basic
+            
+            🎓 Tip: you can also use CLUSTER_TYPE environment variable
+            
+            Allowed values: basic, standard, dedicated
             
         - names:
           - --cluster-region

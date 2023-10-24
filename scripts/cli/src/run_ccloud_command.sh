@@ -12,6 +12,7 @@ enable_c3="${args[--enable-control-center]}"
 enable_conduktor="${args[--enable-conduktor]}"
 enable_kcat="${args[--enable-kcat]}"
 
+cluster_type="${args[--cluster-type]}"
 cluster_cloud="${args[--cluster-cloud]}"
 cluster_region="${args[--cluster-region]}"
 cluster_environment="${args[--cluster-environment]}"
@@ -44,12 +45,11 @@ fi
 
 test_file_directory="$(dirname "${test_file}")"
 filename=$(basename -- "$test_file")
-extension="${filename##*.}"
 
 base1="${test_file_directory##*/}" # connect-cdc-oracle12-source
 dir1="${test_file_directory%/*}" #connect
 dir2="${dir1##*/}/$base1" # connect/connect-cdc-oracle12-source
-final_dir=$(echo $dir2 | tr '/' '-') # connect-connect-cdc-oracle12-source
+
 flag_list=""
 if [[ -n "$tag" ]]
 then
@@ -99,6 +99,17 @@ if [[ -n "$enable_kcat" ]]
 then
   flag_list="$flag_list --enable-kcat"
   export ENABLE_KCAT=true
+fi
+
+if [[ -n "$cluster_type" ]]
+then
+  flag_list="$flag_list --cluster-type $cluster_type"
+  export CLUSTER_TYPE=$cluster_type
+else
+  if [ -z "$CLUSTER_TYPE" ]
+  then
+    export CLUSTER_TYPE="basic"
+  fi
 fi
 
 if [[ -n "$cluster_cloud" ]]

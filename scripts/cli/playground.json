@@ -242,7 +242,7 @@
     },
     {
       "name": "run-ccloud",
-      "description": "⛅ Run any Confluent Cloud (ccloud) example\n\nAll you have to do is to be already logged in with confluent CLI.\n\nBy default, a new Confluent Cloud environment with a Cluster will be created.\n\nYou can configure the new cluster by setting:\n\n--cluster-cloud (or CLUSTER_CLOUD environment variable)\n--cluster-region (or CLUSTER_REGION environment variable)\n--cluster-environment (or ENVIRONMENT environment variable)\n\nIn case you want to use your own existing cluster, you need to setup, in addition to previous ones:\n\n--cluster-name (or CLUSTER_NAME environment variable)\n--cluster-creds (or CLUSTER_CREDS environment variable)\n--cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable)\n",
+      "description": "⛅ Run any Confluent Cloud (ccloud) example\n\nAll you have to do is to be already logged in with confluent CLI.\n\nBy default, a new Confluent Cloud environment with a Cluster will be created.\n\nYou can configure the new cluster by setting:\n\n--cluster-type (or CLUSTER_TYPEenvironment variable)\n--cluster-cloud (or CLUSTER_CLOUD environment variable)\n--cluster-region (or CLUSTER_REGION environment variable)\n--cluster-environment (or ENVIRONMENT environment variable)\n\nIn case you want to use your own existing cluster, you need to setup, in addition to previous ones:\n\n--cluster-name (or CLUSTER_NAME environment variable)\n--cluster-creds (or CLUSTER_CREDS environment variable)\n--cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable)\n",
       "usage": "playground run-ccloud [OPTIONS] [ARGUMENTS...]",
       "options": [
         {
@@ -320,6 +320,17 @@
             "azure"
           ],
           "description": "🌤 The cloud provider: aws, gcp or azure. Default is aws\n\n🎓 Tip: you can also use CLUSTER_CLOUD environment variable\n\nAllowed values: aws, gcp, azure\n"
+        },
+        {
+          "names": [
+            "--cluster-type"
+          ],
+          "argument": [
+            "basic",
+            "standard",
+            "dedicated"
+          ],
+          "description": "🔋 The cluster type: basic, standard or dedicated. Default is basic\n\n🎓 Tip: you can also use CLUSTER_TYPE environment variable\n\nAllowed values: basic, standard, dedicated\n"
         },
         {
           "names": [
@@ -563,6 +574,17 @@
               ],
               "argument": "",
               "description": "🌪️ Enable SQL Datagen injection\n\nThis only works for Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with JDBC and Debezium\n"
+            },
+            {
+              "names": [
+                "--cluster-type"
+              ],
+              "argument": [
+                "basic",
+                "standard",
+                "dedicated"
+              ],
+              "description": "🔋 The cluster type: basic, standard or dedicated. Default is basic\n\n🎓 Tip: you can also use CLUSTER_TYPE environment variable\n\nAllowed values: basic, standard, dedicated\n"
             },
             {
               "names": [
