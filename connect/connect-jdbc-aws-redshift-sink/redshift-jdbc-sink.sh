@@ -54,9 +54,28 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 CLUSTER_NAME=pg${USER}jdbcredshift${TAG}
 CLUSTER_NAME=${CLUSTER_NAME//[-._]/}
 
-set +e
 log "Delete AWS Redshift cluster, if required"
-aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot
+set +e
+RETRIES=3
+# Set the retry interval in seconds
+RETRY_INTERVAL=60
+# Attempt to delete the cluster
+for i in $(seq 1 $RETRIES); do
+    echo "Attempt $i to delete cluster $CLUSTER_NAME"
+    if aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot; then
+        echo "Cluster $CLUSTER_NAME deleted successfully"
+        break
+    else
+        error=$(aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot 2>&1)
+        if [[ $error == *"InvalidClusterState"* ]]; then
+            echo "InvalidClusterState error encountered. Retrying in $RETRY_INTERVAL seconds..."
+            sleep $RETRY_INTERVAL
+        else
+            echo "Error deleting cluster $CLUSTER_NAME: $error"
+            exit 1
+        fi
+    fi
+done
 log "Delete security group sg$CLUSTER_NAME, if required"
 aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
 set -e
