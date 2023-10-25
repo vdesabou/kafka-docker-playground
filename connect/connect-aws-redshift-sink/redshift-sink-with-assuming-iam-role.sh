@@ -45,18 +45,19 @@ RETRIES=3
 RETRY_INTERVAL=60
 # Attempt to delete the cluster
 for i in $(seq 1 $RETRIES); do
-    echo "Attempt $i to delete cluster $CLUSTER_NAME"
-    if aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot; then
-        echo "Cluster $CLUSTER_NAME deleted successfully"
+    log "Attempt $i to delete cluster $CLUSTER_NAME"
+    if aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot
+    then
+        log "Cluster $CLUSTER_NAME deleted successfully"
         break
     else
         error=$(aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot 2>&1)
-        if [[ $error == *"InvalidClusterState"* ]]; then
-            echo "InvalidClusterState error encountered. Retrying in $RETRY_INTERVAL seconds..."
+        if [[ $error == *"InvalidClusterState"* ]]
+        then
+            logwarn "InvalidClusterState error encountered. Retrying in $RETRY_INTERVAL seconds..."
             sleep $RETRY_INTERVAL
         else
-            echo "Error deleting cluster $CLUSTER_NAME: $error"
-            exit 1
+            logwarn "Error deleting cluster $CLUSTER_NAME: $error"
         fi
     fi
 done

@@ -15,7 +15,7 @@ if [ $? -ne 0 ]
 then
   playground container restart --container hadoop
 
-  sleep 20
+  sleep 30
 
   docker exec hadoop bash -c "echo password | kinit && /usr/local/hadoop/bin/hdfs dfs -chmod 777  /"
   if [ $? -ne 0 ]
