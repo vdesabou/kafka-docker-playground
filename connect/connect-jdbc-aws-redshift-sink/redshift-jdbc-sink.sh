@@ -65,6 +65,9 @@ for i in $(seq 1 $RETRIES); do
     if aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot
     then
         log "Cluster $CLUSTER_NAME deleted successfully"
+        sleep 60
+        log "Delete security group sg$CLUSTER_NAME, if required"
+        aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
         break
     else
         error=$(aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot 2>&1)
@@ -77,8 +80,6 @@ for i in $(seq 1 $RETRIES); do
         fi
     fi
 done
-log "Delete security group sg$CLUSTER_NAME, if required"
-aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
 set -e
 
 log "Create AWS Redshift cluster"
@@ -124,8 +125,9 @@ playground connector create-or-update --connector redshift-jdbc-sink << EOF
   "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
   "tasks.max": "1",
   "connection.url": "jdbc:redshift://$CLUSTER:5439/dev?user=masteruser&password=myPassword1&ssl=false",
-  "topics": "orders",
-  "auto.create": "true"
+  "topics": "ORDERS",
+  "auto.create": "true",
+  "dialect.name": "PostgreSqlDatabaseDialect"
 }
 EOF
 
