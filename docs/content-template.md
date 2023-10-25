@@ -306,6 +306,7 @@ There is also a Confluent Cloud version available [here](https://github.com/vdes
 - [How to join a table and a table](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/table-table-join) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [Stream-Table join failure due to timestamp](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/stream-table-join-timestamp-based-join-failure) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [Foreign-key table-table joins](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/foreign-key-table-table-join) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
+- [How to perform a Many to Many join](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/many-many-join) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [ksqlDB Schema Inference with ID](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/schema-inference-with-id) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [how ksqlDB handles schema evolution](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/schema-evolution) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [How to create tumbling windows](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/tumbling-windows) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
@@ -320,7 +321,7 @@ There is also a Confluent Cloud version available [here](https://github.com/vdes
 - [Materialized view/cache example](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/materialized-view) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [Select Query from Materialized table by composite Primary key](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/composite-pkey-materialized-table) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [Why tombstone is not propagated to table derived from CTAS in ksqlDB](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/tombstone-propagated-table) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
-- [How to use Protobuf without Schema Registry](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/protobuf-without-schema-registry) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet) 
+- [How to use Protobuf without Schema Registry](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/protobuf-without-schema-registry) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 
 ## 📝 Schema Registry
 - [How to produce Avro records via kafka-avro-console-producer with Union](https://github.com/vdesabou/kafka-docker-playground/tree/master/schema-registry/kafka-avro-console-producer-union) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
