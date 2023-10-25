@@ -17,6 +17,9 @@ then
     fi
 fi
 
+log "🔰 also setting io.confluent.kafka.schemaregistry.client.rest.RestService (to see schema registry rest requests) to $level"
+playground debug log-level set -p "io.confluent.kafka.schemaregistry.client.rest.RestService" -l $level
+
 items=($connector)
 for connector in ${items[@]}
 do
