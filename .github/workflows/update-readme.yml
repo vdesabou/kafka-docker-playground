@@ -19,7 +19,7 @@ jobs:
 
       - name: Update README
         run: |
-          ./scripts/update-readme.sh "6.2.11 7.0.10 7.1.9 7.2.7 7.3.4 7.4.1 7.5.1"
+          ./scripts/update-readme.sh "6.2.12 7.0.11 7.1.9 7.2.7 7.3.5 7.4.2 7.5.1"
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
