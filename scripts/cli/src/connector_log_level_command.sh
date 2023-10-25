@@ -19,6 +19,8 @@ fi
 
 log "🔰 also setting io.confluent.kafka.schemaregistry.client.rest.RestService (to see schema registry rest requests) to $level"
 playground debug log-level set -p "io.confluent.kafka.schemaregistry.client.rest.RestService" -l $level
+log "🔗 also setting org.apache.kafka.connect.runtime.TransformationChain (to see records before and after SMTs) to $level"
+playground debug log-level set -p "org.apache.kafka.connect.runtime.TransformationChain" -l $level
 
 items=($connector)
 for connector in ${items[@]}

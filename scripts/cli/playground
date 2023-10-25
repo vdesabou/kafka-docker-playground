@@ -4302,7 +4302,10 @@ playground_connector_show_config_parameters_usage() {
 # :command.usage
 playground_connector_log_level_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground connector log-level - 🧬 Set connect log level\n"
+    printf "playground connector log-level\n"
+    echo
+
+    printf "  🧬 Set connect log level\n  \n  🎓 Tip: it will also set\n  io.confluent.kafka.schemaregistry.client.rest.RestService (to see schema\n  registry rest requests) and\n  org.apache.kafka.connect.runtime.TransformationChain (to see records before\n  and after SMTs)\n"
     echo
 
   else
@@ -15149,6 +15152,8 @@ playground_connector_log_level_command() {
 
   log "🔰 also setting io.confluent.kafka.schemaregistry.client.rest.RestService (to see schema registry rest requests) to $level"
   playground debug log-level set -p "io.confluent.kafka.schemaregistry.client.rest.RestService" -l $level
+  log "🔗 also setting org.apache.kafka.connect.runtime.TransformationChain (to see records before and after SMTs) to $level"
+  playground debug log-level set -p "org.apache.kafka.connect.runtime.TransformationChain" -l $level
 
   items=($connector)
   for connector in ${items[@]}
