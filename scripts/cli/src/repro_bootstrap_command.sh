@@ -1111,9 +1111,10 @@ fi
 if [[ -n "$enable_multiple_connect_workers" ]]
 then
   force_enable --enable-multiple-connect-workers ENABLE_CONNECT_NODES
-
-  yq -i '.services.connect2 = .services.connect' $docker_compose_test_file
-  yq -i '.services.connect3 = .services.connect' $docker_compose_test_file
+  cp $docker_compose_test_file /tmp/playground-backup-docker-compose.yml
+  yq -i '.services.connect2 = .services.connect' /tmp/playground-backup-docker-compose.yml
+  yq -i '.services.connect3 = .services.connect' /tmp/playground-backup-docker-compose.yml
+  cp /tmp/playground-backup-docker-compose.yml $docker_compose_test_file
 fi
 
 if [[ -n "$enable_jmx_grafana" ]]
