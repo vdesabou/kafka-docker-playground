@@ -161,6 +161,7 @@ do
       set +e
       log "Delete AWS Redshift $cluster"
       aws redshift delete-cluster --cluster-identifier $cluster --skip-final-cluster-snapshot --region $AWS_REGION
+      sleep 60
       log "Delete security group sg$cluster"
       aws ec2 delete-security-group --group-name sg$cluster --region $AWS_REGION
       set -e
