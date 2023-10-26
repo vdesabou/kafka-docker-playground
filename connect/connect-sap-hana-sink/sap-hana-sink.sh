@@ -63,19 +63,19 @@ log "SAP HANA has started!"
 log "Creating SAP HANA Sink connector"
 playground connector create-or-update --connector sap-hana-sink << EOF
 {
-               "tasks.max": "1",
-               "connector.class": "com.sap.kafka.connect.sink.hana.HANASinkConnector",
-               "topics": "testtopic",
-               "connection.url": "jdbc:sap://sap:39041/?databaseName=HXE&reconnect=true&statementCacheSize=512",
-               "connection.user": "LOCALDEV",
-               "connection.password" : "Localdev1",
-               "key.converter": "io.confluent.connect.avro.AvroConverter",
-               "key.converter.schema.registry.url": "http://schema-registry:8081",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "auto.create": "true",
-               "testtopic.table.name": "\"LOCALDEV\".\"TEST\""
-          }
+     "tasks.max": "1",
+     "connector.class": "com.sap.kafka.connect.sink.hana.HANASinkConnector",
+     "topics": "testtopic",
+     "connection.url": "jdbc:sap://sap:39041/?databaseName=HXE&reconnect=true&statementCacheSize=512",
+     "connection.user": "LOCALDEV",
+     "connection.password" : "Localdev1",
+     "key.converter": "io.confluent.connect.avro.AvroConverter",
+     "key.converter.schema.registry.url": "http://schema-registry:8081",
+     "value.converter": "io.confluent.connect.avro.AvroConverter",
+     "value.converter.schema.registry.url": "http://schema-registry:8081",
+     "auto.create": "true",
+     "testtopic.table.name": "\"LOCALDEV\".\"TEST\""
+}
 EOF
 
 sleep 5
@@ -89,8 +89,11 @@ EOF
 sleep 120
 
 log "Check data is in SAP HANA"
+docker exec -i sap /usr/sap/HXE/HDB90/exe/hdbsql -i 90 -d HXE -u LOCALDEV -p Localdev1 << EOF
+select * from "LOCALDEV"."TEST";
+EOF
 docker exec -i sap /usr/sap/HXE/HDB90/exe/hdbsql -i 90 -d HXE -u LOCALDEV -p Localdev1  > /tmp/result.log  2>&1 <<-EOF
-select * from LOCALDEV.TEST;
+select * from "LOCALDEV"."TEST";
 EOF
 cat /tmp/result.log
-grep "foo" /tmp/result.log
+grep "product" /tmp/result.log
