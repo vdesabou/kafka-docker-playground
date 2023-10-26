@@ -111,8 +111,8 @@ wait_for_ccloud_connector_up $connector_name 300
 
 sleep 120
 
-log "Listing objects of in S3"
-aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
+# log "Listing objects of in S3"
+# aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
 
 
 log "Do you want to delete the fully managed connector $connector_name ?"
