@@ -49,13 +49,13 @@ $ playground run -f kinesis-source-with-assuming-iam-role<tab>
 Create a Kinesis stream `kafka_docker_playground` in $AWS_REGION region:
 
 ```
-$ aws kinesis create-stream --stream-name $KINESIS_STREAM_NAME --shard-count 1
+$ aws kinesis create-stream --stream-name $KINESIS_STREAM_NAME --shard-count 1 --region $AWS_REGION
 ```
 
 Insert records in Kinesis stream:
 
 ```
-$ aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --data test-message-1
+$ aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --data test-message-1 --region $AWS_REGION
 ```
 
 The connector is created with:
@@ -84,7 +84,7 @@ playground topic consume --topic kinesis_topic --min-expected-messages 1 --timeo
 Delete your stream and clean up resources to avoid incurring any unintended charges:
 
 ```
-aws kinesis delete-stream --stream-name $KINESIS_STREAM_NAME
+aws kinesis delete-stream --stream-name $KINESIS_STREAM_NAME --region $AWS_REGION
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

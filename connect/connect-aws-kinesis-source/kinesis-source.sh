@@ -53,19 +53,19 @@ KINESIS_STREAM_NAME=${KINESIS_STREAM_NAME//[-.]/}
 
 set +e
 log "Delete the stream"
-aws kinesis delete-stream --stream-name $KINESIS_STREAM_NAME
+aws kinesis delete-stream --stream-name $KINESIS_STREAM_NAME --region $AWS_REGION
 set -e
 
 sleep 5
 
 log "Create a Kinesis stream $KINESIS_STREAM_NAME"
-aws kinesis create-stream --stream-name $KINESIS_STREAM_NAME --shard-count 1
+aws kinesis create-stream --stream-name $KINESIS_STREAM_NAME --shard-count 1 --region $AWS_REGION
 
 log "Sleep 60 seconds to let the Kinesis stream being fully started"
 sleep 60
 
 log "Insert records in Kinesis stream".
-aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --data test-message-1
+aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --data test-message-1 --region $AWS_REGION
 
 log "Creating Kinesis Source connector"
 playground connector create-or-update --connector kinesis-source << EOF
@@ -89,4 +89,4 @@ playground topic consume --topic kinesis_topic --min-expected-messages 1 --timeo
 # Processed a total of 1 messages
 
 log "Delete the stream"
-aws kinesis delete-stream --stream-name $KINESIS_STREAM_NAME
+aws kinesis delete-stream --stream-name $KINESIS_STREAM_NAME --region $AWS_REGION
