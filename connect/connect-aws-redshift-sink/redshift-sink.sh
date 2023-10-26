@@ -76,6 +76,8 @@ for i in $(seq 1 $RETRIES); do
         fi
     fi
 done
+log "Delete security group sg$CLUSTER_NAME, if required"
+aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
 set -e
 
 log "Create AWS Redshift cluster"
