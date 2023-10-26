@@ -65,7 +65,7 @@ for i in $(seq 1 $RETRIES); do
     if aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot
     then
         log "Cluster $CLUSTER_NAME deleted successfully"
-        sleep 60
+        sleep 120
         log "Delete security group sg$CLUSTER_NAME, if required"
         aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
         break
