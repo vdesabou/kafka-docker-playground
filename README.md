@@ -10,7 +10,7 @@ Check out [kafka-docker-playground.io](https://kafka-docker-playground.io/) to l
 
 ## ✨ Features
 
-- 🔗 150+ self-managed connectors [examples](https://kafka-docker-playground.io/#/content?id=🔗-connectors)
+- 🔗 170+ self-managed connectors [examples](https://kafka-docker-playground.io/#/content?id=🔗-connectors)
 - 🌤️ 20+ fully-managed connectors [examples](https://kafka-docker-playground.io/#/content?id=%f0%9f%a4%96-fully-managed-connectors)
 - 🔐 10+ secured [environments](https://kafka-docker-playground.io/#/content?id=%F0%9F%94%90-environments) (SASL, RBAC, SSL...)
 - ☁️ Confluent Cloud [examples](https://kafka-docker-playground.io/#/content?id=☁%EF%B8%8F-confluent-cloud)
