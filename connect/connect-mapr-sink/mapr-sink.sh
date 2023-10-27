@@ -4,12 +4,9 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if ! version_gt $TAG_BASE "5.9.0"; then
-    if [[ "$TAG" != *ubi8 ]]
-    then
-          logwarn "WARN: This can only be run with UBI image or version greater than 6.0.0"
-          exit 111
-    fi
+if ! version_gt $TAG_BASE "6.9.9"; then
+    logwarn "WARN: This can only be run with image or version greater than 7.0.0"
+    exit 111
 fi
 
 HPE_MAPR_EMAIL=${HPE_MAPR_EMAIL:-$1}
