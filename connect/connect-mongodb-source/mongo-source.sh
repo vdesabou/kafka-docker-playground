@@ -15,11 +15,11 @@ log "Create a user profile"
 docker exec -i mongodb mongosh << EOF
 use admin
 db.createUser(
-{
-user: "myuser",
-pwd: "mypassword",
-roles: ["dbOwner"]
-}
+     {
+          user: "myuser",
+          pwd: "mypassword",
+          roles: ["dbOwner"]
+     }
 )
 EOF
 
@@ -33,7 +33,9 @@ playground connector create-or-update --connector mongodb-source << EOF
      "connection.uri" : "mongodb://myuser:mypassword@mongodb:27017",
      "database":"inventory",
      "collection":"customers",
-     "topic.prefix":"mongo"
+     "topic.prefix":"mongo",
+     "output.format.value": "schema",
+     "output.schema.infer.value": "true"
 }
 EOF
 
