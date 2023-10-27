@@ -29,6 +29,7 @@ else
 fi
 
 PASSWORD=$(date +%s | cksum | base64 | head -c 32 ; echo)
+PASSWORD="${PASSWORD}1"
 # generate data file for externalizing secrets
 sed -e "s|:PASSWORD:|$PASSWORD|g" \
     ../../connect/connect-aws-redshift-sink/data.template > ../../connect/connect-aws-redshift-sink/data

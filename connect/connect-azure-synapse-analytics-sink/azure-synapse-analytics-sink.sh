@@ -27,6 +27,7 @@ AZURE_DATA_WAREHOUSE_NAME=$AZURE_NAME
 AZURE_REGION=westeurope
 AZURE_SQL_URL="jdbc:sqlserver://$AZURE_SQL_NAME.database.windows.net:1433"
 PASSWORD=$(date +%s | cksum | base64 | head -c 32 ; echo)
+PASSWORD="${PASSWORD}1"
 
 set +e
 az group delete --name $AZURE_RESOURCE_GROUP --yes
