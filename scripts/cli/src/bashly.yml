@@ -804,6 +804,9 @@ commands:
       EOF
 
   - name: get-compatibility
+    filters:
+    - not_mdc_environment
+    - schema_registry_running
     group: Schema
     help: |-
       🛡️ Get subject-level compatibility
@@ -811,6 +814,9 @@ commands:
     - *subject_required
 
   - name: set-compatibility
+    filters:
+    - not_mdc_environment
+    - schema_registry_running
     group: Schema
     help: |-
       🛡️ Set subject-level compatibility
@@ -832,6 +838,9 @@ commands:
         Schema Registry compatibility rule
 
   - name: get-mode
+    filters:
+    - not_mdc_environment
+    - schema_registry_running
     group: Schema
     help: |-
       🔏 Get subject-level mode
@@ -839,6 +848,9 @@ commands:
     - *subject_required
 
   - name: set-mode
+    filters:
+    - not_mdc_environment
+    - schema_registry_running
     group: Schema
     help: |-
       🔏 Set subject-level mode
@@ -857,6 +869,9 @@ commands:
         Schema Registry mode
 
   - name: delete
+    filters:
+    - not_mdc_environment
+    - schema_registry_running
     group: Schema
     help: |-
       🧟 Delete schema

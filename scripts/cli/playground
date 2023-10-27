@@ -18587,6 +18587,19 @@ playground_schema_get_compatibility_parse_requirements() {
     exit 1
   fi
 
+  # :command.user_filter
+  filter_error=$(filter_not_mdc_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
 }
 
 # :command.parse_requirements
@@ -18676,6 +18689,19 @@ playground_schema_set_compatibility_parse_requirements() {
     exit 1
   fi
 
+  # :command.user_filter
+  filter_error=$(filter_not_mdc_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
 }
 
 # :command.parse_requirements
@@ -18737,6 +18763,19 @@ playground_schema_get_mode_parse_requirements() {
   # :command.required_flags_filter
   if [[ -z ${args['--subject']+x} ]]; then
     printf "missing required flag: --subject SUBJECT\n" >&2
+    exit 1
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_not_mdc_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
     exit 1
   fi
 
@@ -18829,6 +18868,19 @@ playground_schema_set_mode_parse_requirements() {
     exit 1
   fi
 
+  # :command.user_filter
+  filter_error=$(filter_not_mdc_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
 }
 
 # :command.parse_requirements
@@ -18914,6 +18966,19 @@ playground_schema_delete_parse_requirements() {
 
     esac
   done
+
+  # :command.user_filter
+  filter_error=$(filter_not_mdc_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
 
 }
 
