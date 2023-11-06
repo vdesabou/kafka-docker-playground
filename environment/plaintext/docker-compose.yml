@@ -103,7 +103,7 @@ services:
       PYROSCOPE_APPLICATION_NAME: "broker2"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
     volumes:
-      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/  
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
 
   broker3:
     image: ${CP_KAFKA_IMAGE}:${TAG}
@@ -266,7 +266,7 @@ services:
     environment:
       KAFKA_JMX_PORT: 10022
       KAFKA_JMX_HOSTNAME: localhost
-      CONNECT_LISTENERS: http://:8283 
+      CONNECT_LISTENERS: http://:8283
       CONNECT_BOOTSTRAP_SERVERS: 'broker:9092'
       CONNECT_REST_ADVERTISED_HOST_NAME: connect2
       CONNECT_GROUP_ID: "connect-cluster"
@@ -482,6 +482,24 @@ services:
       # starting from 7.0
       #CONTROL_CENTER_MODE_ENABLE: management
       # CONTROL_CENTER_ID: 32
+
+  rest-proxy:
+    image: confluentinc/cp-kafka-rest:${TAG}
+    hostname: rest-proxy
+    container_name: rest-proxy
+    restart: always
+    depends_on:
+      - broker
+      - schema-registry
+    ports:
+      - "8082:8082"
+    profiles:
+    - rest-proxy
+    environment:
+      KAFKA_REST_HOST_NAME: rest-proxy
+      KAFKA_REST_BOOTSTRAP_SERVERS: 'broker:9092'
+      KAFKA_REST_LISTENERS: "http://0.0.0.0:8082"
+      KAFKA_REST_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
 
   kafka-lag-exporter:
     image: seglo/kafka-lag-exporter:0.7.1

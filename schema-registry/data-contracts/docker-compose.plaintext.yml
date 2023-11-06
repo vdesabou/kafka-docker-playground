@@ -1,0 +1,9 @@
+---
+version: '3.5'
+services:
+  connect:
+    volumes:
+      - ../../schema-registry/data-contracts/data:/data
+  schema-registry:
+    environment:
+      SCHEMA_REGISTRY_RESOURCE_EXTENSION_CLASS: io.confluent.kafka.schemaregistry.rulehandler.RuleSetResourceExtension

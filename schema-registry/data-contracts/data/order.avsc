@@ -1,0 +1,41 @@
+{
+  "name": "Order",
+  "namespace": "acme.com",
+  "type": "record",
+  "fields": [
+    {
+      "name": "orderId",
+      "type": "int"
+    },
+    {
+      "name": "customerId",
+      "type": "int"
+    },
+    {
+      "name": "totalPriceCents",
+      "type": "int"
+    },
+    {
+      "name": "state",
+      "type": {
+        "type": "enum",
+        "name": "OrderStatus",
+        "symbols": [
+          "Pending",
+          "Processing",
+          "Completed",
+          "Canceled",
+          "Unknown"
+        ],
+        "default": "Unknown"
+      }
+    },
+    {
+      "name": "timestamp",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      }
+    }
+  ]
+}
