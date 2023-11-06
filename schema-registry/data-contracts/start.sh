@@ -111,6 +111,3 @@ docker exec -i rest-proxy curl -X POST -H "Content-Type: application/vnd.kafka.a
       -H "Accept: application/vnd.kafka.v2+json" \
       --data '{"value_schema_id": "4", "records": [{"value": {"orderId": 1, "customerId": 2, "totalPriceCents": 15, "state": "Pending", "timestamp": 1693591356}}]}' \
       http://rest-proxy:8082/topics/orders
-
-
-docker exec -i rest-proxy curl --request POST --url 'http://rest-proxy:8082/v3/clusters/foo/topics/orders/records' -H "Content-Type: application/json"  --data '{"value": {"type": "AVRO", "value_schema_id":4, "data": {"orderId": 1, "customerId": 2, "totalPriceCents": 15, "state": "Pending", "timestamp": 1693591356}}}'
