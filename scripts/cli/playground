@@ -8834,15 +8834,16 @@ playground_get_connector_list_command() {
           echo ""
           return
       fi
-      error_code=$(echo "$curl_output" | jq -r .error_code)
-      if [ "$error_code" != "null" ]
+      if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
+
       then
+          error_code=$(echo "$curl_output" | jq -r .error_code)
           message=$(echo "$curl_output" | jq -r .message)
           logerror "Command failed with error code $error_code"
           logerror "$message"
           exit 1
       else
-          echo "$curl_output" | jq -r '.[]' | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
+      echo "$curl_output" | jq -r '.[]' | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
       fi
   else
       logerror "❌ curl request failed with error code $ret!"
@@ -8871,15 +8872,16 @@ playground_get_ccloud_connector_list_command() {
           echo ""
           return
       fi
-      error_code=$(echo "$curl_output" | jq -r .error_code)
-      if [ "$error_code" != "null" ]
+      if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
+
       then
+          error_code=$(echo "$curl_output" | jq -r .error_code)
           message=$(echo "$curl_output" | jq -r .message)
           logerror "Command failed with error code $error_code"
           logerror "$message"
           exit 1
       else
-          echo "$curl_output" | jq -r '.[]' | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
+      echo "$curl_output" | jq -r '.[]' | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
       fi
   else
       logerror "❌ curl request failed with error code $ret!"
@@ -11352,8 +11354,8 @@ playground_schema_register_command() {
   ret=$?
   if [ $ret -eq 0 ]
   then
-      error_code=$(echo "$curl_output" | jq -r .error_code)
-      if [ "$error_code" != "null" ]
+      if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
+
       then
           if [ "$error_code" != "40403" ]
           then
@@ -11399,9 +11401,10 @@ playground_schema_get_compatibility_command() {
   ret=$?
   if [ $ret -eq 0 ]
   then
-      error_code=$(echo "$curl_output" | jq -r .error_code)
-      if [ "$error_code" != "null" ]
+      if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
+
       then
+          error_code=$(echo "$curl_output" | jq -r .error_code)
           message=$(echo "$curl_output" | jq -r .message)
           logerror "Command failed with error code $error_code"
           logerror "$message"
@@ -11464,9 +11467,10 @@ playground_schema_get_mode_command() {
   ret=$?
   if [ $ret -eq 0 ]
   then
-      error_code=$(echo "$curl_output" | jq -r .error_code)
-      if [ "$error_code" != "null" ]
+      if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
+
       then
+          error_code=$(echo "$curl_output" | jq -r .error_code)
           message=$(echo "$curl_output" | jq -r .message)
           logerror "Command failed with error code $error_code"
           logerror "$message"
@@ -11497,9 +11501,10 @@ playground_schema_set_mode_command() {
   ret=$?
   if [ $ret -eq 0 ]
   then
-      error_code=$(echo "$curl_output" | jq -r .error_code)
-      if [ "$error_code" != "null" ]
+      if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
+
       then
+          error_code=$(echo "$curl_output" | jq -r .error_code)
           message=$(echo "$curl_output" | jq -r .message)
           logerror "Command failed with error code $error_code"
           logerror "$message"
@@ -14390,12 +14395,14 @@ playground_ccloud_connector_show_config_parameters_command() {
           set -e
           if [ $ret -eq 0 ]
           then
-              error_code=$(echo "$curl_output" | jq -r .error_code)
-              if [ "$error_code" != "null" ]
+              if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
+
               then
+                  error_code=$(echo "$curl_output" | jq -r .error_code)
                   message=$(echo "$curl_output" | jq -r .message)
                   logerror "Command failed with error code $error_code"
                   logerror "$message"
+                  exit 1
               else
                   if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
                   then
@@ -14568,9 +14575,10 @@ playground_ccloud_connector_create_or_update_command() {
   set -e
   if [ $ret -eq 0 ]
   then
-      error_code=$(echo "$curl_output" | jq -r .error_code)
-      if [ "$error_code" != "null" ]
+      if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
+
       then
+          error_code=$(echo "$curl_output" | jq -r .error_code)
           message=$(echo "$curl_output" | jq -r .message)
           logerror "Command failed with error code $error_code"
           logerror "$message"
@@ -15123,12 +15131,14 @@ playground_connector_show_config_parameters_command() {
           set -e
           if [ $ret -eq 0 ]
           then
-              error_code=$(echo "$curl_output" | jq -r .error_code)
-              if [ "$error_code" != "null" ]
+              if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
+
               then
+                  error_code=$(echo "$curl_output" | jq -r .error_code)
                   message=$(echo "$curl_output" | jq -r .message)
                   logerror "Command failed with error code $error_code"
                   logerror "$message"
+                  exit 1
               else
                   if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
                   then
@@ -15337,9 +15347,10 @@ playground_connector_create_or_update_command() {
   set -e
   if [ $ret -eq 0 ]
   then
-      error_code=$(echo "$curl_output" | jq -r .error_code)
-      if [ "$error_code" != "null" ]
+      if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
+
       then
+          error_code=$(echo "$curl_output" | jq -r .error_code)
           message=$(echo "$curl_output" | jq -r .message)
           logerror "Command failed with error code $error_code"
           logerror "$message"

@@ -61,8 +61,7 @@ curl_output=$(curl $sr_security --request POST -s "${sr_url}/subjects/${subject}
 ret=$?
 if [ $ret -eq 0 ]
 then
-    error_code=$(echo "$curl_output" | jq -r .error_code)
-    if [ "$error_code" != "null" ]
+    if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true 
     then
         if [ "$error_code" != "40403" ]
         then
