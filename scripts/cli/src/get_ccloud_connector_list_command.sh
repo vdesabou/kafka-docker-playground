@@ -11,8 +11,10 @@ if [ $ret -eq 0 ]
 then
     if [ "$curl_output" == "[]" ]
     then
-        logerror "No connector running"
-        exit 1
+        # logerror "No connector running"
+        # exit 1
+        echo ""
+        return
     fi
     error_code=$(echo "$curl_output" | jq -r .error_code)
     if [ "$error_code" != "null" ]
