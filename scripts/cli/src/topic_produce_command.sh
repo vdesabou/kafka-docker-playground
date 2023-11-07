@@ -364,12 +364,12 @@ if [[ -n "$validate" ]]
 then
     log "✔️ --validate is set, validating schema now..."
 
-    if [ "$schema_type" == "json-schema" ]
-    then
-        log "✨ also validating with https://github.com/jriester/PythonScripts/blob/master/json_type_validator.py"
-        curl -s -L https://raw.githubusercontent.com/jriester/PythonScripts/master/json_type_validator.py -o /tmp/json_type_validator.py
-        docker run -i --rm -v "/tmp/json_type_validator.py:/tmp/json_type_validator.py" -v "$schema_file:/tmp/schema" python:3.7-slim python /tmp/json_type_validator.py -f /tmp/schema
-    fi
+    # if [ "$schema_type" == "json-schema" ]
+    # then
+    #     log "✨ also validating with https://github.com/jriester/PythonScripts/blob/master/json_type_validator.py"
+    #     curl -s -L https://raw.githubusercontent.com/jriester/PythonScripts/master/json_type_validator.py -o /tmp/json_type_validator.py
+    #     docker run -i --rm -v "/tmp/json_type_validator.py:/tmp/json_type_validator.py" -v "$schema_file:/tmp/schema" python:3.7-slim python /tmp/json_type_validator.py -f /tmp/schema
+    # fi
 
     set +e
     log "🏗 Building jar for schema-validator"
