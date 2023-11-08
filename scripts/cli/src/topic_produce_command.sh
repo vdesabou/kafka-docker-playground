@@ -364,6 +364,13 @@ if [[ -n "$validate" ]]
 then
     log "✔️ --validate is set, validating schema now..."
 
+    if [ "$schema_type" == "json-schema" ]
+    then
+        log "✨ also validating with https://raw.githubusercontent.com/conan-goldsmith/Python-Scripts/main/json_type_validator.py"
+        curl -s -L https://raw.githubusercontent.com/conan-goldsmith/Python-Scripts/main/json_type_validator.py -o /tmp/json_type_validator.py
+        docker run -i --rm -v "/tmp/json_type_validator.py:/tmp/json_type_validator.py" -v "$schema_file:/tmp/schema" python:3.7-slim python /tmp/json_type_validator.py -f /tmp/schema
+    fi
+
     set +e
     log "🏗 Building jar for schema-validator"
     docker run -i --rm -e TAG=$TAG_BASE -v "${root_folder}/scripts/cli/src/schema-validator":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "${root_folder}/scripts/cli/src/schema-validator/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG package > /tmp/result.log 2>&1
