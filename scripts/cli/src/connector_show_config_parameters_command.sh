@@ -11,7 +11,6 @@ connector="${args[--connector]}"
 
 if [[ ! -n "$connector" ]]
 then
-    log "✨ --connector flag was not provided, applying command to all connectors"
     connector=$(playground get-connector-list)
     if [ "$connector" == "" ]
     then
@@ -21,6 +20,11 @@ then
 fi
 
 items=($connector)
+length=${#items[@]}
+if ((length > 1))
+then
+    log "✨ --connector flag was not provided, applying command to all connectors"
+fi
 for connector in ${items[@]}
 do
     json_config=$(curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config")

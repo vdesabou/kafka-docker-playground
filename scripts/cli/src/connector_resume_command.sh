@@ -7,7 +7,6 @@ connector="${args[--connector]}"
 
 if [[ ! -n "$connector" ]]
 then
-    log "✨ --connector flag was not provided, applying command to all connectors"
     connector=$(playground get-connector-list)
     if [ "$connector" == "" ]
     then
@@ -17,6 +16,11 @@ then
 fi
 
 items=($connector)
+length=${#items[@]}
+if ((length > 1))
+then
+    log "✨ --connector flag was not provided, applying command to all connectors"
+fi
 for connector in ${items[@]}
 do
     log "⏯️ Resuming connector $connector"

@@ -8,7 +8,6 @@ security=$(echo "$ret" | cut -d "@" -f 2)
 
 if [[ ! -n "$connector" ]]
 then
-    log "✨ --connector flag was not provided, applying command to all connectors"
     connector=$(playground get-connector-list)
     if [ "$connector" == "" ]
     then
@@ -23,6 +22,11 @@ container=$(echo "$ret" | cut -d "@" -f 1)
 security=$(echo "$ret" | cut -d "@" -f 2)
 
 items=($connector)
+length=${#items[@]}
+if ((length > 1))
+then
+    log "✨ --connector flag was not provided, applying command to all connectors"
+fi
 for connector in ${items[@]}
 do
   type=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.type')

@@ -14623,7 +14623,6 @@ playground_connector_status_command() {
 
   if [[ ! -n "$connector" ]]
   then
-      log "✨ --connector flag was not provided, applying command to all connectors"
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
@@ -14633,6 +14632,11 @@ playground_connector_status_command() {
   fi
 
   items=($connector)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "✨ --connector flag was not provided, applying command to all connectors"
+  fi
   for connector in ${items[@]}
   do
       set +e
@@ -14716,7 +14720,6 @@ playground_connector_pause_command() {
 
   if [[ ! -n "$connector" ]]
   then
-      log "✨ --connector flag was not provided, applying command to all connectors"
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
@@ -14726,6 +14729,11 @@ playground_connector_pause_command() {
   fi
 
   items=($connector)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "✨ --connector flag was not provided, applying command to all connectors"
+  fi
   for connector in ${items[@]}
   do
       log "⏸️ Pausing connector $connector"
@@ -14845,7 +14853,6 @@ playground_connector_restart_command() {
 
   if [[ ! -n "$connector" ]]
   then
-      log "✨ --connector flag was not provided, applying command to all connectors"
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
@@ -14862,6 +14869,11 @@ playground_connector_restart_command() {
   fi
 
   items=($connector)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "✨ --connector flag was not provided, applying command to all connectors"
+  fi
   for connector in ${items[@]}
   do
       log "🔄 Restarting connector $connector"
@@ -14894,7 +14906,6 @@ playground_connector_resume_command() {
 
   if [[ ! -n "$connector" ]]
   then
-      log "✨ --connector flag was not provided, applying command to all connectors"
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
@@ -14904,6 +14915,11 @@ playground_connector_resume_command() {
   fi
 
   items=($connector)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "✨ --connector flag was not provided, applying command to all connectors"
+  fi
   for connector in ${items[@]}
   do
       log "⏯️ Resuming connector $connector"
@@ -14926,8 +14942,6 @@ playground_connector_delete_command() {
 
   if [[ ! -n "$connector" ]]
   then
-      logwarn "--connector flag was not provided, applying command to all connectors"
-      check_if_continue
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
@@ -14937,6 +14951,12 @@ playground_connector_delete_command() {
   fi
 
   items=($connector)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "✨ --connector flag was not provided, applying command to all connectors"
+      check_if_continue
+  fi
   for connector in ${items[@]}
   do
       log "❌ Deleting connector $connector"
@@ -14957,7 +14977,6 @@ playground_connector_show_lag_command() {
 
   if [[ ! -n "$connector" ]]
   then
-      log "✨ --connector flag was not provided, applying command to all connectors"
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
@@ -14972,6 +14991,11 @@ playground_connector_show_lag_command() {
   security=$(echo "$ret" | cut -d "@" -f 2)
 
   items=($connector)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "✨ --connector flag was not provided, applying command to all connectors"
+  fi
   for connector in ${items[@]}
   do
     type=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.type')
@@ -15030,7 +15054,6 @@ playground_connector_show_config_command() {
 
   if [[ ! -n "$connector" ]]
   then
-      log "✨ --connector flag was not provided, applying command to all connectors"
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
@@ -15040,6 +15063,11 @@ playground_connector_show_config_command() {
   fi
 
   items=($connector)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "✨ --connector flag was not provided, applying command to all connectors"
+  fi
   for connector in ${items[@]}
   do
       log "🧰 Current config for connector $connector"
@@ -15066,7 +15094,6 @@ playground_connector_show_config_parameters_command() {
 
   if [[ ! -n "$connector" ]]
   then
-      log "✨ --connector flag was not provided, applying command to all connectors"
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
@@ -15076,6 +15103,11 @@ playground_connector_show_config_parameters_command() {
   fi
 
   items=($connector)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "✨ --connector flag was not provided, applying command to all connectors"
+  fi
   for connector in ${items[@]}
   do
       json_config=$(curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config")
@@ -15248,7 +15280,6 @@ playground_connector_log_level_command() {
 
   if [[ ! -n "$connector" ]]
   then
-      log "✨ --connector flag was not provided, applying command to all connectors"
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
@@ -15263,6 +15294,11 @@ playground_connector_log_level_command() {
   playground debug log-level set -p "org.apache.kafka.connect.runtime.TransformationChain" -l $level
 
   items=($connector)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "✨ --connector flag was not provided, applying command to all connectors"
+  fi
   for connector in ${items[@]}
   do
       tmp=$(curl -s $security "$connect_url/connectors/$connector" | jq -r '.config."connector.class"')
