@@ -13,7 +13,7 @@ The clients are connected to `europe` cluster.
 N.B: we have dedicated zookepper and broker for metrics.
 
 * Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
-* Grafana is reachable at [http://127.0.0.1:3000](http://127.0.0.1:3000]) (login/password is `admin/admin`)
+* Grafana is reachable at [http://127.0.0.1:3000](http://127.0.0.1:3000]) (login/password is `admin/password`)
 * Prometheus is reachable at [http://127.0.0.1:9090](http://127.0.0.1:9090])
 
 
@@ -27,6 +27,6 @@ N.B: we have dedicated zookepper and broker for metrics.
 
 ![AWS CloudFormation](./images/Screenshot1.png)
 
-* After about 15 minutes, the stack will be created and you can see in *outputs* tab the URLs for connecting to Control Center and Grafana (`admin`/`admin`)
+* After about 15 minutes, the stack will be created and you can see in *outputs* tab the URLs for connecting to Control Center and Grafana (`admin`/`password`)
 
 ![AWS CloudFormation](./images/Screenshot6.png)

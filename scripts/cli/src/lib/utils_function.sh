@@ -752,7 +752,7 @@ function display_jmx_info() {
   else
     log "🛡️ Prometheus is reachable at http://127.0.0.1:9090"
     log "📛 Pyroscope is reachable at http://127.0.0.1:4040"
-    log "📊 Grafana is reachable at http://127.0.0.1:3000 or JMX metrics are available locally on those ports:"
+    log "📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/password) or JMX metrics are available locally on those ports:"
   fi  
   log "    - zookeeper       : 9999"
   log "    - broker          : 10000"
