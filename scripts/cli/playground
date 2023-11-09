@@ -1394,7 +1394,7 @@ playground_repro_bootstrap_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--pipeline SINK_FILE")"
+    printf "  %s\n" "$(magenta "--pipeline SINK_FILE (repeatable)")"
     printf "    🔖 Sink example file to use for creating a pipeline\n    \n    ❕ It must be absolute full path. \n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
@@ -10049,7 +10049,8 @@ playground_repro_bootstrap_command() {
   producer="${args[--producer]}"
   nb_producers="${args[--nb-producers]}"
   add_custom_smt="${args[--custom-smt]}"
-  sink_file="${args[--pipeline]}"
+  eval "pipeline_array=(${args[--pipeline]})"
+
   schema_file_key="${args[--producer-schema-key]}"
   schema_file_value="${args[--producer-schema-value]}"
 
@@ -10133,7 +10134,8 @@ playground_repro_bootstrap_command() {
   dir2="${dir1##*/}/$base1" # connect/connect-cdc-oracle12-source
   final_dir=$(echo $dir2 | tr '/' '-') # connect-connect-cdc-oracle12-source
 
-  if [[ -n "$sink_file" ]]
+  length=${#pipeline_array[@]}
+  if ((length > 0))
   then
     if [[ "$base1" != *source ]]
     then
@@ -10792,240 +10794,242 @@ playground_repro_bootstrap_command() {
     fi
 
   fi
-  if [[ -n "$sink_file" ]]
-  then
-    if [[ $sink_file == *"@"* ]]
+  for sink_file in "${pipeline_array[@]}"; do
+    if [[ -n "$sink_file" ]]
     then
-      sink_file=$(echo "$sink_file" | cut -d "@" -f 2)
-    fi
-    test_sink_file_directory="$(dirname "${sink_file}")"
+      if [[ $sink_file == *"@"* ]]
+      then
+        sink_file=$(echo "$sink_file" | cut -d "@" -f 2)
+      fi
+      test_sink_file_directory="$(dirname "${sink_file}")"
 
-    # docker-compose part
-    # determining the docker-compose file from from test_file
-    docker_compose_sink_file=$(grep "environment" "$sink_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
-    docker_compose_sink_file="${test_sink_file_directory}/${docker_compose_sink_file}"
-    cp $docker_compose_test_file /tmp/1.yml
-    cp $docker_compose_sink_file /tmp/2.yml
-    yq ". *= load(\"/tmp/1.yml\")" /tmp/2.yml > $docker_compose_test_file
-
-    connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
-    sink_connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_sink_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
-    if [ "$sink_connector_paths" == "" ]
-    then
-      logerror "cannot find CONNECT_PLUGIN_PATH in  ${docker_compose_sink_file}"
-      exit 1
-    else
-      tmp_new_connector_paths="$connector_paths,$sink_connector_paths"
-      new_connector_paths=$(echo "$tmp_new_connector_paths" | sed 's/ //g')
+      # docker-compose part
+      # determining the docker-compose file from from test_file
+      docker_compose_sink_file=$(grep "environment" "$sink_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
+      docker_compose_sink_file="${test_sink_file_directory}/${docker_compose_sink_file}"
       cp $docker_compose_test_file /tmp/1.yml
+      cp $docker_compose_sink_file /tmp/2.yml
+      yq ". *= load(\"/tmp/1.yml\")" /tmp/2.yml > $docker_compose_test_file
 
-      yq -i ".services.connect.environment.CONNECT_PLUGIN_PATH = \"$new_connector_paths\"" /tmp/1.yml
-      cp /tmp/1.yml $docker_compose_test_file
-    fi
-
-
-    # sh part
-
-    line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh' $repro_test_file | cut -d ":" -f 1 | tail -n1)
-    line_final_environment=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
-    line_sink_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh' $sink_file | cut -d ":" -f 1 | tail -n1)
-
-    line_sink_environment=$(grep -n '${DIR}/../../environment' $sink_file | cut -d ":" -f 1 | tail -n1)
-
-    # get converter info
-    source_key_converter=$(grep "\"key.converter\"" $repro_test_file | cut -d '"' -f 4)
-    if [ "$source_key_converter" == "" ]
-    then
-      log "💱 Source connector is using default key.converter, i.e org.apache.kafka.connect.storage.StringConverter"
-    else
-      if [ "$source_key_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
+      connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
+      sink_connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_sink_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
+      if [ "$sink_connector_paths" == "" ]
       then
-        # check schemas.enable
-        source_key_json_converter_schemas_enable=$(grep "\"key.converter.schemas.enable\"" $repro_test_file | cut -d '"' -f 4)
-        if [ "$source_key_json_converter_schemas_enable" == "" ]
+        logerror "cannot find CONNECT_PLUGIN_PATH in  ${docker_compose_sink_file}"
+        exit 1
+      else
+        tmp_new_connector_paths="$connector_paths,$sink_connector_paths"
+        new_connector_paths=$(echo "$tmp_new_connector_paths" | sed 's/ //g')
+        cp $docker_compose_test_file /tmp/1.yml
+
+        yq -i ".services.connect.environment.CONNECT_PLUGIN_PATH = \"$new_connector_paths\"" /tmp/1.yml
+        cp /tmp/1.yml $docker_compose_test_file
+      fi
+
+
+      # sh part
+
+      line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+      line_final_environment=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+      line_sink_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh' $sink_file | cut -d ":" -f 1 | tail -n1)
+
+      line_sink_environment=$(grep -n '${DIR}/../../environment' $sink_file | cut -d ":" -f 1 | tail -n1)
+
+      # get converter info
+      source_key_converter=$(grep "\"key.converter\"" $repro_test_file | cut -d '"' -f 4)
+      if [ "$source_key_converter" == "" ]
+      then
+        log "💱 Source connector is using default key.converter, i.e org.apache.kafka.connect.storage.StringConverter"
+      else
+        if [ "$source_key_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
         then
-          log "💱 Source connector is using key.converter $source_key_converter with schemas.enable=true"
+          # check schemas.enable
+          source_key_json_converter_schemas_enable=$(grep "\"key.converter.schemas.enable\"" $repro_test_file | cut -d '"' -f 4)
+          if [ "$source_key_json_converter_schemas_enable" == "" ]
+          then
+            log "💱 Source connector is using key.converter $source_key_converter with schemas.enable=true"
+          else
+            log "💱 Source connector is using key.converter $source_key_converter with schemas.enable=$source_key_json_converter_schemas_enable"
+          fi
         else
-          log "💱 Source connector is using key.converter $source_key_converter with schemas.enable=$source_key_json_converter_schemas_enable"
+          log "💱 Source connector is using key.converter $source_key_converter"
         fi
-      else
-        log "💱 Source connector is using key.converter $source_key_converter"
       fi
-    fi
 
-    source_value_converter=$(grep "\"value.converter\"" $repro_test_file | cut -d '"' -f 4)
-    if [ "$source_value_converter" == "" ]
-    then
-      log "💱 Source connector is using default value.converter, i.e io.confluent.connect.avro.AvroConverter"
-    else
-      if [ "$source_value_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
+      source_value_converter=$(grep "\"value.converter\"" $repro_test_file | cut -d '"' -f 4)
+      if [ "$source_value_converter" == "" ]
       then
-        # check schemas.enable
-        source_value_json_converter_schemas_enable=$(grep "\"value.converter.schemas.enable\"" $repro_test_file | cut -d '"' -f 4)
-        if [ "$source_value_json_converter_schemas_enable" == "" ]
+        log "💱 Source connector is using default value.converter, i.e io.confluent.connect.avro.AvroConverter"
+      else
+        if [ "$source_value_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
         then
-          log "💱 Source connector is using value.converter $source_value_converter with schemas.enable=true"
+          # check schemas.enable
+          source_value_json_converter_schemas_enable=$(grep "\"value.converter.schemas.enable\"" $repro_test_file | cut -d '"' -f 4)
+          if [ "$source_value_json_converter_schemas_enable" == "" ]
+          then
+            log "💱 Source connector is using value.converter $source_value_converter with schemas.enable=true"
+          else
+            log "💱 Source connector is using value.converter $source_value_converter with schemas.enable=$source_value_json_converter_schemas_enable"
+          fi
         else
-          log "💱 Source connector is using value.converter $source_value_converter with schemas.enable=$source_value_json_converter_schemas_enable"
+          log "💱 Source connector is using value.converter $source_value_converter"
         fi
-      else
-        log "💱 Source connector is using value.converter $source_value_converter"
       fi
-    fi
 
-    sink_key_converter=$(grep "\"key.converter\"" $sink_file | cut -d '"' -f 4)
-    if [ "$sink_key_converter" == "" ]
-    then
-      log "💱 Sink connector is using default key.converter, i.e org.apache.kafka.connect.storage.StringConverter"
-    else
-      if [ "$sink_key_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
-      then
-        # check schemas.enable
-        sink_key_json_converter_schemas_enable=$(grep "\"key.converter.schemas.enable\"" $sink_file | cut -d '"' -f 4)
-        if [ "$sink_key_json_converter_schemas_enable" == "" ]
-        then
-          log "💱 Sink connector is using key.converter $sink_key_converter with schemas.enable=true"
-        else
-          log "💱 Sink connector is using key.converter $sink_key_converter with schemas.enable=$sink_key_json_converter_schemas_enable"
-        fi
-      else
-        log "💱 Sink connector is using key.converter $sink_key_converter"
-      fi
-    fi
-
-    sink_value_converter=$(grep "\"value.converter\"" $sink_file | cut -d '"' -f 4)
-    if [ "$sink_value_converter" == "" ]
-    then
-      log "💱 Sink connector is using default value.converter, i.e io.confluent.connect.avro.AvroConverter"
-    else
-      if [ "$sink_value_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
-      then
-        # check schemas.enable
-        sink_value_json_converter_schemas_enable=$(grep "\"value.converter.schemas.enable\"" $sink_file | cut -d '"' -f 4)
-        if [ "$sink_value_json_converter_schemas_enable" == "" ]
-        then
-          log "💱 Sink connector is using value.converter $sink_value_converter with schemas.enable=true"
-        else
-          log "💱 Sink connector is using value.converter $sink_value_converter with schemas.enable=$sink_value_json_converter_schemas_enable"
-        fi
-      else
-        log "💱 Sink connector is using value.converter $sink_value_converter"
-      fi
-    fi
-
-    sed -n "$(($line_sink_source+1)),$(($line_sink_environment-1))p" $sink_file > $tmp_dir/pre_sink
-    cp $repro_test_file $tmp_dir/tmp_file
-
-    { head -n $(($line_final_environment-1)) $tmp_dir/tmp_file; cat $tmp_dir/pre_sink; tail -n +$line_final_environment $tmp_dir/tmp_file; } > $repro_test_file
-
-    sed -n "$(($line_sink_environment+1)),$ p" $sink_file > $tmp_dir/tmp_file
-
-    # deal with converters
-    set +e
-    if [ "$source_value_converter" == "" ] && [ "$sink_value_converter" == "" ]
-    then
-      # do nothing
-      :
-    else
-      grep "\"value.converter" $repro_test_file > $tmp_dir/source_value_converter
-      if [ "$sink_value_converter" == "" ]
-      then
-        line=$(grep -n 'connector.class' $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
-
-        { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_value_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
-        cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
-      else
-        # remove existing value.converter
-        grep -vwE "\"value.converter" $tmp_dir/tmp_file > $tmp_dir/tmp_file2
-        cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
-
-        line=$(grep -n 'connector.class' $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
-
-        { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_value_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
-        cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
-      fi
-      log "🔮 Changing Sink connector value.converter to use same as source:"
-      cat $tmp_dir/source_value_converter
-    fi
-    if [ "$source_key_converter" == "" ] && [ "$sink_key_converter" == "" ]
-    then
-      # do nothing
-      :
-    else
-      grep "\"key.converter" $repro_test_file > $tmp_dir/source_key_converter
+      sink_key_converter=$(grep "\"key.converter\"" $sink_file | cut -d '"' -f 4)
       if [ "$sink_key_converter" == "" ]
       then
-        line=$(grep -n 'connector.class' $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
-
-        { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_key_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
-        cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
+        log "💱 Sink connector is using default key.converter, i.e org.apache.kafka.connect.storage.StringConverter"
       else
-        # remove existing key.converter
-        grep -vwE "\"key.converter" $tmp_dir/tmp_file > $tmp_dir/tmp_file2
-        cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
-
-        line=$(grep -n 'connector.class' $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
-
-        { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_key_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
-        cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
-      fi
-      log "🔮 Changing Sink connector key.converter to use same as source:"
-      cat $tmp_dir/source_key_converter
-    fi
-    set -e
-    # need to remove cli which produces and change topic
-    kafka_cli_producer_error=0
-    kafka_cli_producer_eof=0
-    line_kafka_cli_producer=$(egrep -n "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
-    if [ $? != 0 ]
-    then
-        logwarn "Could not find kafka cli producer!"
-        kafka_cli_producer_error=1
-    fi
-    set +e
-    egrep "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | grep EOF > /dev/null
-    if [ $? = 0 ]
-    then
-        kafka_cli_producer_eof=1
-
-        sed -n "$line_kafka_cli_producer,$(($line_kafka_cli_producer + 10))p" $tmp_dir/tmp_file > /tmp/tmp
-        tmp=$(grep -n "^EOF" /tmp/tmp | cut -d ":" -f 1 | tail -n1)
-        if [ $tmp == "" ]
+        if [ "$sink_key_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
         then
-          logwarn "Could not determine EOF for kafka cli producer!"
-          kafka_cli_producer_error=1
+          # check schemas.enable
+          sink_key_json_converter_schemas_enable=$(grep "\"key.converter.schemas.enable\"" $sink_file | cut -d '"' -f 4)
+          if [ "$sink_key_json_converter_schemas_enable" == "" ]
+          then
+            log "💱 Sink connector is using key.converter $sink_key_converter with schemas.enable=true"
+          else
+            log "💱 Sink connector is using key.converter $sink_key_converter with schemas.enable=$sink_key_json_converter_schemas_enable"
+          fi
+        else
+          log "💱 Sink connector is using key.converter $sink_key_converter"
         fi
-        line_kafka_cli_producer_end=$(($line_kafka_cli_producer + $tmp))
-    fi
-
-    if [ $kafka_cli_producer_error == 0 ]
-    then
-      if [ $kafka_cli_producer_eof == 0 ]
-      then
-        line_kafka_cli_producer_end=$(($line_kafka_cli_producer + 1))
       fi
-      { head -n $(($line_kafka_cli_producer - 2)) $tmp_dir/tmp_file; tail -n +$line_kafka_cli_producer_end $tmp_dir/tmp_file; } >  $tmp_dir/tmp_file2
-      cat  $tmp_dir/tmp_file2 >> $repro_test_file
-    fi
-    set -e
 
-    awk -F'--topic ' '{print $2}' $repro_test_file > $tmp_dir/tmp
-    sed '/^$/d' $tmp_dir/tmp > $tmp_dir/tmp2
-    original_topic_name=$(head -1 $tmp_dir/tmp2 | cut -d " " -f1)
+      sink_value_converter=$(grep "\"value.converter\"" $sink_file | cut -d '"' -f 4)
+      if [ "$sink_value_converter" == "" ]
+      then
+        log "💱 Sink connector is using default value.converter, i.e io.confluent.connect.avro.AvroConverter"
+      else
+        if [ "$sink_value_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
+        then
+          # check schemas.enable
+          sink_value_json_converter_schemas_enable=$(grep "\"value.converter.schemas.enable\"" $sink_file | cut -d '"' -f 4)
+          if [ "$sink_value_json_converter_schemas_enable" == "" ]
+          then
+            log "💱 Sink connector is using value.converter $sink_value_converter with schemas.enable=true"
+          else
+            log "💱 Sink connector is using value.converter $sink_value_converter with schemas.enable=$sink_value_json_converter_schemas_enable"
+          fi
+        else
+          log "💱 Sink connector is using value.converter $sink_value_converter"
+        fi
+      fi
 
-    if [ "$original_topic_name" != "" ]
-    then
+      sed -n "$(($line_sink_source+1)),$(($line_sink_environment-1))p" $sink_file > $tmp_dir/pre_sink
       cp $repro_test_file $tmp_dir/tmp_file
-      line=$(grep -n '"topics"' $repro_test_file | cut -d ":" -f 1 | tail -n1)
 
-      echo "              \"topics\": \"$original_topic_name\"," > $tmp_dir/topic_line
-      { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/topic_line; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $repro_test_file
-    else
+      { head -n $(($line_final_environment-1)) $tmp_dir/tmp_file; cat $tmp_dir/pre_sink; tail -n +$line_final_environment $tmp_dir/tmp_file; } > $repro_test_file
 
-      logwarn "Could not find original topic name! "
-      logwarn "You would need to change topics config for sink by yourself."
+      sed -n "$(($line_sink_environment+1)),$ p" $sink_file > $tmp_dir/tmp_file
+
+      # deal with converters
+      set +e
+      if [ "$source_value_converter" == "" ] && [ "$sink_value_converter" == "" ]
+      then
+        # do nothing
+        :
+      else
+        grep "\"value.converter" $repro_test_file > $tmp_dir/source_value_converter
+        if [ "$sink_value_converter" == "" ]
+        then
+          line=$(grep -n 'connector.class' $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
+
+          { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_value_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
+          cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
+        else
+          # remove existing value.converter
+          grep -vwE "\"value.converter" $tmp_dir/tmp_file > $tmp_dir/tmp_file2
+          cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
+
+          line=$(grep -n 'connector.class' $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
+
+          { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_value_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
+          cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
+        fi
+        log "🔮 Changing Sink connector value.converter to use same as source:"
+        cat $tmp_dir/source_value_converter
+      fi
+      if [ "$source_key_converter" == "" ] && [ "$sink_key_converter" == "" ]
+      then
+        # do nothing
+        :
+      else
+        grep "\"key.converter" $repro_test_file > $tmp_dir/source_key_converter
+        if [ "$sink_key_converter" == "" ]
+        then
+          line=$(grep -n 'connector.class' $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
+
+          { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_key_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
+          cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
+        else
+          # remove existing key.converter
+          grep -vwE "\"key.converter" $tmp_dir/tmp_file > $tmp_dir/tmp_file2
+          cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
+
+          line=$(grep -n 'connector.class' $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
+
+          { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_key_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
+          cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
+        fi
+        log "🔮 Changing Sink connector key.converter to use same as source:"
+        cat $tmp_dir/source_key_converter
+      fi
+      set -e
+      # need to remove cli which produces and change topic
+      kafka_cli_producer_error=0
+      kafka_cli_producer_eof=0
+      line_kafka_cli_producer=$(egrep -n "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
+      if [ $? != 0 ]
+      then
+          logwarn "Could not find kafka cli producer!"
+          kafka_cli_producer_error=1
+      fi
+      set +e
+      egrep "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | grep EOF > /dev/null
+      if [ $? = 0 ]
+      then
+          kafka_cli_producer_eof=1
+
+          sed -n "$line_kafka_cli_producer,$(($line_kafka_cli_producer + 10))p" $tmp_dir/tmp_file > /tmp/tmp
+          tmp=$(grep -n "^EOF" /tmp/tmp | cut -d ":" -f 1 | tail -n1)
+          if [ $tmp == "" ]
+          then
+            logwarn "Could not determine EOF for kafka cli producer!"
+            kafka_cli_producer_error=1
+          fi
+          line_kafka_cli_producer_end=$(($line_kafka_cli_producer + $tmp))
+      fi
+
+      if [ $kafka_cli_producer_error == 0 ]
+      then
+        if [ $kafka_cli_producer_eof == 0 ]
+        then
+          line_kafka_cli_producer_end=$(($line_kafka_cli_producer + 1))
+        fi
+        { head -n $(($line_kafka_cli_producer - 2)) $tmp_dir/tmp_file; tail -n +$line_kafka_cli_producer_end $tmp_dir/tmp_file; } >  $tmp_dir/tmp_file2
+        cat  $tmp_dir/tmp_file2 >> $repro_test_file
+      fi
+      set -e
+
+      awk -F'--topic ' '{print $2}' $repro_test_file > $tmp_dir/tmp
+      sed '/^$/d' $tmp_dir/tmp > $tmp_dir/tmp2
+      original_topic_name=$(head -1 $tmp_dir/tmp2 | cut -d " " -f1)
+
+      if [ "$original_topic_name" != "" ]
+      then
+        cp $repro_test_file $tmp_dir/tmp_file
+        line=$(grep -n '"topics"' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+
+        echo "              \"topics\": \"$original_topic_name\"," > $tmp_dir/topic_line
+        { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/topic_line; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $repro_test_file
+      else
+
+        logwarn "Could not find original topic name! "
+        logwarn "You would need to change topics config for sink by yourself."
+      fi
     fi
-  fi
+  done
 
   cat $repro_test_file > $tmp_dir/tmp_file
 
@@ -18151,7 +18155,11 @@ playground_repro_bootstrap_parse_requirements() {
             exit 1
           fi
 
-          args['--pipeline']="$2"
+          if [[ -z ${args['--pipeline']+x} ]]; then
+            args['--pipeline']="\"$2\""
+          else
+            args['--pipeline']="${args[--pipeline]} \"$2\""
+          fi
           shift
           shift
         else

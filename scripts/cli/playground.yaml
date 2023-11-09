@@ -882,6 +882,8 @@ subcommands:
             
             🎓 Tip: use <tab> completion to trigger fzf completion
             
+            Repeatable: ✓ Yes
+            
             Conflicts with: --producer
             
   - name: get-docker-compose

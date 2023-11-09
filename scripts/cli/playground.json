@@ -679,7 +679,7 @@
                 "--pipeline"
               ],
               "argument": "SINK_FILE",
-              "description": "🔖 Sink example file to use for creating a pipeline\n\n❕ It must be absolute full path. \n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nConflicts with: --producer\n"
+              "description": "🔖 Sink example file to use for creating a pipeline\n\n❕ It must be absolute full path. \n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRepeatable: ✓ Yes\n\nConflicts with: --producer\n"
             }
           ]
         }

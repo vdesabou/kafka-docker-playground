@@ -648,6 +648,7 @@ commands:
       validate: file_exists_with_trick
       arg: sink_file
       conflicts: [--producer]
+      repeatable: true
       completions:
         - $(playground get-examples-list-with-fzf --without-repro --sink-only "$cur")
       help: |-
