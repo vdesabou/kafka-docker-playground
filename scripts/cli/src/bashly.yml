@@ -1608,31 +1608,62 @@ commands:
 
         playground topic produce -t topic-avro --nb-messages 10 << 'EOF'
         {
-            "type": "record",
-            "namespace": "com.github.vdesabou",
-            "name": "Customer",
-            "fields": [
+          "fields": [
+            {
+              "doc": "count",
+              "name": "count",
+              "type": "long"
+            },
+            {
+              "doc": "First Name of Customer",
+              "name": "first_name",
+              "type": "string"
+            },
+            {
+              "doc": "Last Name of Customer",
+              "name": "last_name",
+              "type": "string"
+            },
+            {
+              "doc": "Address of Customer",
+              "name": "address",
+              "type": "string"
+            },
+            {
+              "name": "createdDate",
+              "type": {
+                "logicalType": "timestamp-millis",
+                "type": "long"
+              }
+            },
+            {
+              "default": null,
+              "name": "myDecimal",
+              "type": [
+                "null",
                 {
-                    "name": "count",
-                    "type": "long",
-                    "doc": "count"
-                },
-                {
-                    "name": "first_name",
-                    "type": "string",
-                    "doc": "First Name of Customer"
-                },
-                {
-                    "name": "last_name",
-                    "type": "string",
-                    "doc": "Last Name of Customer"
-                },
-                {
-                    "name": "address",
-                    "type": "string",
-                    "doc": "Address of Customer"
+                  "logicalType": "decimal",
+                  "precision": 15,
+                  "scale": 2,
+                  "type": "bytes"
                 }
-            ]
+              ]
+            },
+            {
+              "default": null,
+              "name": "warranty_expiration",
+              "type": [
+                "null",
+                {
+                  "logicalType": "date",
+                  "type": "int"
+                }
+              ]
+            }
+          ],
+          "name": "Customer",
+          "namespace": "com.github.vdesabou",
+          "type": "record"
         }
         EOF
 
@@ -1695,6 +1726,236 @@ commands:
 
         playground topic produce -t topic-json --nb-messages 1 --producer-property "max.request.size=990485760" < bigjson.json
 
+        playground topic produce -t topic-string --nb-messages 5000 << 'EOF'
+        Ad et ut pariatur officia eos.
+        Nesciunt fugit nam libero ut qui itaque sed earum at itaque nesciunt eveniet atque.
+        Quidem libero quis quod et illum excepturi voluptas et in perspiciatis iusto neque.
+        Quibusdam commodi explicabo dolores molestiae qui delectus dolorum fugiat molestiae natus assumenda omnis expedita.
+        Et sunt aut architecto suscipit fugiat qui voluptate iure vel doloremque eum culpa.
+        Qui enim facilis eos similique aperiam totam eius et at dolor dolores.
+        Ut sunt quia qui quia consectetur aut reiciendis.
+        Modi adipisci iusto aut voluptatem dolores laudantium.
+        Sequi sint quia quibusdam molestias minus et aliquid voluptatum aliquam.
+        Rerum aut amet quo possimus nihil velit quisquam ut cumque.
+        Pariatur ad officiis voluptatibus quia vel corporis ea fugit adipisci porro.
+        EOF
+
+        # key and headers
+        # mykey1 %g can also be used
+        playground topic produce -t topic-json-multiple-lines --nb-messages 10 --key "mykey1" --headers "header1:value1,header2:value2" << 'EOF'
+        {"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
+        {"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
+        {"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
+        EOF
+
+        # tombstone
+        playground topic produce -t topic-json-multiple-lines --tombstone --key "mykey1"
+
+        # input file
+        playground topic produce -t topic-avro-example3 < avro-schema.avsc
+
+        # record-size
+        playground topic produce -t topic-avro-example-big-size --nb-messages 3 --record-size 10000000 << 'EOF'
+        {
+          "fields": [
+            {
+              "doc": "count",
+              "name": "count",
+              "type": "long"
+            },
+            {
+              "doc": "First Name of Customer",
+              "name": "first_name",
+              "type": "string"
+            },
+            {
+              "doc": "Last Name of Customer",
+              "name": "last_name",
+              "type": "string"
+            },
+            {
+              "doc": "Address of Customer",
+              "name": "address",
+              "type": "string"
+            }
+          ],
+          "name": "Customer",
+          "namespace": "com.github.vdesabou",
+          "type": "record"
+        }
+        EOF
+
+        # validate
+        playground topic produce -t topic-json-schema-validate --nb-messages 3 --validate << 'EOF'
+        {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "$id": "http://lh.test/Customer.schema.json",
+          "title": "Customer",
+          "description": "Customer description",
+          "type": "object",
+          "properties": {
+            "name": {
+              "description": "Customer name",
+              "type": "string",
+              "maxLength": 25
+            },
+            "surname": {
+              "description": "Customer surname",
+              "type": "string",
+              "minLength": 2
+            },
+            "email": {
+              "description": "Email",
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"
+            },
+            "holiday": {
+              "oneOf": [
+                {
+                  "title": "Not included",
+                  "type": "null"
+                },
+                {}
+              ]
+            },
+            "f2": {}
+          },
+          "required": [
+            "name",
+            "surname"
+          ]
+        }
+        EOF
+
+        #  --value-subject-name-strategy
+        playground topic produce -t topic-avro-example-value-subject-name-strategy --nb-messages 10 --value-subject-name-strategy TopicRecordNameStrategy << 'EOF'
+        {
+          "fields": [
+            {
+              "doc": "count",
+              "name": "count",
+              "type": "long"
+            },
+            {
+              "doc": "First Name of Customer",
+              "name": "first_name",
+              "type": "string"
+            },
+            {
+              "doc": "Last Name of Customer",
+              "name": "last_name",
+              "type": "string"
+            },
+            {
+              "doc": "Address of Customer",
+              "name": "address",
+              "type": "string"
+            }
+          ],
+          "name": "Customer",
+          "namespace": "com.github.vdesabou",
+          "type": "record"
+        }
+        EOF
+
+        # --generate-only
+        playground topic produce -t topic-avro-example-forced-value --nb-messages 10  --generate-only << 'EOF'
+        {
+          "fields": [
+            {
+              "doc": "count",
+              "name": "count",
+              "type": "long"
+            },
+            {
+              "doc": "First Name of Customer",
+              "name": "first_name",
+              "type": "string"
+            },
+            {
+              "doc": "Last Name of Customer",
+              "name": "last_name",
+              "type": "string"
+            },
+            {
+              "doc": "Address of Customer",
+              "name": "address",
+              "type": "string"
+            },
+            {
+              "name": "createdDate",
+              "type": {
+                "logicalType": "timestamp-millis",
+                "type": "long"
+              }
+            },
+            {
+              "default": null,
+              "name": "warranty_expiration",
+              "type": [
+                "null",
+                {
+                  "logicalType": "date",
+                  "type": "int"
+                }
+              ]
+            }
+          ],
+          "name": "Customer",
+          "namespace": "com.github.vdesabou",
+          "type": "record"
+        }
+        EOF
+
+        # --forced-value
+        playground topic produce -t topic-avro-example-forced-value --nb-messages 1 --forced-value '{"count":4,"first_name":"Vincent","last_name":"de Saboulin","address":"xxx","createdDate":1697852606000,"warranty_expiration":{"int":19653}}' << 'EOF'
+        {
+          "fields": [
+            {
+              "doc": "count",
+              "name": "count",
+              "type": "long"
+            },
+            {
+              "doc": "First Name of Customer",
+              "name": "first_name",
+              "type": "string"
+            },
+            {
+              "doc": "Last Name of Customer",
+              "name": "last_name",
+              "type": "string"
+            },
+            {
+              "doc": "Address of Customer",
+              "name": "address",
+              "type": "string"
+            },
+            {
+              "name": "createdDate",
+              "type": {
+                "logicalType": "timestamp-millis",
+                "type": "long"
+              }
+            },
+            {
+              "default": null,
+              "name": "warranty_expiration",
+              "type": [
+                "null",
+                {
+                  "logicalType": "date",
+                  "type": "int"
+                }
+              ]
+            }
+          ],
+          "name": "Customer",
+          "namespace": "com.github.vdesabou",
+          "type": "record"
+        }
+        EOF
     - name: create
       group: Topic
       help: |-
