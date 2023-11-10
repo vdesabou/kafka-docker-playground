@@ -652,7 +652,7 @@ commands:
       completions:
         - $(playground get-examples-list-with-fzf --without-repro --sink-only "$cur")
       help: |-
-        🔖 Sink example file to use for creating a pipeline
+        🔖 Sink example file to use for creating a pipeline. multiple --pipeline flags can be used to create a pipeline with multiple sinks.
         
         ❕ It must be absolute full path. 
 

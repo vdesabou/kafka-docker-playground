@@ -1395,7 +1395,7 @@ playground_repro_bootstrap_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--pipeline SINK_FILE (repeatable)")"
-    printf "    🔖 Sink example file to use for creating a pipeline\n    \n    ❕ It must be absolute full path. \n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🔖 Sink example file to use for creating a pipeline. multiple --pipeline\n    flags can be used to create a pipeline with multiple sinks.\n    \n    ❕ It must be absolute full path. \n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :command.usage_fixed_flags

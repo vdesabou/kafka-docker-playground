@@ -876,7 +876,7 @@ subcommands:
           - --pipeline
           argument: SINK_FILE
           description: | 
-            🔖 Sink example file to use for creating a pipeline
+            🔖 Sink example file to use for creating a pipeline. multiple --pipeline flags can be used to create a pipeline with multiple sinks.
             
             ❕ It must be absolute full path. 
             
