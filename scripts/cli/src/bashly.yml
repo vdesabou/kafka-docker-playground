@@ -1496,7 +1496,17 @@ commands:
           Example: key%g will start with key1, then key2, etc..
 
           Otherwise, the key will be same for all records.
-          
+        conflicts:
+          - "key-schema"
+
+      - long: --key-schema
+        arg: key-schema
+        required: false
+        help: |-
+          🗝️ Key schema to use. Must be same schema type as value.
+        conflicts:
+          - "key"
+
       - long: --headers
         arg: headers
         required: false

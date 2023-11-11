@@ -1560,7 +1560,14 @@
                 "--key"
               ],
               "argument": "KEY",
-              "description": "🗝️ Key to use. If not set, no key is used.\n\nIf the key contain a number, it will be used as starting point and incremented for each record. \n\nExample: key1 will start with key1, then key2, etc..\nExample: mykey-10-suffix will start with mykey-10-suffix then mykey-11-suffix, etc..\n\n\"%g\" can also be used to generate a counter\n\nExample: key%g will start with key1, then key2, etc..\n\nOtherwise, the key will be same for all records.\n"
+              "description": "🗝️ Key to use. If not set, no key is used.\n\nIf the key contain a number, it will be used as starting point and incremented for each record. \n\nExample: key1 will start with key1, then key2, etc..\nExample: mykey-10-suffix will start with mykey-10-suffix then mykey-11-suffix, etc..\n\n\"%g\" can also be used to generate a counter\n\nExample: key%g will start with key1, then key2, etc..\n\nOtherwise, the key will be same for all records.\n\nConflicts with: key-schema\n"
+            },
+            {
+              "names": [
+                "--key-schema"
+              ],
+              "argument": "KEY-SCHEMA",
+              "description": "🗝️ Key schema to use. Must be same schema type as value.\n\nConflicts with: key\n"
             },
             {
               "names": [

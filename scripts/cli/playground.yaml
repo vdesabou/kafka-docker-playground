@@ -1762,6 +1762,16 @@ subcommands:
             
             Otherwise, the key will be same for all records.
             
+            Conflicts with: key-schema
+            
+        - names:
+          - --key-schema
+          argument: KEY-SCHEMA
+          description: | 
+            🗝️ Key schema to use. Must be same schema type as value.
+            
+            Conflicts with: key
+            
         - names:
           - --headers
           argument: HEADERS
