@@ -1494,9 +1494,16 @@
           "options": [
             {
               "names": [
-                "--input"
+                "--key"
               ],
-              "argument": "INPUT",
+              "argument": "KEY",
+              "description": "🗝️ Key to use. If not set, no key is used.\n\n🔥 You can either:\n\n* Set your own schema (avro, json-schema, protobuf) with stdin (see example section). \n\n* You can also generate json data using json or sql format using syntax from https://github.com/MaterializeInc/datagen\n\n* Use completion to select predefined schemas (or use your own schema file) 🎓 Tip: use <tab> completion to trigger fzf completion\n\n* Directly set payload (\"%g\" can be used to generate a counter)\n"
+            },
+            {
+              "names": [
+                "--value"
+              ],
+              "argument": "VALUE",
               "description": "🔥 You can either:\n\n* Set your own schema (avro, json-schema, protobuf) with stdin (see example section). \n\n* You can also generate json data using json or sql format using syntax from https://github.com/MaterializeInc/datagen\n\n* Use completion to select predefined schemas (or use your own schema file) 🎓 Tip: use <tab> completion to trigger fzf completion\n\n* Directly set payload (\"%g\" can be used to generate a counter)\n\nDefault value: -\n"
             },
             {
@@ -1554,20 +1561,6 @@
                 "TopicRecordNameStrategy"
               ],
               "description": "Value Subject Name Strategy\n\nAllowed values: TopicNameStrategy, RecordNameStrategy, TopicRecordNameStrategy\n"
-            },
-            {
-              "names": [
-                "--key"
-              ],
-              "argument": "KEY",
-              "description": "🗝️ Key to use. If not set, no key is used.\n\nIf the key contain a number, it will be used as starting point and incremented for each record. \n\nExample: key1 will start with key1, then key2, etc..\nExample: mykey-10-suffix will start with mykey-10-suffix then mykey-11-suffix, etc..\n\n\"%g\" can also be used to generate a counter\n\nExample: key%g will start with key1, then key2, etc..\n\nOtherwise, the key will be same for all records.\n\nConflicts with: key-schema\n"
-            },
-            {
-              "names": [
-                "--key-schema"
-              ],
-              "argument": "KEY-SCHEMA",
-              "description": "🗝️ Key schema to use. Must be same schema type as value.\n\nConflicts with: key\n"
             },
             {
               "names": [

@@ -2,9 +2,8 @@ topic="${args[--topic]}"
 verbose="${args[--verbose]}"
 nb_messages="${args[--nb-messages]}"
 nb_partitions="${args[--nb-partitions]}"
-schema="${args[--input]}"
+schema="${args[--value]}"
 key="${args[--key]}"
-key_schema="${args[--key-schema]}"
 headers="${args[--headers]}"
 forced_value="${args[--forced-value]}"
 generate_only="${args[--generate-only]}"
@@ -19,8 +18,11 @@ eval "producer_property=(${args[--producer-property]})"
 
 
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-#trap 'rm -rf $tmp_dir' EXIT
-log "tmp_dir is $tmp_dir"
+trap 'rm -rf $tmp_dir' EXIT
+
+# debug
+# logwarn "DEBUG mode is on"
+# trap 'code $tmp_dir' EXIT
 key_schema_file=$tmp_dir/key_schema
 value_schema_file=$tmp_dir/value_schema
 
@@ -111,7 +113,7 @@ source $root_folder/scripts/utils.sh
 
 if [[ -n "$tombstone" ]]
 then
-    if [[ ! -n "$key" ]] && [[ ! -n "$key_schema" ]]
+    if [[ ! -n "$key" ]]
     then
         logerror "❌ --tombstone is set but neither --key or --key-schema are set!"
         exit 1
@@ -145,59 +147,59 @@ then
     fi
 fi
 
-if [[ -n "$key_schema" ]]
-then
-    echo "$key_schema" > $key_schema_file
-    if grep -q "proto3" $key_schema_file
+function identify_schema() {
+    schema_file=$1
+    type=$2
+
+    if grep -q "proto3" $schema_file
     then
-        log "🔮🔑 key schema was identified as protobuf"
-        key_schema_type=protobuf
-    elif grep -q "\"type\"\s*:\s*\"object\"" $key_schema_file
+        log "🔮 $type schema was identified as protobuf"
+        schema_type=protobuf
+    elif grep -q "\"type\"\s*:\s*\"object\"" $schema_file
     then
-        log "🔮🔑 key schema was identified as json schema"
-        key_schema_type=json-schema
-    elif grep -q "_meta" $key_schema_file
+        log "🔮 $type schema was identified as json schema"
+        schema_type=json-schema
+    elif grep -q "_meta" $schema_file
     then
-        log "🔮🔑 key schema was identified as json"
-        key_schema_type=json
-    elif grep -q "CREATE TABLE" $key_schema_file
+        log "🔮 $type schema was identified as json"
+        schema_type=json
+    elif grep -q "CREATE TABLE" $schema_file
     then
-        log "🔮🔑 key schema was identified as sql"
-        key_schema_type=sql
-    elif grep -q "\"type\"\s*:\s*\"record\"" $key_schema_file
+        log "🔮 $type schema was identified as sql"
+        schema_type=sql
+    elif grep -q "\"type\"\s*:\s*\"record\"" $schema_file
     then
-        log "🔮🔑 key schema was identified as avro"
-        key_schema_type=avro
+        log "🔮 $type schema was identified as avro"
+        schema_type=avro
     else
         log "📢 no known schema could be identified, payload will be sent as raw data"
-        key_schema_type=raw
+        schema_type=raw
+    fi
+}
+
+if [[ -n "$key" ]]
+then
+    echo "$key" > "$key_schema_file"
+    identify_schema "$key_schema_file" "key"
+    key_schema_type=$schema_type
+fi
+
+identify_schema "$value_schema_file" "value"
+value_schema_type=$schema_type
+
+if [[ -n "$key" ]]
+then
+    if ([ "$key_schema_type" = "avro" ] || [ "$key_schema_type" = "protobuf" ] || [ "$key_schema_type" = "json-schema" ]) && 
+        ([ "$value_schema_type" = "avro" ] || [ "$value_schema_type" = "protobuf" ] || [ "$value_schema_type" = "json-schema" ])
+    then
+        if [ "$key_schema_type" != "$value_schema_type" ]
+        then
+            logerror "❌ both key and schemas are set with schema registry aware converters, but they are not the same"
+            exit 1
+        fi
     fi
 fi
 
-if grep -q "proto3" $value_schema_file
-then
-    log "🔮 value schema was identified as protobuf"
-    value_schema_type=protobuf
-elif grep -q "\"type\"\s*:\s*\"object\"" $value_schema_file
-then
-    log "🔮 value schema was identified as json schema"
-    value_schema_type=json-schema
-elif grep -q "_meta" $value_schema_file
-then
-    log "🔮 value schema was identified as json"
-    value_schema_type=json
-elif grep -q "CREATE TABLE" $value_schema_file
-then
-    log "🔮 value schema was identified as sql"
-    value_schema_type=sql
-elif grep -q "\"type\"\s*:\s*\"record\"" $value_schema_file
-then
-    log "🔮 value schema was identified as avro"
-    value_schema_type=avro
-else
-    log "📢 no known schema could be identified, payload will be sent as raw data"
-    value_schema_type=raw
-fi
 log "✨ generating data..."
 if [ "$value_schema_type" == "protobuf" ]
 then
@@ -219,14 +221,12 @@ then
         nb_messages=1
     fi
 fi
-input_key_file=""
-input_value_file=""
 
 function generate_data() {
     schema_type=$1
     schema_file=$2
     output_file=$3
-    
+    input_file=""
 
     case "${schema_type}" in
         json|sql)
@@ -242,28 +242,29 @@ function generate_data() {
                 exit 1
             fi
             set -e
-            cat $tmp_dir/result.log | grep "Payload: " | sed 's/Payload: //' > $tmp_dir/$output_file.json
+            cat $tmp_dir/result.log | grep "Payload: " | sed 's/Payload: //' > $tmp_dir/out.json
         ;;
         avro)
-            docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/$output_file.avro --schema-file /tmp/value_schema --count $nb_messages_to_generate
-            docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/$output_file.avro > $tmp_dir/$output_file.json
+            schema_file_name="$(basename "${schema_file}")"
+            docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/$schema_file_name --count $nb_messages_to_generate
+            docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
         ;;
         json-schema)
-            docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate vdesabou/json-schema-faker > $tmp_dir/$output_file.json
+            docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate vdesabou/json-schema-faker > $tmp_dir/out.json
         ;;
         protobuf)
             # https://github.com/JasonkayZK/mock-protobuf.js
-            docker run --rm -v $tmp_dir:/tmp/ -v $schema_file:/app/schema.proto -e NB_MESSAGES=$nb_messages_to_generate vdesabou/protobuf-faker  > $tmp_dir/$output_file.json
+            docker run --rm -v $tmp_dir:/tmp/ -v $schema_file:/app/schema.proto -e NB_MESSAGES=$nb_messages_to_generate vdesabou/protobuf-faker  > $tmp_dir/out.json
         ;;
         raw)
             if jq -e . >/dev/null 2>&1 <<< "$(cat "$schema_file")"
             then
                 log "💫 payload is single json, it will be sent as one record"
                 jq -c . "$schema_file" > $tmp_dir/minified.json
-                input_value_file=$tmp_dir/minified.json
+                input_file=$tmp_dir/minified.json
             else
                 log "💫 payload is not single json, one record per line will be sent"
-                input_value_file=$schema_file
+                input_file=$schema_file
             fi
         ;;
         *)
@@ -271,80 +272,14 @@ function generate_data() {
             exit 1
         ;;
     esac
-}
 
-if [[ -n "$forced_value" ]]
-then
-    log "☢️ --forced-value is set"
-    echo "$forced_value" > $tmp_dir/out_value.json
-else
-    SECONDS=0
-    generate_data "$value_schema_type" "$value_schema_file"
-fi
+    if [ "$input_file" = "" ]
+    then
+        input_file=$tmp_dir/out.json
+    fi
 
-if [[ -n "$key_schema" ]]
-then
-    case "${key_schema_type}" in
-        json|sql)
-            # https://github.com/MaterializeInc/datagen
-            set +e
-            docker run --rm -i -v $key_schema_file:/app/schema.$key_schema_type materialize/datagen -s schema.$key_schema_type -n $nb_messages_to_generate --dry-run > $tmp_dir/result.log
-            
-            nb=$(grep -c "Payload: " $tmp_dir/result.log)
-            if [ $nb -eq 0 ]
-            then
-                logerror "❌ materialize/datagen failed to produce $key_schema_type "
-                cat $tmp_dir/result.log
-                exit 1
-            fi
-            set -e
-            cat $tmp_dir/result.log | grep "Payload: " | sed 's/Payload: //' > $tmp_dir/out_key.json
-        ;;
-        avro)
-            docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out_key.avro --schema-file /tmp/key_schema --count $nb_messages_to_generate
-            docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out_key.avro > $tmp_dir/out_key.json
-        ;;
-        json-schema)
-            docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate vdesabou/json-schema-faker > $tmp_dir/out_key.json
-        ;;
-        protobuf)
-            # https://github.com/JasonkayZK/mock-protobuf.js
-            docker run --rm -v $tmp_dir:/tmp/ -v $key_schema_file:/app/schema.proto -e NB_MESSAGES=$nb_messages_to_generate vdesabou/protobuf-faker  > $tmp_dir/out_key.json
-        ;;
-        raw)
-            if jq -e . >/dev/null 2>&1 <<< "$(cat "$key_schema_file")"
-            then
-                log "💫 payload is single json, it will be sent as one record"
-                jq -c . "$key_schema_file" > $tmp_dir/minified.json
-                input_value_file=$tmp_dir/minified.json
-            else
-                log "💫 payload is not single json, one record per line will be sent"
-                input_value_file=$key_schema_file
-            fi
-        ;;
-        *)
-            logerror "❌ key_schema_type name not valid ! Should be one of raw, json, avro, json-schema or protobuf"
-            exit 1
-        ;;
-    esac
-fi
-
-if [ "$input_key_file" = "" ]
-then
-    input_key_file=$tmp_dir/out_key.json
-fi
-if [ "$input_value_file" = "" ]
-then
-    input_value_file=$tmp_dir/out_value.json
-fi
-output_key_file=$tmp_dir/out_key_final.json
-output_value_file=$tmp_dir/out_value_final.json
-record_size_temp_file_line=$tmp_dir/line.json
-record_size_temp_file_output=$tmp_dir/output.json
-
-function generate_final_data() {
-    input_file=$1
-    output_file=$2
+    record_size_temp_file_line=$tmp_dir/line.json
+    record_size_temp_file_output=$tmp_dir/output.json
     max_batch=300000
     lines_count=0
     stop=0
@@ -417,12 +352,24 @@ function generate_final_data() {
     done
 }
 
-if [[ -n "$key_schema" ]]
+output_key_file=$tmp_dir/out_key_final.json
+output_value_file=$tmp_dir/out_value_final.json
+output_key_and_value_file=$tmp_dir/out_key_and_value_final.json
+
+if [[ -n "$forced_value" ]]
 then
-    log "generate data for key"
-    generate_final_data "$input_key_file" "$output_key_file"
+    log "☢️ --forced-value is set"
+    echo "$forced_value" > $tmp_dir/out_value.json
+else
+    SECONDS=0
+    generate_data "$value_schema_type" "$value_schema_file" "$output_value_file"
 fi
-generate_final_data "$input_value_file" "$output_value_file"
+
+if [[ -n "$key" ]]
+then
+    log "generate data for key $key_schema_type $key_schema_file $output_key_file"
+    generate_data "$key_schema_type" "$key_schema_file" "$output_key_file"
+fi
 
 nb_generated_messages=$(wc -l < $output_value_file)
 nb_generated_messages=${nb_generated_messages// /}
@@ -620,38 +567,6 @@ case "${value_schema_type}" in
     ;;
 esac
 
-if [[ -n "$key" ]]
-then
-    if [[ $key =~ ^([^0-9]*)([0-9]+)([^0-9]*)$ ]]; then
-        prefix="${BASH_REMATCH[1]}"
-        number="${BASH_REMATCH[2]}"
-        suffix="${BASH_REMATCH[3]}"
-        
-        log "🗝️ key $key is set with a number $number, it will be used as starting point"
-        while read -r line
-        do
-            new_key="${prefix}${number}${suffix}"
-            echo "${new_key}|${line}" >> "$tmp_dir/temp_value_file"
-            number=$((number + 1))
-        done < "$output_value_file"
-
-        mv "$tmp_dir/temp_value_file" "$output_value_file"
-    else
-        counter=1
-        log "🗝️ key is set with a string $key, it will be used for all records"
-        while read -r line
-        do
-            if [[ $key == *"%g"* ]]
-            then
-                key=${key/\%g/$counter}
-            fi
-            echo "${key}|${line}" >> "$tmp_dir/temp_value_file"
-        done < "$output_value_file"
-
-        mv "$tmp_dir/temp_value_file" "$output_value_file"
-    fi
-fi
-
 if [[ -n "$headers" ]]
 then
     log "🚏 headers are set $headers"
@@ -719,19 +634,21 @@ do
             then
                 if [[ -n "$key" ]]
                 then
+                    # merging key and value files
+                    paste -d "|" $output_key_file $output_value_file > $output_key_and_value_file
                     if [[ -n "$headers" ]]
                     then
                         if [[ -n "$verbose" ]]
                         then
                             set -x
                         fi
-                        head -n $nb_messages_to_send $output_value_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties --property parse.key=true --property key.separator="|" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
+                        head -n $nb_messages_to_send $output_key_and_value_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties --property parse.key=true --property key.separator="|" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
                     else
                         if [[ -n "$verbose" ]]
                         then
                             set -x
                         fi
-                        head -n $nb_messages_to_send $output_value_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties --property parse.key=true --property key.separator="|" 
+                        head -n $nb_messages_to_send $output_key_and_value_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties --property parse.key=true --property key.separator="|" 
                     fi
                 else
                     if [[ -n "$headers" ]]
@@ -752,19 +669,21 @@ do
             else
                 if [[ -n "$key" ]]
                 then
+                    # merging key and value files
+                    paste -d "|" $output_key_file $output_value_file > $output_key_and_value_file
                     if [[ -n "$headers" ]]
                     then
                         if [[ -n "$verbose" ]]
                         then
                             set -x
                         fi
-                        head -n $nb_messages_to_send $output_value_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security $producer_properties --property parse.key=true --property key.separator="|" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
+                        head -n $nb_messages_to_send $output_key_and_value_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security $producer_properties --property parse.key=true --property key.separator="|" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
                     else
                         if [[ -n "$verbose" ]]
                         then
                             set -x
                         fi
-                        head -n $nb_messages_to_send $output_value_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security $producer_properties --property parse.key=true --property key.separator="|"
+                        head -n $nb_messages_to_send $output_key_and_value_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security $producer_properties --property parse.key=true --property key.separator="|"
                     fi
                 else
                     if [[ -n "$headers" ]]
@@ -794,19 +713,20 @@ do
             then
                 if [[ -n "$key" ]]
                 then
+                    paste -d "|" $output_key_file $output_value_file > $output_key_and_value_file
                     if [[ -n "$headers" ]]
                     then
                         if [[ -n "$verbose" ]]
                         then
                             set -x
                         fi
-                        head -n $nb_messages_to_send $output_value_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $value_subject_name_strategy_property $producer_properties
+                        head -n $nb_messages_to_send $output_key_and_value_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $value_subject_name_strategy_property $producer_properties
                     else
                         if [[ -n "$verbose" ]]
                         then
                             set -x
                         fi
-                        head -n $nb_messages_to_send $output_value_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer $value_subject_name_strategy_property $producer_properties
+                        head -n $nb_messages_to_send $output_key_and_value_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer $value_subject_name_strategy_property $producer_properties
                     fi
                 else
                     if [[ -n "$headers" ]]
@@ -827,19 +747,20 @@ do
             else
                 if [[ -n "$key" ]]
                 then
+                    paste -d "|" $output_key_file $output_value_file > $output_key_and_value_file
                     if [[ -n "$headers" ]]
                     then
                         if [[ -n "$verbose" ]]
                         then
                             set -x
                         fi
-                        head -n $nb_messages_to_send $output_value_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $value_subject_name_strategy_property $producer_properties
+                        head -n $nb_messages_to_send $output_key_and_value_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $value_subject_name_strategy_property $producer_properties
                     else
                         if [[ -n "$verbose" ]]
                         then
                             set -x
                         fi
-                        head -n $nb_messages_to_send $output_value_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer $value_subject_name_strategy_property $producer_properties
+                        head -n $nb_messages_to_send $output_key_and_value_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer $value_subject_name_strategy_property $producer_properties
                     fi
                 else
                     if [[ -n "$headers" ]]

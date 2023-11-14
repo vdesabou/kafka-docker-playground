@@ -1680,8 +1680,24 @@ subcommands:
         usage: playground topic produce [OPTIONS]
         options:
         - names:
-          - --input
-          argument: INPUT
+          - --key
+          argument: KEY
+          description: | 
+            🗝️ Key to use. If not set, no key is used.
+            
+            🔥 You can either:
+            
+            * Set your own schema (avro, json-schema, protobuf) with stdin (see example section). 
+            
+            * You can also generate json data using json or sql format using syntax from https://github.com/MaterializeInc/datagen
+            
+            * Use completion to select predefined schemas (or use your own schema file) 🎓 Tip: use <tab> completion to trigger fzf completion
+            
+            * Directly set payload ("%g" can be used to generate a counter)
+            
+        - names:
+          - --value
+          argument: VALUE
           description: | 
             🔥 You can either:
             
@@ -1744,33 +1760,6 @@ subcommands:
             Value Subject Name Strategy
             
             Allowed values: TopicNameStrategy, RecordNameStrategy, TopicRecordNameStrategy
-            
-        - names:
-          - --key
-          argument: KEY
-          description: | 
-            🗝️ Key to use. If not set, no key is used.
-            
-            If the key contain a number, it will be used as starting point and incremented for each record. 
-            
-            Example: key1 will start with key1, then key2, etc..
-            Example: mykey-10-suffix will start with mykey-10-suffix then mykey-11-suffix, etc..
-            
-            "%g" can also be used to generate a counter
-            
-            Example: key%g will start with key1, then key2, etc..
-            
-            Otherwise, the key will be same for all records.
-            
-            Conflicts with: key-schema
-            
-        - names:
-          - --key-schema
-          argument: KEY-SCHEMA
-          description: | 
-            🗝️ Key schema to use. Must be same schema type as value.
-            
-            Conflicts with: key
             
         - names:
           - --headers
