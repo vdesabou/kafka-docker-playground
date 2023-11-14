@@ -241,6 +241,84 @@
       "subcommands": null
     },
     {
+      "name": "start-environment",
+      "description": "🔐 Simply start an environment listed in https://kafka-docker-playground.io/#/content?id=%f0%9f%94%90-environments:\n\n- ccloud\n- 2way-ssl\n- kerberos\n- kraft-external-plaintext\n- kraft-plaintext\n- ldap-authorizer-sasl-plain\n- ldap-sasl-plain\n- mdc-kerberos\n- mdc-plaintext\n- mdc-sasl-plain\n- plaintext\n- rbac-sasl-plain\n- sasl-plain\n- sasl-scram\n- sasl-ssl\n- ssl_kerberos\n\nNote: when running an example with <playground run> or <playground run-ccloud>, it is already automatically done\n",
+      "usage": "playground start-environment [OPTIONS] [ARGUMENTS...]",
+      "options": [
+        {
+          "names": [
+            "--environment"
+          ],
+          "argument": "plaintext",
+          "description": "🔐 The environment to start . \n\n- ccloud\n- 2way-ssl\n- kerberos\n- kraft-external-plaintext\n- kraft-plaintext\n- ldap-authorizer-sasl-plain\n- ldap-sasl-plain\n- mdc-kerberos\n- mdc-plaintext\n- mdc-sasl-plain\n- plaintext\n- rbac-sasl-plain\n- sasl-plain\n- sasl-scram\n- sasl-ssl\n- ssl_kerberos\n\nDefault is plaintext\n\nDefault value: plaintext\n\nAllowed values: ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos\n"
+        },
+        {
+          "names": [
+            "--tag"
+          ],
+          "argument": "TAG",
+          "description": "🎯 Confluent Platform (CP) version to use\n\nMust be greater or equal to 5.0.0\n"
+        },
+        {
+          "names": [
+            "--enable-ksqldb"
+          ],
+          "argument": "",
+          "description": "🚀 Enable ksqlDB\n\nBy default, ksqldb-server and ksqldb-cli containers are not started for every test\n"
+        },
+        {
+          "names": [
+            "--enable-control-center"
+          ],
+          "argument": "",
+          "description": "💠 Enable Control Center\n\nBy default, control-center container is not started for every test\n\nControl Center is reachable at http://127.0.0.1:9021\n"
+        },
+        {
+          "names": [
+            "--enable-conduktor"
+          ],
+          "argument": "",
+          "description": "🐺 Enable Conduktor Platform\n\nBy default, Conduktor Platform container is not started for every test\n\nConduktor is reachable at http://127.0.0.1:8080/console (admin/admin)\n"
+        },
+        {
+          "names": [
+            "--enable-multiple-brokers"
+          ],
+          "argument": "",
+          "description": "3️⃣ Enable multiple brokers\n\nBy default, there is only one broker node enabled\n"
+        },
+        {
+          "names": [
+            "--enable-multiple-connect-workers"
+          ],
+          "argument": "",
+          "description": "🥉 Enable multiple connect node\n\nBy default, there is only one connect node enabled\n\nIt only works when plaintext environment is used\n"
+        },
+        {
+          "names": [
+            "--enable-jmx-grafana"
+          ],
+          "argument": "",
+          "description": "Enable Grafana, Prometheus and Pyroscope\n\n📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/password)\n\n🛡️ Prometheus is reachable at http://127.0.0.1:9090\n\n📛 Pyroscope is reachable at http://127.0.0.1:4040\n"
+        },
+        {
+          "names": [
+            "--enable-kcat"
+          ],
+          "argument": "",
+          "description": "🐈‍⬛ Enable kcat\n\nYou can use it with:\n\n$ docker exec kcat kcat -b broker:9092 -L\n"
+        },
+        {
+          "names": [
+            "--enable-sr-maven-plugin-app"
+          ],
+          "argument": "",
+          "description": "🔰 Enable Schema Registry Maven plugin App\n"
+        }
+      ],
+      "subcommands": null
+    },
+    {
       "name": "run-ccloud",
       "description": "⛅ Run any Confluent Cloud (ccloud) example\n\nAll you have to do is to be already logged in with confluent CLI.\n\nBy default, a new Confluent Cloud environment with a Cluster will be created.\n\nYou can configure the new cluster by setting:\n\n--cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: `basic`, `standard` and `dedicated`, default `basic`)\n--cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: `aws`, `gcp` and `azure`, default `aws`)\n--cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use `confluent kafka region list` to get the list, default `eu-west-2`)\n--cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: `env-xxxxx`) \n\nIn case you want to use your own existing cluster, you need to setup, in addition to previous ones:\n\n--cluster-name (or CLUSTER_NAME environment variable): The cluster name\n--cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with semi-colon (example: `<API_KEY>:<API_KEY_SECRET>`)\n--cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with semi-colon (example: `<SR_API_KEY>:<SR_API_KEY_SECRET>`)\n",
       "usage": "playground run-ccloud [OPTIONS] [ARGUMENTS...]",

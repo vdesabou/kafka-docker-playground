@@ -305,6 +305,142 @@ subcommands:
         This only works for Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with JDBC and Debezium
         
     subcommands:
+  - name: start-environment
+    description: | 
+        🔐 Simply start an environment listed in https://kafka-docker-playground.io/#/content?id=%f0%9f%94%90-environments:
+        
+        - ccloud
+        - 2way-ssl
+        - kerberos
+        - kraft-external-plaintext
+        - kraft-plaintext
+        - ldap-authorizer-sasl-plain
+        - ldap-sasl-plain
+        - mdc-kerberos
+        - mdc-plaintext
+        - mdc-sasl-plain
+        - plaintext
+        - rbac-sasl-plain
+        - sasl-plain
+        - sasl-scram
+        - sasl-ssl
+        - ssl_kerberos
+        
+        Note: when running an example with <playground run> or <playground run-ccloud>, it is already automatically done
+    usage: playground start-environment [OPTIONS] [ARGUMENTS...]
+    options:
+    - names:
+      - --environment
+      argument: plaintext
+      description: | 
+        🔐 The environment to start . 
+        
+        - ccloud
+        - 2way-ssl
+        - kerberos
+        - kraft-external-plaintext
+        - kraft-plaintext
+        - ldap-authorizer-sasl-plain
+        - ldap-sasl-plain
+        - mdc-kerberos
+        - mdc-plaintext
+        - mdc-sasl-plain
+        - plaintext
+        - rbac-sasl-plain
+        - sasl-plain
+        - sasl-scram
+        - sasl-ssl
+        - ssl_kerberos
+        
+        Default is plaintext
+        
+        Default value: plaintext
+        
+        Allowed values: ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos
+        
+    - names:
+      - --tag
+      argument: TAG
+      description: | 
+        🎯 Confluent Platform (CP) version to use
+        
+        Must be greater or equal to 5.0.0
+        
+    - names:
+      - --enable-ksqldb
+      argument: ""
+      description: | 
+        🚀 Enable ksqlDB
+        
+        By default, ksqldb-server and ksqldb-cli containers are not started for every test
+        
+    - names:
+      - --enable-control-center
+      argument: ""
+      description: | 
+        💠 Enable Control Center
+        
+        By default, control-center container is not started for every test
+        
+        Control Center is reachable at http://127.0.0.1:9021
+        
+    - names:
+      - --enable-conduktor
+      argument: ""
+      description: | 
+        🐺 Enable Conduktor Platform
+        
+        By default, Conduktor Platform container is not started for every test
+        
+        Conduktor is reachable at http://127.0.0.1:8080/console (admin/admin)
+        
+    - names:
+      - --enable-multiple-brokers
+      argument: ""
+      description: | 
+        3️⃣ Enable multiple brokers
+        
+        By default, there is only one broker node enabled
+        
+    - names:
+      - --enable-multiple-connect-workers
+      argument: ""
+      description: | 
+        🥉 Enable multiple connect node
+        
+        By default, there is only one connect node enabled
+        
+        It only works when plaintext environment is used
+        
+    - names:
+      - --enable-jmx-grafana
+      argument: ""
+      description: | 
+        Enable Grafana, Prometheus and Pyroscope
+        
+        📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/password)
+        
+        🛡️ Prometheus is reachable at http://127.0.0.1:9090
+        
+        📛 Pyroscope is reachable at http://127.0.0.1:4040
+        
+    - names:
+      - --enable-kcat
+      argument: ""
+      description: | 
+        🐈‍⬛ Enable kcat
+        
+        You can use it with:
+        
+        $ docker exec kcat kcat -b broker:9092 -L
+        
+    - names:
+      - --enable-sr-maven-plugin-app
+      argument: ""
+      description: | 
+        🔰 Enable Schema Registry Maven plugin App
+        
+    subcommands:
   - name: run-ccloud
     description: | 
         ⛅ Run any Confluent Cloud (ccloud) example

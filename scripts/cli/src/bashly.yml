@@ -307,7 +307,77 @@ commands:
     - *enable-sql-datagen
   examples:
   - playground re-run
-  - playground re-run --tag=6.2.1
+  - playground re-run --tag 6.2.1
+
+- name: start-environment
+  group: Run
+  help: |-
+    🔐 Simply start an environment listed in https://kafka-docker-playground.io/#/content?id=%f0%9f%94%90-environments:
+
+    - ccloud
+    - 2way-ssl
+    - kerberos
+    - kraft-external-plaintext
+    - kraft-plaintext
+    - ldap-authorizer-sasl-plain
+    - ldap-sasl-plain
+    - mdc-kerberos
+    - mdc-plaintext
+    - mdc-sasl-plain
+    - plaintext
+    - rbac-sasl-plain
+    - sasl-plain
+    - sasl-scram
+    - sasl-ssl
+    - ssl_kerberos
+
+    Note: when running an example with <playground run> or <playground run-ccloud>, it is already automatically done
+  catch_all:
+    label: arguments
+    help: |-
+      Arguments to use by script
+
+      Most of examples support to get required options either by using arguments or environment variables.
+    required: false
+  flags:
+    - long: --environment
+      required: false
+      default: "plaintext"
+      arg: environment
+      allowed: [ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos]
+      help: |-
+        🔐 The environment to start . 
+        
+        - ccloud
+        - 2way-ssl
+        - kerberos
+        - kraft-external-plaintext
+        - kraft-plaintext
+        - ldap-authorizer-sasl-plain
+        - ldap-sasl-plain
+        - mdc-kerberos
+        - mdc-plaintext
+        - mdc-sasl-plain
+        - plaintext
+        - rbac-sasl-plain
+        - sasl-plain
+        - sasl-scram
+        - sasl-ssl
+        - ssl_kerberos
+
+        Default is plaintext
+    - *tag
+    - *enable-ksqldb
+    - *enable-control-center
+    - *enable-conduktor
+    - *enable-multiple-brokers
+    - *enable-multiple-connect-workers
+    - *enable-jmx-grafana
+    - *enable-kcat
+    - *enable-sr-maven-plugin-app
+  examples:
+  - playground start-environment
+  - playground start-environment --environment rbac-sasl-plain
 
 - name: run-ccloud
   group: Run
