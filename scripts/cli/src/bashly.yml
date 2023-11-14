@@ -1390,9 +1390,19 @@ commands:
         help: |-
           🗳 Timestamp field name that represents when record was created in source system
 
-      - long: --subject
+      - long: --key-subject
         required: false
-        arg: subject
+        arg: key-subject
+        completions:
+          - $(playground get-subject-list)
+        help: |-
+          📛 Subject for key in schema-registry to use (useful when data was produced with --key-subject-name-strategy other than TopicNameStrategy)
+          
+          Note: --topic should be specified in this case.
+
+      - long: --value-subject
+        required: false
+        arg: value-subject
         completions:
           - $(playground get-subject-list)
         help: |-
@@ -1498,6 +1508,16 @@ commands:
           - NONE
         help: |-
           Schema Registry compatibility rule
+
+      - &key-subject-name-strategy
+        long: --key-subject-name-strategy
+        arg: key-subject-name-strategy
+        allowed: 
+          - TopicNameStrategy
+          - RecordNameStrategy
+          - TopicRecordNameStrategy
+        help: |-
+          Key Subject Name Strategy
 
       - &value-subject-name-strategy
         long: --value-subject-name-strategy

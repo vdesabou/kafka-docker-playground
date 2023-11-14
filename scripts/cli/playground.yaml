@@ -1659,8 +1659,16 @@ subcommands:
             🗳 Timestamp field name that represents when record was created in source system
             
         - names:
-          - --subject
-          argument: SUBJECT
+          - --key-subject
+          argument: KEY-SUBJECT
+          description: | 
+            📛 Subject for key in schema-registry to use (useful when data was produced with --key-subject-name-strategy other than TopicNameStrategy)
+            
+            Note: --topic should be specified in this case.
+            
+        - names:
+          - --value-subject
+          argument: VALUE-SUBJECT
           description: | 
             📛 Subject for value in schema-registry to use (useful when data was produced with --value-subject-name-strategy other than TopicNameStrategy)
             
@@ -1763,6 +1771,14 @@ subcommands:
             Schema Registry compatibility rule
             
             Allowed values: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE
+            
+        - names:
+          - --key-subject-name-strategy
+          argument: [TopicNameStrategy, RecordNameStrategy, TopicRecordNameStrategy]
+          description: | 
+            Key Subject Name Strategy
+            
+            Allowed values: TopicNameStrategy, RecordNameStrategy, TopicRecordNameStrategy
             
         - names:
           - --value-subject-name-strategy

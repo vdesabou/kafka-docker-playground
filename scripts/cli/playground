@@ -3216,7 +3216,12 @@ playground_topic_consume_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--subject SUBJECT")"
+    printf "  %s\n" "$(magenta "--key-subject KEY-SUBJECT")"
+    printf "    📛 Subject for key in schema-registry to use (useful when data was produced\n    with --key-subject-name-strategy other than TopicNameStrategy)\n    \n    Note: --topic should be specified in this case.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--value-subject VALUE-SUBJECT")"
     printf "    📛 Subject for value in schema-registry to use (useful when data was produced\n    with --value-subject-name-strategy other than TopicNameStrategy)\n    \n    Note: --topic should be specified in this case.\n"
     echo
 
@@ -3293,6 +3298,12 @@ playground_topic_produce_usage() {
     printf "  %s\n" "$(magenta "--compatibility COMPATIBILITY")"
     printf "    Schema Registry compatibility rule\n"
     printf "    Allowed: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--key-subject-name-strategy KEY-SUBJECT-NAME-STRATEGY")"
+    printf "    Key Subject Name Strategy\n"
+    printf "    Allowed: TopicNameStrategy, RecordNameStrategy, TopicRecordNameStrategy\n"
     echo
 
     # :flag.usage
@@ -12567,7 +12578,8 @@ playground_topic_consume_command() {
   timeout="${args[--timeout]}"
   tail="${args[--tail]}"
   timestamp_field="${args[--plot-latencies-timestamp-field]}"
-  subject="${args[--subject]}"
+  key_subject="${args[--key-subject]}"
+  value_subject="${args[--value-subject]}"
   max_characters="${args[--max-characters]}"
 
   environment=`get_environment_used`
@@ -12644,9 +12656,14 @@ playground_topic_consume_command() {
         logerror "--min-expected-messages was provided without specifying --topic"
         exit 1
       fi
-      if [[ -n "$subject" ]]
+      if [[ -n "$key_subject" ]]
       then
-        logerror "--subject was provided without specifying --topic"
+        logerror "--key-subject was provided without specifying --topic"
+        exit 1
+      fi
+      if [[ -n "$value_subject" ]]
+      then
+        logerror "--value-subject was provided without specifying --topic"
         exit 1
       fi
       if [[ -n "$tail" ]]
@@ -12764,18 +12781,42 @@ playground_topic_consume_command() {
       esac
     fi
 
+    if [[ -n "$key_subject" ]]
+    then
+      log "📛 key subject is set with $key_subject"
+    else
+      key_subject="${topic}-key"
+    fi
+
+    key_type=""
+    version=$(curl $sr_security -s "${sr_url}/subjects/${key_subject}/versions/latest" | jq -r .version)
+    if [ "$version" != "null" ]
+    then
+      schema_type=$(curl $sr_security -s "${sr_url}/subjects/${key_subject}/versions/latest"  | jq -r .schemaType)
+      case "${schema_type}" in
+        JSON)
+          key_type="json-schema"
+        ;;
+        PROTOBUF)
+          key_type="protobuf"
+        ;;
+        null)
+          key_type="avro"
+        ;;
+      esac
+    fi
+
     if [ "$key_type" != "" ]
     then
       log "🔮🔰 topic is using $key_type for key"
-      playground schema get --subject ${topic}-key
+      playground schema get --subject ${key_subject}
     else
       log "🔮🙅 topic is not using any schema for key"
     fi
 
-    if [[ -n "$subject" ]]
+    if [[ -n "$value_subject" ]]
     then
-      log "📛 subject is set with $subject"
-      value_subject="${subject}"
+      log "📛 value subject is set with $value_subject"
     else
       value_subject="${topic}-value"
     fi
@@ -13041,6 +13082,7 @@ playground_topic_produce_command() {
   generate_only="${args[--generate-only]}"
   tombstone="${args[--tombstone]}"
   compatibility="${args[--compatibility]}"
+  key_subject_name_strategy="${args[--key-subject-name-strategy]}"
   value_subject_name_strategy="${args[--value-subject-name-strategy]}"
   validate="${args[--validate]}"
   record_size="${args[--record-size]}"
@@ -13633,6 +13675,32 @@ playground_topic_produce_command() {
       playground topic set-schema-compatibility --topic $topic --compatibility $compatibility
   fi
 
+  if [[ ! -n "$key" ]] && [[ -n "$key_subject_name_strategy" ]]
+  then
+      logerror "❌ --key-subject-name-strategy is set but not --key"
+      exit 1
+
+  fi
+
+  case "${key_schema_type}" in
+      avro|json-schema|protobuf)
+
+      ;;
+      *)
+          if [[ -n "$validate" ]]
+          then
+              logerror "❌ --validate is set but $key_schema_type is used. This is only valid for avro|json-schema|protobuf"
+              exit 1
+          fi
+          if [[ -n "$key_subject_name_strategy" ]]
+          then
+              logerror "❌ --key-subject-name-strategy is set but $key_schema_type is used. This is only valid for avro|json-schema|protobuf"
+              exit 1
+
+          fi
+      ;;
+  esac
+
   case "${value_schema_type}" in
       avro|json-schema|protobuf)
 
@@ -13780,6 +13848,12 @@ playground_topic_produce_command() {
               then
                   maybe_string_serializer="--property key.schema="$(cat $key_schema_file)""
               fi
+              key_subject_name_strategy_property=""
+              if [[ -n "$key_subject_name_strategy" ]]
+              then
+                  key_subject_name_strategy_property="--property key.subject.name.strategy=io.confluent.kafka.serializers.subject.$key_subject_name_strategy"
+              fi
+
               value_subject_name_strategy_property=""
               if [[ -n "$value_subject_name_strategy" ]]
               then
@@ -13795,13 +13869,13 @@ playground_topic_produce_command() {
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_final_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" $maybe_string_serializer --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $value_subject_name_strategy_property $producer_properties
+                          head -n $nb_messages_to_send $output_final_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" $maybe_string_serializer --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $key_subject_name_strategy_property $value_subject_name_strategy_property $producer_properties
                       else
                           if [[ -n "$verbose" ]]
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_final_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" $maybe_string_serializer $value_subject_name_strategy_property $producer_properties
+                          head -n $nb_messages_to_send $output_final_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" $maybe_string_serializer $key_subject_name_strategy_property $value_subject_name_strategy_property $producer_properties
                       fi
                   else
                       if [[ -n "$headers" ]]
@@ -13810,13 +13884,13 @@ playground_topic_produce_command() {
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_final_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $value_subject_name_strategy_property $producer_properties
+                          head -n $nb_messages_to_send $output_final_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $key_subject_name_strategy_property $value_subject_name_strategy_property $producer_properties
                       else
                           if [[ -n "$verbose" ]]
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_final_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $value_schema_file)" $value_subject_name_strategy_property $producer_properties
+                          head -n $nb_messages_to_send $output_final_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $value_schema_file)" $key_subject_name_strategy_property $value_subject_name_strategy_property $producer_properties
                       fi
                   fi
               else
@@ -13828,13 +13902,13 @@ playground_topic_produce_command() {
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_final_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" $maybe_string_serializer --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $value_subject_name_strategy_property $producer_properties
+                          head -n $nb_messages_to_send $output_final_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" $maybe_string_serializer --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $key_subject_name_strategy_property $value_subject_name_strategy_property $producer_properties
                       else
                           if [[ -n "$verbose" ]]
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_final_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" $maybe_string_serializer $value_subject_name_strategy_property $producer_properties
+                          head -n $nb_messages_to_send $output_final_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" $maybe_string_serializer $key_subject_name_strategy_property $value_subject_name_strategy_property $producer_properties
                       fi
                   else
                       if [[ -n "$headers" ]]
@@ -13843,13 +13917,13 @@ playground_topic_produce_command() {
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_final_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $value_subject_name_strategy_property $producer_properties
+                          head -n $nb_messages_to_send $output_final_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $key_subject_name_strategy_property $value_subject_name_strategy_property $producer_properties
                       else
                           if [[ -n "$verbose" ]]
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_final_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $value_schema_file)" $value_subject_name_strategy_property $producer_properties
+                          head -n $nb_messages_to_send $output_final_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $value_schema_file)" $key_subject_name_strategy_property $value_subject_name_strategy_property $producer_properties
                       fi
                   fi
               fi
@@ -21690,16 +21764,31 @@ playground_topic_consume_parse_requirements() {
         ;;
 
       # :flag.case
-      --subject)
+      --key-subject)
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
 
-          args['--subject']="$2"
+          args['--key-subject']="$2"
           shift
           shift
         else
-          printf "%s\n" "--subject requires an argument: --subject SUBJECT" >&2
+          printf "%s\n" "--key-subject requires an argument: --key-subject KEY-SUBJECT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --value-subject)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--value-subject']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--value-subject requires an argument: --value-subject VALUE-SUBJECT" >&2
           exit 1
         fi
         ;;
@@ -21890,6 +21979,21 @@ playground_topic_produce_parse_requirements() {
         ;;
 
       # :flag.case
+      --key-subject-name-strategy)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--key-subject-name-strategy']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--key-subject-name-strategy requires an argument: --key-subject-name-strategy KEY-SUBJECT-NAME-STRATEGY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --value-subject-name-strategy)
 
         # :flag.case_arg
@@ -22047,6 +22151,10 @@ playground_topic_produce_parse_requirements() {
   # :command.whitelist_filter
   if [[ ${args['--compatibility']} ]] && [[ ! ${args['--compatibility']} =~ ^(BACKWARD|BACKWARD_TRANSITIVE|FORWARD|FORWARD_TRANSITIVE|FULL|FULL_TRANSITIVE|NONE)$ ]]; then
     printf "%s\n" "--compatibility must be one of: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE" >&2
+    exit 1
+  fi
+  if [[ ${args['--key-subject-name-strategy']} ]] && [[ ! ${args['--key-subject-name-strategy']} =~ ^(TopicNameStrategy|RecordNameStrategy|TopicRecordNameStrategy)$ ]]; then
+    printf "%s\n" "--key-subject-name-strategy must be one of: TopicNameStrategy, RecordNameStrategy, TopicRecordNameStrategy" >&2
     exit 1
   fi
   if [[ ${args['--value-subject-name-strategy']} ]] && [[ ! ${args['--value-subject-name-strategy']} =~ ^(TopicNameStrategy|RecordNameStrategy|TopicRecordNameStrategy)$ ]]; then

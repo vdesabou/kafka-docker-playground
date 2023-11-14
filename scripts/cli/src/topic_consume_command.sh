@@ -6,7 +6,8 @@ min_expected_messages="${args[--min-expected-messages]}"
 timeout="${args[--timeout]}"
 tail="${args[--tail]}"
 timestamp_field="${args[--plot-latencies-timestamp-field]}"
-subject="${args[--subject]}"
+key_subject="${args[--key-subject]}"
+value_subject="${args[--value-subject]}"
 max_characters="${args[--max-characters]}"
 
 environment=`get_environment_used`
@@ -82,9 +83,14 @@ then
       logerror "--min-expected-messages was provided without specifying --topic"
       exit 1
     fi
-    if [[ -n "$subject" ]]
+    if [[ -n "$key_subject" ]]
     then
-      logerror "--subject was provided without specifying --topic"
+      logerror "--key-subject was provided without specifying --topic"
+      exit 1
+    fi
+    if [[ -n "$value_subject" ]]
+    then
+      logerror "--value-subject was provided without specifying --topic"
       exit 1
     fi
     if [[ -n "$tail" ]]
@@ -201,18 +207,42 @@ do
     esac
   fi
 
+  if [[ -n "$key_subject" ]]
+  then
+    log "📛 key subject is set with $key_subject"
+  else
+    key_subject="${topic}-key"
+  fi
+
+  key_type=""
+  version=$(curl $sr_security -s "${sr_url}/subjects/${key_subject}/versions/latest" | jq -r .version)
+  if [ "$version" != "null" ]
+  then
+    schema_type=$(curl $sr_security -s "${sr_url}/subjects/${key_subject}/versions/latest"  | jq -r .schemaType)
+    case "${schema_type}" in
+      JSON)
+        key_type="json-schema"
+      ;;
+      PROTOBUF)
+        key_type="protobuf"
+      ;;
+      null)
+        key_type="avro"
+      ;;
+    esac
+  fi
+
   if [ "$key_type" != "" ]
   then
     log "🔮🔰 topic is using $key_type for key"
-    playground schema get --subject ${topic}-key
+    playground schema get --subject ${key_subject}
   else
     log "🔮🙅 topic is not using any schema for key"
   fi
 
-  if [[ -n "$subject" ]]
+  if [[ -n "$value_subject" ]]
   then
-    log "📛 subject is set with $subject"
-    value_subject="${subject}"
+    log "📛 value subject is set with $value_subject"
   else
     value_subject="${topic}-value"
   fi

@@ -1473,9 +1473,16 @@
             },
             {
               "names": [
-                "--subject"
+                "--key-subject"
               ],
-              "argument": "SUBJECT",
+              "argument": "KEY-SUBJECT",
+              "description": "📛 Subject for key in schema-registry to use (useful when data was produced with --key-subject-name-strategy other than TopicNameStrategy)\n\nNote: --topic should be specified in this case.\n"
+            },
+            {
+              "names": [
+                "--value-subject"
+              ],
+              "argument": "VALUE-SUBJECT",
               "description": "📛 Subject for value in schema-registry to use (useful when data was produced with --value-subject-name-strategy other than TopicNameStrategy)\n\nNote: --topic should be specified in this case.\n"
             },
             {
@@ -1550,6 +1557,17 @@
                 "NONE"
               ],
               "description": "Schema Registry compatibility rule\n\nAllowed values: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE\n"
+            },
+            {
+              "names": [
+                "--key-subject-name-strategy"
+              ],
+              "argument": [
+                "TopicNameStrategy",
+                "RecordNameStrategy",
+                "TopicRecordNameStrategy"
+              ],
+              "description": "Key Subject Name Strategy\n\nAllowed values: TopicNameStrategy, RecordNameStrategy, TopicRecordNameStrategy\n"
             },
             {
               "names": [
