@@ -367,7 +367,6 @@ fi
 
 if [[ -n "$key" ]]
 then
-    log "generate data for key $key_schema_type $key_schema_file $output_key_file"
     generate_data "$key_schema_type" "$key_schema_file" "$output_key_file"
 fi
 
@@ -378,6 +377,38 @@ if [ "$nb_generated_messages" == "0" ]
 then
     logerror "❌ records could not be generated!"
     exit 1
+fi
+
+if [[ -n "$key" ]] && [ "$key_schema_type" = "raw" ]
+then
+    if [[ $key =~ ^([^0-9]*)([0-9]+)([^0-9]*)$ ]]; then
+        prefix="${BASH_REMATCH[1]}"
+        number="${BASH_REMATCH[2]}"
+        suffix="${BASH_REMATCH[3]}"
+        
+        log "🗝️ key $key is set with a number $number, it will be used as starting point"
+        while read -r line
+        do
+            new_key="${prefix}${number}${suffix}"
+            echo "${new_key}" >> "$tmp_dir/temp_value_file"
+            number=$((number + 1))
+        done < "$output_key_file"
+
+        mv "$tmp_dir/temp_value_file" "$output_key_file"
+    else
+        counter=1
+        log "🗝️ key is set with a string $key, it will be used for all records"
+        while read -r line
+        do
+            if [[ $key == *"%g"* ]]
+            then
+                key=${key/\%g/$counter}
+            fi
+            echo "${key}" >> "$tmp_dir/temp_value_file"
+        done < "$output_key_file"
+
+        mv "$tmp_dir/temp_value_file" "$output_key_file"
+    fi
 fi
 
 if [[ -n "$key" ]]
