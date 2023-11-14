@@ -13387,12 +13387,12 @@ playground_topic_produce_command() {
 
   output_key_file=$tmp_dir/out_key_final.json
   output_value_file=$tmp_dir/out_value_final.json
-  output_key_and_value_file=$tmp_dir/out_key_and_value_final.json
+  output_final_file=$tmp_dir/out_final.json
 
   if [[ -n "$forced_value" ]]
   then
       log "☢️ --forced-value is set"
-      echo "$forced_value" > $tmp_dir/out_value.json
+      echo "$forced_value" > $output_value_file
   else
       SECONDS=0
       generate_data "$value_schema_type" "$value_schema_file" "$output_value_file"
@@ -13413,6 +13413,26 @@ playground_topic_produce_command() {
       exit 1
   fi
 
+  if [[ -n "$key" ]]
+  then
+      # merging key and value files
+      paste -d "|" $output_key_file $output_value_file > $output_final_file
+  else
+      cp $output_value_file $output_final_file
+  fi
+
+  # headers need to be set first
+  if [[ -n "$headers" ]]
+  then
+      log "🚏 headers are set $headers"
+      while read line
+      do
+          echo "${headers}|${line}" >> $tmp_dir/temp_headers_file
+      done < $output_final_file
+
+      mv $tmp_dir/temp_headers_file $output_final_file
+  fi
+
   value_str=""
   if [[ -n "$forced_value" ]]
   then
@@ -13426,15 +13446,15 @@ playground_topic_produce_command() {
   then
       log "✨ $nb_generated_messages records were generated$value_str (only showing first 1 as record size is $record_size), $ELAPSED"
       log "✨ only showing first $size_limit_to_show characters"
-      head -n 1 "$output_value_file" | cut -c 1-${size_limit_to_show} | awk "{print \$0 \"...<truncated, only showing first $size_limit_to_show characters, out of $record_size>...\"}"
+      head -n 1 "$output_final_file" | cut -c 1-${size_limit_to_show} | awk "{print \$0 \"...<truncated, only showing first $size_limit_to_show characters, out of $record_size>...\"}"
   else
       if (( nb_generated_messages < 10 ))
       then
           log "✨ $nb_generated_messages records were generated$value_str"
-          cat "$output_value_file"
+          cat "$output_final_file"
       else
           log "✨ $nb_generated_messages records were generated$value_str (only showing first 10), $ELAPSED"
-          head -n 10 "$output_value_file"
+          head -n 10 "$output_final_file"
       fi
   fi
 
@@ -13468,7 +13488,7 @@ playground_topic_produce_command() {
 
       docker cp ${root_folder}/scripts/cli/src/schema-validator/target/schema-validator-1.0.0-jar-with-dependencies.jar connect:/tmp/schema-validator-1.0.0-jar-with-dependencies.jar > /dev/null 2>&1
       docker cp $value_schema_file connect:/tmp/schema > /dev/null 2>&1
-      docker cp $tmp_dir/out_value.json connect:/tmp/message.json > /dev/null 2>&1
+      docker cp $output_value_file connect:/tmp/message.json > /dev/null 2>&1
       env_list=""
       for conf in "${validate_config[@]}"
       do
@@ -13601,17 +13621,6 @@ playground_topic_produce_command() {
       ;;
   esac
 
-  if [[ -n "$headers" ]]
-  then
-      log "🚏 headers are set $headers"
-      while read line
-      do
-          echo "${headers}|${line}" >> $tmp_dir/temp_value_file
-      done < $output_value_file
-
-      mv $tmp_dir/temp_value_file $output_value_file
-  fi
-
   producer_properties=""
 
   if [ $record_size -gt 1048576 ]
@@ -13668,21 +13677,19 @@ playground_topic_produce_command() {
               then
                   if [[ -n "$key" ]]
                   then
-                      # merging key and value files
-                      paste -d "|" $output_key_file $output_value_file > $output_key_and_value_file
                       if [[ -n "$headers" ]]
                       then
                           if [[ -n "$verbose" ]]
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_key_and_value_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties --property parse.key=true --property key.separator="|" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
+                          head -n $nb_messages_to_send $output_final_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties --property parse.key=true --property key.separator="|" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
                       else
                           if [[ -n "$verbose" ]]
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_key_and_value_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties --property parse.key=true --property key.separator="|"
+                          head -n $nb_messages_to_send $output_final_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties --property parse.key=true --property key.separator="|"
 
                       fi
                   else
@@ -13692,33 +13699,31 @@ playground_topic_produce_command() {
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_value_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
+                          head -n $nb_messages_to_send $output_final_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
                       else
                           if [[ -n "$verbose" ]]
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_value_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties
+                          head -n $nb_messages_to_send $output_final_file | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties
                       fi
                   fi
               else
                   if [[ -n "$key" ]]
                   then
-                      # merging key and value files
-                      paste -d "|" $output_key_file $output_value_file > $output_key_and_value_file
                       if [[ -n "$headers" ]]
                       then
                           if [[ -n "$verbose" ]]
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_key_and_value_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security $producer_properties --property parse.key=true --property key.separator="|" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
+                          head -n $nb_messages_to_send $output_final_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security $producer_properties --property parse.key=true --property key.separator="|" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
                       else
                           if [[ -n "$verbose" ]]
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_key_and_value_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security $producer_properties --property parse.key=true --property key.separator="|"
+                          head -n $nb_messages_to_send $output_final_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security $producer_properties --property parse.key=true --property key.separator="|"
                       fi
                   else
                       if [[ -n "$headers" ]]
@@ -13727,13 +13732,13 @@ playground_topic_produce_command() {
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_value_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security $producer_properties --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
+                          head -n $nb_messages_to_send $output_final_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security $producer_properties --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
                       else
                           if [[ -n "$verbose" ]]
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_value_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security $producer_properties
+                          head -n $nb_messages_to_send $output_final_file | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security $producer_properties
                       fi
                   fi
               fi
@@ -13748,20 +13753,19 @@ playground_topic_produce_command() {
               then
                   if [[ -n "$key" ]]
                   then
-                      paste -d "|" $output_key_file $output_value_file > $output_key_and_value_file
                       if [[ -n "$headers" ]]
                       then
                           if [[ -n "$verbose" ]]
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_key_and_value_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $value_subject_name_strategy_property $producer_properties
+                          head -n $nb_messages_to_send $output_final_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $value_subject_name_strategy_property $producer_properties
                       else
                           if [[ -n "$verbose" ]]
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_key_and_value_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer $value_subject_name_strategy_property $producer_properties
+                          head -n $nb_messages_to_send $output_final_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer $value_subject_name_strategy_property $producer_properties
                       fi
                   else
                       if [[ -n "$headers" ]]
@@ -13770,32 +13774,31 @@ playground_topic_produce_command() {
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_value_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $value_subject_name_strategy_property $producer_properties
+                          head -n $nb_messages_to_send $output_final_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $value_subject_name_strategy_property $producer_properties
                       else
                           if [[ -n "$verbose" ]]
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_value_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $value_schema_file)" $value_subject_name_strategy_property $producer_properties
+                          head -n $nb_messages_to_send $output_final_file | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $value_schema_file)" $value_subject_name_strategy_property $producer_properties
                       fi
                   fi
               else
                   if [[ -n "$key" ]]
                   then
-                      paste -d "|" $output_key_file $output_value_file > $output_key_and_value_file
                       if [[ -n "$headers" ]]
                       then
                           if [[ -n "$verbose" ]]
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_key_and_value_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $value_subject_name_strategy_property $producer_properties
+                          head -n $nb_messages_to_send $output_final_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $value_subject_name_strategy_property $producer_properties
                       else
                           if [[ -n "$verbose" ]]
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_key_and_value_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer $value_subject_name_strategy_property $producer_properties
+                          head -n $nb_messages_to_send $output_final_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer $value_subject_name_strategy_property $producer_properties
                       fi
                   else
                       if [[ -n "$headers" ]]
@@ -13804,13 +13807,13 @@ playground_topic_produce_command() {
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_value_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $value_subject_name_strategy_property $producer_properties
+                          head -n $nb_messages_to_send $output_final_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $value_schema_file)" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $value_subject_name_strategy_property $producer_properties
                       else
                           if [[ -n "$verbose" ]]
                           then
                               set -x
                           fi
-                          head -n $nb_messages_to_send $output_value_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $value_schema_file)" $value_subject_name_strategy_property $producer_properties
+                          head -n $nb_messages_to_send $output_final_file | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $value_schema_file)" $value_subject_name_strategy_property $producer_properties
                       fi
                   fi
               fi
