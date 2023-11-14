@@ -1269,6 +1269,7 @@ commands:
       - *container
 
     - name: resume
+      alias: unpause
       group: Container
       help: |-
         ⏯️  Resume a container
@@ -2124,6 +2125,7 @@ commands:
     - *ccloudconnector
 
   - name: resume
+    alias: unpause
     help: ⏯️  Resume connector
     flags:
     - *ccloudconnector
@@ -2242,6 +2244,7 @@ commands:
     - *connector
 
   - name: resume
+    alias: unpause
     help: ⏯️  Resume connector
     flags:
     - *connector

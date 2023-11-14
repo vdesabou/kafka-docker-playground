@@ -2872,6 +2872,9 @@ playground_container_resume_usage() {
 
   fi
 
+  printf "Alias: unpause\n"
+  echo
+
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground container resume [OPTIONS]\n"
   printf "  playground container resume --help | -h\n"
@@ -3667,6 +3670,9 @@ playground_ccloud_connector_resume_usage() {
 
   fi
 
+  printf "Alias: unpause\n"
+  echo
+
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground ccloud-connector resume [OPTIONS]\n"
   printf "  playground ccloud-connector resume --help | -h\n"
@@ -4126,6 +4132,9 @@ playground_connector_resume_usage() {
     echo
 
   fi
+
+  printf "Alias: unpause\n"
+  echo
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground connector resume [OPTIONS]\n"
@@ -20423,7 +20432,7 @@ playground_container_parse_requirements() {
       shift $#
       ;;
 
-    resume)
+    resume | unpause)
       action="resume"
       shift
       playground_container_resume_parse_requirements "$@"
@@ -22486,7 +22495,7 @@ playground_ccloud_connector_parse_requirements() {
       shift $#
       ;;
 
-    resume)
+    resume | unpause)
       action="resume"
       shift
       playground_ccloud_connector_resume_parse_requirements "$@"
@@ -23185,7 +23194,7 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
-    resume)
+    resume | unpause)
       action="resume"
       shift
       playground_connector_resume_parse_requirements "$@"
