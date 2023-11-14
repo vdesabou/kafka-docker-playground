@@ -1,5 +1,5 @@
 subject="${args[--subject]}"
-schema="${args[--input]}"
+schema="${args[--schema]}"
 verbose="${args[--verbose]}"
 
 ret=$(get_sr_url_and_security)
@@ -22,7 +22,7 @@ else
         # this is a schema file
         argument_schema_file=$(echo "$schema" | cut -d "@" -f 2)
         cp $argument_schema_file $schema_file
-    elif [ -f $schema ]
+    elif [ -f "$schema" ]
     then
         cp $schema $schema_file
     else

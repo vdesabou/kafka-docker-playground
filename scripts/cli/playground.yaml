@@ -1089,8 +1089,8 @@ subcommands:
             🐞 Show command being ran.
             
         - names:
-          - --input
-          argument: INPUT
+          - --schema
+          argument: SCHEMA
           description: | 
             🔥 You can either:
             

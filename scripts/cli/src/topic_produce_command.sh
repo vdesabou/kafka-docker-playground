@@ -45,7 +45,7 @@ else
         # this is a schema file
         argument_schema_file=$(echo "$schema" | cut -d "@" -f 2)
         cp $argument_schema_file $value_schema_file
-    elif [ -f $schema ]
+    elif [ -f "$schema" ]
     then
         cp $schema $value_schema_file
     else

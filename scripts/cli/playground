@@ -1715,7 +1715,7 @@ playground_schema_register_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--input INPUT")"
+    printf "  %s\n" "$(magenta "--schema SCHEMA")"
     printf "    🔥 You can either:\n    \n    * Set your own schema (avro, json-schema, protobuf) with stdin (see example\n    section).\n    \n    * Use completion to select predefined schemas (or use your own schema file)\n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     printf "    Default: -\n"
     echo
@@ -11491,7 +11491,7 @@ playground_schema_get_command() {
 playground_schema_register_command() {
   # src/schema_register_command.sh
   subject="${args[--subject]}"
-  schema="${args[--input]}"
+  schema="${args[--schema]}"
   verbose="${args[--verbose]}"
 
   ret=$(get_sr_url_and_security)
@@ -11514,7 +11514,7 @@ playground_schema_register_command() {
           # this is a schema file
           argument_schema_file=$(echo "$schema" | cut -d "@" -f 2)
           cp $argument_schema_file $schema_file
-      elif [ -f $schema ]
+      elif [ -f "$schema" ]
       then
           cp $schema $schema_file
       else
@@ -13301,7 +13301,7 @@ playground_topic_produce_command() {
           # this is a schema file
           argument_schema_file=$(echo "$schema" | cut -d "@" -f 2)
           cp $argument_schema_file $value_schema_file
-      elif [ -f $schema ]
+      elif [ -f "$schema" ]
       then
           cp $schema $value_schema_file
       else
@@ -19049,16 +19049,16 @@ playground_schema_register_parse_requirements() {
         ;;
 
       # :flag.case
-      --input)
+      --schema)
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
 
-          args['--input']="$2"
+          args['--schema']="$2"
           shift
           shift
         else
-          printf "%s\n" "--input requires an argument: --input INPUT" >&2
+          printf "%s\n" "--schema requires an argument: --schema SCHEMA" >&2
           exit 1
         fi
         ;;
@@ -19086,7 +19086,7 @@ playground_schema_register_parse_requirements() {
   fi
 
   # :command.default_assignments
-  [[ -n ${args['--input']:-} ]] || args['--input']="-"
+  [[ -n ${args['--schema']:-} ]] || args['--schema']="-"
 
   # :command.user_filter
   filter_error=$(filter_not_mdc_environment)

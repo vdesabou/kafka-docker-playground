@@ -817,8 +817,8 @@ commands:
         long: --verbose
         short: -v
         help: 🐞 Show command being ran.
-      - long: --input
-        arg: input
+      - long: --schema
+        arg: schema
         completions:
           - $(playground get-predefined-schemas "$cur")
         default: "-"
