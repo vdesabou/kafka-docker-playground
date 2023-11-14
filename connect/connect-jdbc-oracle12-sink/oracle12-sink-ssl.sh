@@ -140,13 +140,13 @@ if ! version_gt $JDBC_CONNECTOR_VERSION "9.9.9"; then
      docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.ssl.yml" up -d
 
      command="source ${DIR}/../../scripts/utils.sh && docker compose -f ../../environment/plaintext/docker-compose.yml -f ${PWD}/docker-compose.plaintext.ssl.yml up -d ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} up -d"
-     echo "$command" > /tmp/playground-command
+     echo "$command" >> /tmp/playground-command
      log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command playground container recreate"
 else
      docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.no-ojdbc-ssl.yml" up -d
 
      command="source ${DIR}/../../scripts/utils.sh && docker compose -f ../../environment/plaintext/docker-compose.yml -f ${PWD}/docker-compose.plaintext.no-ojdbc-ssl.yml up -d ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} up -d"
-     echo "$command" > /tmp/playground-command
+     echo "$command" >> /tmp/playground-command
 fi
 
 ../../scripts/wait-for-connect-and-controlcenter.sh
