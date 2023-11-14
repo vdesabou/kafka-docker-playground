@@ -13073,6 +13073,7 @@ playground_topic_produce_command() {
   # src/topic_produce_command.sh
   topic="${args[--topic]}"
   verbose="${args[--verbose]}"
+  debug="${args[--debug]}"
   nb_messages="${args[--nb-messages]}"
   nb_partitions="${args[--nb-partitions]}"
   schema="${args[--value]}"
@@ -13094,8 +13095,11 @@ playground_topic_produce_command() {
   trap 'rm -rf $tmp_dir' EXIT
 
   # debug
-  # logwarn "DEBUG mode is on"
-  # trap 'code $tmp_dir' EXIT
+  if [[ -n "$debug" ]]
+  then
+      log "🐞 debug mode is on"
+      trap 'code $tmp_dir' EXIT
+  fi
   key_schema_file=$tmp_dir/key_schema
   value_schema_file=$tmp_dir/value_schema
 
@@ -21909,6 +21913,14 @@ playground_topic_produce_parse_requirements() {
         ;;
 
       # :flag.case
+      --debug | -d)
+
+        # :flag.case_no_arg
+        args['--debug']=1
+        shift
+        ;;
+
+      # :flag.case
       --topic | -t)
 
         # :flag.case_arg
@@ -22137,6 +22149,10 @@ playground_topic_produce_parse_requirements() {
   done
 
   # :command.required_flags_filter
+  if [[ -z ${args['--debug']+x} ]]; then
+    printf "missing required flag: --debug, -d\n" >&2
+    exit 1
+  fi
   if [[ -z ${args['--topic']+x} ]]; then
     printf "missing required flag: --topic, -t TOPIC\n" >&2
     exit 1

@@ -1471,6 +1471,12 @@ commands:
           * Directly set payload ("%g" can be used to generate a counter)
 
       - *verbose
+      - long: --debug
+        short: -d
+        required: true
+        private: true
+        help: |-
+          debug mode (internal)
       - long: --topic
         short: -t
         required: true

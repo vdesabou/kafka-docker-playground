@@ -1523,6 +1523,14 @@
             },
             {
               "names": [
+                "--debug",
+                "-d"
+              ],
+              "argument": "",
+              "description": "debug mode (internal)\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
                 "--topic",
                 "-t"
               ],

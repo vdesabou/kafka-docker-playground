@@ -1,5 +1,6 @@
 topic="${args[--topic]}"
 verbose="${args[--verbose]}"
+debug="${args[--debug]}"
 nb_messages="${args[--nb-messages]}"
 nb_partitions="${args[--nb-partitions]}"
 schema="${args[--value]}"
@@ -22,8 +23,11 @@ tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
 
 # debug
-# logwarn "DEBUG mode is on"
-# trap 'code $tmp_dir' EXIT
+if [[ -n "$debug" ]]
+then
+    log "🐞 debug mode is on"
+    trap 'code $tmp_dir' EXIT
+fi
 key_schema_file=$tmp_dir/key_schema
 value_schema_file=$tmp_dir/value_schema
 

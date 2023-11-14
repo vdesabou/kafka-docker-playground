@@ -1738,6 +1738,15 @@ subcommands:
             🐞 Show command being ran.
             
         - names:
+          - --debug
+          - -d
+          argument: ""
+          description: | 
+            debug mode (internal)
+            
+            Required: ✓ Yes
+            
+        - names:
           - --topic
           - -t
           argument: TOPIC
