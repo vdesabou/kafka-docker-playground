@@ -22497,10 +22497,6 @@ playground_topic_produce_parse_requirements() {
   done
 
   # :command.required_flags_filter
-  if [[ -z ${args['--debug']+x} ]]; then
-    printf "missing required flag: --debug, -d\n" >&2
-    exit 1
-  fi
   if [[ -z ${args['--topic']+x} ]]; then
     printf "missing required flag: --topic, -t TOPIC\n" >&2
     exit 1

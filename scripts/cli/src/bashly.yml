@@ -1544,7 +1544,7 @@ commands:
       - *verbose
       - long: --debug
         short: -d
-        required: true
+        required: false
         private: true
         help: |-
           debug mode (internal)

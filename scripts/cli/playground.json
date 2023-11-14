@@ -1605,7 +1605,7 @@
                 "-d"
               ],
               "argument": "",
-              "description": "debug mode (internal)\n\nRequired: ✓ Yes\n"
+              "description": "debug mode (internal)\n"
             },
             {
               "names": [

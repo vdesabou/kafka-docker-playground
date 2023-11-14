@@ -1880,8 +1880,6 @@ subcommands:
           description: | 
             debug mode (internal)
             
-            Required: ✓ Yes
-            
         - names:
           - --topic
           - -t
