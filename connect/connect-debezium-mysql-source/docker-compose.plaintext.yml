@@ -13,7 +13,7 @@ services:
       - ../../connect/connect-debezium-mysql-source/mysql-datagen/target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
 
   mysql:
-    image: mysql:latest
+    image: mysql:8.1
     hostname: mysql
     container_name: mysql
     volumes:
