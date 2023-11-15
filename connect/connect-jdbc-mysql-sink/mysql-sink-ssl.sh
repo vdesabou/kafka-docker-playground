@@ -22,6 +22,7 @@ docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/dock
 sleep 5
 
 log "Getting certs from mysql container and transform them to JKS"
+mkdir -p ${PWD}/security/
 rm -rf ${PWD}/security/*
 # https://dev.mysql.com/doc/connector-j/5.1/en/connector-j-reference-using-ssl.html
 docker cp mysql:/var/lib/mysql/ca.pem ${PWD}/security/
@@ -29,7 +30,6 @@ docker cp mysql:/var/lib/mysql/client-key.pem ${PWD}/security/
 docker cp mysql:/var/lib/mysql/client-cert.pem ${PWD}/security/
 
 log "Creating JKS from pem files"
-mkdir -p ${PWD}/security/
 cd ${PWD}/security/
 if [[ "$OSTYPE" == "darwin"* ]]
 then
