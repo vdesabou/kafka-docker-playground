@@ -25,8 +25,3 @@ services:
       - ../../connect/connect-jdbc-oracle19-source/mtls/keystore.jks:/tmp/keystore.jks
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
-      KAFKA_OPTS: -Djavax.net.ssl.trustStore=/tmp/truststore.jks
-                  -Djavax.net.ssl.trustStorePassword=welcome123
-                  -Djavax.net.ssl.keyStore=/tmp/keystore.jks
-                  -Djavax.net.ssl.keyStorePassword=welcome123
-                  # -Djavax.net.debug=all
