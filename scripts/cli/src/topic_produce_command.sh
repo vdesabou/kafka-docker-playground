@@ -360,14 +360,13 @@ output_key_file=$tmp_dir/out_key_final.json
 output_value_file=$tmp_dir/out_value_final.json
 output_final_file=$tmp_dir/out_final.json
 max_batch=300000
+SECONDS=0
 if [[ -n "$forced_value" ]]
 then
     log "☢️ --forced-value is set"
     echo "$forced_value" > $output_value_file
-else
-    SECONDS=0
-    generate_data "$value_schema_type" "$value_schema_file" "$output_value_file"
 fi
+generate_data "$value_schema_type" "$value_schema_file" "$output_value_file"
 
 if [[ -n "$key" ]]
 then
