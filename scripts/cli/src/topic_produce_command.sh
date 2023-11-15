@@ -285,7 +285,6 @@ function generate_data() {
 
     record_size_temp_file_line=$tmp_dir/line.json
     record_size_temp_file_output=$tmp_dir/output.json
-    max_batch=300000
     lines_count=0
     stop=0
     counter=1
@@ -360,7 +359,7 @@ function generate_data() {
 output_key_file=$tmp_dir/out_key_final.json
 output_value_file=$tmp_dir/out_value_final.json
 output_final_file=$tmp_dir/out_final.json
-
+max_batch=300000
 if [[ -n "$forced_value" ]]
 then
     log "☢️ --forced-value is set"
