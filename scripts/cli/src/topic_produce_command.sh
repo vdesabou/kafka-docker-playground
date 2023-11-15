@@ -233,51 +233,57 @@ function generate_data() {
     output_file=$3
     input_file=""
 
-    case "${schema_type}" in
-        json|sql)
-            # https://github.com/MaterializeInc/datagen
-            set +e
-            docker run --rm -i -v $schema_file:/app/schema.$schema_type materialize/datagen -s schema.$schema_type -n $nb_messages_to_generate --dry-run > $tmp_dir/result.log
-            
-            nb=$(grep -c "Payload: " $tmp_dir/result.log)
-            if [ $nb -eq 0 ]
-            then
-                logerror "❌ materialize/datagen failed to produce $schema_type "
-                cat $tmp_dir/result.log
+    if [[ -n "$forced_value" ]]
+    then
+        log "☢️ --forced-value is set"
+        echo "$forced_value" > $tmp_dir/out.json
+    else
+        case "${schema_type}" in
+            json|sql)
+                # https://github.com/MaterializeInc/datagen
+                set +e
+                docker run --rm -i -v $schema_file:/app/schema.$schema_type materialize/datagen -s schema.$schema_type -n $nb_messages_to_generate --dry-run > $tmp_dir/result.log
+                
+                nb=$(grep -c "Payload: " $tmp_dir/result.log)
+                if [ $nb -eq 0 ]
+                then
+                    logerror "❌ materialize/datagen failed to produce $schema_type "
+                    cat $tmp_dir/result.log
+                    exit 1
+                fi
+                set -e
+                cat $tmp_dir/result.log | grep "Payload: " | sed 's/Payload: //' > $tmp_dir/out.json
+            ;;
+            avro)
+                schema_file_name="$(basename "${schema_file}")"
+                docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/$schema_file_name --count $nb_messages_to_generate
+                docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
+            ;;
+            json-schema)
+                docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate vdesabou/json-schema-faker > $tmp_dir/out.json
+            ;;
+            protobuf)
+                # https://github.com/JasonkayZK/mock-protobuf.js
+                docker run --rm -v $tmp_dir:/tmp/ -v $schema_file:/app/schema.proto -e NB_MESSAGES=$nb_messages_to_generate vdesabou/protobuf-faker  > $tmp_dir/out.json
+            ;;
+            raw)
+                if jq -e . >/dev/null 2>&1 <<< "$(cat "$schema_file")"
+                then
+                    log "💫 payload is single json, it will be sent as one record"
+                    jq -c . "$schema_file" > $tmp_dir/minified.json
+                    input_file=$tmp_dir/minified.json
+                else
+                    log "💫 payload is not single json, one record per line will be sent"
+                    input_file=$schema_file
+                fi
+            ;;
+            *)
+                logerror "❌ schema_type name not valid ! Should be one of raw, json, avro, json-schema or protobuf"
                 exit 1
-            fi
-            set -e
-            cat $tmp_dir/result.log | grep "Payload: " | sed 's/Payload: //' > $tmp_dir/out.json
-        ;;
-        avro)
-            schema_file_name="$(basename "${schema_file}")"
-            docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/$schema_file_name --count $nb_messages_to_generate
-            docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
-        ;;
-        json-schema)
-            docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate vdesabou/json-schema-faker > $tmp_dir/out.json
-        ;;
-        protobuf)
-            # https://github.com/JasonkayZK/mock-protobuf.js
-            docker run --rm -v $tmp_dir:/tmp/ -v $schema_file:/app/schema.proto -e NB_MESSAGES=$nb_messages_to_generate vdesabou/protobuf-faker  > $tmp_dir/out.json
-        ;;
-        raw)
-            if jq -e . >/dev/null 2>&1 <<< "$(cat "$schema_file")"
-            then
-                log "💫 payload is single json, it will be sent as one record"
-                jq -c . "$schema_file" > $tmp_dir/minified.json
-                input_file=$tmp_dir/minified.json
-            else
-                log "💫 payload is not single json, one record per line will be sent"
-                input_file=$schema_file
-            fi
-        ;;
-        *)
-            logerror "❌ schema_type name not valid ! Should be one of raw, json, avro, json-schema or protobuf"
-            exit 1
-        ;;
-    esac
-
+            ;;
+        esac
+    fi
+    
     if [ "$input_file" = "" ]
     then
         input_file=$tmp_dir/out.json
@@ -361,11 +367,6 @@ output_value_file=$tmp_dir/out_value_final.json
 output_final_file=$tmp_dir/out_final.json
 max_batch=300000
 SECONDS=0
-if [[ -n "$forced_value" ]]
-then
-    log "☢️ --forced-value is set"
-    echo "$forced_value" > $output_value_file
-fi
 generate_data "$value_schema_type" "$value_schema_file" "$output_value_file"
 
 if [[ -n "$key" ]]
