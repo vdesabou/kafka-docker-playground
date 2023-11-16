@@ -518,7 +518,7 @@ function remove_partition() {
 
 function aws() {
 
-    if [ -z "$AWS_ACCESS_KEY_ID" ] && [ -z "$AWS_SECRET_ACCESS_KEY" ] && [ ! -f $HOME/.aws/config ] && [ ! -f $HOME/.aws/credentials ]
+    if [ -z "$AWS_ACCESS_KEY_ID" ] && [ -z "$AWS_SECRET_ACCESS_KEY" ] && [ ! -f $HOME/.aws/credentials ]
     then
       logerror 'ERROR: Neither AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY or $HOME/.aws/credentials are set. AWS credentials must be set !'
       if [ -z "$AWS_ACCESS_KEY_ID" ]
@@ -545,14 +545,19 @@ region = $AWS_REGION
 EOF
     fi
 
-    if [ ! -f $HOME/.aws/credentials ]
+    if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
     then
-      #log "Using aws cli with environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
+      # log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
       docker run --rm -iv $tmp_dir/config:/root/.aws/config -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
       rm -rf $tmp_dir
     else
-      #log "Using aws cli with credentials file"
-      docker run --rm -iv $HOME/.aws:/root/.aws -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
+      if [ ! -f $HOME/.aws/credentials ]
+      then
+        logerror '$HOME/.aws/credentials does not exist.'
+      else
+        # log "💭 AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
+        docker run --rm -iv $HOME/.aws:/root/.aws -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
+      fi
     fi
 }
 
