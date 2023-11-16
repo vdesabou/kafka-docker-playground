@@ -212,7 +212,10 @@ then
 else
     nb_max_messages_to_generate=1000
 fi
-if [ $nb_messages -lt $nb_max_messages_to_generate ]
+if [ $nb_messages = -1 ]
+then
+    nb_messages_to_generate=$nb_max_messages_to_generate
+elif [ $nb_messages -lt $nb_max_messages_to_generate ]
 then
     nb_messages_to_generate=$nb_messages
 else
@@ -352,10 +355,13 @@ function generate_data() {
                 stop=1
                 break
             fi
-            if [ $lines_count -ge $nb_messages ]
+            if [ $nb_messages != -1 ]
             then
-                stop=1
-                break
+                if [ $lines_count -ge $nb_messages ]
+                then
+                    stop=1
+                    break
+                fi
             fi
             counter=$((counter+1))
         done < "$input_file"
@@ -663,23 +669,39 @@ done
 
 if [ "$producer_properties" != "" ]
 then
-    log "Following producer properties will be used: $producer_properties"
+    log "⚙️ following producer properties will be used: $producer_properties"
 fi
 
 set -e
 SECONDS=0
-log "📤 producing $nb_messages records to topic $topic"
-if [ $nb_messages -gt $max_batch ]
+if [ $nb_messages = -1 ]
+then
+    log "📤 producing infinite records to topic $topic (--nb-messages is set to -1), press ctrl-c to stop"
+else
+    log "📤 producing $nb_messages records to topic $topic"
+fi
+if [ $nb_messages -gt $max_batch ] || [ $nb_messages = -1 ]
 then
     log "✨ it will be done in batches of maximum $max_batch records"
 fi
+
+function handle_signal {
+  echo "Stopping..."
+  stop=1
+}
+# Set the signal handler
+trap handle_signal SIGINT
+
 nb_messages_sent=0
 nb_messages_to_send=0
 stop=0
 should_stop=0
 while [ $stop != 1 ]
 do
-    if [ $((nb_messages_sent + nb_generated_messages)) -le $nb_messages ]
+    if [ $nb_messages -eq -1 ]
+    then
+        nb_messages_to_send=$nb_generated_messages
+    elif [ $((nb_messages_sent + nb_generated_messages)) -le $nb_messages ]
     then
         nb_messages_to_send=$nb_generated_messages
     else
@@ -875,7 +897,7 @@ do
     fi
     # Increment the number of sent messages
     nb_messages_sent=$((nb_messages_sent + nb_messages_to_send))
-    if [ $should_stop -eq 1 ]
+    if [ $nb_messages != -1 ] && [ $should_stop -eq 1 ]
     then
         stop=1
     fi

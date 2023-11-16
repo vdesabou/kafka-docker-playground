@@ -1620,7 +1620,7 @@
                 "--nb-messages"
               ],
               "argument": 1,
-              "description": "💯 Number of messages to produce (default is 1)\n\nDefault value: 1\n"
+              "description": "💯 Number of messages to produce (default is 1).\n\n🎓 if you set it to -1, an infinite number of records will be sent by batches of 300000 records.\n\nDefault value: 1\n"
             },
             {
               "names": [
