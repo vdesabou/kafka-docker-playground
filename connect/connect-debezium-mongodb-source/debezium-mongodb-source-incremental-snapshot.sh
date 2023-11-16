@@ -117,6 +117,7 @@ db.customers2.insert([
 ]);
 EOF
 
+# FIXTHIS: we can see 2 records here, not sure why?
 log "Verifying topic dbserver1.inventory.customers2 : there will be only the new record"
 playground topic consume --topic dbserver1.inventory.customers2 --min-expected-messages 1 --timeout 60
 
