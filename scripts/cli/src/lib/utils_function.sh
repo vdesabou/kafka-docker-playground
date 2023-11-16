@@ -538,7 +538,7 @@ function aws() {
 
     if [ ! -f $HOME/.aws/config ]
     then
-          tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+      tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 cat << EOF > $tmp_dir/config
 [default]
 region = $AWS_REGION
@@ -548,8 +548,13 @@ EOF
     if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
     then
       # log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
-      docker run --rm -iv $tmp_dir/config:/root/.aws/config -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
-      rm -rf $tmp_dir
+      if [ -f $tmp_dir/config ]
+      then
+        docker run --rm -iv $tmp_dir/config:/root/.aws/config -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
+        rm -rf $tmp_dir
+      else
+        docker run --rm -iv $HOME/.aws/config:/root/.aws/config -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
+      fi
     else
       if [ ! -f $HOME/.aws/credentials ]
       then
