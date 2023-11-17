@@ -207,22 +207,6 @@ then
     fi
 fi
 
-log "✨ generating data..."
-if [ "$value_schema_type" == "protobuf" ]
-then
-    nb_max_messages_to_generate=50
-else
-    nb_max_messages_to_generate=1000
-fi
-if [ $nb_messages = -1 ]
-then
-    nb_messages_to_generate=$nb_max_messages_to_generate
-elif [ $nb_messages -lt $nb_max_messages_to_generate ]
-then
-    nb_messages_to_generate=$nb_messages
-else
-    nb_messages_to_generate=$nb_max_messages_to_generate
-fi
 if [[ -n "$validate" ]]
 then
     if [ $nb_messages != 1 ]
@@ -237,6 +221,22 @@ function generate_data() {
     schema_file=$2
     output_file=$3
     input_file=""
+
+    if [ "$value_schema_type" == "protobuf" ]
+    then
+        nb_max_messages_to_generate=50
+    else
+        nb_max_messages_to_generate=1000
+    fi
+    if [ $nb_messages = -1 ]
+    then
+        nb_messages_to_generate=$nb_max_messages_to_generate
+    elif [ $nb_messages -lt $nb_max_messages_to_generate ]
+    then
+        nb_messages_to_generate=$nb_messages
+    else
+        nb_messages_to_generate=$nb_max_messages_to_generate
+    fi
 
     if [[ -n "$forced_value" ]]
     then
@@ -294,82 +294,87 @@ function generate_data() {
         input_file=$tmp_dir/out.json
     fi
 
+    input2_file=$tmp_dir/input2.json
     record_size_temp_file_line=$tmp_dir/line.json
     record_size_temp_file_output=$tmp_dir/output.json
     lines_count=0
-    stop=0
     counter=1
-    while [ $stop != 1 ]
+
+    while IFS= read -r line
     do
-        while IFS= read -r line
-        do
-            if [[ $line == *"%g"* ]]
+        if [[ $line == *"%g"* ]]
+        then
+            line=${line/\%g/$counter}
+        fi
+
+        if [ $record_size != 0 ]
+        then
+            if ! echo "$line" | jq -e .  > /dev/null 2>&1
             then
-                line=${line/\%g/$counter}
-            fi
-
-            if [ $record_size != 0 ]
-            then
-                if ! echo "$line" | jq -e .  > /dev/null 2>&1
-                then
-                    echo "${line}PLACEHOLDER" > $record_size_temp_file_output
-                else
-                    echo $line > $record_size_temp_file_line
-                    new_value="PLACEHOLDER"
-                    
-                    first_string_field=$(echo "$line" | jq -r 'path(.. | select(type == "string")) | .[-1]' | tail -1)
-
-                    log "🔮 Replacing first string field $first_string_field value with long payload"
-                    jq -c --arg new_val "$new_value" ".${first_string_field} |= \$new_val" $record_size_temp_file_line > $record_size_temp_file_output
-                fi
-
-                # The size needed for the new_value
-                size_with_placeholder=$(wc -c < $record_size_temp_file_output)
-
-                # The size needed for the new_value
-                new_value_size=$((record_size - size_with_placeholder))
-
-                if [[ $new_value_size -gt 0 ]]
-                then
-                    # Create a string of '-' characters with length equivalent to new_value_size
-                    new_value_string=$(LC_ALL=C tr -dc 'a-zA-Z0-9' < /dev/urandom | head -c$new_value_size)
-
-                    echo -n "$new_value_string" > temp.txt
-
-                    # Replace placeholder with the content of temp.txt file in $record_size_temp_file_output
-                    # Perl can handle very large arguments and perform replacement effectively
-                    perl -pi -e 'BEGIN{undef $/;} s/PLACEHOLDER/`cat temp.txt`/gse' $record_size_temp_file_output
-
-                    cat $record_size_temp_file_output >> "$output_file"
-                    # Remove temp file
-                    rm temp.txt
-                else
-                    log "❌ record-size is too small"
-                    exit 1
-                fi
+                echo "${line}PLACEHOLDER" > $record_size_temp_file_output
             else
-                echo "$line" >> "$output_file"
+                echo $line > $record_size_temp_file_line
+                new_value="PLACEHOLDER"
+                
+                first_string_field=$(echo "$line" | jq -r 'path(.. | select(type == "string")) | .[-1]' | tail -1)
+
+                log "🔮 Replacing first string field $first_string_field value with long payload"
+                jq -c --arg new_val "$new_value" ".${first_string_field} |= \$new_val" $record_size_temp_file_line > $record_size_temp_file_output
             fi
 
-            lines_count=$((lines_count+1))
-            if [ $lines_count -ge $max_nb_messages_per_batch ]
+            # The size needed for the new_value
+            size_with_placeholder=$(wc -c < $record_size_temp_file_output)
+
+            # The size needed for the new_value
+            new_value_size=$((record_size - size_with_placeholder))
+
+            if [[ $new_value_size -gt 0 ]]
             then
-                stop=1
+                # Create a string of '-' characters with length equivalent to new_value_size
+                new_value_string=$(LC_ALL=C tr -dc 'a-zA-Z0-9' < /dev/urandom | head -c$new_value_size)
+
+                echo -n "$new_value_string" > temp.txt
+
+                # Replace placeholder with the content of temp.txt file in $record_size_temp_file_output
+                # Perl can handle very large arguments and perform replacement effectively
+                perl -pi -e 'BEGIN{undef $/;} s/PLACEHOLDER/`cat temp.txt`/gse' $record_size_temp_file_output
+
+                cat $record_size_temp_file_output >> "$input2_file"
+                # Remove temp file
+                rm temp.txt
+            else
+                log "❌ record-size is too small"
+                exit 1
+            fi
+        else
+            echo "$line" >> "$input2_file"
+        fi
+
+        lines_count=$((lines_count+1))
+        if [ $nb_messages != -1 ]
+        then
+            if [ $lines_count -ge $nb_messages ]
+            then
                 break
             fi
-            if [ $nb_messages != -1 ]
-            then
-                if [ $lines_count -ge $nb_messages ]
-                then
-                    stop=1
-                    break
-                fi
-            fi
-            counter=$((counter+1))
-        done < "$input_file"
+        fi
+        counter=$((counter+1))
+    done < "$input_file"
+
+    nb_lines=$(wc -l < "$input2_file")
+
+    # Calculate the number of times the input file needs to be duplicated
+    nb_copies=$((($max_nb_messages_per_batch + $nb_lines - 1) / $nb_lines))
+
+    # Duplicate the input file to the output file until the maximum number of lines is reached
+    while [ $nb_copies -gt 0 ]
+    do
+        cat "$input2_file" >> "$output_file"
+        nb_copies=$((nb_copies - 1))
     done
 }
 
+log "✨ generating value data..."
 output_key_file=$tmp_dir/out_key_final.json
 output_value_file=$tmp_dir/out_value_final.json
 output_final_file=$tmp_dir/out_final.json
@@ -378,6 +383,7 @@ generate_data "$value_schema_type" "$value_schema_file" "$output_value_file"
 
 if [[ -n "$key" ]]
 then
+    log "✨ generating key data..."
     generate_data "$key_schema_type" "$key_schema_file" "$output_key_file"
 fi
 
