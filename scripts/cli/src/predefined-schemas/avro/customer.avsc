@@ -13,8 +13,12 @@
       "type": "string"
     },
     {
+      "default": null,
       "name": "address",
-      "type": "string"
+      "type": [
+        "null",
+        "string"
+      ]
     },
     {
       "name": "last_sale_date",
@@ -24,28 +28,20 @@
       }
     },
     {
-      "default": null,
       "name": "last_sale_price",
-      "type": [
-        "null",
-        {
-          "logicalType": "decimal",
-          "precision": 15,
-          "scale": 2,
-          "type": "bytes"
-        }
-      ]
+      "type": {
+        "logicalType": "decimal",
+        "precision": 15,
+        "scale": 2,
+        "type": "bytes"
+      }
     },
     {
-      "default": null,
       "name": "last_connection",
-      "type": [
-        "null",
-        {
-          "logicalType": "date",
-          "type": "int"
-        }
-      ]
+      "type": {
+        "logicalType": "date",
+        "type": "int"
+      }
     }
   ],
   "name": "Customer",
