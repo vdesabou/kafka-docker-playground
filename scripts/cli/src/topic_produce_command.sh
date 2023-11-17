@@ -361,6 +361,8 @@ function generate_data() {
         counter=$((counter+1))
     done < "$input_file"
 
+    if [ $nb_messages -gt $max_nb_messages_per_batch ] || [ $nb_messages = -1 ]
+    then
     nb_lines=$(wc -l < "$input2_file")
 
     # Calculate the number of times the input file needs to be duplicated
@@ -372,6 +374,9 @@ function generate_data() {
         cat "$input2_file" >> "$output_file"
         nb_copies=$((nb_copies - 1))
     done
+    else
+    cp $input2_file $output_file
+    fi
 }
 
 log "✨ generating value data..."

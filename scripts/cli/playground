@@ -13695,7 +13695,6 @@ playground_topic_produce_command() {
       record_size_temp_file_line=$tmp_dir/line.json
       record_size_temp_file_output=$tmp_dir/output.json
       lines_count=0
-      stop=0
       counter=1
 
       while IFS= read -r line
@@ -13759,6 +13758,8 @@ playground_topic_produce_command() {
           counter=$((counter+1))
       done < "$input_file"
 
+      if [ $nb_messages -gt $max_nb_messages_per_batch ] || [ $nb_messages = -1 ]
+      then
       nb_lines=$(wc -l < "$input2_file")
 
       # Calculate the number of times the input file needs to be duplicated
@@ -13770,6 +13771,9 @@ playground_topic_produce_command() {
           cat "$input2_file" >> "$output_file"
           nb_copies=$((nb_copies - 1))
       done
+      else
+      cp $input2_file $output_file
+      fi
   }
 
   log "✨ generating value data..."
