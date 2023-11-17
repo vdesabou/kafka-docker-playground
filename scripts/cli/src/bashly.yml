@@ -1565,6 +1565,15 @@ commands:
           💯 Number of messages to produce (default is 1).
 
           🎓 if you set it to -1, an infinite number of records will be sent by batches of 300000 records.
+      - long: --max-nb-messages-per-batch
+        arg: max-nb-messages-per-batch
+        validate: integer
+        required: false
+        default: "300000"
+        help: |-
+          🔼 Max number of messages to send per batch when --nb-messages > --max-nb-messages-per-batch
+             if --nb-messages is set to -1, this is the number of messages sent per batch
+             default is 300000.
       - long: --nb-partitions
         arg: nb-partitions
         validate: integer

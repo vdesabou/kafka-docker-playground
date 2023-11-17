@@ -3391,6 +3391,12 @@ playground_topic_produce_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--max-nb-messages-per-batch MAX-NB-MESSAGES-PER-BATCH")"
+    printf "    🔼 Max number of messages to send per batch when --nb-messages >\n    --max-nb-messages-per-batch\n       if --nb-messages is set to -1, this is the number of messages sent per\n    batch\n       default is 300000.\n"
+    printf "    Default: 300000\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--nb-partitions NB-PARTITIONS")"
     printf "    🔢 Number of partitions for the topic. (default is 1)\n    \n    ❌ Important: If topic is existing, it will be re-created before producing to\n    topic.\n"
     printf "    Default: \n"
@@ -5953,10 +5959,10 @@ EOF
       # log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
       if [ -f $tmp_dir/config ]
       then
-        docker run --rm -iv $tmp_dir/config:/root/.aws/config -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
+        docker run --rm -iv $tmp_dir/config:/root/.aws/config -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
         rm -rf $tmp_dir
       else
-        docker run --rm -iv $HOME/.aws/config:/root/.aws/config -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
+        docker run --rm -iv $HOME/.aws/config:/root/.aws/config -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
       fi
     else
       if [ ! -f $HOME/.aws/credentials ]
@@ -13398,6 +13404,7 @@ playground_topic_produce_command() {
   value_subject_name_strategy="${args[--value-subject-name-strategy]}"
   validate="${args[--validate]}"
   record_size="${args[--record-size]}"
+  max_nb_messages_per_batch="${args[--max-nb-messages-per-batch]}"
   # Convert the space delimited string to an array
   eval "validate_config=(${args[--validate-config]})"
   eval "producer_property=(${args[--producer-property]})"
@@ -13735,7 +13742,7 @@ playground_topic_produce_command() {
               fi
 
               lines_count=$((lines_count+1))
-              if [ $lines_count -ge $max_batch ]
+              if [ $lines_count -ge $max_nb_messages_per_batch ]
               then
                   stop=1
                   break
@@ -13756,7 +13763,6 @@ playground_topic_produce_command() {
   output_key_file=$tmp_dir/out_key_final.json
   output_value_file=$tmp_dir/out_value_final.json
   output_final_file=$tmp_dir/out_final.json
-  max_batch=300000
   SECONDS=0
   generate_data "$value_schema_type" "$value_schema_file" "$output_value_file"
 
@@ -14068,9 +14074,9 @@ playground_topic_produce_command() {
   else
       log "📤 producing $nb_messages records to topic $topic"
   fi
-  if [ $nb_messages -gt $max_batch ] || [ $nb_messages = -1 ]
+  if [ $nb_messages -gt $max_nb_messages_per_batch ] || [ $nb_messages = -1 ]
   then
-      log "✨ it will be done in batches of maximum $max_batch records"
+      log "✨ it will be done in batches of maximum $max_nb_messages_per_batch records"
   fi
 
   function handle_signal {
@@ -14101,7 +14107,7 @@ playground_topic_produce_command() {
           stop=1
           continue
       fi
-      if [ $nb_messages -gt $max_batch ]
+      if [ $nb_messages -gt $max_nb_messages_per_batch ]
       then
           log "📤 producing a batch of $nb_messages_to_send records to topic $topic"
           log "💯 $nb_messages_sent/$nb_messages records sent so far..."
@@ -22468,6 +22474,26 @@ playground_topic_produce_parse_requirements() {
         ;;
 
       # :flag.case
+      --max-nb-messages-per-batch)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_integer "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--max-nb-messages-per-batch MAX-NB-MESSAGES-PER-BATCH" "$(validate_integer "$2")" >&2
+            exit 1
+          fi
+
+          args['--max-nb-messages-per-batch']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-nb-messages-per-batch requires an argument: --max-nb-messages-per-batch MAX-NB-MESSAGES-PER-BATCH" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --nb-partitions)
 
         # :flag.case_arg
@@ -22669,6 +22695,7 @@ playground_topic_produce_parse_requirements() {
   # :command.default_assignments
   [[ -n ${args['--value']:-} ]] || args['--value']="-"
   [[ -n ${args['--nb-messages']:-} ]] || args['--nb-messages']="1"
+  [[ -n ${args['--max-nb-messages-per-batch']:-} ]] || args['--max-nb-messages-per-batch']="300000"
   [[ -n ${args['--nb-partitions']:-} ]] || args['--nb-partitions']=""
   [[ -n ${args['--record-size']:-} ]] || args['--record-size']="0"
 

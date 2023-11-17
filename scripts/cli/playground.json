@@ -1624,6 +1624,13 @@
             },
             {
               "names": [
+                "--max-nb-messages-per-batch"
+              ],
+              "argument": 300000,
+              "description": "🔼 Max number of messages to send per batch when --nb-messages > --max-nb-messages-per-batch\n   if --nb-messages is set to -1, this is the number of messages sent per batch\n   default is 300000.\n\nDefault value: 300000\n"
+            },
+            {
+              "names": [
                 "--nb-partitions"
               ],
               "argument": null,

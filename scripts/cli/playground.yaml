@@ -1900,6 +1900,16 @@ subcommands:
             Default value: 1
             
         - names:
+          - --max-nb-messages-per-batch
+          argument: 300000
+          description: | 
+            🔼 Max number of messages to send per batch when --nb-messages > --max-nb-messages-per-batch
+               if --nb-messages is set to -1, this is the number of messages sent per batch
+               default is 300000.
+            
+            Default value: 300000
+            
+        - names:
           - --nb-partitions
           argument: 
           description: | 

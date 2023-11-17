@@ -14,6 +14,7 @@ key_subject_name_strategy="${args[--key-subject-name-strategy]}"
 value_subject_name_strategy="${args[--value-subject-name-strategy]}"
 validate="${args[--validate]}"
 record_size="${args[--record-size]}"
+max_nb_messages_per_batch="${args[--max-nb-messages-per-batch]}"
 # Convert the space delimited string to an array
 eval "validate_config=(${args[--validate-config]})"
 eval "producer_property=(${args[--producer-property]})"
@@ -350,7 +351,7 @@ function generate_data() {
             fi
 
             lines_count=$((lines_count+1))
-            if [ $lines_count -ge $max_batch ]
+            if [ $lines_count -ge $max_nb_messages_per_batch ]
             then
                 stop=1
                 break
@@ -371,7 +372,6 @@ function generate_data() {
 output_key_file=$tmp_dir/out_key_final.json
 output_value_file=$tmp_dir/out_value_final.json
 output_final_file=$tmp_dir/out_final.json
-max_batch=300000
 SECONDS=0
 generate_data "$value_schema_type" "$value_schema_file" "$output_value_file"
 
@@ -680,9 +680,9 @@ then
 else
     log "📤 producing $nb_messages records to topic $topic"
 fi
-if [ $nb_messages -gt $max_batch ] || [ $nb_messages = -1 ]
+if [ $nb_messages -gt $max_nb_messages_per_batch ] || [ $nb_messages = -1 ]
 then
-    log "✨ it will be done in batches of maximum $max_batch records"
+    log "✨ it will be done in batches of maximum $max_nb_messages_per_batch records"
 fi
 
 function handle_signal {
@@ -713,7 +713,7 @@ do
         stop=1
         continue
     fi
-    if [ $nb_messages -gt $max_batch ]
+    if [ $nb_messages -gt $max_nb_messages_per_batch ]
     then
         log "📤 producing a batch of $nb_messages_to_send records to topic $topic"
         log "💯 $nb_messages_sent/$nb_messages records sent so far..."
