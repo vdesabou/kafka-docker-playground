@@ -318,7 +318,10 @@ function generate_data() {
                 
                 first_string_field=$(echo "$line" | jq -r 'path(.. | select(type == "string")) | .[-1]' | tail -1)
 
-                log "🔮 Replacing first string field $first_string_field value with long payload"
+                if [ $lines_count -eq 0 ]
+                then
+                    log "🔮 Replacing first string field $first_string_field value with long payload"
+                fi
                 jq -c --arg new_val "$new_value" ".${first_string_field} |= \$new_val" $record_size_temp_file_line > $record_size_temp_file_output
             fi
 
@@ -363,19 +366,19 @@ function generate_data() {
 
     if [ $nb_messages -gt $max_nb_messages_per_batch ] || [ $nb_messages = -1 ]
     then
-    nb_lines=$(wc -l < "$input2_file")
+        nb_lines=$(wc -l < "$input2_file")
 
-    # Calculate the number of times the input file needs to be duplicated
-    nb_copies=$((($max_nb_messages_per_batch + $nb_lines - 1) / $nb_lines))
+        # Calculate the number of times the input file needs to be duplicated
+        nb_copies=$((($max_nb_messages_per_batch + $nb_lines - 1) / $nb_lines))
 
-    # Duplicate the input file to the output file until the maximum number of lines is reached
-    while [ $nb_copies -gt 0 ]
-    do
-        cat "$input2_file" >> "$output_file"
-        nb_copies=$((nb_copies - 1))
-    done
+        # Duplicate the input file to the output file until the maximum number of lines is reached
+        while [ $nb_copies -gt 0 ]
+        do
+            cat "$input2_file" >> "$output_file"
+            nb_copies=$((nb_copies - 1))
+        done
     else
-    cp $input2_file $output_file
+        cp $input2_file $output_file
     fi
 }
 
