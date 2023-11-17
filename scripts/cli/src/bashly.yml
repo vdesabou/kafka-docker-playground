@@ -1730,55 +1730,47 @@ commands:
         {
           "fields": [
             {
-              "doc": "count",
               "name": "count",
               "type": "long"
             },
             {
-              "doc": "First Name of Customer",
               "name": "first_name",
               "type": "string"
             },
             {
-              "doc": "Last Name of Customer",
               "name": "last_name",
               "type": "string"
             },
             {
-              "doc": "Address of Customer",
+              "default": null,
               "name": "address",
-              "type": "string"
+              "type": [
+                "null",
+                "string"
+              ]
             },
             {
-              "name": "createdDate",
+              "name": "last_sale_date",
               "type": {
                 "logicalType": "timestamp-millis",
                 "type": "long"
               }
             },
             {
-              "default": null,
-              "name": "myDecimal",
-              "type": [
-                "null",
-                {
-                  "logicalType": "decimal",
-                  "precision": 15,
-                  "scale": 2,
-                  "type": "bytes"
-                }
-              ]
+              "name": "last_sale_price",
+              "type": {
+                "logicalType": "decimal",
+                "precision": 15,
+                "scale": 2,
+                "type": "bytes"
+              }
             },
             {
-              "default": null,
-              "name": "warranty_expiration",
-              "type": [
-                "null",
-                {
-                  "logicalType": "date",
-                  "type": "int"
-                }
-              ]
+              "name": "last_connection",
+              "type": {
+                "logicalType": "date",
+                "type": "int"
+              }
             }
           ],
           "name": "Customer",

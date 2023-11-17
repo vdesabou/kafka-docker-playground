@@ -713,10 +713,16 @@ do
         stop=1
         continue
     fi
-    if [ $nb_messages -gt $max_nb_messages_per_batch ]
+    if [ $nb_messages -gt $max_nb_messages_per_batch ] || [ $nb_messages = -1 ]
     then
-        log "📤 producing a batch of $nb_messages_to_send records to topic $topic"
-        log "💯 $nb_messages_sent/$nb_messages records sent so far..."
+        if [ $nb_messages -eq -1 ]
+        then
+            log "📤 producing a batch of $nb_messages_to_send records to topic $topic (press ctrl-c to stop)"
+            log "💯 $nb_messages_sent records sent so far..."
+        else
+            log "📤 producing a batch of $nb_messages_to_send records to topic $topic"
+            log "💯 $nb_messages_sent/$nb_messages records sent so far..."
+        fi
     fi
     docker cp $root_folder/scripts/cli/src/tools-log4j.properties connect:/tmp/tools-log4j.properties > /dev/null 2>&1
     case "${value_schema_type}" in
