@@ -1562,9 +1562,10 @@ commands:
         required: false
         default: "1"
         help: |-
-          💯 Number of messages to produce (default is 1).
-
-          🎓 if you set it to -1, an infinite number of records will be sent by batches of 300000 records.
+          💯 Number of messages to produce (default is 1)
+             
+          🎓  - if > <value of --max-nb-messages-per-batch> (default 300000), messages will be sent in batches of <value of --max-nb-messages-per-batch> (default 300000) records
+              - if you set it to -1, an infinite number of records will also be sent in batches
       - long: --max-nb-messages-per-batch
         arg: max-nb-messages-per-batch
         validate: integer
@@ -1573,7 +1574,15 @@ commands:
         help: |-
           🔼 Max number of messages to send per batch when --nb-messages > --max-nb-messages-per-batch
              if --nb-messages is set to -1, this is the number of messages sent per batch
-             default is 300000.
+             default is 300000
+      - long: --sleep-time-between-batch
+        arg: sleep-time-between-batch
+        validate: integer
+        required: false
+        default: "0"
+        help: |-
+          💤 Sleep time in seconds between batches
+             default is 0
       - long: --nb-partitions
         arg: nb-partitions
         validate: integer

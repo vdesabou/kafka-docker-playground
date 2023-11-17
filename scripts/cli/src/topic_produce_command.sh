@@ -15,6 +15,7 @@ value_subject_name_strategy="${args[--value-subject-name-strategy]}"
 validate="${args[--validate]}"
 record_size="${args[--record-size]}"
 max_nb_messages_per_batch="${args[--max-nb-messages-per-batch]}"
+sleep_time_between_batch="${args[--sleep-time-between-batch]}"
 # Convert the space delimited string to an array
 eval "validate_config=(${args[--validate-config]})"
 eval "producer_property=(${args[--producer-property]})"
@@ -676,13 +677,18 @@ set -e
 SECONDS=0
 if [ $nb_messages = -1 ]
 then
-    log "📤 producing infinite records to topic $topic (--nb-messages is set to -1), press ctrl-c to stop"
+    log "📤 producing infinite records to topic $topic (--nb-messages is set to -1)"
 else
     log "📤 producing $nb_messages records to topic $topic"
 fi
+sleep_msg=""
+if [[ $sleep_time_between_batch -gt 0 ]]
+then
+    sleep_msg=" with $sleep_time_between_batch seconds between each batch"
+fi
 if [ $nb_messages -gt $max_nb_messages_per_batch ] || [ $nb_messages = -1 ]
 then
-    log "✨ it will be done in batches of maximum $max_nb_messages_per_batch records"
+    log "✨ it will be done in batches of maximum $max_nb_messages_per_batch records$sleep_msg"
 fi
 
 function handle_signal {
@@ -904,6 +910,11 @@ do
     fi
     # Increment the number of sent messages
     nb_messages_sent=$((nb_messages_sent + nb_messages_to_send))
+
+    if [[ $sleep_time_between_batch -gt 0 ]]
+    then
+        sleep $sleep_time_between_batch
+    fi
     if [ $nb_messages != -1 ] && [ $should_stop -eq 1 ]
     then
         stop=1

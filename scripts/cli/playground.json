@@ -1620,14 +1620,21 @@
                 "--nb-messages"
               ],
               "argument": 1,
-              "description": "💯 Number of messages to produce (default is 1).\n\n🎓 if you set it to -1, an infinite number of records will be sent by batches of 300000 records.\n\nDefault value: 1\n"
+              "description": "💯 Number of messages to produce (default is 1)\n   \n🎓  - if > <value of --max-nb-messages-per-batch> (default 300000), messages will be sent in batches of <value of --max-nb-messages-per-batch> (default 300000) records\n    - if you set it to -1, an infinite number of records will also be sent in batches\n\nDefault value: 1\n"
             },
             {
               "names": [
                 "--max-nb-messages-per-batch"
               ],
               "argument": 300000,
-              "description": "🔼 Max number of messages to send per batch when --nb-messages > --max-nb-messages-per-batch\n   if --nb-messages is set to -1, this is the number of messages sent per batch\n   default is 300000.\n\nDefault value: 300000\n"
+              "description": "🔼 Max number of messages to send per batch when --nb-messages > --max-nb-messages-per-batch\n   if --nb-messages is set to -1, this is the number of messages sent per batch\n   default is 300000\n\nDefault value: 300000\n"
+            },
+            {
+              "names": [
+                "--sleep-time-between-batch"
+              ],
+              "argument": 0,
+              "description": "💤 Sleep time in seconds between batches\n   default is 0\n\nDefault value: 0\n"
             },
             {
               "names": [

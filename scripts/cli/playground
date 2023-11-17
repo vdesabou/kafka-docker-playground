@@ -3386,14 +3386,20 @@ playground_topic_produce_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--nb-messages NB-MESSAGES")"
-    printf "    💯 Number of messages to produce (default is 1).\n    \n    🎓 if you set it to -1, an infinite number of records will be sent by batches\n    of 300000 records.\n"
+    printf "    💯 Number of messages to produce (default is 1)\n       \n    🎓  - if > <value of --max-nb-messages-per-batch> (default 300000), messages\n    will be sent in batches of <value of --max-nb-messages-per-batch> (default\n    300000) records\n        - if you set it to -1, an infinite number of records will also be sent\n    in batches\n"
     printf "    Default: 1\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--max-nb-messages-per-batch MAX-NB-MESSAGES-PER-BATCH")"
-    printf "    🔼 Max number of messages to send per batch when --nb-messages >\n    --max-nb-messages-per-batch\n       if --nb-messages is set to -1, this is the number of messages sent per\n    batch\n       default is 300000.\n"
+    printf "    🔼 Max number of messages to send per batch when --nb-messages >\n    --max-nb-messages-per-batch\n       if --nb-messages is set to -1, this is the number of messages sent per\n    batch\n       default is 300000\n"
     printf "    Default: 300000\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--sleep-time-between-batch SLEEP-TIME-BETWEEN-BATCH")"
+    printf "    💤 Sleep time in seconds between batches\n       default is 0\n"
+    printf "    Default: 0\n"
     echo
 
     # :flag.usage
@@ -13405,6 +13411,7 @@ playground_topic_produce_command() {
   validate="${args[--validate]}"
   record_size="${args[--record-size]}"
   max_nb_messages_per_batch="${args[--max-nb-messages-per-batch]}"
+  sleep_time_between_batch="${args[--sleep-time-between-batch]}"
   # Convert the space delimited string to an array
   eval "validate_config=(${args[--validate-config]})"
   eval "producer_property=(${args[--producer-property]})"
@@ -14070,13 +14077,18 @@ playground_topic_produce_command() {
   SECONDS=0
   if [ $nb_messages = -1 ]
   then
-      log "📤 producing infinite records to topic $topic (--nb-messages is set to -1), press ctrl-c to stop"
+      log "📤 producing infinite records to topic $topic (--nb-messages is set to -1)"
   else
       log "📤 producing $nb_messages records to topic $topic"
   fi
+  sleep_msg=""
+  if [[ $sleep_time_between_batch -gt 0 ]]
+  then
+      sleep_msg=" with $sleep_time_between_batch seconds between each batch"
+  fi
   if [ $nb_messages -gt $max_nb_messages_per_batch ] || [ $nb_messages = -1 ]
   then
-      log "✨ it will be done in batches of maximum $max_nb_messages_per_batch records"
+      log "✨ it will be done in batches of maximum $max_nb_messages_per_batch records$sleep_msg"
   fi
 
   function handle_signal {
@@ -14299,6 +14311,11 @@ playground_topic_produce_command() {
       fi
       # Increment the number of sent messages
       nb_messages_sent=$((nb_messages_sent + nb_messages_to_send))
+
+      if [[ $sleep_time_between_batch -gt 0 ]]
+      then
+          sleep $sleep_time_between_batch
+      fi
       if [ $nb_messages != -1 ] && [ $should_stop -eq 1 ]
       then
           stop=1
@@ -22500,6 +22517,26 @@ playground_topic_produce_parse_requirements() {
         ;;
 
       # :flag.case
+      --sleep-time-between-batch)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_integer "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--sleep-time-between-batch SLEEP-TIME-BETWEEN-BATCH" "$(validate_integer "$2")" >&2
+            exit 1
+          fi
+
+          args['--sleep-time-between-batch']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--sleep-time-between-batch requires an argument: --sleep-time-between-batch SLEEP-TIME-BETWEEN-BATCH" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --nb-partitions)
 
         # :flag.case_arg
@@ -22702,6 +22739,7 @@ playground_topic_produce_parse_requirements() {
   [[ -n ${args['--value']:-} ]] || args['--value']="-"
   [[ -n ${args['--nb-messages']:-} ]] || args['--nb-messages']="1"
   [[ -n ${args['--max-nb-messages-per-batch']:-} ]] || args['--max-nb-messages-per-batch']="300000"
+  [[ -n ${args['--sleep-time-between-batch']:-} ]] || args['--sleep-time-between-batch']="0"
   [[ -n ${args['--nb-partitions']:-} ]] || args['--nb-partitions']=""
   [[ -n ${args['--record-size']:-} ]] || args['--record-size']="0"
 
