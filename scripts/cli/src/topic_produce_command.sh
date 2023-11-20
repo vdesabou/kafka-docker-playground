@@ -226,7 +226,12 @@ function generate_data() {
     then
         nb_max_messages_to_generate=50
     else
-        nb_max_messages_to_generate=1000
+        if [ $record_size != 0 ]
+        then
+            nb_max_messages_to_generate=50
+        else
+            nb_max_messages_to_generate=1000
+        fi
     fi
     if [ $nb_messages = -1 ]
     then
@@ -926,5 +931,4 @@ do
 done
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 log "📤 produced $nb_messages records to topic $topic, $ELAPSED"
-set +x
 playground topic get-number-records --topic $topic
