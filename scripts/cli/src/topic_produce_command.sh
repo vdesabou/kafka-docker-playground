@@ -228,9 +228,9 @@ function generate_data() {
     else
         if [ $record_size != 0 ]
         then
-            nb_max_messages_to_generate=50
+            nb_max_messages_to_generate=10
         else
-            nb_max_messages_to_generate=1000
+            nb_max_messages_to_generate=500
         fi
     fi
     if [ $nb_messages = -1 ]
@@ -371,7 +371,16 @@ function generate_data() {
 
     if [ $nb_messages -gt $max_nb_messages_per_batch ] || [ $nb_messages = -1 ]
     then
-        yes "$(cat "$input2_file")" | head -n "$max_nb_messages_per_batch" > "$output_file"
+        # https://stackoverflow.com/questions/22818814/repeat-a-file-content-until-reach-a-defined-line-count
+        function repcat() {
+            while cat "$1"
+            do 
+                :
+            done
+        }
+        set +e
+        repcat "$input2_file" | head -n "$max_nb_messages_per_batch" > "$output_file"
+        set -e
     else
         cp $input2_file $output_file
     fi
