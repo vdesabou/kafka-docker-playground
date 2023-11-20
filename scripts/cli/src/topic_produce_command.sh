@@ -121,15 +121,19 @@ source $root_folder/scripts/utils.sh
 
 if [[ -n "$tombstone" ]]
 then
-    if [[ ! -n "$key" ]]
+    if [[ ! -n "$key" ]] && [[ ! -n "$forced_key" ]]
     then
-        logerror "❌ --tombstone is set but neither --key or --key-schema are set!"
+        logerror "❌ --tombstone is set but neither --key or --forced-key are set!"
         exit 1
     fi
     if ! version_gt $CONNECT_TAG "7.1.99"
     then
         logerror "❌ --tombstone is set but it can be produced only with CP 7.2+"
         exit 1
+    fi
+    if [[ -n "$forced_key" ]]
+    then
+        key=$forced_key
     fi
     log "🧟 Sending tombstone for key $key in topic $topic"
     if [[ -n "$verbose" ]]
