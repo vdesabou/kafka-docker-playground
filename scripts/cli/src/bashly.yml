@@ -1635,6 +1635,13 @@ commands:
           Example: --headers "header1:value1,header2:value2"
 
           Note: CP 7.2+ is required.
+      - long: --forced-key
+        arg: forced-key
+        required: false
+        help: |-
+          ☢️ Key to use for all records. 
+          
+          🎓 Tip: use --generate-only first with avro, json-schema or protobuf to get skeleton of messages and then use --forced-key to send the message you need. 
       - long: --forced-value
         arg: forced-value
         required: false

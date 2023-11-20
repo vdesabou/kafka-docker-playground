@@ -6,6 +6,7 @@ nb_partitions="${args[--nb-partitions]}"
 schema="${args[--value]}"
 key="${args[--key]}"
 headers="${args[--headers]}"
+forced_key="${args[--forced-key]}"
 forced_value="${args[--forced-value]}"
 generate_only="${args[--generate-only]}"
 tombstone="${args[--tombstone]}"
@@ -216,10 +217,19 @@ then
     fi
 fi
 
+# https://stackoverflow.com/questions/22818814/repeat-a-file-content-until-reach-a-defined-line-count
+function repcat() {
+    while cat "$1"
+    do 
+        :
+    done
+}
+
 function generate_data() {
     schema_type=$1
     schema_file=$2
     output_file=$3
+    type="$4"
     input_file=""
 
     if [ "$value_schema_type" == "protobuf" ]
@@ -243,10 +253,14 @@ function generate_data() {
         nb_messages_to_generate=$nb_max_messages_to_generate
     fi
 
-    if [[ -n "$forced_value" ]]
+    if [[ -n "$forced_value" ]] && [ "$type" == "VALUE" ]
     then
         log "☢️ --forced-value is set"
         echo "$forced_value" > $tmp_dir/out.json
+    elif [[ -n "$forced_key" ]] && [ "$type" == "KEY" ]
+    then
+        log "☢️ --forced-key is set"
+        echo "$forced_key" > $tmp_dir/out.json
     else
         case "${schema_type}" in
             json|sql)
@@ -300,6 +314,10 @@ function generate_data() {
     fi
 
     input2_file=$tmp_dir/input2.json
+    if [ -f $input2_file ]
+    then
+        rm -f $input2_file
+    fi
     record_size_temp_file_line=$tmp_dir/line.json
     record_size_temp_file_output=$tmp_dir/output.json
     lines_count=0
@@ -371,15 +389,13 @@ function generate_data() {
 
     if [ $nb_messages -gt $max_nb_messages_per_batch ] || [ $nb_messages = -1 ]
     then
-        # https://stackoverflow.com/questions/22818814/repeat-a-file-content-until-reach-a-defined-line-count
-        function repcat() {
-            while cat "$1"
-            do 
-                :
-            done
-        }
         set +e
         repcat "$input2_file" | head -n "$max_nb_messages_per_batch" > "$output_file"
+        set -e
+    elif [ $lines_count -lt $nb_messages ]
+    then
+        set +e
+        repcat "$input_file" | head -n "$nb_messages" > "$output_file"
         set -e
     else
         cp $input2_file $output_file
@@ -391,12 +407,12 @@ output_key_file=$tmp_dir/out_key_final.json
 output_value_file=$tmp_dir/out_value_final.json
 output_final_file=$tmp_dir/out_final.json
 SECONDS=0
-generate_data "$value_schema_type" "$value_schema_file" "$output_value_file"
+generate_data "$value_schema_type" "$value_schema_file" "$output_value_file" "VALUE"
 
 if [[ -n "$key" ]]
 then
     log "✨ generating key data..."
-    generate_data "$key_schema_type" "$key_schema_file" "$output_key_file"
+    generate_data "$key_schema_type" "$key_schema_file" "$output_key_file" "KEY"
 fi
 
 nb_generated_messages=$(wc -l < $output_value_file)

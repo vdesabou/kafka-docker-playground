@@ -1689,6 +1689,13 @@
             },
             {
               "names": [
+                "--forced-key"
+              ],
+              "argument": "FORCED-KEY",
+              "description": "☢️ Key to use for all records. \n\n🎓 Tip: use --generate-only first with avro, json-schema or protobuf to get skeleton of messages and then use --forced-key to send the message you need. \n"
+            },
+            {
+              "names": [
                 "--forced-value"
               ],
               "argument": "FORCED-VALUE",

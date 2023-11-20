@@ -1964,6 +1964,14 @@ subcommands:
             Note: CP 7.2+ is required.
             
         - names:
+          - --forced-key
+          argument: FORCED-KEY
+          description: | 
+            ☢️ Key to use for all records. 
+            
+            🎓 Tip: use --generate-only first with avro, json-schema or protobuf to get skeleton of messages and then use --forced-key to send the message you need. 
+            
+        - names:
           - --forced-value
           argument: FORCED-VALUE
           description: | 
