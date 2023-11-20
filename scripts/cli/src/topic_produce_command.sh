@@ -262,7 +262,7 @@ function generate_data() {
                     exit 1
                 fi
                 set -e
-                cat $tmp_dir/result.log | grep "Payload: " | sed 's/Payload: //' > $tmp_dir/out.json
+                cat $tmp_dir/result.log | grep "Payload: " | sed 's/  Payload: //' > $tmp_dir/out.json
             ;;
             avro)
                 schema_file_name="$(basename "${schema_file}")"
