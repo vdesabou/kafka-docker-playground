@@ -11,7 +11,7 @@ if ! version_gt $TAG_BASE "5.3.99"; then
 fi
 
 verify_docker_and_memory
-verify_installed "docker-compose"
+
 check_docker_compose_version
 check_bash_version
 set_profiles
