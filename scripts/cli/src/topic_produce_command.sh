@@ -399,7 +399,7 @@ function generate_data() {
     elif [ $lines_count -lt $nb_messages ]
     then
         set +e
-        repcat "$input_file" | head -n "$nb_messages" > "$output_file"
+        repcat "$input2_file" | head -n "$nb_messages" > "$output_file"
         set -e
     else
         cp $input2_file $output_file
