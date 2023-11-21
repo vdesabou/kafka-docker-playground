@@ -19,6 +19,7 @@ connector_tag="${args[--connector-tag]}"
 connector_zip="${args[--connector-zip]}"
 connector_jar="${args[--connector-jar]}"
 enable_ksqldb="${args[--enable-ksqldb]}"
+enable_rest_proxy="${args[--enable-rest-proxy]}"
 enable_c3="${args[--enable-control-center]}"
 enable_conduktor="${args[--enable-conduktor]}"
 enable_multiple_brokers="${args[--enable-multiple-brokers]}"
@@ -1096,7 +1097,12 @@ fi
 
 if [[ -n "$enable_ksqldb" ]]
 then
-  force_enable --enable_ksqldb ENABLE_KSQLDB
+  force_enable --enable-ksqldb ENABLE_KSQLDB
+fi
+
+if [[ -n "$enable_rest_proxy" ]]
+then
+  force_enable --enable-rest-proxy ENABLE_RESTPROXY
 fi
 
 if [[ -n "$enable_c3" ]]

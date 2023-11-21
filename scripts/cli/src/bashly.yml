@@ -200,6 +200,13 @@ commands:
       🚀 Enable ksqlDB
 
       By default, ksqldb-server and ksqldb-cli containers are not started for every test
+  - &enable-rest-proxy
+    long: --enable-rest-proxy
+    required: false
+    help: |-
+      🧲 Enable Rest Proxy
+
+      By default, rest-proxy container is not started for every test
   - &enable-control-center
     long: --enable-control-center
     required: false

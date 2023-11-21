@@ -670,6 +670,11 @@ playground_run_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--enable-rest-proxy")"
+    printf "    🧲 Enable Rest Proxy\n    \n    By default, rest-proxy container is not started for every test\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--enable-control-center")"
     printf "    💠 Enable Control Center\n    \n    By default, control-center container is not started for every test\n    \n    Control Center is reachable at http://127.0.0.1:9021\n"
     echo
@@ -1467,7 +1472,7 @@ playground_repro_bootstrap_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--producer, -p PRODUCER-TYPE")"
-    printf "    ♨️ Java producer type to use\n    \n    One of avro, avro-with-key, protobuf, protobuf-with-key, json-schema,\n    json-schema-with-key\n    \n    🎓 Tip: Most of times, it's much simpler to use 'playground topic produce'.\n    Use java producer only if you have very specific requirements such as\n    specifying record timestamp, use key with schema or to do perf testing\n    \n    🎓 Tip: 'with-key' will also produce key with selected converter, otherwise\n    LongConverter is used\n"
+    printf "    ♨️ Java producer type to use\n    \n    One of avro, avro-with-key, protobuf, protobuf-with-key, json-schema,\n    json-schema-with-key\n    \n    🎓 Tip: Most of times, it's much simpler to use 'playground topic produce'.\n    Use java producer only if you have very specific requirements such as\n    specifying record timestamp or to do perf testing (even though CLI is also\n    good for that)\n    \n    🎓 Tip: 'with-key' will also produce key with selected converter, otherwise\n    LongConverter is used\n"
     printf "    Allowed: none, avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key\n"
     printf "    Default: none\n"
     echo
@@ -5918,7 +5923,6 @@ function set_profiles() {
     :
   elif [ ${nb_connect_services} -gt 1 ]
   then
-
     log "🥉 Multiple Connect nodes mode is enabled, connect2 and connect 3 containers will be started"
     profile_connect_nodes_command="--profile connect_nodes"
     export CONNECT_NODES_PROFILES="connect_nodes"
@@ -6063,7 +6067,6 @@ function display_docker_container_error_log() {
           docker container logs --tail=100 $container 2>&1 | grep -v "was supplied but isn't a known config"
       else
           docker container logs $container 2>&1 | egrep "ERROR|FATAL"
-
       fi
       logwarn "####################################################"
   done
@@ -6342,7 +6345,6 @@ function display_jmx_info() {
     log "📛 Pyroscope is reachable at http://127.0.0.1:4040"
     log "📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/password) or JMX metrics are available locally on those ports:"
   fi
-
   log "    - zookeeper       : 9999"
   log "    - broker          : 10000"
   log "    - schema-registry : 10001"
@@ -6503,10 +6505,8 @@ function add_latency() {
     src_container=$1
     if valid_ip $2
     then
-
       dst_ip=$2
     else
-
       dst_ip=$(container_to_ip $2)
     fi
     latency=$3
@@ -6548,10 +6548,8 @@ function add_packet_corruption() {
     src_container=$1
     if valid_ip $2
     then
-
       dst_ip=$2
     else
-
       dst_ip=$(container_to_ip $2)
     fi
     corruption=$3
@@ -6575,7 +6573,6 @@ function add_packet_corruption() {
     # Route the rest of the of the packets without any control.
     # Add a filter to the parent queue 1:. The filter has priority 2.
     docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip dst 0.0.0.0/0 flowid 1:2
-
     docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip protocol 1 0xff flowid 1:2
 
     # Add a child queue named 10: under class 1:1. All outgoing packets that will be routed to 10: will have corrupt applied them.
@@ -6583,7 +6580,6 @@ function add_packet_corruption() {
 
     # Add a child queue named 20: under class 1:2
     docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:2 handle 20: sfq
-
 }
 
 function add_packet_loss() {
@@ -6595,10 +6591,8 @@ function add_packet_loss() {
     src_container=$1
     if valid_ip $2
     then
-
       dst_ip=$2
     else
-
       dst_ip=$(container_to_ip $2)
     fi
     loss=$3
@@ -6622,7 +6616,6 @@ function add_packet_loss() {
     # Route the rest of the of the packets without any control.
     # Add a filter to the parent queue 1:. The filter has priority 2.
     docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip dst 0.0.0.0/0 flowid 1:2
-
     docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip protocol 1 0xff flowid 1:2
 
     # Add a child queue named 10: under class 1:1. All outgoing packets that will be routed to 10: will have loss applied them.
@@ -6630,7 +6623,6 @@ function add_packet_loss() {
 
     # Add a child queue named 20: under class 1:2
     docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:2 handle 20: sfq
-
 }
 
 function get_3rdparty_file () {
@@ -6904,7 +6896,6 @@ function print_code_pass() {
   shift $((OPTIND-1))
 	printf "${PRETTY_PASS}${PRETTY_CODE}%s\e[0m\n" "${CODE}"
 	[[ -z "$MESSAGE" ]] || printf "\t$MESSAGE\n"
-
 }
 function print_code_error() {
   local MESSAGE=""
@@ -6919,7 +6910,6 @@ function print_code_error() {
   shift $((OPTIND-1))
 	printf "${PRETTY_ERROR}${PRETTY_CODE}%s\e[0m\n" "${CODE}"
 	[[ -z "$MESSAGE" ]] || printf "\t$MESSAGE\n"
-
 }
 
 function exit_with_error()
@@ -6959,7 +6949,6 @@ function maybe_delete_ccloud_environment () {
   if [ -z "$CLUSTER_NAME" ]
   then
     #
-
     # CLUSTER_NAME is not set
     #
     log "🧹❌ Confluent Cloud cluster will be deleted..."
@@ -7005,7 +6994,6 @@ function bootstrap_ccloud_environment () {
   if [ -z "$CLUSTER_NAME" ]
   then
     #
-
     # CLUSTER_NAME is not set
     #
     log "🛠👷‍♀️ CLUSTER_NAME is not set, a new Confluent Cloud cluster will be created..."
@@ -7015,7 +7003,6 @@ function bootstrap_ccloud_environment () {
     then
       logwarn "CLUSTER_CLOUD and/or CLUSTER_REGION are not set, the cluster will be created 🌤 AWS provider and 🗺 eu-west-2 region"
       export CLUSTER_CLOUD=aws
-
       export CLUSTER_REGION=eu-west-2
     fi
 
@@ -7034,7 +7021,6 @@ function bootstrap_ccloud_environment () {
     check_if_continue
   else
     #
-
     # CLUSTER_NAME is set
     #
     log "🌱 CLUSTER_NAME is set, your existing Confluent Cloud cluster will be used..."
@@ -7442,7 +7428,6 @@ function ccloud::find_cluster() {
   [[ ! -z "$FOUND_CLUSTER" ]] && {
       echo "$FOUND_CLUSTER" | jq -r .id
       return 0
-
     } || {
       return 1
     }
@@ -7531,7 +7516,6 @@ function ccloud::find_credentials_resource() {
   [[ $FOUND_COUNT -ne 0 ]] && {
       echo "$FOUND_CRED" | jq -r '.[0].api_key'
       return 0
-
     } || {
       return 1
     }
@@ -7575,7 +7559,6 @@ function ccloud::find_ksqldb_app() {
   [[ $FOUND_COUNT -ne 0 ]] && {
       echo "$FOUND_APP" | jq -r '.[].id'
       return 0
-
     } || {
       return 1
     }
@@ -7904,7 +7887,6 @@ function ccloud::create_acls_connect_topics() {
   confluent kafka acl create --allow --service-account $serviceAccount --operations WRITE,READ --topic $TOPIC --prefix
 
   TOPIC=connect-demo-statuses
-
   confluent kafka topic create $TOPIC --partitions 3 --config "cleanup.policy=compact"
   confluent kafka acl create --allow --service-account $serviceAccount --operations WRITE,READ  --topic $TOPIC --prefix
 
@@ -8016,7 +7998,6 @@ function ccloud::create_ccloud_stack() {
   fi
 
   if [[ -z "$ENVIRONMENT" ]];
-
   then
     # Environment is not received so it will be created
     ENVIRONMENT_NAME=${ENVIRONMENT_NAME:-"pg-$SERVICE_ACCOUNT_ID-$EXAMPLE"}
@@ -8178,7 +8159,6 @@ function ccloud::destroy_ccloud_stack() {
   # Setting default QUIET=false to surface potential errors
   QUIET="${QUIET:-false}"
   [[ $QUIET == "true" ]] &&
-
     local REDIRECT_TO="/dev/null" ||
     local REDIRECT_TO="/dev/tty"
 
@@ -8732,7 +8712,6 @@ EOF
   chmod $PERM $PYTHON_CONFIG
 
   # .NET
-
   DOTNET_CONFIG=$DEST/dotnet.delta
   echo "$DOTNET_CONFIG"
   rm -f $DOTNET_CONFIG
@@ -8908,11 +8887,8 @@ EOF
 }
 
 # These are some duplicate functions from
-
 #  helper.sh to decouple the script files.  In
-
 #  the future we can work to remove this
-
 #  duplication if necessary
 function ccloud::retry() {
     local -r -i max_wait="$1"; shift
@@ -8936,13 +8912,11 @@ function ccloud::retry() {
     printf "\n"
 }
 function ccloud::version_gt() {
-
   test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
 }
 
 
 function check_arm64_support() {
-
   DIR="$1"
   DOCKER_COMPOSE_FILE="$2"
   set +e
@@ -9344,6 +9318,7 @@ playground_run_command() {
   connector_zip="${args[--connector-zip]}"
   connector_jar="${args[--connector-jar]}"
   enable_ksqldb="${args[--enable-ksqldb]}"
+  enable_rest_proxy="${args[--enable-rest-proxy]}"
   enable_c3="${args[--enable-control-center]}"
   enable_conduktor="${args[--enable-conduktor]}"
   enable_multiple_brokers="${args[--enable-multiple-brokers]}"
@@ -9422,6 +9397,12 @@ playground_run_command() {
   then
     flag_list="$flag_list --enable-ksqldb"
     export ENABLE_KSQLDB=true
+  fi
+
+  if [[ -n "$enable_rest_proxy" ]]
+  then
+    flag_list="$flag_list --enable-rest-proxy"
+    export ENABLE_RESTPROXY=true
   fi
 
   if [[ -n "$enable_c3" ]]
@@ -9563,6 +9544,7 @@ playground_re_run_command() {
   connector_zip="${args[--connector-zip]}"
   connector_jar="${args[--connector-jar]}"
   enable_ksqldb="${args[--enable-ksqldb]}"
+  enable_rest_proxy="${args[--enable-rest-proxy]}"
   enable_c3="${args[--enable-control-center]}"
   enable_conduktor="${args[--enable-conduktor]}"
   enable_multiple_brokers="${args[--enable-multiple-brokers]}"
@@ -9605,6 +9587,11 @@ playground_re_run_command() {
   if [[ -n "$enable_ksqldb" ]]
   then
     flag_list="$flag_list --enable-ksqldb"
+  fi
+
+  if [[ -n "$enable_rest_proxy" ]]
+  then
+    flag_list="$flag_list --enable-rest-proxy"
   fi
 
   if [[ -n "$enable_c3" ]]
@@ -9697,6 +9684,7 @@ playground_start_environment_command() {
   environment="${args[--environment]}"
   tag="${args[--tag]}"
   enable_ksqldb="${args[--enable-ksqldb]}"
+  enable_rest_proxy="${args[--enable-rest-proxy]}"
   enable_c3="${args[--enable-control-center]}"
   enable_conduktor="${args[--enable-conduktor]}"
   enable_multiple_brokers="${args[--enable-multiple-brokers]}"
@@ -9714,6 +9702,11 @@ playground_start_environment_command() {
   if [[ -n "$enable_ksqldb" ]]
   then
     flag_list="$flag_list --enable-ksqldb"
+  fi
+
+  if [[ -n "$enable_rest_proxy" ]]
+  then
+    flag_list="$flag_list --enable-rest-proxy"
   fi
 
   if [[ -n "$enable_c3" ]]
@@ -10445,6 +10438,7 @@ playground_repro_bootstrap_command() {
   connector_zip="${args[--connector-zip]}"
   connector_jar="${args[--connector-jar]}"
   enable_ksqldb="${args[--enable-ksqldb]}"
+  enable_rest_proxy="${args[--enable-rest-proxy]}"
   enable_c3="${args[--enable-control-center]}"
   enable_conduktor="${args[--enable-conduktor]}"
   enable_multiple_brokers="${args[--enable-multiple-brokers]}"
@@ -11511,7 +11505,12 @@ playground_repro_bootstrap_command() {
 
   if [[ -n "$enable_ksqldb" ]]
   then
-    force_enable --enable_ksqldb ENABLE_KSQLDB
+    force_enable --enable-ksqldb ENABLE_KSQLDB
+  fi
+
+  if [[ -n "$enable_rest_proxy" ]]
+  then
+    force_enable --enable-rest-proxy ENABLE_RESTPROXY
   fi
 
   if [[ -n "$enable_c3" ]]
@@ -17237,6 +17236,14 @@ playground_run_parse_requirements() {
 
         # :flag.case_no_arg
         args['--enable-ksqldb']=1
+        shift
+        ;;
+
+      # :flag.case
+      --enable-rest-proxy)
+
+        # :flag.case_no_arg
+        args['--enable-rest-proxy']=1
         shift
         ;;
 
