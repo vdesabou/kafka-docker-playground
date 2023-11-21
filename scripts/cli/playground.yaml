@@ -2297,6 +2297,20 @@ subcommands:
             
             🎓 Tip: If not specified, the command will apply to all connectors
             
+      - name: stop
+        description: | 
+          🛑 Stop connector (only available if CP > 7.5 )
+        usage: playground connector stop [OPTIONS]
+        options:
+        - names:
+          - --connector
+          - -c
+          argument: CONNECTOR
+          description: | 
+            🔗 Connector name
+            
+            🎓 Tip: If not specified, the command will apply to all connectors
+            
       - name: resume
         description: | 
           ⏯️  Resume connector

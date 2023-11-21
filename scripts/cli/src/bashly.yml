@@ -148,7 +148,7 @@ commands:
     long: --tag
     arg: tag
     required: false
-    validate: minimal_cp_version
+    validate: minimal_cp_version "4"
     help: |-
       🎯 Confluent Platform (CP) version to use
 
@@ -2341,6 +2341,11 @@ commands:
 
   - name: restart
     help: ♻️  Restart connector
+    flags:
+    - *connector
+
+  - name: stop
+    help: 🛑 Stop connector (only available if CP > 7.5 )
     flags:
     - *connector
 

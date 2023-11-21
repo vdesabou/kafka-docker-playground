@@ -127,6 +127,7 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")                        "
   [[ -n $long_usage ]] && printf "  %s   🧞 Get current and latest version available on Confluent Hub for connector(s) used in example\n" "$(green "connector versions")                     "
   [[ -n $long_usage ]] && printf "  %s   ♻️  Restart connector\n" "$(green "connector restart")                      "
+  [[ -n $long_usage ]] && printf "  %s   🛑 Stop connector (only available if CP > 7.5 )\n" "$(green "connector stop")                         "
   [[ -n $long_usage ]] && printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")                       "
   [[ -n $long_usage ]] && printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")                       "
   [[ -n $long_usage ]] && printf "  %s   🐢 Show lag of sink connector\n" "$(green "connector show-lag")                     "
@@ -4044,6 +4045,7 @@ playground_connector_usage() {
   printf "  %s   ⏸️  Pause connector\n" "$(green "pause")                 "
   printf "  %s   🧞 Get current and latest version available on Confluent Hub for connector(s) used in example\n" "$(green "versions")              "
   printf "  %s   ♻️  Restart connector\n" "$(green "restart")               "
+  printf "  %s   🛑 Stop connector (only available if CP > 7.5 )\n" "$(green "stop")                  "
   printf "  %s   ⏯️  Resume connector\n" "$(green "resume")                "
   printf "  %s   🗑️  Delete connector\n" "$(green "delete")                "
   printf "  %s   🐢 Show lag of sink connector\n" "$(green "show-lag")              "
@@ -4217,6 +4219,41 @@ playground_connector_restart_usage() {
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground connector restart [OPTIONS]\n"
   printf "  playground connector restart --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_stop_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector stop - 🛑 Stop connector (only available if CP > 7.5 )\n"
+    echo
+
+  else
+    printf "playground connector stop - 🛑 Stop connector (only available if CP > 7.5 )\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector stop [OPTIONS]\n"
+  printf "  playground connector stop --help | -h\n"
   echo
 
   # :command.long_usage
@@ -15221,6 +15258,9 @@ playground_connector_status_command() {
       elif [ "$status" == "FAILED" ]
       then
           status="❌ FAILED"
+      elif [ "$status" == "STOPPED" ]
+      then
+          status="🛑 STOPPED"
       else
           status="🤔 UNKNOWN"
       fi
@@ -15233,6 +15273,9 @@ playground_connector_status_command() {
       elif [[ "$tasks" == *"PAUSED"* ]]
       then
           tasks="${tasks//PAUSED/⏸️  PAUSED}"
+      elif [[ "$tasks" == *"STOPPED"* ]]
+      then
+          tasks="${tasks//STOPPED/🛑  STOPPED}"
       elif [[ "$tasks" == *"FAILED"* ]]
       then
           tasks="${tasks//FAILED/🛑 FAILED}"
@@ -15459,6 +15502,53 @@ playground_connector_restart_command() {
   done
   sleep 3
   playground connector status --connector $connector
+}
+
+# :command.function
+playground_connector_stop_command() {
+  # src/connector_stop_command.sh
+  ret=$(get_connect_url_and_security)
+
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
+  connector="${args[--connector]}"
+
+  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  dir1=$(echo ${DIR_CLI%/*})
+  root_folder=$(echo ${dir1%/*})
+  IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
+  source $root_folder/scripts/utils.sh
+
+  if ! version_gt $TAG_BASE "7.4.99"; then
+      logerror "❌ stop connector is available since CP 7.5 only"
+      exit 1
+  fi
+
+  if [[ ! -n "$connector" ]]
+  then
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No connector is running !"
+          exit 1
+      fi
+  fi
+
+  items=($connector)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "✨ --connector flag was not provided, applying command to all connectors"
+  fi
+  for connector in ${items[@]}
+  do
+      log "🛑 Stopping connector $connector"
+      curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/stop" | jq .
+
+      sleep 1
+      playground connector status --connector $connector
+  done
 }
 
 # :command.function
@@ -17053,8 +17143,8 @@ playground_run_parse_requirements() {
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
           # :flag.validations
-          if [[ -n $(validate_minimal_cp_version "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "$2")" >&2
+          if [[ -n $(validate_minimal_cp_version "4" "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "4" "$2")" >&2
             exit 1
           fi
 
@@ -17282,8 +17372,8 @@ playground_re_run_parse_requirements() {
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
           # :flag.validations
-          if [[ -n $(validate_minimal_cp_version "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "$2")" >&2
+          if [[ -n $(validate_minimal_cp_version "4" "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "4" "$2")" >&2
             exit 1
           fi
 
@@ -17503,8 +17593,8 @@ playground_start_environment_parse_requirements() {
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
           # :flag.validations
-          if [[ -n $(validate_minimal_cp_version "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "$2")" >&2
+          if [[ -n $(validate_minimal_cp_version "4" "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "4" "$2")" >&2
             exit 1
           fi
 
@@ -17690,8 +17780,8 @@ playground_run_ccloud_parse_requirements() {
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
           # :flag.validations
-          if [[ -n $(validate_minimal_cp_version "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "$2")" >&2
+          if [[ -n $(validate_minimal_cp_version "4" "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "4" "$2")" >&2
             exit 1
           fi
 
@@ -17989,8 +18079,8 @@ playground_update_version_parse_requirements() {
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
           # :flag.validations
-          if [[ -n $(validate_minimal_cp_version "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "$2")" >&2
+          if [[ -n $(validate_minimal_cp_version "4" "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "4" "$2")" >&2
             exit 1
           fi
 
@@ -18501,8 +18591,8 @@ playground_repro_bootstrap_parse_requirements() {
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
           # :flag.validations
-          if [[ -n $(validate_minimal_cp_version "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "$2")" >&2
+          if [[ -n $(validate_minimal_cp_version "4" "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "4" "$2")" >&2
             exit 1
           fi
 
@@ -23822,6 +23912,13 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
+    stop)
+      action="stop"
+      shift
+      playground_connector_stop_parse_requirements "$@"
+      shift $#
+      ;;
+
     resume | unpause)
       action="resume"
       shift
@@ -24144,6 +24241,64 @@ playground_connector_restart_parse_requirements() {
 
   # :command.command_filter
   action="connector restart"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_connector_stop_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_stop_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector stop"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -24822,6 +24977,7 @@ run() {
     "connector pause") playground_connector_pause_command ;;
     "connector versions") playground_connector_versions_command ;;
     "connector restart") playground_connector_restart_command ;;
+    "connector stop") playground_connector_stop_command ;;
     "connector resume") playground_connector_resume_command ;;
     "connector delete") playground_connector_delete_command ;;
     "connector show-lag") playground_connector_show_lag_command ;;

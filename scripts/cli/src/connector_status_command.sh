@@ -38,6 +38,9 @@ do
     elif [ "$status" == "FAILED" ]
     then
         status="❌ FAILED"
+    elif [ "$status" == "STOPPED" ]
+    then
+        status="🛑 STOPPED"
     else
         status="🤔 UNKNOWN"
     fi
@@ -50,6 +53,9 @@ do
     elif [[ "$tasks" == *"PAUSED"* ]]
     then
         tasks="${tasks//PAUSED/⏸️  PAUSED}"
+    elif [[ "$tasks" == *"STOPPED"* ]]
+    then
+        tasks="${tasks//STOPPED/🛑  STOPPED}"
     elif [[ "$tasks" == *"FAILED"* ]]
     then
         tasks="${tasks//FAILED/🛑 FAILED}"
