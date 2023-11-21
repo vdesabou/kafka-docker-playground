@@ -2188,6 +2188,35 @@
           ]
         },
         {
+          "name": "search-jar",
+          "description": "🔌 Connector plugin from confluent hub https://www.confluent.io/hub/\n",
+          "usage": "playground connector search-jar [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--connector-plugin",
+                "-c"
+              ],
+              "argument": "CONNECTOR-PLUGIN",
+              "description": "🔌 Connector plugin name\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--connector-tag"
+              ],
+              "argument": "latest",
+              "description": "🔗 Connector version to use\n\nBy default, for each connector, the latest available version on Confluent Hub is used\n\nDefault value: latest\n"
+            },
+            {
+              "names": [
+                "--class"
+              ],
+              "argument": "CLASS",
+              "description": "☕ Java class name to search for in all jars\n"
+            }
+          ]
+        },
+        {
           "name": "log-level",
           "description": "🧬 Set connect log level\n  \n  🎓 Tip: it will also set io.confluent.kafka.schemaregistry.client.rest.RestService (to see schema registry rest requests) and org.apache.kafka.connect.runtime.TransformationChain (to see records before and after SMTs)\n",
           "usage": "playground connector log-level [OPTIONS]",

@@ -133,6 +133,7 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   🐢 Show lag of sink connector\n" "$(green "connector show-lag")                     "
   [[ -n $long_usage ]] && printf "  %s   🧰 Show current connector config\n" "$(green "connector show-config")                  "
   [[ -n $long_usage ]] && printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "connector show-config-parameters")       "
+  [[ -n $long_usage ]] && printf "  %s   🔌 Connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "connector search-jar")                   "
   [[ -n $long_usage ]] && printf "  %s   🧬 Set connect log level\n" "$(green "connector log-level")                    "
   [[ -n $long_usage ]] && printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "connector create-or-update")             "
   echo
@@ -242,6 +243,72 @@ playground_get_connector_list_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_generate_connector_plugin_list_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground generate-connector-plugin-list - generate the confluent hub plugin list\n"
+    echo
+
+  else
+    printf "playground generate-connector-plugin-list - generate the confluent hub plugin list\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground generate-connector-plugin-list\n"
+  printf "  playground generate-connector-plugin-list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_get_connector_plugin_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground get-connector-plugin - Return some completion for connector plugin\n"
+    echo
+
+  else
+    printf "playground get-connector-plugin - Return some completion for connector plugin\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground get-connector-plugin [CUR]\n"
+  printf "  playground get-connector-plugin --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "CUR")"
+    printf "    correspond to completion $cur\n"
     echo
 
   fi
@@ -4071,6 +4138,7 @@ playground_connector_usage() {
   printf "  %s   🐢 Show lag of sink connector\n" "$(green "show-lag")              "
   printf "  %s   🧰 Show current connector config\n" "$(green "show-config")           "
   printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "show-config-parameters")"
+  printf "  %s   🔌 Connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "search-jar")            "
   printf "  %s   🧬 Set connect log level\n" "$(green "log-level")             "
   printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "create-or-update")      "
   echo
@@ -4487,6 +4555,57 @@ playground_connector_show_config_parameters_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_search_jar_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector search-jar - 🔌 Connector plugin from confluent hub https://www.confluent.io/hub/\n"
+    echo
+
+  else
+    printf "playground connector search-jar - 🔌 Connector plugin from confluent hub https://www.confluent.io/hub/\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector search-jar [OPTIONS]\n"
+  printf "  playground connector search-jar --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-plugin, -c CONNECTOR-PLUGIN (required)")"
+    printf "    🔌 Connector plugin name\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG")"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n"
+    printf "    Default: latest\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--class CLASS")"
+    printf "    ☕ Java class name to search for in all jars\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector search-jar --connector-plugin\n  confluentinc/kafka-connect-s3 --class WebIdentityTokenCredentialsProvider\n"
     echo
 
   fi
@@ -5043,6 +5162,28 @@ function get_predefined_schemas_with_fzf() {
   else
     res=$(find $predefined_folder $PWD -maxdepth 2 \( -name "*.json" -o -name "*.avsc" -o -name "*.proto" -o -name "*.proto5" -o -name "*.sql" \) | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-2,-1" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
   fi
+}
+
+function get_plugin_list() {
+  cur="$1"
+
+  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  dir1=$(echo ${DIR_CLI%/*})
+  root_folder=$(echo ${dir1%/*})
+
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
+  then
+    fzf_option_wrap="--preview-window=40%,wrap"
+    fzf_option_pointer="--pointer=👉"
+    fzf_option_rounded="--border=rounded"
+  else
+    fzf_options=""
+    fzf_option_pointer=""
+    fzf_option_rounded=""
+  fi
+
+  res=$(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
 }
 
 function filter_not_mdc_environment() {
@@ -9148,6 +9289,28 @@ playground_get_connector_list_command() {
       logerror "❌ curl request failed with error code $ret!"
       exit 1
   fi
+}
+
+# :command.function
+playground_generate_connector_plugin_list_command() {
+  # src/generate_connector_plugin_list_command.sh
+  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  dir1=$(echo ${DIR_CLI%/*})
+  root_folder=$(echo ${dir1%/*})
+
+  curl -s -S 'https://api.hub.confluent.io/api/plugins?per_page=100000' | jq '. | sort_by(.release_date) | reverse | .' > /tmp/allmanis.json
+
+  jq -r '.[] | "\(.owner.username)/\(.name)"' /tmp/allmanis.json | sort | uniq > $root_folder/scripts/cli/confluent-hub-plugin-list.txt
+
+  rm -f /tmp/allmanis.json
+}
+
+# :command.function
+playground_get_connector_plugin_command() {
+  # src/get_connector_plugin_command.sh
+  cur="${args[cur]}"
+
+  get_plugin_list "$cur"
 }
 
 # :command.function
@@ -15949,6 +16112,42 @@ playground_connector_show_config_parameters_command() {
 }
 
 # :command.function
+playground_connector_search_jar_command() {
+  # src/connector_search_jar_command.sh
+  connector_plugin="${args[--connector-plugin]}"
+  connector_tag="${args[--connector-tag]}"
+  class="${args[--class]}"
+
+  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  dir1=$(echo ${DIR_CLI%/*})
+  root_folder=$(echo ${dir1%/*})
+  IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
+  source $root_folder/scripts/utils.sh
+
+  if [[ $connector_plugin == *"@"* ]]
+  then
+    connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+  fi
+
+  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
+
+  log "🔌 Downloading connector plugin $connector_plugin:$connector_tag"
+  docker run -u0 -i --rm -v $tmp_dir:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "confluent-hub install --no-prompt $connector_plugin:$connector_tag && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" | grep "Downloading"
+
+  log "☕ Listing jar files"
+  cd $tmp_dir/*/lib
+  ls -lrt *.jar
+
+  if [[ -n "$class" ]]
+  then
+    log "Searching for java class $class in all jars"
+    find . -name '*.jar' -print | while read i; do jar -tvf "$i" | grep -Hsi ${class} && log "👉 $i"; done
+  fi
+
+}
+
+# :command.function
 playground_connector_log_level_command() {
   # src/connector_log_level_command.sh
   ret=$(get_connect_url_and_security)
@@ -16165,6 +16364,20 @@ parse_requirements() {
       action="get-connector-list"
       shift
       playground_get_connector_list_parse_requirements "$@"
+      shift $#
+      ;;
+
+    generate-connector-plugin-list)
+      action="generate-connector-plugin-list"
+      shift
+      playground_generate_connector_plugin_list_parse_requirements "$@"
+      shift $#
+      ;;
+
+    get-connector-plugin)
+      action="get-connector-plugin"
+      shift
+      playground_get_connector_plugin_parse_requirements "$@"
       shift $#
       ;;
 
@@ -16537,6 +16750,100 @@ playground_get_connector_list_parse_requirements() {
         # :command.parse_requirements_case_simple
         printf "invalid argument: %s\n" "$key" >&2
         exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_generate_connector_plugin_list_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_generate_connector_plugin_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="generate-connector-plugin-list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_get_connector_plugin_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_get_connector_plugin_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="get-connector-plugin"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        if [[ -z ${args['cur']+x} ]]; then
+
+          args['cur']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
 
         ;;
 
@@ -24010,6 +24317,13 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
+    search-jar)
+      action="search-jar"
+      shift
+      playground_connector_search_jar_parse_requirements "$@"
+      shift $#
+      ;;
+
     log-level)
       action="log-level"
       shift
@@ -24716,6 +25030,103 @@ playground_connector_show_config_parameters_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_connector_search_jar_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_search_jar_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector search-jar"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector-plugin | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector-plugin']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector-plugin requires an argument: --connector-plugin, -c CONNECTOR-PLUGIN" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector-tag)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector-tag']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector-tag requires an argument: --connector-tag CONNECTOR_TAG" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --class)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--class']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--class requires an argument: --class CLASS" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--connector-plugin']+x} ]]; then
+    printf "missing required flag: --connector-plugin, -c CONNECTOR-PLUGIN\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--connector-tag']:-} ]] || args['--connector-tag']="latest"
+
+}
+
+# :command.parse_requirements
 playground_connector_log_level_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
@@ -24949,6 +25360,8 @@ run() {
     "help") playground_help_command ;;
     "status") playground_status_command ;;
     "get-connector-list") playground_get_connector_list_command ;;
+    "generate-connector-plugin-list") playground_generate_connector_plugin_list_command ;;
+    "get-connector-plugin") playground_get_connector_plugin_command ;;
     "get-ccloud-connector-list") playground_get_ccloud_connector_list_command ;;
     "get-kafka-region-list") playground_get_kafka_region_list_command ;;
     "get-topic-list") playground_get_topic_list_command ;;
@@ -25039,6 +25452,7 @@ run() {
     "connector show-lag") playground_connector_show_lag_command ;;
     "connector show-config") playground_connector_show_config_command ;;
     "connector show-config-parameters") playground_connector_show_config_parameters_command ;;
+    "connector search-jar") playground_connector_search_jar_command ;;
     "connector log-level") playground_connector_log_level_command ;;
     "connector create-or-update") playground_connector_create_or_update_command ;;
   esac

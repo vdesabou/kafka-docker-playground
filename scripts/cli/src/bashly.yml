@@ -24,6 +24,18 @@ commands:
   help: Return some completion for connector list
   private: true
 
+- name: generate-connector-plugin-list
+  help: generate the confluent hub plugin list
+  private: true
+
+- name: get-connector-plugin
+  help: Return some completion for connector plugin
+  private: true
+  args:
+  - name: cur
+    required: false
+    help: correspond to completion $cur
+
 - name: get-ccloud-connector-list
   help: Return some completion for ccloud connector list
   private: true
@@ -2394,6 +2406,35 @@ commands:
       help: |-
         ☢️ Force refresh.
     - *only_show_file_path
+
+  - name: search-jar
+    help: 🔌 Connector plugin from confluent hub https://www.confluent.io/hub/
+    flags:
+    - long: --connector-plugin
+      short: -c
+      required: true
+      arg: connector-plugin
+      completions:
+        - $(playground get-connector-plugin)
+      help: |-
+        🔌 Connector plugin name
+
+        🎓 Tip: use <tab> completion to trigger fzf completion
+    - long: --connector-tag
+      arg: connector_tag
+      required: false
+      default: "latest"
+      help: |- 
+        🔗 Connector version to use
+  
+        By default, for each connector, the latest available version on Confluent Hub is used
+    - long: --class
+      arg: class
+      required: false
+      help: |- 
+        ☕ Java class name to search for in all jars
+    examples: |
+      playground connector search-jar --connector-plugin confluentinc/kafka-connect-s3 --class WebIdentityTokenCredentialsProvider
 
   - name: log-level
     help: |-

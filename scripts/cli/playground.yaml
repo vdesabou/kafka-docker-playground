@@ -2438,6 +2438,38 @@ subcommands:
           description: | 
             📂 Only show the path of the file containing the configuration parameters
             
+      - name: search-jar
+        description: | 
+          🔌 Connector plugin from confluent hub https://www.confluent.io/hub/
+        usage: playground connector search-jar [OPTIONS]
+        options:
+        - names:
+          - --connector-plugin
+          - -c
+          argument: CONNECTOR-PLUGIN
+          description: | 
+            🔌 Connector plugin name
+            
+            🎓 Tip: use <tab> completion to trigger fzf completion
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --connector-tag
+          argument: latest
+          description: | 
+            🔗 Connector version to use
+            
+            By default, for each connector, the latest available version on Confluent Hub is used
+            
+            Default value: latest
+            
+        - names:
+          - --class
+          argument: CLASS
+          description: | 
+            ☕ Java class name to search for in all jars
+            
       - name: log-level
         description: | 
           🧬 Set connect log level
