@@ -5843,6 +5843,16 @@ function set_profiles() {
     echo "export ENABLE_KSQLDB=1" >> /tmp/playground-command
   fi
 
+  profile_rest_proxy_command=""
+  if [ -z "$ENABLE_RESTPROXY" ]
+  then
+    log "🛑 REST Proxy is disabled"
+  else
+    log "📲 REST Proxy is enabled"
+    profile_rest_proxy_command="--profile rest-proxy"
+    echo "export ENABLE_RESTPROXY=1" >> /tmp/playground-command
+  fi
+
   # defined grafana variable and when profile is included/excluded
   profile_grafana_command=""
   if [ -z "$ENABLE_JMX_GRAFANA" ]

@@ -1,0 +1,9 @@
+{
+  "metadata": {
+    "properties": {
+       "owner": "OrdersTeam",
+       "owner_email": "orders.team@acme.com",
+       "slo_timeliness_secs": "10"
+    }
+  }
+}
