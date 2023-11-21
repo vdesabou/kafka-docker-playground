@@ -387,6 +387,16 @@ function set_profiles() {
     echo "export ENABLE_KSQLDB=1" >> /tmp/playground-command
   fi
 
+  profile_rest_proxy_command=""
+  if [ -z "$ENABLE_RESTPROXY" ]
+  then
+    log "🛑 REST Proxy is disabled"
+  else
+    log "📲 REST Proxy is enabled"
+    profile_rest_proxy_command="--profile rest-proxy"
+    echo "export ENABLE_RESTPROXY=1" >> /tmp/playground-command
+  fi
+
   # defined grafana variable and when profile is included/excluded
   profile_grafana_command=""
   if [ -z "$ENABLE_JMX_GRAFANA" ]
@@ -451,7 +461,7 @@ function set_profiles() {
   then
     :
   elif [ ${nb_connect_services} -gt 1 ]
-  then 
+  then
     log "🥉 Multiple Connect nodes mode is enabled, connect2 and connect 3 containers will be started"
     profile_connect_nodes_command="--profile connect_nodes"
     export CONNECT_NODES_PROFILES="connect_nodes"
@@ -595,7 +605,7 @@ function display_docker_container_error_log() {
           # always show all logs for connect
           docker container logs --tail=100 $container 2>&1 | grep -v "was supplied but isn't a known config"
       else
-          docker container logs $container 2>&1 | egrep "ERROR|FATAL" 
+          docker container logs $container 2>&1 | egrep "ERROR|FATAL"
       fi
       logwarn "####################################################"
   done
@@ -873,12 +883,12 @@ function display_jmx_info() {
     log "🛡️ Prometheus is reachable at http://127.0.0.1:9090"
     log "📛 Pyroscope is reachable at http://127.0.0.1:4040"
     log "📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/password) or JMX metrics are available locally on those ports:"
-  fi  
+  fi
   log "    - zookeeper       : 9999"
   log "    - broker          : 10000"
   log "    - schema-registry : 10001"
   log "    - connect         : 10002"
-    
+
   if [ ! -z "$ENABLE_KSQLDB" ]
   then
     log "    - ksqldb-server   : 10003"
@@ -1033,9 +1043,9 @@ function add_latency() {
 
     src_container=$1
     if valid_ip $2
-    then 
+    then
       dst_ip=$2
-    else 
+    else
       dst_ip=$(container_to_ip $2)
     fi
     latency=$3
@@ -1077,9 +1087,9 @@ function add_packet_corruption() {
 
     src_container=$1
     if valid_ip $2
-    then 
+    then
       dst_ip=$2
-    else 
+    else
       dst_ip=$(container_to_ip $2)
     fi
     corruption=$3
@@ -1093,24 +1103,24 @@ function add_packet_corruption() {
     # Add a classful priority queue which lets us differentiate messages.
     # This queue is named 1:.
     # Three children classes, 1:1, 1:2 and 1:3, are automatically created.
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 root handle 1: prio 
+    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 root handle 1: prio
 
 
     # Add a filter to the parent queue 1: (also called 1:0). The filter has priority 1 (if we had more filters this would make a difference).
     # For all messages with the ip of dst_ip as their destination, it routes them to class 1:1, which
     # subsequently sends them to its only child, queue 10: (All messages need to  "end up" in a queue).
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol ip parent 1: prio 1 u32 match ip dst $dst_ip flowid 1:1 
+    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol ip parent 1: prio 1 u32 match ip dst $dst_ip flowid 1:1
 
     # Route the rest of the of the packets without any control.
     # Add a filter to the parent queue 1:. The filter has priority 2.
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip dst 0.0.0.0/0 flowid 1:2 
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip protocol 1 0xff flowid 1:2 
+    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip dst 0.0.0.0/0 flowid 1:2
+    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip protocol 1 0xff flowid 1:2
 
     # Add a child queue named 10: under class 1:1. All outgoing packets that will be routed to 10: will have corrupt applied them.
     docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:1 handle 10: netem corrupt $corruption
 
     # Add a child queue named 20: under class 1:2
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:2 handle 20: sfq 
+    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:2 handle 20: sfq
 }
 
 function add_packet_loss() {
@@ -1121,9 +1131,9 @@ function add_packet_loss() {
 
     src_container=$1
     if valid_ip $2
-    then 
+    then
       dst_ip=$2
-    else 
+    else
       dst_ip=$(container_to_ip $2)
     fi
     loss=$3
@@ -1137,24 +1147,24 @@ function add_packet_loss() {
     # Add a classful priority queue which lets us differentiate messages.
     # This queue is named 1:.
     # Three children classes, 1:1, 1:2 and 1:3, are automatically created.
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 root handle 1: prio 
+    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 root handle 1: prio
 
 
     # Add a filter to the parent queue 1: (also called 1:0). The filter has priority 1 (if we had more filters this would make a difference).
     # For all messages with the ip of dst_ip as their destination, it routes them to class 1:1, which
     # subsequently sends them to its only child, queue 10: (All messages need to  "end up" in a queue).
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol ip parent 1: prio 1 u32 match ip dst $dst_ip flowid 1:1 
+    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol ip parent 1: prio 1 u32 match ip dst $dst_ip flowid 1:1
 
     # Route the rest of the of the packets without any control.
     # Add a filter to the parent queue 1:. The filter has priority 2.
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip dst 0.0.0.0/0 flowid 1:2 
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip protocol 1 0xff flowid 1:2 
+    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip dst 0.0.0.0/0 flowid 1:2
+    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip protocol 1 0xff flowid 1:2
 
     # Add a child queue named 10: under class 1:1. All outgoing packets that will be routed to 10: will have loss applied them.
     docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:1 handle 10: netem loss $loss
 
     # Add a child queue named 20: under class 1:2
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:2 handle 20: sfq 
+    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:2 handle 20: sfq
 }
 
 function get_3rdparty_file () {
@@ -1427,7 +1437,7 @@ function print_code_pass() {
 	done
   shift $((OPTIND-1))
 	printf "${PRETTY_PASS}${PRETTY_CODE}%s\e[0m\n" "${CODE}"
-	[[ -z "$MESSAGE" ]] || printf "\t$MESSAGE\n"			
+	[[ -z "$MESSAGE" ]] || printf "\t$MESSAGE\n"
 }
 function print_code_error() {
   local MESSAGE=""
@@ -1441,7 +1451,7 @@ function print_code_error() {
 	done
   shift $((OPTIND-1))
 	printf "${PRETTY_ERROR}${PRETTY_CODE}%s\e[0m\n" "${CODE}"
-	[[ -z "$MESSAGE" ]] || printf "\t$MESSAGE\n"			
+	[[ -z "$MESSAGE" ]] || printf "\t$MESSAGE\n"
 }
 
 function exit_with_error()
@@ -1480,7 +1490,7 @@ function maybe_delete_ccloud_environment () {
 
   if [ -z "$CLUSTER_NAME" ]
   then
-    # 
+    #
     # CLUSTER_NAME is not set
     #
     log "🧹❌ Confluent Cloud cluster will be deleted..."
@@ -1525,7 +1535,7 @@ function bootstrap_ccloud_environment () {
 
   if [ -z "$CLUSTER_NAME" ]
   then
-    # 
+    #
     # CLUSTER_NAME is not set
     #
     log "🛠👷‍♀️ CLUSTER_NAME is not set, a new Confluent Cloud cluster will be created..."
@@ -1534,7 +1544,7 @@ function bootstrap_ccloud_environment () {
     if [ -z "$CLUSTER_CLOUD" ] || [ -z "$CLUSTER_REGION" ]
     then
       logwarn "CLUSTER_CLOUD and/or CLUSTER_REGION are not set, the cluster will be created 🌤 AWS provider and 🗺 eu-west-2 region"
-      export CLUSTER_CLOUD=aws 
+      export CLUSTER_CLOUD=aws
       export CLUSTER_REGION=eu-west-2
     fi
 
@@ -1552,7 +1562,7 @@ function bootstrap_ccloud_environment () {
 
     check_if_continue
   else
-    # 
+    #
     # CLUSTER_NAME is set
     #
     log "🌱 CLUSTER_NAME is set, your existing Confluent Cloud cluster will be used..."
@@ -1570,7 +1580,7 @@ function bootstrap_ccloud_environment () {
     log "🌐 ENVIRONMENT is set with $ENVIRONMENT"
     log "🎰 CLUSTER_NAME is set with $CLUSTER_NAME"
     log "🌤  CLUSTER_CLOUD is set with $CLUSTER_CLOUD"
-    log "🗺  CLUSTER_REGION is set with $CLUSTER_REGION" 
+    log "🗺  CLUSTER_REGION is set with $CLUSTER_REGION"
 
     export WARMUP_TIME=0
   fi
@@ -1967,7 +1977,7 @@ function ccloud::find_cluster() {
   local FOUND_CLUSTER=$(confluent kafka cluster list -o json | jq -c -r '.[] | select((.name == "'"$CLUSTER_NAME"'") and (.provider == "'"$CLUSTER_CLOUD"'") and (.region == "'"$CLUSTER_REGION"'"))')
   [[ ! -z "$FOUND_CLUSTER" ]] && {
       echo "$FOUND_CLUSTER" | jq -r .id
-      return 0 
+      return 0
     } || {
       return 1
     }
@@ -2055,7 +2065,7 @@ function ccloud::find_credentials_resource() {
   local FOUND_COUNT=$(echo "$FOUND_CRED" | jq 'length')
   [[ $FOUND_COUNT -ne 0 ]] && {
       echo "$FOUND_CRED" | jq -r '.[0].api_key'
-      return 0 
+      return 0
     } || {
       return 1
     }
@@ -2082,7 +2092,7 @@ function ccloud::create_credentials_resource() {
 function ccloud::maybe_create_credentials_resource() {
   SERVICE_ACCOUNT_ID=$1
   RESOURCE=$2
-  
+
   local KEY=$(ccloud::find_credentials_resource $SERVICE_ACCOUNT_ID $RESOURCE)
   [[ -z $KEY ]] && {
     ccloud::create_credentials_resource $SERVICE_ACCOUNT_ID $RESOURCE
@@ -2100,7 +2110,7 @@ function ccloud::find_ksqldb_app() {
   local FOUND_COUNT=$(echo "$FOUND_APP" | jq 'length')
   [[ $FOUND_COUNT -ne 0 ]] && {
       echo "$FOUND_APP" | jq -r '.[].id'
-      return 0 
+      return 0
     } || {
       return 1
     }
@@ -2124,7 +2134,7 @@ function ccloud::maybe_create_ksqldb_app() {
   CLUSTER=$2
   # colon deliminated credentials (APIKEY:APISECRET)
   local ksqlDB_kafka_creds=$3
-  
+
   APP_ID=$(ccloud::find_ksqldb_app $KSQLDB_NAME $CLUSTER)
   if [ $? -eq 0 ]
   then
@@ -2149,7 +2159,7 @@ function ccloud::create_acls_all_resources_full_access() {
   confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operations READ,WRITE,CREATE,DESCRIBE --consumer-group '*' &>"$REDIRECT_TO"
 
   confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operations DESCRIBE,WRITE --transactional-id '*' &>"$REDIRECT_TO"
-  
+
   confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operations IDEMPOTENT-WRITE,DESCRIBE --cluster-scope &>"$REDIRECT_TO"
 
   return 0
@@ -2429,8 +2439,8 @@ function ccloud::create_acls_connect_topics() {
   TOPIC=connect-demo-offsets
   confluent kafka topic create $TOPIC --partitions 6 --config "cleanup.policy=compact"
   confluent kafka acl create --allow --service-account $serviceAccount --operations WRITE,READ --topic $TOPIC --prefix
-  
-  TOPIC=connect-demo-statuses 
+
+  TOPIC=connect-demo-statuses
   confluent kafka topic create $TOPIC --partitions 3 --config "cleanup.policy=compact"
   confluent kafka acl create --allow --service-account $serviceAccount --operations WRITE,READ  --topic $TOPIC --prefix
 
@@ -2438,7 +2448,7 @@ function ccloud::create_acls_connect_topics() {
     confluent kafka topic create $TOPIC --partitions 1 &>/dev/null
     confluent kafka acl create --allow --service-account $serviceAccount --operations WRITE,READ  --topic $TOPIC --prefix
   done
- 
+
   confluent kafka acl create --allow --service-account $serviceAccount --operations READ --consumer-group connect-cloud
 
   echo "Connectors: creating topics and ACLs for service account $serviceAccount"
@@ -2543,8 +2553,8 @@ function ccloud::create_ccloud_stack() {
 
     echo "Creating Confluent Cloud stack for service account $SERVICE_NAME, ID: $SERVICE_ACCOUNT_ID."
   fi
-  
-  if [[ -z "$ENVIRONMENT" ]]; 
+
+  if [[ -z "$ENVIRONMENT" ]];
   then
     # Environment is not received so it will be created
     ENVIRONMENT_NAME=${ENVIRONMENT_NAME:-"pg-$SERVICE_ACCOUNT_ID-$EXAMPLE"}
@@ -2573,7 +2583,7 @@ function ccloud::create_ccloud_stack() {
   else
     BOOTSTRAP_SERVERS="$endpoint"
   fi
-  
+
   NEED_ACLS=0
   # VINC: added
   if [[ -z "$CLUSTER_CREDS" ]]
@@ -2593,7 +2603,7 @@ function ccloud::create_ccloud_stack() {
     # Estimating another 80s wait still sometimes required
     WARMUP_TIME=${WARMUP_TIME:-80}
     echo "Sleeping an additional ${WARMUP_TIME} seconds to ensure propagation of all metadata"
-    sleep $WARMUP_TIME 
+    sleep $WARMUP_TIME
 
     ccloud::create_acls_all_resources_full_access $SERVICE_ACCOUNT_ID
   fi
@@ -2612,7 +2622,7 @@ function ccloud::create_ccloud_stack() {
     fi
     SCHEMA_REGISTRY_CREDS=$(ccloud::maybe_create_credentials_resource $SERVICE_ACCOUNT_ID $SCHEMA_REGISTRY)
   fi
-  
+
   SCHEMA_REGISTRY_ENDPOINT=$(confluent schema-registry cluster describe -o json | jq -r ".endpoint_url")
 
   if [[ $NEED_ACLS -eq 1 ]]
@@ -2645,7 +2655,7 @@ function ccloud::create_ccloud_stack() {
     if [[ -z "$CCLOUD_CONFIG_FILE" ]]; then
       CCLOUD_CONFIG_FILE="/tmp/tmp.config"
     fi
-  
+
     cat <<EOF > $CCLOUD_CONFIG_FILE
 # --------------------------------------
 # Confluent Cloud connection information
@@ -2705,7 +2715,7 @@ function ccloud::destroy_ccloud_stack() {
 
   # Setting default QUIET=false to surface potential errors
   QUIET="${QUIET:-false}"
-  [[ $QUIET == "true" ]] && 
+  [[ $QUIET == "true" ]] &&
     local REDIRECT_TO="/dev/null" ||
     local REDIRECT_TO="/dev/tty"
 
@@ -2731,7 +2741,7 @@ function ccloud::destroy_ccloud_stack() {
   confluent api-key list --service-account $SERVICE_ACCOUNT_ID -o json | jq -r '.[].api_key' | xargs -I{} confluent api-key delete {} --force
 
   # Delete service account
-  confluent iam service-account delete $SERVICE_ACCOUNT_ID --force &>"$REDIRECT_TO" 
+  confluent iam service-account delete $SERVICE_ACCOUNT_ID --force &>"$REDIRECT_TO"
 
   if [[ $PRESERVE_ENVIRONMENT == "false" ]]; then
     local environment_id=$(confluent environment list -o json | jq -r 'map(select(.name | startswith("'"$ENVIRONMENT_NAME_PREFIX"'"))) | .[].id')
@@ -2742,7 +2752,7 @@ function ccloud::destroy_ccloud_stack() {
       confluent environment delete $environment_id &> "$REDIRECT_TO"
     fi
   fi
-  
+
   rm -f $CCLOUD_CONFIG_FILE
 
   return 0
@@ -2816,10 +2826,10 @@ function ccloud::generate_configs() {
     echo "See https://docs.confluent.io/current/cloud/connect/auto-generate-configs.html for more information"
     return 1
   fi
-  
+
   echo -e "\nGenerating component configurations from $CCLOUD_CONFIG_FILE"
   echo -e "\n(If you want to run any of these components to talk to Confluent Cloud, these are the configurations to add to the properties file for each component)"
-  
+
   # Set permissions
   PERM=600
   if ls --version 2>/dev/null | grep -q 'coreutils' ; then
@@ -2829,15 +2839,15 @@ function ccloud::generate_configs() {
     # BSD
     PERM=$(stat -f "%OLp" $CCLOUD_CONFIG_FILE)
   fi
-  
+
   # Make destination
   DEST="/tmp/delta_configs"
   mkdir -p $DEST
-  
+
   ################################################################################
   # Glean parameters from the Confluent Cloud configuration file
   ################################################################################
-  
+
   # Kafka cluster
   BOOTSTRAP_SERVERS=$( grep "^bootstrap.server" $CCLOUD_CONFIG_FILE | awk -F'=' '{print $2;}' )
   BOOTSTRAP_SERVERS=${BOOTSTRAP_SERVERS/\\/}
@@ -2846,16 +2856,16 @@ function ccloud::generate_configs() {
   SASL_JAAS_CONFIG_PROPERTY_FORMAT=${SASL_JAAS_CONFIG_PROPERTY_FORMAT/password\\=/password=}
   CLOUD_KEY=$( echo $SASL_JAAS_CONFIG | awk '{print $3}' | awk -F"'" '$0=$2' )
   CLOUD_SECRET=$( echo $SASL_JAAS_CONFIG | awk '{print $4}' | awk -F"'" '$0=$2' )
-  
+
   # Schema Registry
   BASIC_AUTH_CREDENTIALS_SOURCE=$( grep "^basic.auth.credentials.source" $CCLOUD_CONFIG_FILE | awk -F'=' '{print $2;}' )
   SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=$( grep "^basic.auth.user.info" $CCLOUD_CONFIG_FILE | awk -F'=' '{print $2;}' )
   SCHEMA_REGISTRY_URL=$( grep "^schema.registry.url" $CCLOUD_CONFIG_FILE | awk -F'=' '{print $2;}' )
-  
+
   # ksqlDB
   KSQLDB_ENDPOINT=$( grep "^ksql.endpoint" $CCLOUD_CONFIG_FILE | awk -F'=' '{print $2;}' )
   KSQLDB_BASIC_AUTH_USER_INFO=$( grep "^ksql.basic.auth.user.info" $CCLOUD_CONFIG_FILE | awk -F'=' '{print $2;}' )
-  
+
   ################################################################################
   # Build configuration file with Confluent Cloud connection parameters and
   # Confluent Monitoring Interceptors for Streams Monitoring in Confluent Control Center
@@ -2900,9 +2910,9 @@ function ccloud::generate_configs() {
     fi
   done < "$CCLOUD_CONFIG_FILE"
   chmod $PERM $INTERCEPTORS_CONFIG_FILE
-  
+
   echo -e "\nConfluent Platform Components:"
-  
+
   ################################################################################
   # Confluent Schema Registry instance (local) for Confluent Cloud
   ################################################################################
@@ -2918,7 +2928,7 @@ function ccloud::generate_configs() {
     fi
   done < "$CCLOUD_CONFIG_FILE"
   chmod $PERM $SR_CONFIG_DELTA
-  
+
   ################################################################################
   # Confluent Replicator (executable) for Confluent Cloud
   ################################################################################
@@ -2932,7 +2942,7 @@ function ccloud::generate_configs() {
   REPLICATOR_SASL_JAAS_CONFIG=${REPLICATOR_SASL_JAAS_CONFIG//\\=/=}
   REPLICATOR_SASL_JAAS_CONFIG=${REPLICATOR_SASL_JAAS_CONFIG//\"/\\\"}
   chmod $PERM $REPLICATOR_PRODUCER_DELTA
-  
+
   ################################################################################
   # ksqlDB Server runs locally and connects to Confluent Cloud
   ################################################################################
@@ -2960,7 +2970,7 @@ function ccloud::generate_configs() {
     fi
   done < $CCLOUD_CONFIG_FILE
   chmod $PERM $KSQLDB_SERVER_DELTA
-  
+
   ################################################################################
   # KSQL DataGen for Confluent Cloud
   ################################################################################
@@ -2980,7 +2990,7 @@ function ccloud::generate_configs() {
     fi
   done < $CCLOUD_CONFIG_FILE
   chmod $PERM $KSQL_DATAGEN_DELTA
-  
+
   ################################################################################
   # Confluent Control Center runs locally, monitors Confluent Cloud, and uses Confluent Cloud cluster as the backstore
   ################################################################################
@@ -3012,7 +3022,7 @@ function ccloud::generate_configs() {
     fi
   done < $CCLOUD_CONFIG_FILE
   chmod $PERM $C3_DELTA
-  
+
   ################################################################################
   # Confluent Metrics Reporter to Confluent Cloud
   ################################################################################
@@ -3030,7 +3040,7 @@ function ccloud::generate_configs() {
     fi
   done < "$CCLOUD_CONFIG_FILE"
   chmod $PERM $METRICS_REPORTER_DELTA
-  
+
   ################################################################################
   # Confluent REST Proxy to Confluent Cloud
   ################################################################################
@@ -3056,7 +3066,7 @@ function ccloud::generate_configs() {
     fi
   done < $CCLOUD_CONFIG_FILE
   chmod $PERM $REST_PROXY_DELTA
-  
+
   ################################################################################
   # Kafka Connect runs locally and connects to Confluent Cloud
   ################################################################################
@@ -3083,9 +3093,9 @@ EOF
       fi
     fi
   done < "$CCLOUD_CONFIG_FILE"
-  
+
   for prefix in "producer" "consumer" "producer.confluent.monitoring.interceptor" "consumer.confluent.monitoring.interceptor" ; do
-  
+
   echo -e "\n# Configuration for embedded $prefix" >> $CONNECT_DELTA
   while read -r line
     do
@@ -3098,10 +3108,10 @@ EOF
       fi
     fi
   done < "$CCLOUD_CONFIG_FILE"
-  
+
   done
-  
-  
+
+
   cat <<EOF >> $CONNECT_DELTA
 
 # Confluent Schema Registry for Kafka Connect
@@ -3111,7 +3121,7 @@ value.converter.schema.registry.basic.auth.user.info=$SCHEMA_REGISTRY_BASIC_AUTH
 value.converter.schema.registry.url=$SCHEMA_REGISTRY_URL
 EOF
   chmod $PERM $CONNECT_DELTA
-  
+
   ################################################################################
   # Kafka connector
   ################################################################################
@@ -3126,7 +3136,7 @@ value.converter.schema.registry.basic.auth.user.info=$SCHEMA_REGISTRY_BASIC_AUTH
 value.converter.schema.registry.url=$SCHEMA_REGISTRY_URL
 EOF
   chmod $PERM $CONNECTOR_DELTA
-  
+
   ################################################################################
   # AK command line tools
   ################################################################################
@@ -3135,17 +3145,17 @@ EOF
   rm -f $AK_TOOLS_DELTA
   cp $CCLOUD_CONFIG_FILE $AK_TOOLS_DELTA
   chmod $PERM $AK_TOOLS_DELTA
-  
-  
+
+
   echo -e "\nKafka Clients:"
-  
+
   ################################################################################
   # Java (Producer/Consumer)
   ################################################################################
   JAVA_PC_CONFIG=$DEST/java_producer_consumer.delta
   echo "$JAVA_PC_CONFIG"
   rm -f $JAVA_PC_CONFIG
-  
+
   cat <<EOF >> $JAVA_PC_CONFIG
 import java.util.Properties;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -3187,14 +3197,14 @@ props.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG + SaslConfigs.SASL_JAAS_CONF
 // .... additional configuration settings
 EOF
   chmod $PERM $JAVA_PC_CONFIG
-  
+
   ################################################################################
   # Java (Streams)
   ################################################################################
   JAVA_STREAMS_CONFIG=$DEST/java_streams.delta
   echo "$JAVA_STREAMS_CONFIG"
   rm -f $JAVA_STREAMS_CONFIG
-  
+
   cat <<EOF >> $JAVA_STREAMS_CONFIG
 import java.util.Properties;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -3237,14 +3247,14 @@ props.put(StreamsConfig.CONSUMER_PREFIX + ConsumerConfig.INTERCEPTOR_CLASSES_CON
 // .... additional configuration settings
 EOF
   chmod $PERM $JAVA_STREAMS_CONFIG
-  
+
   ################################################################################
   # librdkafka
   ################################################################################
   LIBRDKAFKA_CONFIG=$DEST/librdkafka.delta
   echo "$LIBRDKAFKA_CONFIG"
   rm -f $LIBRDKAFKA_CONFIG
-  
+
   cat <<EOF >> $LIBRDKAFKA_CONFIG
 bootstrap.servers="$BOOTSTRAP_SERVERS"
 security.protocol=SASL_SSL
@@ -3255,14 +3265,14 @@ schema.registry.url="$SCHEMA_REGISTRY_URL"
 basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"
 EOF
   chmod $PERM $LIBRDKAFKA_CONFIG
-  
+
   ################################################################################
   # Python
   ################################################################################
   PYTHON_CONFIG=$DEST/python.delta
   echo "$PYTHON_CONFIG"
   rm -f $PYTHON_CONFIG
-  
+
   cat <<EOF >> $PYTHON_CONFIG
 from confluent_kafka import Producer, Consumer, KafkaError
 
@@ -3293,14 +3303,14 @@ consumer = Consumer({
 })
 EOF
   chmod $PERM $PYTHON_CONFIG
-  
+
   ################################################################################
-  # .NET 
+  # .NET
   ################################################################################
   DOTNET_CONFIG=$DEST/dotnet.delta
   echo "$DOTNET_CONFIG"
   rm -f $DOTNET_CONFIG
-  
+
   cat <<EOF >> $DOTNET_CONFIG
 using Confluent.Kafka;
 
@@ -3333,19 +3343,19 @@ var consumerConfig = new Dictionary<string, object>
 };
 EOF
   chmod $PERM $DOTNET_CONFIG
-  
+
   ################################################################################
   # Go
   ################################################################################
   GO_CONFIG=$DEST/go.delta
   echo "$GO_CONFIG"
   rm -f $GO_CONFIG
-  
+
   cat <<EOF >> $GO_CONFIG
 import (
   "github.com/confluentinc/confluent-kafka-go/kafka"
-  
- 
+
+
 producer, err := kafka.NewProducer(&kafka.ConfigMap{
            "bootstrap.servers": "$BOOTSTRAP_SERVERS",
           "broker.version.fallback": "0.10.0.0",
@@ -3358,7 +3368,7 @@ producer, err := kafka.NewProducer(&kafka.ConfigMap{
                  "plugin.library.paths": "monitoring-interceptor",
                  // .... additional configuration settings
                  })
- 
+
 consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
      "bootstrap.servers": "$BOOTSTRAP_SERVERS",
        "broker.version.fallback": "0.10.0.0",
@@ -3374,14 +3384,14 @@ consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
                  })
 EOF
   chmod $PERM $GO_CONFIG
-  
+
   ################################################################################
   # Node.js
   ################################################################################
   NODE_CONFIG=$DEST/node.delta
   echo "$NODE_CONFIG"
   rm -f $NODE_CONFIG
-  
+
   cat <<EOF >> $NODE_CONFIG
 var Kafka = require('node-rdkafka');
 
@@ -3412,14 +3422,14 @@ var consumer = Kafka.KafkaConsumer.createReadStream({
 });
 EOF
   chmod $PERM $NODE_CONFIG
-  
+
   ################################################################################
   # C++
   ################################################################################
   CPP_CONFIG=$DEST/cpp.delta
   echo "$CPP_CONFIG"
   rm -f $CPP_CONFIG
-  
+
   cat <<EOF >> $CPP_CONFIG
 #include <librdkafka/rdkafkacpp.h>
 
@@ -3454,14 +3464,14 @@ if (consumerConfig->set("metadata.broker.list", "$BOOTSTRAP_SERVERS", errstr) !=
 RdKafka::Consumer *consumer = RdKafka::Consumer::create(consumerConfig, errstr);
 EOF
   chmod $PERM $CPP_CONFIG
-  
+
   ################################################################################
   # ENV
   ################################################################################
   ENV_CONFIG=$DEST/env.delta
   echo "$ENV_CONFIG"
   rm -f $ENV_CONFIG
-  
+
   cat <<EOF >> $ENV_CONFIG
 export BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS"
 export SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG"
@@ -3481,9 +3491,9 @@ EOF
 }
 
 ##############################################
-# These are some duplicate functions from 
-#  helper.sh to decouple the script files.  In 
-#  the future we can work to remove this 
+# These are some duplicate functions from
+#  helper.sh to decouple the script files.  In
+#  the future we can work to remove this
 #  duplication if necessary
 ##############################################
 function ccloud::retry() {
@@ -3507,7 +3517,7 @@ function ccloud::retry() {
     done
     printf "\n"
 }
-function ccloud::version_gt() { 
+function ccloud::version_gt() {
   test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
 }
 
@@ -3517,7 +3527,7 @@ function ccloud::version_gt() {
 ## END
 ##############
 
-function check_arm64_support() { 
+function check_arm64_support() {
   DIR="$1"
   DOCKER_COMPOSE_FILE="$2"
   set +e
