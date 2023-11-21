@@ -788,6 +788,11 @@ playground_re_run_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--enable-rest-proxy")"
+    printf "    🧲 Enable Rest Proxy\n    \n    By default, rest-proxy container is not started for every test\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--enable-control-center")"
     printf "    💠 Enable Control Center\n    \n    By default, control-center container is not started for every test\n    \n    Control Center is reachable at http://127.0.0.1:9021\n"
     echo
@@ -888,6 +893,11 @@ playground_start_environment_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-ksqldb")"
     printf "    🚀 Enable ksqlDB\n    \n    By default, ksqldb-server and ksqldb-cli containers are not started for\n    every test\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--enable-rest-proxy")"
+    printf "    🧲 Enable Rest Proxy\n    \n    By default, rest-proxy container is not started for every test\n"
     echo
 
     # :flag.usage
@@ -1387,6 +1397,11 @@ playground_repro_bootstrap_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-ksqldb")"
     printf "    🚀 Enable ksqlDB\n    \n    By default, ksqldb-server and ksqldb-cli containers are not started for\n    every test\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--enable-rest-proxy")"
+    printf "    🧲 Enable Rest Proxy\n    \n    By default, rest-proxy container is not started for every test\n"
     echo
 
     # :flag.usage
@@ -17477,6 +17492,14 @@ playground_re_run_parse_requirements() {
         ;;
 
       # :flag.case
+      --enable-rest-proxy)
+
+        # :flag.case_no_arg
+        args['--enable-rest-proxy']=1
+        shift
+        ;;
+
+      # :flag.case
       --enable-control-center)
 
         # :flag.case_no_arg
@@ -17629,6 +17652,14 @@ playground_start_environment_parse_requirements() {
 
         # :flag.case_no_arg
         args['--enable-ksqldb']=1
+        shift
+        ;;
+
+      # :flag.case
+      --enable-rest-proxy)
+
+        # :flag.case_no_arg
+        args['--enable-rest-proxy']=1
         shift
         ;;
 
@@ -18692,6 +18723,14 @@ playground_repro_bootstrap_parse_requirements() {
 
         # :flag.case_no_arg
         args['--enable-ksqldb']=1
+        shift
+        ;;
+
+      # :flag.case
+      --enable-rest-proxy)
+
+        # :flag.case_no_arg
+        args['--enable-rest-proxy']=1
         shift
         ;;
 

@@ -190,6 +190,13 @@
         },
         {
           "names": [
+            "--enable-rest-proxy"
+          ],
+          "argument": "",
+          "description": "🧲 Enable Rest Proxy\n\nBy default, rest-proxy container is not started for every test\n"
+        },
+        {
+          "names": [
             "--enable-control-center"
           ],
           "argument": "",
@@ -272,6 +279,13 @@
           ],
           "argument": "",
           "description": "🚀 Enable ksqlDB\n\nBy default, ksqldb-server and ksqldb-cli containers are not started for every test\n"
+        },
+        {
+          "names": [
+            "--enable-rest-proxy"
+          ],
+          "argument": "",
+          "description": "🧲 Enable Rest Proxy\n\nBy default, rest-proxy container is not started for every test\n"
         },
         {
           "names": [
@@ -603,6 +617,13 @@
               ],
               "argument": "",
               "description": "🚀 Enable ksqlDB\n\nBy default, ksqldb-server and ksqldb-cli containers are not started for every test\n"
+            },
+            {
+              "names": [
+                "--enable-rest-proxy"
+              ],
+              "argument": "",
+              "description": "🧲 Enable Rest Proxy\n\nBy default, rest-proxy container is not started for every test\n"
             },
             {
               "names": [

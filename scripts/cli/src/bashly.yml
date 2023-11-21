@@ -304,6 +304,7 @@ commands:
     - *connector-zip
     - *connector-jar
     - *enable-ksqldb
+    - *enable-rest-proxy
     - *enable-control-center
     - *enable-conduktor
     - *enable-multiple-brokers
@@ -375,6 +376,7 @@ commands:
         Default is plaintext
     - *tag
     - *enable-ksqldb
+    - *enable-rest-proxy
     - *enable-control-center
     - *enable-conduktor
     - *enable-multiple-brokers
@@ -635,6 +637,7 @@ commands:
     - *connector-zip
     - *connector-jar
     - *enable-ksqldb
+    - *enable-rest-proxy
     - *enable-control-center
     - *enable-conduktor
     - *enable-multiple-brokers
