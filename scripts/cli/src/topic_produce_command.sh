@@ -693,24 +693,6 @@ esac
 
 producer_properties=""
 
-if [ $record_size -gt 1048576 ]
-then
-    log "✨ record-size $record_size is greater than 1Mb (1048576), setting --producer-property max.request.size=$((record_size + 1000)) and --producer-property buffer.memory=67108864"
-    producer_properties="--producer-property max.request.size=$((record_size + 1000)) --producer-property buffer.memory=67108864"
-    log "✨ topic $topic max.message.bytes is also set to $((record_size + 1000))"
-    playground topic alter --topic $topic --add-config max.message.bytes=$((record_size + 1000))
-fi
-
-for producer_prop in "${producer_property[@]}"
-do
-    producer_properties="$producer_properties --producer-property $producer_prop"
-done
-
-if [ "$producer_properties" != "" ]
-then
-    log "⚙️ following producer properties will be used: $producer_properties"
-fi
-
 set -e
 SECONDS=0
 if [ $nb_messages = -1 ]
@@ -727,6 +709,27 @@ fi
 if [ $nb_messages -gt $max_nb_messages_per_batch ] || [ $nb_messages = -1 ]
 then
     log "✨ it will be done in batches of maximum $max_nb_messages_per_batch records$sleep_msg"
+
+    log "✨ setting --producer-property linger.ms=100 and --producer-property batch.size=500000 and --compression-codec lz4"
+    producer_properties="$producer_properties --producer-property linger.ms=1000 --producer-property batch.size=500000 --compression-codec lz4"
+fi
+
+if [ $record_size -gt 1048576 ]
+then
+    log "✨ record-size $record_size is greater than 1Mb (1048576), setting --producer-property max.request.size=$((record_size + 1000)) and --producer-property buffer.memory=67108864"
+    producer_properties="$producer_properties --producer-property max.request.size=$((record_size + 1000)) --producer-property buffer.memory=67108864"
+    log "✨ topic $topic max.message.bytes is also set to $((record_size + 1000))"
+    playground topic alter --topic $topic --add-config max.message.bytes=$((record_size + 1000))
+fi
+
+for producer_prop in "${producer_property[@]}"
+do
+    producer_properties="$producer_properties --producer-property $producer_prop"
+done
+
+if [ "$producer_properties" != "" ]
+then
+    log "⚙️ following producer properties will be used: $producer_properties"
 fi
 
 function handle_signal {
