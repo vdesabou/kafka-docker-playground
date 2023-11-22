@@ -17477,11 +17477,6 @@ playground_run_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          # :flag.validations
-          if [[ -n $(validate_minimal_cp_version "4" "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "4" "$2")" >&2
-            exit 1
-          fi
 
           args['--tag']="$2"
           shift
@@ -17714,11 +17709,6 @@ playground_re_run_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          # :flag.validations
-          if [[ -n $(validate_minimal_cp_version "4" "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "4" "$2")" >&2
-            exit 1
-          fi
 
           args['--tag']="$2"
           shift
@@ -17943,11 +17933,6 @@ playground_start_environment_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          # :flag.validations
-          if [[ -n $(validate_minimal_cp_version "4" "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "4" "$2")" >&2
-            exit 1
-          fi
 
           args['--tag']="$2"
           shift
@@ -18138,11 +18123,6 @@ playground_run_ccloud_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          # :flag.validations
-          if [[ -n $(validate_minimal_cp_version "4" "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "4" "$2")" >&2
-            exit 1
-          fi
 
           args['--tag']="$2"
           shift
@@ -18437,11 +18417,6 @@ playground_update_version_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          # :flag.validations
-          if [[ -n $(validate_minimal_cp_version "4" "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "4" "$2")" >&2
-            exit 1
-          fi
 
           args['--tag']="$2"
           shift
@@ -18949,11 +18924,6 @@ playground_repro_bootstrap_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          # :flag.validations
-          if [[ -n $(validate_minimal_cp_version "4" "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "4" "$2")" >&2
-            exit 1
-          fi
 
           args['--tag']="$2"
           shift

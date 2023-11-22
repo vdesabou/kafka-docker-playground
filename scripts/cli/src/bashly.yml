@@ -160,7 +160,7 @@ commands:
     long: --tag
     arg: tag
     required: false
-    validate: minimal_cp_version "4"
+    # fixthis validate: minimal_cp_version "4"
     help: |-
       🎯 Confluent Platform (CP) version to use
 
