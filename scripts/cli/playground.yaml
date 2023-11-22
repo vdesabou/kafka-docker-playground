@@ -1962,6 +1962,15 @@ subcommands:
             Default value: 
             
         - names:
+          - --compression-codec
+          argument: [gzip, snappy, lz4, zstd]
+          description: | 
+            🤐 The compression codec: either 'gzip', 'snappy', 'lz4', or 'zstd'
+            If not set, there is no compression
+            
+            Allowed values: gzip, snappy, lz4, zstd
+            
+        - names:
           - --compatibility
           argument: [BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE]
           description: | 

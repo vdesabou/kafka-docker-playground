@@ -1614,6 +1614,18 @@ commands:
           🔢 Number of partitions for the topic. (default is 1)
           
           ❌ Important: If topic is existing, it will be re-created before producing to topic.
+      - long: --compression-codec
+        arg: compression-codec
+        required: false
+        allowed: 
+          - gzip
+          - snappy
+          - lz4
+          - zstd
+        help: |-
+          🤐 The compression codec: either 'gzip', 'snappy', 'lz4', or 'zstd'
+          If not set, there is no compression
+
       - &compatibility
         long: --compatibility
         arg: compatibility

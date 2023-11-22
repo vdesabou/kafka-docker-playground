@@ -1673,6 +1673,18 @@
             },
             {
               "names": [
+                "--compression-codec"
+              ],
+              "argument": [
+                "gzip",
+                "snappy",
+                "lz4",
+                "zstd"
+              ],
+              "description": "🤐 The compression codec: either 'gzip', 'snappy', 'lz4', or 'zstd'\nIf not set, there is no compression\n\nAllowed values: gzip, snappy, lz4, zstd\n"
+            },
+            {
+              "names": [
                 "--compatibility"
               ],
               "argument": [
