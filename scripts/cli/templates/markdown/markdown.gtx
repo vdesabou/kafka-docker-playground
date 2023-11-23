@@ -34,19 +34,6 @@ end
 > ```
 >
 
-# === Examples
-
-if examples
-  > ## Examples
-  >
-  examples.each do |example|
-    > ```bash
-    > {{ example }}
-    > ```
-    >
-  end
-end
-
 # === Dependencies
 
 if dependencies.any?
@@ -179,6 +166,19 @@ if flags.any?
       end
       >
     end
+  end
+end
+
+# === Examples
+
+if examples
+  > ## Examples
+  >
+  examples.each do |example|
+    > ```bash
+    > {{ example }}
+    > ```
+    >
   end
 end
 
