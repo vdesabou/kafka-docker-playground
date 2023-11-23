@@ -2280,6 +2280,12 @@ subcommands:
             
             Required: ✓ Yes
             
+        - names:
+          - --validate
+          argument: ""
+          description: | 
+            ✅ Validate config using PUT https://api.confluent.cloud/connect/v1/environments/{environment_id}/clusters/{kafka_cluster_id}/connector-plugins/{plugin_name}/config/validate (https://docs.confluent.io/cloud/current/api.html#tag/Managed-Connector-Plugins-(connectv1)/operation/validateConnectv1ConnectorPlugin)
+            
   - name: connector
     description: | 
         🔗 Connector commands
@@ -2535,4 +2541,10 @@ subcommands:
           argument: PACKAGE
           description: | 
             Package name
+            
+        - names:
+          - --validate
+          argument: ""
+          description: | 
+            ✅ Validate config using PUT /connector-plugins/(string:name)/config/validate (https://docs.confluent.io/platform/current/connect/references/restapi.html#put--connector-plugins-(string-name)-config-validate)
             

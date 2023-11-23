@@ -137,7 +137,7 @@ _playground_completions() {
       ;;
 
     'ccloud-connector create-or-update'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help -c -h")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --validate -c -h")" -- "$cur" )
       ;;
 
     'topic set-schema-compatibility'*'-t')
@@ -357,7 +357,7 @@ _playground_completions() {
       ;;
 
     'connector create-or-update'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --level --package -c -h -l -p")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --level --package --validate -c -h -l -p")" -- "$cur" )
       ;;
 
     'repro bootstrap'*'--pipeline')
