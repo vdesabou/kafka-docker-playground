@@ -16367,7 +16367,7 @@ playground_connector_create_or_update_command() {
       set +e
       connector_class=$(echo "$json_content" | jq -r '."connector.class"')
       # add mandator name field
-      new_json_content=$(echo $json_content | jq '. + {"name": "validate_connector"}')
+      new_json_content=$(echo $json_content | jq ". + {\"name\": \"$connector\"}")
       curl_output=$(curl $security -s -X PUT \
           -H "Content-Type: application/json" \
           --data "$new_json_content" \
