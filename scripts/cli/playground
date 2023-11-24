@@ -13905,7 +13905,8 @@ playground_topic_produce_command() {
                   docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
               ;;
               json-schema)
-                  docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate vdesabou/json-schema-faker > $tmp_dir/out.json
+                  schema_file_name="$(basename "${schema_file}")"
+                  docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate -e SCHEMA=/tmp/$schema_file_name vdesabou/json-schema-faker > $tmp_dir/out.json
               ;;
               protobuf)
                   # https://github.com/JasonkayZK/mock-protobuf.js
@@ -14026,14 +14027,12 @@ playground_topic_produce_command() {
   output_key_file=$tmp_dir/out_key_final.json
   output_value_file=$tmp_dir/out_value_final.json
   output_final_file=$tmp_dir/out_final.json
-
+  SECONDS=0
   if [[ -n "$key" ]]
   then
       log "✨ generating key data..."
       generate_data "$key_schema_type" "$key_schema_file" "$output_key_file" "KEY"
   fi
-
-  SECONDS=0
   log "✨ generating value data..."
   generate_data "$value_schema_type" "$value_schema_file" "$output_value_file" "VALUE"
 

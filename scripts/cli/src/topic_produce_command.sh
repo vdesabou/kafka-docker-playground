@@ -308,7 +308,8 @@ function generate_data() {
                 docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
             ;;
             json-schema)
-                docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate vdesabou/json-schema-faker > $tmp_dir/out.json
+                schema_file_name="$(basename "${schema_file}")"
+                docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate -e SCHEMA=/tmp/$schema_file_name vdesabou/json-schema-faker > $tmp_dir/out.json
             ;;
             protobuf)
                 # https://github.com/JasonkayZK/mock-protobuf.js
