@@ -223,6 +223,13 @@ then
             exit 1
         fi
     fi
+
+    if ([ "$key_schema_type" = "avro" ] || [ "$key_schema_type" = "protobuf" ] || [ "$key_schema_type" = "json-schema" ]) && 
+        ([ "$value_schema_type" = "raw" ] || [ "$value_schema_type" = "json" ] || [ "$value_schema_type" = "sql" ])
+    then
+        logerror "❌ key is set with schema registry aware converter, but not value"
+        exit 1
+    fi
 fi
 
 if [[ -n "$validate" ]]
@@ -419,18 +426,17 @@ function generate_data() {
     fi
 }
 
-log "✨ generating value data..."
 output_key_file=$tmp_dir/out_key_final.json
 output_value_file=$tmp_dir/out_value_final.json
 output_final_file=$tmp_dir/out_final.json
 SECONDS=0
-generate_data "$value_schema_type" "$value_schema_file" "$output_value_file" "VALUE"
-
 if [[ -n "$key" ]]
 then
     log "✨ generating key data..."
     generate_data "$key_schema_type" "$key_schema_file" "$output_key_file" "KEY"
 fi
+log "✨ generating value data..."
+generate_data "$value_schema_type" "$value_schema_file" "$output_value_file" "VALUE"
 
 nb_generated_messages=$(wc -l < $output_value_file)
 nb_generated_messages=${nb_generated_messages// /}
