@@ -10,6 +10,16 @@ key_subject="${args[--key-subject]}"
 value_subject="${args[--value-subject]}"
 max_characters="${args[--max-characters]}"
 
+if [[ -n "$key_subject" ]]
+then
+  original_key_subject=$key_subject
+fi
+
+if [[ -n "$value_subject" ]]
+then
+  original_value_subject=$value_subject
+fi
+
 get_environment_used
 
 if [ "$environment" == "error" ]
@@ -112,6 +122,8 @@ fi
 items=($topic)
 for topic in ${items[@]}
 do
+  key_subject=""
+  value_subject=""
   if [ ! -n "$tail" ]
   then
     if [[ -n "$min_expected_messages" ]]
@@ -204,9 +216,10 @@ do
     esac
   fi
 
-  if [[ -n "$key_subject" ]]
+  if [[ -n "$original_key_subject" ]]
   then
-    log "📛 key subject is set with $key_subject"
+    log "📛 key subject is set with $original_key_subject"
+    key_subject=$original_key_subject
   else
     key_subject="${topic}-key"
   fi
@@ -237,9 +250,10 @@ do
     log "🔮🙅 topic is not using any schema for key"
   fi
 
-  if [[ -n "$value_subject" ]]
+  if [[ -n "$original_value_subject" ]]
   then
-    log "📛 value subject is set with $value_subject"
+    log "📛 value subject is set with $original_value_subject"
+    value_subject=$original_value_subject
   else
     value_subject="${topic}-value"
   fi
