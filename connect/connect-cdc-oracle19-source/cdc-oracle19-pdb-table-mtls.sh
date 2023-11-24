@@ -247,54 +247,90 @@ log "✨ If you modify a docker-compose file and want to re-create the container
 log "Creating Oracle source connector"
 playground connector create-or-update --connector cdc-oracle-source-pdb --package "io.confluent.connect.oracle.cdc.util.metrics.MetricsReporter" --level DEBUG << EOF
 {
-               "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
-               "tasks.max":1,
-               "key.converter": "io.confluent.connect.avro.AvroConverter",
-               "key.converter.schema.registry.url": "http://schema-registry:8081",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "oracle.server": "oracle",
-               "oracle.port": 1532,
-               "oracle.sid": "ORCLCDB",
-               "oracle.pdb.name": "ORCLPDB1",
-               "oracle.username": "C##MYUSER",
-               "oracle.password": "mypassword",
-               "oracle.ssl.truststore.file": "/tmp/truststore.jks",
-               "oracle.ssl.truststore.password": "welcome123",
-               "oracle.connection.javax.net.ssl.keyStore": "/tmp/keystore.jks",
-               "oracle.connection.javax.net.ssl.keyStorePassword": "welcome123",
-               "start.from":"snapshot",
-               "enable.metrics.collection": "true",
-               "redo.log.topic.name": "redo-log-topic",
-               "redo.log.consumer.bootstrap.servers":"broker:9092",
-               "table.inclusion.regex": "ORCLPDB1[.].*[.]CUSTOMERS",
-               "table.topic.name.template": "\${databaseName}.\${schemaName}.\${tableName}",
-               "numeric.mapping": "best_fit",
-               "connection.pool.max.size": 20,
-               "redo.log.row.fetch.size":1,
-               "oracle.dictionary.mode": "auto",
-               "topic.creation.redo.include": "redo-log-topic",
-               "topic.creation.redo.replication.factor": 1,
-               "topic.creation.redo.partitions": 1,
-               "topic.creation.redo.cleanup.policy": "delete",
-               "topic.creation.redo.retention.ms": 1209600000,
-               "topic.creation.default.replication.factor": 1,
-               "topic.creation.default.partitions": 1,
-               "topic.creation.default.cleanup.policy": "delete"
-          }
+     "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
+     "tasks.max":1,
+     "key.converter": "io.confluent.connect.avro.AvroConverter",
+     "key.converter.schema.registry.url": "http://schema-registry:8081",
+     "value.converter": "io.confluent.connect.avro.AvroConverter",
+     "value.converter.schema.registry.url": "http://schema-registry:8081",
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1",
+     "oracle.server": "oracle",
+     "oracle.port": 1532,
+     "oracle.sid": "ORCLCDB",
+     "oracle.pdb.name": "ORCLPDB1",
+     "oracle.username": "C##MYUSER",
+     "oracle.password": "mypassword",
+     "oracle.ssl.truststore.file": "/tmp/truststore.jks",
+     "oracle.ssl.truststore.password": "welcome123",
+     "oracle.connection.javax.net.ssl.keyStore": "/tmp/keystore.jks",
+     "oracle.connection.javax.net.ssl.keyStorePassword": "welcome123",
+     "start.from":"snapshot",
+     "enable.metrics.collection": "true",
+     "redo.log.topic.name": "redo-log-topic",
+     "redo.log.consumer.bootstrap.servers":"broker:9092",
+     "table.inclusion.regex": "ORCLPDB1[.].*[.]CUSTOMERS",
+     "table.topic.name.template": "\${databaseName}.\${schemaName}.\${tableName}",
+     "numeric.mapping": "best_fit",
+     "connection.pool.max.size": 20,
+     "redo.log.row.fetch.size":1,
+     "oracle.dictionary.mode": "auto",
+     "topic.creation.redo.include": "redo-log-topic",
+     "topic.creation.redo.replication.factor": 1,
+     "topic.creation.redo.partitions": 1,
+     "topic.creation.redo.cleanup.policy": "delete",
+     "topic.creation.redo.retention.ms": 1209600000,
+     "topic.creation.default.replication.factor": 1,
+     "topic.creation.default.partitions": 1,
+     "topic.creation.default.cleanup.policy": "delete"
+}
 EOF
 
 log "Waiting 20s for connector to read existing data"
 sleep 20
 
-log "Running SQL scripts"
-for script in ../../connect/connect-cdc-oracle19-source/sample-sql-scripts/*.sh
-do
-     $script "ORCLPDB1"
-done
+log "Insert 2 customers in CUSTOMERS table"
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+     insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Frantz', 'Kafka', 'fkafka@confluent.io', 'Male', 'bronze', 'Evil is whatever distracts');
+     insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Gregor', 'Samsa', 'gsamsa@confluent.io', 'Male', 'platinium', 'How about if I sleep a little bit longer and forget all this nonsense');
+     exit;
+EOF
+
+log "Update CUSTOMERS with email=fkafka@confluent.io"
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+     update CUSTOMERS set club_status = 'gold' where email = 'fkafka@confluent.io';
+     exit;
+EOF
+
+log "Deleting CUSTOMERS with email=fkafka@confluent.io"
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+     delete from CUSTOMERS where email = 'fkafka@confluent.io';
+     exit;
+EOF
+
+log "Altering CUSTOMERS table with an optional column"
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+     ALTER SESSION SET CONTAINER=CDB\$ROOT;
+     EXECUTE DBMS_LOGMNR_D.BUILD(OPTIONS=>DBMS_LOGMNR_D.STORE_IN_REDO_LOGS);
+     ALTER SESSION SET CONTAINER=ORCLPDB1;
+     alter table CUSTOMERS add (
+     country VARCHAR(50)
+     );
+     ALTER SESSION SET CONTAINER=CDB\$ROOT;
+     EXECUTE DBMS_LOGMNR_D.BUILD(OPTIONS=>DBMS_LOGMNR_D.STORE_IN_REDO_LOGS);
+     exit;
+EOF
+
+log "Populating CUSTOMERS table after altering the structure"
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+     insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, country) values ('Josef', 'K', 'jk@confluent.io', 'Male', 'bronze', 'How is it even possible for someone to be guilty', 'Poland');
+     update CUSTOMERS set club_status = 'silver' where email = 'gsamsa@confluent.io';
+     update CUSTOMERS set club_status = 'gold' where email = 'gsamsa@confluent.io';
+     update CUSTOMERS set club_status = 'gold' where email = 'jk@confluent.io';
+     commit;
+     exit;
+EOF
 
 log "Waiting 20s for connector to read new data"
 sleep 20
@@ -302,5 +338,5 @@ sleep 20
 log "Verifying topic ORCLPDB1.C__MYUSER.CUSTOMERS: there should be 13 records"
 playground topic consume --topic ORCLPDB1.C__MYUSER.CUSTOMERS --min-expected-messages 13 --timeout 60
 
-log "Verifying topic redo-log-topic: there should be 15 records"
-playground topic consume --topic redo-log-topic --min-expected-messages 15 --timeout 60
+log "Verifying topic redo-log-topic: there should be 14 records"
+playground topic consume --topic redo-log-topic --min-expected-messages 14 --timeout 60

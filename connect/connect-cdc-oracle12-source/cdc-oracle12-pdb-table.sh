@@ -195,17 +195,53 @@ EOF
 log "Waiting 20s for connector to read existing data"
 sleep 20
 
-log "Running SQL scripts"
-for script in ../../connect/connect-cdc-oracle12-source/sample-sql-scripts/*.sh
-do
-     $script "ORCLPDB1"
-done
+log "Insert 2 customers in CUSTOMERS table"
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+     insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Frantz', 'Kafka', 'fkafka@confluent.io', 'Male', 'bronze', 'Evil is whatever distracts');
+     insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Gregor', 'Samsa', 'gsamsa@confluent.io', 'Male', 'platinium', 'How about if I sleep a little bit longer and forget all this nonsense');
+     exit;
+EOF
+
+log "Update CUSTOMERS with email=fkafka@confluent.io"
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+     update CUSTOMERS set club_status = 'gold' where email = 'fkafka@confluent.io';
+     exit;
+EOF
+
+log "Deleting CUSTOMERS with email=fkafka@confluent.io"
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+     delete from CUSTOMERS where email = 'fkafka@confluent.io';
+     exit;
+EOF
+
+log "Altering CUSTOMERS table with an optional column"
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+     ALTER SESSION SET CONTAINER=CDB\$ROOT;
+     EXECUTE DBMS_LOGMNR_D.BUILD(OPTIONS=>DBMS_LOGMNR_D.STORE_IN_REDO_LOGS);
+     ALTER SESSION SET CONTAINER=ORCLPDB1;
+     alter table CUSTOMERS add (
+     country VARCHAR(50)
+     );
+     ALTER SESSION SET CONTAINER=CDB\$ROOT;
+     EXECUTE DBMS_LOGMNR_D.BUILD(OPTIONS=>DBMS_LOGMNR_D.STORE_IN_REDO_LOGS);
+     exit;
+EOF
+
+log "Populating CUSTOMERS table after altering the structure"
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+     insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, country) values ('Josef', 'K', 'jk@confluent.io', 'Male', 'bronze', 'How is it even possible for someone to be guilty', 'Poland');
+     update CUSTOMERS set club_status = 'silver' where email = 'gsamsa@confluent.io';
+     update CUSTOMERS set club_status = 'gold' where email = 'gsamsa@confluent.io';
+     update CUSTOMERS set club_status = 'gold' where email = 'jk@confluent.io';
+     commit;
+     exit;
+EOF
 
 log "Verifying topic ORCLPDB1.C__MYUSER.CUSTOMERS: there should be 13 records"
 playground topic consume --topic ORCLPDB1.C__MYUSER.CUSTOMERS --min-expected-messages 13 --timeout 60
 
-log "Verifying topic redo-log-topic: there should be 15 records"
-playground topic consume --topic redo-log-topic --min-expected-messages 15 --timeout 60
+log "Verifying topic redo-log-topic: there should be 14 records"
+playground topic consume --topic redo-log-topic --min-expected-messages 14 --timeout 60
 
 if [ ! -z "$SQL_DATAGEN" ]
 then

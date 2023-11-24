@@ -288,5 +288,5 @@ log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS: there should be 5 records"
 set +e
 playground topic consume --topic ORCLCDB.C__MYUSER.CUSTOMERS --min-expected-messages 5 --timeout 60
 
-# log "Verifying topic redo-log-topic: there should be 15 records"
-# playground topic consume --topic redo-log-topic --min-expected-messages 15 --timeout 60
+# log "Verifying topic redo-log-topic: there should be 14 records"
+# playground topic consume --topic redo-log-topic --min-expected-messages 14 --timeout 60
