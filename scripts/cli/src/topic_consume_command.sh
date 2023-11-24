@@ -425,9 +425,19 @@ do
           payload=$(echo "$line_with_date" | cut -d "|" -f 6)
           if [ ${#payload} -lt $max_characters ]
           then
-            echo "$line_with_date" | awk 'BEGIN{FS=OFS="|"} {$4="Headers:"$4; $5="Key:"$5; $6="Value:"$6; $7="SchemaId:"$7} 1'
+            if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
+            then
+              echo "$line_with_date" | awk 'BEGIN{FS=OFS="|"} {$4="Headers:"$4; $5="Key:"$5; $6="KeySchemaId:"$6; $7="Value:"$7; $8="ValueSchemaId:"$8} 1'
+            else
+              echo "$line_with_date" | awk 'BEGIN{FS=OFS="|"} {$4="Headers:"$4; $5="Key:"$5; $6="Value:"$6; $7="ValueSchemaId:"$7} 1'
+            fi
           else
-            echo "$line_with_date" | awk 'BEGIN{FS=OFS="|"} {$4="Headers:"$4; $5="Key:"$5; $6="Value:"$6; $7="SchemaId:"$7} 1' | cut -c 1-$max_characters | awk "{print \$0 \"...<truncated, only showing first $max_characters characters, out of ${#payload}>...\"}"
+            if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
+            then
+              echo "$line_with_date" | awk 'BEGIN{FS=OFS="|"} {$4="Headers:"$4; $5="Key:"$5; $6="KeySchemaId:"$6; $7="Value:"$7; $8="ValueSchemaId:"$8} 1' | cut -c 1-$max_characters | awk "{print \$0 \"...<truncated, only showing first $max_characters characters, out of ${#payload}>...\"}"
+            else
+              echo "$line_with_date" | awk 'BEGIN{FS=OFS="|"} {$4="Headers:"$4; $5="Key:"$5; $6="Value:"$6; $7="ValueSchemaId:"$7} 1' | cut -c 1-$max_characters | awk "{print \$0 \"...<truncated, only showing first $max_characters characters, out of ${#payload}>...\"}"
+            fi
           fi
         fi
       fi
