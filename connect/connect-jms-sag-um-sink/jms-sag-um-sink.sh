@@ -44,6 +44,8 @@ then
 fi
 
 docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.yml" up -d
+command="source ${DIR}/../../scripts/utils.sh && docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.yml" up -d ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} up -d"
+echo "$command" >> /tmp/playground-command
 
 ../../scripts/wait-for-connect-and-controlcenter.sh
 
@@ -62,21 +64,21 @@ EOF
 log "Creating Solace source connector"
 playground connector create-or-update --connector jms-sag-um-sink << EOF
 {
-               "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
-               "tasks.max": "1",
-               "topics": "sink-messages",
-               "java.naming.provider.url": "nsp://umserver:9000",
-               "java.naming.factory.initial": "com.pcbsys.nirvana.nSpace.NirvanaContextFactory",
-               "connection.factory.name": "QueueConnectionFactory",
-               "java.naming.security.principal": "admin",
-               "java.naming.security.credentials": "admin",
-               "jms.destination.type": "queue",
-               "jms.destination.name": "test-queue",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+     "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
+     "tasks.max": "1",
+     "topics": "sink-messages",
+     "java.naming.provider.url": "nsp://umserver:9000",
+     "java.naming.factory.initial": "com.pcbsys.nirvana.nSpace.NirvanaContextFactory",
+     "connection.factory.name": "QueueConnectionFactory",
+     "java.naming.security.principal": "admin",
+     "java.naming.security.credentials": "admin",
+     "jms.destination.type": "queue",
+     "jms.destination.name": "test-queue",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 30
