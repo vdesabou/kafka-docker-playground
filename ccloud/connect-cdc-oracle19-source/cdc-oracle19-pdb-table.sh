@@ -263,5 +263,5 @@ playground topic consume --topic ORCLPDB1.C__MYUSER.CUSTOMERS --min-expected-mes
 log "Verifying topic redo-log-topic: there should be 14 records"
 playground topic consume --topic redo-log-topic --min-expected-messages 14 --timeout 60
 
-log "🚚 If you're planning to inject more data, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle19-source/README.md#note-on-redologrowfetchsize"
+
 

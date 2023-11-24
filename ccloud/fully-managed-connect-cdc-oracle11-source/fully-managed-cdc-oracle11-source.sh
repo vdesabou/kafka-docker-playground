@@ -156,7 +156,7 @@ playground topic consume --topic XE.MYUSER.CUSTOMERS --min-expected-messages 13 
 log "Verifying topic redo-log-topic: there should be 14 records"
 playground topic consume --topic redo-log-topic --min-expected-messages 14 --timeout 60
 
-log "🚚 If you're planning to inject more data, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle19-source/README.md#note-on-redologrowfetchsize"
+
 
 
 log "Do you want to delete the fully managed connector $connector_name ?"
