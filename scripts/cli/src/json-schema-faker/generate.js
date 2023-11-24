@@ -10,3 +10,4 @@ for (let i = 0; i < iterations; i++) {
   const minifiedData = jsonminify(JSON.stringify(data));
   console.log(minifiedData);
 }
+// https://github.com/json-schema-faker/json-schema-faker/tree/master/docs
