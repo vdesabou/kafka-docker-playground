@@ -1,24 +1,25 @@
 function get_environment_used() {
   if [ ! -f /tmp/playground-command ]
   then
-    echo "error"
+    environment="error"
     return
   fi
 
   patterns=("environment/2way-ssl" "environment/sasl-ssl" "environment/rbac-sasl-plain" "environment/kerberos" "environment/ssl_kerberos" "environment/ldap-authorizer-sasl-plain" "environment/sasl-plain" "environment/ldap-sasl-plain" "environment/sasl-scram" "environment/mdc-plaintext" "environment/mdc-sasl-plain" "environment/mdc-kerberos" "environment/ldap-authorizer-sasl-plain" "ccloud/environment")
 
-  for pattern in "${patterns[@]}"; do
-    if grep -q "$pattern" /tmp/playground-command; then
-      echo "${pattern#*/}"
+  for pattern in "${patterns[@]}"
+  do
+    if grep -q "$pattern" /tmp/playground-command
+    then
+      environment="${pattern#*/}"
       return
     fi
   done
-
-  echo "plaintext"
+  environment="plaintext"
 }
 
 function get_connect_url_and_security() {
-  environment=`get_environment_used`
+  get_environment_used
 
   if [ "$environment" == "error" ]
   then
@@ -39,8 +40,6 @@ function get_connect_url_and_security() {
 
       security="-u connectorSubmitter:connectorSubmitter"
   fi
-
-  echo "$connect_url@$security"
 }
 
 function get_ccloud_connect() {
@@ -64,12 +63,10 @@ function get_ccloud_connect() {
   else
       authorization=$(echo -n "$CLOUD_API_KEY:$CLOUD_API_SECRET" | base64 -w 0)
   fi
-
-  echo "$environment@$cluster@$authorization"
 }
 
 function get_sr_url_and_security() {
-  environment=`get_environment_used`
+  get_environment_used
 
   if [ "$environment" == "error" ]
   then
@@ -103,13 +100,11 @@ function get_sr_url_and_security() {
     sr_url=$SCHEMA_REGISTRY_URL
     security="-u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"
   fi
-
-  echo "$sr_url@$security"
 }
 
 function get_security_broker() {
   config_file_name="$1"
-  environment=`get_environment_used`
+  get_environment_used
 
   if [ "$environment" == "error" ]
   then
@@ -135,7 +130,6 @@ function get_security_broker() {
   then
       security="$config_file_name /etc/kafka/secrets/client_without_interceptors.config"
   fi
-  echo "$container@$security"
 }
 
 function get_fzf_version() {
@@ -413,7 +407,7 @@ function get_plugin_list() {
 }
 
 function filter_not_mdc_environment() {
-  environment=`get_environment_used`
+  get_environment_used
 
   if [ "$environment" == "error" ]
   then
@@ -428,7 +422,7 @@ function filter_not_mdc_environment() {
 }
 
 function filter_ccloud_environment() {
-  environment=`get_environment_used`
+  get_environment_used
 
   if [ "$environment" == "error" ]
   then
@@ -443,12 +437,9 @@ function filter_ccloud_environment() {
 }
 
 function filter_schema_registry_running() {
-  ret=$(get_sr_url_and_security)
+  get_sr_url_and_security
 
-  sr_url=$(echo "$ret" | cut -d "@" -f 1)
-  sr_security=$(echo "$ret" | cut -d "@" -f 2)
-
-  ret=$(curl $sr_security -s "${sr_url}/config")
+  curl $sr_security -s "${sr_url}/config" > /dev/null 2>&1
   if [ $? != 0 ]
   then
     echo "schema registry rest api should be running to run this command"
@@ -456,12 +447,9 @@ function filter_schema_registry_running() {
 }
 
 function filter_connect_running() {
-  ret=$(get_connect_url_and_security)
+  get_connect_url_and_security
 
-  connect_url=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
-
-  ret=$(curl $security -s "${connect_url}")
+  curl $security -s "${connect_url}" > /dev/null 2>&1
   if [ $? != 0 ]
   then
     echo "connect rest api should be running to run this command"

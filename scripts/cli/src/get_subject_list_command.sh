@@ -1,8 +1,5 @@
-ret=$(get_sr_url_and_security)
+get_sr_url_and_security
 deleted="${args[--deleted]}"
-
-sr_url=$(echo "$ret" | cut -d "@" -f 1)
-sr_security=$(echo "$ret" | cut -d "@" -f 2)
 
 if [[ -n "$deleted" ]]
 then

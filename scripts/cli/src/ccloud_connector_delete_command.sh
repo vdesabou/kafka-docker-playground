@@ -1,9 +1,3 @@
-ret=$(get_ccloud_connect)
-
-environment=$(echo "$ret" | cut -d "@" -f 1)
-cluster=$(echo "$ret" | cut -d "@" -f 2)
-authorization=$(echo "$ret" | cut -d "@" -f 3)
-
 connector="${args[--connector]}"
 
 if [[ ! -n "$connector" ]]

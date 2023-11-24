@@ -1,10 +1,7 @@
 connector="${args[--connector]}"
 wait_for_zero_lag="${args[--wait-for-zero-lag]}"
 
-ret=$(get_connect_url_and_security)
-
-connect_url=$(echo "$ret" | cut -d "@" -f 1)
-security=$(echo "$ret" | cut -d "@" -f 2)
+get_connect_url_and_security
 
 if [[ ! -n "$connector" ]]
 then
@@ -16,10 +13,7 @@ then
     fi
 fi
 
-ret=$(get_security_broker "--command-config")
-
-container=$(echo "$ret" | cut -d "@" -f 1)
-security=$(echo "$ret" | cut -d "@" -f 2)
+get_security_broker "--command-config"
 
 items=($connector)
 length=${#items[@]}

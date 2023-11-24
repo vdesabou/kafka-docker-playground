@@ -1,7 +1,7 @@
 topic="${args[--topic]}"
 compatibility="${args[--compatibility]}"
 
-environment=`get_environment_used`
+get_environment_used
 
 if [ "$environment" == "error" ]
 then
@@ -9,10 +9,7 @@ then
   exit 1 
 fi
 
-ret=$(get_sr_url_and_security)
-
-sr_url=$(echo "$ret" | cut -d "@" -f 1)
-sr_security=$(echo "$ret" | cut -d "@" -f 2)
+get_sr_url_and_security
 
 if [[ ! -n "$topic" ]]
 then

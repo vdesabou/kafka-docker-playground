@@ -1,10 +1,7 @@
 subject="${args[--subject]}"
 deleted="${args[--deleted]}"
 
-ret=$(get_sr_url_and_security)
-
-sr_url=$(echo "$ret" | cut -d "@" -f 1)
-sr_security=$(echo "$ret" | cut -d "@" -f 2)
+get_sr_url_and_security
 
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT

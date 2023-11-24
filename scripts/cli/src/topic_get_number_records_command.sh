@@ -1,9 +1,6 @@
 topic="${args[--topic]}"
 
-ret=$(get_security_broker "--command-config")
-
-container=$(echo "$ret" | cut -d "@" -f 1)
-security=$(echo "$ret" | cut -d "@" -f 2)
+get_security_broker "--command-config"
 
 if [[ ! -n "$topic" ]]
 then
@@ -16,7 +13,7 @@ then
     fi
 fi
 
-environment=`get_environment_used`
+get_environment_used
 
 if [ "$environment" == "error" ]
 then
@@ -39,10 +36,7 @@ do
     set +e
     if [[ "$environment" == "environment" ]]
     then
-        ret=$(get_sr_url_and_security)
-
-        sr_url=$(echo "$ret" | cut -d "@" -f 1)
-        sr_security=$(echo "$ret" | cut -d "@" -f 2)
+        get_sr_url_and_security
 
         value_type=""
         version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-value/versions/1" | jq -r .version)
@@ -101,9 +95,8 @@ do
         if ! version_gt $TAG_BASE "6.9.9" && [ "$security" != "" ]
         then
             # GetOffsetShell does not support security before 7.x
-            ret=$(get_security_broker "--consumer.config")
-            container=$(echo "$ret" | cut -d "@" -f 1)
-            security=$(echo "$ret" | cut -d "@" -f 2)
+            get_security_broker "--consumer.config"
+            
             set +e
             docker exec $container timeout 15 kafka-console-consumer --bootstrap-server broker:9092 --topic $topic $security --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
             set -e

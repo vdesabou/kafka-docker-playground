@@ -10,7 +10,7 @@ key_subject="${args[--key-subject]}"
 value_subject="${args[--value-subject]}"
 max_characters="${args[--max-characters]}"
 
-environment=`get_environment_used`
+get_environment_used
 
 if [ "$environment" == "error" ]
 then
@@ -18,10 +18,7 @@ then
   exit 1 
 fi
 
-ret=$(get_sr_url_and_security)
-
-sr_url=$(echo "$ret" | cut -d "@" -f 1)
-sr_security=$(echo "$ret" | cut -d "@" -f 2)
+get_sr_url_and_security
 
 bootstrap_server="broker:9092"
 container="connect"

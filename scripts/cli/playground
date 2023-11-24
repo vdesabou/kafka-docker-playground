@@ -4788,24 +4788,25 @@ inspect_args() {
 function get_environment_used() {
   if [ ! -f /tmp/playground-command ]
   then
-    echo "error"
+    environment="error"
     return
   fi
 
   patterns=("environment/2way-ssl" "environment/sasl-ssl" "environment/rbac-sasl-plain" "environment/kerberos" "environment/ssl_kerberos" "environment/ldap-authorizer-sasl-plain" "environment/sasl-plain" "environment/ldap-sasl-plain" "environment/sasl-scram" "environment/mdc-plaintext" "environment/mdc-sasl-plain" "environment/mdc-kerberos" "environment/ldap-authorizer-sasl-plain" "ccloud/environment")
 
-  for pattern in "${patterns[@]}"; do
-    if grep -q "$pattern" /tmp/playground-command; then
-      echo "${pattern#*/}"
+  for pattern in "${patterns[@]}"
+  do
+    if grep -q "$pattern" /tmp/playground-command
+    then
+      environment="${pattern#*/}"
       return
     fi
   done
-
-  echo "plaintext"
+  environment="plaintext"
 }
 
 function get_connect_url_and_security() {
-  environment=`get_environment_used`
+  get_environment_used
 
   if [ "$environment" == "error" ]
   then
@@ -4827,8 +4828,6 @@ function get_connect_url_and_security() {
 
       security="-u connectorSubmitter:connectorSubmitter"
   fi
-
-  echo "$connect_url@$security"
 }
 
 function get_ccloud_connect() {
@@ -4852,12 +4851,10 @@ function get_ccloud_connect() {
   else
       authorization=$(echo -n "$CLOUD_API_KEY:$CLOUD_API_SECRET" | base64 -w 0)
   fi
-
-  echo "$environment@$cluster@$authorization"
 }
 
 function get_sr_url_and_security() {
-  environment=`get_environment_used`
+  get_environment_used
 
   if [ "$environment" == "error" ]
   then
@@ -4892,13 +4889,11 @@ function get_sr_url_and_security() {
     sr_url=$SCHEMA_REGISTRY_URL
     security="-u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"
   fi
-
-  echo "$sr_url@$security"
 }
 
 function get_security_broker() {
   config_file_name="$1"
-  environment=`get_environment_used`
+  get_environment_used
 
   if [ "$environment" == "error" ]
   then
@@ -4925,7 +4920,6 @@ function get_security_broker() {
   then
       security="$config_file_name /etc/kafka/secrets/client_without_interceptors.config"
   fi
-  echo "$container@$security"
 }
 
 function get_fzf_version() {
@@ -5203,7 +5197,7 @@ function get_plugin_list() {
 }
 
 function filter_not_mdc_environment() {
-  environment=`get_environment_used`
+  get_environment_used
 
   if [ "$environment" == "error" ]
   then
@@ -5219,7 +5213,7 @@ function filter_not_mdc_environment() {
 }
 
 function filter_ccloud_environment() {
-  environment=`get_environment_used`
+  get_environment_used
 
   if [ "$environment" == "error" ]
   then
@@ -5235,12 +5229,9 @@ function filter_ccloud_environment() {
 }
 
 function filter_schema_registry_running() {
-  ret=$(get_sr_url_and_security)
+  get_sr_url_and_security
 
-  sr_url=$(echo "$ret" | cut -d "@" -f 1)
-  sr_security=$(echo "$ret" | cut -d "@" -f 2)
-
-  ret=$(curl $sr_security -s "${sr_url}/config")
+  curl $sr_security -s "${sr_url}/config" > /dev/null 2>&1
   if [ $? != 0 ]
   then
     echo "schema registry rest api should be running to run this command"
@@ -5248,12 +5239,9 @@ function filter_schema_registry_running() {
 }
 
 function filter_connect_running() {
-  ret=$(get_connect_url_and_security)
+  get_connect_url_and_security
 
-  connect_url=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
-
-  ret=$(curl $security -s "${connect_url}")
+  curl $security -s "${connect_url}" > /dev/null 2>&1
   if [ $? != 0 ]
   then
     echo "connect rest api should be running to run this command"
@@ -9274,10 +9262,7 @@ playground_status_command() {
 # :command.function
 playground_get_connector_list_command() {
   # src/get_connector_list_command.sh
-  ret=$(get_connect_url_and_security)
-
-  connect_url=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
+  get_connect_url_and_security
 
   curl_output=$(curl $security -s "$connect_url/connectors")
   ret=$?
@@ -9332,12 +9317,6 @@ playground_get_connector_plugin_command() {
 # :command.function
 playground_get_ccloud_connector_list_command() {
   # src/get_ccloud_connector_list_command.sh
-  ret=$(get_ccloud_connect)
-
-  environment=$(echo "$ret" | cut -d "@" -f 1)
-  cluster=$(echo "$ret" | cut -d "@" -f 2)
-  authorization=$(echo "$ret" | cut -d "@" -f 3)
-
   curl_output=$(curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors" \
   --header "authorization: Basic $authorization")
   ret=$?
@@ -9378,7 +9357,7 @@ playground_get_topic_list_command() {
   # src/get_topic_list_command.sh
   skip_connect_internal_topics="${args[--skip-connect-internal-topics]}"
 
-  environment=`get_environment_used`
+  get_environment_used
 
   if [ "$environment" == "error" ]
   then
@@ -9408,11 +9387,8 @@ playground_get_topic_list_command() {
 # :command.function
 playground_get_subject_list_command() {
   # src/get_subject_list_command.sh
-  ret=$(get_sr_url_and_security)
+  get_sr_url_and_security
   deleted="${args[--deleted]}"
-
-  sr_url=$(echo "$ret" | cut -d "@" -f 1)
-  sr_security=$(echo "$ret" | cut -d "@" -f 2)
 
   if [[ -n "$deleted" ]]
   then
@@ -11793,10 +11769,7 @@ playground_schema_get_command() {
   subject="${args[--subject]}"
   deleted="${args[--deleted]}"
 
-  ret=$(get_sr_url_and_security)
-
-  sr_url=$(echo "$ret" | cut -d "@" -f 1)
-  sr_security=$(echo "$ret" | cut -d "@" -f 2)
+  get_sr_url_and_security
 
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
@@ -11878,10 +11851,7 @@ playground_schema_register_command() {
   schema="${args[--schema]}"
   verbose="${args[--verbose]}"
 
-  ret=$(get_sr_url_and_security)
-
-  sr_url=$(echo "$ret" | cut -d "@" -f 1)
-  sr_security=$(echo "$ret" | cut -d "@" -f 2)
+  get_sr_url_and_security
 
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
@@ -11975,10 +11945,7 @@ playground_schema_get_compatibility_command() {
   # src/schema_get_compatibility_command.sh
   subject="${args[--subject]}"
 
-  ret=$(get_sr_url_and_security)
-
-  sr_url=$(echo "$ret" | cut -d "@" -f 1)
-  sr_security=$(echo "$ret" | cut -d "@" -f 2)
+  get_sr_url_and_security
 
   log "🛡️ Get compatibility for subject ${subject}"
   curl_output=$(curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/config/${subject}")
@@ -12009,10 +11976,7 @@ playground_schema_set_compatibility_command() {
   subject="${args[--subject]}"
   compatibility="${args[--compatibility]}"
 
-  ret=$(get_sr_url_and_security)
-
-  sr_url=$(echo "$ret" | cut -d "@" -f 1)
-  sr_security=$(echo "$ret" | cut -d "@" -f 2)
+  get_sr_url_and_security
 
   log "🛡️ Set compatibility for subject ${subject} to $compatibility"
   curl_output=$(curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${subject}" | jq .)
@@ -12041,10 +12005,7 @@ playground_schema_get_mode_command() {
   # src/schema_get_mode_command.sh
   subject="${args[--subject]}"
 
-  ret=$(get_sr_url_and_security)
-
-  sr_url=$(echo "$ret" | cut -d "@" -f 1)
-  sr_security=$(echo "$ret" | cut -d "@" -f 2)
+  get_sr_url_and_security
 
   log "🔏 Get mode for subject ${subject}"
   curl_output=$(curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/mode/${subject}")
@@ -12075,10 +12036,7 @@ playground_schema_set_mode_command() {
   subject="${args[--subject]}"
   mode="${args[--mode]}"
 
-  ret=$(get_sr_url_and_security)
-
-  sr_url=$(echo "$ret" | cut -d "@" -f 1)
-  sr_security=$(echo "$ret" | cut -d "@" -f 2)
+  get_sr_url_and_security
 
   log "🔏 Set mode for subject ${subject} to $mode"
   curl_output=$(curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"mode\": \"$mode\"}" "${sr_url}/mode/${subject}" | jq .)
@@ -12110,10 +12068,7 @@ playground_schema_delete_command() {
   version="${args[--version]}"
   permanent="${args[--permanent]}"
 
-  ret=$(get_sr_url_and_security)
-
-  sr_url=$(echo "$ret" | cut -d "@" -f 1)
-  sr_security=$(echo "$ret" | cut -d "@" -f 2)
+  get_sr_url_and_security
 
   if [[ -n "$version" ]]
   then
@@ -12648,10 +12603,7 @@ playground_debug_flight_recorder_command() {
 # :command.function
 playground_debug_log_level_get_command() {
   # src/debug_log_level_get_command.sh
-  ret=$(get_connect_url_and_security)
-
-  connect_url=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
+  get_connect_url_and_security
 
   package="${args[--package]}"
 
@@ -12668,10 +12620,7 @@ playground_debug_log_level_get_command() {
 # :command.function
 playground_debug_log_level_set_command() {
   # src/debug_log_level_set_command.sh
-  ret=$(get_connect_url_and_security)
-
-  connect_url=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
+  get_connect_url_and_security
 
   package="${args[--package]}"
   level="${args[--level]}"
@@ -12866,10 +12815,7 @@ playground_topic_get_number_records_command() {
   # src/topic_get_number_records_command.sh
   topic="${args[--topic]}"
 
-  ret=$(get_security_broker "--command-config")
-
-  container=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
+  get_security_broker "--command-config"
 
   if [[ ! -n "$topic" ]]
   then
@@ -12882,7 +12828,7 @@ playground_topic_get_number_records_command() {
       fi
   fi
 
-  environment=`get_environment_used`
+  get_environment_used
 
   if [ "$environment" == "error" ]
   then
@@ -12906,10 +12852,7 @@ playground_topic_get_number_records_command() {
       set +e
       if [[ "$environment" == "environment" ]]
       then
-          ret=$(get_sr_url_and_security)
-
-          sr_url=$(echo "$ret" | cut -d "@" -f 1)
-          sr_security=$(echo "$ret" | cut -d "@" -f 2)
+          get_sr_url_and_security
 
           value_type=""
           version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-value/versions/1" | jq -r .version)
@@ -12968,9 +12911,8 @@ playground_topic_get_number_records_command() {
           if ! version_gt $TAG_BASE "6.9.9" && [ "$security" != "" ]
           then
               # GetOffsetShell does not support security before 7.x
-              ret=$(get_security_broker "--consumer.config")
-              container=$(echo "$ret" | cut -d "@" -f 1)
-              security=$(echo "$ret" | cut -d "@" -f 2)
+              get_security_broker "--consumer.config"
+
               set +e
               docker exec $container timeout 15 kafka-console-consumer --bootstrap-server broker:9092 --topic $topic $security --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
               set -e
@@ -12984,12 +12926,8 @@ playground_topic_get_number_records_command() {
 # :command.function
 playground_topic_display_consumer_offsets_command() {
   # src/topic_display_consumer_offsets_command.sh
-  ret=$(get_security_broker "--consumer.config")
-
-  container=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
-
-  environment=`get_environment_used`
+  get_security_broker "--consumer.config"
+  get_environment_used
 
   if [ "$environment" == "error" ]
   then
@@ -13024,7 +12962,6 @@ playground_topic_display_consumer_offsets_command() {
   else
       docker exec -i $container kafka-console-consumer --bootstrap-server broker:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security | grep -v "_confluent-controlcenter"
   fi
-
 }
 
 # :command.function
@@ -13039,10 +12976,7 @@ playground_topic_describe_command() {
   # src/topic_describe_command.sh
   topic="${args[--topic]}"
 
-  ret=$(get_security_broker "--command-config")
-
-  container=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
+  get_security_broker "--command-config"
 
   if [[ ! -n "$topic" ]]
   then
@@ -13055,7 +12989,7 @@ playground_topic_describe_command() {
       fi
   fi
 
-  environment=`get_environment_used`
+  get_environment_used
 
   if [ "$environment" == "error" ]
   then
@@ -13102,7 +13036,7 @@ playground_topic_set_schema_compatibility_command() {
   topic="${args[--topic]}"
   compatibility="${args[--compatibility]}"
 
-  environment=`get_environment_used`
+  get_environment_used
 
   if [ "$environment" == "error" ]
   then
@@ -13111,10 +13045,7 @@ playground_topic_set_schema_compatibility_command() {
 
   fi
 
-  ret=$(get_sr_url_and_security)
-
-  sr_url=$(echo "$ret" | cut -d "@" -f 1)
-  sr_security=$(echo "$ret" | cut -d "@" -f 2)
+  get_sr_url_and_security
 
   if [[ ! -n "$topic" ]]
   then
@@ -13151,7 +13082,7 @@ playground_topic_consume_command() {
   value_subject="${args[--value-subject]}"
   max_characters="${args[--max-characters]}"
 
-  environment=`get_environment_used`
+  get_environment_used
 
   if [ "$environment" == "error" ]
   then
@@ -13160,10 +13091,7 @@ playground_topic_consume_command() {
 
   fi
 
-  ret=$(get_sr_url_and_security)
-
-  sr_url=$(echo "$ret" | cut -d "@" -f 1)
-  sr_security=$(echo "$ret" | cut -d "@" -f 2)
+  get_sr_url_and_security
 
   bootstrap_server="broker:9092"
   container="connect"
@@ -13699,7 +13627,7 @@ playground_topic_produce_command() {
       fi
   fi
 
-  environment=`get_environment_used`
+  get_environment_used
 
   if [ "$environment" == "error" ]
   then
@@ -13708,10 +13636,7 @@ playground_topic_produce_command() {
 
   fi
 
-  ret=$(get_sr_url_and_security)
-
-  sr_url=$(echo "$ret" | cut -d "@" -f 1)
-  sr_security=$(echo "$ret" | cut -d "@" -f 2)
+  get_sr_url_and_security
 
   bootstrap_server="broker:9092"
   container="connect"
@@ -14632,12 +14557,8 @@ playground_topic_create_command() {
   topic="${args[--topic]}"
   nb_partitions="${args[--nb-partitions]}"
 
-  ret=$(get_security_broker "--command-config")
-
-  container=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
-
-  environment=`get_environment_used`
+  get_security_broker "--command-config"
+  get_environment_used
 
   if [ "$nb_partitions" == "" ]
   then
@@ -14694,12 +14615,8 @@ playground_topic_delete_command() {
   # src/topic_delete_command.sh
   topic="${args[--topic]}"
 
-  ret=$(get_security_broker "--command-config")
-
-  container=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
-
-  environment=`get_environment_used`
+  get_security_broker "--command-config"
+  get_environment_used
 
   if [ "$environment" == "error" ]
   then
@@ -14751,12 +14668,8 @@ playground_topic_alter_command() {
   # src/topic_alter_command.sh
   topic="${args[--topic]}"
 
-  ret=$(get_security_broker "--command-config")
-
-  container=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
-
-  environment=`get_environment_used`
+  get_security_broker "--command-config"
+  get_environment_used
 
   if [ "$environment" == "error" ]
   then
@@ -14809,12 +14722,6 @@ playground_topic_alter_command() {
 # :command.function
 playground_ccloud_connector_status_command() {
   # src/ccloud_connector_status_command.sh
-  ret=$(get_ccloud_connect)
-
-  environment=$(echo "$ret" | cut -d "@" -f 1)
-  cluster=$(echo "$ret" | cut -d "@" -f 2)
-  authorization=$(echo "$ret" | cut -d "@" -f 3)
-
   connector="${args[--connector]}"
 
   if [[ ! -n "$connector" ]]
@@ -14847,12 +14754,6 @@ playground_ccloud_connector_status_command() {
 # :command.function
 playground_ccloud_connector_plugins_command() {
   # src/ccloud_connector_plugins_command.sh
-  ret=$(get_ccloud_connect)
-
-  environment=$(echo "$ret" | cut -d "@" -f 1)
-  cluster=$(echo "$ret" | cut -d "@" -f 2)
-  authorization=$(echo "$ret" | cut -d "@" -f 3)
-
   log "🧩 Displaying all connector plugins installed"
   curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins" \
   --header "authorization: Basic $authorization" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t
@@ -14862,12 +14763,6 @@ playground_ccloud_connector_plugins_command() {
 # :command.function
 playground_ccloud_connector_pause_command() {
   # src/ccloud_connector_pause_command.sh
-  ret=$(get_ccloud_connect)
-
-  environment=$(echo "$ret" | cut -d "@" -f 1)
-  cluster=$(echo "$ret" | cut -d "@" -f 2)
-  authorization=$(echo "$ret" | cut -d "@" -f 3)
-
   connector="${args[--connector]}"
 
   if [[ ! -n "$connector" ]]
@@ -14904,12 +14799,6 @@ playground_ccloud_connector_pause_command() {
 # :command.function
 playground_ccloud_connector_resume_command() {
   # src/ccloud_connector_resume_command.sh
-  ret=$(get_ccloud_connect)
-
-  environment=$(echo "$ret" | cut -d "@" -f 1)
-  cluster=$(echo "$ret" | cut -d "@" -f 2)
-  authorization=$(echo "$ret" | cut -d "@" -f 3)
-
   connector="${args[--connector]}"
 
   if [[ ! -n "$connector" ]]
@@ -14946,12 +14835,6 @@ playground_ccloud_connector_resume_command() {
 # :command.function
 playground_ccloud_connector_delete_command() {
   # src/ccloud_connector_delete_command.sh
-  ret=$(get_ccloud_connect)
-
-  environment=$(echo "$ret" | cut -d "@" -f 1)
-  cluster=$(echo "$ret" | cut -d "@" -f 2)
-  authorization=$(echo "$ret" | cut -d "@" -f 3)
-
   connector="${args[--connector]}"
 
   if [[ ! -n "$connector" ]]
@@ -14984,12 +14867,6 @@ playground_ccloud_connector_delete_command() {
 # :command.function
 playground_ccloud_connector_show_lag_command() {
   # src/ccloud_connector_show_lag_command.sh
-  ret=$(get_ccloud_connect)
-
-  environment=$(echo "$ret" | cut -d "@" -f 1)
-  cluster=$(echo "$ret" | cut -d "@" -f 2)
-  authorization=$(echo "$ret" | cut -d "@" -f 3)
-
   connector="${args[--connector]}"
   wait_for_zero_lag="${args[--wait-for-zero-lag]}"
 
@@ -15083,12 +14960,6 @@ playground_ccloud_connector_show_lag_command() {
 # :command.function
 playground_ccloud_connector_show_config_command() {
   # src/ccloud_connector_show_config_command.sh
-  ret=$(get_ccloud_connect)
-
-  environment=$(echo "$ret" | cut -d "@" -f 1)
-  cluster=$(echo "$ret" | cut -d "@" -f 2)
-  authorization=$(echo "$ret" | cut -d "@" -f 3)
-
   connector="${args[--connector]}"
 
   if [[ ! -n "$connector" ]]
@@ -15124,12 +14995,6 @@ playground_ccloud_connector_show_config_command() {
 # :command.function
 playground_ccloud_connector_show_config_parameters_command() {
   # src/ccloud_connector_show_config_parameters_command.sh
-  ret=$(get_ccloud_connect)
-
-  environment=$(echo "$ret" | cut -d "@" -f 1)
-  cluster=$(echo "$ret" | cut -d "@" -f 2)
-  authorization=$(echo "$ret" | cut -d "@" -f 3)
-
   connector="${args[--connector]}"
   open="${args[--open]}"
   force_refresh="${args[--force-refresh]}"
@@ -15362,12 +15227,6 @@ playground_ccloud_connector_create_or_update_command() {
       exit 1
   fi
 
-  ret=$(get_ccloud_connect)
-
-  environment=$(echo "$ret" | cut -d "@" -f 1)
-  cluster=$(echo "$ret" | cut -d "@" -f 2)
-  authorization=$(echo "$ret" | cut -d "@" -f 3)
-
   connector="${args[--connector]}"
 
   is_create=1
@@ -15519,10 +15378,7 @@ playground_ccloud_connector_create_or_update_command() {
 # :command.function
 playground_connector_status_command() {
   # src/connector_status_command.sh
-  ret=$(get_connect_url_and_security)
-
-  connect_url=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
+  get_connect_url_and_security
 
   connector="${args[--connector]}"
 
@@ -15610,10 +15466,7 @@ playground_connector_status_command() {
 # :command.function
 playground_connector_plugins_command() {
   # src/connector_plugins_command.sh
-  ret=$(get_connect_url_and_security)
-
-  connect_url=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
+  get_connect_url_and_security
 
   log "🧩 Displaying all connector plugins installed"
   curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t
@@ -15622,10 +15475,7 @@ playground_connector_plugins_command() {
 # :command.function
 playground_connector_pause_command() {
   # src/connector_pause_command.sh
-  ret=$(get_connect_url_and_security)
-
-  connect_url=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
+  get_connect_url_and_security
 
   connector="${args[--connector]}"
 
@@ -15755,10 +15605,7 @@ playground_connector_versions_command() {
 # :command.function
 playground_connector_restart_command() {
   # src/connector_restart_command.sh
-  ret=$(get_connect_url_and_security)
-
-  connect_url=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
+  get_connect_url_and_security
 
   connector="${args[--connector]}"
 
@@ -15808,10 +15655,7 @@ playground_connector_restart_command() {
 # :command.function
 playground_connector_stop_command() {
   # src/connector_stop_command.sh
-  ret=$(get_connect_url_and_security)
-
-  connect_url=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
+  get_connect_url_and_security
 
   connector="${args[--connector]}"
 
@@ -15855,10 +15699,7 @@ playground_connector_stop_command() {
 # :command.function
 playground_connector_resume_command() {
   # src/connector_resume_command.sh
-  ret=$(get_connect_url_and_security)
-
-  connect_url=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
+  get_connect_url_and_security
 
   connector="${args[--connector]}"
 
@@ -15891,10 +15732,7 @@ playground_connector_resume_command() {
 # :command.function
 playground_connector_delete_command() {
   # src/connector_delete_command.sh
-  ret=$(get_connect_url_and_security)
-
-  connect_url=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
+  get_connect_url_and_security
 
   connector="${args[--connector]}"
 
@@ -15928,10 +15766,7 @@ playground_connector_show_lag_command() {
   connector="${args[--connector]}"
   wait_for_zero_lag="${args[--wait-for-zero-lag]}"
 
-  ret=$(get_connect_url_and_security)
-
-  connect_url=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
+  get_connect_url_and_security
 
   if [[ ! -n "$connector" ]]
   then
@@ -15943,10 +15778,7 @@ playground_connector_show_lag_command() {
       fi
   fi
 
-  ret=$(get_security_broker "--command-config")
-
-  container=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
+  get_security_broker "--command-config"
 
   items=($connector)
   length=${#items[@]}
@@ -16003,10 +15835,7 @@ playground_connector_show_lag_command() {
 # :command.function
 playground_connector_show_config_command() {
   # src/connector_show_config_command.sh
-  ret=$(get_connect_url_and_security)
-
-  connect_url=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
+  get_connect_url_and_security
 
   connector="${args[--connector]}"
 
@@ -16043,10 +15872,7 @@ playground_connector_show_config_parameters_command() {
   force_refresh="${args[--force-refresh]}"
   only_show_file_path="${args[--only-show-file-path]}"
 
-  ret=$(get_connect_url_and_security)
-
-  connect_url=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
+  get_connect_url_and_security
 
   connector="${args[--connector]}"
 
@@ -16263,10 +16089,7 @@ playground_connector_search_jar_command() {
 # :command.function
 playground_connector_log_level_command() {
   # src/connector_log_level_command.sh
-  ret=$(get_connect_url_and_security)
-
-  connect_url=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
+  get_connect_url_and_security
 
   level="${args[--level]}"
   connector="${args[--connector]}"
@@ -16343,10 +16166,7 @@ playground_connector_create_or_update_command() {
       exit 1
   fi
 
-  ret=$(get_connect_url_and_security)
-
-  connect_url=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
+  get_connect_url_and_security
 
   connector="${args[--connector]}"
 

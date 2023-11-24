@@ -2,10 +2,7 @@ open="${args[--open]}"
 force_refresh="${args[--force-refresh]}"
 only_show_file_path="${args[--only-show-file-path]}"
 
-ret=$(get_connect_url_and_security)
-
-connect_url=$(echo "$ret" | cut -d "@" -f 1)
-security=$(echo "$ret" | cut -d "@" -f 2)
+get_connect_url_and_security
 
 connector="${args[--connector]}"
 

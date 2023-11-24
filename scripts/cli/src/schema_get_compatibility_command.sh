@@ -1,9 +1,6 @@
 subject="${args[--subject]}"
 
-ret=$(get_sr_url_and_security)
-
-sr_url=$(echo "$ret" | cut -d "@" -f 1)
-sr_security=$(echo "$ret" | cut -d "@" -f 2)
+get_sr_url_and_security
 
 log "🛡️ Get compatibility for subject ${subject}"
 curl_output=$(curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/config/${subject}")

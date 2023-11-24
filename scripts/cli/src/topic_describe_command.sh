@@ -1,9 +1,6 @@
 topic="${args[--topic]}"
 
-ret=$(get_security_broker "--command-config")
-
-container=$(echo "$ret" | cut -d "@" -f 1)
-security=$(echo "$ret" | cut -d "@" -f 2)
+get_security_broker "--command-config"
 
 if [[ ! -n "$topic" ]]
 then
@@ -16,7 +13,7 @@ then
     fi
 fi
 
-environment=`get_environment_used`
+get_environment_used
 
 if [ "$environment" == "error" ]
 then

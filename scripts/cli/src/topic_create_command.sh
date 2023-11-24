@@ -1,12 +1,8 @@
 topic="${args[--topic]}"
 nb_partitions="${args[--nb-partitions]}"
 
-ret=$(get_security_broker "--command-config")
-
-container=$(echo "$ret" | cut -d "@" -f 1)
-security=$(echo "$ret" | cut -d "@" -f 2)
-
-environment=`get_environment_used`
+get_security_broker "--command-config"
+get_environment_used
 
 if [ "$nb_partitions" == "" ]
 then

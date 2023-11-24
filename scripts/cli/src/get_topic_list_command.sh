@@ -1,6 +1,6 @@
 skip_connect_internal_topics="${args[--skip-connect-internal-topics]}"
 
-environment=`get_environment_used`
+get_environment_used
 
 if [ "$environment" == "error" ]
 then

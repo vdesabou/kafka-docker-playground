@@ -2,10 +2,7 @@ subject="${args[--subject]}"
 version="${args[--version]}"
 permanent="${args[--permanent]}"
 
-ret=$(get_sr_url_and_security)
-
-sr_url=$(echo "$ret" | cut -d "@" -f 1)
-sr_security=$(echo "$ret" | cut -d "@" -f 2)
+get_sr_url_and_security
 
 if [[ -n "$version" ]]
 then

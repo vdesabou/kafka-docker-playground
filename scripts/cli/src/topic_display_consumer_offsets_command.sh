@@ -1,9 +1,5 @@
-ret=$(get_security_broker "--consumer.config")
-
-container=$(echo "$ret" | cut -d "@" -f 1)
-security=$(echo "$ret" | cut -d "@" -f 2)
-
-environment=`get_environment_used`
+get_security_broker "--consumer.config"
+get_environment_used
 
 if [ "$environment" == "error" ]
 then
@@ -37,4 +33,3 @@ then
 else
     docker exec -i $container kafka-console-consumer --bootstrap-server broker:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security | grep -v "_confluent-controlcenter"
 fi
-
