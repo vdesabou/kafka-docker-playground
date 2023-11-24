@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package com.github.vdesabou;
+
+message Key {
+    int64 id = 1;
+}
