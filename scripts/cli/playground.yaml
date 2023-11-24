@@ -1867,6 +1867,8 @@ subcommands:
             
             * You can also generate json data using json or sql format using syntax from https://github.com/MaterializeInc/datagen
             
+            * Use completion to select predefined schemas (or use your own schema file) 🎓 Tip: use <tab> completion to trigger fzf completion
+            
             * Directly set payload ("%g" can be used to generate a counter)
             
             In case of 'raw' data (i.e not using schema):

@@ -193,7 +193,18 @@ function identify_schema() {
 
 if [[ -n "$key" ]]
 then
-    echo "$key" > "$key_schema_file"
+    if [[ $key == @* ]]
+    then
+        # this is a schema file
+        argument_schema_file=$(echo "$key" | cut -d "@" -f 2)
+        cp $argument_schema_file $key_schema_file
+    elif [ -f "$key" ]
+    then
+        cp $key $key_schema_file
+    else
+        echo "$key" > "$key_schema_file"
+    fi
+    
     identify_schema "$key_schema_file" "key"
     key_schema_type=$schema_type
 fi

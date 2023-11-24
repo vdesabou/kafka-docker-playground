@@ -3453,7 +3453,7 @@ playground_topic_produce_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--key KEY")"
-    printf "    🗝️ Key to use. If not set, no key is used.\n    \n    🔥 You can either:\n    \n    * Set your own schema (avro, json-schema, protobuf) within single quotes\n    (see examples)\n    \n    * You can also generate json data using json or sql format using syntax from\n    https://github.com/MaterializeInc/datagen\n    \n    * Directly set payload (\"%g\" can be used to generate a counter)\n    \n    In case of 'raw' data (i.e not using schema):\n    \n    If the key contain a number, it will be used as starting point and\n    incremented for each record.\n    \n    Example: key1 will start with key1, then key2, etc..\n    Example: mykey-10-suffix will start with mykey-10-suffix then\n    mykey-11-suffix, etc..\n    \n    \"%g\" can also be used to generate a counter\n    \n    Example: key%g will start with key1, then key2, etc..\n    \n    Otherwise, the key will be same for all records.\n"
+    printf "    🗝️ Key to use. If not set, no key is used.\n    \n    🔥 You can either:\n    \n    * Set your own schema (avro, json-schema, protobuf) within single quotes\n    (see examples)\n    \n    * You can also generate json data using json or sql format using syntax from\n    https://github.com/MaterializeInc/datagen\n    \n    * Use completion to select predefined schemas (or use your own schema file)\n    🎓 Tip: use <tab> completion to trigger fzf completion\n    \n    * Directly set payload (\"%g\" can be used to generate a counter)\n    \n    In case of 'raw' data (i.e not using schema):\n    \n    If the key contain a number, it will be used as starting point and\n    incremented for each record.\n    \n    Example: key1 will start with key1, then key2, etc..\n    Example: mykey-10-suffix will start with mykey-10-suffix then\n    mykey-11-suffix, etc..\n    \n    \"%g\" can also be used to generate a counter\n    \n    Example: key%g will start with key1, then key2, etc..\n    \n    Otherwise, the key will be same for all records.\n"
     echo
 
     # :flag.usage
@@ -13777,7 +13777,18 @@ playground_topic_produce_command() {
 
   if [[ -n "$key" ]]
   then
-      echo "$key" > "$key_schema_file"
+      if [[ $key == @* ]]
+      then
+          # this is a schema file
+          argument_schema_file=$(echo "$key" | cut -d "@" -f 2)
+          cp $argument_schema_file $key_schema_file
+      elif [ -f "$key" ]
+      then
+          cp $key $key_schema_file
+      else
+          echo "$key" > "$key_schema_file"
+      fi
+
       identify_schema "$key_schema_file" "key"
       key_schema_type=$schema_type
   fi
