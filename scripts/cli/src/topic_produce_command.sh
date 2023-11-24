@@ -181,6 +181,10 @@ function identify_schema() {
     then
         log "🔮 $type schema was identified as avro"
         schema_type=avro
+    elif grep -xq "\".*\"" $schema_file
+    then
+        log "🔮 $type schema was identified as avro (single line surrounded by double quotes)"
+        schema_type=avro
     else
         log "📢 no known schema could be identified, payload will be sent as raw data"
         schema_type=raw
