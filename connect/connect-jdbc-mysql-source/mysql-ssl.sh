@@ -48,6 +48,8 @@ docker run --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} keytool -importk
 cd -
 
 docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.ssl.yml" up -d
+command="docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.ssl.yml" up -d ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} up -d"
+echo "$command" >> /tmp/playground-command
 ../../scripts/wait-for-connect-and-controlcenter.sh
 
 
@@ -96,15 +98,15 @@ EOF
 log "Creating MySQL source connector"
 playground connector create-or-update --connector mysql-ssl-source << EOF
 {
-               "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
-               "tasks.max":"10",
-               "connection.url": "jdbc:mysql://mysql:3306/mydb?user=userssl&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1,TLSv1.1,TLSv1.2,TLSv1.3",
-               "table.whitelist":"team",
-               "mode":"timestamp+incrementing",
-               "timestamp.column.name":"last_modified",
-               "incrementing.column.name":"id",
-               "topic.prefix":"mysql-"
-          }
+  "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
+  "tasks.max":"10",
+  "connection.url": "jdbc:mysql://mysql:3306/mydb?user=userssl&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1,TLSv1.1,TLSv1.2,TLSv1.3",
+  "table.whitelist":"team",
+  "mode":"timestamp+incrementing",
+  "timestamp.column.name":"last_modified",
+  "incrementing.column.name":"id",
+  "topic.prefix":"mysql-"
+}
 EOF
 
 sleep 5
