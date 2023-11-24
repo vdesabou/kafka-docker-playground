@@ -3,7 +3,7 @@ verbose="${args[--verbose]}"
 debug="${args[--debug]}"
 nb_messages="${args[--nb-messages]}"
 nb_partitions="${args[--nb-partitions]}"
-schema="${args[--value]}"
+value="${args[--value]}"
 key="${args[--key]}"
 headers="${args[--headers]}"
 forced_key="${args[--forced-key]}"
@@ -35,26 +35,26 @@ fi
 key_schema_file=$tmp_dir/key_schema
 value_schema_file=$tmp_dir/value_schema
 
-if [ "$schema" = "-" ]
+if [ "$value" = "-" ]
 then
     if [[ ! -n "$tombstone" ]]
     then
         # stdin
-        schema_content=$(cat "$schema")
-        echo "$schema_content" > $value_schema_file
+        value_content=$(cat "$value")
+        echo "$value_content" > $value_schema_file
     fi
 else
-    if [[ $schema == @* ]]
+    if [[ $value == @* ]]
     then
         # this is a schema file
-        argument_schema_file=$(echo "$schema" | cut -d "@" -f 2)
+        argument_schema_file=$(echo "$value" | cut -d "@" -f 2)
         cp $argument_schema_file $value_schema_file
-    elif [ -f "$schema" ]
+    elif [ -f "$value" ]
     then
-        cp $schema $value_schema_file
+        cp $value $value_schema_file
     else
-        schema_content=$schema
-        echo "$schema_content" > $value_schema_file
+        value_content=$value
+        echo "$value_content" > $value_schema_file
     fi
 fi
 
