@@ -37,8 +37,8 @@ command.deep_commands.reject(&:private).each do |subcommand|
           file.write(gtxsubsub.parse(subsubcommand))
         end
         processed_subcommands << subsubcommand.full_name
-        logger.info("process subcommand")
-        logger.info(subsubcommand.full_name)
+        #logger.info("process subcommand")
+        #logger.info(subsubcommand.full_name)
       end
     end
     processed_subcommands << subcommand.full_name
@@ -48,8 +48,8 @@ command.deep_commands.reject(&:private).each do |subcommand|
         file.write(gtxsub.parse(subcommand))
       end
       processed_subcommands << subcommand.full_name
-      logger.info("process command")
-      logger.info(subcommand.full_name)
+      # logger.info("process command")
+      # logger.info(subcommand.full_name)
     end
   end
 end
