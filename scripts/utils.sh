@@ -225,7 +225,7 @@ then
 
           log "♨️ Listing jar files"
           cd ${DIR_UTILS}/../confluent-hub/$owner-$name/lib > /dev/null 2>&1
-          ls -lrt *.jar
+          ls -1 | sort
           cd - > /dev/null 2>&1
 
           if [ "$first_loop" = true ]
@@ -435,7 +435,7 @@ else
             set -e
             log "♨️ Listing jar files"
             cd ${DIR_UTILS}/../confluent-hub/$owner-$name/lib > /dev/null 2>&1
-            ls -lrt *.jar
+            ls -1 | sort
             cd - > /dev/null 2>&1
 
             version=$(cat ${DIR_UTILS}/../confluent-hub/${connector_path}/manifest.json | jq -r '.version')

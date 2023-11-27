@@ -16156,7 +16156,7 @@ playground_connector_search_jar_command() {
 
   log "♨️ Listing jar files"
   cd $tmp_dir/*/lib
-  ls -lrt *.jar
+  ls -1 | sort
 
   if [[ -n "$class" ]]
   then

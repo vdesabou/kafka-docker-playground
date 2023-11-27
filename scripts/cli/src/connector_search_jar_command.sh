@@ -21,7 +21,7 @@ docker run -u0 -i --rm -v $tmp_dir:/usr/share/confluent-hub-components ${CP_CONN
 
 log "♨️ Listing jar files"
 cd $tmp_dir/*/lib
-ls -lrt *.jar
+ls -1 | sort
 
 if [[ -n "$class" ]]
 then
