@@ -52,7 +52,7 @@ then
      # this is github actions
      set +e
      log "Waking up servicenow instance..."
-     docker run -e USERNAME="$SERVICENOW_DEVELOPER_USERNAME" -e PASSWORD="$SERVICENOW_DEVELOPER_PASSWORD" ghcr.io/0x111/servicenow-instance-wakeup:latest
+     docker run -e USERNAME="$SERVICENOW_DEVELOPER_USERNAME" -e PASSWORD="$SERVICENOW_DEVELOPER_PASSWORD" vdesabou/servicenowinstancewakeup:latest
      set -e
      wait_for_end_of_hibernation
 fi
