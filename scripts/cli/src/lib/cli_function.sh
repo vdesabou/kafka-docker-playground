@@ -75,19 +75,19 @@ function get_sr_url_and_security() {
   fi
 
   sr_url="http://localhost:8081"
-  security_sr=""
+  sr_security=""
 
   if [[ "$environment" == "sasl-ssl" ]] || [[ "$environment" == "2way-ssl" ]]
   then
       sr_url="https://localhost:8081"
       DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-      security="--cert $DIR_CLI/../../environment/$environment/security/schema-registry.certificate.pem --key $DIR_CLI/../../environment/$environment/security/schema-registry.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
+      sr_security="--cert $DIR_CLI/../../environment/$environment/security/schema-registry.certificate.pem --key $DIR_CLI/../../environment/$environment/security/schema-registry.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
   elif [[ "$environment" == "rbac-sasl-plain" ]]
   then
       DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-      security="-u superUser:superUser"
+      sr_security="-u superUser:superUser"
   elif [[ "$environment" == "environment" ]]
   then
     if [ -f /tmp/delta_configs/env.delta ]
@@ -98,7 +98,7 @@ function get_sr_url_and_security() {
         exit 1
     fi
     sr_url=$SCHEMA_REGISTRY_URL
-    security="-u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"
+    sr_security="-u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"
   fi
 }
 
