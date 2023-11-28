@@ -87,11 +87,11 @@ do
         set -e
         if [ $ret -eq 0 ]
         then
-            if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true 
+            if echo "$curl_output" | jq '.error | has("error_code")' 2> /dev/null | grep -q true
             then
-                error_code=$(echo "$curl_output" | jq -r .error_code)
-                message=$(echo "$curl_output" | jq -r .message)
-                logerror "Command failed with error code $error_code"
+                code=$(echo "$curl_output" | jq -r .error.code)
+                message=$(echo "$curl_output" | jq -r .error.message)
+                logerror "Command failed with error code $code"
                 logerror "$message"
                 exit 1
             else
