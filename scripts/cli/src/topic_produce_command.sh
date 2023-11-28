@@ -665,23 +665,26 @@ then
     exit 1 
 fi
 
-case "${key_schema_type}" in
-    avro|json-schema|protobuf)
+if [ "$key_schema_type" != "" ]
+then
+    case "${key_schema_type}" in
+        avro|json-schema|protobuf)
 
-    ;;
-    *)
-        if [[ -n "$validate" ]]
-        then
-            logerror "❌ --validate is set but $key_schema_type is used. This is only valid for avro|json-schema|protobuf"
-            exit 1
-        fi
-        if [[ -n "$key_subject_name_strategy" ]]
-        then
-            logerror "❌ --key-subject-name-strategy is set but $key_schema_type is used. This is only valid for avro|json-schema|protobuf"
-            exit 1 
-        fi
-    ;;
-esac
+        ;;
+        *)
+            if [[ -n "$validate" ]]
+            then
+                logerror "❌ --validate is set but $key_schema_type is used. This is only valid for avro|json-schema|protobuf"
+                exit 1
+            fi
+            if [[ -n "$key_subject_name_strategy" ]]
+            then
+                logerror "❌ --key-subject-name-strategy is set but $key_schema_type is used. This is only valid for avro|json-schema|protobuf"
+                exit 1 
+            fi
+        ;;
+    esac
+fi
 
 case "${value_schema_type}" in
     avro|json-schema|protobuf)
