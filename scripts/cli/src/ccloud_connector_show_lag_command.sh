@@ -1,5 +1,6 @@
 connector="${args[--connector]}"
 wait_for_zero_lag="${args[--wait-for-zero-lag]}"
+get_ccloud_connect
 
 if [[ ! -n "$connector" ]]
 then

@@ -9317,6 +9317,8 @@ playground_get_connector_plugin_command() {
 # :command.function
 playground_get_ccloud_connector_list_command() {
   # src/get_ccloud_connector_list_command.sh
+  get_ccloud_connect
+
   curl_output=$(curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors" \
   --header "authorization: Basic $authorization")
   ret=$?
@@ -14806,6 +14808,8 @@ playground_ccloud_connector_status_command() {
   # src/ccloud_connector_status_command.sh
   connector="${args[--connector]}"
 
+  get_ccloud_connect
+
   if [[ ! -n "$connector" ]]
   then
       set +e
@@ -14836,6 +14840,8 @@ playground_ccloud_connector_status_command() {
 # :command.function
 playground_ccloud_connector_plugins_command() {
   # src/ccloud_connector_plugins_command.sh
+  get_ccloud_connect
+
   log "🧩 Displaying all connector plugins installed"
   curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins" \
   --header "authorization: Basic $authorization" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t
@@ -14846,6 +14852,7 @@ playground_ccloud_connector_plugins_command() {
 playground_ccloud_connector_pause_command() {
   # src/ccloud_connector_pause_command.sh
   connector="${args[--connector]}"
+  get_ccloud_connect
 
   if [[ ! -n "$connector" ]]
   then
@@ -14882,6 +14889,7 @@ playground_ccloud_connector_pause_command() {
 playground_ccloud_connector_resume_command() {
   # src/ccloud_connector_resume_command.sh
   connector="${args[--connector]}"
+  get_ccloud_connect
 
   if [[ ! -n "$connector" ]]
   then
@@ -14918,6 +14926,7 @@ playground_ccloud_connector_resume_command() {
 playground_ccloud_connector_delete_command() {
   # src/ccloud_connector_delete_command.sh
   connector="${args[--connector]}"
+  get_ccloud_connect
 
   if [[ ! -n "$connector" ]]
   then
@@ -14951,6 +14960,7 @@ playground_ccloud_connector_show_lag_command() {
   # src/ccloud_connector_show_lag_command.sh
   connector="${args[--connector]}"
   wait_for_zero_lag="${args[--wait-for-zero-lag]}"
+  get_ccloud_connect
 
   if [[ ! -n "$connector" ]]
   then
@@ -15043,6 +15053,7 @@ playground_ccloud_connector_show_lag_command() {
 playground_ccloud_connector_show_config_command() {
   # src/ccloud_connector_show_config_command.sh
   connector="${args[--connector]}"
+  get_ccloud_connect
 
   if [[ ! -n "$connector" ]]
   then
@@ -15081,6 +15092,7 @@ playground_ccloud_connector_show_config_parameters_command() {
   open="${args[--open]}"
   force_refresh="${args[--force-refresh]}"
   only_show_file_path="${args[--only-show-file-path]}"
+  get_ccloud_connect
 
   if [[ ! -n "$connector" ]]
   then
@@ -15274,6 +15286,7 @@ playground_ccloud_connector_create_or_update_command() {
   # src/ccloud_connector_create_or_update_command.sh
   json=${args[json]}
   validate=${args[--validate]}
+  get_ccloud_connect
 
   if [ "$json" = "-" ]
   then

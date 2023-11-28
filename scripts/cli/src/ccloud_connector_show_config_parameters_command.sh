@@ -2,6 +2,7 @@ connector="${args[--connector]}"
 open="${args[--open]}"
 force_refresh="${args[--force-refresh]}"
 only_show_file_path="${args[--only-show-file-path]}"
+get_ccloud_connect
 
 if [[ ! -n "$connector" ]]
 then

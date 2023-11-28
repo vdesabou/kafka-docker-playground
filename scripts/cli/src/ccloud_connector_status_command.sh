@@ -1,5 +1,7 @@
 connector="${args[--connector]}"
 
+get_ccloud_connect
+
 if [[ ! -n "$connector" ]]
 then
     set +e

@@ -1,5 +1,6 @@
 json=${args[json]}
 validate=${args[--validate]}
+get_ccloud_connect
 
 if [ "$json" = "-" ]
 then

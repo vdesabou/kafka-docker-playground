@@ -1,3 +1,5 @@
+get_ccloud_connect
+
 curl_output=$(curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors" \
 --header "authorization: Basic $authorization")
 ret=$?
