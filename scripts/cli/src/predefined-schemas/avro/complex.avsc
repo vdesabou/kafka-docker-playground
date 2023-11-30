@@ -1,6 +1,10 @@
 {
     "fields": [
         {
+            "name": "id",
+            "type": "int"
+        },
+        {
             "name": "myProductId",
             "type": "string"
         },
