@@ -71,7 +71,7 @@ do
         set +e
         curl_output=$(curl $security -s -X PUT \
             -H "Content-Type: application/json" \
-            --data "$json_content" \
+            --data "$json_config" \
             $connect_url/connector-plugins/$connector_class/config/validate)
         ret=$?
         set -e
