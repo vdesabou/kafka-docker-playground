@@ -43,6 +43,7 @@ playground_usage() {
   printf "%s\n" "$(bold "Run commands:")"
   printf "  %s   🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)\n" "$(green "run")                                    "
   printf "  %s   ⚡ Simply re-run last example you ran with <playground run> or <playground run-ccloud>\n" "$(green "re-run")                                 "
+  printf "  %s   🏰 Get an history of the examples which were run with run command and run it again\n" "$(green "history")                                "
   printf "  %s   🔐 Simply start an environment listed in https://kafka-docker-playground.io/#/content?id=%f0%9f%94%90-environments:\n" "$(green "start-environment")                      "
   printf "  %s   ⛅ Run any Confluent Cloud (ccloud) example\n" "$(green "run-ccloud")                             "
   printf "  %s   ✨ Update current confluent platform or connector(s) with new version(s)\n" "$(green "update-version")                         "
@@ -915,6 +916,35 @@ playground_re_run_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground re-run\n"
     printf "  playground re-run --tag 6.2.1\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_history_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground history - 🏰 Get an history of the examples which were run with run command and run it again\n"
+    echo
+
+  else
+    printf "playground history - 🏰 Get an history of the examples which were run with run command and run it again\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground history\n"
+  printf "  playground history --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
     echo
 
   fi
@@ -9664,6 +9694,12 @@ playground_run_command() {
   playground container kill-all
   set -e
   echo "playground run -f $test_file $flag_list ${other_args[*]}" > /tmp/playground-run
+  line="playground run -f $test_file $flag_list ${other_args[*]}"
+  if ! grep -qF "$line" "$root_folder/playground-run-history"
+  then
+    echo "" >> "$root_folder/playground-run-history"
+    cat /tmp/playground-run >> "$root_folder/playground-run-history"
+  fi
   log "####################################################"
   log "🚀 Executing $filename in dir $test_file_directory"
   log "####################################################"
@@ -9841,6 +9877,40 @@ playground_re_run_command() {
       bash /tmp/playground-run
     fi
   fi
+}
+
+# :command.function
+playground_history_command() {
+  # src/history_command.sh
+  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  dir1=$(echo ${DIR_CLI%/*})
+  root_folder=$(echo ${dir1%/*})
+
+  if [ ! -f $root_folder/playground-run-history ]
+  then
+      logerror "❌ history could not be found !"
+      logerror "$root_folder/playground-run-history does not exist"
+      exit 1
+  fi
+
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
+  then
+      fzf_option_wrap="--preview-window=40%,wrap"
+      fzf_option_pointer="--pointer=👉"
+      fzf_option_rounded="--border=rounded"
+  else
+      fzf_options=""
+      fzf_option_pointer=""
+      fzf_option_rounded=""
+  fi
+
+  res=$(cat $root_folder/playground-run-history | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🏰" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer)
+
+  log "🚀 Are you sure you want to run:"
+  echo "$res"
+  check_if_continue
+  $res
 }
 
 # :command.function
@@ -16584,6 +16654,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    history)
+      action="history"
+      shift
+      playground_history_parse_requirements "$@"
+      shift $#
+      ;;
+
     start-environment)
       action="start-environment"
       shift
@@ -17995,6 +18072,67 @@ playground_re_run_parse_requirements() {
         # :command.parse_requirements_case_catch_all
         other_args+=("$1")
         shift
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_history_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_history_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+  if command -v fzf >/dev/null 2>&1; then
+    deps['fzf']="$(command -v fzf | head -n1)"
+  else
+    printf "missing dependency: fzf\n" >&2
+    printf "%s\n" "visit https://github.com/junegunn/fzf#installation to install" >&2
+    exit 1
+  fi
+
+  if command -v confluent >/dev/null 2>&1; then
+    deps['confluent']="$(command -v confluent | head -n1)"
+  else
+    printf "missing dependency: confluent\n" >&2
+    printf "%s\n" "visit https://docs.confluent.io/confluent-cli/current/overview.html to install" >&2
+    exit 1
+  fi
+
+  # :command.command_filter
+  action="history"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
 
         ;;
 
@@ -25498,6 +25636,7 @@ run() {
     "bashly-reload") playground_bashly_reload_command ;;
     "run") playground_run_command ;;
     "re-run") playground_re_run_command ;;
+    "history") playground_history_command ;;
     "start-environment") playground_start_environment_command ;;
     "run-ccloud") playground_run_ccloud_command ;;
     "update-version") playground_update_version_command ;;

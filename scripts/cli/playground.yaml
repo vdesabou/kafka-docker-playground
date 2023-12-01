@@ -321,6 +321,12 @@ subcommands:
         This only works for Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with JDBC and Debezium
         
     subcommands:
+  - name: history
+    description: | 
+        🏰 Get an history of the examples which were run with run command and run it again
+    usage: playground history
+    options: []
+    subcommands:
   - name: start-environment
     description: | 
         🔐 Simply start an environment listed in https://kafka-docker-playground.io/#/content?id=%f0%9f%94%90-environments:
