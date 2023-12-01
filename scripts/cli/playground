@@ -5144,7 +5144,7 @@ function get_predefined_schemas_with_fzf() {
   DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
   dir1=$(echo ${DIR_CLI%/*})
   dir2=$(echo ${dir1%/*})
-  predefined_folder=$dir2/scripts/cli/src/predefined-schemas
+  predefined_folder=$dir2/scripts/cli/predefined-schemas
 
   cur="$1"
 
