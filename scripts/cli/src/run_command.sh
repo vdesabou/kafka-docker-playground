@@ -184,12 +184,9 @@ set +e
 playground container kill-all
 set -e
 echo "playground run -f $test_file $flag_list ${other_args[*]}" > /tmp/playground-run
-line="playground run -f $test_file $flag_list ${other_args[*]}"
-if ! grep -qF "$line" "$root_folder/playground-run-history"
-then
-  echo "" >> "$root_folder/playground-run-history"
-  cat /tmp/playground-run >> "$root_folder/playground-run-history"
-fi
+echo "" >> "$root_folder/playground-run-history"
+cat /tmp/playground-run >> "$root_folder/playground-run-history"
+
 log "####################################################"
 log "🚀 Executing $filename in dir $test_file_directory"
 log "####################################################"
