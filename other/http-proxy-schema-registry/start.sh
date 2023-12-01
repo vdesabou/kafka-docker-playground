@@ -45,16 +45,16 @@ timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server bro
 log "Creating FileStream Sink connector"
 playground connector create-or-update --connector filestream-sink << EOF
 {
-               "tasks.max": "1",
-               "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
-               "topics": "a-topic",
-               "file": "/tmp/output.json",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "value.converter.proxy.host": "nginx-proxy",
-               "value.converter.proxy.port": "8888"
-          }
+    "tasks.max": "1",
+    "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+    "topics": "a-topic",
+    "file": "/tmp/output.json",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://schema-registry:8081",
+    "value.converter.proxy.host": "nginx-proxy",
+    "value.converter.proxy.port": "8888"
+}
 EOF
 
 
