@@ -148,6 +148,8 @@ INSERT INTO customers2(first_name,last_name,email)
 GO
 EOF
 
+sleep 30
+
 log "Verifying topic server1.testDB.dbo.customers2 : there will be only the new record"
 playground topic consume --topic server1.testDB.dbo.customers2 --min-expected-messages 1 --timeout 60
 
