@@ -332,6 +332,7 @@ There is also a Confluent Cloud version available [here](https://github.com/vdes
 
 ## 😴 REST Proxy
 - [Quickstart example](https://github.com/vdesabou/kafka-docker-playground/tree/master/rest-proxy/quickstart-example) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
+- [How to reset an offset for a specific consumer group using the REST Proxy](https://github.com/vdesabou/kafka-docker-playground/tree/master/rest-proxy/reset-offset-consumer-group) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 
 ## 👾 Other Playgrounds
 
