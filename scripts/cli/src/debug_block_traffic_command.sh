@@ -8,13 +8,6 @@ docker exec $container type iptables > /dev/null 2>&1
 if [ $? != 0 ]
 then
     logwarn "iptables is not installed on container $container, attempting to install it"
-
-    DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-    dir1=$(echo ${DIR_CLI%/*})
-    root_folder=$(echo ${dir1%/*})
-    IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-    source $root_folder/scripts/utils.sh
-
     if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
     then
       docker exec --privileged --user root $container bash -c "yum -y install --disablerepo='Confluent*' iptables"

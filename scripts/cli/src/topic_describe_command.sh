@@ -40,12 +40,6 @@ do
             exit 1
         fi
 
-        DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-        dir1=$(echo ${DIR_CLI%/*})
-        root_folder=$(echo ${dir1%/*})
-        IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-        source $root_folder/scripts/utils.sh
-
         docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
     else
         docker exec $container kafka-topics --describe --topic $topic --bootstrap-server broker:9092 $security

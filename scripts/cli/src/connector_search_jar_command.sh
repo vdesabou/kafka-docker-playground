@@ -2,11 +2,6 @@ connector_plugin="${args[--connector-plugin]}"
 connector_tag="${args[--connector-tag]}"
 class="${args[--class]}"
 
-DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-dir1=$(echo ${DIR_CLI%/*})
-root_folder=$(echo ${dir1%/*})
-IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-source $root_folder/scripts/utils.sh
 
 if [[ $connector_plugin == *"@"* ]]
 then

@@ -48,11 +48,6 @@ function get_ccloud_connect() {
       logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
       exit 1
   fi
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-  IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-  source $root_folder/scripts/utils.sh
 
   environment=$(grep "ENVIRONMENT ID" /tmp/delta_configs/ak-tools-ccloud.delta | cut -d " " -f 4)
   cluster=$(grep "KAFKA CLUSTER ID" /tmp/delta_configs/ak-tools-ccloud.delta | cut -d " " -f 5)

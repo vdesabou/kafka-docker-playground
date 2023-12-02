@@ -2,12 +2,6 @@ get_connect_url_and_security
 
 connector="${args[--connector]}"
 
-DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-dir1=$(echo ${DIR_CLI%/*})
-root_folder=$(echo ${dir1%/*})
-IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-source $root_folder/scripts/utils.sh
-
 if ! version_gt $TAG_BASE "7.4.99"; then
     logerror "❌ stop connector is available since CP 7.5 only"
     exit 1

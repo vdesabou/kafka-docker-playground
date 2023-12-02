@@ -4866,11 +4866,6 @@ function get_ccloud_connect() {
       logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
       exit 1
   fi
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-  IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-  source $root_folder/scripts/utils.sh
 
   environment=$(grep "ENVIRONMENT ID" /tmp/delta_configs/ak-tools-ccloud.delta | cut -d " " -f 4)
   cluster=$(grep "KAFKA CLUSTER ID" /tmp/delta_configs/ak-tools-ccloud.delta | cut -d " " -f 5)
@@ -12420,11 +12415,6 @@ playground_debug_tcp_dump_command() {
   then
       logwarn "tcpdump is not installed on container $container, attempting to install it"
 
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-      dir1=$(echo ${DIR_CLI%/*})
-      root_folder=$(echo ${dir1%/*})
-      IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-      source $root_folder/scripts/utils.sh
       if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
       then
         if [ `uname -m` = "arm64" ]
@@ -12495,13 +12485,6 @@ playground_debug_block_traffic_command() {
   if [ $? != 0 ]
   then
       logwarn "iptables is not installed on container $container, attempting to install it"
-
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-      dir1=$(echo ${DIR_CLI%/*})
-      root_folder=$(echo ${dir1%/*})
-      IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-      source $root_folder/scripts/utils.sh
-
       if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
       then
         docker exec --privileged --user root $container bash -c "yum -y install --disablerepo='Confluent*' iptables"
@@ -12607,12 +12590,6 @@ playground_debug_flight_recorder_command() {
   if [ $? != 0 ]
   then
       logwarn "jcmd is not installed on container $container, attempting to install it"
-
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-      dir1=$(echo ${DIR_CLI%/*})
-      root_folder=$(echo ${dir1%/*})
-      IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-      source $root_folder/scripts/utils.sh
 
       if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
       then
@@ -13028,12 +13005,6 @@ playground_topic_display_consumer_offsets_command() {
           exit 1
       fi
 
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-      dir1=$(echo ${DIR_CLI%/*})
-      root_folder=$(echo ${dir1%/*})
-      IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-      source $root_folder/scripts/utils.sh
-
       docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
   else
       docker exec -i $container kafka-console-consumer --bootstrap-server broker:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security | grep -v "_confluent-controlcenter"
@@ -13092,12 +13063,6 @@ playground_topic_describe_command() {
               logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
               exit 1
           fi
-
-          DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-          dir1=$(echo ${DIR_CLI%/*})
-          root_folder=$(echo ${dir1%/*})
-          IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-          source $root_folder/scripts/utils.sh
 
           docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
       else
@@ -13216,11 +13181,6 @@ playground_topic_consume_command() {
         logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
         exit 1
     fi
-    DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-    dir1=$(echo ${DIR_CLI%/*})
-    root_folder=$(echo ${dir1%/*})
-    IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-    source $root_folder/scripts/utils.sh
   fi
 
   if [[ -n "$timeout" ]] && [ "$timeout" != "60" ]
@@ -13775,12 +13735,6 @@ playground_topic_produce_command() {
         exit 1
     fi
   fi
-
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-  IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-  source $root_folder/scripts/utils.sh
 
   if [[ -n "$tombstone" ]]
   then
@@ -14763,12 +14717,6 @@ playground_topic_create_command() {
               exit 1
           fi
 
-          DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-          dir1=$(echo ${DIR_CLI%/*})
-          root_folder=$(echo ${dir1%/*})
-          IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-          source $root_folder/scripts/utils.sh
-
           docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --create --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --partitions $nb_partitions ${other_args[*]}
       else
           docker exec $container kafka-topics --create --topic $topic --bootstrap-server broker:9092 --partitions $nb_partitions $security ${other_args[*]}
@@ -14820,12 +14768,6 @@ playground_topic_delete_command() {
           exit 1
       fi
 
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-      dir1=$(echo ${DIR_CLI%/*})
-      root_folder=$(echo ${dir1%/*})
-      IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-      source $root_folder/scripts/utils.sh
-
       docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --delete --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
   else
       docker exec $container kafka-topics --delete --topic $topic --bootstrap-server broker:9092 $security
@@ -14872,12 +14814,6 @@ playground_topic_alter_command() {
               logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
               exit 1
           fi
-
-          DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-          dir1=$(echo ${DIR_CLI%/*})
-          root_folder=$(echo ${dir1%/*})
-          IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-          source $root_folder/scripts/utils.sh
 
           docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties ${other_args[*]}
       else
@@ -15079,12 +15015,6 @@ playground_ccloud_connector_show_lag_command() {
       exit 1
   fi
 
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-  IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-  source $root_folder/scripts/utils.sh
-
   items=($connector)
   for connector in ${items[@]}
   do
@@ -15210,12 +15140,6 @@ playground_ccloud_connector_show_config_parameters_command() {
       logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
       exit 1
   fi
-
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-  IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-  source $root_folder/scripts/utils.sh
 
   items=($connector)
   for connector in ${items[@]}
@@ -15838,12 +15762,6 @@ playground_connector_stop_command() {
 
   connector="${args[--connector]}"
 
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-  IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-  source $root_folder/scripts/utils.sh
-
   if ! version_gt $TAG_BASE "7.4.99"; then
       logerror "❌ stop connector is available since CP 7.5 only"
       exit 1
@@ -16236,12 +16154,6 @@ playground_connector_search_jar_command() {
   connector_plugin="${args[--connector-plugin]}"
   connector_tag="${args[--connector-tag]}"
   class="${args[--class]}"
-
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-  IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-  source $root_folder/scripts/utils.sh
 
   if [[ $connector_plugin == *"@"* ]]
   then
@@ -25592,6 +25504,17 @@ playground_connector_create_or_update_parse_requirements() {
 
 }
 
+# :command.user_hooks
+before_hook() {
+  # src/before.sh
+
+  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  dir1=$(echo ${DIR_CLI%/*})
+  root_folder=$(echo ${dir1%/*})
+  IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
+  source $root_folder/scripts/utils.sh
+}
+
 # :command.initialize
 initialize() {
   version="1.0.0"
@@ -25622,6 +25545,7 @@ run() {
   declare -a input=()
   normalize_input "$@"
   parse_requirements "${input[@]}"
+  before_hook
 
   case "$action" in
     "help") playground_help_command ;;

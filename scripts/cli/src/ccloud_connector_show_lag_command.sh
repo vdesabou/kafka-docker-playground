@@ -34,12 +34,6 @@ then
     exit 1
 fi
 
-DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-dir1=$(echo ${DIR_CLI%/*})
-root_folder=$(echo ${dir1%/*})
-IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-source $root_folder/scripts/utils.sh
-
 items=($connector)
 for connector in ${items[@]}
 do
