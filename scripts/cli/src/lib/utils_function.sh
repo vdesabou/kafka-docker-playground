@@ -1,13 +1,13 @@
 function log() {
   YELLOW='\033[0;33m'
   NC='\033[0m' # No Color
-  echo -e "$YELLOW`date +"%H:%M:%S"` ℹ️ $@$NC"
+  echo -e "$YELLOW$(date +"%H:%M:%S") ℹ️ $@$NC"
 }
 
 function logerror() {
   RED='\033[0;31m'
   NC='\033[0m' # No Color
-  echo -e "$RED`date +"%H:%M:%S"` 🔥 $@$NC"
+  echo -e "$RED$(date +"%H:%M:%S") 🔥 $@$NC"
 }
 
 function logwarn() {
