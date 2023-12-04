@@ -2,7 +2,7 @@
 version: '3.5'
 services:
   ibmmq:
-    image: ibmcom/mq # https://hub.docker.com/r/ibmcom/mq/
+    image: icr.io/ibm-messaging/mq:9.3.2.0-r2
     hostname: ibmmq
     container_name: ibmmq
     environment:
