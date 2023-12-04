@@ -64,20 +64,20 @@ TODAY=$(date -u '+%Y-%m-%d')
 log "Creating ServiceNow Source connector"
 playground connector create-or-update --connector servicenow-source << EOF
 {
-                    "connector.class": "io.confluent.connect.servicenow.ServiceNowSourceConnector",
-                    "kafka.topic": "topic-servicenow",
-                    "servicenow.url": "$SERVICENOW_URL",
-                    "tasks.max": "1",
-                    "servicenow.table": "incident",
-                    "servicenow.user": "admin",
-                    "servicenow.password": "$SERVICENOW_PASSWORD",
-                    "servicenow.since": "$TODAY",
-                    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }
+     "connector.class": "io.confluent.connect.servicenow.ServiceNowSourceConnector",
+     "kafka.topic": "topic-servicenow",
+     "servicenow.url": "$SERVICENOW_URL",
+     "tasks.max": "1",
+     "servicenow.table": "incident",
+     "servicenow.user": "admin",
+     "servicenow.password": "$SERVICENOW_PASSWORD",
+     "servicenow.since": "$TODAY",
+     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 
