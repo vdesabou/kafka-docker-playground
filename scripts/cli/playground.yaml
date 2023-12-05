@@ -2463,7 +2463,7 @@ subcommands:
             
       - name: search-jar
         description: | 
-          🔌 Connector plugin from confluent hub https://www.confluent.io/hub/
+          🔌 List jars for a connector plugin from confluent hub https://www.confluent.io/hub/ Search for specific class and display method signatures
         usage: playground connector search-jar [OPTIONS]
         options:
         - names:

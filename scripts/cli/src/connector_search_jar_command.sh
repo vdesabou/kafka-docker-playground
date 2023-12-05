@@ -21,5 +21,19 @@ ls -1 | sort
 if [[ -n "$class" ]]
 then
   log "Searching for java class $class in all jars"
-  find . -name '*.jar' -print | while read i; do jar -tvf "$i" | grep -Hsi ${class} && log "👉 $i"; done
+  find . -name '*.jar' -print | while read i; 
+  do 
+    set +e
+    jar -tvf "$i" | grep -Hsi ${class} | awk '{print $10}' | sed 's/\.class$//' | tr '/' '.' | while read j
+    do
+      if [ $? -eq 0 ]
+      then
+        if [ "$j" != "" ]
+        then
+          log "👉 method signatures from $i jar for class $j"
+          javap -classpath $i $j
+        fi
+      fi
+    done
+  done
 fi
