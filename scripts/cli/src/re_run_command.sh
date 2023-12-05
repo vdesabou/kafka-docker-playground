@@ -72,7 +72,7 @@ fi
 
 if [[ -n "$enable_multiple_brokers" ]]
 then
-  flag_list="$flag_list --enable-multiple-broker"
+  flag_list="$flag_list --enable-multiple-brokers"
 fi
 
 if [[ -n "$enable_multiple_connect_workers" ]]
