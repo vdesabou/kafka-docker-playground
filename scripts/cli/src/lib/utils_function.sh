@@ -40,7 +40,7 @@ function jq() {
     then
       docker run --rm -i imega/jq "$@"
     else
-      $(which jq) "$@"
+      $(type -f jq | awk '{print $3}') "$@"
     fi
 }
 
@@ -49,7 +49,7 @@ function yq() {
     then
       docker run -u0 -v /tmp:/tmp --rm -i mikefarah/yq "$@"
     else
-      $(which yq) "$@"
+      $(type -f yq | awk '{print $3}') "$@"
     fi
 }
 
@@ -582,7 +582,7 @@ function timeout() {
     shift
     eval "$@"
   else
-    $(which timeout) "$@"
+    $(type -f timeout | awk '{print $3}') "$@"
   fi
 }
 
