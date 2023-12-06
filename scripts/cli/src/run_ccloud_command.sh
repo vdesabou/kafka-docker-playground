@@ -197,6 +197,7 @@ SECONDS=0
 cd $test_file_directory
 trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground ccloud-connector status;playground connector versions' EXIT
 touch /tmp/playground-run-command-used
+generate_fzf_find_files &
 bash $filename ${other_args[*]}
 ret=$?
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"

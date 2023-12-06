@@ -198,6 +198,7 @@ then
 else
   trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground connector versions;playground open-docs --only-show-url' EXIT
 fi
+generate_fzf_find_files &
 touch /tmp/playground-run-command-used
 bash $filename ${other_args[*]}
 ret=$?
