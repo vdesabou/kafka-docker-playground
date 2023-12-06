@@ -37,7 +37,7 @@ docker exec -i splunk-uf sudo ./bin/splunk add monitor -source /opt/splunkforwar
 log "Configure the UF to connect to Splunk S2S Source connector"
 docker exec -i splunk-uf sudo ./bin/splunk add forward-server connect:9997
 
-sleep 5
+sleep 30
 
 log "Verifying topic splunk-s2s-events"
 playground topic consume --topic splunk-s2s-events --timeout 20 --min-expected-messages 1 --grep "log event 1" --max-messages=1000
