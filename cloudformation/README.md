@@ -4,7 +4,7 @@ If you don't want to run the playground locally, you can run it easily on a EC2 
 
 ## Using AWS console
 
-* Create stack in AWS CloudFormation and upload [this](./alfred-aws-vscode-workflow/kafka-docker-playground.yml?raw=true) template file:
+* Create stack in AWS CloudFormation and upload [this](https://raw.githubusercontent.com/vdesabou/kafka-docker-playground/master/cloudformation/alfred-aws-vscode-workflow/kafka-docker-playground.yml) template file:
 
 ![AWS CloudFormation](./Screenshot1.png)
 
