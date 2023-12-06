@@ -1,0 +1,10 @@
+---
+version: '3.5'
+services:
+
+  broker:
+    environment:
+      KAFKA_LOG4J_LOGGERS: "org.apache.kafka.common.network.Selector=DEBUG"
+    volumes:
+        - ../../other/capture-authentication-logs/good-credentials-client.properties:/tmp/good-credentials-client.properties
+        - ../../other/capture-authentication-logs/bad-credentials-client.properties:/tmp/bad-credentials-client.properties
