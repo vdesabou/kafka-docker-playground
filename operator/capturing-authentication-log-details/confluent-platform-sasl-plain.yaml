@@ -1,0 +1,196 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: plain-users-credentials
+  namespace: confluent 
+type: Opaque
+stringData:
+  plain-users.json: |
+    {
+      "kafka_client": "kafka_client-secret",
+      "kafka": "kafka-secret"
+    }
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kafka-rest-credential
+  namespace: confluent 
+type: Opaque
+stringData:
+  bearer.txt: |
+    username=kafka
+    password=kafka-secret
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: Zookeeper
+metadata:
+  name: zookeeper
+  namespace: confluent
+spec:
+  replicas: 1
+  image:
+    application: confluentinc/cp-zookeeper:7.5.0
+    init: confluentinc/confluent-init-container:2.7.0
+  dataVolumeCapacity: 1Gi
+  logVolumeCapacity: 1Gi
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: Kafka
+metadata:
+  name: kafka
+  namespace: confluent
+spec:
+  replicas: 1
+  image:
+    application: confluentinc/cp-server:7.5.0
+    init: confluentinc/confluent-init-container:2.7.0
+  dataVolumeCapacity: 1Gi
+  listeners:
+    external:
+      authentication:
+        type: plain
+        jaasConfig:
+          secretRef: plain-users-credentials
+  configOverrides:
+    server:
+      - offsets.topic.replication.factor=1
+      - transaction.state.log.replication.factor=1
+      - confluent.license.topic.replication.factor=1
+      - confluent.metadata.topic.replication.factor=1
+      - confluent.balancer.topic.replication.factor=1
+      - confluent.metrics.reporter.topic.replicas=1
+      - confluent.security.event.logger.exporter.kafka.topic.replicas=1
+    log4j:
+      - log4j.logger.org.apache.kafka.common.network.Selector=DEBUG, stdout
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: KafkaRestClass
+metadata:
+  name: default
+  namespace: confluent
+spec:
+  kafkaClusterRef:
+    name: kafka
+    namespace: confluent
+  kafkaRest:
+    authentication:
+      type: bearer
+      bearer:
+        secretRef: kafka-rest-credential
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: test-topic
+  namespace: confluent
+spec:
+  replicas: 1
+  partitionCount: 1
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: good-credentials 
+  namespace: confluent
+type: Opaque
+stringData:
+  kafka.properties: |
+    bootstrap.servers=kafka.confluent.svc.cluster.local:9092
+    sasl.mechanism=PLAIN
+    security.protocol=SASL_PLAINTEXT
+    sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required \
+      username="kafka_client" \
+      password="kafka_client-secret";
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: bad-credentials 
+  namespace: confluent
+type: Opaque
+stringData:
+  kafka.properties: |
+    bootstrap.servers==kafka.confluent.svc.cluster.local:9092
+    sasl.mechanism=PLAIN
+    security.protocol=SASL_PLAINTEXT
+    sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required \
+      username="kafka_client" \
+      password="bad-secret";
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: good-client
+  namespace: confluent 
+spec:
+  serviceName: good-client
+  podManagementPolicy: Parallel
+  replicas: 1
+  selector:
+    matchLabels:
+      app: good-client
+  template:
+    metadata:
+      labels:
+        app: good-client
+    spec:
+      containers:
+      - name: good-client
+        image: confluentinc/cp-kafka:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          /bin/kafka-producer-perf-test --topic test-topic --throughput -1 --num-records 100 --record-size 10 --producer.config /mnt/kafka.properties
+        volumeMounts:
+        - name: kafka-properties
+          mountPath: /mnt
+          readOnly: true
+        resources:
+          requests:
+            memory: 512Mi
+            cpu: 500m
+      volumes:
+        - name: kafka-properties
+          secret:
+            secretName: good-credentials
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: bad-client
+  namespace: confluent 
+spec:
+  serviceName: bad-client
+  podManagementPolicy: Parallel
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bad-client
+  template:
+    metadata:
+      labels:
+        app: bad-client
+    spec:
+      containers:
+      - name: bad-client
+        image: confluentinc/cp-kafka:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          /bin/kafka-producer-perf-test --topic test-topic --throughput -1 --num-records 100 --record-size 10 --producer.config /mnt/kafka.properties
+        volumeMounts:
+        - name: kafka-properties
+          mountPath: /mnt
+          readOnly: true
+        resources:
+          requests:
+            memory: 512Mi
+            cpu: 500m
+      volumes:
+        - name: kafka-properties
+          secret:
+            secretName: bad-credentials
