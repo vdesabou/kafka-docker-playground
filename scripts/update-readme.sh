@@ -158,7 +158,7 @@ do
         
         if [ ! -f /tmp/${gh_run_id}_1.json ]
         then
-          for i in {1..10}; do
+          for i in {1..20}; do
             curl -s -u vdesabou:$GH_TOKEN -H "Accept: application/vnd.github.v3+json" \
             -o "/tmp/${gh_run_id}_${i}.json" \
             "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=${i}"
