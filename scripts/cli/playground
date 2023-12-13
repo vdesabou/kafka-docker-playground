@@ -9180,7 +9180,7 @@ function force_enable () {
 
 # src/lib/validations/validate_dir_exists.sh
 validate_dir_exists() {
-  [[ -d "$1" ]] || echo "must be an existing directory"
+  [[ -d "$1" ]] || logerror "<$1> must be an existing directory"
 }
 
 # src/lib/validations/validate_editor_exists.sh
@@ -9188,13 +9188,14 @@ validate_editor_exists() {
   local cmd="$1"
   if [[ $(type $cmd 2>&1) =~ "not found" ]]
   then
-    echo "this script requires $cmd. Please install $cmd and run again."
+    logerror "this script requires $cmd. Please install $cmd and run again."
   fi
 }
 
 # src/lib/validations/validate_file_exists.sh
 validate_file_exists() {
-  [[ -f "$1" ]] || echo "must be an existing file"
+  file="$1"
+  [[ -f "$1" ]] || logerror "<$file> does not correspond to the path of an existing file, please make sure to use absolute full path or correct relative path !"
 }
 
 # src/lib/validations/validate_file_exists_with_trick.sh
@@ -9207,7 +9208,7 @@ validate_file_exists_with_trick() {
     real_file=$(echo "$file" | cut -d "@" -f 2)
   fi
 
-  [[ -f "$real_file" ]] || echo "$real_file must be an existing file"
+  [[ -f "$real_file" ]] || logerror "<$real_file> does not correspond to the path of an existing file, please make sure to use absolute full path or correct relative path !"
 }
 
 # src/lib/validations/validate_integer.sh
@@ -9216,7 +9217,7 @@ validate_integer() {
   then
     return 0
   else
-    echo "must be an integer"
+    logerror "must be an integer"
     return 1
   fi
 }
@@ -9226,13 +9227,13 @@ validate_minimal_cp_version() {
   version="$1"
   if ! version_gt $version "4.9.99"
   then
-      echo "CP version (--tag) must be > 5.0.0"
+      logerror "CP version (--tag) must be > 5.0.0"
   fi
 }
 
 # src/lib/validations/validate_not_empty.sh
 validate_not_empty() {
-  [[ -z "$1" ]] && echo "must not be empty"
+  [[ -z "$1" ]] && logerror "must not be empty"
 }
 
 # :command.command_functions

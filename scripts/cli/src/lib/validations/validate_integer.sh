@@ -4,7 +4,7 @@ validate_integer() {
   then
     return 0
   else
-    echo "must be an integer"
+    logerror "must be an integer"
     return 1
   fi
 }
