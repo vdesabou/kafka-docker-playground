@@ -19,7 +19,7 @@ The goal is to test [LDAP authorizer](https://docs.confluent.io/current/security
 Simply run:
 
 ```
-$ playground run -f start<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
+$ playground run -f start<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
 ```
 
 ## Explanations

@@ -7,7 +7,7 @@ TL;DR: Existing data reprocessing should be considered in your data compatibilit
 # Show me the code
 You can find a full reproducer at [start.sh](./start.sh) and you can run it by runnng:
 ```
-$ playground run -f start<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
+$ playground run -f start<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
 ```
 
 # Initial Situation

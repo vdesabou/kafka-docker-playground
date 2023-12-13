@@ -54,5 +54,5 @@ In case you want to use your own existing cluster, you need to setup these envir
 ## How to run
 
 ```
-$ playground run -f fully-managed-mqtt-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path> <NGROK_AUTH_TOKEN>
+$ playground run -f fully-managed-mqtt-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <NGROK_AUTH_TOKEN>
 ```

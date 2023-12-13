@@ -13,7 +13,7 @@ Quickly test [HDFS 3 Source](https://docs.confluent.io/current/connect/kafka-con
 Simply run:
 
 ```
-$ playground run -f hdfs3<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
+$ playground run -f hdfs3<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
 ```
 
 ## Details of what the script is doing

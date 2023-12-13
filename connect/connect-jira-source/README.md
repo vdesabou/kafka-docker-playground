@@ -27,7 +27,7 @@ Create the API token:
 Simply run:
 
 ```
-$ playground run -f jira-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path> <JIRA_URL> <JIRA_USERNAME> <JIRA_API_TOKEN>
+$ playground run -f jira-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <JIRA_URL> <JIRA_USERNAME> <JIRA_API_TOKEN>
 ```
 
 Note: you can also export these values as environment variable

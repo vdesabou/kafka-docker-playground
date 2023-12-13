@@ -66,7 +66,7 @@ Follow instructions [here](https://docs.confluent.io/current/connect/kafka-conne
 Simply run:
 
 ```
-$ playground run -f salesforce-sobject-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path> <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_CONSUMER_KEY> <SALESFORCE_CONSUMER_PASSWORD> <SALESFORCE_SECURITY_TOKEN> <SALESFORCE_USERNAME_ACCOUNT2> <SALESFORCE_PASSWORD_ACCOUNT2> <SALESFORCE_SECURITY_TOKEN_ACCOUNT2> <SALESFORCE_CONSUMER_KEY_ACCOUNT2> <SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2>
+$ playground run -f salesforce-sobject-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_CONSUMER_KEY> <SALESFORCE_CONSUMER_PASSWORD> <SALESFORCE_SECURITY_TOKEN> <SALESFORCE_USERNAME_ACCOUNT2> <SALESFORCE_PASSWORD_ACCOUNT2> <SALESFORCE_SECURITY_TOKEN_ACCOUNT2> <SALESFORCE_CONSUMER_KEY_ACCOUNT2> <SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2>
 ```
 
 Note: you can also export these values as environment variable

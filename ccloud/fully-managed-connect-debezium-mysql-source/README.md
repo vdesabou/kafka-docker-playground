@@ -12,7 +12,7 @@ Quickly test [Debezium MySQL](https://docs.confluent.io/cloud/current/connectors
 Simply run:
 
 ```
-$ playground run -f fully-managed-mysql<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
+$ playground run -f fully-managed-mysql<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
 ```
 
 ## Exposing docker container over internet

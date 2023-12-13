@@ -12,7 +12,7 @@ Quickly test [Neo4j Sink](https://neo4j.com/labs/kafka/4.0/kafka-connect/) conne
 Simply run:
 
 ```
-$ playground run -f neo4j<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
+$ playground run -f neo4j<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
 ```
 
 Neo4j UI is available at [127.0.0.1:7474](http://127.0.0.1:7474) `neo4j/connect`

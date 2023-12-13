@@ -12,7 +12,7 @@ Quickly test [Azure Blob Storage Source](https://docs.confluent.io/current/conne
 Simply run:
 
 ```
-$ playground run -f azure-blob-storage-source-backup-and-restore<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
+$ playground run -f azure-blob-storage-source-backup-and-restore<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
 ```
 
 Simply run:
@@ -20,13 +20,13 @@ Simply run:
 For [Backup and Restore Azure Blob Storage Source](https://docs.confluent.io/kafka-connect-azure-blob-storage-source/current/backup-and-restore/index.html):
 
 ```bash
-$ playground run -f azure-blob-storage-source-backup-and-restore<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
+$ playground run -f azure-blob-storage-source-backup-and-restore<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
 ```
 
 For [Generalized Azure Blob Storage Source](https://docs.confluent.io/kafka-connect-azure-blob-storage-source/current/generalized/overview.html#) (it requires version 2.2.0 at minimum):
 
 ```bash
-$ playground run -f azure-blob-storage-source-generalized<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
+$ playground run -f azure-blob-storage-source-generalized<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
 ```
 
 ## Details of what the script is doing

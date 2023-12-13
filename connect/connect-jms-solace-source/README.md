@@ -14,7 +14,7 @@ Quickly test [JMS Source - Solace](https://docs.confluent.io/kafka-connect-jms-s
 Simply run:
 
 ```
-$ playground run -f jms-solace-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
+$ playground run -f jms-solace-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
 ```
 
 Solace UI is available at [127.0.0.1:8080](http://127.0.0.1:8080) `admin/admin`

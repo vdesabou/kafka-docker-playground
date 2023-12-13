@@ -30,7 +30,7 @@ Available tags are listed [here](https://github.com/vdesabou/cp-ansible-playgrou
 ## How to run
 
 ```
-$ playground run -f start<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path> <host yml file>
+$ playground run -f start<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <host yml file>
 ```
 
 `hosts-plaintext.yml` host file should be used as the base file, then you can modify it to include your changes:
@@ -44,7 +44,7 @@ ssl_enabled: true
 sasl_protocol: plain
 
 # run the script
-$ playground run -f start<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path> hosts-custom.yml
+$ playground run -f start<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> hosts-custom.yml
 ```
 
 Once the script has been run, you will have all the docker container running with your changes.

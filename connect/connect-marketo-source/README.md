@@ -42,7 +42,7 @@ The REST API Endpoint URL (`MARKETO_ENDPOINT_URL`) can be found within `Admin`->
 Simply run:
 
 ```
-$ playground run -f marketo-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path> <MARKETO_ENDPOINT_URL> <MARKETO_CLIENT_ID> <MARKETO_CLIENT_SECRET>
+$ playground run -f marketo-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <MARKETO_ENDPOINT_URL> <MARKETO_CLIENT_ID> <MARKETO_CLIENT_SECRET>
 ```
 
 Note: you can also export these values as environment variable
