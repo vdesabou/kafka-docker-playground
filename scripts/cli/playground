@@ -9457,38 +9457,38 @@ playground_get_examples_list_with_fzf_command() {
 
   if [[ -n "$without_repro" ]] && [[ -n "$sink_only" ]]
   then
-      if [ ! -f /tmp/get_examples_list_with_fzf_without_repro_sink_only ]
-      then
+      # if [ ! -f /tmp/get_examples_list_with_fzf_without_repro_sink_only ]
+      # then
           generate_get_examples_list_with_fzf_without_repro_sink_only
-      fi
+      # fi
       get_examples_list_with_fzf_without_repro_sink_only "$cur"
       return
   fi
 
   if [[ -n "$without_repro" ]]
   then
-      if [ ! -f /tmp/get_examples_list_with_fzf_without_repro ]
-      then
+      # if [ ! -f /tmp/get_examples_list_with_fzf_without_repro ]
+      # then
           generate_get_examples_list_with_fzf_without_repro
-      fi
+      # fi
       get_examples_list_with_fzf_without_repro "$cur"
       return
   fi
 
   if [[ -n "$ccloud_only" ]]
   then
-      if [ ! -f /tmp/get_examples_list_with_fzf_ccloud_only ]
-      then
+      # if [ ! -f /tmp/get_examples_list_with_fzf_ccloud_only ]
+      # then
           generate_get_examples_list_with_fzf_ccloud_only
-      fi
+      # fi
       get_examples_list_with_fzf_ccloud_only "$cur"
       return
   fi
 
-  if [ ! -f /tmp/get_examples_list_with_fzf ]
-  then
+  # if [ ! -f /tmp/get_examples_list_with_fzf ]
+  # then
       generate_get_examples_list_with_fzf
-  fi
+  # fi
   get_examples_list_with_fzf "$cur"
 }
 
@@ -9506,8 +9506,7 @@ playground_get_any_file_with_fzf_command() {
   # src/get_any_file_with_fzf_command.sh
   cur="${args[cur]}"
 
-  find $root_folder -type f ! -path '*/\.*' > /tmp/get_any_files_with_fzf &
-
+  find $root_folder -type f ! -path '*/\.*' > /tmp/get_any_files_with_fzf
   get_any_files_with_fzf "$cur"
 }
 
@@ -9744,7 +9743,7 @@ playground_run_command() {
   else
     trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground connector versions;playground open-docs --only-show-url' EXIT
   fi
-  generate_fzf_find_files &
+  #generate_fzf_find_files &
   touch /tmp/playground-run-command-used
   bash $filename ${other_args[*]}
   ret=$?
@@ -10239,7 +10238,7 @@ playground_run_ccloud_command() {
   cd $test_file_directory
   trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground ccloud-connector status;playground connector versions' EXIT
   touch /tmp/playground-run-command-used
-  generate_fzf_find_files &
+  #generate_fzf_find_files &
   bash $filename ${other_args[*]}
   ret=$?
   ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
