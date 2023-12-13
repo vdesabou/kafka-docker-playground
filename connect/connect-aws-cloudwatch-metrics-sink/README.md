@@ -20,7 +20,7 @@ You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` an
 Simply run:
 
 ```bash
-$ playground run -f cloudwatch-metrics-sink<tab>
+$ playground run -f cloudwatch-metrics-sink<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 

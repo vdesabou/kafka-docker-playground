@@ -54,7 +54,7 @@ In case you want to use your own existing cluster, you need to setup these envir
 Simply run:
 
 ```
-$ playground run -f fully-managed-postgres<tab>
+$ playground run -f fully-managed-postgres<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 

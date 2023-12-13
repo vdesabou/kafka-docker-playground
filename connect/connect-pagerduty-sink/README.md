@@ -38,7 +38,7 @@ Select `Configuration`->`API Access` and create New API Key:
 Simply run:
 
 ```bash
-$ playground run -f pagerduty-sink<tab> <PAGERDUTY_USER_EMAIL> <PAGERDUTY_API_KEY> <PAGERDUTY_SERVICE_ID>
+$ playground run -f pagerduty-sink<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*> <PAGERDUTY_USER_EMAIL> <PAGERDUTY_API_KEY> <PAGERDUTY_SERVICE_ID>
 ```
 
 Note: you can also export these values as environment variable

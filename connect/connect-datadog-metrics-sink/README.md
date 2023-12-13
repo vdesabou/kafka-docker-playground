@@ -21,7 +21,7 @@ Create an API key (`DD_API_KEY`) and an Application key (`DD_APP_KEY`):
 Simply run:
 
 ```
-$ playground run -f datadog-metrics-sink-sink<tab> <DD_API_KEY> <DD_APP_KEY>
+$ playground run -f datadog-metrics-sink-sink<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*> <DD_API_KEY> <DD_APP_KEY>
 
 Note: you can also export these values as environment variable
 

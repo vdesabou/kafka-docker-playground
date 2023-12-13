@@ -12,7 +12,7 @@ Quickly test [ata Diode (Source & Sink)](https://docs.confluent.io/current/conne
 Simply run:
 
 ```
-$ playground run -f datadiode<tab>
+$ playground run -f datadiode<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 ## Details of what the script is doing

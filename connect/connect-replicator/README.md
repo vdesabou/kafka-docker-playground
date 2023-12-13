@@ -14,19 +14,19 @@ N.B: This is just to test security configurations with replicator. More useful e
 Simply run:
 
 ```
-$ playground run -f replicator<tab>
+$ playground run -f replicator<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 Or using SASL_SSL authentications:
 
 ```bash
-$ playground run -f replicator-sasl-ssl<tab>
+$ playground run -f replicator-sasl-ssl<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 Or using 2 way SSL authentications:
 
 ```bash
-$ playground run -f replicator-2way-ssl<tab>
+$ playground run -f replicator-2way-ssl<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 ## Details of what the script is doing

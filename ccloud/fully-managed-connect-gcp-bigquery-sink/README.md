@@ -59,5 +59,5 @@ Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment v
 Simply run:
 
 ```bash
-$ playground run -f fully-managed-gcp-bigquery<tab> <GCP_PROJECT>
+$ playground run -f fully-managed-gcp-bigquery<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*> <GCP_PROJECT>
 ```

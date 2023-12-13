@@ -29,13 +29,13 @@ In case you want to use your own existing cluster, you need to setup these envir
 With Connect:
 
 ```
-$ playground run -f connect-onprem-to-cloud<tab>
+$ playground run -f connect-onprem-to-cloud<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 With Replicator executable:
 
 ```
-$ playground run -f executable-onprem-to-cloud<tab>
+$ playground run -f executable-onprem-to-cloud<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 ## OnPrem to Cloud examples with AvroConverter
 
@@ -50,13 +50,13 @@ This is documented [here](https://docs.confluent.io/platform/current/multi-dc-de
 With Connect:
 
 ```
-$ playground run -f connect-onprem-to-cloud-avro<tab>
+$ playground run -f connect-onprem-to-cloud-avro<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 With Replicator executable:
 
 ```
-$ playground run -f executable-onprem-to-cloud-avro<tab>
+$ playground run -f executable-onprem-to-cloud-avro<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

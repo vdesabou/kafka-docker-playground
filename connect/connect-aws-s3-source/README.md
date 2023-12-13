@@ -22,25 +22,25 @@ Simply run:
 For [Backup and Restore Amazon S3 Source](https://docs.confluent.io/kafka-connect-s3-source/current/backup-and-restore/overview.html#):
 
 ```bash
-$ playground run -f s3-source-backup-and-restore<tab>
+$ playground run -f s3-source-backup-and-restore<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 For [Generalized Amazon S3 Source](https://docs.confluent.io/kafka-connect-s3-source/current/generalized/overview.html) (it requires version 2.0.0 at minimum):
 
 ```bash
-$ playground run -f s3-source-generalized<tab>
+$ playground run -f s3-source-generalized<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 If you want to assume IAM roles:
 
 ```
-$ playground run -f s3-source-backup-and-restore-with-assuming-iam-role<tab> (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
+$ playground run -f s3-source-backup-and-restore-with-assuming-iam-role<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*> (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
 ```
 
 or with AssumeRole using custom AWS credentials provider (⚠️ custom code is just an example, there is no support for it):
 
 ```
-$ playground run -f s3-source-backup-and-restore-assuming-iam-role-with-custom-aws-credential-provider<tab>
+$ playground run -f s3-source-backup-and-restore-assuming-iam-role-with-custom-aws-credential-provider<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 ## Details of what the script is doing

@@ -10,7 +10,7 @@ Quickly test [Singlestore](https://github.com/memsql/singlestore-kafka-connector
 Simply run:
 
 ```
-$ playground run -f singlestore-sink<tab>
+$ playground run -f singlestore-sink<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 ## Details of what the script is doing

@@ -19,19 +19,19 @@ Download [IBM-MQ-Install-Java-All.jar](https://ibm.biz/mq92javaclient) (for exam
 Without SSL:
 
 ```
-$ playground run -f ibm-mq<tab>
+$ playground run -f ibm-mq<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 with SSL encryption:
 
 ```
-$ playground run -f ibm-mq-ssl<tab>
+$ playground run -f ibm-mq-ssl<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 with SSL encryption + Mutual TLS authentication:
 
 ```
-$ playground run -f ibm-mq-mtls<tab>
+$ playground run -f ibm-mq-mtls<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 ## Details of what the script is doing

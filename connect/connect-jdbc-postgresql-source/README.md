@@ -12,19 +12,19 @@ Quickly test [JDBC PostGreSQL](https://docs.confluent.io/current/connect/kafka-c
 Without SSL:
 
 ```
-$ playground run -f postgres<tab>
+$ playground run -f postgres<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 with SSL encryption:
 
 ```
-$ playground run -f postgres-ssl<tab>
+$ playground run -f postgres-ssl<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 with SSL encryption + Mutual TLS authentication:
 
 ```
-$ playground run -f postgres-mtls<tab>
+$ playground run -f postgres-mtls<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 ## Details of what the script is doing
 

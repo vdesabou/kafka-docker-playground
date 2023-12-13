@@ -12,7 +12,7 @@ Quickly test [Azure Data Lake Storage Gen1 Sink](https://docs.confluent.io/curre
 Simply run:
 
 ```
-$ playground run -f azure-data-lake-storage-gen1-sink<tab>
+$ playground run -f azure-data-lake-storage-gen1-sink<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 **Note**: You need to provide the tenant name by providing AZURE_TENANT_NAME environment variable. Check the list of tenants using `az account list`.

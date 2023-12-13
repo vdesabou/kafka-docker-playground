@@ -11,13 +11,13 @@ Quickly test [Couchbase Source](https://docs.couchbase.com/kafka-connector/curre
 Simply run:
 
 ```
-$ playground run -f couchbase<tab>
+$ playground run -f couchbase<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 Note: if you want to test with a custom `couchbase.event.filter` class, use:
 
 ```
-$ playground run -f couchbase-with-key-filter<tab>
+$ playground run -f couchbase-with-key-filter<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 It will filter using key starting with `airline`
@@ -25,7 +25,7 @@ It will filter using key starting with `airline`
 Note: if you want to test with some [SMT](https://docs.confluent.io/current/connect/transforms/index.html) `ExtractTopic$Key` and `RegexRouter`, use:
 
 ```
-$ playground run -f couchbase-with-transforms<tab>
+$ playground run -f couchbase-with-transforms<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 The transforms are defined with:

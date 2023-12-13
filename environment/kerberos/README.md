@@ -17,7 +17,7 @@ This is a deployment with no SSL encryption, and Kerberos GSSAPI authentication:
 Simply run:
 
 ```
-$ playground run -f start<tab>
+$ playground run -f start<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 ## Credits

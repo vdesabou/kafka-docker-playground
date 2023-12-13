@@ -12,7 +12,7 @@ Quickly test [RabbitMQ Source](https://docs.confluent.io/current/connect/kafka-c
 Simply run:
 
 ```
-$ playground run -f rabbitmq<tab>
+$ playground run -f rabbitmq<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 ## Details of what the script is doing

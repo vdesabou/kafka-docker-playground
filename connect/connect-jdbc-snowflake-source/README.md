@@ -14,7 +14,7 @@ Go to [Snowflake](https://www.snowflake.com) and register an account. You'll rec
 Simply run:
 
 ```bash
-$ playground run -f jdbc-snowflake-source<tab> <SNOWFLAKE_ACCOUNT_NAME> <SNOWFLAKE_USERNAME> <SNOWFLAKE_PASSWORD>
+$ playground run -f jdbc-snowflake-source<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*> <SNOWFLAKE_ACCOUNT_NAME> <SNOWFLAKE_USERNAME> <SNOWFLAKE_PASSWORD>
 ```
 
 Note: you can also export these values as environment variable

@@ -13,19 +13,19 @@ Simply run:
 Without SSL:
 
 ```
-$ playground run -f debezium-postgres-source<tab>
+$ playground run -f debezium-postgres-source<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 with SSL encryption:
 
 ```
-$ playground run -f debezium-postgres-source-ssl<tab>
+$ playground run -f debezium-postgres-source-ssl<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 with SSL encryption + Mutual TLS authentication:
 
 ```
-$ playground run -f debezium-postgres-source-mtls<tab>
+$ playground run -f debezium-postgres-source-mtls<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 ## Details of what the script is doing

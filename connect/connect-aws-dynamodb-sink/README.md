@@ -20,25 +20,25 @@ You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` an
 Simply run:
 
 ```bash
-$ playground run -f dynamodb<tab>
+$ playground run -f dynamodb<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 If you want to assume IAM roles:
 
 ```
-$ playground run -f dynamodb-sink-with-assuming-iam-role<tab> (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
+$ playground run -f dynamodb-sink-with-assuming-iam-role<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*> (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
 ```
 
 or
 
 ```
-$ playground run -f dynamodb-sink-with-assuming-iam-role-config<tab> <AWS_STS_ROLE_ARN>
+$ playground run -f dynamodb-sink-with-assuming-iam-role-config<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*> <AWS_STS_ROLE_ARN>
 ```
 
 or with BasicAwsCredentialsProvider using custom AWS credentials provider (⚠️ custom code is just an example, there is no support for it):
 
 ```
-$ playground run -f dynamodb-sink-with-custom-basic-aws-credentials-provider<tab>
+$ playground run -f dynamodb-sink-with-custom-basic-aws-credentials-provider<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 ## Details of what the script is doing

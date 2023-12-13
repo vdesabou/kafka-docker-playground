@@ -14,7 +14,7 @@ Quickly test [Debezium MySQL](https://docs.confluent.io/current/connect/debezium
 Simply run:
 
 ```
-$ playground run -f debezium-mysql-source<tab>
+$ playground run -f debezium-mysql-source<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 ## Details of what the script is doing

@@ -27,7 +27,7 @@ Available tags are `6.0.0`
 2. Then you just need to run:
 
 ```
-$ playground run -f start<tab>
+$ playground run -f start<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 `hosts-ccloud` host file is automatically generated with your confluent cloud details from `$HOME/.confluent/config`

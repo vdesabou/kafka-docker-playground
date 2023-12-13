@@ -10,7 +10,7 @@ Quickly test [JDBC Sink](https://docs.confluent.io/current/connect/kafka-connect
 
 
 ```
-$ playground run -f mariadb-sink<tab>
+$ playground run -f mariadb-sink<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 ## Details of what the script is doing

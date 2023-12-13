@@ -14,7 +14,7 @@ Quickly test [Solace Sink](https://docs.confluent.io/current/connect/kafka-conne
 Simply run:
 
 ```
-$ playground run -f jms-solace-sink<tab>
+$ playground run -f jms-solace-sink<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 Solace UI is available at [127.0.0.1:8080](http://127.0.0.1:8080) `admin/admin`

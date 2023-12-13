@@ -18,13 +18,13 @@ java.lang.ClassCastException: class [Ljava.lang.Object; cannot be cast to class 
 Simply run:
 
 ```
-$ playground run -f hdfs3-sink<tab>
+$ playground run -f hdfs3-sink<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
 ```
 
 or with Kerberos:
 
 ```
-$ playground run -f hdfs2-sink-kerberos<tab> (without Hive support)
+$ playground run -f hdfs2-sink-kerberos<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*> (without Hive support)
 ```
 
 ## Details of what the script is doing
