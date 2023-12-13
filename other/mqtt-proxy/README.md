@@ -12,11 +12,11 @@ Quickly test [MQTT proxy](https://docs.confluent.io/platform/current/kafka-mqtt/
 Simply run:
 
 ```
-$ playground run -f mqtt-proxy<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
+$ playground run -f mqtt-proxy<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
 ```
 
 or 
 
 ```
-$ playground run -f mqtt-proxy-sasl-plaintext<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
+$ playground run -f mqtt-proxy-sasl-plaintext<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
 ```

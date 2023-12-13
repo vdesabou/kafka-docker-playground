@@ -10,5 +10,5 @@ Quickly test [AVRO Serializer and Deserializer](https://docs.confluent.io/platfo
 Simply run:
 
 ```
-$ playground run -f start<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
+$ playground run -f start<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
 ```

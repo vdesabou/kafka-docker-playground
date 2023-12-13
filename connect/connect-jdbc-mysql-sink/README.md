@@ -11,19 +11,19 @@ Quickly test [JDBC Sink](https://docs.confluent.io/current/connect/kafka-connect
 Without SSL:
 
 ```
-$ playground run -f mysql-sink<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
+$ playground run -f mysql-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
 ```
 
 with SSL encryption:
 
 ```
-$ playground run -f mysql-sink-ssl<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
+$ playground run -f mysql-sink-ssl<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
 ```
 
 with SSL encryption + Mutual TLS authentication:
 
 ```
-$ playground run -f mysql-sink-mtls<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
+$ playground run -f mysql-sink-mtls<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
 ```
 
 ## Details of what the script is doing

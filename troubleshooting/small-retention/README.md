@@ -44,7 +44,7 @@ Message timestamps are used in order to check if it is *expired*, so a producer 
 Simply run:
 
 ```
-$ playground run -f no-activity<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
+$ playground run -f no-activity<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
 ```
 
 Create a topic `testtopic` with 30 seconds retention:
@@ -112,7 +112,7 @@ Result: **CLEANUP**
 Simply run:
 
 ```
-$ playground run -f activity<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
+$ playground run -f activity<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
 ```
 
 Create a topic `testtopic` with 30 seconds retention:
@@ -166,7 +166,7 @@ One minute after last message (no activity), cleanup is done:
 Simply run:
 
 ```
-$ playground run -f activity-small-segment-ms<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
+$ playground run -f activity-small-segment-ms<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
 ```
 
 Create a topic `testtopic` with 30 seconds retention and `segment.ms` 15000:
@@ -231,7 +231,7 @@ If you can't fix the producer timestamps, you can set at topic level the config 
 If you want to test, simply run:
 
 ```
-$ playground run -f old-timestamp<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
+$ playground run -f old-timestamp<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
 ```
 
 * Test with `message.timestamp.type=CreateTime` (default)

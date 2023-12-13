@@ -9,13 +9,13 @@ Quickly test [DNS SRV Records for LDAP](https://ldap.com/dns-srv-records-for-lda
 Simply run:
 
 ```
-$ playground run -f start-ldap<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
+$ playground run -f start-ldap<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
 ```
 
 or with LDAPS (**this is not working**, see [here](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/ldap-authorizer-with-ldap-failover/README.md#using-dns-srv-records-with-ldap-over-tls) for details):
 
 ```
-$ playground run -f start-ldaps<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
+$ playground run -f start-ldaps<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
 ```
 
 ## Details of what the script is doing

@@ -25,7 +25,7 @@ Quickly test [Elasticsearch Sink](https://docs.confluent.io/current/connect/kafk
 Simply run:
 
 ```
-$ playground run -f elasticsearch-cloud-sink<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*> <ELASTICSEARCH_CLOUD_ENDPOINT> <ELASTICSEARCH_CLOUD_USERNAME> <ELASTICSEARCH_CLOUD_PASSWORD>
+$ playground run -f elasticsearch-cloud-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path> <ELASTICSEARCH_CLOUD_ENDPOINT> <ELASTICSEARCH_CLOUD_USERNAME> <ELASTICSEARCH_CLOUD_PASSWORD>
 ```
 
 Note: you can also export these values as environment variable

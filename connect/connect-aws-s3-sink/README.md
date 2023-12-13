@@ -19,25 +19,25 @@ You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` an
 Simply run:
 
 ```
-$ playground run -f s3-sink<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
+$ playground run -f s3-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
 ```
 
 If you want to assume IAM roles:
 
 ```
-$ playground run -f s3-sink-with-assuming-iam-role<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*> (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
+$ playground run -f s3-sink-with-assuming-iam-role<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path> (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
 ```
 
 or
 
 ```
-$ playground run -f s3-sink-with-assuming-iam-role-config<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*> <AWS_STS_ROLE_ARN>
+$ playground run -f s3-sink-with-assuming-iam-role-config<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path> <AWS_STS_ROLE_ARN>
 ```
 
 or with AssumeRole using custom AWS credentials provider (⚠️ custom code is just an example, there is no support for it):
 
 ```
-$ playground run -f s3-sink-backup-and-restore-assuming-iam-role-with-custom-aws-credential-provider<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
+$ playground run -f s3-sink-backup-and-restore-assuming-iam-role-with-custom-aws-credential-provider<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
 ```
 
 Note: you can also export these values as environment variable

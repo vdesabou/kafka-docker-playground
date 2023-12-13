@@ -13,13 +13,13 @@ Note: it also contains Hive integration
 Simply run:
 
 ```
-$ playground run -f hdfs2-sink<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
+$ playground run -f hdfs2-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
 ```
 
 or with Kerberos:
 
 ```
-$ playground run -f hdfs2-sink-kerberos<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*> (without Hive support)
+$ playground run -f hdfs2-sink-kerberos<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path> (without Hive support)
 ```
 
 ## Details of what the script is doing

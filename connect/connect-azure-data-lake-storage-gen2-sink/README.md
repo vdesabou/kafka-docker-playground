@@ -13,13 +13,13 @@ Quickly test [Azure Data Lake Storage Gen2 Sink](https://docs.confluent.io/curre
 Simply run:
 
 ```
-$ playground run -f azure-data-lake-storage-gen2-sink<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
+$ playground run -f azure-data-lake-storage-gen2-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
 ```
 
 Or using 2 way SSL authentication:
 
 ```bash
-$ playground run -f azure-data-lake-storage-gen2-2way-ssl<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
+$ playground run -f azure-data-lake-storage-gen2-2way-ssl<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
 ```
 
 **Note**: You need to provide the tenant name by providing AZURE_TENANT_NAME environment variable. Check the list of tenants using `az account list`.

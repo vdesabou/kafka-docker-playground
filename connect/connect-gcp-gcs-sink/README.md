@@ -38,38 +38,38 @@ Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment v
 Simply run:
 
 ```bash
-$ playground run -f gcs-sink<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*> <GCP_PROJECT>
+$ playground run -f gcs-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path> <GCP_PROJECT>
 ```
 
 Or using SASL_SSL:
 
 ```bash
-$ playground run -f gcs-sink-sasl-ssl<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*> <GCP_PROJECT>
+$ playground run -f gcs-sink-sasl-ssl<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path> <GCP_PROJECT>
 ```
 
 Or using 2 way SSL authentication:
 
 ```bash
-$ playground run -f gcs-sink-2way-ssl<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*> <GCP_PROJECT>
+$ playground run -f gcs-sink-2way-ssl<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path> <GCP_PROJECT>
 ```
 
 
 Or using kerberos:
 
 ```bash
-$ playground run -f gcs-sink-kerberos<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*> <GCP_PROJECT>
+$ playground run -f gcs-sink-kerberos<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path> <GCP_PROJECT>
 ```
 
 Or using LDAP Authorizer with SASL/PLAIN:
 
 ```bash
-$ playground run -f gcs-sink-ldap-authorizer-sasl-plain<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*> <GCP_PROJECT>
+$ playground run -f gcs-sink-ldap-authorizer-sasl-plain<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path> <GCP_PROJECT>
 ```
 
 Or using RBAC environment with SASL/PLAIN:
 
 ```bash
-$ playground run -f gcs-sink-rbac-sasl-plain<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*> <GCP_PROJECT>
+$ playground run -f gcs-sink-rbac-sasl-plain<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path> <GCP_PROJECT>
 ```
 
 Note: you can also export these values as environment variable

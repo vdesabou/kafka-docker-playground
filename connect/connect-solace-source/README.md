@@ -14,7 +14,7 @@ Quickly test [Solace Source](https://docs.confluent.io/current/connect/kafka-con
 Simply run:
 
 ```
-$ playground run -f solace<use tab key to activate [fzf completion](https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion) (otherwise use full path, i.e *not relative path*>
+$ playground run -f solace<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or relative path>
 ```
 
 Solace UI is available at [127.0.0.1:8080](http://127.0.0.1:8080) `admin/admin`
