@@ -307,7 +307,7 @@ function generate_data() {
             ;;
             protobuf)
                 # https://github.com/JasonkayZK/mock-protobuf.js
-                docker run --rm -v $tmp_dir:/tmp/ -v $schema_file:/app/schema.proto -e NB_MESSAGES=$nb_messages_to_generate vdesabou/protobuf-faker  > $tmp_dir/out.json
+                docker run -u0 --rm -v $tmp_dir:/tmp/ -v $schema_file:/app/schema.proto -e NB_MESSAGES=$nb_messages_to_generate vdesabou/protobuf-faker bash -c "bash /app/produce.sh && chown -R $(id -u $USER):$(id -g $USER) /tmp/" > $tmp_dir/out.json
             ;;
             raw)
                 if jq -e . >/dev/null 2>&1 <<< "$(cat "$schema_file")"
