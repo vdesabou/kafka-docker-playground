@@ -955,17 +955,17 @@ do
             else
                 if [ -f $key_schema_file ]
                 then
-                    docker cp $key_schema_file connect:/tmp/key_schema_file > /dev/null 2>&1
+                    docker cp $key_schema_file $container:/tmp/key_schema_file > /dev/null 2>&1
                 fi
                 if [ -f $value_schema_file ]
                 then
-                    docker cp $value_schema_file connect:/tmp/value_schema_file > /dev/null 2>&1
+                    docker cp $value_schema_file $container:/tmp/value_schema_file > /dev/null 2>&1
                 fi
                 if [[ -n "$key" ]]
                 then
                     if [[ -n "$headers" ]]
                     then
-                        docker cp $root_folder/scripts/cli/src/tools-log4j.properties connect:/tmp/tools-log4j.properties > /dev/null 2>&1
+                        docker cp $root_folder/scripts/cli/src/tools-log4j.properties $container:/tmp/tools-log4j.properties > /dev/null 2>&1
                         if [ "$key_schema_type" = "avro" ] || [ "$key_schema_type" = "protobuf" ] || [ "$key_schema_type" = "json-schema" ]
                         then
                             if [[ -n "$verbose" ]]
@@ -985,7 +985,7 @@ do
                             head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/tmp/tools-log4j.properties" -i $container kafka-$value_schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema.file="/tmp/value_schema_file" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $key_subject_name_strategy_property $value_subject_name_strategy_property $producer_properties $compression
                         fi
                     else
-                        docker cp $root_folder/scripts/cli/src/tools-log4j.properties connect:/tmp/tools-log4j.properties > /dev/null 2>&1
+                        docker cp $root_folder/scripts/cli/src/tools-log4j.properties $container:/tmp/tools-log4j.properties > /dev/null 2>&1
                         if [ "$key_schema_type" = "avro" ] || [ "$key_schema_type" = "protobuf" ] || [ "$key_schema_type" = "json-schema" ]
                         then
                             if [[ -n "$verbose" ]]
@@ -1004,7 +1004,7 @@ do
                         fi
                     fi
                 else
-                    docker cp $root_folder/scripts/cli/src/tools-log4j.properties connect:/tmp/tools-log4j.properties > /dev/null 2>&1
+                    docker cp $root_folder/scripts/cli/src/tools-log4j.properties $container:/tmp/tools-log4j.properties > /dev/null 2>&1
                     if [[ -n "$headers" ]]
                     then
                         if [[ -n "$verbose" ]]
