@@ -16,7 +16,7 @@ This is why this example is using `organizations`.
 
 In your Zendesk account, create a token (if you're only an agent you need to ask it to an admin):
 
-![setup](Screenshot1.png)
+![setup](zendesk.jpg)
 
 ## How to run
 
