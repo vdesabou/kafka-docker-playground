@@ -2452,7 +2452,7 @@ commands:
       required: true
       arg: connector-plugin
       completions:
-        - $(playground get-connector-plugin)
+        - $(playground get-connector-plugin "$cur")
       help: |-
         🔌 Connector plugin name
 
