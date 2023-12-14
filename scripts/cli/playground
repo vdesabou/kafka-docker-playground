@@ -124,7 +124,7 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "ccloud-connector create-or-update")      "
   printf "  %s   🔗 Connector commands\n" "$(green "connector")                              "
   [[ -n $long_usage ]] && printf "  %s   🧩 Show status of all connectors\n" "$(green "connector status")                       "
-  [[ -n $long_usage ]] && printf "  %s   🎨 Show all plugins installed\n" "$(green "connector plugins")                      "
+  [[ -n $long_usage ]] && printf "  %s   🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n" "$(green "connector plugins")                      "
   [[ -n $long_usage ]] && printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")                        "
   [[ -n $long_usage ]] && printf "  %s   🧞 Get current and latest version available on Confluent Hub for connector(s) used in example\n" "$(green "connector versions")                     "
   [[ -n $long_usage ]] && printf "  %s   ♻️  Restart connector\n" "$(green "connector restart")                      "
@@ -4169,7 +4169,7 @@ playground_connector_usage() {
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   🧩 Show status of all connectors\n" "$(green "status")                "
-  printf "  %s   🎨 Show all plugins installed\n" "$(green "plugins")               "
+  printf "  %s   🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n" "$(green "plugins")               "
   printf "  %s   ⏸️  Pause connector\n" "$(green "pause")                 "
   printf "  %s   🧞 Get current and latest version available on Confluent Hub for connector(s) used in example\n" "$(green "versions")              "
   printf "  %s   ♻️  Restart connector\n" "$(green "restart")               "
@@ -4243,23 +4243,29 @@ playground_connector_status_usage() {
 # :command.usage
 playground_connector_plugins_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground connector plugins - 🎨 Show all plugins installed\n"
+    printf "playground connector plugins - 🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n"
     echo
 
   else
-    printf "playground connector plugins - 🎨 Show all plugins installed\n"
+    printf "playground connector plugins - 🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n"
     echo
 
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground connector plugins\n"
+  printf "  playground connector plugins [OPTIONS]\n"
   printf "  playground connector plugins --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
     printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--all")"
+    printf "    🌕 Show also transforms, converters, predicates available\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -15613,9 +15619,17 @@ playground_connector_status_command() {
 playground_connector_plugins_command() {
   # src/connector_plugins_command.sh
   get_connect_url_and_security
+  all="${args[--all]}"
 
-  log "🧩 Displaying all connector plugins installed"
-  curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t
+  log "🎨 Displaying all connector plugins installed"
+  if [[ -n "$all" ]]
+  then
+      log "🌕 Displaying also transforms, converters, predicates available"
+      curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins?connectorsOnly=false" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t
+  else
+      curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t
+  fi
+
 }
 
 # :command.function
@@ -24700,6 +24714,13 @@ playground_connector_plugins_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --all)
+
+        # :flag.case_no_arg
+        args['--all']=1
+        shift
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2

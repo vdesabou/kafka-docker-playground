@@ -2054,9 +2054,17 @@
         },
         {
           "name": "plugins",
-          "description": "🎨 Show all plugins installed\n",
-          "usage": "playground connector plugins",
-          "options": []
+          "description": "🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n",
+          "usage": "playground connector plugins [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--all"
+              ],
+              "argument": "",
+              "description": "🌕 Show also transforms, converters, predicates available\n"
+            }
+          ]
         },
         {
           "name": "pause",

@@ -705,7 +705,7 @@ _playground_completions() {
       ;;
 
     'connector plugins'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--all --help -h")" -- "$cur" )
       ;;
 
     'topic describe'*'-t')

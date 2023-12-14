@@ -2380,7 +2380,12 @@ commands:
         🎓 Tip: If not specified, the command will apply to all connectors
 
   - name: plugins
-    help: 🎨 Show all plugins installed
+    help: 🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag
+    flags:
+    - long: --all
+      required: false
+      help: |-
+        🌕 Show also transforms, converters, predicates available
 
   - name: pause
     help: ⏸️  Pause connector
