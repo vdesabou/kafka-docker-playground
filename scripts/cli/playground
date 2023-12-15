@@ -39,8 +39,6 @@ playground_usage() {
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   Show help about a command\n" "$(green "help")                                   "
   printf "  %s   🗺️ Show a status\n" "$(green "status")                                 "
-  printf "  %s   🌩️  Switch to ccloud environment.\n" "$(green "switch-ccloud")                          "
-  printf "  %s   💺  Switch back from ccloud environment to onprem environment. \n" "$(green "switch-onprem")                          "
   echo
   printf "%s\n" "$(bold "Run commands:")"
   printf "  %s   🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)\n" "$(green "run")                                    "
@@ -48,6 +46,8 @@ playground_usage() {
   printf "  %s   🏰 Get an history of the examples which were run with run command and run it again\n" "$(green "history")                                "
   printf "  %s   🔐 Simply start an environment listed in https://kafka-docker-playground.io/#/content?id=%f0%9f%94%90-environments:\n" "$(green "start-environment")                      "
   printf "  %s   ⛅ Run any Confluent Cloud (ccloud) example\n" "$(green "run-ccloud")                             "
+  printf "  %s   🌩️  Switch to ccloud environment.\n" "$(green "switch-ccloud")                          "
+  printf "  %s   💺  Switch back from ccloud environment to onprem environment. \n" "$(green "switch-onprem")                          "
   printf "  %s   ✨ Update current confluent platform or connector(s) with new version(s)\n" "$(green "update-version")                         "
   printf "  %s   👐 When --file is not provided, simply open last example you ran with <playground run> or <playground run-ccloud>\n" "$(green "open")                                   "
   printf "  %s   🛑 Stop currently running example\n" "$(green "stop")                                   "

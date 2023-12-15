@@ -547,6 +547,7 @@ commands:
   - playground run-ccloud mqtt<tab> --cluster-cloud aws --cluster-region eu-west-3 --enable-control-center --connector-tag 1.2.3
 
 - name: switch-ccloud
+  group: Run
   dependencies:
     confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
   help: |-
@@ -583,6 +584,7 @@ commands:
   - *cluster-schema-registry-creds
 
 - name: switch-onprem
+  group: Run
   help: |-
     💺  Switch back from ccloud environment to onprem environment. 
 
