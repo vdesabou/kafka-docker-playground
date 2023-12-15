@@ -1,5 +1,6 @@
 subject="${args[--subject]}"
 deleted="${args[--deleted]}"
+verbose="${args[--verbose]}"
 
 get_sr_url_and_security
 
@@ -39,6 +40,11 @@ found=0
 items=($subject)
 for subject in ${items[@]}
 do
+    if [[ -n "$verbose" ]]
+    then
+        log "🐞 curl command used"
+        echo "curl $sr_security -s "${sr_url}/subjects/${subject}/versions$maybe_include_deleted""
+    fi
     versions=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions$maybe_include_deleted")
 
     for version in $(echo "${versions}" | jq -r '.[]')
@@ -62,6 +68,11 @@ do
         fi
         found=1
 
+        if [[ -n "$verbose" ]]
+        then
+            log "🐞 curl command used"
+            echo "curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}$maybe_include_deleted""
+        fi
         echo "${schema}"
     done
 done

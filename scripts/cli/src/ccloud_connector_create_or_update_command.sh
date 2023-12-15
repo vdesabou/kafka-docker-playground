@@ -1,5 +1,7 @@
 json=${args[json]}
 validate=${args[--validate]}
+verbose="${args[--verbose]}"
+
 get_ccloud_connect
 
 if [ "$json" = "-" ]
@@ -54,11 +56,13 @@ then
     log "✅ --validate is set"
     set +e
     connector_class=$(echo "$json_content" | jq -r '."connector.class"')
-    curl_output=$(curl $security -s -X PUT \
-        -H "Content-Type: application/json" \
-        -H "authorization: Basic $authorization" \
-        --data @$json_file \
-        https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate)
+
+    if [[ -n "$verbose" ]]
+    then
+        log "🐞 curl command used"
+        echo "curl $security -s -X PUT -H "Content-Type: application/json" -H "authorization: Basic $authorization" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate"
+    fi
+    curl_output=$(curl $security -s -X PUT -H "Content-Type: application/json" -H "authorization: Basic $authorization" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate)
 
     ret=$?
     set -e
@@ -135,6 +139,11 @@ else
 fi
 
 set +e
+if [[ -n "$verbose" ]]
+then
+    log "🐞 curl command used"
+    echo "curl $security -s -X PUT -H "Content-Type: application/json" -H "authorization: Basic $authorization" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config"
+fi
 curl_output=$(curl $security -s -X PUT \
      -H "Content-Type: application/json" \
      -H "authorization: Basic $authorization" \

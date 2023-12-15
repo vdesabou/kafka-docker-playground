@@ -1,4 +1,5 @@
 connector="${args[--connector]}"
+verbose="${args[--verbose]}"
 
 get_ccloud_connect
 
@@ -25,5 +26,10 @@ items=($connector)
 for connector in ${items[@]}
 do
     log "🧩 Displaying connector status for $connector"
+    if [[ -n "$verbose" ]]
+    then
+        log "🐞 curl command used"
+        echo "curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status" --header "authorization: Basic $authorization""
+    fi
     curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status" --header "authorization: Basic $authorization" | jq .
 done

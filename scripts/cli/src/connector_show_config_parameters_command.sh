@@ -1,6 +1,7 @@
 open="${args[--open]}"
 force_refresh="${args[--force-refresh]}"
 only_show_file_path="${args[--only-show-file-path]}"
+verbose="${args[--verbose]}"
 
 get_connect_url_and_security
 
@@ -69,10 +70,12 @@ do
     if [ ! -f $filename ]
     then
         set +e
-        curl_output=$(curl $security -s -X PUT \
-            -H "Content-Type: application/json" \
-            --data "$json_config" \
-            $connect_url/connector-plugins/$connector_class/config/validate)
+        if [[ -n "$verbose" ]]
+        then
+            log "🐞 curl command used"
+            echo "curl $security -s -X PUT -H "Content-Type: application/json" --data "$json_config" $connect_url/connector-plugins/$connector_class/config/validate"
+        fi
+        curl_output=$(curl $security -s -X PUT -H "Content-Type: application/json" --data "$json_config" $connect_url/connector-plugins/$connector_class/config/validate)
         ret=$?
         set -e
         if [ $ret -eq 0 ]

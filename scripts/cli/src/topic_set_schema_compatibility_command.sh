@@ -1,5 +1,6 @@
 topic="${args[--topic]}"
 compatibility="${args[--compatibility]}"
+verbose="${args[--verbose]}"
 
 get_environment_used
 
@@ -27,5 +28,10 @@ items=($topic)
 for topic in ${items[@]}
 do
   log "🛡️ Set compatibility for subject ${topic}-value to $compatibility"
+  if [[ -n "$verbose" ]]
+  then
+      log "🐞 curl command used"
+      echo "curl $sr_security -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${topic}-value""
+  fi
   curl $sr_security -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${topic}-value"
 done

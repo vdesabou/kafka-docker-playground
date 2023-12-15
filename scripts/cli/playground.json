@@ -841,6 +841,14 @@
             },
             {
               "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
                 "--deleted"
               ],
               "argument": "",
@@ -888,6 +896,14 @@
               ],
               "argument": "SUBJECT",
               "description": "📛 Subject name\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
             }
           ]
         },
@@ -902,6 +918,14 @@
               ],
               "argument": "SUBJECT",
               "description": "📛 Subject name\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
             },
             {
               "names": [
@@ -931,6 +955,14 @@
               ],
               "argument": "SUBJECT",
               "description": "📛 Subject name\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
             }
           ]
         },
@@ -945,6 +977,14 @@
               ],
               "argument": "SUBJECT",
               "description": "📛 Subject name\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
             },
             {
               "names": [
@@ -984,6 +1024,14 @@
               ],
               "argument": "",
               "description": "💀 Hard delete (default is soft delete)\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
             }
           ]
         }
@@ -1467,8 +1515,17 @@
         {
           "name": "display-consumer-offsets",
           "description": "📭 Display content of __consumer_offsets topic\n",
-          "usage": "playground topic display-consumer-offsets",
-          "options": []
+          "usage": "playground topic display-consumer-offsets [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
         },
         {
           "name": "list",
@@ -1488,6 +1545,14 @@
               ],
               "argument": "TOPIC",
               "description": "🗳 Topic name\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
             }
           ]
         },
@@ -1518,6 +1583,14 @@
                 "NONE"
               ],
               "description": "Schema Registry compatibility rule\n\nRequired: ✓ Yes\n\nAllowed values: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
             }
           ]
         },
@@ -1814,6 +1887,14 @@
           "options": [
             {
               "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
                 "--topic",
                 "-t"
               ],
@@ -1836,6 +1917,14 @@
           "options": [
             {
               "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
                 "--topic",
                 "-t"
               ],
@@ -1849,6 +1938,14 @@
           "description": "🪛 Alter topic config\n",
           "usage": "playground topic alter [OPTIONS] [ARGUMENTS...]",
           "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
             {
               "names": [
                 "--topic",
@@ -1874,6 +1971,14 @@
           "options": [
             {
               "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
                 "--connector",
                 "-c"
               ],
@@ -1885,14 +1990,31 @@
         {
           "name": "plugins",
           "description": "🎨 Show all plugins installed\n",
-          "usage": "playground ccloud-connector plugins",
-          "options": []
+          "usage": "playground ccloud-connector plugins [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
         },
         {
           "name": "pause",
           "description": "⏸️  Pause connector\n",
           "usage": "playground ccloud-connector pause [OPTIONS]",
           "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
             {
               "names": [
                 "--connector",
@@ -1910,6 +2032,14 @@
           "options": [
             {
               "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
                 "--connector",
                 "-c"
               ],
@@ -1925,6 +2055,14 @@
           "options": [
             {
               "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
                 "--connector",
                 "-c"
               ],
@@ -1938,6 +2076,14 @@
           "description": "🐢 Show lag of sink connector\n",
           "usage": "playground ccloud-connector show-lag [OPTIONS]",
           "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
             {
               "names": [
                 "--connector",
@@ -1962,6 +2108,14 @@
           "options": [
             {
               "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
                 "--connector",
                 "-c"
               ],
@@ -1975,6 +2129,14 @@
           "description": "🔩 Show all possible configuration parameters of connector\n",
           "usage": "playground ccloud-connector show-config-parameters [OPTIONS]",
           "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
             {
               "names": [
                 "--connector",
@@ -2014,6 +2176,14 @@
           "options": [
             {
               "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
                 "--connector",
                 "-c"
               ],
@@ -2044,6 +2214,14 @@
           "options": [
             {
               "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
                 "--connector",
                 "-c"
               ],
@@ -2059,6 +2237,14 @@
           "options": [
             {
               "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
                 "--all"
               ],
               "argument": "",
@@ -2071,6 +2257,14 @@
           "description": "⏸️  Pause connector\n",
           "usage": "playground connector pause [OPTIONS]",
           "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
             {
               "names": [
                 "--connector",
@@ -2094,6 +2288,14 @@
           "options": [
             {
               "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
                 "--connector",
                 "-c"
               ],
@@ -2107,6 +2309,14 @@
           "description": "🛑 Stop connector (only available if CP > 7.5 )\n",
           "usage": "playground connector stop [OPTIONS]",
           "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
             {
               "names": [
                 "--connector",
@@ -2124,6 +2334,14 @@
           "options": [
             {
               "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
                 "--connector",
                 "-c"
               ],
@@ -2139,6 +2357,14 @@
           "options": [
             {
               "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
                 "--connector",
                 "-c"
               ],
@@ -2152,6 +2378,14 @@
           "description": "🐢 Show lag of sink connector\n",
           "usage": "playground connector show-lag [OPTIONS]",
           "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
             {
               "names": [
                 "--connector",
@@ -2176,6 +2410,14 @@
           "options": [
             {
               "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
                 "--connector",
                 "-c"
               ],
@@ -2189,6 +2431,14 @@
           "description": "🔩 Show all possible configuration parameters of connector\n",
           "usage": "playground connector show-config-parameters [OPTIONS]",
           "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
             {
               "names": [
                 "--connector",
@@ -2283,6 +2533,14 @@
           "description": "🧑‍🎨  Create or update connector\n",
           "usage": "playground connector create-or-update [JSON] [OPTIONS]",
           "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
             {
               "names": [
                 "--connector",

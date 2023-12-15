@@ -1,6 +1,7 @@
 get_connect_url_and_security
 
 connector="${args[--connector]}"
+verbose="${args[--verbose]}"
 
 if [[ ! -n "$connector" ]]
 then
@@ -22,6 +23,11 @@ for connector in ${items[@]}
 do
     set +e
     log "🧩 Displaying connector status for $connector"
+    if [[ -n "$verbose" ]]
+    then
+        log "🐞 curl command used"
+        echo "curl -s $security "$connect_url/connectors/$connector/status""
+    fi
     printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
     echo "-----------------------------------------------------------------------------------------------------------------------------"
     status=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.connector.state')

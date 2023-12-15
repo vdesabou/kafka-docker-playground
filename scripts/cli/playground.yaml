@@ -1101,6 +1101,13 @@ subcommands:
             📛 Subject name
             
         - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
           - --deleted
           argument: ""
           description: | 
@@ -1151,6 +1158,13 @@ subcommands:
             
             Required: ✓ Yes
             
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
       - name: set-compatibility
         description: | 
           🛡️ Set subject-level compatibility
@@ -1163,6 +1177,13 @@ subcommands:
             📛 Subject name
             
             Required: ✓ Yes
+            
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
             
         - names:
           - --compatibility
@@ -1187,6 +1208,13 @@ subcommands:
             
             Required: ✓ Yes
             
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
       - name: set-mode
         description: | 
           🔏 Set subject-level mode
@@ -1201,6 +1229,13 @@ subcommands:
             📛 Subject name
             
             Required: ✓ Yes
+            
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
             
         - names:
           - --mode
@@ -1238,6 +1273,13 @@ subcommands:
           argument: ""
           description: | 
             💀 Hard delete (default is soft delete)
+            
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
             
   - name: debug
     description: | 
@@ -1722,8 +1764,15 @@ subcommands:
       - name: display-consumer-offsets
         description: | 
           📭 Display content of __consumer_offsets topic
-        usage: playground topic display-consumer-offsets
-        options: []
+        usage: playground topic display-consumer-offsets [OPTIONS]
+        options:
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
       - name: list
         description: | 
           🔘 List topics
@@ -1740,6 +1789,13 @@ subcommands:
           argument: TOPIC
           description: | 
             🗳 Topic name
+            
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
             
       - name: set-schema-compatibility
         description: | 
@@ -1762,6 +1818,13 @@ subcommands:
             Required: ✓ Yes
             
             Allowed values: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE
+            
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
             
       - name: consume
         description: | 
@@ -2096,6 +2159,13 @@ subcommands:
         usage: playground topic create [OPTIONS] [ARGUMENTS...]
         options:
         - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
           - --topic
           - -t
           argument: TOPIC
@@ -2118,6 +2188,13 @@ subcommands:
         usage: playground topic delete [OPTIONS]
         options:
         - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
           - --topic
           - -t
           argument: TOPIC
@@ -2131,6 +2208,13 @@ subcommands:
           🪛 Alter topic config
         usage: playground topic alter [OPTIONS] [ARGUMENTS...]
         options:
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
         - names:
           - --topic
           - -t
@@ -2152,6 +2236,13 @@ subcommands:
         usage: playground ccloud-connector status [OPTIONS]
         options:
         - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
           - --connector
           - -c
           argument: CONNECTOR
@@ -2163,13 +2254,27 @@ subcommands:
       - name: plugins
         description: | 
           🎨 Show all plugins installed
-        usage: playground ccloud-connector plugins
-        options: []
+        usage: playground ccloud-connector plugins [OPTIONS]
+        options:
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
       - name: pause
         description: | 
           ⏸️  Pause connector
         usage: playground ccloud-connector pause [OPTIONS]
         options:
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
         - names:
           - --connector
           - -c
@@ -2185,6 +2290,13 @@ subcommands:
         usage: playground ccloud-connector resume [OPTIONS]
         options:
         - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
           - --connector
           - -c
           argument: CONNECTOR
@@ -2199,6 +2311,13 @@ subcommands:
         usage: playground ccloud-connector delete [OPTIONS]
         options:
         - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
           - --connector
           - -c
           argument: CONNECTOR
@@ -2212,6 +2331,13 @@ subcommands:
           🐢 Show lag of sink connector
         usage: playground ccloud-connector show-lag [OPTIONS]
         options:
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
         - names:
           - --connector
           - -c
@@ -2233,6 +2359,13 @@ subcommands:
         usage: playground ccloud-connector show-config [OPTIONS]
         options:
         - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
           - --connector
           - -c
           argument: CONNECTOR
@@ -2246,6 +2379,13 @@ subcommands:
           🔩 Show all possible configuration parameters of connector
         usage: playground ccloud-connector show-config-parameters [OPTIONS]
         options:
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
         - names:
           - --connector
           - -c
@@ -2280,6 +2420,13 @@ subcommands:
         usage: playground ccloud-connector create-or-update [JSON] [OPTIONS]
         options:
         - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
           - --connector
           - -c
           argument: CONNECTOR
@@ -2306,6 +2453,13 @@ subcommands:
         usage: playground connector status [OPTIONS]
         options:
         - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
           - --connector
           - -c
           argument: CONNECTOR
@@ -2320,6 +2474,13 @@ subcommands:
         usage: playground connector plugins [OPTIONS]
         options:
         - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
           - --all
           argument: ""
           description: | 
@@ -2330,6 +2491,13 @@ subcommands:
           ⏸️  Pause connector
         usage: playground connector pause [OPTIONS]
         options:
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
         - names:
           - --connector
           - -c
@@ -2350,6 +2518,13 @@ subcommands:
         usage: playground connector restart [OPTIONS]
         options:
         - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
           - --connector
           - -c
           argument: CONNECTOR
@@ -2363,6 +2538,13 @@ subcommands:
           🛑 Stop connector (only available if CP > 7.5 )
         usage: playground connector stop [OPTIONS]
         options:
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
         - names:
           - --connector
           - -c
@@ -2378,6 +2560,13 @@ subcommands:
         usage: playground connector resume [OPTIONS]
         options:
         - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
           - --connector
           - -c
           argument: CONNECTOR
@@ -2392,6 +2581,13 @@ subcommands:
         usage: playground connector delete [OPTIONS]
         options:
         - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
           - --connector
           - -c
           argument: CONNECTOR
@@ -2405,6 +2601,13 @@ subcommands:
           🐢 Show lag of sink connector
         usage: playground connector show-lag [OPTIONS]
         options:
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
         - names:
           - --connector
           - -c
@@ -2426,6 +2629,13 @@ subcommands:
         usage: playground connector show-config [OPTIONS]
         options:
         - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
           - --connector
           - -c
           argument: CONNECTOR
@@ -2439,6 +2649,13 @@ subcommands:
           🔩 Show all possible configuration parameters of connector
         usage: playground connector show-config-parameters [OPTIONS]
         options:
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
         - names:
           - --connector
           - -c
@@ -2531,6 +2748,13 @@ subcommands:
           🧑‍🎨  Create or update connector
         usage: playground connector create-or-update [JSON] [OPTIONS]
         options:
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
         - names:
           - --connector
           - -c

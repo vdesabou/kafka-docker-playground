@@ -1,4 +1,6 @@
 connector="${args[--connector]}"
+verbose="${args[--verbose]}"
+
 get_ccloud_connect
 
 if [[ ! -n "$connector" ]]
@@ -24,6 +26,11 @@ items=($connector)
 for connector in ${items[@]}
 do
     log "🧰 Current config for ccloud connector $connector"
+    if [[ -n "$verbose" ]]
+    then
+        log "🐞 curl command used"
+        echo "curl $security -s -X GET -H "Content-Type: application/json" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config" --header "authorization: Basic $authorization""
+    fi
     json_config=$(curl $security -s -X GET -H "Content-Type: application/json" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config" --header "authorization: Basic $authorization")
     echo "playground ccloud-connector create-or-update --connector $connector << EOF"
     echo "$json_config" | jq -S . | sed 's/\$/\\$/g'

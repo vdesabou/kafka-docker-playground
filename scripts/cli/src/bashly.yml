@@ -818,6 +818,10 @@ commands:
           - $(playground get-subject-list)
         help: |-
           📛 Subject name
+      - &verbose
+        long: --verbose
+        short: -v
+        help: 🐞 Show command being ran.
 
       - long: --deleted
         required: false
@@ -844,10 +848,7 @@ commands:
           - $(playground get-subject-list)
         help: |-
           📛 Subject name
-      - &verbose
-        long: --verbose
-        short: -v
-        help: 🐞 Show command being ran.
+      - *verbose
       - long: --schema
         arg: schema
         completions:
@@ -914,6 +915,7 @@ commands:
       🛡️ Get subject-level compatibility
     flags:
     - *subject_required
+    - *verbose
 
   - name: set-compatibility
     filters:
@@ -924,6 +926,7 @@ commands:
       🛡️ Set subject-level compatibility
     flags:
     - *subject_required
+    - *verbose
     - &compatibility-required
       long: --compatibility
       arg: compatibility
@@ -948,6 +951,7 @@ commands:
       🔏 Get subject-level mode
     flags:
     - *subject_required
+    - *verbose
 
   - name: set-mode
     filters:
@@ -960,6 +964,7 @@ commands:
       To enable mode changes on a Schema Registry cluster, you must also set mode.mutability=true in the Schema Registry properties file before starting Schema Registry
     flags:
     - *subject_required
+    - *verbose
     - long: --mode
       arg: mode
       allowed: 
@@ -1000,6 +1005,7 @@ commands:
       required: false
       help: |-
         💀 Hard delete (default is soft delete)
+    - *verbose
         
 - name: debug
   expose: true
@@ -1417,6 +1423,8 @@ commands:
       group: Topic
       help: |-
         📭 Display content of __consumer_offsets topic
+      flags:
+      - *verbose
 
     - name: list
       group: Topic
@@ -1429,6 +1437,7 @@ commands:
         🔬 Describe topic
       flags:
       - *topic
+      - *verbose
 
     - name: set-schema-compatibility
       filters:
@@ -1439,7 +1448,8 @@ commands:
       flags:
       - *topic
       - *compatibility-required
-          
+      - *verbose
+
     - name: consume
       filters:
       - schema_registry_running
@@ -2174,6 +2184,7 @@ commands:
       help: |-
         🆕 Create topic
       flags:
+      - *verbose
       - long: --topic
         short: -t
         required: true
@@ -2201,6 +2212,7 @@ commands:
       help: |-
         ❌ Delete topic
       flags:
+      - *verbose
       - long: --topic
         short: -t
         required: true
@@ -2215,6 +2227,7 @@ commands:
       help: |-
         🪛 Alter topic config
       flags:
+      - *verbose
       - long: --topic
         short: -t
         required: true
@@ -2252,6 +2265,7 @@ commands:
   - name: status
     help: 🧩 Show status of all connectors
     flags:
+    - *verbose
     - &ccloudconnector
       long: --connector
       short: -c
@@ -2266,26 +2280,32 @@ commands:
 
   - name: plugins
     help: 🎨 Show all plugins installed
+    flags:
+    - *verbose
 
   - name: pause
     help: ⏸️  Pause connector
     flags:
+    - *verbose
     - *ccloudconnector
 
   - name: resume
     alias: unpause
     help: ⏯️  Resume connector
     flags:
+    - *verbose
     - *ccloudconnector
 
   - name: delete
     help: 🗑️  Delete connector
     flags:
+    - *verbose
     - *ccloudconnector
 
   - name: show-lag
     help: 🐢 Show lag of sink connector
     flags:
+    - *verbose
     - *ccloudconnector
     - &waitforzerolag
       long: --wait-for-zero-lag
@@ -2295,11 +2315,13 @@ commands:
   - name: show-config
     help:  🧰 Show current connector config
     flags:
+    - *verbose
     - *ccloudconnector
 
   - name: show-config-parameters
     help: 🔩 Show all possible configuration parameters of connector
     flags:
+    - *verbose
     - *ccloudconnector
     - long: --open
       short: -o
@@ -2325,6 +2347,7 @@ commands:
       help: json (reads from stdin if empty)
 
     flags:
+    - *verbose
     - long: --connector
       short: -c
       required: true
@@ -2367,6 +2390,7 @@ commands:
   - name: status
     help: 🧩 Show status of all connectors
     flags:
+    - *verbose
     - &connector
       long: --connector
       short: -c
@@ -2382,6 +2406,7 @@ commands:
   - name: plugins
     help: 🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag
     flags:
+    - *verbose
     - long: --all
       required: false
       help: |-
@@ -2390,6 +2415,7 @@ commands:
   - name: pause
     help: ⏸️  Pause connector
     flags:
+    - *verbose
     - *connector
 
   - name: versions
@@ -2398,38 +2424,45 @@ commands:
   - name: restart
     help: ♻️  Restart connector
     flags:
+    - *verbose
     - *connector
 
   - name: stop
     help: 🛑 Stop connector (only available if CP > 7.5 )
     flags:
+    - *verbose
     - *connector
 
   - name: resume
     alias: unpause
     help: ⏯️  Resume connector
     flags:
+    - *verbose
     - *connector
 
   - name: delete
     help: 🗑️  Delete connector
     flags:
+    - *verbose
     - *connector
 
   - name: show-lag
     help: 🐢 Show lag of sink connector
     flags:
+    - *verbose
     - *connector
     - *waitforzerolag
 
   - name: show-config
     help:  🧰 Show current connector config
     flags:
+    - *verbose
     - *connector
 
   - name: show-config-parameters
     help: 🔩 Show all possible configuration parameters of connector
     flags:
+    - *verbose
     - *connector
     - long: --open
       short: -o
@@ -2492,6 +2525,7 @@ commands:
       help: json (reads from stdin if empty)
 
     flags:
+    - *verbose
     - long: --connector
       short: -c
       required: true

@@ -1,9 +1,15 @@
 subject="${args[--subject]}"
 mode="${args[--mode]}"
+verbose="${args[--verbose]}"
 
 get_sr_url_and_security
 
 log "🔏 Set mode for subject ${subject} to $mode"
+if [[ -n "$verbose" ]]
+then
+    log "🐞 curl command used"
+    echo "curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"mode\": \"$mode\"}" "${sr_url}/mode/${subject}""
+fi
 curl_output=$(curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"mode\": \"$mode\"}" "${sr_url}/mode/${subject}" | jq .)
 ret=$?
 if [ $ret -eq 0 ]

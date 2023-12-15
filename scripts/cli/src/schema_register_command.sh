@@ -82,8 +82,7 @@ fi
 log "⏺️ Registering schema to subject ${subject}"
 if [[ -n "$verbose" ]]
 then
-    set -x
+    log "🐞 curl command used"
+    echo "curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions" --header 'Content-Type: application/vnd.schemaregistry.v1+json' --data "$json_new""
 fi
-curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions" \
-    --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
-    --data "$json_new" | jq .
+curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions" --header 'Content-Type: application/vnd.schemaregistry.v1+json' --data "$json_new" | jq .

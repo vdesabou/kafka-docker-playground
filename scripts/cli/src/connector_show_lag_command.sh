@@ -1,5 +1,6 @@
 connector="${args[--connector]}"
 wait_for_zero_lag="${args[--wait-for-zero-lag]}"
+verbose="${args[--verbose]}"
 
 get_connect_url_and_security
 
@@ -61,6 +62,11 @@ do
     done
   else
     log "🐢 Show lag for sink connector $connector"
+    if [[ -n "$verbose" ]]
+    then
+        log "🐞 CLI command used"
+        echo "kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security"
+    fi
     docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security
   fi
 done

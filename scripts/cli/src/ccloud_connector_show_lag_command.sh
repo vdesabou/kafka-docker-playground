@@ -1,5 +1,7 @@
 connector="${args[--connector]}"
 wait_for_zero_lag="${args[--wait-for-zero-lag]}"
+verbose="${args[--verbose]}"
+
 get_ccloud_connect
 
 if [[ ! -n "$connector" ]]
@@ -76,6 +78,11 @@ do
         done
     else
         log "🐢 Show lag for sink connector $connector ($connectorId)"
+        if [[ -n "$verbose" ]]
+        then
+            log "🐞 CLI command used"
+            echo "kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group connect-$connectorId --describe"
+        fi
         docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group connect-$connectorId --describe
     fi
 done

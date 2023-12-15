@@ -1,4 +1,5 @@
 topic="${args[--topic]}"
+verbose="${args[--verbose]}"
 
 get_security_broker "--command-config"
 
@@ -39,9 +40,18 @@ do
             logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
             exit 1
         fi
-
+        if [[ -n "$verbose" ]]
+        then
+            log "🐞 CLI command used"
+            echo "kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
+        fi
         docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
     else
+        if [[ -n "$verbose" ]]
+        then
+            log "🐞 CLI command used"
+            echo "kafka-topics --describe --topic $topic --bootstrap-server broker:9092 $security"
+        fi
         docker exec $container kafka-topics --describe --topic $topic --bootstrap-server broker:9092 $security
     fi
 done

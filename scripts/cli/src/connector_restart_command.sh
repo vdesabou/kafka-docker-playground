@@ -1,6 +1,7 @@
 get_connect_url_and_security
 
 connector="${args[--connector]}"
+verbose="${args[--verbose]}"
 
 if [[ ! -n "$connector" ]]
 then
@@ -35,9 +36,19 @@ do
         for task_id in $task_ids
         do
             log "🤹‍♂️ Restart task $task_id"
+            if [[ -n "$verbose" ]]
+            then
+                log "🐞 curl command used"
+                echo "curl $security -s -X POST -H "Content-Type: application/json" "$connect_url/connectors/$connector/tasks/$task_id/restart""
+            fi
             curl $security -s -X POST -H "Content-Type: application/json" "$connect_url/connectors/$connector/tasks/$task_id/restart"
         done
     else
+        if [[ -n "$verbose" ]]
+        then
+            log "🐞 curl command used"
+            echo "curl $security -s -X POST -H "Content-Type: application/json" "$connect_url/connectors/$connector/restart?includeTasks=true&onlyFailed=false""
+        fi
         curl $security -s -X POST -H "Content-Type: application/json" "$connect_url/connectors/$connector/restart?includeTasks=true&onlyFailed=false" | jq .
     fi
 done

@@ -2,6 +2,8 @@ connector="${args[--connector]}"
 open="${args[--open]}"
 force_refresh="${args[--force-refresh]}"
 only_show_file_path="${args[--only-show-file-path]}"
+verbose="${args[--verbose]}"
+
 get_ccloud_connect
 
 if [[ ! -n "$connector" ]]
@@ -76,6 +78,11 @@ do
     if [ ! -f $filename ]
     then
         set +e
+        if [[ -n "$verbose" ]]
+        then
+            log "🐞 curl command used"
+            echo "curl -s --request PUT -H "Content-Type: application/json" --data "$json_config" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate" --header "authorization: Basic $authorization""
+        fi
         curl_output=$(curl -s --request PUT -H "Content-Type: application/json" --data "$json_config" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate" --header "authorization: Basic $authorization")
         ret=$?
         set -e

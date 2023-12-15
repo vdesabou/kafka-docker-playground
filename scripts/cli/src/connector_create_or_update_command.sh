@@ -2,6 +2,7 @@ json=${args[json]}
 level=${args[--level]}
 package=${args[--package]}
 validate=${args[--validate]}
+verbose="${args[--verbose]}"
 
 if [ "$json" = "-" ]
 then
@@ -59,10 +60,12 @@ then
     connector_class=$(echo "$json_content" | jq -r '."connector.class"')
     # add mandator name field
     new_json_content=$(echo $json_content | jq ". + {\"name\": \"$connector\"}")
-    curl_output=$(curl $security -s -X PUT \
-        -H "Content-Type: application/json" \
-        --data "$new_json_content" \
-        $connect_url/connector-plugins/$connector_class/config/validate)
+    if [[ -n "$verbose" ]]
+    then
+        log "🐞 curl command used"
+        echo "curl $security -s -X PUT -H "Content-Type: application/json" --data "$new_json_content" $connect_url/connector-plugins/$connector_class/config/validate"
+    fi
+    curl_output=$(curl $security -s -X PUT -H "Content-Type: application/json" --data "$new_json_content" $connect_url/connector-plugins/$connector_class/config/validate)
     ret=$?
     set -e
     if [ $ret -eq 0 ]
@@ -138,10 +141,12 @@ else
 fi
 
 set +e
-curl_output=$(curl $security -s -X PUT \
-     -H "Content-Type: application/json" \
-     --data "$json_content" \
-     $connect_url/connectors/$connector/config)
+if [[ -n "$verbose" ]]
+then
+    log "🐞 curl command used"
+    echo "curl $security -s -X PUT -H "Content-Type: application/json" --data "$json_content" $connect_url/connectors/$connector/config"
+fi
+curl_output=$(curl $security -s -X PUT -H "Content-Type: application/json" --data "$json_content" $connect_url/connectors/$connector/config)
 ret=$?
 set -e
 if [ $ret -eq 0 ]

@@ -1,9 +1,15 @@
 subject="${args[--subject]}"
 compatibility="${args[--compatibility]}"
+verbose="${args[--verbose]}"
 
 get_sr_url_and_security
 
 log "🛡️ Set compatibility for subject ${subject} to $compatibility"
+if [[ -n "$verbose" ]]
+then
+    log "🐞 curl command used"
+    echo "curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${subject}""
+fi
 curl_output=$(curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${subject}" | jq .)
 ret=$?
 if [ $ret -eq 0 ]

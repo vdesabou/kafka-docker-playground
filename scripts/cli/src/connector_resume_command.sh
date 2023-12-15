@@ -1,6 +1,7 @@
 get_connect_url_and_security
 
 connector="${args[--connector]}"
+verbose="${args[--verbose]}"
 
 if [[ ! -n "$connector" ]]
 then
@@ -21,6 +22,11 @@ fi
 for connector in ${items[@]}
 do
     log "⏯️ Resuming connector $connector"
+    if [[ -n "$verbose" ]]
+    then
+        log "🐞 curl command used"
+        echo "curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/resume""
+    fi
     curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/resume"  | jq .
 
     sleep 1

@@ -1781,6 +1781,11 @@ playground_schema_get_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--deleted")"
     printf "    🧟 Include soft deleted subjects\n"
     echo
@@ -1878,6 +1883,11 @@ playground_schema_get_compatibility_usage() {
     printf "    📛 Subject name\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -1911,6 +1921,11 @@ playground_schema_set_compatibility_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--subject SUBJECT (required)")"
     printf "    📛 Subject name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
     echo
 
     # :flag.usage
@@ -1954,6 +1969,11 @@ playground_schema_get_mode_usage() {
     printf "    📛 Subject name\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -1990,6 +2010,11 @@ playground_schema_set_mode_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--subject SUBJECT (required)")"
     printf "    📛 Subject name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
     echo
 
     # :flag.usage
@@ -2041,6 +2066,11 @@ playground_schema_delete_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--permanent")"
     printf "    💀 Hard delete (default is soft delete)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
     echo
 
     # :command.usage_fixed_flags
@@ -3248,13 +3278,19 @@ playground_topic_display_consumer_offsets_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground topic display-consumer-offsets\n"
+  printf "  playground topic display-consumer-offsets [OPTIONS]\n"
   printf "  playground topic display-consumer-offsets --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
     printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -3320,6 +3356,11 @@ playground_topic_describe_usage() {
     printf "    🗳 Topic name\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -3359,6 +3400,11 @@ playground_topic_set_schema_compatibility_usage() {
     printf "  %s\n" "$(magenta "--compatibility COMPATIBILITY (required)")"
     printf "    Schema Registry compatibility rule\n"
     printf "    Allowed: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
     echo
 
     # :command.usage_fixed_flags
@@ -3633,6 +3679,11 @@ playground_topic_create_usage() {
 
     # :command.usage_flags
     # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
     printf "    🗳 Topic name\n"
     echo
@@ -3686,6 +3737,11 @@ playground_topic_delete_usage() {
 
     # :command.usage_flags
     # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
     printf "    🗳 Topic name\n"
     echo
@@ -3720,6 +3776,11 @@ playground_topic_alter_usage() {
     printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
     # :flag.usage
     printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
     printf "    🗳 Topic name\n"
@@ -3822,6 +3883,11 @@ playground_ccloud_connector_status_usage() {
 
     # :command.usage_flags
     # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
     echo
@@ -3847,13 +3913,19 @@ playground_ccloud_connector_plugins_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground ccloud-connector plugins\n"
+  printf "  playground ccloud-connector plugins [OPTIONS]\n"
   printf "  playground ccloud-connector plugins --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
     printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -3885,6 +3957,11 @@ playground_ccloud_connector_pause_usage() {
     printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
@@ -3924,6 +4001,11 @@ playground_ccloud_connector_resume_usage() {
 
     # :command.usage_flags
     # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
     echo
@@ -3959,6 +4041,11 @@ playground_ccloud_connector_delete_usage() {
 
     # :command.usage_flags
     # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
     echo
@@ -3993,6 +4080,11 @@ playground_ccloud_connector_show_lag_usage() {
     printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
@@ -4034,6 +4126,11 @@ playground_ccloud_connector_show_config_usage() {
 
     # :command.usage_flags
     # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
     echo
@@ -4068,6 +4165,11 @@ playground_ccloud_connector_show_config_parameters_usage() {
     printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
@@ -4118,6 +4220,11 @@ playground_ccloud_connector_create_or_update_usage() {
     printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR (required)")"
     printf "    🔗 Connector name\n"
@@ -4228,6 +4335,11 @@ playground_connector_status_usage() {
 
     # :command.usage_flags
     # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
     echo
@@ -4263,6 +4375,11 @@ playground_connector_plugins_usage() {
 
     # :command.usage_flags
     # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--all")"
     printf "    🌕 Show also transforms, converters, predicates available\n"
     echo
@@ -4297,6 +4414,11 @@ playground_connector_pause_usage() {
     printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
@@ -4362,6 +4484,11 @@ playground_connector_restart_usage() {
 
     # :command.usage_flags
     # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
     echo
@@ -4396,6 +4523,11 @@ playground_connector_stop_usage() {
     printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
@@ -4435,6 +4567,11 @@ playground_connector_resume_usage() {
 
     # :command.usage_flags
     # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
     echo
@@ -4470,6 +4607,11 @@ playground_connector_delete_usage() {
 
     # :command.usage_flags
     # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
     echo
@@ -4504,6 +4646,11 @@ playground_connector_show_lag_usage() {
     printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
@@ -4545,6 +4692,11 @@ playground_connector_show_config_usage() {
 
     # :command.usage_flags
     # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
     echo
@@ -4579,6 +4731,11 @@ playground_connector_show_config_parameters_usage() {
     printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
@@ -4724,6 +4881,11 @@ playground_connector_create_or_update_usage() {
     printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR (required)")"
     printf "    🔗 Connector name\n"
@@ -11888,6 +12050,7 @@ playground_schema_get_command() {
   # src/schema_get_command.sh
   subject="${args[--subject]}"
   deleted="${args[--deleted]}"
+  verbose="${args[--verbose]}"
 
   get_sr_url_and_security
 
@@ -11927,6 +12090,11 @@ playground_schema_get_command() {
   items=($subject)
   for subject in ${items[@]}
   do
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 curl command used"
+          echo "curl $sr_security -s "${sr_url}/subjects/${subject}/versions$maybe_include_deleted""
+      fi
       versions=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions$maybe_include_deleted")
 
       for version in $(echo "${versions}" | jq -r '.[]')
@@ -11950,6 +12118,11 @@ playground_schema_get_command() {
           fi
           found=1
 
+          if [[ -n "$verbose" ]]
+          then
+              log "🐞 curl command used"
+              echo "curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}$maybe_include_deleted""
+          fi
           echo "${schema}"
       done
   done
@@ -12052,11 +12225,10 @@ playground_schema_register_command() {
   log "⏺️ Registering schema to subject ${subject}"
   if [[ -n "$verbose" ]]
   then
-      set -x
+      log "🐞 curl command used"
+      echo "curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions" --header 'Content-Type: application/vnd.schemaregistry.v1+json' --data "$json_new""
   fi
-  curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions" \
-      --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
-      --data "$json_new" | jq .
+  curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions" --header 'Content-Type: application/vnd.schemaregistry.v1+json' --data "$json_new" | jq .
 
 }
 
@@ -12064,10 +12236,16 @@ playground_schema_register_command() {
 playground_schema_get_compatibility_command() {
   # src/schema_get_compatibility_command.sh
   subject="${args[--subject]}"
+  verbose="${args[--verbose]}"
 
   get_sr_url_and_security
 
   log "🛡️ Get compatibility for subject ${subject}"
+  if [[ -n "$verbose" ]]
+  then
+      log "🐞 curl command used"
+      echo "curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/config/${subject}""
+  fi
   curl_output=$(curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/config/${subject}")
   ret=$?
   if [ $ret -eq 0 ]
@@ -12095,10 +12273,16 @@ playground_schema_set_compatibility_command() {
   # src/schema_set_compatibility_command.sh
   subject="${args[--subject]}"
   compatibility="${args[--compatibility]}"
+  verbose="${args[--verbose]}"
 
   get_sr_url_and_security
 
   log "🛡️ Set compatibility for subject ${subject} to $compatibility"
+  if [[ -n "$verbose" ]]
+  then
+      log "🐞 curl command used"
+      echo "curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${subject}""
+  fi
   curl_output=$(curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${subject}" | jq .)
   ret=$?
   if [ $ret -eq 0 ]
@@ -12124,10 +12308,16 @@ playground_schema_set_compatibility_command() {
 playground_schema_get_mode_command() {
   # src/schema_get_mode_command.sh
   subject="${args[--subject]}"
+  verbose="${args[--verbose]}"
 
   get_sr_url_and_security
 
   log "🔏 Get mode for subject ${subject}"
+  if [[ -n "$verbose" ]]
+  then
+      log "🐞 curl command used"
+      echo "curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/mode/${subject}""
+  fi
   curl_output=$(curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/mode/${subject}")
   ret=$?
   if [ $ret -eq 0 ]
@@ -12155,10 +12345,16 @@ playground_schema_set_mode_command() {
   # src/schema_set_mode_command.sh
   subject="${args[--subject]}"
   mode="${args[--mode]}"
+  verbose="${args[--verbose]}"
 
   get_sr_url_and_security
 
   log "🔏 Set mode for subject ${subject} to $mode"
+  if [[ -n "$verbose" ]]
+  then
+      log "🐞 curl command used"
+      echo "curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"mode\": \"$mode\"}" "${sr_url}/mode/${subject}""
+  fi
   curl_output=$(curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"mode\": \"$mode\"}" "${sr_url}/mode/${subject}" | jq .)
   ret=$?
   if [ $ret -eq 0 ]
@@ -12187,6 +12383,7 @@ playground_schema_delete_command() {
   subject="${args[--subject]}"
   version="${args[--version]}"
   permanent="${args[--permanent]}"
+  verbose="${args[--verbose]}"
 
   get_sr_url_and_security
 
@@ -12205,19 +12402,39 @@ playground_schema_delete_command() {
       if [[ -n "$version" ]]
       then
           log "🧟 Soft deleting 💯 version ${version} from subject 🔰 ${subject}"
+          if [[ -n "$verbose" ]]
+          then
+              log "🐞 curl command used"
+              echo "curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}/versions/${version}""
+          fi
           curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}/versions/${version}" | jq .
           if [[ -n "$permanent" ]]
           then
               log "💀 Hard deleting 💯 version ${version} from subject 🔰 ${subject}"
+              if [[ -n "$verbose" ]]
+              then
+                  log "🐞 curl command used"
+                  echo "curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}/versions/${version}?permanent=true""
+              fi
               curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}/versions/${version}?permanent=true" | jq .
           fi
       else
           logwarn "--version is not set, deleting all versions !"
           log "🧟 Soft deleting subject 🔰 ${subject}"
+          if [[ -n "$verbose" ]]
+          then
+              log "🐞 curl command used"
+              echo "curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}""
+          fi
           curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}" | jq .
           if [[ -n "$permanent" ]]
           then
               log "💀 Hard deleting  subject 🔰 ${subject}"
+              if [[ -n "$verbose" ]]
+              then
+                  log "🐞 curl command used"
+                  echo "curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}?permanent=true""
+              fi
               curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}?permanent=true" | jq .
           fi
       fi
@@ -13030,6 +13247,7 @@ playground_topic_display_consumer_offsets_command() {
   # src/topic_display_consumer_offsets_command.sh
   get_security_broker "--consumer.config"
   get_environment_used
+  verbose="${args[--verbose]}"
 
   if [ "$environment" == "error" ]
   then
@@ -13041,21 +13259,15 @@ playground_topic_display_consumer_offsets_command() {
   log "Display content of __consumer_offsets topic, press crtl-c to stop..."
   if [[ "$environment" == "environment" ]]
   then
-      if [ -f /tmp/delta_configs/env.delta ]
-      then
-          source /tmp/delta_configs/env.delta
-      else
-          logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
-          exit 1
-      fi
-      if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
-      then
-          logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
-          exit 1
-      fi
-
-      docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
+      logerror " __consumer_offsets topic is not readable in cloud"
+      exit 1
   else
+
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 CLI command used"
+          echo "kafka-console-consumer --bootstrap-server broker:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security"
+      fi
       docker exec -i $container kafka-console-consumer --bootstrap-server broker:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security | grep -v "_confluent-controlcenter"
   fi
 }
@@ -13071,6 +13283,7 @@ playground_topic_list_command() {
 playground_topic_describe_command() {
   # src/topic_describe_command.sh
   topic="${args[--topic]}"
+  verbose="${args[--verbose]}"
 
   get_security_broker "--command-config"
 
@@ -13112,9 +13325,18 @@ playground_topic_describe_command() {
               logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
               exit 1
           fi
-
+          if [[ -n "$verbose" ]]
+          then
+              log "🐞 CLI command used"
+              echo "kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
+          fi
           docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
       else
+          if [[ -n "$verbose" ]]
+          then
+              log "🐞 CLI command used"
+              echo "kafka-topics --describe --topic $topic --bootstrap-server broker:9092 $security"
+          fi
           docker exec $container kafka-topics --describe --topic $topic --bootstrap-server broker:9092 $security
       fi
   done
@@ -13125,6 +13347,7 @@ playground_topic_set_schema_compatibility_command() {
   # src/topic_set_schema_compatibility_command.sh
   topic="${args[--topic]}"
   compatibility="${args[--compatibility]}"
+  verbose="${args[--verbose]}"
 
   get_environment_used
 
@@ -13153,6 +13376,11 @@ playground_topic_set_schema_compatibility_command() {
   for topic in ${items[@]}
   do
     log "🛡️ Set compatibility for subject ${topic}-value to $compatibility"
+    if [[ -n "$verbose" ]]
+    then
+        log "🐞 curl command used"
+        echo "curl $sr_security -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${topic}-value""
+    fi
     curl $sr_security -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${topic}-value"
   done
 }
@@ -14728,6 +14956,7 @@ playground_topic_create_command() {
   # src/topic_create_command.sh
   topic="${args[--topic]}"
   nb_partitions="${args[--nb-partitions]}"
+  verbose="${args[--verbose]}"
 
   get_security_broker "--command-config"
   get_environment_used
@@ -14765,9 +14994,18 @@ playground_topic_create_command() {
               logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
               exit 1
           fi
-
+          if [[ -n "$verbose" ]]
+          then
+              log "🐞 CLI command used"
+              echo "kafka-topics --create --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --partitions $nb_partitions ${other_args[*]}"
+          fi
           docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --create --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --partitions $nb_partitions ${other_args[*]}
       else
+          if [[ -n "$verbose" ]]
+          then
+              log "🐞 CLI command used"
+              echo "kafka-topics --create --topic $topic --bootstrap-server broker:9092 --partitions $nb_partitions $security ${other_args[*]}"
+          fi
           docker exec $container kafka-topics --create --topic $topic --bootstrap-server broker:9092 --partitions $nb_partitions $security ${other_args[*]}
       fi
   else
@@ -14780,6 +15018,7 @@ playground_topic_create_command() {
 playground_topic_delete_command() {
   # src/topic_delete_command.sh
   topic="${args[--topic]}"
+  verbose="${args[--verbose]}"
 
   get_security_broker "--command-config"
   get_environment_used
@@ -14816,9 +15055,18 @@ playground_topic_delete_command() {
           logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
           exit 1
       fi
-
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 CLI command used"
+          echo "kafka-topics --delete --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
+      fi
       docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --delete --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
   else
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 CLI command used"
+          echo "kafka-topics --delete --topic $topic --bootstrap-server broker:9092 $security"
+      fi
       docker exec $container kafka-topics --delete --topic $topic --bootstrap-server broker:9092 $security
   fi
 }
@@ -14877,6 +15125,7 @@ playground_topic_alter_command() {
 playground_ccloud_connector_status_command() {
   # src/ccloud_connector_status_command.sh
   connector="${args[--connector]}"
+  verbose="${args[--verbose]}"
 
   get_ccloud_connect
 
@@ -14903,6 +15152,11 @@ playground_ccloud_connector_status_command() {
   for connector in ${items[@]}
   do
       log "🧩 Displaying connector status for $connector"
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 curl command used"
+          echo "curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status" --header "authorization: Basic $authorization""
+      fi
       curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status" --header "authorization: Basic $authorization" | jq .
   done
 }
@@ -14911,8 +15165,15 @@ playground_ccloud_connector_status_command() {
 playground_ccloud_connector_plugins_command() {
   # src/ccloud_connector_plugins_command.sh
   get_ccloud_connect
+  verbose="${args[--verbose]}"
 
   log "🧩 Displaying all connector plugins installed"
+  if [[ -n "$verbose" ]]
+  then
+      log "🐞 curl command used"
+      echo "curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins" \
+  --header "authorization: Basic $authorization" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t"
+  fi
   curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins" \
   --header "authorization: Basic $authorization" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t
 
@@ -14922,6 +15183,7 @@ playground_ccloud_connector_plugins_command() {
 playground_ccloud_connector_pause_command() {
   # src/ccloud_connector_pause_command.sh
   connector="${args[--connector]}"
+  verbose="${args[--verbose]}"
   get_ccloud_connect
 
   if [[ ! -n "$connector" ]]
@@ -14947,6 +15209,11 @@ playground_ccloud_connector_pause_command() {
   for connector in ${items[@]}
   do
       log "⏸️ Pausing ccloud connector $connector"
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 curl command used"
+          echo "curl -s --request PUT "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/pause" --header "authorization: Basic $authorization""
+      fi
       curl -s --request PUT "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/pause" --header "authorization: Basic $authorization" | jq .
 
       sleep 3
@@ -14959,6 +15226,8 @@ playground_ccloud_connector_pause_command() {
 playground_ccloud_connector_resume_command() {
   # src/ccloud_connector_resume_command.sh
   connector="${args[--connector]}"
+  verbose="${args[--verbose]}"
+
   get_ccloud_connect
 
   if [[ ! -n "$connector" ]]
@@ -14984,6 +15253,11 @@ playground_ccloud_connector_resume_command() {
   for connector in ${items[@]}
   do
       log "⏯️ Resuming ccloud connector $connector"
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 curl command used"
+          echo "curl -s --request PUT "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/resume" --header "authorization: Basic $authorization""
+      fi
       curl -s --request PUT "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/resume" --header "authorization: Basic $authorization" | jq .
 
       sleep 3
@@ -14996,6 +15270,8 @@ playground_ccloud_connector_resume_command() {
 playground_ccloud_connector_delete_command() {
   # src/ccloud_connector_delete_command.sh
   connector="${args[--connector]}"
+  verbose="${args[--verbose]}"
+
   get_ccloud_connect
 
   if [[ ! -n "$connector" ]]
@@ -15021,6 +15297,11 @@ playground_ccloud_connector_delete_command() {
   for connector in ${items[@]}
   do
       log "❌ Deleting ccloud connector $connector"
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 curl command used"
+          echo "curl -s --request DELETE "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector" --header "authorization: Basic $authorization""
+      fi
       curl -s --request DELETE "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector" --header "authorization: Basic $authorization" | jq .
   done
 }
@@ -15030,6 +15311,8 @@ playground_ccloud_connector_show_lag_command() {
   # src/ccloud_connector_show_lag_command.sh
   connector="${args[--connector]}"
   wait_for_zero_lag="${args[--wait-for-zero-lag]}"
+  verbose="${args[--verbose]}"
+
   get_ccloud_connect
 
   if [[ ! -n "$connector" ]]
@@ -15107,6 +15390,11 @@ playground_ccloud_connector_show_lag_command() {
           done
       else
           log "🐢 Show lag for sink connector $connector ($connectorId)"
+          if [[ -n "$verbose" ]]
+          then
+              log "🐞 CLI command used"
+              echo "kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group connect-$connectorId --describe"
+          fi
           docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group connect-$connectorId --describe
       fi
   done
@@ -15117,6 +15405,8 @@ playground_ccloud_connector_show_lag_command() {
 playground_ccloud_connector_show_config_command() {
   # src/ccloud_connector_show_config_command.sh
   connector="${args[--connector]}"
+  verbose="${args[--verbose]}"
+
   get_ccloud_connect
 
   if [[ ! -n "$connector" ]]
@@ -15142,6 +15432,11 @@ playground_ccloud_connector_show_config_command() {
   for connector in ${items[@]}
   do
       log "🧰 Current config for ccloud connector $connector"
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 curl command used"
+          echo "curl $security -s -X GET -H "Content-Type: application/json" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config" --header "authorization: Basic $authorization""
+      fi
       json_config=$(curl $security -s -X GET -H "Content-Type: application/json" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config" --header "authorization: Basic $authorization")
       echo "playground ccloud-connector create-or-update --connector $connector << EOF"
       echo "$json_config" | jq -S . | sed 's/\$/\\$/g'
@@ -15156,6 +15451,8 @@ playground_ccloud_connector_show_config_parameters_command() {
   open="${args[--open]}"
   force_refresh="${args[--force-refresh]}"
   only_show_file_path="${args[--only-show-file-path]}"
+  verbose="${args[--verbose]}"
+
   get_ccloud_connect
 
   if [[ ! -n "$connector" ]]
@@ -15230,6 +15527,11 @@ playground_ccloud_connector_show_config_parameters_command() {
       if [ ! -f $filename ]
       then
           set +e
+          if [[ -n "$verbose" ]]
+          then
+              log "🐞 curl command used"
+              echo "curl -s --request PUT -H "Content-Type: application/json" --data "$json_config" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate" --header "authorization: Basic $authorization""
+          fi
           curl_output=$(curl -s --request PUT -H "Content-Type: application/json" --data "$json_config" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate" --header "authorization: Basic $authorization")
           ret=$?
           set -e
@@ -15343,6 +15645,8 @@ playground_ccloud_connector_create_or_update_command() {
   # src/ccloud_connector_create_or_update_command.sh
   json=${args[json]}
   validate=${args[--validate]}
+  verbose="${args[--verbose]}"
+
   get_ccloud_connect
 
   if [ "$json" = "-" ]
@@ -15397,11 +15701,13 @@ playground_ccloud_connector_create_or_update_command() {
       log "✅ --validate is set"
       set +e
       connector_class=$(echo "$json_content" | jq -r '."connector.class"')
-      curl_output=$(curl $security -s -X PUT \
-          -H "Content-Type: application/json" \
-          -H "authorization: Basic $authorization" \
-          --data @$json_file \
-          https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate)
+
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 curl command used"
+          echo "curl $security -s -X PUT -H "Content-Type: application/json" -H "authorization: Basic $authorization" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate"
+      fi
+      curl_output=$(curl $security -s -X PUT -H "Content-Type: application/json" -H "authorization: Basic $authorization" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate)
 
       ret=$?
       set -e
@@ -15481,6 +15787,11 @@ playground_ccloud_connector_create_or_update_command() {
   fi
 
   set +e
+  if [[ -n "$verbose" ]]
+  then
+      log "🐞 curl command used"
+      echo "curl $security -s -X PUT -H "Content-Type: application/json" -H "authorization: Basic $authorization" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config"
+  fi
   curl_output=$(curl $security -s -X PUT \
        -H "Content-Type: application/json" \
        -H "authorization: Basic $authorization" \
@@ -15533,6 +15844,7 @@ playground_connector_status_command() {
   get_connect_url_and_security
 
   connector="${args[--connector]}"
+  verbose="${args[--verbose]}"
 
   if [[ ! -n "$connector" ]]
   then
@@ -15554,6 +15866,11 @@ playground_connector_status_command() {
   do
       set +e
       log "🧩 Displaying connector status for $connector"
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 curl command used"
+          echo "curl -s $security "$connect_url/connectors/$connector/status""
+      fi
       printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
       echo "-----------------------------------------------------------------------------------------------------------------------------"
       status=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.connector.state')
@@ -15620,13 +15937,24 @@ playground_connector_plugins_command() {
   # src/connector_plugins_command.sh
   get_connect_url_and_security
   all="${args[--all]}"
+  verbose="${args[--verbose]}"
 
   log "🎨 Displaying all connector plugins installed"
   if [[ -n "$all" ]]
   then
       log "🌕 Displaying also transforms, converters, predicates available"
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 curl command used"
+          echo "curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins?connectorsOnly=false" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t"
+      fi
       curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins?connectorsOnly=false" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t
   else
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 curl command used"
+          echo "curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t"
+      fi
       curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t
   fi
 
@@ -15638,6 +15966,7 @@ playground_connector_pause_command() {
   get_connect_url_and_security
 
   connector="${args[--connector]}"
+  verbose="${args[--verbose]}"
 
   if [[ ! -n "$connector" ]]
   then
@@ -15658,6 +15987,11 @@ playground_connector_pause_command() {
   for connector in ${items[@]}
   do
       log "⏸️ Pausing connector $connector"
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 curl command used"
+          echo "curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/pause""
+      fi
       curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/pause" | jq .
 
       sleep 1
@@ -15768,6 +16102,7 @@ playground_connector_restart_command() {
   get_connect_url_and_security
 
   connector="${args[--connector]}"
+  verbose="${args[--verbose]}"
 
   if [[ ! -n "$connector" ]]
   then
@@ -15802,9 +16137,19 @@ playground_connector_restart_command() {
           for task_id in $task_ids
           do
               log "🤹‍♂️ Restart task $task_id"
+              if [[ -n "$verbose" ]]
+              then
+                  log "🐞 curl command used"
+                  echo "curl $security -s -X POST -H "Content-Type: application/json" "$connect_url/connectors/$connector/tasks/$task_id/restart""
+              fi
               curl $security -s -X POST -H "Content-Type: application/json" "$connect_url/connectors/$connector/tasks/$task_id/restart"
           done
       else
+          if [[ -n "$verbose" ]]
+          then
+              log "🐞 curl command used"
+              echo "curl $security -s -X POST -H "Content-Type: application/json" "$connect_url/connectors/$connector/restart?includeTasks=true&onlyFailed=false""
+          fi
           curl $security -s -X POST -H "Content-Type: application/json" "$connect_url/connectors/$connector/restart?includeTasks=true&onlyFailed=false" | jq .
       fi
   done
@@ -15818,6 +16163,7 @@ playground_connector_stop_command() {
   get_connect_url_and_security
 
   connector="${args[--connector]}"
+  verbose="${args[--verbose]}"
 
   if ! version_gt $TAG_BASE "7.4.99"; then
       logerror "❌ stop connector is available since CP 7.5 only"
@@ -15843,6 +16189,11 @@ playground_connector_stop_command() {
   for connector in ${items[@]}
   do
       log "🛑 Stopping connector $connector"
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 curl command used"
+          echo "curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/stop""
+      fi
       curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/stop" | jq .
 
       sleep 1
@@ -15856,6 +16207,7 @@ playground_connector_resume_command() {
   get_connect_url_and_security
 
   connector="${args[--connector]}"
+  verbose="${args[--verbose]}"
 
   if [[ ! -n "$connector" ]]
   then
@@ -15876,6 +16228,11 @@ playground_connector_resume_command() {
   for connector in ${items[@]}
   do
       log "⏯️ Resuming connector $connector"
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 curl command used"
+          echo "curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/resume""
+      fi
       curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/resume"  | jq .
 
       sleep 1
@@ -15887,7 +16244,7 @@ playground_connector_resume_command() {
 playground_connector_delete_command() {
   # src/connector_delete_command.sh
   get_connect_url_and_security
-
+  verbose="${args[--verbose]}"
   connector="${args[--connector]}"
 
   if [[ ! -n "$connector" ]]
@@ -15910,6 +16267,11 @@ playground_connector_delete_command() {
   for connector in ${items[@]}
   do
       log "❌ Deleting connector $connector"
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 curl command used"
+          echo "curl $security -s -X DELETE "$connect_url/connectors/$connector""
+      fi
       curl $security -s -X DELETE "$connect_url/connectors/$connector" | jq .
   done
 }
@@ -15919,6 +16281,7 @@ playground_connector_show_lag_command() {
   # src/connector_show_lag_command.sh
   connector="${args[--connector]}"
   wait_for_zero_lag="${args[--wait-for-zero-lag]}"
+  verbose="${args[--verbose]}"
 
   get_connect_url_and_security
 
@@ -15981,6 +16344,11 @@ playground_connector_show_lag_command() {
       done
     else
       log "🐢 Show lag for sink connector $connector"
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 CLI command used"
+          echo "kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security"
+      fi
       docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security
     fi
   done
@@ -15992,6 +16360,7 @@ playground_connector_show_config_command() {
   get_connect_url_and_security
 
   connector="${args[--connector]}"
+  verbose="${args[--verbose]}"
 
   if [[ ! -n "$connector" ]]
   then
@@ -16012,6 +16381,11 @@ playground_connector_show_config_command() {
   for connector in ${items[@]}
   do
       log "🧰 Current config for connector $connector"
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 curl command used"
+          echo "curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config""
+      fi
       json_config=$(curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config")
       echo "playground connector create-or-update --connector $connector << EOF"
       echo "$json_config" | jq -S . | sed 's/\$/\\$/g'
@@ -16025,6 +16399,7 @@ playground_connector_show_config_parameters_command() {
   open="${args[--open]}"
   force_refresh="${args[--force-refresh]}"
   only_show_file_path="${args[--only-show-file-path]}"
+  verbose="${args[--verbose]}"
 
   get_connect_url_and_security
 
@@ -16093,10 +16468,12 @@ playground_connector_show_config_parameters_command() {
       if [ ! -f $filename ]
       then
           set +e
-          curl_output=$(curl $security -s -X PUT \
-              -H "Content-Type: application/json" \
-              --data "$json_config" \
-              $connect_url/connector-plugins/$connector_class/config/validate)
+          if [[ -n "$verbose" ]]
+          then
+              log "🐞 curl command used"
+              echo "curl $security -s -X PUT -H "Content-Type: application/json" --data "$json_config" $connect_url/connector-plugins/$connector_class/config/validate"
+          fi
+          curl_output=$(curl $security -s -X PUT -H "Content-Type: application/json" --data "$json_config" $connect_url/connector-plugins/$connector_class/config/validate)
           ret=$?
           set -e
           if [ $ret -eq 0 ]
@@ -16295,6 +16672,7 @@ playground_connector_create_or_update_command() {
   level=${args[--level]}
   package=${args[--package]}
   validate=${args[--validate]}
+  verbose="${args[--verbose]}"
 
   if [ "$json" = "-" ]
   then
@@ -16352,10 +16730,12 @@ playground_connector_create_or_update_command() {
       connector_class=$(echo "$json_content" | jq -r '."connector.class"')
       # add mandator name field
       new_json_content=$(echo $json_content | jq ". + {\"name\": \"$connector\"}")
-      curl_output=$(curl $security -s -X PUT \
-          -H "Content-Type: application/json" \
-          --data "$new_json_content" \
-          $connect_url/connector-plugins/$connector_class/config/validate)
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 curl command used"
+          echo "curl $security -s -X PUT -H "Content-Type: application/json" --data "$new_json_content" $connect_url/connector-plugins/$connector_class/config/validate"
+      fi
+      curl_output=$(curl $security -s -X PUT -H "Content-Type: application/json" --data "$new_json_content" $connect_url/connector-plugins/$connector_class/config/validate)
       ret=$?
       set -e
       if [ $ret -eq 0 ]
@@ -16434,10 +16814,12 @@ playground_connector_create_or_update_command() {
   fi
 
   set +e
-  curl_output=$(curl $security -s -X PUT \
-       -H "Content-Type: application/json" \
-       --data "$json_content" \
-       $connect_url/connectors/$connector/config)
+  if [[ -n "$verbose" ]]
+  then
+      log "🐞 curl command used"
+      echo "curl $security -s -X PUT -H "Content-Type: application/json" --data "$json_content" $connect_url/connectors/$connector/config"
+  fi
+  curl_output=$(curl $security -s -X PUT -H "Content-Type: application/json" --data "$json_content" $connect_url/connectors/$connector/config)
   ret=$?
   set -e
   if [ $ret -eq 0 ]
@@ -19868,6 +20250,14 @@ playground_schema_get_parse_requirements() {
         ;;
 
       # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
       --deleted)
 
         # :flag.case_no_arg
@@ -20049,6 +20439,14 @@ playground_schema_get_compatibility_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -20124,6 +20522,14 @@ playground_schema_set_compatibility_parse_requirements() {
           printf "%s\n" "--subject requires an argument: --subject SUBJECT" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
         ;;
 
       # :flag.case
@@ -20228,6 +20634,14 @@ playground_schema_get_mode_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -20303,6 +20717,14 @@ playground_schema_set_mode_parse_requirements() {
           printf "%s\n" "--subject requires an argument: --subject SUBJECT" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
         ;;
 
       # :flag.case
@@ -20432,6 +20854,14 @@ playground_schema_delete_parse_requirements() {
 
         # :flag.case_no_arg
         args['--permanent']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
         shift
         ;;
 
@@ -22655,6 +23085,13 @@ playground_topic_display_consumer_offsets_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
@@ -22758,6 +23195,14 @@ playground_topic_describe_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -22829,6 +23274,14 @@ playground_topic_set_schema_compatibility_parse_requirements() {
           printf "%s\n" "--compatibility requires an argument: --compatibility COMPATIBILITY" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
         ;;
 
       -?*)
@@ -23546,6 +23999,14 @@ playground_topic_create_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
       --topic | -t)
 
         # :flag.case_arg
@@ -23639,6 +24100,14 @@ playground_topic_delete_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
       --topic | -t)
 
         # :flag.case_arg
@@ -23702,6 +24171,14 @@ playground_topic_alter_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
       # :flag.case
       --topic | -t)
 
@@ -23923,6 +24400,14 @@ playground_ccloud_connector_status_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
       --connector | -c)
 
         # :flag.case_arg
@@ -23980,6 +24465,13 @@ playground_ccloud_connector_plugins_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
@@ -24024,6 +24516,14 @@ playground_ccloud_connector_pause_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
       # :flag.case
       --connector | -c)
 
@@ -24083,6 +24583,14 @@ playground_ccloud_connector_resume_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
       --connector | -c)
 
         # :flag.case_arg
@@ -24141,6 +24649,14 @@ playground_ccloud_connector_delete_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
       --connector | -c)
 
         # :flag.case_arg
@@ -24198,6 +24714,14 @@ playground_ccloud_connector_show_lag_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
       # :flag.case
       --connector | -c)
 
@@ -24265,6 +24789,14 @@ playground_ccloud_connector_show_config_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
       --connector | -c)
 
         # :flag.case_arg
@@ -24322,6 +24854,14 @@ playground_ccloud_connector_show_config_parameters_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
       # :flag.case
       --connector | -c)
 
@@ -24404,6 +24944,14 @@ playground_ccloud_connector_create_or_update_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
       # :flag.case
       --connector | -c)
 
@@ -24657,6 +25205,14 @@ playground_connector_status_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
       --connector | -c)
 
         # :flag.case_arg
@@ -24715,6 +25271,14 @@ playground_connector_plugins_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
       --all)
 
         # :flag.case_no_arg
@@ -24765,6 +25329,14 @@ playground_connector_pause_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
       # :flag.case
       --connector | -c)
 
@@ -24868,6 +25440,14 @@ playground_connector_restart_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
       --connector | -c)
 
         # :flag.case_arg
@@ -24925,6 +25505,14 @@ playground_connector_stop_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
       # :flag.case
       --connector | -c)
 
@@ -24984,6 +25572,14 @@ playground_connector_resume_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
       --connector | -c)
 
         # :flag.case_arg
@@ -25042,6 +25638,14 @@ playground_connector_delete_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
       --connector | -c)
 
         # :flag.case_arg
@@ -25099,6 +25703,14 @@ playground_connector_show_lag_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
       # :flag.case
       --connector | -c)
 
@@ -25166,6 +25778,14 @@ playground_connector_show_config_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
       --connector | -c)
 
         # :flag.case_arg
@@ -25223,6 +25843,14 @@ playground_connector_show_config_parameters_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
       # :flag.case
       --connector | -c)
 
@@ -25496,6 +26124,14 @@ playground_connector_create_or_update_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
       # :flag.case
       --connector | -c)
 

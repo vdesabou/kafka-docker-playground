@@ -1,4 +1,6 @@
 connector="${args[--connector]}"
+verbose="${args[--verbose]}"
+
 get_ccloud_connect
 
 if [[ ! -n "$connector" ]]
@@ -24,5 +26,10 @@ items=($connector)
 for connector in ${items[@]}
 do
     log "❌ Deleting ccloud connector $connector"
+    if [[ -n "$verbose" ]]
+    then
+        log "🐞 curl command used"
+        echo "curl -s --request DELETE "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector" --header "authorization: Basic $authorization""
+    fi
     curl -s --request DELETE "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector" --header "authorization: Basic $authorization" | jq .
 done

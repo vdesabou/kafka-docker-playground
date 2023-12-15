@@ -1,6 +1,7 @@
 get_connect_url_and_security
 
 connector="${args[--connector]}"
+verbose="${args[--verbose]}"
 
 if [[ ! -n "$connector" ]]
 then
@@ -21,6 +22,11 @@ fi
 for connector in ${items[@]}
 do
     log "🧰 Current config for connector $connector"
+    if [[ -n "$verbose" ]]
+    then
+        log "🐞 curl command used"
+        echo "curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config""
+    fi
     json_config=$(curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config")
     echo "playground connector create-or-update --connector $connector << EOF"
     echo "$json_config" | jq -S . | sed 's/\$/\\$/g'
