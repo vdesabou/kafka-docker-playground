@@ -1,0 +1,15 @@
+---
+version: '3.5'
+services:
+  graphdb:
+    image: ontotext/graphdb:10.2.0
+    hostname: graphdb
+    container_name: graphdb
+    ports:
+      - 7200:7200
+      
+  connect:
+    environment:
+      #CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-http
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/ontotext-kafka-sink-graphdb
+
