@@ -57,6 +57,15 @@ app.put('/', authenticateRequest, (req, res) => {
   console.log(`[${new Date().toISOString()}] sending back ${errorCode}`); 
 });
 
+app.delete('/', authenticateRequest, (req, res) => {
+  res.status(errorCode).json({ message: `Returned status: ${errorCode}` });
+  console.log("headers:");
+  console.log(req.headers);
+  console.log("body:");
+  console.log(req.body);
+  console.log(`[${new Date().toISOString()}] sending back ${errorCode}`); 
+});
+
 app.put('/set-response-error-code', (req, res) => {
   if(req.body.errorCode && typeof req.body.errorCode === "number") {
     errorCode = req.body.errorCode;
