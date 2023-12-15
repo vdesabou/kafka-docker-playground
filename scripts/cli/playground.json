@@ -477,6 +477,67 @@
       "subcommands": null
     },
     {
+      "name": "switch-ccloud",
+      "description": "🌩️  Switch to ccloud environment.\n\nIt will bootstrap ccloud environment. \n\nNote that this is automatically done with any ccloud example.\n\nIt will also save any onprem environment to get back to it with switch-onprem command\n\nAll you have to do is to be already logged in with confluent CLI.\n\nBy default, a new Confluent Cloud environment with a Cluster will be created.\n\nYou can configure the new cluster by setting:\n\n--cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: `basic`, `standard` and `dedicated`, default `basic`)\n--cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: `aws`, `gcp` and `azure`, default `aws`)\n--cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use `confluent kafka region list` to get the list, default `eu-west-2`)\n--cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: `env-xxxxx`) \n\nIn case you want to use your own existing cluster, you need to setup, in addition to previous ones:\n\n--cluster-name (or CLUSTER_NAME environment variable): The cluster name\n--cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with semi-colon (example: `<API_KEY>:<API_KEY_SECRET>`)\n--cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with semi-colon (example: `<SR_API_KEY>:<SR_API_KEY_SECRET>`)\n",
+      "usage": "playground switch-ccloud [OPTIONS]",
+      "options": [
+        {
+          "names": [
+            "--cluster-type"
+          ],
+          "argument": [
+            "basic",
+            "standard",
+            "dedicated"
+          ],
+          "description": "🔋 The cluster type: basic, standard or dedicated. Default is basic\n\n🎓 Tip: you can also use CLUSTER_TYPE environment variable\n\nAllowed values: basic, standard, dedicated\n"
+        },
+        {
+          "names": [
+            "--cluster-region"
+          ],
+          "argument": "CLUSTER-REGION",
+          "description": "🗺 The Cloud region. \n\n🎓 Tip: you can also use CLUSTER_REGION environment variable\n"
+        },
+        {
+          "names": [
+            "--cluster-environment"
+          ],
+          "argument": "CLUSTER-ENVIRONMENT",
+          "description": "🌐 The environment id where want your new cluster (example: env-xxxxx)\n\nℹ️ Optional, if not set, new environment will be created\n\n🎓 Tip: you can also use ENVIRONMENT environment variable\n"
+        },
+        {
+          "names": [
+            "--cluster-name"
+          ],
+          "argument": "CLUSTER-NAME",
+          "description": "🎰 The cluster name. \n\n❣️ Only required if you want to use your own existing cluster\n\n🎓 Tip: you can also use CLUSTER_NAME environment variable\n"
+        },
+        {
+          "names": [
+            "--cluster-creds"
+          ],
+          "argument": "CLUSTER-CREDS",
+          "description": "🔒 The Kafka api key and secret to use, it should be separated with semi-colon (example: <API_KEY>:<API_KEY_SECRET>)\n\n❣️ Only required if you want to use your own existing cluster\n\n🎓 Tip: you can also use CLUSTER_CREDS environment variable\n"
+        },
+        {
+          "names": [
+            "--cluster-schema-registry-creds"
+          ],
+          "argument": "CLUSTER-SCHEMA-REGISTRY-CREDS",
+          "description": "🔒 The Schema Registry api key and secret to use, it should be separated with semi-colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n\nℹ️ Optional, if not set, new credentials will be created\n\n❣️ Only required if you want to use your own existing cluster\n\n🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable\n"
+        }
+      ],
+      "subcommands": null
+    },
+    {
+      "name": "switch-onprem",
+      "description": "💺  Switch back from ccloud environment to onprem environment. \n",
+      "usage": "playground switch-onprem",
+      "options": [],
+      "subcommands": null
+    },
+    {
       "name": "update-version",
       "description": "✨ Update current confluent platform or connector(s) with new version(s)\n",
       "usage": "playground update-version [OPTIONS]",
