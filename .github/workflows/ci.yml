@@ -426,7 +426,7 @@ jobs:
         with:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
-          submodules: recursive
+          # submodules: recursive
           ssh-key: ${{ secrets.GH_SSH_KEY_FILE }}
           ssh-strict: 'false'
 
