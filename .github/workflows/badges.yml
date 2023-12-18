@@ -1,11 +1,11 @@
 name: Create Badge
 
 on:
-  push:
-    branches:
-      - master
-  schedule:
-      - cron: '0 * * * *' # every hour
+  # push:
+  #   branches:
+  #     - master
+  # schedule:
+  #     - cron: '0 * * * *' # every hour
 
   workflow_dispatch:
 
