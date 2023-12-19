@@ -7,22 +7,19 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-000002-deserialization-error.yml"
 
 log "Sending messages to topic filestream"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic filestream --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},
-{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' << EOF
-{"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
-{"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
-{"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
+playground topic produce -t filestream --nb-messages 3 --verbose << 'EOF'
+{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}
 EOF
 
+
 log "Sending again message to topic filestream"
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic filestream << EOF
+playground topic produce -t filestream --nb-messages 1 --verbose << 'EOF'
 {"u_name": "poison pill", "u_price": 1.75, "u_quantity": 1}
 EOF
 
 log "Sending again messages to topic filestream"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic filestream --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},
-{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' << EOF
-{"u_name": "bottle", "u_price": 2.75, "u_quantity": 3}
+playground topic produce -t filestream --nb-messages 1 --verbose << 'EOF'
+{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}
 EOF
 
 log "Creating FileStream Sink connector"
