@@ -11,21 +11,21 @@ docker exec -i connect bash -c "mkdir -p /tmp/kafka-connect/examples/ && curl -s
 log "Creating FileStream Source connector"
 playground connector create-or-update --connector filestream-source << EOF
 {
-               "tasks.max": "1",
-               "connector.class": "org.apache.kafka.connect.file.FileStreamSourceConnector",
-               "topic": "filestream",
-               "file": "/tmp/kafka-connect/examples/file.json",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-               "value.converter.schemas.enable": "false",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true",
+     "tasks.max": "1",
+     "connector.class": "org.apache.kafka.connect.file.FileStreamSourceConnector",
+     "topic": "filestream",
+     "file": "/tmp/kafka-connect/examples/file.json",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "value.converter.schemas.enable": "false",
+     "errors.log.enable": "true",
+     "errors.log.include.messages": "true",
 
-               "transforms": "InsertField",
-               "transforms.InsertField.type": "org.apache.kafka.connect.transforms.InsertField\$Value",
-               "transforms.InsertField.static.field": "MessageSource",
-               "transforms.InsertField.static.value": "Kafka Connect framework"
-          }
+     "transforms": "InsertField",
+     "transforms.InsertField.type": "org.apache.kafka.connect.transforms.InsertField\$Value",
+     "transforms.InsertField.static.field": "MessageSource",
+     "transforms.InsertField.static.value": "Kafka Connect framework"
+}
 EOF
 
 sleep 5

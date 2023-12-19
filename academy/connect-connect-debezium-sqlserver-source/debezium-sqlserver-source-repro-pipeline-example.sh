@@ -44,30 +44,30 @@ EOF
 log "Creating Debezium SQL Server source connector"
 playground connector create-or-update --connector debezium-sqlserver-source << EOF
 {
-              "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
-              "tasks.max": "1",
-              "database.hostname": "sqlserver",
-              "database.port": "1433",
-              "database.user": "sa",
-              "database.password": "Password!",
-              "database.names" : "testDB",
-              
-              "_comment": "old version before 2.x",
-              "database.server.name": "server1",
-              "database.history.kafka.bootstrap.servers": "broker:9092",
-              "database.history.kafka.topic": "schema-changes.inventory",
-              "_comment": "new version since 2.x",
-              "database.encrypt": "false",
-              "topic.prefix": "server1",
-              "schema.history.internal.kafka.bootstrap.servers": "broker:9092",
-              "schema.history.internal.kafka.topic": "schema-changes.inventory",
+  "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
+  "tasks.max": "1",
+  "database.hostname": "sqlserver",
+  "database.port": "1433",
+  "database.user": "sa",
+  "database.password": "Password!",
+  "database.names" : "testDB",
+  
+  "_comment": "old version before 2.x",
+  "database.server.name": "server1",
+  "database.history.kafka.bootstrap.servers": "broker:9092",
+  "database.history.kafka.topic": "schema-changes.inventory",
+  "_comment": "new version since 2.x",
+  "database.encrypt": "false",
+  "topic.prefix": "server1",
+  "schema.history.internal.kafka.bootstrap.servers": "broker:9092",
+  "schema.history.internal.kafka.topic": "schema-changes.inventory",
 
-              "transforms": "unwrap,RemoveDots",
-              "transforms.RemoveDots.type": "org.apache.kafka.connect.transforms.RegexRouter",
-              "transforms.RemoveDots.regex": "(.*)\\\\.(.*)\\\\.(.*)",
-              "transforms.RemoveDots.replacement": "mytable",
-              "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
-          }
+  "transforms": "unwrap,RemoveDots",
+  "transforms.RemoveDots.type": "org.apache.kafka.connect.transforms.RegexRouter",
+  "transforms.RemoveDots.regex": "(.*)\\\\.(.*)\\\\.(.*)",
+  "transforms.RemoveDots.replacement": "mytable",
+  "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
+}
 EOF
 
 sleep 5
@@ -89,15 +89,15 @@ playground topic consume --topic mytable --min-expected-messages 5 --timeout 60
 log "Creating JDBC PostgreSQL sink connector"
 playground connector create-or-update --connector postgres-sink << EOF
 {
-               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-               "tasks.max": "1",
-               "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false",
-               "topics": "mytable",
-               "auto.create": "true",
-               "transforms": "flatten",
-               "transforms.flatten.type": "org.apache.kafka.connect.transforms.Flatten\$Value",
-               "transforms.flatten.delimiter": "."
-          }
+  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+  "tasks.max": "1",
+  "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false",
+  "topics": "mytable",
+  "auto.create": "true",
+  "transforms": "flatten",
+  "transforms.flatten.type": "org.apache.kafka.connect.transforms.Flatten\$Value",
+  "transforms.flatten.delimiter": "."
+}
 EOF
 
 
