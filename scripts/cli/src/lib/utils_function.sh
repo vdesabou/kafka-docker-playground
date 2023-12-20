@@ -586,6 +586,32 @@ function timeout() {
   fi
 }
 
+function get_connect_image() {
+  set +e
+  CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+  set -e
+  if [ "$CONNECT_TAG" == "" ]
+  then
+    DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+    dir1=$(echo ${DIR_CLI%/*})
+    root_folder=$(echo ${dir1%/*})
+    CONNECT_TAG=$(grep "export TAG" $root_folder/scripts/utils.sh | head -1 | cut -d "=" -f 2)
+
+    if [ "$CONNECT_TAG" == "" ]
+    then
+      logerror "Error while getting default TAG in get_connect_image()"
+      exit 1
+    fi
+  fi
+
+  if version_gt $CONNECT_TAG 5.2.99
+  then
+    CP_CONNECT_IMAGE=confluentinc/cp-server-connect-base
+  else
+    CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect-base
+  fi
+}
+
 function az() {
     docker run -v /tmp:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli az "$@"
 }
