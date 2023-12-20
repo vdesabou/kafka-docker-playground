@@ -18662,14 +18662,6 @@ playground_history_parse_requirements() {
     exit 1
   fi
 
-  if command -v confluent >/dev/null 2>&1; then
-    deps['confluent']="$(command -v confluent | head -n1)"
-  else
-    printf "missing dependency: confluent\n" >&2
-    printf "%s\n" "visit https://docs.confluent.io/confluent-cli/current/overview.html to install" >&2
-    exit 1
-  fi
-
   # :command.command_filter
   action="history"
 
