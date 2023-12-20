@@ -11,7 +11,7 @@ fi
 if [[ "$environment" == "environment" ]]
 then
   set +e
-  confluent kafka topic list | grep -v "^\s*_" | grep -v "Name" | grep -v "\-\-\-" | grep -v "None found"
+  confluent kafka topic list | awk '{if(NR>2) print $1}'
   set -e
 else
   # trick to be faster

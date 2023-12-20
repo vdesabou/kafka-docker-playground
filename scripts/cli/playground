@@ -9708,7 +9708,7 @@ playground_get_topic_list_command() {
   if [[ "$environment" == "environment" ]]
   then
     set +e
-    confluent kafka topic list | grep -v "^\s*_" | grep -v "Name" | grep -v "\-\-\-" | grep -v "None found"
+    confluent kafka topic list | awk '{if(NR>2) print $1}'
     set -e
   else
     # trick to be faster
@@ -26663,6 +26663,15 @@ playground_connector_create_or_update_parse_requirements() {
 
 }
 
+# :command.user_hooks
+before_hook() {
+  # src/before.sh
+
+  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  dir1=$(echo ${DIR_CLI%/*})
+  root_folder=$(echo ${dir1%/*})
+}
+
 # :command.initialize
 initialize() {
   version="1.0.0"
@@ -26693,6 +26702,7 @@ run() {
   declare -a input=()
   normalize_input "$@"
   parse_requirements "${input[@]}"
+  before_hook
 
   case "$action" in
     "help") playground_help_command ;;
