@@ -15,4 +15,5 @@ then
   echo "$value"
 else
   logerror "No such key: $key"
+  return 1
 fi

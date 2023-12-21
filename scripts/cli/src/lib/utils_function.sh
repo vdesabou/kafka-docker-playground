@@ -365,6 +365,7 @@ function set_profiles() {
   if [ -z "$ENABLE_CONTROL_CENTER" ]
   then
     log "🛑 control-center is disabled"
+    playground state del env.ENABLE_CONTROL_CENTER
   else
     log "💠 control-center is enabled"
     log "Use http://localhost:9021 to login"
@@ -376,6 +377,7 @@ function set_profiles() {
   if [ -z "$ENABLE_KSQLDB" ]
   then
     log "🛑 ksqldb is disabled"
+    playground state del env.ENABLE_KSQLDB
   else
     log "🚀 ksqldb is enabled"
     log "🔧 You can use ksqlDB with CLI using:"
@@ -388,6 +390,7 @@ function set_profiles() {
   if [ -z "$ENABLE_RESTPROXY" ]
   then
     log "🛑 REST Proxy is disabled"
+    playground state del env.ENABLE_RESTPROXY
   else
     log "📲 REST Proxy is enabled"
     profile_rest_proxy_command="--profile rest-proxy"
@@ -399,6 +402,7 @@ function set_profiles() {
   if [ -z "$ENABLE_JMX_GRAFANA" ]
   then
     log "🛑 Grafana is disabled"
+    playground state del env.ENABLE_JMX_GRAFANA
   else
     log "📊 Grafana is enabled"
     profile_grafana_command="--profile grafana"
@@ -408,6 +412,7 @@ function set_profiles() {
   if [ -z "$ENABLE_KCAT" ]
   then
     log "🛑 kcat is disabled"
+    playground state del env.ENABLE_KCAT
   else
     log "🧰 kcat is enabled"
     profile_kcat_command="--profile kcat"
@@ -417,6 +422,7 @@ function set_profiles() {
   if [ -z "$ENABLE_CONDUKTOR" ]
   then
     log "🛑 conduktor is disabled"
+    playground state del env.ENABLE_CONDUKTOR
   else
     log "🐺 conduktor is enabled"
     log "Use http://localhost:8080/console (admin/admin) to login"
@@ -428,6 +434,8 @@ function set_profiles() {
   then
     profile_sql_datagen_command="--profile sql_datagen"
     playground state set env.SQL_DATAGEN 1
+  else
+    playground state del env.SQL_DATAGEN
   fi
 
   #define kafka_nodes variable and when profile is included/excluded
@@ -435,6 +443,7 @@ function set_profiles() {
   if [ -z "$ENABLE_KAFKA_NODES" ]
   then
     profile_kafka_nodes_command=""
+    playground state del env.ENABLE_KAFKA_NODES
   else
     log "3️⃣  Multi broker nodes enabled"
     profile_kafka_nodes_command="--profile kafka_nodes"
@@ -446,6 +455,7 @@ function set_profiles() {
   if [ -z "$ENABLE_SR_MAVEN_PLUGIN_NODE" ]
   then
     profile_schema_registry_command=""
+    playground state del env.ENABLE_SR_MAVEN_PLUGIN_NODE
   else
     log " Starting Schema Registry plugin profile"
     profile_schema_registry_command="--profile sr_plugin_app"
@@ -456,7 +466,7 @@ function set_profiles() {
   profile_connect_nodes_command=""
   if [ -z "$ENABLE_CONNECT_NODES" ]
   then
-    :
+    playground state del env.ENABLE_CONNECT_NODES
   elif [ ${nb_connect_services} -gt 1 ]
   then
     log "🥉 Multiple Connect nodes mode is enabled, connect2 and connect 3 containers will be started"
@@ -3602,4 +3612,17 @@ function force_enable () {
   cp $repro_test_file $tmp_dir/tmp_file
 
   { head -n $(($line_final_source+1)) $tmp_dir/tmp_file; cat $tmp_dir/tmp_force_enable; tail -n  +$(($line_final_source+1)) $tmp_dir/tmp_file; } > $repro_test_file
+}
+
+function load_env_variables () {
+  for item in {ENABLE_CONTROL_CENTER,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,SQL_DATAGEN,ENABLE_KAFKA_NODES,ENABLE_SR_MAVEN_PLUGIN_NODE,CONNECT_NODES_PROFILES,CONNECT_NODES_PROFILES}
+  do
+    set +e
+    playground state get "env.${item}" > /dev/null 2>&1
+    if [ $? -ne 1 ]
+    then
+      log "❇️ exporting environment variable ${item}"
+      export "${item}"=1
+    fi
+  done
 }

@@ -11,5 +11,3 @@ value="${args[value]}"
 
 ini["$key"]="$value"
 ini_save $root_folder/playground.ini
-
-cat $root_folder/playground.ini

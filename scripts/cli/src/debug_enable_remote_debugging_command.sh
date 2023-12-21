@@ -17,7 +17,7 @@ export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
 
 # see heredocs.sh
 get_remote_debugging_command_heredoc "$container"
-
+load_env_variables
 bash /tmp/playground-command-debugging
 
 log "If you use Visual Studio Code:"
