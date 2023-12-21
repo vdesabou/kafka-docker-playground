@@ -683,6 +683,217 @@ playground_bashly_reload_usage() {
 }
 
 # :command.usage
+playground_state_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground state\n"
+    echo
+
+  else
+    printf "playground state\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground state COMMAND\n"
+  printf "  playground state [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   Show the entire config file\n" "$(green "list")"
+  printf "  %s   Read a value from the config file\n" "$(green "get") "
+  printf "  %s   Save a value in the config file\n" "$(green "set") "
+  printf "  %s   Remove a value from the config file\n" "$(green "del") "
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_state_list_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground state list - Show the entire config file\n"
+    echo
+
+  else
+    printf "playground state list - Show the entire config file\n"
+    echo
+
+  fi
+
+  printf "Alias: l\n"
+  echo
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground state list\n"
+  printf "  playground state list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_state_get_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground state get - Read a value from the config file\n"
+    echo
+
+  else
+    printf "playground state get - Read a value from the config file\n"
+    echo
+
+  fi
+
+  printf "Alias: g\n"
+  echo
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground state get KEY\n"
+  printf "  playground state get --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "KEY")"
+    printf "    Config key\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground state get hello\n"
+    printf "  playground state get user.name\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_state_set_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground state set - Save a value in the config file\n"
+    echo
+
+  else
+    printf "playground state set - Save a value in the config file\n"
+    echo
+
+  fi
+
+  printf "Alias: s\n"
+  echo
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground state set KEY VALUE\n"
+  printf "  playground state set --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "KEY")"
+    printf "    Config key\n"
+    echo
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "VALUE")"
+    printf "    Config value\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground state set hello world\n"
+    printf "  playground state set user.email me@example.com\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_state_del_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground state del - Remove a value from the config file\n"
+    echo
+
+  else
+    printf "playground state del - Remove a value from the config file\n"
+    echo
+
+  fi
+
+  printf "Alias: d\n"
+  echo
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground state del KEY\n"
+  printf "  playground state del --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "KEY")"
+    printf "    Config key\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground state del hello\n"
+    printf "  playground state del user.name\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_run_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground run - 🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)\n"
@@ -5845,6 +6056,82 @@ done
 EOF
 }
 
+# src/lib/ini.sh
+ini_load() {
+  declare -gA ini
+
+  local ini_file="$1"
+
+  local section=""
+  local key=""
+  local value=""
+  local section_regex="^\[(.+)\]"
+  local key_regex="^([^ =]+) *= *(.*) *$"
+  local comment_regex="^;"
+
+  while IFS= read -r line; do
+    if [[ $line =~ $comment_regex ]]; then
+      continue
+    elif [[ $line =~ $section_regex ]]; then
+      section="${BASH_REMATCH[1]}."
+    elif [[ $line =~ $key_regex ]]; then
+      key="${BASH_REMATCH[1]}"
+      value="${BASH_REMATCH[2]}"
+      [[ $value == *\$* ]] && eval "value=\"$value\""
+      ini["${section}${key}"]="$value"
+    fi
+  done <"$ini_file"
+}
+
+ini_save() {
+  declare -gA ini
+
+  local ini_file="$1"
+
+  local current_section=""
+  local has_free_keys=false
+
+  rm -f "$ini_file"
+
+  for key in $(ini_keys); do
+    [[ $key == *.* ]] && continue
+    has_free_keys=true
+    value="${ini[$key]}"
+    echo "$key = $value" >>"$ini_file"
+  done
+
+  [[ "${has_free_keys}" == "true" ]] && echo >>"$ini_file"
+
+  for key in $(ini_keys); do
+    [[ $key == *.* ]] || continue
+    value="${ini[$key]}"
+    IFS="." read -r section_name key_name <<<"$key"
+
+    if [[ "$current_section" != "$section_name" ]]; then
+      [[ $current_section ]] && echo >>"$ini_file"
+      echo "[$section_name]" >>"$ini_file"
+      current_section="$section_name"
+    fi
+
+    echo "$key_name = $value" >>"$ini_file"
+  done
+}
+
+ini_show() {
+  declare -gA ini
+
+  for key in $(ini_keys); do
+    echo "$key = ${ini[$key]}"
+  done
+}
+
+ini_keys() {
+  declare -gA ini
+
+  local keys=("${!ini[@]}")
+  for a in "${keys[@]}"; do echo "$a"; done | sort
+}
+
 # src/lib/send_completions.sh
 send_completions() {
   echo $'# playground completion                                    -*- shell-script -*-'
@@ -9830,6 +10117,76 @@ playground_bashly_reload_command() {
   rm -f $root_folder/scripts/cli/completions.bash
   bashly add completions_script
   cd - > /dev/null
+}
+
+# :command.function
+playground_state_list_command() {
+  # src/state_list_command.sh
+  # Using the standard library (lib/ini.sh) to show the entire config file
+  if [ ! -f $root_folder/playground.ini ]
+  then
+      touch $root_folder/playground.ini
+  fi
+  ini_load $root_folder/playground.ini
+  ini_show
+}
+
+# :command.function
+playground_state_get_command() {
+  # src/state_get_command.sh
+  # Using the standard library (lib/ini.sh) to show a value from the config
+  if [ ! -f $root_folder/playground.ini ]
+  then
+      touch $root_folder/playground.ini
+  fi
+  ini_load $root_folder/playground.ini
+
+  key="${args[key]:-}"
+  value=${ini[$key]:-}
+
+  if [[ "$value" ]]; then
+    echo "$key = $value"
+  else
+    logerror "No such key: $key"
+  fi
+}
+
+# :command.function
+playground_state_set_command() {
+  # src/state_set_command.sh
+  # Using the standard library (lib/ini.sh) to store a value to the config
+  if [ ! -f $root_folder/playground.ini ]
+  then
+      touch $root_folder/playground.ini
+  fi
+  set -e
+  ini_load $root_folder/playground.ini
+
+  key="${args[key]}"
+  value="${args[value]}"
+
+  ini["$key"]="$value"
+  ini_save $root_folder/playground.ini
+
+  cat $root_folder/playground.ini
+}
+
+# :command.function
+playground_state_del_command() {
+  # src/state_del_command.sh
+  # Using the standard library (lib/ini.sh) to delete a value from the config
+  if [ ! -f $root_folder/playground.ini ]
+  then
+      touch $root_folder/playground.ini
+  fi
+  set -e
+  ini_load $root_folder/playground.ini
+
+  key="${args[key]}"
+  unset "ini[$key]"
+
+  ini_save $root_folder/playground.ini
+
 }
 
 # :command.function
@@ -17228,6 +17585,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    state)
+      action="state"
+      shift
+      playground_state_parse_requirements "$@"
+      shift $#
+      ;;
+
     run)
       action="run"
       shift
@@ -18201,6 +18565,314 @@ playground_bashly_reload_parse_requirements() {
 
     esac
   done
+
+}
+
+# :command.parse_requirements
+playground_state_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_state_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    list | l)
+      action="list"
+      shift
+      playground_state_list_parse_requirements "$@"
+      shift $#
+      ;;
+
+    get | g)
+      action="get"
+      shift
+      playground_state_get_parse_requirements "$@"
+      shift $#
+      ;;
+
+    set | s)
+      action="set"
+      shift
+      playground_state_set_parse_requirements "$@"
+      shift $#
+      ;;
+
+    del | d)
+      action="del"
+      shift
+      playground_state_del_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_state_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_state_list_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_state_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="state list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_state_get_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_state_get_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="state get"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        if [[ -z ${args['key']+x} ]]; then
+
+          args['key']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['key']+x} ]]; then
+    printf "missing required argument: KEY\nusage: playground state get KEY\n" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_state_set_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_state_set_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="state set"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        if [[ -z ${args['key']+x} ]]; then
+
+          args['key']=$1
+          shift
+        elif [[ -z ${args['value']+x} ]]; then
+
+          args['value']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['key']+x} ]]; then
+    printf "missing required argument: KEY\nusage: playground state set KEY VALUE\n" >&2
+    exit 1
+  fi
+  if [[ -z ${args['value']+x} ]]; then
+    printf "missing required argument: VALUE\nusage: playground state set KEY VALUE\n" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_state_del_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_state_del_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="state del"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        if [[ -z ${args['key']+x} ]]; then
+
+          args['key']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['key']+x} ]]; then
+    printf "missing required argument: KEY\nusage: playground state del KEY\n" >&2
+    exit 1
+  fi
 
 }
 
@@ -26720,6 +27392,11 @@ run() {
     "get-playground-repro-export-with-fzf") playground_get_playground_repro_export_with_fzf_command ;;
     "get-predefined-schemas") playground_get_predefined_schemas_command ;;
     "bashly-reload") playground_bashly_reload_command ;;
+    "state") playground_state_command ;;
+    "state list") playground_state_list_command ;;
+    "state get") playground_state_get_command ;;
+    "state set") playground_state_set_command ;;
+    "state del") playground_state_del_command ;;
     "run") playground_run_command ;;
     "re-run") playground_re_run_command ;;
     "history") playground_history_command ;;

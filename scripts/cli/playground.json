@@ -20,6 +20,34 @@
       "subcommands": null
     },
     {
+      "name": "list",
+      "description": "Show the entire config file\n",
+      "usage": "playground state list",
+      "options": [],
+      "subcommands": null
+    },
+    {
+      "name": "get",
+      "description": "Read a value from the config file\n",
+      "usage": "playground state get KEY",
+      "options": [],
+      "subcommands": null
+    },
+    {
+      "name": "set",
+      "description": "Save a value in the config file\n",
+      "usage": "playground state set KEY VALUE",
+      "options": [],
+      "subcommands": null
+    },
+    {
+      "name": "del",
+      "description": "Remove a value from the config file\n",
+      "usage": "playground state del KEY",
+      "options": [],
+      "subcommands": null
+    },
+    {
       "name": "run",
       "description": "🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)\n",
       "usage": "playground run [OPTIONS] [ARGUMENTS...]",

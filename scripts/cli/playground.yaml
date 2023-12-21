@@ -19,6 +19,30 @@ subcommands:
     usage: playground status
     options: []
     subcommands:
+  - name: list
+    description: | 
+        Show the entire config file
+    usage: playground state list
+    options: []
+    subcommands:
+  - name: get
+    description: | 
+        Read a value from the config file
+    usage: playground state get KEY
+    options: []
+    subcommands:
+  - name: set
+    description: | 
+        Save a value in the config file
+    usage: playground state set KEY VALUE
+    options: []
+    subcommands:
+  - name: del
+    description: | 
+        Remove a value from the config file
+    usage: playground state del KEY
+    options: []
+    subcommands:
   - name: run
     description: | 
         🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)
