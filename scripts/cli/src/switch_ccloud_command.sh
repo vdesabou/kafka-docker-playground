@@ -18,7 +18,7 @@ then
     exit 1
 fi
 
-playground state set environment_before_switch "$(playground state get environment)"
+playground state set run.environment_before_switch "$(playground state get run.environment)"
 
 log "🔌 boostrapping ccloud environment"
 bootstrap_ccloud_environment

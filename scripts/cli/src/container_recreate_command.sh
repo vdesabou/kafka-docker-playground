@@ -11,7 +11,7 @@ fi
 
 export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
 
-docker_command=$(playground state get docker_command)
+docker_command=$(playground state get run.docker_command)
 echo "$docker_command" > /tmp/playground-command
 log "💫 Recreate container(s)"
 bash /tmp/playground-command

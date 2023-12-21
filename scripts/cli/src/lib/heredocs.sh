@@ -115,7 +115,7 @@ EOF
 }
 
 function get_remote_debugging_command_heredoc () {
-docker_command=$(playground state get docker_command)
+docker_command=$(playground state get run.docker_command)
 echo "$docker_command" > /tmp/tmp
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT

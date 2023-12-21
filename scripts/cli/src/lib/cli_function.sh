@@ -1,5 +1,5 @@
 function get_environment_used() {
-  environment=$(playground state get environment)
+  environment=$(playground state get run.environment)
 }
 
 function get_connect_url_and_security() {

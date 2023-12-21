@@ -95,7 +95,7 @@ fi
 
 if [ "$flag_list" != "" ]
 then
-  test_file=$(playground state get test_file)
+  test_file=$(playground state get run.test_file)
 
   if [ ! -f $test_file ]
   then 
@@ -109,7 +109,7 @@ then
 else
   if [[ -n "$clear" ]]
   then
-    test_file=$(playground state get test_file)
+    test_file=$(playground state get run.test_file)
 
     if [ ! -f $test_file ]
     then 
@@ -121,7 +121,7 @@ else
     playground run -f $test_file ${other_args[*]}
   else
     log "🚀 Running example again with same flags as before"
-    run_command=$(playground state get run_command)
+    run_command=$(playground state get run.run_command)
     echo "$run_command"
     bash "$run_command"
   fi

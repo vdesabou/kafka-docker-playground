@@ -1,5 +1,5 @@
 only_show_url="${args[--only-show-url]}"
-test_file=$(playground state get test_file)
+test_file=$(playground state get run.test_file)
 
 if [ ! -f $test_file ]
 then 

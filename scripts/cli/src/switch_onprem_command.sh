@@ -1,6 +1,6 @@
 log "💺 Switch back to onprem environment"
 set +e
-playground state get environment_before_switch > /dev/null 2>&1
+playground state get run.environment_before_switch > /dev/null 2>&1
 if [ $? -ne 0 ]
 then
     logerror "switch-ccloud was probably not executed before"
@@ -8,10 +8,10 @@ then
 fi
 set -e
 
-playground state set environment "$(playground state get environment_before_switch)"
+playground state set run.environment "$(playground state get run.environment_before_switch)"
 playground state del environment_before_switch
 
-test_file=$(playground state get test_file)
+test_file=$(playground state get run.test_file)
 
 if [ ! -f $test_file ]
 then 

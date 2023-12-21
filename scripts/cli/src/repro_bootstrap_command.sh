@@ -1046,8 +1046,8 @@ repro_test_filename=$(basename -- "$repro_test_file")
 
 log "🌟 Command to run generated example"
 echo "playground run -f $repro_dir/$repro_test_filename"
-playground state set test_file "$repro_dir/$repro_test_filename"
-playground state set run_command "playground run -f $repro_dir/$repro_test_filename"
+playground state set run.test_file "$repro_dir/$repro_test_filename"
+playground state set run.run_command "playground run -f $repro_dir/$repro_test_filename"
 
 if config_has_key "editor"
 then

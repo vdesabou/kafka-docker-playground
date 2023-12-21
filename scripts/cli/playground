@@ -5290,7 +5290,7 @@ inspect_args() {
 # :command.user_lib
 # src/lib/cli_function.sh
 function get_environment_used() {
-  environment=$(playground state get environment)
+  environment=$(playground state get run.environment)
 }
 
 function get_connect_url_and_security() {
@@ -5970,7 +5970,7 @@ EOF
 }
 
 function get_remote_debugging_command_heredoc () {
-docker_command=$(playground state get docker_command)
+docker_command=$(playground state get run.docker_command)
 echo "$docker_command" > /tmp/tmp
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
@@ -7812,7 +7812,7 @@ function bootstrap_ccloud_environment () {
   playground state set ccloud.SCHEMA_REGISTRY_CREDS "$SCHEMA_REGISTRY_CREDS"
 
   # trick
-  playground state set environment "ccloud"
+  playground state set run.environment "ccloud"
 }
 
 function create_ccloud_connector() {
@@ -9819,7 +9819,7 @@ playground_help_command() {
 # :command.function
 playground_status_command() {
   # src/status_command.sh
-  test_file=$(playground state get test_file)
+  test_file=$(playground state get run.test_file)
 
   if [ ! -f $test_file ]
   then
@@ -10347,8 +10347,8 @@ playground_run_command() {
   set +e
   playground container kill-all
   set -e
-  playground state set test_file "$test_file"
-  playground state set run_command "playground run -f $test_file $flag_list ${other_args[*]}"
+  playground state set run.test_file "$test_file"
+  playground state set run.run_command "playground run -f $test_file $flag_list ${other_args[*]}"
   echo "" >> "$root_folder/playground-run-history"
   echo "playground run -f $test_file $flag_list ${other_args[*]}" >> "$root_folder/playground-run-history"
 
@@ -10489,7 +10489,7 @@ playground_re_run_command() {
 
   if [ "$flag_list" != "" ]
   then
-    test_file=$(playground state get test_file)
+    test_file=$(playground state get run.test_file)
 
     if [ ! -f $test_file ]
     then
@@ -10504,7 +10504,7 @@ playground_re_run_command() {
   else
     if [[ -n "$clear" ]]
     then
-      test_file=$(playground state get test_file)
+      test_file=$(playground state get run.test_file)
 
       if [ ! -f $test_file ]
       then
@@ -10517,7 +10517,7 @@ playground_re_run_command() {
       playground run -f $test_file ${other_args[*]}
     else
       log "🚀 Running example again with same flags as before"
-      run_command=$(playground state get run_command)
+      run_command=$(playground state get run.run_command)
       echo "$run_command"
       bash "$run_command"
     fi
@@ -10842,8 +10842,8 @@ playground_run_ccloud_command() {
   set +e
   playground container kill-all
   set -e
-  playground state set test_file "$test_file"
-  playground state set run_command "playground run -f $test_file $flag_list ${other_args[*]}"
+  playground state set run.test_file "$test_file"
+  playground state set run.run_command "playground run -f $test_file $flag_list ${other_args[*]}"
   echo "" >> "$root_folder/playground-run-history"
   echo "playground run -f $test_file $flag_list ${other_args[*]}" >> "$root_folder/playground-run-history"
 
@@ -10902,7 +10902,7 @@ playground_switch_ccloud_command() {
       exit 1
   fi
 
-  playground state set environment_before_switch "$(playground state get environment)"
+  playground state set run.environment_before_switch "$(playground state get run.environment)"
 
   log "🔌 boostrapping ccloud environment"
   bootstrap_ccloud_environment
@@ -10921,7 +10921,7 @@ playground_switch_onprem_command() {
   # src/switch_onprem_command.sh
   log "💺 Switch back to onprem environment"
   set +e
-  playground state get environment_before_switch > /dev/null 2>&1
+  playground state get run.environment_before_switch > /dev/null 2>&1
   if [ $? -ne 0 ]
   then
       logerror "switch-ccloud was probably not executed before"
@@ -10929,10 +10929,10 @@ playground_switch_onprem_command() {
   fi
   set -e
 
-  playground state set environment "$(playground state get environment_before_switch)"
+  playground state set run.environment "$(playground state get run.environment_before_switch)"
   playground state del environment_before_switch
 
-  test_file=$(playground state get test_file)
+  test_file=$(playground state get run.test_file)
 
   if [ ! -f $test_file ]
   then
@@ -11010,7 +11010,7 @@ playground_update_version_command() {
     export CONNECTOR_JAR=$connector_jar
   fi
 
-  test_file=$(playground state get test_file)
+  test_file=$(playground state get run.test_file)
 
   if [ ! -f $test_file ]
   then
@@ -11084,7 +11084,7 @@ playground_open_command() {
       test_file=$(echo "$test_file" | cut -d "@" -f 2)
     fi
   else
-    test_file=$(playground state get test_file)
+    test_file=$(playground state get run.test_file)
 
     if [ ! -f $test_file ]
     then
@@ -11114,7 +11114,7 @@ playground_open_command() {
 # :command.function
 playground_stop_command() {
   # src/stop_command.sh
-  test_file=$(playground state get test_file)
+  test_file=$(playground state get run.test_file)
 
   if [ ! -f $test_file ]
   then
@@ -11141,7 +11141,7 @@ playground_stop_command() {
 playground_open_docs_command() {
   # src/open_docs_command.sh
   only_show_url="${args[--only-show-url]}"
-  test_file=$(playground state get test_file)
+  test_file=$(playground state get run.test_file)
 
   if [ ! -f $test_file ]
   then
@@ -11245,7 +11245,7 @@ playground_repro_export_command() {
       fi
   else
       # copy only current example
-      test_file=$(playground state get test_file)
+      test_file=$(playground state get run.test_file)
 
       if [ ! -f $test_file ]
       then
@@ -12384,8 +12384,8 @@ playground_repro_bootstrap_command() {
 
   log "🌟 Command to run generated example"
   echo "playground run -f $repro_dir/$repro_test_filename"
-  playground state set test_file "$repro_dir/$repro_test_filename"
-  playground state set run_command "playground run -f $repro_dir/$repro_test_filename"
+  playground state set run.test_file "$repro_dir/$repro_test_filename"
+  playground state set run.run_command "playground run -f $repro_dir/$repro_test_filename"
 
   if config_has_key "editor"
   then
@@ -12501,7 +12501,7 @@ playground_get_docker_compose_command() {
   export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
   export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
 
-  docker_command=$(playground state get docker_command)
+  docker_command=$(playground state get run.docker_command)
   echo "$docker_command" > /tmp/tmp
   sed -e "s|up -d|config|g" \
       /tmp/tmp > /tmp/playground-command-config
@@ -13469,7 +13469,7 @@ playground_container_recreate_command() {
 
   export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
 
-  docker_command=$(playground state get docker_command)
+  docker_command=$(playground state get run.docker_command)
   echo "$docker_command" > /tmp/playground-command
   log "💫 Recreate container(s)"
   bash /tmp/playground-command
@@ -16422,7 +16422,7 @@ playground_connector_pause_command() {
 # :command.function
 playground_connector_versions_command() {
   # src/connector_versions_command.sh
-  test_file=$(playground state get test_file)
+  test_file=$(playground state get run.test_file)
 
   if [ ! -f $test_file ]
   then

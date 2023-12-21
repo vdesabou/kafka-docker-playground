@@ -28,8 +28,8 @@ docker compose -f ../../environment/plaintext/docker-compose.yml ${ENABLE_DOCKER
 docker compose -f ../../environment/plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_rest_proxy_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_sql_datagen_command} ${profile_connect_nodes_command} ${profile_kafka_nodes_command} ${profile_schema_registry_command} up -d
 log "📝 To see the actual properties file, use cli command playground get-properties -c <container>"
 command="source ${DIR}/../../scripts/utils.sh && docker compose -f ${DIR}/../../environment/plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_rest_proxy_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_sql_datagen_command} ${profile_connect_nodes_command} ${profile_kafka_nodes_command} ${profile_schema_registry_command} up -d"
-playground state set docker_command "$command"
-playground state set environment "plaintext"
+playground state set run.docker_command "$command"
+playground state set run.environment "plaintext"
 log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command playground container recreate"
 
 

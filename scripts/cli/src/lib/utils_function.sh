@@ -1644,7 +1644,7 @@ function bootstrap_ccloud_environment () {
   playground state set ccloud.SCHEMA_REGISTRY_CREDS "$SCHEMA_REGISTRY_CREDS"
 
   # trick
-  playground state set environment "ccloud"
+  playground state set run.environment "ccloud"
 }
 
 function create_ccloud_connector() {

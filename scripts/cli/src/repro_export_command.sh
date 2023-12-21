@@ -61,7 +61,7 @@ then
     fi
 else
     # copy only current example
-    test_file=$(playground state get test_file)
+    test_file=$(playground state get run.test_file)
 
     if [ ! -f $test_file ]
     then 
