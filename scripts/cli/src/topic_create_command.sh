@@ -10,11 +10,7 @@ then
     nb_partitions=1
 fi
 
-if [ "$environment" == "error" ]
-then
-  logerror "File containing restart command /tmp/playground-command does not exist!"
-  exit 1 
-fi
+
 
 playground topic get-number-records --topic $topic > /tmp/result.log 2>/tmp/result.log
 set +e
@@ -23,7 +19,7 @@ if [ $? == 0 ]
 then
     set -e
     log "🆕 Creating topic $topic"
-    if [[ "$environment" == "environment" ]]
+    if [[ "$environment" == "ccloud" ]]
     then
         if [ -f /tmp/delta_configs/env.delta ]
         then

@@ -2,13 +2,7 @@ skip_connect_internal_topics="${args[--skip-connect-internal-topics]}"
 
 get_environment_used
 
-if [ "$environment" == "error" ]
-then
-  logerror "File containing restart command /tmp/playground-command does not exist!"
-  exit 1 
-fi
-
-if [[ "$environment" == "environment" ]]
+if [[ "$environment" == "ccloud" ]]
 then
   set +e
   confluent kafka topic list | awk '{if(NR>2) print $1}'

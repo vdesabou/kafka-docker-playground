@@ -4,11 +4,7 @@ verbose="${args[--verbose]}"
 
 get_environment_used
 
-if [ "$environment" == "error" ]
-then
-  logerror "File containing restart command /tmp/playground-command does not exist!"
-  exit 1 
-fi
+
 
 get_sr_url_and_security
 

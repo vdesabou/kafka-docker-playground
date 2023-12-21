@@ -2,14 +2,10 @@ get_security_broker "--consumer.config"
 get_environment_used
 verbose="${args[--verbose]}"
 
-if [ "$environment" == "error" ]
-then
-  logerror "File containing restart command /tmp/playground-command does not exist!"
-  exit 1 
-fi
+
 
 log "Display content of __consumer_offsets topic, press crtl-c to stop..."
-if [[ "$environment" == "environment" ]]
+if [[ "$environment" == "ccloud" ]]
 then
     logerror " __consumer_offsets topic is not readable in cloud"
     exit 1

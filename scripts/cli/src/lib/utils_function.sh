@@ -360,9 +360,6 @@ function check_bash_version() {
 }
 
 function set_profiles() {
-
-  rm -f /tmp/playground-command
-  touch /tmp/playground-command
   # https://docs.docker.com/compose/profiles/
   profile_control_center_command=""
   if [ -z "$ENABLE_CONTROL_CENTER" ]
@@ -372,7 +369,7 @@ function set_profiles() {
     log "💠 control-center is enabled"
     log "Use http://localhost:9021 to login"
     profile_control_center_command="--profile control-center"
-    echo "export ENABLE_CONTROL_CENTER=1" >> /tmp/playground-command
+    playground state set env.ENABLE_CONTROL_CENTER 1
   fi
 
   profile_ksqldb_command=""
@@ -384,7 +381,7 @@ function set_profiles() {
     log "🔧 You can use ksqlDB with CLI using:"
     log "docker exec -i ksqldb-cli ksql http://ksqldb-server:8088"
     profile_ksqldb_command="--profile ksqldb"
-    echo "export ENABLE_KSQLDB=1" >> /tmp/playground-command
+    playground state set env.ENABLE_KSQLDB 1
   fi
 
   profile_rest_proxy_command=""
@@ -394,7 +391,7 @@ function set_profiles() {
   else
     log "📲 REST Proxy is enabled"
     profile_rest_proxy_command="--profile rest-proxy"
-    echo "export ENABLE_RESTPROXY=1" >> /tmp/playground-command
+    playground state set env.ENABLE_RESTPROXY 1
   fi
 
   # defined grafana variable and when profile is included/excluded
@@ -405,7 +402,7 @@ function set_profiles() {
   else
     log "📊 Grafana is enabled"
     profile_grafana_command="--profile grafana"
-    echo "export ENABLE_JMX_GRAFANA=1" >> /tmp/playground-command
+    playground state set env.ENABLE_JMX_GRAFANA 1
   fi
   profile_kcat_command=""
   if [ -z "$ENABLE_KCAT" ]
@@ -414,7 +411,7 @@ function set_profiles() {
   else
     log "🧰 kcat is enabled"
     profile_kcat_command="--profile kcat"
-    echo "export ENABLE_KCAT=1" >> /tmp/playground-command
+    playground state set env.ENABLE_KCAT 1
   fi
   profile_conduktor_command=""
   if [ -z "$ENABLE_CONDUKTOR" ]
@@ -424,13 +421,13 @@ function set_profiles() {
     log "🐺 conduktor is enabled"
     log "Use http://localhost:8080/console (admin/admin) to login"
     profile_conduktor_command="--profile conduktor"
-    echo "export ENABLE_CONDUKTOR=1" >> /tmp/playground-command
+    playground state set env.ENABLE_CONDUKTOR 1
   fi
   profile_sql_datagen_command=""
   if [ ! -z "$SQL_DATAGEN" ]
   then
     profile_sql_datagen_command="--profile sql_datagen"
-    echo "export SQL_DATAGEN=1" >> /tmp/playground-command
+    playground state set env.SQL_DATAGEN 1
   fi
 
   #define kafka_nodes variable and when profile is included/excluded
@@ -441,7 +438,7 @@ function set_profiles() {
   else
     log "3️⃣  Multi broker nodes enabled"
     profile_kafka_nodes_command="--profile kafka_nodes"
-    echo "export ENABLE_KAFKA_NODES=1" >> /tmp/playground-command
+    playground state set env.ENABLE_KAFKA_NODES 1
   fi
 
   # Adding Schema Registry plugin profile
@@ -452,7 +449,7 @@ function set_profiles() {
   else
     log " Starting Schema Registry plugin profile"
     profile_schema_registry_command="--profile sr_plugin_app"
-    echo "export ENABLE_SR_MAVEN_PLUGIN_NODE=1" >> /tmp/playground-command
+    playground state set env.ENABLE_SR_MAVEN_PLUGIN_NODE 1
   fi
 
   # defined 3 Connect variable and when profile is included/excluded
@@ -465,13 +462,13 @@ function set_profiles() {
     log "🥉 Multiple Connect nodes mode is enabled, connect2 and connect 3 containers will be started"
     profile_connect_nodes_command="--profile connect_nodes"
     export CONNECT_NODES_PROFILES="connect_nodes"
-    echo "export CONNECT_NODES_PROFILES=connect_nodes" >> /tmp/playground-command
+    playground state set env.CONNECT_NODES_PROFILES 1
   else
     if [ ! -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
     then
       log "🥉 Multiple connect nodes mode is enabled, connect2 and connect 3 containers will be started"
       profile_connect_nodes_command="--profile connect_nodes"
-      echo "export CONNECT_NODES_PROFILES=connect_nodes" >> /tmp/playground-command
+      playground state set env.CONNECT_NODES_PROFILES 1
     else
       logerror "🛑 Could not find connect2 and connect3 in ${DOCKER_COMPOSE_FILE_OVERRIDE}. Update the yaml files to contain the connect2 && connect3 in ${DOCKER_COMPOSE_FILE_OVERRIDE}"
       exit 1
@@ -1630,7 +1627,7 @@ function bootstrap_ccloud_environment () {
   fi
 
   # trick
-  echo "ccloud/environment" > /tmp/playground-command
+  playground state set environment "ccloud"
 }
 
 function create_ccloud_connector() {

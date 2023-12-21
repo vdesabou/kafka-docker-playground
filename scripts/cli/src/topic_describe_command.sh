@@ -16,17 +16,13 @@ fi
 
 get_environment_used
 
-if [ "$environment" == "error" ]
-then
-  logerror "File containing restart command /tmp/playground-command does not exist!"
-  exit 1 
-fi
+
 
 items=($topic)
 for topic in ${items[@]}
 do
     log "🔎 Describing topic $topic"
-    if [[ "$environment" == "environment" ]]
+    if [[ "$environment" == "ccloud" ]]
     then
         if [ -f /tmp/delta_configs/env.delta ]
         then

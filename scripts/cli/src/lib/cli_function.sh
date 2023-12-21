@@ -1,31 +1,10 @@
 function get_environment_used() {
-  if [ ! -f /tmp/playground-command ]
-  then
-    environment="error"
-    return
-  fi
-
-  patterns=("environment/2way-ssl" "environment/sasl-ssl" "environment/rbac-sasl-plain" "environment/kerberos" "environment/ssl_kerberos" "environment/ldap-authorizer-sasl-plain" "environment/sasl-plain" "environment/ldap-sasl-plain" "environment/sasl-scram" "environment/mdc-plaintext" "environment/mdc-sasl-plain" "environment/mdc-kerberos" "environment/ldap-authorizer-sasl-plain" "ccloud/environment")
-
-  for pattern in "${patterns[@]}"
-  do
-    if grep -q "$pattern" /tmp/playground-command
-    then
-      environment="${pattern#*/}"
-      return
-    fi
-  done
-  environment="plaintext"
+  environment=$(playground state get environment)
 }
 
 function get_connect_url_and_security() {
   get_environment_used
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1 
-  fi
   connect_url="http://localhost:8083"
   security=""
   if [[ "$environment" == "sasl-ssl" ]] || [[ "$environment" == "2way-ssl" ]]
@@ -106,11 +85,6 @@ function get_ccloud_connect() {
 function get_sr_url_and_security() {
   get_environment_used
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1 
-  fi
 
   sr_url="http://localhost:8081"
   sr_security=""
@@ -126,7 +100,7 @@ function get_sr_url_and_security() {
       DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
       sr_security="-u superUser:superUser"
-  elif [[ "$environment" == "environment" ]]
+  elif [[ "$environment" == "ccloud" ]]
   then
     if [ -f /tmp/delta_configs/env.delta ]
     then
@@ -144,11 +118,6 @@ function get_security_broker() {
   config_file_name="$1"
   get_environment_used
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1 
-  fi
 
   container="broker"
   security=""
@@ -427,11 +396,6 @@ function get_plugin_list() {
 function filter_not_mdc_environment() {
   get_environment_used
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1 
-  fi
 
   if [[ "$environment" == "mdc"* ]]
   then
@@ -442,13 +406,7 @@ function filter_not_mdc_environment() {
 function filter_ccloud_environment() {
   get_environment_used
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1 
-  fi
-
-  if [[ "$environment" != "environment" ]]
+  if [[ "$environment" != "ccloud" ]]
   then
     echo "environment should be ccloud with this command (it is $environment)!"
   fi

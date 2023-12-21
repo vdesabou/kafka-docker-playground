@@ -60,11 +60,7 @@ fi
 
 get_environment_used
 
-if [ "$environment" == "error" ]
-then
-  logerror "File containing restart command /tmp/playground-command does not exist!"
-  exit 1 
-fi
+
 
 get_sr_url_and_security
 
@@ -95,7 +91,7 @@ then
     security="--producer.config /etc/kafka/producer.properties"
 
     docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
-elif [[ "$environment" == "environment" ]]
+elif [[ "$environment" == "ccloud" ]]
 then
   if [ -f /tmp/delta_configs/env.delta ]
   then
@@ -133,7 +129,7 @@ then
     then
         set -x
     fi
-    if [[ "$environment" == "environment" ]]
+    if [[ "$environment" == "ccloud" ]]
     then
         get_connect_image
         echo "$key|NULL" | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security --property parse.key=true --property key.separator="|" --property null.marker=NULL
@@ -619,7 +615,7 @@ grep "does not exist" $tmp_dir/result.log > /dev/null 2>&1
 if [ $? == 0 ]
 then
     log "✨ topic $topic does not exist, it will be created.."
-    if [[ "$environment" == "environment" ]]
+    if [[ "$environment" == "ccloud" ]]
     then
         if [ "$nb_partitions" != "" ]
         then
@@ -795,7 +791,7 @@ do
     fi
     case "${value_schema_type}" in
         json|sql|raw)
-            if [[ "$environment" == "environment" ]]
+            if [[ "$environment" == "ccloud" ]]
             then
                 if [[ -n "$key" ]]
                 then
@@ -888,7 +884,7 @@ do
             then
                 value_subject_name_strategy_property="--property value.subject.name.strategy=io.confluent.kafka.serializers.subject.$value_subject_name_strategy"
             fi
-            if [[ "$environment" == "environment" ]]
+            if [[ "$environment" == "ccloud" ]]
             then
                 cp $root_folder/scripts/cli/src/tools-log4j.properties /tmp/tools-log4j.properties > /dev/null 2>&1
                 if [ -f $key_schema_file ]

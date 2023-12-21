@@ -11,11 +11,7 @@ fi
 
 export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
 
-if [ ! -f /tmp/playground-command ]
-then
-  logerror "File containing restart command /tmp/playground-command does not exist!"
-  exit 1
-fi
-set +e
+docker_command=$(playground state get docker_command)
+echo "$docker_command" > /tmp/playground-command
 log "💫 Recreate container(s)"
 bash /tmp/playground-command

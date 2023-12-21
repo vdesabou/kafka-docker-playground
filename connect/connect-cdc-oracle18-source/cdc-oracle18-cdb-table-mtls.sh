@@ -227,7 +227,8 @@ sleep 60
 docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.cdb-table-mtls.yml" up -d
 set_profiles
 command="source ${DIR}/../../scripts/utils.sh && docker compose -f ../../environment/plaintext/docker-compose.yml -f ${PWD}/docker-compose.plaintext.cdb-table-mtls.yml up -d ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} up -d"
-echo "$command" >> /tmp/playground-command
+playground state set docker_command "$command"
+playground state set environment "plaintext"
 log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command playground container recreate"
 
 ../../scripts/wait-for-connect-and-controlcenter.sh

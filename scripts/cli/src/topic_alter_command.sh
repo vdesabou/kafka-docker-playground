@@ -3,11 +3,7 @@ topic="${args[--topic]}"
 get_security_broker "--command-config"
 get_environment_used
 
-if [ "$environment" == "error" ]
-then
-  logerror "File containing restart command /tmp/playground-command does not exist!"
-  exit 1 
-fi
+
 
 playground topic get-number-records --topic $topic > /tmp/result.log 2>/tmp/result.log
 set +e
@@ -20,7 +16,7 @@ then
     playground topic alter --topic $topic ${other_args[*]}
 else
     log "🪛 Altering topic $topic"
-    if [[ "$environment" == "environment" ]]
+    if [[ "$environment" == "ccloud" ]]
     then
         if [ -f /tmp/delta_configs/env.delta ]
         then

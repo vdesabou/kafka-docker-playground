@@ -15,11 +15,7 @@ fi
 
 get_environment_used
 
-if [ "$environment" == "error" ]
-then
-  logerror "File containing restart command /tmp/playground-command does not exist!"
-  exit 1 
-fi
+
 
 items=($topic)
 for topic in ${items[@]}
@@ -34,7 +30,7 @@ do
         continue
     fi
     set +e
-    if [[ "$environment" == "environment" ]]
+    if [[ "$environment" == "ccloud" ]]
     then
         get_sr_url_and_security
 
