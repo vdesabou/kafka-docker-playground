@@ -30,25 +30,7 @@ playground topic delete --topic connect-configs-${TAG}
 playground topic create --topic _confluent-monitoring
 set -e
 
-# https://docs.docker.com/compose/profiles/
-profile_control_center_command=""
-if [ -z "$ENABLE_CONTROL_CENTER" ]
-then
-  log "🛑 control-center is disabled"
-else
-  log "💠 control-center is enabled"
-  log "Use http://localhost:9021 to login"
-  profile_control_center_command="--profile control-center"
-fi
-
-if [ -z "$ENABLE_CONDUKTOR" ]
-then
-  log "🛑 conduktor is disabled"
-else
-  log "🐺 conduktor is enabled"
-  log "Use http://localhost:8080/console (admin/admin) to login"
-  profile_conduktor_command="--profile conduktor"
-fi
+set_profiles
 
 ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
