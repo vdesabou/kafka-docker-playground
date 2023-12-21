@@ -1,32 +1,22 @@
-if [ -f /tmp/switch-playground-command ]
+log "💺 Switch back to onprem environment"
+set +e
+playground state get environment_before_switch > /dev/null 2>&1
+if [ $? -ne 0 ]
 then
-    log "💺 Switch back to onprem environment"
-    mv /tmp/switch-playground-command /tmp/playground-command
-else
-    logwarn "/tmp/switch-playground-command was not found, switch-ccloud was probably not executed before"
+    logerror "switch-ccloud was probably not executed before"
+    exit 1
 fi
+set -e
 
-if [ -f /tmp/switch-playground-run ]
-then
-    mv /tmp/switch-playground-run /tmp/playground-run
-else
-    logwarn "/tmp/switch-playground-run was not found, switch-ccloud was probably not executed before"
-fi
+playground state set environment "$(playground state get environment_before_switch)"
+playground state del environment_before_switch
 
-if [ ! -f /tmp/playground-run ]
-then
-  logerror "File containing re-run command /tmp/playground-run does not exist!"
-  logerror "Make sure to use <playground run> command !"
-  exit 1
-fi
-
-test_file=$(cat /tmp/playground-run | awk '{ print $4}')
+test_file=$(playground state get test_file)
 
 if [ ! -f $test_file ]
 then 
-logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
-logerror "Make sure to use <playground run> command !"
-exit 1
+    logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
+    exit 1
 fi
 
 last_two_folders=$(basename $(dirname $(dirname $test_file)))/$(basename $(dirname $test_file))

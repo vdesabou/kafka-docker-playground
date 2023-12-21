@@ -365,36 +365,36 @@ function set_profiles() {
   if [ -z "$ENABLE_CONTROL_CENTER" ]
   then
     log "🛑 control-center is disabled"
-    playground state del env.ENABLE_CONTROL_CENTER
+    playground state del flags.ENABLE_CONTROL_CENTER
   else
     log "💠 control-center is enabled"
     log "Use http://localhost:9021 to login"
     profile_control_center_command="--profile control-center"
-    playground state set env.ENABLE_CONTROL_CENTER 1
+    playground state set flags.ENABLE_CONTROL_CENTER 1
   fi
 
   profile_ksqldb_command=""
   if [ -z "$ENABLE_KSQLDB" ]
   then
     log "🛑 ksqldb is disabled"
-    playground state del env.ENABLE_KSQLDB
+    playground state del flags.ENABLE_KSQLDB
   else
     log "🚀 ksqldb is enabled"
     log "🔧 You can use ksqlDB with CLI using:"
     log "docker exec -i ksqldb-cli ksql http://ksqldb-server:8088"
     profile_ksqldb_command="--profile ksqldb"
-    playground state set env.ENABLE_KSQLDB 1
+    playground state set flags.ENABLE_KSQLDB 1
   fi
 
   profile_rest_proxy_command=""
   if [ -z "$ENABLE_RESTPROXY" ]
   then
     log "🛑 REST Proxy is disabled"
-    playground state del env.ENABLE_RESTPROXY
+    playground state del flags.ENABLE_RESTPROXY
   else
     log "📲 REST Proxy is enabled"
     profile_rest_proxy_command="--profile rest-proxy"
-    playground state set env.ENABLE_RESTPROXY 1
+    playground state set flags.ENABLE_RESTPROXY 1
   fi
 
   # defined grafana variable and when profile is included/excluded
@@ -402,40 +402,40 @@ function set_profiles() {
   if [ -z "$ENABLE_JMX_GRAFANA" ]
   then
     log "🛑 Grafana is disabled"
-    playground state del env.ENABLE_JMX_GRAFANA
+    playground state del flags.ENABLE_JMX_GRAFANA
   else
     log "📊 Grafana is enabled"
     profile_grafana_command="--profile grafana"
-    playground state set env.ENABLE_JMX_GRAFANA 1
+    playground state set flags.ENABLE_JMX_GRAFANA 1
   fi
   profile_kcat_command=""
   if [ -z "$ENABLE_KCAT" ]
   then
     log "🛑 kcat is disabled"
-    playground state del env.ENABLE_KCAT
+    playground state del flags.ENABLE_KCAT
   else
     log "🧰 kcat is enabled"
     profile_kcat_command="--profile kcat"
-    playground state set env.ENABLE_KCAT 1
+    playground state set flags.ENABLE_KCAT 1
   fi
   profile_conduktor_command=""
   if [ -z "$ENABLE_CONDUKTOR" ]
   then
     log "🛑 conduktor is disabled"
-    playground state del env.ENABLE_CONDUKTOR
+    playground state del flags.ENABLE_CONDUKTOR
   else
     log "🐺 conduktor is enabled"
     log "Use http://localhost:8080/console (admin/admin) to login"
     profile_conduktor_command="--profile conduktor"
-    playground state set env.ENABLE_CONDUKTOR 1
+    playground state set flags.ENABLE_CONDUKTOR 1
   fi
   profile_sql_datagen_command=""
   if [ ! -z "$SQL_DATAGEN" ]
   then
     profile_sql_datagen_command="--profile sql_datagen"
-    playground state set env.SQL_DATAGEN 1
+    playground state set flags.SQL_DATAGEN 1
   else
-    playground state del env.SQL_DATAGEN
+    playground state del flags.SQL_DATAGEN
   fi
 
   #define kafka_nodes variable and when profile is included/excluded
@@ -443,11 +443,11 @@ function set_profiles() {
   if [ -z "$ENABLE_KAFKA_NODES" ]
   then
     profile_kafka_nodes_command=""
-    playground state del env.ENABLE_KAFKA_NODES
+    playground state del flags.ENABLE_KAFKA_NODES
   else
     log "3️⃣  Multi broker nodes enabled"
     profile_kafka_nodes_command="--profile kafka_nodes"
-    playground state set env.ENABLE_KAFKA_NODES 1
+    playground state set flags.ENABLE_KAFKA_NODES 1
   fi
 
   # Adding Schema Registry plugin profile
@@ -455,30 +455,30 @@ function set_profiles() {
   if [ -z "$ENABLE_SR_MAVEN_PLUGIN_NODE" ]
   then
     profile_schema_registry_command=""
-    playground state del env.ENABLE_SR_MAVEN_PLUGIN_NODE
+    playground state del flags.ENABLE_SR_MAVEN_PLUGIN_NODE
   else
     log " Starting Schema Registry plugin profile"
     profile_schema_registry_command="--profile sr_plugin_app"
-    playground state set env.ENABLE_SR_MAVEN_PLUGIN_NODE 1
+    playground state set flags.ENABLE_SR_MAVEN_PLUGIN_NODE 1
   fi
 
   # defined 3 Connect variable and when profile is included/excluded
   profile_connect_nodes_command=""
   if [ -z "$ENABLE_CONNECT_NODES" ]
   then
-    playground state del env.ENABLE_CONNECT_NODES
+    playground state del flags.ENABLE_CONNECT_NODES
   elif [ ${nb_connect_services} -gt 1 ]
   then
     log "🥉 Multiple Connect nodes mode is enabled, connect2 and connect 3 containers will be started"
     profile_connect_nodes_command="--profile connect_nodes"
     export CONNECT_NODES_PROFILES="connect_nodes"
-    playground state set env.CONNECT_NODES_PROFILES 1
+    playground state set flags.CONNECT_NODES_PROFILES 1
   else
     if [ ! -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
     then
       log "🥉 Multiple connect nodes mode is enabled, connect2 and connect 3 containers will be started"
       profile_connect_nodes_command="--profile connect_nodes"
-      playground state set env.CONNECT_NODES_PROFILES 1
+      playground state set flags.CONNECT_NODES_PROFILES 1
     else
       logerror "🛑 Could not find connect2 and connect3 in ${DOCKER_COMPOSE_FILE_OVERRIDE}. Update the yaml files to contain the connect2 && connect3 in ${DOCKER_COMPOSE_FILE_OVERRIDE}"
       exit 1
@@ -1635,6 +1635,13 @@ function bootstrap_ccloud_environment () {
     logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
     exit 1
   fi
+
+  playground state set ccloud.ENVIRONMENT "$ENVIRONMENT"
+  playground state set ccloud.CLUSTER_NAME "$CLUSTER_NAME"
+  playground state set ccloud.CLUSTER_CLOUD "$CLUSTER_CLOUD"
+  playground state set ccloud.CLUSTER_REGION "$CLUSTER_REGION"
+  playground state set ccloud.CLUSTER_CREDS "$CLUSTER_CREDS"
+  playground state set ccloud.SCHEMA_REGISTRY_CREDS "$SCHEMA_REGISTRY_CREDS"
 
   # trick
   playground state set environment "ccloud"
@@ -3618,10 +3625,10 @@ function load_env_variables () {
   for item in {ENABLE_CONTROL_CENTER,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,SQL_DATAGEN,ENABLE_KAFKA_NODES,ENABLE_SR_MAVEN_PLUGIN_NODE,CONNECT_NODES_PROFILES,CONNECT_NODES_PROFILES}
   do
     set +e
-    playground state get "env.${item}" > /dev/null 2>&1
+    playground state get "flags.${item}" > /dev/null 2>&1
     if [ $? -ne 1 ]
     then
-      log "❇️ exporting environment variable ${item}"
+      log "⛳ exporting environment variable ${item}"
       export "${item}"=1
     fi
   done
