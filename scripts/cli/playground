@@ -9840,21 +9840,13 @@ playground_help_command() {
 # :command.function
 playground_status_command() {
   # src/status_command.sh
-  if [ ! -f /tmp/playground-run ]
-  then
-    logerror "File containing re-run command /tmp/playground-run does not exist!"
-    logerror "Make sure to use <playground run> command !"
-    exit 1
-  fi
-
-  test_file=$(cat /tmp/playground-run | awk '{ print $4}')
+  test_file=$(playground state get test_file)
 
   if [ ! -f $test_file ]
   then
 
-  logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
-  logerror "Make sure to use <playground run> command !"
-  exit 1
+      logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
+      exit 1
   fi
 
   last_two_folders=$(basename $(dirname $(dirname $test_file)))/$(basename $(dirname $test_file))
@@ -10123,9 +10115,11 @@ playground_bashly_reload_command() {
 playground_state_list_command() {
   # src/state_list_command.sh
   # Using the standard library (lib/ini.sh) to show the entire config file
-  if [ ! -f $root_folder/playground.ini ]
+  if [ ! -f "$root_folder/playground.ini" ]
   then
-      touch $root_folder/playground.ini
+      logerror "$root_folder/playground.ini does not exist !"
+      logerror "Make sure to always use the CLI to run exampls"
+      exit 1
   fi
   ini_load $root_folder/playground.ini
   ini_show
@@ -10135,17 +10129,20 @@ playground_state_list_command() {
 playground_state_get_command() {
   # src/state_get_command.sh
   # Using the standard library (lib/ini.sh) to show a value from the config
-  if [ ! -f $root_folder/playground.ini ]
+  if [ ! -f "$root_folder/playground.ini" ]
   then
-      touch $root_folder/playground.ini
+      logerror "$root_folder/playground.ini does not exist !"
+      logerror "Make sure to always use the CLI to run exampls"
+      exit 1
   fi
   ini_load $root_folder/playground.ini
 
   key="${args[key]:-}"
   value=${ini[$key]:-}
 
-  if [[ "$value" ]]; then
-    echo "$key = $value"
+  if [[ "$value" ]]
+  then
+    echo "$value"
   else
     logerror "No such key: $key"
   fi
@@ -10175,9 +10172,11 @@ playground_state_set_command() {
 playground_state_del_command() {
   # src/state_del_command.sh
   # Using the standard library (lib/ini.sh) to delete a value from the config
-  if [ ! -f $root_folder/playground.ini ]
+  if [ ! -f "$root_folder/playground.ini" ]
   then
-      touch $root_folder/playground.ini
+      logerror "$root_folder/playground.ini does not exist !"
+      logerror "Make sure to always use the CLI to run exampls"
+      exit 1
   fi
   set -e
   ini_load $root_folder/playground.ini
@@ -10377,9 +10376,10 @@ playground_run_command() {
   set +e
   playground container kill-all
   set -e
-  echo "playground run -f $test_file $flag_list ${other_args[*]}" > /tmp/playground-run
+  playground state set test_file "$test_file"
+  playground state set run_command "playground run -f $test_file $flag_list ${other_args[*]}"
   echo "" >> "$root_folder/playground-run-history"
-  cat /tmp/playground-run >> "$root_folder/playground-run-history"
+  echo "playground run -f $test_file $flag_list ${other_args[*]}" >> "$root_folder/playground-run-history"
 
   log "####################################################"
   log "🚀 Executing $filename in dir $test_file_directory"
@@ -10421,13 +10421,6 @@ playground_run_command() {
 # :command.function
 playground_re_run_command() {
   # src/re_run_command.sh
-  if [ ! -f /tmp/playground-run ]
-  then
-    logerror "File containing re-run command /tmp/playground-run does not exist!"
-    logerror "Make sure to use <playground run> command !"
-    exit 1
-  fi
-
   tag="${args[--tag]}"
   connector_tag="${args[--connector-tag]}"
   connector_zip="${args[--connector-zip]}"
@@ -10525,14 +10518,13 @@ playground_re_run_command() {
 
   if [ "$flag_list" != "" ]
   then
-    test_file=$(cat /tmp/playground-run | awk '{ print $4}')
+    test_file=$(playground state get test_file)
 
     if [ ! -f $test_file ]
     then
 
-      logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
-      logerror "Make sure to use <playground run> command !"
-      exit 1
+        logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
+        exit 1
     fi
 
     log "🚀 Running example again with new flags"
@@ -10541,22 +10533,22 @@ playground_re_run_command() {
   else
     if [[ -n "$clear" ]]
     then
-      test_file=$(cat /tmp/playground-run | awk '{ print $4}')
+      test_file=$(playground state get test_file)
 
       if [ ! -f $test_file ]
       then
 
-        logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
-        logerror "Make sure to use <playground run> command !"
-        exit 1
+          logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
+          exit 1
       fi
 
       log "🧼 Running example again with no flags"
       playground run -f $test_file ${other_args[*]}
     else
       log "🚀 Running example again with same flags as before"
-      cat /tmp/playground-run
-      bash /tmp/playground-run
+      run_command=$(playground state get run_command)
+      echo "$run_command"
+      bash "$run_command"
     fi
   fi
 }
@@ -10879,7 +10871,11 @@ playground_run_ccloud_command() {
   set +e
   playground container kill-all
   set -e
-  echo "playground run -f $test_file $flag_list ${other_args[*]}" > /tmp/playground-run
+  playground state set test_file "$test_file"
+  playground state set run_command "playground run -f $test_file $flag_list ${other_args[*]}"
+  echo "" >> "$root_folder/playground-run-history"
+  echo "playground run -f $test_file $flag_list ${other_args[*]}" >> "$root_folder/playground-run-history"
+
   log "####################################################"
   log "🚀 Executing $filename in dir $test_file_directory"
   log "####################################################"
@@ -11047,21 +11043,13 @@ playground_update_version_command() {
     export CONNECTOR_JAR=$connector_jar
   fi
 
-  if [ ! -f /tmp/playground-run ]
-  then
-    logerror "File containing run command /tmp/playground-run does not exist!"
-    logerror "Make sure to use <playground run> command !"
-    exit 1
-  fi
-
-  test_file=$(cat /tmp/playground-run | awk '{ print $4}')
+  test_file=$(playground state get test_file)
 
   if [ ! -f $test_file ]
   then
 
-    logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
-    logerror "Make sure to use <playground run> command !"
-    exit 1
+      logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
+      exit 1
   fi
 
   # determining the docker-compose file from from test_file
@@ -11129,21 +11117,13 @@ playground_open_command() {
       test_file=$(echo "$test_file" | cut -d "@" -f 2)
     fi
   else
-    if [ ! -f /tmp/playground-run ]
-    then
-      logerror "File containing run command /tmp/playground-run does not exist!"
-      logerror "Make sure to use <playground run> command !"
-      exit 1
-    fi
-
-    test_file=$(cat /tmp/playground-run | awk '{ print $4}')
+    test_file=$(playground state get test_file)
 
     if [ ! -f $test_file ]
     then
 
-      logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
-      logerror "Make sure to use <playground run> command !"
-      exit 1
+        logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
+        exit 1
     fi
   fi
 
@@ -11167,21 +11147,13 @@ playground_open_command() {
 # :command.function
 playground_stop_command() {
   # src/stop_command.sh
-  if [ ! -f /tmp/playground-run ]
-  then
-    logerror "File containing run command /tmp/playground-run does not exist!"
-    logerror "Make sure to use <playground run> command !"
-    exit 1
-  fi
-
-  test_file=$(cat /tmp/playground-run | awk '{ print $4}')
+  test_file=$(playground state get test_file)
 
   if [ ! -f $test_file ]
   then
 
-    logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
-    logerror "Make sure to use <playground run> command !"
-    exit 1
+      logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
+      exit 1
   fi
   filename=$(basename -- "$test_file")
   test_file_directory="$(dirname "${test_file}")"
@@ -11202,20 +11174,12 @@ playground_stop_command() {
 playground_open_docs_command() {
   # src/open_docs_command.sh
   only_show_url="${args[--only-show-url]}"
-  if [ ! -f /tmp/playground-run ]
-  then
-      logerror "File containing re-run command /tmp/playground-run does not exist!"
-      logerror "Make sure to use <playground run> command !"
-      exit 1
-  fi
-
-  test_file=$(cat /tmp/playground-run | awk '{ print $4}')
+  test_file=$(playground state get test_file)
 
   if [ ! -f $test_file ]
   then
 
-      logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
-      logerror "Make sure to use <playground run> command !"
+      logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
       exit 1
   fi
 
@@ -11314,19 +11278,12 @@ playground_repro_export_command() {
       fi
   else
       # copy only current example
-      if [ ! -f /tmp/playground-run ]
-      then
-          logerror "File containing re-run command /tmp/playground-run does not exist!"
-          logerror "Make sure to use <playground run> command !"
-          exit 1
-      fi
-
-      test_file=$(cat /tmp/playground-run | awk '{ print $4}')
+      test_file=$(playground state get test_file)
 
       if [ ! -f $test_file ]
       then
-          logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
-          logerror "Make sure to use <playground run> command !"
+
+          logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
           exit 1
       fi
 
@@ -12460,7 +12417,8 @@ playground_repro_bootstrap_command() {
 
   log "🌟 Command to run generated example"
   echo "playground run -f $repro_dir/$repro_test_filename"
-  echo "playground run -f $repro_dir/$repro_test_filename" > /tmp/playground-run
+  playground state set test_file "$repro_dir/$repro_test_filename"
+  playground state set run_command "playground run -f $repro_dir/$repro_test_filename"
 
   if config_has_key "editor"
   then
@@ -16574,20 +16532,12 @@ playground_connector_pause_command() {
 # :command.function
 playground_connector_versions_command() {
   # src/connector_versions_command.sh
-  if [ ! -f /tmp/playground-run ]
-  then
-      logerror "File containing re-run command /tmp/playground-run does not exist!"
-      logerror "Make sure to use <playground run> command !"
-      exit 1
-  fi
-
-  test_file=$(cat /tmp/playground-run | awk '{ print $4}')
+  test_file=$(playground state get test_file)
 
   if [ ! -f $test_file ]
   then
 
-      logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
-      logerror "Make sure to use <playground run> command !"
+      logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
       exit 1
   fi
 

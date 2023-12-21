@@ -1,10 +1,3 @@
-if [ ! -f /tmp/playground-run ]
-then
-  logerror "File containing re-run command /tmp/playground-run does not exist!"
-  logerror "Make sure to use <playground run> command !"
-  exit 1
-fi
-
 tag="${args[--tag]}"
 connector_tag="${args[--connector-tag]}"
 connector_zip="${args[--connector-zip]}"
@@ -102,13 +95,12 @@ fi
 
 if [ "$flag_list" != "" ]
 then
-  test_file=$(cat /tmp/playground-run | awk '{ print $4}')
+  test_file=$(playground state get test_file)
 
   if [ ! -f $test_file ]
   then 
-    logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
-    logerror "Make sure to use <playground run> command !"
-    exit 1
+      logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
+      exit 1
   fi
 
   log "🚀 Running example again with new flags"
@@ -117,20 +109,20 @@ then
 else
   if [[ -n "$clear" ]]
   then
-    test_file=$(cat /tmp/playground-run | awk '{ print $4}')
+    test_file=$(playground state get test_file)
 
     if [ ! -f $test_file ]
     then 
-      logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
-      logerror "Make sure to use <playground run> command !"
-      exit 1
+        logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
+        exit 1
     fi
 
     log "🧼 Running example again with no flags"
     playground run -f $test_file ${other_args[*]}
   else
     log "🚀 Running example again with same flags as before"
-    cat /tmp/playground-run
-    bash /tmp/playground-run
+    run_command=$(playground state get run_command)
+    echo "$run_command"
+    bash "$run_command"
   fi
 fi

@@ -1,16 +1,8 @@
-if [ ! -f /tmp/playground-run ]
-then
-    logerror "File containing re-run command /tmp/playground-run does not exist!"
-    logerror "Make sure to use <playground run> command !"
-    exit 1
-fi
-
-test_file=$(cat /tmp/playground-run | awk '{ print $4}')
+test_file=$(playground state get test_file)
 
 if [ ! -f $test_file ]
 then 
-    logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
-    logerror "Make sure to use <playground run> command !"
+    logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
     exit 1
 fi
 

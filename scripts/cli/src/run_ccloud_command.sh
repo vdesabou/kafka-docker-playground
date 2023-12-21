@@ -189,7 +189,11 @@ fi
 set +e
 playground container kill-all
 set -e
-echo "playground run -f $test_file $flag_list ${other_args[*]}" > /tmp/playground-run
+playground state set test_file "$test_file"
+playground state set run_command "playground run -f $test_file $flag_list ${other_args[*]}"
+echo "" >> "$root_folder/playground-run-history"
+echo "playground run -f $test_file $flag_list ${other_args[*]}" >> "$root_folder/playground-run-history"
+
 log "####################################################"
 log "🚀 Executing $filename in dir $test_file_directory"
 log "####################################################"
