@@ -124,51 +124,105 @@ commands:
 - name: state
   private: true
   commands:
-  - name: list
-    alias: l
-    help: Show the entire config file
+  - name: show
+    help: Show the entire playground.ini file
 
   - name: get
-    alias: g
-    help: Read a value from the config file
+    help: Read a value from the playground.ini file
 
     args:
     - name: key
       required: true
-      help: Config key
-
+      help: playground.ini key
     examples:
     - playground state get hello
     - playground state get user.name
 
   - name: set
-    alias: s
-    help: Save a value in the config file
+    help: Save a value in the playground.ini file
 
     args:
     - name: key
       required: true
-      help: Config key
+      help: playground.ini key
     - name: value
       required: true
-      help: Config value
-
+      help: playground.ini value
     examples:
     - playground state set hello world
     - playground state set user.email me@example.com
 
   - name: del
-    alias: d
-    help: Remove a value from the config file
+    help: Remove a value from the playground.ini file
+
+    args:
+    - name: key
+      required: true
+      help: playground.ini key
+
+    examples:
+    - playground state del hello
+    - playground state del user.name
+
+
+- name: config
+  commands:
+  - name: show
+    help: Show the entire playground_config.ini file
+
+  - name: get
+    private: true
+    help: Read a value from the playground_config.ini file
 
     args:
     - name: key
       required: true
       help: Config key
-
     examples:
-    - playground state del hello
-    - playground state del user.name
+    - playground config get hello
+    - playground config get user.name
+
+  - name: set
+    private: true
+    help: Save a value in the playground_config.ini file
+    args:
+    - name: key
+      required: true
+      help: playground_config.ini key
+    - name: value
+      required: true
+      help: playground_config.ini value
+    examples:
+    - playground config set hello world
+    - playground config set user.email me@example.com
+
+  - name: editor
+    help: editor to use to open files
+    args:
+    - name: editor
+      required: true
+      help: editor
+      validate: editor_exists
+    examples:
+    - playground config editor vi
+    - playground config editor code
+
+  - name: folder_zip_or_jar
+    help: |- 
+      📂 list of folders where to search for zip or jar
+      current folder is always included
+
+      default is ~ (home dir)
+    args:
+    - name: folder
+      required: true
+      help: folder
+      unique: true
+      repeatable: true
+      validate: dir_exists
+    examples:
+    - playground config folder_zip_or_jar ~/Downloads ~/Documents/github/kafka-connect-*
+    - playground config folder_zip_or_jar ~/Downloads
 
 - name: run
   group: Run
@@ -204,7 +258,7 @@ commands:
       🎓 Tip: use <tab> completion to trigger fzf completion
   - long: --open
     short: -o
-    help: 📖 Opening example file with text editor set with config.ini (default is code)
+    help: 📖 Opening example file with text editor set with playground config editor <editor> (default is code)
   - &tag
     long: --tag
     arg: tag
@@ -237,7 +291,7 @@ commands:
       ❕ It must be absolute full path
 
       🎓 Tip: use <tab> completion to trigger fzf completion 
-              use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+              use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
 
   - &connector-jar
     long: --connector-jar
@@ -252,7 +306,7 @@ commands:
       ❕ It must be absolute full path
 
       🎓 Tip: use <tab> completion to trigger fzf completion 
-              use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+              use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
 
   - &enable-ksqldb
     long: --enable-ksqldb
@@ -509,7 +563,7 @@ commands:
         🎓 Tip: use <tab> completion to trigger fzf completion
     - long: --open
       short: -o
-      help: 📖 Opening example file with text editor set with config.ini (default is code)
+      help: 📖 Opening example file with text editor set with playground config editor <editor> (default is code)
     - *tag
     - *connector-tag
     - *connector-zip
@@ -724,7 +778,7 @@ commands:
         ❕ It must be absolute full path
 
         🎓 Tip: use <tab> completion to trigger fzf completion 
-                use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+                use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
 
   - name: bootstrap
     help: |-
@@ -1164,7 +1218,7 @@ commands:
     help: |-
       🎯 Take a java thread dump
 
-      🔖 It will save output to a file and open with text editor set with config.ini (default is code)
+      🔖 It will save output to a file and open with text editor set with playground config editor <editor> (default is code)
     flags:
       - *container
     examples:
@@ -1308,7 +1362,7 @@ commands:
   - long: --open
     short: -o
     help: |- 
-      🔖 Save output to a file and open with text editor set with config.ini (default is code)
+      🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
 
   - long: --domain
     short: -d
@@ -1365,7 +1419,7 @@ commands:
       - long: --open
         short: -o
         help: |- 
-          🔖 Save output to a file and open with text editor set with config.ini (default is code)
+          🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
         conflicts: [--wait-for-log]
       - long: --wait-for-log
         short: -w
@@ -2416,7 +2470,7 @@ commands:
     - long: --open
       short: -o
       help: |- 
-        🔖 Save output to a file and open with text editor set with config.ini (default is code)
+        🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
     - long: --force-refresh
       required: false
       help: |-
@@ -2557,7 +2611,7 @@ commands:
     - long: --open
       short: -o
       help: |- 
-        🔖 Save output to a file and open with text editor set with config.ini (default is code)
+        🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
     - long: --force-refresh
       required: false
       help: |-

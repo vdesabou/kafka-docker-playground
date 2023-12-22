@@ -39,6 +39,7 @@ playground_usage() {
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   Show help about a command\n" "$(green "help")                                   "
   printf "  %s   🗺️ Show a status\n" "$(green "status")                                 "
+  printf "  %s   \n" "$(green "config")                                 "
   echo
   printf "%s\n" "$(bold "Run commands:")"
   printf "  %s   🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)\n" "$(green "run")                                    "
@@ -700,10 +701,10 @@ playground_state_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   Show the entire config file\n" "$(green "list")"
-  printf "  %s   Read a value from the config file\n" "$(green "get") "
-  printf "  %s   Save a value in the config file\n" "$(green "set") "
-  printf "  %s   Remove a value from the config file\n" "$(green "del") "
+  printf "  %s   Show the entire playground.ini file\n" "$(green "show")"
+  printf "  %s   Read a value from the playground.ini file\n" "$(green "get") "
+  printf "  %s   Save a value in the playground.ini file\n" "$(green "set") "
+  printf "  %s   Remove a value from the playground.ini file\n" "$(green "del") "
   echo
 
   # :command.long_usage
@@ -719,23 +720,20 @@ playground_state_usage() {
 }
 
 # :command.usage
-playground_state_list_usage() {
+playground_state_show_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground state list - Show the entire config file\n"
+    printf "playground state show - Show the entire playground.ini file\n"
     echo
 
   else
-    printf "playground state list - Show the entire config file\n"
+    printf "playground state show - Show the entire playground.ini file\n"
     echo
 
   fi
 
-  printf "Alias: l\n"
-  echo
-
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground state list\n"
-  printf "  playground state list --help | -h\n"
+  printf "  playground state show\n"
+  printf "  playground state show --help | -h\n"
   echo
 
   # :command.long_usage
@@ -753,17 +751,14 @@ playground_state_list_usage() {
 # :command.usage
 playground_state_get_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground state get - Read a value from the config file\n"
+    printf "playground state get - Read a value from the playground.ini file\n"
     echo
 
   else
-    printf "playground state get - Read a value from the config file\n"
+    printf "playground state get - Read a value from the playground.ini file\n"
     echo
 
   fi
-
-  printf "Alias: g\n"
-  echo
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground state get KEY\n"
@@ -784,7 +779,7 @@ playground_state_get_usage() {
 
     # :argument.usage
     printf "  %s\n" "$(blue "KEY")"
-    printf "    Config key\n"
+    printf "    playground.ini key\n"
     echo
 
     # :command.usage_examples
@@ -799,17 +794,14 @@ playground_state_get_usage() {
 # :command.usage
 playground_state_set_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground state set - Save a value in the config file\n"
+    printf "playground state set - Save a value in the playground.ini file\n"
     echo
 
   else
-    printf "playground state set - Save a value in the config file\n"
+    printf "playground state set - Save a value in the playground.ini file\n"
     echo
 
   fi
-
-  printf "Alias: s\n"
-  echo
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground state set KEY VALUE\n"
@@ -830,12 +822,12 @@ playground_state_set_usage() {
 
     # :argument.usage
     printf "  %s\n" "$(blue "KEY")"
-    printf "    Config key\n"
+    printf "    playground.ini key\n"
     echo
 
     # :argument.usage
     printf "  %s\n" "$(blue "VALUE")"
-    printf "    Config value\n"
+    printf "    playground.ini value\n"
     echo
 
     # :command.usage_examples
@@ -850,21 +842,125 @@ playground_state_set_usage() {
 # :command.usage
 playground_state_del_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground state del - Remove a value from the config file\n"
+    printf "playground state del - Remove a value from the playground.ini file\n"
     echo
 
   else
-    printf "playground state del - Remove a value from the config file\n"
+    printf "playground state del - Remove a value from the playground.ini file\n"
     echo
 
   fi
 
-  printf "Alias: d\n"
-  echo
-
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground state del KEY\n"
   printf "  playground state del --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "KEY")"
+    printf "    playground.ini key\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground state del hello\n"
+    printf "  playground state del user.name\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_config_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground config\n"
+    echo
+
+  else
+    printf "playground config\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground config COMMAND\n"
+  printf "  playground config [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   Show the entire playground_config.ini file\n" "$(green "show")             "
+  printf "  %s   editor to use to open files\n" "$(green "editor")           "
+  printf "  %s   📂 list of folders where to search for zip or jar\n" "$(green "folder_zip_or_jar")"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_config_show_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground config show - Show the entire playground_config.ini file\n"
+    echo
+
+  else
+    printf "playground config show - Show the entire playground_config.ini file\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground config show\n"
+  printf "  playground config show --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_config_get_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground config get - Read a value from the playground_config.ini file\n"
+    echo
+
+  else
+    printf "playground config get - Read a value from the playground_config.ini file\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground config get KEY\n"
+  printf "  playground config get --help | -h\n"
   echo
 
   # :command.long_usage
@@ -886,8 +982,145 @@ playground_state_del_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground state del hello\n"
-    printf "  playground state del user.name\n"
+    printf "  playground config get hello\n"
+    printf "  playground config get user.name\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_config_set_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground config set - Save a value in the playground_config.ini file\n"
+    echo
+
+  else
+    printf "playground config set - Save a value in the playground_config.ini file\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground config set KEY VALUE\n"
+  printf "  playground config set --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "KEY")"
+    printf "    playground_config.ini key\n"
+    echo
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "VALUE")"
+    printf "    playground_config.ini value\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground config set hello world\n"
+    printf "  playground config set user.email me@example.com\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_config_editor_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground config editor - editor to use to open files\n"
+    echo
+
+  else
+    printf "playground config editor - editor to use to open files\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground config editor EDITOR\n"
+  printf "  playground config editor --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "EDITOR")"
+    printf "    editor\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground config editor vi\n"
+    printf "  playground config editor code\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_config_folder_zip_or_jar_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground config folder_zip_or_jar\n"
+    echo
+
+    printf "  📂 list of folders where to search for zip or jar\n  current folder is always included\n  \n  default is ~ (home dir)\n"
+    echo
+
+  else
+    printf "playground config folder_zip_or_jar - 📂 list of folders where to search for zip or jar\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground config folder_zip_or_jar FOLDER...\n"
+  printf "  playground config folder_zip_or_jar --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "FOLDER...")"
+    printf "    folder\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground config folder_zip_or_jar ~/Downloads\n  ~/Documents/github/kafka-connect-*\n"
+    printf "  playground config folder_zip_or_jar ~/Downloads\n"
     echo
 
   fi
@@ -922,7 +1155,7 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--open, -o")"
-    printf "    📖 Opening example file with text editor set with config.ini (default is\n    code)\n"
+    printf "    📖 Opening example file with text editor set with playground config editor\n    <editor> (default is code)\n"
     echo
 
     # :flag.usage
@@ -937,12 +1170,12 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
-    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
-    printf "    ♨️ Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    printf "    ♨️ Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
     echo
 
     # :flag.usage
@@ -1055,12 +1288,12 @@ playground_re_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
-    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
-    printf "    ♨️ Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    printf "    ♨️ Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
     echo
 
     # :flag.usage
@@ -1298,7 +1531,7 @@ playground_run_ccloud_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--open, -o")"
-    printf "    📖 Opening example file with text editor set with config.ini (default is\n    code)\n"
+    printf "    📖 Opening example file with text editor set with playground config editor\n    <editor> (default is code)\n"
     echo
 
     # :flag.usage
@@ -1313,12 +1546,12 @@ playground_run_ccloud_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
-    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
-    printf "    ♨️ Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    printf "    ♨️ Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
     echo
 
     # :flag.usage
@@ -1520,12 +1753,12 @@ playground_update_version_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
-    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
-    printf "    ♨️ Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    printf "    ♨️ Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
     echo
 
     # :command.usage_fixed_flags
@@ -1741,7 +1974,7 @@ playground_repro_import_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE")"
-    printf "    🤐 playground_repro_export.tgz file\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    printf "    🤐 playground_repro_export.tgz file\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
     echo
 
     # :command.usage_fixed_flags
@@ -1789,12 +2022,12 @@ playground_repro_bootstrap_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
-    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
-    printf "    ♨️ Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    printf "    ♨️ Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
     echo
 
     # :flag.usage
@@ -2609,7 +2842,7 @@ playground_debug_thread_dump_usage() {
     printf "playground debug thread-dump\n"
     echo
 
-    printf "  🎯 Take a java thread dump\n  \n  🔖 It will save output to a file and open with text editor set with config.ini\n  (default is code)\n"
+    printf "  🎯 Take a java thread dump\n  \n  🔖 It will save output to a file and open with text editor set with playground\n  config editor <editor> (default is code)\n"
     echo
 
   else
@@ -3006,7 +3239,7 @@ playground_get_jmx_metrics_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--open, -o")"
-    printf "    🔖 Save output to a file and open with text editor set with config.ini\n    (default is code)\n"
+    printf "    🔖 Save output to a file and open with text editor set with playground config\n    editor <editor> (default is code)\n"
     echo
 
     # :flag.usage
@@ -3202,7 +3435,7 @@ playground_container_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--open, -o")"
-    printf "    🔖 Save output to a file and open with text editor set with config.ini\n    (default is code)\n"
+    printf "    🔖 Save output to a file and open with text editor set with playground config\n    editor <editor> (default is code)\n"
     echo
 
     # :flag.usage
@@ -4483,7 +4716,7 @@ playground_ccloud_connector_show_config_parameters_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--open, -o")"
-    printf "    🔖 Save output to a file and open with text editor set with config.ini\n    (default is code)\n"
+    printf "    🔖 Save output to a file and open with text editor set with playground config\n    editor <editor> (default is code)\n"
     echo
 
     # :flag.usage
@@ -5049,7 +5282,7 @@ playground_connector_show_config_parameters_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--open, -o")"
-    printf "    🔖 Save output to a file and open with text editor set with config.ini\n    (default is code)\n"
+    printf "    🔖 Save output to a file and open with text editor set with playground config\n    editor <editor> (default is code)\n"
     echo
 
     # :flag.usage
@@ -5565,10 +5798,9 @@ function get_zip_or_jar_with_fzf() {
     fzf_option_rounded=""
   fi
 
-  if config_has_key "folder_zip_or_jar"
+  folder_zip_or_jar=$(playground config get folder_zip_or_jar)
+  if [ "$folder_zip_or_jar" == "" ]
   then
-    folder_zip_or_jar=$(config_get "folder_zip_or_jar")
-  else
     logerror "Could not find config value <folder_zip_or_jar> !"
     exit 1
   fi
@@ -5594,10 +5826,9 @@ function get_playground_repro_export_with_fzf() {
     fzf_option_rounded=""
   fi
 
-  if config_has_key "folder_zip_or_jar"
+  folder_zip_or_jar=$(playground config get folder_zip_or_jar)
+  if [ "$folder_zip_or_jar" == "" ]
   then
-    folder_zip_or_jar=$(config_get "folder_zip_or_jar")
-  else
     logerror "Could not find config value <folder_zip_or_jar> !"
     exit 1
   fi
@@ -5755,102 +5986,6 @@ yellow_underlined() { print_in_color "\e[4;33m" "$*"; }
 blue_underlined() { print_in_color "\e[4;34m" "$*"; }
 magenta_underlined() { print_in_color "\e[4;35m" "$*"; }
 cyan_underlined() { print_in_color "\e[4;36m" "$*"; }
-
-# src/lib/config.sh
-config_init() {
-  CONFIG_FILE=${CONFIG_FILE:=config.ini}
-  [[ -f "$CONFIG_FILE" ]] || touch "$CONFIG_FILE"
-}
-
-config_get() {
-  local key=$1
-  local regex="^$key *= *(.+)$"
-  local value=""
-
-  config_init
-
-  while IFS= read -r line || [ -n "$line" ]; do
-    if [[ $line =~ $regex ]]; then
-      value="${BASH_REMATCH[1]}"
-      break
-    fi
-  done <"$CONFIG_FILE"
-
-  echo "$value"
-}
-
-config_set() {
-  local key=$1
-  shift
-  local value="$*"
-
-  config_init
-
-  local regex="^($key) *= *.+$"
-  local output=""
-  local found_key=""
-  local newline
-
-  while IFS= read -r line || [ -n "$line" ]; do
-    newline=$line
-    if [[ $line =~ $regex ]]; then
-      found_key="${BASH_REMATCH[1]}"
-      newline="$key = $value"
-      output="$output$newline\n"
-    elif [[ $line ]]; then
-      output="$output$line\n"
-    fi
-  done <"$CONFIG_FILE"
-
-  if [[ -z $found_key ]]; then
-    output="$output$key = $value\n"
-  fi
-
-  printf "%b\n" "$output" >"$CONFIG_FILE"
-}
-
-config_del() {
-  local key=$1
-
-  local regex="^($key) *="
-  local output=""
-
-  config_init
-
-  while IFS= read -r line || [ -n "$line" ]; do
-    if [[ $line ]] && [[ ! $line =~ $regex ]]; then
-      output="$output$line\n"
-    fi
-  done <"$CONFIG_FILE"
-
-  printf "%b\n" "$output" >"$CONFIG_FILE"
-}
-
-config_show() {
-  config_init
-  cat "$CONFIG_FILE"
-}
-
-config_keys() {
-  local regex="^([a-zA-Z0-9_\-\/\.]+) *="
-
-  config_init
-
-  local keys=()
-  local key
-
-  while IFS= read -r line || [ -n "$line" ]; do
-    if [[ $line =~ $regex ]]; then
-      key="${BASH_REMATCH[1]}"
-      keys+=("$key")
-    fi
-  done <"$CONFIG_FILE"
-  echo "${keys[@]}"
-}
-
-config_has_key() {
-  [[ $(config_get "$1") ]]
-}
 
 # src/lib/heredocs.sh
 function get_properties_command_heredoc () {
@@ -7173,20 +7308,20 @@ done
 
   if [[ -n "$open" ]]
   then
-    if config_has_key "editor"
+    editor=$(playground config get editor)
+    if [ "$editor" != "" ]
     then
-      editor=$(config_get "editor")
       log "📖 Opening /tmp/jmx_metrics.log using configured editor $editor"
       $editor /tmp/jmx_metrics.log
     else
-      if [[ $(type code 2>&1) =~ "not found" ]]
-      then
-        logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
-        exit 1
-      else
-        log "📖 Opening /tmp/jmx_metrics.log with code (default) - you can change editor by updating config.ini"
-        code /tmp/jmx_metrics.log
-      fi
+        if [[ $(type code 2>&1) =~ "not found" ]]
+        then
+            logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
+            exit 1
+        else
+            log "📖 Opening /tmp/jmx_metrics.log with code (default) - you can change editor by using playground config editor <editor>"
+            code /tmp/jmx_metrics.log
+        fi
     fi
   fi
 }
@@ -10088,8 +10223,8 @@ playground_bashly_reload_command() {
 }
 
 # :command.function
-playground_state_list_command() {
-  # src/state_list_command.sh
+playground_state_show_command() {
+  # src/state_show_command.sh
   # Using the standard library (lib/ini.sh) to show the entire config file
   if [ ! -f "$root_folder/playground.ini" ]
   then
@@ -10160,6 +10295,85 @@ playground_state_del_command() {
 
   ini_save $root_folder/playground.ini
 
+}
+
+# :command.function
+playground_config_show_command() {
+  # src/config_show_command.sh
+  # Using the standard library (lib/ini.sh) to show the entire config file
+  if [ ! -f "$root_folder/playground_config.ini" ]
+  then
+      logerror "$root_folder/playground_config.ini does not exist !"
+      logerror "Make sure to always use the CLI to run exampls"
+      exit 1
+  fi
+  ini_load $root_folder/playground_config.ini
+  ini_show
+}
+
+# :command.function
+playground_config_get_command() {
+  # src/config_get_command.sh
+  # Using the standard library (lib/ini.sh) to show a value from the config
+  if [ ! -f "$root_folder/playground_config.ini" ]
+  then
+      # set defaults
+      playground config editor code > /dev/null 2>&1
+      playground config folder_zip_or_jar ~ > /dev/null 2>&1
+  fi
+  ini_load $root_folder/playground_config.ini
+
+  key="${args[key]:-}"
+  value=${ini[$key]:-}
+
+  if [[ "$value" ]]
+  then
+    echo "$value"
+  else
+    echo ""
+  fi
+}
+
+# :command.function
+playground_config_set_command() {
+  # src/config_set_command.sh
+  # Using the standard library (lib/ini.sh) to store a value to the config
+  if [ ! -f $root_folder/playground_config.ini ]
+  then
+      touch $root_folder/playground_config.ini
+  fi
+  set -e
+  ini_load $root_folder/playground_config.ini
+
+  key="${args[key]}"
+  value="${args[value]}"
+
+  ini["$key"]="$value"
+  ini_save $root_folder/playground_config.ini
+}
+
+# :command.function
+playground_config_editor_command() {
+  # src/config_editor_command.sh
+  log "🔖 configuring editor with ${args[editor]}"
+  playground config set editor "${args[editor]}"
+}
+
+# :command.function
+playground_config_folder_zip_or_jar_command() {
+  # src/config_folder_zip_or_jar_command.sh
+  # Convert the space delimited string to an array
+  folders=''
+  eval "folders=(${args[folder]:-})"
+
+  folder_list=""
+  for i in "${folders[@]}"
+  do
+      folder_list="$folder_list,$i"
+  done
+
+  log "📁 configuring folder_zip_or_jar with $folder_list"
+  playground config set folder_zip_or_jar "$folder_list"
 }
 
 # :command.function
@@ -10321,22 +10535,22 @@ playground_run_command() {
 
   if [[ -n "$open" ]]
   then
-    if config_has_key "editor"
+    editor=$(playground config get editor)
+    if [ "$editor" != "" ]
     then
-      editor=$(config_get "editor")
       log "📖 Opening ${test_file} using configured editor $editor"
       $editor ${test_file}
       check_if_continue
     else
-      if [[ $(type code 2>&1) =~ "not found" ]]
-      then
-        logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
-        exit 1
-      else
-        log "📖 Opening ${test_file} with code (default) - you can change editor by updating config.ini"
-        code ${test_file}
-        check_if_continue
-      fi
+        if [[ $(type code 2>&1) =~ "not found" ]]
+        then
+            logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
+            exit 1
+        else
+            log "📖 Opening ${test_file} with code (default) - you can change editor by using playground config editor <editor>"
+            code ${test_file}
+            check_if_continue
+        fi
     fi
   fi
 
@@ -10821,22 +11035,22 @@ playground_run_ccloud_command() {
 
   if [[ -n "$open" ]]
   then
-    if config_has_key "editor"
+    editor=$(playground config get editor)
+    if [ "$editor" != "" ]
     then
-      editor=$(config_get "editor")
       log "📖 Opening ${test_file} using configured editor $editor"
       $editor ${test_file}
       check_if_continue
     else
-      if [[ $(type code 2>&1) =~ "not found" ]]
-      then
-        logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
-        exit 1
-      else
-        log "📖 Opening ${test_file} with code (default) - you can change editor by updating config.ini"
-        code ${test_file}
-        check_if_continue
-      fi
+        if [[ $(type code 2>&1) =~ "not found" ]]
+        then
+            logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
+            exit 1
+        else
+            log "📖 Opening ${test_file} with code (default) - you can change editor by using playground config editor <editor>"
+            code ${test_file}
+            check_if_continue
+        fi
     fi
   fi
 
@@ -11101,18 +11315,18 @@ playground_open_command() {
     fi
   fi
 
-  if config_has_key "editor"
+  editor=$(playground config get editor)
+  if [ "$editor" != "" ]
   then
-    editor=$(config_get "editor")
     log "📖 Opening ${test_file} using configured editor $editor"
     $editor ${test_file}
   else
     if [[ $(type code 2>&1) =~ "not found" ]]
     then
-      logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
+      logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
       exit 1
     else
-      log "📖 Opening ${test_file} with code (default) - you can change editor by updating config.ini"
+      log "📖 Opening ${test_file} with code (default) - you can change editor by using playground config editor <editor>"
       code ${test_file}
     fi
   fi
@@ -11669,9 +11883,10 @@ playground_repro_bootstrap_command() {
 
       if [[ -n "$schema_file_key" ]]
       then
-        if config_has_key "editor"
+
+        editor=$(playground config get editor)
+        if [ "$editor" != "" ]
         then
-          editor=$(config_get "editor")
           log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
           if [ "$editor" = "code" ]
           then
@@ -11682,14 +11897,13 @@ playground_repro_bootstrap_command() {
         else
           if [[ $(type code 2>&1) =~ "not found" ]]
           then
-            logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
+            logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
             exit 1
           else
             log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
             code --wait $tmp_dir/key_schema
           fi
         fi
-
         case "${producer}" in
           avro-with-key)
             original_namespace=$(cat $tmp_dir/key_schema | jq -r .namespace)
@@ -11764,9 +11978,10 @@ playground_repro_bootstrap_command() {
 
       if [[ -n "$schema_file_value" ]]
       then
-        if config_has_key "editor"
+
+        editor=$(playground config get editor)
+        if [ "$editor" != "" ]
         then
-          editor=$(config_get "editor")
           log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
           if [ "$editor" = "code" ]
           then
@@ -11777,7 +11992,7 @@ playground_repro_bootstrap_command() {
         else
           if [[ $(type code 2>&1) =~ "not found" ]]
           then
-            logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
+            logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
             exit 1
           else
             log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
@@ -12394,20 +12609,20 @@ playground_repro_bootstrap_command() {
   playground state set run.test_file "$repro_dir/$repro_test_filename"
   playground state set run.run_command "playground run -f $repro_dir/$repro_test_filename"
 
-  if config_has_key "editor"
+  editor=$(playground config get editor)
+  if [ "$editor" != "" ]
   then
-    editor=$(config_get "editor")
     log "📖 Opening ${repro_test_filename} using configured editor $editor"
     $editor $repro_dir/$repro_test_filename
   else
-    if [[ $(type code 2>&1) =~ "not found" ]]
-    then
-      logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
-      exit 1
-    else
-      log "📖 Opening ${repro_test_filename} with code (default) - you can change editor by updating config.ini"
-      code $repro_dir/$repro_test_filename
-    fi
+      if [[ $(type code 2>&1) =~ "not found" ]]
+      then
+          logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
+          exit 1
+      else
+          log "📖 Opening ${repro_test_filename} with code (default) - you can change editor by using playground config editor <editor>"
+          code $repro_dir/$repro_test_filename
+      fi
   fi
 
   # run command specifics:
@@ -13093,19 +13308,19 @@ playground_debug_thread_dump_command() {
   docker exec $container jstack 1 > "$filename" 2>&1
   if [ $? -eq 0 ]
   then
-      if config_has_key "editor"
+      editor=$(playground config get editor)
+      if [ "$editor" != "" ]
       then
-          editor=$(config_get "editor")
           log "📖 Opening ${filename} using configured editor $editor"
-          $editor $filename
+          $editor ${filename}
       else
           if [[ $(type code 2>&1) =~ "not found" ]]
           then
-              logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
+              logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
               exit 1
           else
-              log "📖 Opening ${filename} with code (default) - you can change editor by updating config.ini"
-              code $filename
+              log "📖 Opening ${filename} with code (default) - you can change editor by using playground config editor <editor>"
+              code ${filename}
           fi
       fi
   else
@@ -13520,20 +13735,20 @@ playground_container_logs_command() {
     docker container logs "$container" > "$filename" 2>&1
     if [ $? -eq 0 ]
     then
-      if config_has_key "editor"
+      editor=$(playground config get editor)
+      if [ "$editor" != "" ]
       then
-        editor=$(config_get "editor")
-        log "📖 Opening ${filename} using configured editor $editor"
-        $editor $filename
+          log "📖 Opening ${filename} using configured editor $editor"
+          $editor ${filename}
       else
-        if [[ $(type code 2>&1) =~ "not found" ]]
-        then
-          logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
-          exit 1
-        else
-          log "📖 Opening ${filename} with code (default) - you can change editor by updating config.ini"
-          code $filename
-        fi
+          if [[ $(type code 2>&1) =~ "not found" ]]
+          then
+              logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
+              exit 1
+          else
+              log "📖 Opening ${filename} with code (default) - you can change editor by using playground config editor <editor>"
+              code ${filename}
+          fi
       fi
     else
       logerror "Failed to get logs using container logs $container"
@@ -16051,19 +16266,19 @@ playground_ccloud_connector_show_config_parameters_command() {
 
       if [[ -n "$open" ]]
       then
-          if config_has_key "editor"
+          editor=$(playground config get editor)
+          if [ "$editor" != "" ]
           then
-              editor=$(config_get "editor")
-          log "📖 Opening ${filename} using configured editor $editor"
-          $editor $filename
+              log "📖 Opening ${filename} using configured editor $editor"
+              $editor ${filename}
           else
               if [[ $(type code 2>&1) =~ "not found" ]]
               then
-              logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
-              exit 1
+                  logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
+                  exit 1
               else
-              log "📖 Opening ${filename} with code (default) - you can change editor by updating config.ini"
-              code $filename
+                  log "📖 Opening ${filename} with code (default) - you can change editor by using playground config editor <editor>"
+                  code ${filename}
               fi
           fi
       else
@@ -16985,19 +17200,19 @@ playground_connector_show_config_parameters_command() {
 
       if [[ -n "$open" ]]
       then
-          if config_has_key "editor"
+          editor=$(playground config get editor)
+          if [ "$editor" != "" ]
           then
-              editor=$(config_get "editor")
-          log "📖 Opening ${filename} using configured editor $editor"
-          $editor $filename
+              log "📖 Opening ${filename} using configured editor $editor"
+              $editor ${filename}
           else
               if [[ $(type code 2>&1) =~ "not found" ]]
               then
-              logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
-              exit 1
+                  logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
+                  exit 1
               else
-              log "📖 Opening ${filename} with code (default) - you can change editor by updating config.ini"
-              code $filename
+                  log "📖 Opening ${filename} with code (default) - you can change editor by using playground config editor <editor>"
+                  code ${filename}
               fi
           fi
       else
@@ -17446,6 +17661,13 @@ parse_requirements() {
       action="state"
       shift
       playground_state_parse_requirements "$@"
+      shift $#
+      ;;
+
+    config)
+      action="config"
+      shift
+      playground_config_parse_requirements "$@"
       shift $#
       ;;
 
@@ -18449,28 +18671,28 @@ playground_state_parse_requirements() {
   case $action in
     -*) ;;
 
-    list | l)
-      action="list"
+    show)
+      action="show"
       shift
-      playground_state_list_parse_requirements "$@"
+      playground_state_show_parse_requirements "$@"
       shift $#
       ;;
 
-    get | g)
+    get)
       action="get"
       shift
       playground_state_get_parse_requirements "$@"
       shift $#
       ;;
 
-    set | s)
+    set)
       action="set"
       shift
       playground_state_set_parse_requirements "$@"
       shift $#
       ;;
 
-    del | d)
+    del)
       action="del"
       shift
       playground_state_del_parse_requirements "$@"
@@ -18514,13 +18736,13 @@ playground_state_parse_requirements() {
 }
 
 # :command.parse_requirements
-playground_state_list_parse_requirements() {
+playground_state_show_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
     case "${1:-}" in
       --help | -h)
         long_usage=yes
-        playground_state_list_usage
+        playground_state_show_usage
         exit
         ;;
 
@@ -18532,7 +18754,7 @@ playground_state_list_parse_requirements() {
   done
 
   # :command.command_filter
-  action="state list"
+  action="state show"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -18728,6 +18950,389 @@ playground_state_del_parse_requirements() {
   # :command.required_args_filter
   if [[ -z ${args['key']+x} ]]; then
     printf "missing required argument: KEY\nusage: playground state del KEY\n" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_config_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_config_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    show)
+      action="show"
+      shift
+      playground_config_show_parse_requirements "$@"
+      shift $#
+      ;;
+
+    get)
+      action="get"
+      shift
+      playground_config_get_parse_requirements "$@"
+      shift $#
+      ;;
+
+    set)
+      action="set"
+      shift
+      playground_config_set_parse_requirements "$@"
+      shift $#
+      ;;
+
+    editor)
+      action="editor"
+      shift
+      playground_config_editor_parse_requirements "$@"
+      shift $#
+      ;;
+
+    folder_zip_or_jar)
+      action="folder_zip_or_jar"
+      shift
+      playground_config_folder_zip_or_jar_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_config_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_config_show_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_config_show_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="config show"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_config_get_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_config_get_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="config get"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        if [[ -z ${args['key']+x} ]]; then
+
+          args['key']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['key']+x} ]]; then
+    printf "missing required argument: KEY\nusage: playground config get KEY\n" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_config_set_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_config_set_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="config set"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        if [[ -z ${args['key']+x} ]]; then
+
+          args['key']=$1
+          shift
+        elif [[ -z ${args['value']+x} ]]; then
+
+          args['value']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['key']+x} ]]; then
+    printf "missing required argument: KEY\nusage: playground config set KEY VALUE\n" >&2
+    exit 1
+  fi
+  if [[ -z ${args['value']+x} ]]; then
+    printf "missing required argument: VALUE\nusage: playground config set KEY VALUE\n" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_config_editor_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_config_editor_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="config editor"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        if [[ -z ${args['editor']+x} ]]; then
+          # :argument.validations
+          if [[ -n $(validate_editor_exists "$1") ]]; then
+            printf "validation error in %s:\n%s\n" "EDITOR" "$(validate_editor_exists "$1")" >&2
+            exit 1
+          fi
+
+          args['editor']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['editor']+x} ]]; then
+    printf "missing required argument: EDITOR\nusage: playground config editor EDITOR\n" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_config_folder_zip_or_jar_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_config_folder_zip_or_jar_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="config folder_zip_or_jar"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_repeatable
+        # :argument.validations
+        if [[ -n $(validate_dir_exists "$1") ]]; then
+          printf "validation error in %s:\n%s\n" "FOLDER" "$(validate_dir_exists "$1")" >&2
+          exit 1
+        fi
+
+        if [[ -z ${args['folder']+x} ]]; then
+          args['folder']="\"$1\""
+          shift
+        elif [[ ! "${args['folder']}" =~ \"$1\" ]]; then
+          args['folder']="${args[folder]} \"$1\""
+          shift
+        else
+          shift
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['folder']+x} ]]; then
+    printf "missing required argument: FOLDER\nusage: playground config folder_zip_or_jar FOLDER...\n" >&2
     exit 1
   fi
 
@@ -27207,20 +27812,6 @@ initialize() {
   long_usage=''
   set -e
 
-  # src/initialize.sh
-
-  if [ -z $CONFIG_FILE ]
-  then
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-      dir1=$(echo ${DIR_CLI%/*})
-      root_folder=$(echo ${dir1%/*})
-
-      CONFIG_FILE=$root_folder/scripts/cli/config.ini
-
-      # log "📝 Loading default config.ini $CONFIG_FILE as CONFIG_FILE environment variable is not set"
-  # else
-      # log "📝 Loading config.ini $CONFIG_FILE from CONFIG_FILE environment variable"
-  fi
 }
 
 # :command.run
@@ -27250,10 +27841,16 @@ run() {
     "get-predefined-schemas") playground_get_predefined_schemas_command ;;
     "bashly-reload") playground_bashly_reload_command ;;
     "state") playground_state_command ;;
-    "state list") playground_state_list_command ;;
+    "state show") playground_state_show_command ;;
     "state get") playground_state_get_command ;;
     "state set") playground_state_set_command ;;
     "state del") playground_state_del_command ;;
+    "config") playground_config_command ;;
+    "config show") playground_config_show_command ;;
+    "config get") playground_config_get_command ;;
+    "config set") playground_config_set_command ;;
+    "config editor") playground_config_editor_command ;;
+    "config folder_zip_or_jar") playground_config_folder_zip_or_jar_command ;;
     "run") playground_run_command ;;
     "re-run") playground_re_run_command ;;
     "history") playground_history_command ;;

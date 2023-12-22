@@ -315,9 +315,12 @@ then
     #### schema_file_key
     if [[ -n "$schema_file_key" ]]
     then
-      if config_has_key "editor"
+
+
+
+      editor=$(playground config get editor)
+      if [ "$editor" != "" ]
       then
-        editor=$(config_get "editor")
         log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
         if [ "$editor" = "code" ]
         then
@@ -328,14 +331,13 @@ then
       else
         if [[ $(type code 2>&1) =~ "not found" ]]
         then
-          logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
+          logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
           exit 1
         else
           log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
           code --wait $tmp_dir/key_schema
         fi
       fi
-
       case "${producer}" in
         avro-with-key)
           original_namespace=$(cat $tmp_dir/key_schema | jq -r .namespace)
@@ -412,9 +414,10 @@ then
     #### schema_file_value
     if [[ -n "$schema_file_value" ]]
     then
-      if config_has_key "editor"
+
+      editor=$(playground config get editor)
+      if [ "$editor" != "" ]
       then
-        editor=$(config_get "editor")
         log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
         if [ "$editor" = "code" ]
         then
@@ -425,7 +428,7 @@ then
       else
         if [[ $(type code 2>&1) =~ "not found" ]]
         then
-          logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
+          logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
           exit 1
         else
           log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
@@ -1049,20 +1052,20 @@ echo "playground run -f $repro_dir/$repro_test_filename"
 playground state set run.test_file "$repro_dir/$repro_test_filename"
 playground state set run.run_command "playground run -f $repro_dir/$repro_test_filename"
 
-if config_has_key "editor"
+editor=$(playground config get editor)
+if [ "$editor" != "" ]
 then
-  editor=$(config_get "editor")
   log "📖 Opening ${repro_test_filename} using configured editor $editor"
   $editor $repro_dir/$repro_test_filename
 else
-  if [[ $(type code 2>&1) =~ "not found" ]]
-  then
-    logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
-    exit 1
-  else
-    log "📖 Opening ${repro_test_filename} with code (default) - you can change editor by updating config.ini"
-    code $repro_dir/$repro_test_filename
-  fi
+    if [[ $(type code 2>&1) =~ "not found" ]]
+    then
+        logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
+        exit 1
+    else
+        log "📖 Opening ${repro_test_filename} with code (default) - you can change editor by using playground config editor <editor>"
+        code $repro_dir/$repro_test_filename
+    fi
 fi
 
 # run command specifics:

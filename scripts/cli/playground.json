@@ -20,32 +20,58 @@
       "subcommands": null
     },
     {
-      "name": "list",
-      "description": "Show the entire config file\n",
-      "usage": "playground state list",
+      "name": "show",
+      "description": "Show the entire playground.ini file\n",
+      "usage": "playground state show",
       "options": [],
       "subcommands": null
     },
     {
       "name": "get",
-      "description": "Read a value from the config file\n",
+      "description": "Read a value from the playground.ini file\n",
       "usage": "playground state get KEY",
       "options": [],
       "subcommands": null
     },
     {
       "name": "set",
-      "description": "Save a value in the config file\n",
+      "description": "Save a value in the playground.ini file\n",
       "usage": "playground state set KEY VALUE",
       "options": [],
       "subcommands": null
     },
     {
       "name": "del",
-      "description": "Remove a value from the config file\n",
+      "description": "Remove a value from the playground.ini file\n",
       "usage": "playground state del KEY",
       "options": [],
       "subcommands": null
+    },
+    {
+      "name": "config",
+      "description": "",
+      "usage": "playground config COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "show",
+          "description": "Show the entire playground_config.ini file\n",
+          "usage": "playground config show",
+          "options": []
+        },
+        {
+          "name": "editor",
+          "description": "editor to use to open files\n",
+          "usage": "playground config editor EDITOR",
+          "options": []
+        },
+        {
+          "name": "folder_zip_or_jar",
+          "description": "📂 list of folders where to search for zip or jar\n  current folder is always included\n  \n  default is ~ (home dir)\n",
+          "usage": "playground config folder_zip_or_jar FOLDER...",
+          "options": []
+        }
+      ]
     },
     {
       "name": "run",
@@ -66,7 +92,7 @@
             "-o"
           ],
           "argument": "",
-          "description": "📖 Opening example file with text editor set with config.ini (default is code)\n"
+          "description": "📖 Opening example file with text editor set with playground config editor <editor> (default is code)\n"
         },
         {
           "names": [
@@ -87,14 +113,14 @@
             "--connector-zip"
           ],
           "argument": "CONNECTOR_ZIP",
-          "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)\n\nConflicts with: --connector-tag\n"
+          "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n\nConflicts with: --connector-tag\n"
         },
         {
           "names": [
             "--connector-jar"
           ],
           "argument": "CONNECTOR_JAR",
-          "description": "♨️ Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)\n"
+          "description": "♨️ Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n"
         },
         {
           "names": [
@@ -200,14 +226,14 @@
             "--connector-zip"
           ],
           "argument": "CONNECTOR_ZIP",
-          "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)\n\nConflicts with: --connector-tag\n"
+          "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n\nConflicts with: --connector-tag\n"
         },
         {
           "names": [
             "--connector-jar"
           ],
           "argument": "CONNECTOR_JAR",
-          "description": "♨️ Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)\n"
+          "description": "♨️ Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n"
         },
         {
           "names": [
@@ -393,7 +419,7 @@
             "-o"
           ],
           "argument": "",
-          "description": "📖 Opening example file with text editor set with config.ini (default is code)\n"
+          "description": "📖 Opening example file with text editor set with playground config editor <editor> (default is code)\n"
         },
         {
           "names": [
@@ -414,14 +440,14 @@
             "--connector-zip"
           ],
           "argument": "CONNECTOR_ZIP",
-          "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)\n\nConflicts with: --connector-tag\n"
+          "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n\nConflicts with: --connector-tag\n"
         },
         {
           "names": [
             "--connector-jar"
           ],
           "argument": "CONNECTOR_JAR",
-          "description": "♨️ Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)\n"
+          "description": "♨️ Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n"
         },
         {
           "names": [
@@ -589,14 +615,14 @@
             "--connector-zip"
           ],
           "argument": "CONNECTOR_ZIP",
-          "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)\n\nConflicts with: --connector-tag\n"
+          "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n\nConflicts with: --connector-tag\n"
         },
         {
           "names": [
             "--connector-jar"
           ],
           "argument": "CONNECTOR_JAR",
-          "description": "♨️ Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)\n"
+          "description": "♨️ Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n"
         }
       ],
       "subcommands": null
@@ -670,7 +696,7 @@
                 "-f"
               ],
               "argument": "FILE",
-              "description": "🤐 playground_repro_export.tgz file\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)\n"
+              "description": "🤐 playground_repro_export.tgz file\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n"
             }
           ]
         },
@@ -698,14 +724,14 @@
                 "--connector-zip"
               ],
               "argument": "CONNECTOR_ZIP",
-              "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)\n\nConflicts with: --connector-tag\n"
+              "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n\nConflicts with: --connector-tag\n"
             },
             {
               "names": [
                 "--connector-jar"
               ],
               "argument": "CONNECTOR_JAR",
-              "description": "♨️ Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)\n"
+              "description": "♨️ Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n"
             },
             {
               "names": [
@@ -1176,7 +1202,7 @@
         },
         {
           "name": "thread-dump",
-          "description": "🎯 Take a java thread dump\n  \n  🔖 It will save output to a file and open with text editor set with config.ini (default is code)\n",
+          "description": "🎯 Take a java thread dump\n  \n  🔖 It will save output to a file and open with text editor set with playground config editor <editor> (default is code)\n",
           "usage": "playground debug thread-dump [OPTIONS]",
           "options": [
             {
@@ -1375,7 +1401,7 @@
             "-o"
           ],
           "argument": "",
-          "description": "🔖 Save output to a file and open with text editor set with config.ini (default is code)\n"
+          "description": "🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)\n"
         },
         {
           "names": [
@@ -1439,7 +1465,7 @@
                 "-o"
               ],
               "argument": "",
-              "description": "🔖 Save output to a file and open with text editor set with config.ini (default is code)\n\nConflicts with: --wait-for-log\n"
+              "description": "🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)\n\nConflicts with: --wait-for-log\n"
             },
             {
               "names": [
@@ -2240,7 +2266,7 @@
                 "-o"
               ],
               "argument": "",
-              "description": "🔖 Save output to a file and open with text editor set with config.ini (default is code)\n"
+              "description": "🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)\n"
             },
             {
               "names": [
@@ -2542,7 +2568,7 @@
                 "-o"
               ],
               "argument": "",
-              "description": "🔖 Save output to a file and open with text editor set with config.ini (default is code)\n"
+              "description": "🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)\n"
             },
             {
               "names": [

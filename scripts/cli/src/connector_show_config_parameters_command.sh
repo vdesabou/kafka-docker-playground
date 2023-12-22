@@ -157,19 +157,19 @@ do
 
     if [[ -n "$open" ]]
     then
-        if config_has_key "editor"
+        editor=$(playground config get editor)
+        if [ "$editor" != "" ]
         then
-            editor=$(config_get "editor")
-        log "📖 Opening ${filename} using configured editor $editor"
-        $editor $filename
+            log "📖 Opening ${filename} using configured editor $editor"
+            $editor ${filename}
         else
             if [[ $(type code 2>&1) =~ "not found" ]]
             then
-            logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
-            exit 1
+                logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
+                exit 1
             else
-            log "📖 Opening ${filename} with code (default) - you can change editor by updating config.ini"
-            code $filename
+                log "📖 Opening ${filename} with code (default) - you can change editor by using playground config editor <editor>"
+                code ${filename}
             fi
         fi
     else

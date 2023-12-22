@@ -19,30 +19,54 @@ subcommands:
     usage: playground status
     options: []
     subcommands:
-  - name: list
+  - name: show
     description: | 
-        Show the entire config file
-    usage: playground state list
+        Show the entire playground.ini file
+    usage: playground state show
     options: []
     subcommands:
   - name: get
     description: | 
-        Read a value from the config file
+        Read a value from the playground.ini file
     usage: playground state get KEY
     options: []
     subcommands:
   - name: set
     description: | 
-        Save a value in the config file
+        Save a value in the playground.ini file
     usage: playground state set KEY VALUE
     options: []
     subcommands:
   - name: del
     description: | 
-        Remove a value from the config file
+        Remove a value from the playground.ini file
     usage: playground state del KEY
     options: []
     subcommands:
+  - name: config
+    description: | 
+        
+    usage: playground config COMMAND
+    options: []
+    subcommands:
+      - name: show
+        description: | 
+          Show the entire playground_config.ini file
+        usage: playground config show
+        options: []
+      - name: editor
+        description: | 
+          editor to use to open files
+        usage: playground config editor EDITOR
+        options: []
+      - name: folder_zip_or_jar
+        description: | 
+          📂 list of folders where to search for zip or jar
+            current folder is always included
+            
+            default is ~ (home dir)
+        usage: playground config folder_zip_or_jar FOLDER...
+        options: []
   - name: run
     description: | 
         🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)
@@ -66,7 +90,7 @@ subcommands:
       - -o
       argument: ""
       description: | 
-        📖 Opening example file with text editor set with config.ini (default is code)
+        📖 Opening example file with text editor set with playground config editor <editor> (default is code)
         
     - names:
       - --tag
@@ -95,7 +119,7 @@ subcommands:
         ❕ It must be absolute full path
         
         🎓 Tip: use <tab> completion to trigger fzf completion 
-                use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+                use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
         
         Conflicts with: --connector-tag
         
@@ -108,7 +132,7 @@ subcommands:
         ❕ It must be absolute full path
         
         🎓 Tip: use <tab> completion to trigger fzf completion 
-                use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+                use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
         
     - names:
       - --enable-ksqldb
@@ -239,7 +263,7 @@ subcommands:
         ❕ It must be absolute full path
         
         🎓 Tip: use <tab> completion to trigger fzf completion 
-                use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+                use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
         
         Conflicts with: --connector-tag
         
@@ -252,7 +276,7 @@ subcommands:
         ❕ It must be absolute full path
         
         🎓 Tip: use <tab> completion to trigger fzf completion 
-                use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+                use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
         
     - names:
       - --enable-ksqldb
@@ -535,7 +559,7 @@ subcommands:
       - -o
       argument: ""
       description: | 
-        📖 Opening example file with text editor set with config.ini (default is code)
+        📖 Opening example file with text editor set with playground config editor <editor> (default is code)
         
     - names:
       - --tag
@@ -564,7 +588,7 @@ subcommands:
         ❕ It must be absolute full path
         
         🎓 Tip: use <tab> completion to trigger fzf completion 
-                use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+                use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
         
         Conflicts with: --connector-tag
         
@@ -577,7 +601,7 @@ subcommands:
         ❕ It must be absolute full path
         
         🎓 Tip: use <tab> completion to trigger fzf completion 
-                use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+                use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
         
     - names:
       - --enable-control-center
@@ -807,7 +831,7 @@ subcommands:
         ❕ It must be absolute full path
         
         🎓 Tip: use <tab> completion to trigger fzf completion 
-                use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+                use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
         
         Conflicts with: --connector-tag
         
@@ -820,7 +844,7 @@ subcommands:
         ❕ It must be absolute full path
         
         🎓 Tip: use <tab> completion to trigger fzf completion 
-                use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+                use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
         
     subcommands:
   - name: open
@@ -892,7 +916,7 @@ subcommands:
             ❕ It must be absolute full path
             
             🎓 Tip: use <tab> completion to trigger fzf completion 
-                    use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+                    use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
             
       - name: bootstrap
         description: | 
@@ -928,7 +952,7 @@ subcommands:
             ❕ It must be absolute full path
             
             🎓 Tip: use <tab> completion to trigger fzf completion 
-                    use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+                    use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
             
             Conflicts with: --connector-tag
             
@@ -941,7 +965,7 @@ subcommands:
             ❕ It must be absolute full path
             
             🎓 Tip: use <tab> completion to trigger fzf completion 
-                    use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
+                    use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
             
         - names:
           - --enable-ksqldb
@@ -1466,7 +1490,7 @@ subcommands:
         description: | 
           🎯 Take a java thread dump
             
-            🔖 It will save output to a file and open with text editor set with config.ini (default is code)
+            🔖 It will save output to a file and open with text editor set with playground config editor <editor> (default is code)
         usage: playground debug thread-dump [OPTIONS]
         options:
         - names:
@@ -1659,7 +1683,7 @@ subcommands:
       - -o
       argument: ""
       description: | 
-        🔖 Save output to a file and open with text editor set with config.ini (default is code)
+        🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
         
     - names:
       - --domain
@@ -1719,7 +1743,7 @@ subcommands:
           - -o
           argument: ""
           description: | 
-            🔖 Save output to a file and open with text editor set with config.ini (default is code)
+            🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
             
             Conflicts with: --wait-for-log
             
@@ -2519,7 +2543,7 @@ subcommands:
           - -o
           argument: ""
           description: | 
-            🔖 Save output to a file and open with text editor set with config.ini (default is code)
+            🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
             
         - names:
           - --force-refresh
@@ -2789,7 +2813,7 @@ subcommands:
           - -o
           argument: ""
           description: | 
-            🔖 Save output to a file and open with text editor set with config.ini (default is code)
+            🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
             
         - names:
           - --force-refresh

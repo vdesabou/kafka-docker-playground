@@ -276,10 +276,9 @@ function get_zip_or_jar_with_fzf() {
     fzf_option_rounded=""
   fi
 
-  if config_has_key "folder_zip_or_jar"
+  folder_zip_or_jar=$(playground config get folder_zip_or_jar)
+  if [ "$folder_zip_or_jar" == "" ]
   then
-    folder_zip_or_jar=$(config_get "folder_zip_or_jar")
-  else
     logerror "Could not find config value <folder_zip_or_jar> !"
     exit 1
   fi
@@ -305,10 +304,9 @@ function get_playground_repro_export_with_fzf() {
     fzf_option_rounded=""
   fi
 
-  if config_has_key "folder_zip_or_jar"
+  folder_zip_or_jar=$(playground config get folder_zip_or_jar)
+  if [ "$folder_zip_or_jar" == "" ]
   then
-    folder_zip_or_jar=$(config_get "folder_zip_or_jar")
-  else
     logerror "Could not find config value <folder_zip_or_jar> !"
     exit 1
   fi

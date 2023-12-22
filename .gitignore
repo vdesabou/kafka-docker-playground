@@ -74,3 +74,4 @@ confluent-hub
 *.jfr
 playground-run-history
 playground.ini
+playground_config.ini
