@@ -97,6 +97,15 @@ then
   export ENABLE_KCAT=true
 fi
 
+if [[ -n "$cluster_region" ]]
+then
+  if [[ $cluster_region == *"@"* ]]
+  then
+    cluster_region=$(echo "$cluster_region" | cut -d "@" -f 2)
+  fi
+  cluster_region=$(echo "$cluster_region" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
+fi
+
 if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_name" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
 then
   if [ ! -z "$CLUSTER_TYPE" ]

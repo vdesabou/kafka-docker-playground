@@ -282,6 +282,35 @@ playground_generate_connector_plugin_list_usage() {
 }
 
 # :command.usage
+playground_generate_kafka_region_list_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground generate-kafka-region-list - generate the confluent kafka region list\n"
+    echo
+
+  else
+    printf "playground generate-kafka-region-list - generate the confluent kafka region list\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground generate-kafka-region-list\n"
+  printf "  playground generate-kafka-region-list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_get_connector_plugin_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground get-connector-plugin - Return some completion for connector plugin\n"
@@ -360,7 +389,7 @@ playground_get_kafka_region_list_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground get-kafka-region-list\n"
+  printf "  playground get-kafka-region-list [CUR]\n"
   printf "  playground get-kafka-region-list --help | -h\n"
   echo
 
@@ -371,6 +400,14 @@ playground_get_kafka_region_list_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "CUR")"
+    printf "    correspond to completion $cur\n"
     echo
 
   fi
@@ -5787,6 +5824,24 @@ function get_playground_repro_export_with_fzf() {
   res=$(find $folder_zip_or_jar $PWD -name playground_repro_export.tgz ! -path '*/\.*' | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
 }
 
+function get_confluent_kafka_region_list_with_fzf() {
+  cur="$1"
+
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
+  then
+    fzf_option_wrap="--preview-window=40%,wrap"
+    fzf_option_pointer="--pointer=👉"
+    fzf_option_rounded="--border=rounded"
+  else
+    fzf_options=""
+    fzf_option_pointer=""
+    fzf_option_rounded=""
+  fi
+
+  res=$(cat $root_folder/scripts/cli/confluent-kafka-region-list.txt | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+}
+
 function get_any_files_with_fzf() {
   cur="$1"
 
@@ -10035,6 +10090,13 @@ playground_generate_connector_plugin_list_command() {
 }
 
 # :command.function
+playground_generate_kafka_region_list_command() {
+  # src/generate_kafka_region_list_command.sh
+  confluent kafka region list | awk -F'|' '{print $1"/"$3}' | tr -s '[:blank:]' | grep -v "Cloud ID" | grep -v "\-\-\-" | grep -v "^\/" > $root_folder/scripts/cli/confluent-kafka-region-list.txt
+
+}
+
+# :command.function
 playground_get_connector_plugin_command() {
   # src/get_connector_plugin_command.sh
   cur="${args[cur]}"
@@ -10078,7 +10140,9 @@ playground_get_ccloud_connector_list_command() {
 # :command.function
 playground_get_kafka_region_list_command() {
   # src/get_kafka_region_list_command.sh
-  confluent kafka region list
+  cur="${args[cur]}"
+
+  get_confluent_kafka_region_list_with_fzf "$cur"
 }
 
 # :command.function
@@ -10990,6 +11054,15 @@ playground_run_ccloud_command() {
   then
     flag_list="$flag_list --enable-kcat"
     export ENABLE_KCAT=true
+  fi
+
+  if [[ -n "$cluster_region" ]]
+  then
+    if [[ $cluster_region == *"@"* ]]
+    then
+      cluster_region=$(echo "$cluster_region" | cut -d "@" -f 2)
+    fi
+    cluster_region=$(echo "$cluster_region" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
   fi
 
   if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_name" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
@@ -17667,6 +17740,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    generate-kafka-region-list)
+      action="generate-kafka-region-list"
+      shift
+      playground_generate_kafka_region_list_parse_requirements "$@"
+      shift $#
+      ;;
+
     get-connector-plugin)
       action="get-connector-plugin"
       shift
@@ -18131,6 +18211,59 @@ playground_generate_connector_plugin_list_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_generate_kafka_region_list_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_generate_kafka_region_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+  if command -v confluent >/dev/null 2>&1; then
+    deps['confluent']="$(command -v confluent | head -n1)"
+  else
+    printf "missing dependency: confluent\n" >&2
+    printf "%s\n" "visit https://docs.confluent.io/confluent-cli/current/overview.html to install" >&2
+    exit 1
+  fi
+
+  # :command.command_filter
+  action="generate-kafka-region-list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
 playground_get_connector_plugin_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
@@ -18276,8 +18409,14 @@ playground_get_kafka_region_list_parse_requirements() {
       *)
         # :command.parse_requirements_case
         # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
+        if [[ -z ${args['cur']+x} ]]; then
+
+          args['cur']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
 
         ;;
 
@@ -27830,6 +27969,7 @@ run() {
     "status") playground_status_command ;;
     "get-connector-list") playground_get_connector_list_command ;;
     "generate-connector-plugin-list") playground_generate_connector_plugin_list_command ;;
+    "generate-kafka-region-list") playground_generate_kafka_region_list_command ;;
     "get-connector-plugin") playground_get_connector_plugin_command ;;
     "get-ccloud-connector-list") playground_get_ccloud_connector_list_command ;;
     "get-kafka-region-list") playground_get_kafka_region_list_command ;;

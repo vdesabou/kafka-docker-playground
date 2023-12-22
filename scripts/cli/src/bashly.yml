@@ -28,6 +28,12 @@ commands:
   help: generate the confluent hub plugin list
   private: true
 
+- name: generate-kafka-region-list
+  help: generate the confluent kafka region list
+  private: true
+  dependencies:
+    confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+    
 - name: get-connector-plugin
   help: Return some completion for connector plugin
   private: true
@@ -47,6 +53,10 @@ commands:
   private: true
   dependencies:
     confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+  args:
+  - name: cur
+    required: false
+    help: correspond to completion $cur
 
 - name: get-topic-list
   help: Return some completion for topic list
@@ -595,7 +605,7 @@ commands:
       required: false
       arg: cluster-region
       completions:
-        - $(playground get-kafka-region-list)
+        - $(playground get-kafka-region-list "$cur")
       help: |-
         🗺 The Cloud region. 
         
