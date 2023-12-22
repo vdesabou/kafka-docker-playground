@@ -14,6 +14,5 @@ if [[ "$value" ]]
 then
   echo "$value"
 else
-  logerror "No such key: $key"
-  return 1
+  echo ""
 fi

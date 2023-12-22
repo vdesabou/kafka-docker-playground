@@ -122,6 +122,11 @@ else
   else
     log "🚀 Running example again with same flags as before"
     run_command=$(playground state get run.run_command)
+    if [ "$run_command" == "" ]
+    then
+      logerror "run_command retrieved from $root_folder/playground.ini is empty !"
+      exit 1
+    fi
     echo "$run_command"
     bash "$run_command"
   fi

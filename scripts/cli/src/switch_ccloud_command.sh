@@ -2,24 +2,21 @@ log "🌩️ switch to ccloud environment"
 
 for item in {ENVIRONMENT,CLUSTER_NAME,CLUSTER_CLOUD,CLUSTER_REGION,CLUSTER_CREDS,SCHEMA_REGISTRY_CREDS}
 do
-set +e
-playground state get "ccloud.${item}" > /dev/null 2>&1
-if [ $? != 0 ]
-then
-    logerror "ccloud.${item} is missing"
-    logerror "a ccloud example was probably not executed before"
-    exit 1
-fi
+    i=$(playground state get "ccloud.${item}")
+    if [ "$i" == "" ]
+    then
+        logerror "ccloud.${item} is missing"
+        logerror "a ccloud example was probably not executed before"
+        exit 1
+    fi
 done
 
-set +e
 ENVIRONMENT=$(playground state get ccloud.ENVIRONMENT)
 CLUSTER_NAME=$(playground state get ccloud.CLUSTER_NAME)
 CLUSTER_CLOUD=$(playground state get ccloud.CLUSTER_CLOUD)
 CLUSTER_REGION=$(playground state get ccloud.CLUSTER_REGION)
 CLUSTER_CREDS=$(playground state get ccloud.CLUSTER_CREDS)
 SCHEMA_REGISTRY_CREDS=$(playground state get ccloud.SCHEMA_REGISTRY_CREDS)
-set -e
 
 playground state set run.environment_before_switch "$(playground state get run.environment)"
 

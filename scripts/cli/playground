@@ -5971,6 +5971,11 @@ EOF
 
 function get_remote_debugging_command_heredoc () {
 docker_command=$(playground state get run.docker_command)
+if [ "$docker_command" == "" ]
+then
+  logerror "docker_command retrieved from $root_folder/playground.ini is empty !"
+  exit 1
+fi
 echo "$docker_command" > /tmp/tmp
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
@@ -9723,9 +9728,8 @@ function force_enable () {
 function load_env_variables () {
   for item in {ENABLE_CONTROL_CENTER,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,SQL_DATAGEN,ENABLE_KAFKA_NODES,ENABLE_SR_MAVEN_PLUGIN_NODE,CONNECT_NODES_PROFILES,CONNECT_NODES_PROFILES}
   do
-    set +e
-    playground state get "flags.${item}" > /dev/null 2>&1
-    if [ $? -ne 1 ]
+    i=$(playground state get "flags.${item}")
+    if [ "$i" != "" ]
     then
       log "⛳ exporting environment variable ${item}"
       export "${item}"=1
@@ -10116,8 +10120,7 @@ playground_state_get_command() {
   then
     echo "$value"
   else
-    logerror "No such key: $key"
-    return 1
+    echo ""
   fi
 }
 
@@ -10518,6 +10521,11 @@ playground_re_run_command() {
     else
       log "🚀 Running example again with same flags as before"
       run_command=$(playground state get run.run_command)
+      if [ "$run_command" == "" ]
+      then
+        logerror "run_command retrieved from $root_folder/playground.ini is empty !"
+        exit 1
+      fi
       echo "$run_command"
       bash "$run_command"
     fi
@@ -10886,24 +10894,21 @@ playground_switch_ccloud_command() {
 
   for item in {ENVIRONMENT,CLUSTER_NAME,CLUSTER_CLOUD,CLUSTER_REGION,CLUSTER_CREDS,SCHEMA_REGISTRY_CREDS}
   do
-  set +e
-  playground state get "ccloud.${item}" > /dev/null 2>&1
-  if [ $? != 0 ]
-  then
-      logerror "ccloud.${item} is missing"
-      logerror "a ccloud example was probably not executed before"
-      exit 1
-  fi
+      i=$(playground state get "ccloud.${item}")
+      if [ "$i" == "" ]
+      then
+          logerror "ccloud.${item} is missing"
+          logerror "a ccloud example was probably not executed before"
+          exit 1
+      fi
   done
 
-  set +e
   ENVIRONMENT=$(playground state get ccloud.ENVIRONMENT)
   CLUSTER_NAME=$(playground state get ccloud.CLUSTER_NAME)
   CLUSTER_CLOUD=$(playground state get ccloud.CLUSTER_CLOUD)
   CLUSTER_REGION=$(playground state get ccloud.CLUSTER_REGION)
   CLUSTER_CREDS=$(playground state get ccloud.CLUSTER_CREDS)
   SCHEMA_REGISTRY_CREDS=$(playground state get ccloud.SCHEMA_REGISTRY_CREDS)
-  set -e
 
   playground state set run.environment_before_switch "$(playground state get run.environment)"
 
@@ -10923,16 +10928,15 @@ playground_switch_ccloud_command() {
 playground_switch_onprem_command() {
   # src/switch_onprem_command.sh
   log "💺 Switch back to onprem environment"
-  set +e
-  playground state get run.environment_before_switch > /dev/null 2>&1
-  if [ $? -ne 0 ]
+
+  environment_before_switch=$(playground state get run.environment_before_switch)
+  if [ "$environment_before_switch" == "" ]
   then
       logerror "switch-ccloud was probably not executed before"
       exit 1
   fi
-  set -e
 
-  playground state set run.environment "$(playground state get run.environment_before_switch)"
+  playground state set run.environment "$environment_before_switch"
   playground state del run.environment_before_switch
 
   test_file=$(playground state get run.test_file)
@@ -12505,6 +12509,11 @@ playground_get_docker_compose_command() {
   export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
 
   docker_command=$(playground state get run.docker_command)
+  if [ "$docker_command" == "" ]
+  then
+    logerror "docker_command retrieved from $root_folder/playground.ini is empty !"
+    exit 1
+  fi
   echo "$docker_command" > /tmp/tmp
   sed -e "s|up -d|config|g" \
       /tmp/tmp > /tmp/playground-command-config
@@ -13473,6 +13482,11 @@ playground_container_recreate_command() {
   export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
 
   docker_command=$(playground state get run.docker_command)
+  if [ "$docker_command" == "" ]
+  then
+    logerror "docker_command retrieved from $root_folder/playground.ini is empty !"
+    exit 1
+  fi
   echo "$docker_command" > /tmp/playground-command
   log "💫 Recreate container(s)"
   bash /tmp/playground-command

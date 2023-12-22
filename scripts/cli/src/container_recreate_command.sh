@@ -12,6 +12,11 @@ fi
 export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
 
 docker_command=$(playground state get run.docker_command)
+if [ "$docker_command" == "" ]
+then
+  logerror "docker_command retrieved from $root_folder/playground.ini is empty !"
+  exit 1
+fi
 echo "$docker_command" > /tmp/playground-command
 log "💫 Recreate container(s)"
 bash /tmp/playground-command

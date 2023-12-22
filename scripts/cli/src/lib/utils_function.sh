@@ -3624,9 +3624,8 @@ function force_enable () {
 function load_env_variables () {
   for item in {ENABLE_CONTROL_CENTER,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,SQL_DATAGEN,ENABLE_KAFKA_NODES,ENABLE_SR_MAVEN_PLUGIN_NODE,CONNECT_NODES_PROFILES,CONNECT_NODES_PROFILES}
   do
-    set +e
-    playground state get "flags.${item}" > /dev/null 2>&1
-    if [ $? -ne 1 ]
+    i=$(playground state get "flags.${item}")
+    if [ "$i" != "" ]
     then
       log "⛳ exporting environment variable ${item}"
       export "${item}"=1

@@ -116,6 +116,11 @@ EOF
 
 function get_remote_debugging_command_heredoc () {
 docker_command=$(playground state get run.docker_command)
+if [ "$docker_command" == "" ]
+then
+  logerror "docker_command retrieved from $root_folder/playground.ini is empty !"
+  exit 1
+fi
 echo "$docker_command" > /tmp/tmp
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
