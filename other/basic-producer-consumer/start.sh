@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 mvn package -f "./kafka-producer-application/pom.xml"
 mvn package -f "./kafka-consumer-application/pom.xml"
 
-${DIR}/../../environment/plaintext/start.sh
+playground start-environment --environment plaintext
 
 log "Create topic output-topic"
 docker exec broker kafka-topics --create --topic output-topic --bootstrap-server broker:9092 --replication-factor 1 --partitions 1

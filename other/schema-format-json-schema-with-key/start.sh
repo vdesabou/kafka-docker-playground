@@ -23,7 +23,7 @@ do
     set -e
 done
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.java-producer.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.java-producer.yml"
 
 log "Produce json-schema data using Java producer"
 docker exec producer bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"

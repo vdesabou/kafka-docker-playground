@@ -22,7 +22,7 @@ then
 fi
 
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.datadirect.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.datadirect.yml"
 
 sleep 30
 

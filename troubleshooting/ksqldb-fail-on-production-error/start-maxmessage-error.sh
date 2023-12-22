@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 # make sure ksqlDB is not disabled
 export ENABLE_KSQLDB=true
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.maxmessage-error.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.maxmessage-error.yml"
 
 log "Create the input topic with a stream"
 timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF

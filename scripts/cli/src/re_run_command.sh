@@ -128,6 +128,7 @@ else
       exit 1
     fi
     echo "$run_command"
-    bash "$run_command"
+    echo "$run_command" > /tmp/playground-run
+    bash /tmp/playground-run
   fi
 fi

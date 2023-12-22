@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 # make sure control-center is not disabled
 export ENABLE_CONTROL_CENTER=true
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.standalone-worker.yml" -a -b
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.standalone-worker.yml" -a -b
 
 log "Create table"
 docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF

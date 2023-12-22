@@ -9,13 +9,13 @@ if ! version_gt $TAG_BASE "5.4.0"; then
     exit 111
 fi
 
-${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.yml"
+playground start-environment --environment ccloud --docker-compose-override-file "${PWD}/docker-compose.yml"
 
 # generate sr.json config
 sed -e "s|:SCHEMA_REGISTRY_URL:|$SCHEMA_REGISTRY_URL|g" \
     ../../ccloud/multiple-sr-hybrid/sr-template.json > ../../ccloud/multiple-sr-hybrid/sr.json
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.yml"
 
 # results a re inconsistent depending on RHEL or DEBIAN
 if [[ "$TAG" == *ubi8 ]]  || version_gt $TAG_BASE "5.9.0" #starting from 6.0, all images are ubi8

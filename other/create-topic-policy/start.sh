@@ -11,7 +11,7 @@ then
      docker run -i --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/create-topic-policy":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/create-topic-policy/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 ../../scripts/wait-for-connect-and-controlcenter.sh
 

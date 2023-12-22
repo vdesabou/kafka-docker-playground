@@ -105,7 +105,7 @@ do
     if [[ "$test" == "connect"* ]]
     then
       # if it is a connector test, get connector_path
-      docker_compose_file=$(grep "environment" "$script" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
+      docker_compose_file=$(grep "start-environment" "$script" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
       if [ "${docker_compose_file}" != "" ] && [ -f "${test}/${docker_compose_file}" ]
       then
         connector_path=$(grep "CONNECT_PLUGIN_PATH" "${test}/${docker_compose_file}" | grep -v KSQL_CONNECT_PLUGIN_PATH | cut -d "/" -f 5)

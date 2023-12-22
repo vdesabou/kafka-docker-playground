@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 cp $PWD/create-role-bindings-for-group.sh ../../environment/rbac-sasl-plain/scripts/helper/
 
-${DIR}/../../environment/rbac-sasl-plain/start.sh
+playground start-environment --environment rbac-sasl-plain
 
 
 log "Creating role bindings for group"

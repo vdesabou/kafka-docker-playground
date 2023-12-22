@@ -28,7 +28,7 @@ then
      exit 1
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending messages to topic incidents"
 playground topic produce -t incidents --nb-messages 3 --forced-value "{\"fromEmail\":\"$PAGERDUTY_USER_EMAIL\", \"serviceId\":\"$PAGERDUTY_SERVICE_ID\", \"incidentTitle\":\"Incident Title x %g\"}" << 'EOF'

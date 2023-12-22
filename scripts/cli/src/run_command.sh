@@ -120,7 +120,7 @@ then
   export ENABLE_CONNECT_NODES=true
 
   # determining the docker-compose file from from test_file
-  docker_compose_file=$(grep "environment" "$test_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
+  docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
   docker_compose_file="${test_file_directory}/${docker_compose_file}"
   cp $docker_compose_file /tmp/playground-backup-docker-compose.yml
   yq -i '.services.connect2 = .services.connect' /tmp/playground-backup-docker-compose.yml

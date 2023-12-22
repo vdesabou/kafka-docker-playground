@@ -11,7 +11,7 @@ ssh-keygen -t rsa -b 4096 -f ssh_host_rsa_key -P "mypassword"
 ssh-keygen -p -f ssh_host_rsa_key -m pem -P mypassword -N mypassword -b 2048
 openssl rsa -in ssh_host_rsa_key -outform pem -passin pass:mypassword > ssh_host_rsa_key.pem
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.ssh-pem-file.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssh-pem-file.yml"
 
 docker exec sftp-server bash -c "
 mkdir -p /chroot/home/foo/upload/input

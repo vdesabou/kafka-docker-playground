@@ -82,7 +82,7 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.assuming-iam-role-with-custom-awscredentialsprovider.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.assuming-iam-role-with-custom-awscredentialsprovider.yml"
 
 KINESIS_STREAM_NAME=kafka_docker_playground$TAG
 KINESIS_STREAM_NAME=${KINESIS_STREAM_NAME//[-.]/}

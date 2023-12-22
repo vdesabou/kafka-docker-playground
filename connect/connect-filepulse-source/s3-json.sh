@@ -101,7 +101,7 @@ EOF
 log "Upload JSON file to AWS S3 bucket $AWS_BUCKET_NAME"
 aws s3 cp /tmp/track.json s3://$AWS_BUCKET_NAME/
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.s3.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.s3.yml"
 
 log "Creating S3 JSON FilePulse Source connector"
 playground connector create-or-update --connector filepulse-source-s3-json << EOF

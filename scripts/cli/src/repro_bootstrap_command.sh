@@ -135,7 +135,7 @@ description_kebab_case=$(echo "$description_kebab_case" | tr '[:upper:]' '[:lowe
 repro_test_file="$repro_dir/$filename-repro-$description_kebab_case.$extension"
 
 # determining the docker-compose file from from test_file
-docker_compose_file=$(grep "environment" "$test_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
+docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
 docker_compose_file="${test_file_directory}/${docker_compose_file}"
 
 log "✨ Creating file $repro_test_file"
@@ -546,7 +546,7 @@ then
   get_producer_build_heredoc
   # log "✨ Adding command to build jar for $producer_hostname to $repro_test_file"
   cp $repro_test_file $tmp_dir/tmp_file
-  line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+  line=$(grep -n 'playground start-environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
   
   { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/build_producer; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
 
@@ -702,7 +702,7 @@ then
   get_custom_smt_build_heredoc
   # log "✨ Adding command to build jar for $custom_smt_name to $repro_test_file"
   cp $repro_test_file $tmp_dir/tmp_file
-  line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+  line=$(grep -n 'playground start-environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
   
   { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/build_custom_smt; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
 
@@ -728,7 +728,7 @@ then
   fi
 
   cp $repro_test_file $tmp_dir/tmp_file
-  line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+  line=$(grep -n 'playground start-environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
   
   { head -n $(($line+2)) $tmp_dir/tmp_file; cat $tmp_dir/build_custom_docker_cp_smt; tail -n +$(($line+2)) $tmp_dir/tmp_file; } > $repro_test_file
 
@@ -773,7 +773,7 @@ for sink_file in "${pipeline_array[@]}"; do
     ## 
     # docker-compose part
     # determining the docker-compose file from from test_file
-    docker_compose_sink_file=$(grep "environment" "$sink_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
+    docker_compose_sink_file=$(grep "start-environment" "$sink_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
     docker_compose_sink_file="${test_sink_file_directory}/${docker_compose_sink_file}"
     cp $docker_compose_test_file /tmp/1.yml
     cp $docker_compose_sink_file /tmp/2.yml
@@ -798,9 +798,9 @@ for sink_file in "${pipeline_array[@]}"; do
     # sh part
     
     line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh' $repro_test_file | cut -d ":" -f 1 | tail -n1)
-    line_final_environment=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+    line_final_environment=$(grep -n 'playground start-environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
     line_sink_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh' $sink_file | cut -d ":" -f 1 | tail -n1) 
-    line_sink_environment=$(grep -n '${DIR}/../../environment' $sink_file | cut -d ":" -f 1 | tail -n1)
+    line_sink_environment=$(grep -n 'playground start-environment' $sink_file | cut -d ":" -f 1 | tail -n1)
 
     # get converter info
     source_key_converter=$(grep "\"key.converter\"" $repro_test_file | cut -d '"' -f 4)

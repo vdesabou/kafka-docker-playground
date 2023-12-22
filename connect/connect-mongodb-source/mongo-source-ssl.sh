@@ -68,7 +68,7 @@ fi
 cd -
 
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.ssl.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssl.yml"
 
 # https://www.mongodb.com/docs/manual/tutorial/configure-ssl-clients/
 log "Initialize MongoDB replica set"

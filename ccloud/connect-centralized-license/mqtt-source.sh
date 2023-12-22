@@ -24,7 +24,7 @@ playground topic delete --topic $MQTT_TOPIC
 set -e
 
 
-${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.mqtt-source.yml"
+playground start-environment --environment ccloud --docker-compose-override-file "${PWD}/docker-compose.mqtt-source.yml"
 
 if [ -f /tmp/delta_configs/env.delta ]
 then

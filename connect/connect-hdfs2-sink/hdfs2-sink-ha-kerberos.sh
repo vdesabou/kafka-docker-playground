@@ -10,7 +10,7 @@ then
      wget https://archive.apache.org/dist/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz > /dev/null 2>&1
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.ha-kerberos.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.ha-kerberos.yml"
 
 log "Wait 80 seconds while hadoop is installing"
 sleep 80

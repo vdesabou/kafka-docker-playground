@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "../../connect/connect-cdc-oracle19-source/ora-setup-scripts-cdb-table"
 
-${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.plaintext.cdb-table.yml"
+playground start-environment --environment ccloud --docker-compose-override-file "${PWD}/docker-compose.plaintext.cdb-table.yml"
 
 if [ -f /tmp/delta_configs/env.delta ]
 then

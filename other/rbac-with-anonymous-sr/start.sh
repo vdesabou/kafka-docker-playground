@@ -9,7 +9,7 @@ if ! version_gt $TAG_BASE "5.3.99"; then
     exit 111
 fi
 
-${DIR}/../../environment/rbac-sasl-plain/start.sh "${PWD}/docker-compose.rbac-sasl-plain.yml"
+playground start-environment --environment rbac-sasl-plain --docker-compose-override-file "${PWD}/docker-compose.rbac-sasl-plain.yml"
 
 log "Creating role bindings for ANONYMOUS"
 docker exec -i tools bash -c "/create-role-bindings-anonymous.sh"

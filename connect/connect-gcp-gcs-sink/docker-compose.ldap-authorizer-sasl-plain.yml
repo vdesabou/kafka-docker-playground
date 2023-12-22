@@ -1,9 +1,0 @@
----
-version: '3.5'
-services:
-  connect:
-    volumes:
-        - ../../connect/connect-gcp-gcs-sink/keyfile.json:/tmp/keyfile.json:ro
-        - ../../environment/ldap-authorizer-sasl-plain/kafka/users:/service/kafka/users
-    environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-gcs

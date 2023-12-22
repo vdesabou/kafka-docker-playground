@@ -14,7 +14,7 @@ keytool -genkey -keyalg RSA -alias endeca -keystore truststore.jks -noprompt -st
 keytool -delete -alias endeca -keystore truststore.jks -noprompt -storepass confluent -keypass confluent
 keytool -import -v -trustcacerts -alias endeca-ca -file cert.cer -keystore truststore.jks -noprompt -storepass confluent -keypass confluent
 
-#${DIR}/../../environment/rbac-sasl-plain/start.sh "${PWD}/docker-compose.rbac-with-azure-ad.yml"
+#playground start-environment --environment rbac-sasl-plain --docker-compose-override-file "${PWD}/docker-compose.rbac-with-azure-ad.yml"
 
 #############
 

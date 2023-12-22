@@ -31,7 +31,7 @@ then
 fi
 cd -
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 wait_for_solace
 log "Solace UI is accessible at http://127.0.0.1:8080 (admin/admin)"

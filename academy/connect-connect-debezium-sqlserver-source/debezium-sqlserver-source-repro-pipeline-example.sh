@@ -11,7 +11,7 @@ then
 fi
 
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-pipeline-example.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.repro-pipeline-example.yml"
 
 
 log "Create table"

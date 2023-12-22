@@ -71,7 +71,7 @@ fi
 
 cd -
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.mtls.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.mtls.yml"
 
 log "Creating JDBC PostgreSQL sink connector"
 playground connector create-or-update --connector postgres-sink << EOF

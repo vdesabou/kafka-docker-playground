@@ -23,7 +23,7 @@ then
      cd ${OLDDIR}
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Starting up locator"
 docker exec -i pivotal-gemfire sh /opt/pivotal/workdir/startLocator.sh

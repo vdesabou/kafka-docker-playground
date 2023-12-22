@@ -29,7 +29,7 @@ cd -
 log "Removing all data"
 docker run -v $PWD/../../connect/connect-gcp-firebase-sink/keyfile.json:/tmp/keyfile.json -e GOOGLE_APPLICATION_CREDENTIALS="/tmp/keyfile.json" -e PROJECT=$GCP_PROJECT -i andreysenov/firebase-tools firebase database:remove / --project "$GCP_PROJECT" --force
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating GCP Firebase Sink connector"
 playground connector create-or-update --connector firebase-sink << EOF

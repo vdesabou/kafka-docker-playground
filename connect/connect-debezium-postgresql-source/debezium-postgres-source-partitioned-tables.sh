@@ -10,7 +10,7 @@ then
     exit 111
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Create Partitioned CUSTOMERS table:"
 docker exec -i postgres psql -U myuser -d postgres << EOF

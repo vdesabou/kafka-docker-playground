@@ -61,7 +61,7 @@ fi
 
 cd -
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.jtds-ssl.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.jtds-ssl.yml"
 
 log "Creating JDBC SQL Server (with JTDS driver) sink connector"
 playground connector create-or-update --connector sqlserver-sink-ssl << EOF

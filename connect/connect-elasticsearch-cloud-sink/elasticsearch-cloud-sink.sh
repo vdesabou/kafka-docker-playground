@@ -36,7 +36,7 @@ then
     export ELASTIC_VERSION="7.12.0"
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Elasticsearch Sink connector (Elasticsearch version is $ELASTIC_VERSION)"
 if version_gt $CONNECTOR_TAG "10.9.9"

@@ -9,7 +9,7 @@ if ! version_gt $TAG_BASE "5.3.99"; then
     exit 111
 fi
 
-${DIR}/../../environment/sasl-plain/start.sh "${PWD}/docker-compose.sasl-plain.yml"
+playground start-environment --environment sasl-plain --docker-compose-override-file "${PWD}/docker-compose.sasl-plain.yml"
 
 sleep 10
 

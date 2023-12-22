@@ -8,7 +8,7 @@ source ${DIR}/../../scripts/utils.sh
 export ENABLE_RESTPROXY=true
 export ENABLE_KSQLDB=true
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 sleep 5
 

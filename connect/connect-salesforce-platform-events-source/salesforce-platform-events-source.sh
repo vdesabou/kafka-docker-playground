@@ -44,7 +44,7 @@ then
      exit 1
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Salesforce Platform Events Source connector"
 playground connector create-or-update --connector salesforce-platform-events-source << EOF

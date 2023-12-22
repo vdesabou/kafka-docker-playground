@@ -27,7 +27,7 @@ fi
 log "Removing all data"
 docker run -v $PWD/../../ccloud/connect-gcp-firebase-sink/keyfile.json:/tmp/keyfile.json -e GOOGLE_APPLICATION_CREDENTIALS="/tmp/keyfile.json" -e PROJECT=$GCP_PROJECT -i andreysenov/firebase-tools firebase database:remove / --project "$GCP_PROJECT" --force
 
-${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.yml"
+playground start-environment --environment ccloud --docker-compose-override-file "${PWD}/docker-compose.yml"
 
 if [ -f /tmp/delta_configs/env.delta ]
 then

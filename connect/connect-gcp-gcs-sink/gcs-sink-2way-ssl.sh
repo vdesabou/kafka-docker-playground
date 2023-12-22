@@ -27,7 +27,7 @@ else
 fi
 cd -
 
-${DIR}/../../environment/2way-ssl/start.sh "${PWD}/docker-compose.2way-ssl.yml"
+playground start-environment --environment 2way-ssl --docker-compose-override-file "${PWD}/docker-compose.yml"
 
 GCS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${TAG}
 GCS_BUCKET_NAME=${GCS_BUCKET_NAME//[-.]/}

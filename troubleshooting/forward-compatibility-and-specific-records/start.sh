@@ -18,7 +18,7 @@ do
      set -e
 done
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 docker exec broker kafka-topics --create --topic customer-avro --partitions 1 --replication-factor 1 --bootstrap-server broker:9092
 

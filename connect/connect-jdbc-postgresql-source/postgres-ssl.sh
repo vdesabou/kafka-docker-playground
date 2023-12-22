@@ -44,7 +44,7 @@ rm server.csr
 
 cd -
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.ssl.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssl.yml"
 
 log "Create CUSTOMERS table:"
 docker exec -i postgres psql -U myuser -d postgres << EOF

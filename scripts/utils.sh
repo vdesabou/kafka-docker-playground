@@ -165,7 +165,7 @@ then
       docker_compose_file=$DOCKER_COMPOSE_FILE_UPDATE_VERSION
     elif [ -f "$PWD/$0" ]
     then
-      docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
+      docker_compose_file=$(grep "start-environment" "$PWD/$0" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
     fi
     if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
     then
@@ -316,7 +316,7 @@ else
       docker_compose_file=$DOCKER_COMPOSE_FILE_UPDATE_VERSION
     elif [ -f "$PWD/$0" ]
     then
-      docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
+      docker_compose_file=$(grep "start-environment" "$PWD/$0" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
     fi
     if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
     then

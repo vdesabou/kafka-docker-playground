@@ -27,7 +27,7 @@ else
 fi
 cd -
 
-${DIR}/../../environment/sasl-ssl/start.sh "${PWD}/docker-compose.sasl-ssl.yml"
+playground start-environment --environment sasl-ssl --docker-compose-override-file "${PWD}/docker-compose.yml"
 
 GCS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${TAG}
 GCS_BUCKET_NAME=${GCS_BUCKET_NAME//[-.]/}

@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 # make sure ksqlDB is not disabled
 export ENABLE_KSQLDB=true
 
-#${DIR}/../../environment/sasl-plain/start.sh "${PWD}/docker-compose.plaintext.autherror.yml"
+#playground start-environment --environment sasl-plain --docker-compose-override-file "${PWD}/docker-compose.plaintext.autherror.yml"
 
 docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-plain/docker-compose.yml -f ${DIR}/docker-compose.plaintext.autherror.yml --profile control-center --profile ksqldb up -d zookeeper broker schema-registry connect
 

@@ -10,7 +10,7 @@ sed -e "s|:NOW:|$NOW|g" \
 sed -e "s|:NOW:|$NOW|g" \
     ${DIR}/../../ksqldb/benchmarking-scenarios/schemas/shipments-template.avro > ${DIR}/../../ksqldb/benchmarking-scenarios/schemas/shipments.avro
 
-${DIR}/../../environment/rbac-sasl-plain/start.sh "${PWD}/docker-compose.rbac-sasl-plain.yml"
+playground start-environment --environment rbac-sasl-plain --docker-compose-override-file "${PWD}/docker-compose.rbac-sasl-plain.yml"
 
 log "Create topic rbac_orders"
 curl -s -X PUT \

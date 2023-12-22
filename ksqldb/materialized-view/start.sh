@@ -12,7 +12,7 @@ fi
 # make sure ksqlDB is not disabled
 export ENABLE_KSQLDB=true
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Describing the calls table in DB 'mydb':"
 docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'describe calls'"

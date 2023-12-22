@@ -41,7 +41,7 @@ set +e
 playground topic create --topic stats
 set -e
 
-${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.gcp-bigtable.yml"
+playground start-environment --environment ccloud --docker-compose-override-file "${PWD}/docker-compose.gcp-bigtable.yml"
 
 if [ -f /tmp/delta_configs/env.delta ]
 then

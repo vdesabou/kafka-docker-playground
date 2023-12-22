@@ -42,7 +42,7 @@ log "Delete table, this might fail"
 aws dynamodb delete-table --table-name mytable --region $AWS_REGION
 set -e
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.with-assuming-iam-role.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.with-assuming-iam-role.yml"
 
 log "Sending messages to topic mytable"
 playground topic produce -t mytable --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'

@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 # make sure rest-proxy is not disabled
 export ENABLE_RESTPROXY=true=true
 
-${DIR}/../../environment/plaintext/start.sh
+playground start-environment --environment plaintext
 
 # JSON Messages
 log "Produce and Consume JSON Messages"

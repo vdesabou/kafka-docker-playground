@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 # make sure ksqlDB is not disabled
 export ENABLE_KSQLDB=true
 
-${DIR}/../../environment/plaintext/start.sh
+playground start-environment --environment plaintext
 
 log "Create the ksqlDB table and the Stream"
 log "We have a table to represent the movie reference data and a stream to represent the ratings of those movies"

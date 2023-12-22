@@ -12,7 +12,7 @@ then
 fi
 cd -
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating MariaDB sink connector"
 playground connector create-or-update --connector mariadb-sink << EOF

@@ -1409,7 +1409,7 @@ playground_start_environment_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground start-environment [OPTIONS] [ARGUMENTS...]\n"
+  printf "  playground start-environment [OPTIONS]\n"
   printf "  playground start-environment --help | -h\n"
   echo
 
@@ -1423,6 +1423,11 @@ playground_start_environment_usage() {
     printf "    🔐 The environment to start . \n    \n    - ccloud\n    - 2way-ssl\n    - kerberos\n    - kraft-external-plaintext\n    - kraft-plaintext\n    - ldap-authorizer-sasl-plain\n    - ldap-sasl-plain\n    - mdc-kerberos\n    - mdc-plaintext\n    - mdc-sasl-plain\n    - plaintext\n    - rbac-sasl-plain\n    - sasl-plain\n    - sasl-scram\n    - sasl-ssl\n    - ssl_kerberos\n    \n    Default is plaintext\n"
     printf "    Allowed: ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos\n"
     printf "    Default: plaintext\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--docker-compose-override-file, -f DOCKER-COMPOSE-OVERRIDE-FILE")"
+    printf "    🔖 docker-compose override file\n    \n    ❕ It must be absolute full path\n"
     echo
 
     # :flag.usage
@@ -1478,13 +1483,6 @@ playground_start_environment_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
-    echo
-
-    # :command.usage_args
-    printf "%s\n" "$(bold "== Arguments ==")"
-
-    echo "  ARGUMENTS..."
-    printf "    Arguments to use by script\n    \n    Most of examples support to get required options either by using arguments\n    or environment variables.\n"
     echo
 
     # :command.usage_examples
@@ -10504,7 +10502,7 @@ playground_run_command() {
     export ENABLE_CONNECT_NODES=true
 
     # determining the docker-compose file from from test_file
-    docker_compose_file=$(grep "environment" "$test_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
+    docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
     docker_compose_file="${test_file_directory}/${docker_compose_file}"
     cp $docker_compose_file /tmp/playground-backup-docker-compose.yml
     yq -i '.services.connect2 = .services.connect' /tmp/playground-backup-docker-compose.yml
@@ -10747,7 +10745,8 @@ playground_re_run_command() {
         exit 1
       fi
       echo "$run_command"
-      bash "$run_command"
+      echo "$run_command" > /tmp/playground-run
+      bash /tmp/playground-run
     fi
   fi
 }
@@ -10806,6 +10805,22 @@ playground_start_environment_command() {
   enable_jmx_grafana="${args[--enable-jmx-grafana]}"
   enable_kcat="${args[--enable-kcat]}"
   enable_sr_maven_plugin_app="${args[--enable-sr-maven-plugin-app]}"
+  docker_compose_override_file="${args[--docker-compose-override-file]}"
+
+  if [ "$environment" = "ccloud" ]
+  then
+    test_file="$root_folder/ccloud/environment/start.sh"
+  else
+    test_file="$root_folder/environment/$environment/start.sh"
+  fi
+  test_file_directory="$(dirname "${test_file}")"
+
+  flag_list=""
+  if [[ -n "$tag" ]]
+  then
+    flag_list="--tag=$tag"
+    export TAG=$tag
+  fi
 
   flag_list=""
   if [[ -n "$tag" ]]
@@ -10816,56 +10831,75 @@ playground_start_environment_command() {
   if [[ -n "$enable_ksqldb" ]]
   then
     flag_list="$flag_list --enable-ksqldb"
+    export ENABLE_KSQLDB=true
   fi
 
   if [[ -n "$enable_rest_proxy" ]]
   then
     flag_list="$flag_list --enable-rest-proxy"
+    export ENABLE_RESTPROXY=true
   fi
 
   if [[ -n "$enable_c3" ]]
   then
     flag_list="$flag_list --enable-control-center"
+    export ENABLE_CONTROL_CENTER=true
   fi
 
   if [[ -n "$enable_conduktor" ]]
   then
     flag_list="$flag_list --enable-conduktor"
+    export ENABLE_CONDUKTOR=true
   fi
 
   if [[ -n "$enable_multiple_brokers" ]]
   then
     flag_list="$flag_list --enable-multiple-broker"
+    export ENABLE_KAFKA_NODES=true
   fi
 
   if [[ -n "$enable_multiple_connect_workers" ]]
   then
     flag_list="$flag_list --enable-multiple-connect-workers"
+    export ENABLE_CONNECT_NODES=true
+
+    # determining the docker-compose file from from test_file
+    docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
+    docker_compose_file="${test_file_directory}/${docker_compose_file}"
+    cp $docker_compose_file /tmp/playground-backup-docker-compose.yml
+    yq -i '.services.connect2 = .services.connect' /tmp/playground-backup-docker-compose.yml
+    yq -i '.services.connect3 = .services.connect' /tmp/playground-backup-docker-compose.yml
+    cp /tmp/playground-backup-docker-compose.yml $docker_compose_file
   fi
 
   if [[ -n "$enable_jmx_grafana" ]]
   then
     flag_list="$flag_list --enable-jmx-grafana"
+    export ENABLE_JMX_GRAFANA=true
   fi
 
   if [[ -n "$enable_kcat" ]]
   then
     flag_list="$flag_list --enable-kcat"
+    export ENABLE_KCAT=true
   fi
 
   if [[ -n "$enable_sr_maven_plugin_app" ]]
   then
     flag_list="$flag_list --enable-sr-maven-plugin-app"
+    export ENABLE_SR_MAVEN_PLUGIN_NODE=true
   fi
 
-  if [ "$environment" = "ccloud" ]
+  set +e
+  playground container kill-all
+  set -e
+  cd $test_file_directory
+  if [ -f $docker_compose_override_file ]
   then
-    test_file="$root_folder/ccloud/environment/start.sh"
+    $test_file "$docker_compose_override_file"
   else
-    test_file="$root_folder/environment/$environment/start.sh"
+    $test_file
   fi
-
-  playground run -f $test_file $flag_list ${other_args[*]}
 }
 
 # :command.function
@@ -11279,7 +11313,7 @@ playground_update_version_command() {
   fi
 
   # determining the docker-compose file from from test_file
-  docker_compose_file=$(grep "environment" "$test_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
+  docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
   test_file_directory="$(dirname "${test_file}")"
   docker_compose_file="${test_file_directory}/${docker_compose_file}"
 
@@ -11735,7 +11769,7 @@ playground_repro_bootstrap_command() {
   repro_test_file="$repro_dir/$filename-repro-$description_kebab_case.$extension"
 
   # determining the docker-compose file from from test_file
-  docker_compose_file=$(grep "environment" "$test_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
+  docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
   docker_compose_file="${test_file_directory}/${docker_compose_file}"
 
   log "✨ Creating file $repro_test_file"
@@ -12142,7 +12176,7 @@ playground_repro_bootstrap_command() {
     get_producer_build_heredoc
     # log "✨ Adding command to build jar for $producer_hostname to $repro_test_file"
     cp $repro_test_file $tmp_dir/tmp_file
-    line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+    line=$(grep -n 'playground start-environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
 
     { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/build_producer; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
 
@@ -12298,7 +12332,7 @@ playground_repro_bootstrap_command() {
     get_custom_smt_build_heredoc
     # log "✨ Adding command to build jar for $custom_smt_name to $repro_test_file"
     cp $repro_test_file $tmp_dir/tmp_file
-    line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+    line=$(grep -n 'playground start-environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
 
     { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/build_custom_smt; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
 
@@ -12321,7 +12355,7 @@ playground_repro_bootstrap_command() {
     fi
 
     cp $repro_test_file $tmp_dir/tmp_file
-    line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+    line=$(grep -n 'playground start-environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
 
     { head -n $(($line+2)) $tmp_dir/tmp_file; cat $tmp_dir/build_custom_docker_cp_smt; tail -n +$(($line+2)) $tmp_dir/tmp_file; } > $repro_test_file
 
@@ -12363,7 +12397,7 @@ playground_repro_bootstrap_command() {
 
       # docker-compose part
       # determining the docker-compose file from from test_file
-      docker_compose_sink_file=$(grep "environment" "$sink_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
+      docker_compose_sink_file=$(grep "start-environment" "$sink_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
       docker_compose_sink_file="${test_sink_file_directory}/${docker_compose_sink_file}"
       cp $docker_compose_test_file /tmp/1.yml
       cp $docker_compose_sink_file /tmp/2.yml
@@ -12388,10 +12422,10 @@ playground_repro_bootstrap_command() {
       # sh part
 
       line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh' $repro_test_file | cut -d ":" -f 1 | tail -n1)
-      line_final_environment=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+      line_final_environment=$(grep -n 'playground start-environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
       line_sink_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh' $sink_file | cut -d ":" -f 1 | tail -n1)
 
-      line_sink_environment=$(grep -n '${DIR}/../../environment' $sink_file | cut -d ":" -f 1 | tail -n1)
+      line_sink_environment=$(grep -n 'playground start-environment' $sink_file | cut -d ":" -f 1 | tail -n1)
 
       # get converter info
       source_key_converter=$(grep "\"key.converter\"" $repro_test_file | cut -d '"' -f 4)
@@ -16734,7 +16768,7 @@ playground_connector_versions_command() {
   fi
 
   # determining the docker-compose file from from test_file
-  docker_compose_file=$(grep "environment" "$test_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
+  docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
   test_file_directory="$(dirname "${test_file}")"
   docker_compose_file="${test_file_directory}/${docker_compose_file}"
 
@@ -19977,6 +20011,26 @@ playground_start_environment_parse_requirements() {
         ;;
 
       # :flag.case
+      --docker-compose-override-file | -f)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_file_exists "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--docker-compose-override-file, -f DOCKER-COMPOSE-OVERRIDE-FILE" "$(validate_file_exists "$2")" >&2
+            exit 1
+          fi
+
+          args['--docker-compose-override-file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--docker-compose-override-file requires an argument: --docker-compose-override-file, -f DOCKER-COMPOSE-OVERRIDE-FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --tag)
 
         # :flag.case_arg
@@ -20063,22 +20117,16 @@ playground_start_environment_parse_requirements() {
         shift
         ;;
 
-      --)
-        shift
-        other_args+=("$@")
-        break
-        ;;
-
       -?*)
-        other_args+=("$1")
-        shift
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
         ;;
 
       *)
         # :command.parse_requirements_case
-        # :command.parse_requirements_case_catch_all
-        other_args+=("$1")
-        shift
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
 
         ;;
 

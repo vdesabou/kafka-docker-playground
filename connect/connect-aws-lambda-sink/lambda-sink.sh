@@ -71,7 +71,7 @@ cd -
 
 
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending messages to topic add-topic"
 playground topic produce -t add-topic --nb-messages 10 << 'EOF'

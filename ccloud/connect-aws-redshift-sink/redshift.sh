@@ -40,7 +40,7 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
-${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.yml"
+playground start-environment --environment ccloud --docker-compose-override-file "${PWD}/docker-compose.yml"
 
 if [ -f /tmp/delta_configs/env.delta ]
 then

@@ -57,7 +57,7 @@ then
      wait_for_end_of_hibernation
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending messages to topic test_table"
 playground topic produce -t test_table --nb-messages 3 << 'EOF'

@@ -71,7 +71,7 @@ sed -e "s|:AZURE_SAS_KEY:|$AZURE_SAS_KEY|g" \
     -e "s|:AZURE_SERVICE_BUS_QUEUE_NAME:|$AZURE_SERVICE_BUS_QUEUE_NAME|g" \
     ../../connect/connect-azure-service-bus-source/data.template > ../../connect/connect-azure-service-bus-source/data
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Azure Service Bus Source connector"
 playground connector create-or-update --connector azure-service-bus-source << EOF

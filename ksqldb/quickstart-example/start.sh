@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 # make sure ksqlDB is not disabled
 export ENABLE_KSQLDB=true
 
-${DIR}/../../environment/plaintext/start.sh
+playground start-environment --environment plaintext
 
 log "Create the ksqlDB streams"
 timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF

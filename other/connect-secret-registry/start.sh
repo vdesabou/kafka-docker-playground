@@ -9,7 +9,7 @@ if ! version_gt $TAG_BASE "5.2.99"; then
     exit 111
 fi
 
-${DIR}/../../environment/rbac-sasl-plain/start.sh "${PWD}/docker-compose.rbac-sasl-plain.yml"
+playground start-environment --environment rbac-sasl-plain --docker-compose-override-file "${PWD}/docker-compose.rbac-sasl-plain.yml"
 
 log "Sending messages to topic rbac_topic"
 playground topic produce -t rbac_topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'

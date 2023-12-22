@@ -463,13 +463,6 @@ commands:
     - ssl_kerberos
 
     Note: when running an example with <playground run> or <playground run-ccloud>, it is already automatically done
-  catch_all:
-    label: arguments
-    help: |-
-      Arguments to use by script
-
-      Most of examples support to get required options either by using arguments or environment variables.
-    required: false
   flags:
     - long: --environment
       required: false
@@ -497,6 +490,14 @@ commands:
         - ssl_kerberos
 
         Default is plaintext
+    - long: --docker-compose-override-file
+      short: -f
+      validate: file_exists
+      arg: docker-compose-override-file
+      help: |-
+        🔖 docker-compose override file
+
+        ❕ It must be absolute full path
     - *tag
     - *enable-ksqldb
     - *enable-rest-proxy

@@ -71,7 +71,8 @@ do
         THE_CONNECTOR_TAG=""
         if [[ "$dir" == "connect"* ]]
         then
-            docker_compose_file=$(grep "environment" "$script" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
+            docker_compose_file=$(grep "start-environment" "$script" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
+
             if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
             then
                 connector_path=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | cut -d "/" -f 5 | head -1)

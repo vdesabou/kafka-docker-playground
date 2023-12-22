@@ -27,7 +27,7 @@ else
 fi
 cd -
 
-${DIR}/../../environment/kerberos/start.sh "${PWD}/docker-compose.kerberos.yml"
+playground start-environment --environment kerberos --docker-compose-override-file "${PWD}/docker-compose.yml"
 
 GCS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${TAG}
 GCS_BUCKET_NAME=${GCS_BUCKET_NAME//[-.]/}

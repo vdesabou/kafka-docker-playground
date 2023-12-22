@@ -17,4 +17,4 @@ rm -f ${DIR}/schema-registry/logs/*
 rm -f ${DIR}/control-center/logs/*
 rm -f ${DIR}/ksql-server/logs/*
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.template-log4j.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.template-log4j.yml"

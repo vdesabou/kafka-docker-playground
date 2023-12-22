@@ -34,7 +34,7 @@ fi
 
 create_or_get_oracle_image "linuxx64_12201_database.zip" "../../connect/connect-cdc-oracle12-source/ora-setup-scripts-pdb-table"
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.pdb-table.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.pdb-table.yml"
 
 
 # Verify Oracle DB has started within MAX_WAIT seconds

@@ -49,7 +49,7 @@ export AWS_DEFAULT_REGION=$AWS_REGION
 export AWS_ATHENA_S3_STAGING_DIR=s3://$AWS_BUCKET_NAME/athena
 export AWS_ATHENA_WORK_GROUP=$ATHENA_WORK_GROUP
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 
 log "Create table CUSTOMERS"

@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-${DIR}/../../environment/plaintext/start.sh
+playground start-environment --environment plaintext
 
 log "Create a topic my-topic"
 docker exec -i connect kafka-topics --create --bootstrap-server broker:9092 --topic my-topic --partitions 1

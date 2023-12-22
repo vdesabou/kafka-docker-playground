@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 create_or_get_oracle_image "linuxx64_12201_database.zip" "../../connect/connect-jdbc-oracle12-source/ora-setup-scripts"
 
 # required to make utils.sh script being able to work, do not remove:
-# ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+# playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 if [ ! -z "$CONNECTOR_TAG" ]
 then

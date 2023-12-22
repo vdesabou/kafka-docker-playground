@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 # make sure ksqlDB is not disabled
 export ENABLE_KSQLDB=true
 
-${DIR}/../../environment/plaintext/start.sh
+playground start-environment --environment plaintext
 
 log "Create topics"
 docker exec -i connect kafka-topics --create --bootstrap-server broker:9092 --topic orders --partitions 1 --config retention.ms=-1 --config retention.bytes=-1

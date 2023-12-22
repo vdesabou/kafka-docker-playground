@@ -61,7 +61,7 @@ set +e
 playground topic delete --topic _confluent-command
 set -e
 
-${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.servicenow-source.yml"
+playground start-environment --environment ccloud --docker-compose-override-file "${PWD}/docker-compose.servicenow-source.yml"
 
 if [ -f /tmp/delta_configs/env.delta ]
 then

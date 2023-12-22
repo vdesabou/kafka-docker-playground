@@ -75,7 +75,7 @@ FUNCTIONS_URL=$(echo $output | grep -Eo 'https://[^ >]+'|head -1)
 
 log "Functions URL is $FUNCTIONS_URL"
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending messages to topic functions-test"
 playground topic produce -t functions-test --nb-messages 3 --key "key1" << 'EOF'

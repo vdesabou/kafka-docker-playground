@@ -297,7 +297,7 @@
     {
       "name": "start-environment",
       "description": "🔐 Simply start an environment listed in https://kafka-docker-playground.io/#/content?id=%f0%9f%94%90-environments:\n\n- ccloud\n- 2way-ssl\n- kerberos\n- kraft-external-plaintext\n- kraft-plaintext\n- ldap-authorizer-sasl-plain\n- ldap-sasl-plain\n- mdc-kerberos\n- mdc-plaintext\n- mdc-sasl-plain\n- plaintext\n- rbac-sasl-plain\n- sasl-plain\n- sasl-scram\n- sasl-ssl\n- ssl_kerberos\n\nNote: when running an example with <playground run> or <playground run-ccloud>, it is already automatically done\n",
-      "usage": "playground start-environment [OPTIONS] [ARGUMENTS...]",
+      "usage": "playground start-environment [OPTIONS]",
       "options": [
         {
           "names": [
@@ -305,6 +305,14 @@
           ],
           "argument": "plaintext",
           "description": "🔐 The environment to start . \n\n- ccloud\n- 2way-ssl\n- kerberos\n- kraft-external-plaintext\n- kraft-plaintext\n- ldap-authorizer-sasl-plain\n- ldap-sasl-plain\n- mdc-kerberos\n- mdc-plaintext\n- mdc-sasl-plain\n- plaintext\n- rbac-sasl-plain\n- sasl-plain\n- sasl-scram\n- sasl-ssl\n- ssl_kerberos\n\nDefault is plaintext\n\nDefault value: plaintext\n\nAllowed values: ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos\n"
+        },
+        {
+          "names": [
+            "--docker-compose-override-file",
+            "-f"
+          ],
+          "argument": "DOCKER-COMPOSE-OVERRIDE-FILE",
+          "description": "🔖 docker-compose override file\n\n❕ It must be absolute full path\n"
         },
         {
           "names": [

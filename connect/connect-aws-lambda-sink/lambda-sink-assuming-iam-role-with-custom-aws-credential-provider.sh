@@ -106,7 +106,7 @@ cd -
 
 
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.backup-and-restore-assuming-iam-role-with-custom-aws-credential-provider.yml"
+playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.backup-and-restore-assuming-iam-role-with-custom-aws-credential-provider.yml"
 
 log "Sending messages to topic add-topic"
 playground topic produce -t add-topic --nb-messages 10 << 'EOF'

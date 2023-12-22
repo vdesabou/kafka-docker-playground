@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-${DIR}/../../environment/plaintext/start.sh
+playground start-environment --environment plaintext
 
 # CASE 1 -> With an optional field
 log "Register an Avro schema with an Optional field"
