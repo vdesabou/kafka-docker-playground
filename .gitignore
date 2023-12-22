@@ -73,4 +73,3 @@ github_ssh_key_file
 confluent-hub
 *.jfr
 playground-run-history
-playground.ini
