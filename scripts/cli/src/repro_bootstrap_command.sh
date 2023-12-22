@@ -1,9 +1,5 @@
 IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 
-DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-dir1=$(echo ${DIR_CLI%/*})
-root_folder=$(echo ${dir1%/*})
-
 test_file="${args[--file]}"
 description="${args[--description]}"
 producer="${args[--producer]}"

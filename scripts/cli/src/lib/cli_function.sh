@@ -22,10 +22,6 @@ function get_connect_url_and_security() {
 }
 
 function generate_fzf_find_files() {
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-
   generate_get_examples_list_with_fzf_without_repro_sink_only
   generate_get_examples_list_with_fzf_without_repro
   generate_get_examples_list_with_fzf_ccloud_only
@@ -33,34 +29,18 @@ function generate_fzf_find_files() {
 }
 
 function generate_get_examples_list_with_fzf_without_repro_sink_only () {
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-
   find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' > /tmp/get_examples_list_with_fzf_without_repro_sink_only
 }
 
 function generate_get_examples_list_with_fzf_without_repro () {
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-
   find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' > /tmp/get_examples_list_with_fzf_without_repro
 }
 
 function generate_get_examples_list_with_fzf_ccloud_only () {
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-
   find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/ccloud*' ! -path '*/ora-*/*' ! -path '*/security/*' > /tmp/get_examples_list_with_fzf_ccloud_only
 }
 
 function generate_get_examples_list_with_fzf () {
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-
   find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ccloud/*' ! -path '*/ora-*/*' ! -path '*/security/*' > /tmp/get_examples_list_with_fzf
 }
 
@@ -371,11 +351,6 @@ function get_predefined_schemas_with_fzf() {
 
 function get_plugin_list() {
   cur="$1"
-
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-
   fzf_version=$(get_fzf_version)
   if version_gt $fzf_version "0.38"
   then

@@ -1,7 +1,3 @@
-DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-dir1=$(echo ${DIR_CLI%/*})
-root_folder=$(echo ${dir1%/*})
-
 if [ ! -f $root_folder/playground-run-history ]
 then
     logerror "❌ history could not be found !"

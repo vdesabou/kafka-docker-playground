@@ -599,9 +599,6 @@ function get_connect_image() {
   set -e
   if [ "$CONNECT_TAG" == "" ]
   then
-    DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-    dir1=$(echo ${DIR_CLI%/*})
-    root_folder=$(echo ${dir1%/*})
     CONNECT_TAG=$(grep "export TAG" $root_folder/scripts/utils.sh | head -1 | cut -d "=" -f 2)
 
     if [ "$CONNECT_TAG" == "" ]

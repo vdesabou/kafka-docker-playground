@@ -1,9 +1,5 @@
 all="${args[--all]}"
 
-DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-dir1=$(echo ${DIR_CLI%/*})
-root_folder=$(echo ${dir1%/*})
-
 if [ ! -z "$OUTPUT_FOLDER" ]
 then
   output_folder="$OUTPUT_FOLDER"

@@ -5543,10 +5543,6 @@ function get_connect_url_and_security() {
 }
 
 function generate_fzf_find_files() {
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-
   generate_get_examples_list_with_fzf_without_repro_sink_only
   generate_get_examples_list_with_fzf_without_repro
   generate_get_examples_list_with_fzf_ccloud_only
@@ -5554,34 +5550,18 @@ function generate_fzf_find_files() {
 }
 
 function generate_get_examples_list_with_fzf_without_repro_sink_only () {
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-
   find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' > /tmp/get_examples_list_with_fzf_without_repro_sink_only
 }
 
 function generate_get_examples_list_with_fzf_without_repro () {
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-
   find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' > /tmp/get_examples_list_with_fzf_without_repro
 }
 
 function generate_get_examples_list_with_fzf_ccloud_only () {
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-
   find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/ccloud*' ! -path '*/ora-*/*' ! -path '*/security/*' > /tmp/get_examples_list_with_fzf_ccloud_only
 }
 
 function generate_get_examples_list_with_fzf () {
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-
   find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ccloud/*' ! -path '*/ora-*/*' ! -path '*/security/*' > /tmp/get_examples_list_with_fzf
 }
 
@@ -5890,11 +5870,6 @@ function get_predefined_schemas_with_fzf() {
 
 function get_plugin_list() {
   cur="$1"
-
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-
   fzf_version=$(get_fzf_version)
   if version_gt $fzf_version "0.38"
   then
@@ -6907,9 +6882,6 @@ function get_connect_image() {
   set -e
   if [ "$CONNECT_TAG" == "" ]
   then
-    DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-    dir1=$(echo ${DIR_CLI%/*})
-    root_folder=$(echo ${dir1%/*})
     CONNECT_TAG=$(grep "export TAG" $root_folder/scripts/utils.sh | head -1 | cut -d "=" -f 2)
 
     if [ "$CONNECT_TAG" == "" ]
@@ -10027,10 +9999,6 @@ playground_get_connector_list_command() {
 # :command.function
 playground_generate_connector_plugin_list_command() {
   # src/generate_connector_plugin_list_command.sh
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-
   curl -s -S 'https://api.hub.confluent.io/api/plugins?per_page=100000' | jq '. | sort_by(.release_date) | reverse | .' > /tmp/allmanis.json
 
   jq -r '.[] | "\(.owner.username)/\(.name)"' /tmp/allmanis.json | sort | uniq > $root_folder/scripts/cli/confluent-hub-plugin-list.txt
@@ -10208,10 +10176,6 @@ playground_get_predefined_schemas_command() {
 # :command.function
 playground_bashly_reload_command() {
   # src/bashly_reload_command.sh
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-
   cd $root_folder/scripts/cli
   bashly generate
   rm -f $root_folder/scripts/cli/completions.bash
@@ -10746,10 +10710,6 @@ playground_re_run_command() {
 # :command.function
 playground_history_command() {
   # src/history_command.sh
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-
   if [ ! -f $root_folder/playground-run-history ]
   then
       logerror "❌ history could not be found !"
@@ -10789,10 +10749,6 @@ playground_history_command() {
 playground_start_environment_command() {
   # src/start_environment_command.sh
   IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
 
   environment="${args[--environment]}"
   tag="${args[--tag]}"
@@ -11402,10 +11358,6 @@ playground_repro_export_command() {
   # src/repro_export_command.sh
   all="${args[--all]}"
 
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-
   if [ ! -z "$OUTPUT_FOLDER" ]
   then
     output_folder="$OUTPUT_FOLDER"
@@ -11525,10 +11477,6 @@ playground_repro_import_command() {
   # src/repro_import_command.sh
   file="${args[--file]}"
 
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-
   if [ ! -z "$OUTPUT_FOLDER" ]
   then
     output_folder="$OUTPUT_FOLDER"
@@ -11566,10 +11514,6 @@ playground_repro_import_command() {
 playground_repro_bootstrap_command() {
   # src/repro_bootstrap_command.sh
   IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
 
   test_file="${args[--file]}"
   description="${args[--description]}"
@@ -16706,9 +16650,6 @@ playground_connector_versions_command() {
 
           rm /tmp/allmanis.json
 
-          DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-          dir1=$(echo ${DIR_CLI%/*})
-          root_folder=$(echo ${dir1%/*})
 
           manifest_file="$root_folder/confluent-hub/$full_connector_name/manifest.json"
           if [ -f $manifest_file ]

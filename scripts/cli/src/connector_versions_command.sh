@@ -51,11 +51,7 @@ else
 
         rm /tmp/allmanis.json
 
-        ## current version
-        DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-        dir1=$(echo ${DIR_CLI%/*})
-        root_folder=$(echo ${dir1%/*})
-        
+        ## current version        
         manifest_file="$root_folder/confluent-hub/$full_connector_name/manifest.json"
         if [ -f $manifest_file ]
         then
