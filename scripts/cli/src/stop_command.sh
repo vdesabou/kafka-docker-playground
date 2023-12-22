@@ -7,13 +7,12 @@ then
 fi
 filename=$(basename -- "$test_file")
 test_file_directory="$(dirname "${test_file}")"
-cd ${test_file_directory}
-
-if [ ! -f $test_file_directory/stop.sh ]
-then 
-  logerror "File stop.sh in directory $test_file_directory does not exist"
-  exit 1
-fi
 
 log "🛑 Stopping example $filename in dir $test_file_directory"
-bash stop.sh
+docker_command=$(playground state get run.docker_command)
+echo "$docker_command" > /tmp/tmp
+
+sed -e "s|up -d|down -v --remove-orphans|g" \
+    /tmp/tmp > /tmp/playground-command-stop
+
+bash /tmp/playground-command-stop
