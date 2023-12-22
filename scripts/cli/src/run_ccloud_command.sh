@@ -46,10 +46,6 @@ fi
 test_file_directory="$(dirname "${test_file}")"
 filename=$(basename -- "$test_file")
 
-base1="${test_file_directory##*/}" # connect-cdc-oracle12-source
-dir1="${test_file_directory%/*}" #connect
-dir2="${dir1##*/}/$base1" # connect/connect-cdc-oracle12-source
-
 flag_list=""
 if [[ -n "$tag" ]]
 then
