@@ -1563,6 +1563,51 @@ function bootstrap_ccloud_environment () {
       confluent login --save
   fi
 
+  suggest_use_previous_example_ccloud=1
+  for item in {ENVIRONMENT,CLUSTER_NAME,CLUSTER_CLOUD,CLUSTER_REGION,CLUSTER_CREDS}
+  do
+      i=$(playground state get "ccloud.${item}")
+      if [ "$i" == "" ]
+      then
+        # at least one mandatory field is missing
+        suggest_use_previous_example_ccloud=0
+        break
+      fi
+  done
+
+  if [ $suggest_use_previous_example_ccloud -eq 1 ] && [ -z "$GITHUB_RUN_NUMBER" ]
+  then
+    log "🙋 Use previously used ccloud cluster:"
+    log "  🌐 ENVIRONMENT=$(playground state get ccloud.ENVIRONMENT)"
+    log "  🎰 CLUSTER_NAME=$(playground state get ccloud.CLUSTER_NAME)"
+    log "  🌤  CLUSTER_CLOUD=$(playground state get ccloud.CLUSTER_CLOUD)"
+    log "  🗺  CLUSTER_REGION=$(playground state get ccloud.CLUSTER_REGION)"
+
+    read -p "Continue (y/n)?" choice
+    case "$choice" in
+    y|Y ) 
+      ENVIRONMENT=$(playground state get ccloud.ENVIRONMENT)
+      CLUSTER_NAME=$(playground state get ccloud.CLUSTER_NAME)
+      CLUSTER_CLOUD=$(playground state get ccloud.CLUSTER_CLOUD)
+      CLUSTER_REGION=$(playground state get ccloud.CLUSTER_REGION)
+      CLUSTER_CREDS=$(playground state get ccloud.CLUSTER_CREDS)
+      SCHEMA_REGISTRY_CREDS=$(playground state get ccloud.SCHEMA_REGISTRY_CREDS)
+      ;;
+    n|N ) 
+      playground state del ccloud.ENVIRONMENT
+      playground state del ccloud.CLUSTER_NAME
+      playground state del ccloud.CLUSTER_CLOUD
+      playground state del ccloud.CLUSTER_REGION
+      playground state del ccloud.CLUSTER_CREDS
+      playground state del ccloud.SCHEMA_REGISTRY_CREDS
+      ;;
+    * ) 
+      logerror "invalid response!";
+      exit 1
+      ;;
+    esac
+  fi
+
   if [ -z "$CLUSTER_NAME" ]
   then
     #
