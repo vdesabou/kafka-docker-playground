@@ -408,3 +408,20 @@ function filter_connect_running() {
 function filter_docker_running() {
   docker info >/dev/null 2>&1 || echo "Docker must be running"
 }
+
+function increment_cli_metric() {
+  metric_name="$1"
+  metric=$(playground state get "metrics.$metric_name")
+  if [ "$metric" == "" ]
+  then
+    # initialize
+    playground state set "metrics.$metric_name" 1
+  else
+    playground state set "metrics.$metric_name" $((metric+1))
+  fi
+}
+
+function get_cli_metric() {
+  metric_name="$1"
+  playground state get "metrics.$metric_name"
+}

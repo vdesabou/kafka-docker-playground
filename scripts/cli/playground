@@ -1629,7 +1629,7 @@ playground_switch_ccloud_usage() {
     printf "playground switch-ccloud\n"
     echo
 
-    printf "  🌩️  Switch to ccloud environment.\n  \n  It will bootstrap ccloud environment. \n  \n  Note that this is automatically done with any ccloud example.\n  \n  It will also save any onprem environment to get back to it with switch-onprem\n  command\n  \n  All you have to do is to be already logged in with confluent CLI.\n  \n  By default, a new Confluent Cloud environment with a Cluster will be created.\n  \n  You can configure the new cluster by setting:\n  \n  --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster\n  (possible values: \`basic\`, \`standard\` and \`dedicated\`, default \`basic\`)\n  --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider\n  (possible values: \`aws\`, \`gcp\` and \`azure\`, default \`aws\`)\n  --cluster-region (or CLUSTER_REGION environment variable): The Cloud region\n  (use \`confluent kafka region list\` to get the list, default \`eu-west-2\`)\n  --cluster-environment (or ENVIRONMENT environment variable) (optional): The\n  environment id where want your new cluster (example: \`env-xxxxx\`)\n  \n  In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n  --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n  --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and\n  secret to use, it should be separated with semi-colon (example:\n  \`<API_KEY>:<API_KEY_SECRET>\`)\n  --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable) (optional, if not set, new one will be created): The Schema Registry\n  api key and secret to use, it should be separated with semi-colon (example:\n  \`<SR_API_KEY>:<SR_API_KEY_SECRET>\`)\n"
+    printf "  🌩️  Switch to ccloud environment.\n  \n  It will bootstrap ccloud environment based on your previously ran ccloud\n  example.\n"
     echo
 
   else
@@ -1639,45 +1639,13 @@ playground_switch_ccloud_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground switch-ccloud [OPTIONS]\n"
+  printf "  playground switch-ccloud\n"
   printf "  playground switch-ccloud --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
     printf "%s\n" "$(bold "== Options ==")"
-
-    # :command.usage_flags
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--cluster-type CLUSTER-TYPE")"
-    printf "    🔋 The cluster type: basic, standard or dedicated. Default is basic\n    \n    🎓 Tip: you can also use CLUSTER_TYPE environment variable\n"
-    printf "    Allowed: basic, standard, dedicated\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--cluster-region CLUSTER-REGION")"
-    printf "    🗺 The Cloud region. \n    \n    🎓 Tip: you can also use CLUSTER_REGION environment variable\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--cluster-environment CLUSTER-ENVIRONMENT")"
-    printf "    🌐 The environment id where want your new cluster (example: env-xxxxx)\n    \n    ℹ️ Optional, if not set, new environment will be created\n    \n    🎓 Tip: you can also use ENVIRONMENT environment variable\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--cluster-name CLUSTER-NAME")"
-    printf "    🎰 The cluster name. \n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use CLUSTER_NAME environment variable\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--cluster-creds CLUSTER-CREDS")"
-    printf "    🔒 The Kafka api key and secret to use, it should be separated with\n    semi-colon (example: <API_KEY>:<API_KEY_SECRET>)\n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use CLUSTER_CREDS environment variable\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--cluster-schema-registry-creds CLUSTER-SCHEMA-REGISTRY-CREDS")"
-    printf "    🔒 The Schema Registry api key and secret to use, it should be separated with\n    semi-colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n    \n    ℹ️ Optional, if not set, new credentials will be created\n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable\n"
-    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -5927,6 +5895,23 @@ function filter_docker_running() {
   docker info >/dev/null 2>&1 || echo "Docker must be running"
 }
 
+function increment_cli_metric() {
+  metric_name="$1"
+  metric=$(playground state get "metrics.$metric_name")
+  if [ "$metric" == "" ]
+  then
+    # initialize
+    playground state set "metrics.$metric_name" 1
+  else
+    playground state set "metrics.$metric_name" $((metric+1))
+  fi
+}
+
+function get_cli_metric() {
+  metric_name="$1"
+  playground state get "metrics.$metric_name"
+}
+
 # src/lib/colors.sh
 print_in_color() {
   local color="$1"
@@ -9940,6 +9925,10 @@ playground_status_command() {
   filename=$(basename $test_file)
   last_folder=$(basename $(dirname $test_file))
 
+  log "📊 Metrics"
+  log "🚀 Number of examples ran so far: $(get_cli_metric nb_runs)"
+  log "👷 Number of repro models created so far: $(get_cli_metric nb_reproduction_models)"
+
   log "🚀 Running example "
   echo $last_two_folders/$filename
 
@@ -10530,6 +10519,9 @@ playground_run_command() {
   echo "" >> "$root_folder/playground-run-history"
   echo "playground run -f $test_file $flag_list ${other_args[*]}" >> "$root_folder/playground-run-history"
 
+  increment_cli_metric nb_runs
+  log "🚀 Number of examples ran so far: $(get_cli_metric nb_runs)"
+
   log "####################################################"
   log "🚀 Executing $filename in dir $test_file_directory"
   log "####################################################"
@@ -11021,6 +11013,9 @@ playground_run_ccloud_command() {
   playground state set run.run_command "playground run -f $test_file $flag_list ${other_args[*]}"
   echo "" >> "$root_folder/playground-run-history"
   echo "playground run -f $test_file $flag_list ${other_args[*]}" >> "$root_folder/playground-run-history"
+
+  increment_cli_metric nb_runs
+  log "🚀 Number of examples ran so far: $(get_cli_metric nb_runs)"
 
   log "####################################################"
   log "🚀 Executing $filename in dir $test_file_directory"
@@ -12651,7 +12646,10 @@ playground_repro_bootstrap_command() {
     force_enable --enable-sql-datagen SQL_DATAGEN
   fi
 
-  log "🕹️ Ready? Run it now?"
+  increment_cli_metric nb_reproduction_models
+  log "👷 Number of repro models created so far: $(get_cli_metric nb_reproduction_models)"
+
+  log "🕹️  Ready? Run it now?"
   check_if_continue
   playground run -f $repro_dir/$repro_test_filename $flag_list ${other_args[*]}
 }
@@ -20340,115 +20338,6 @@ playground_switch_ccloud_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
-      # :flag.case
-      --cluster-type)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-
-          args['--cluster-type']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--cluster-type requires an argument: --cluster-type CLUSTER-TYPE" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
-      --cluster-region)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-
-          args['--cluster-region']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--cluster-region requires an argument: --cluster-region CLUSTER-REGION" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
-      --cluster-environment)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          # :flag.validations
-          if [[ -n $(validate_not_empty "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--cluster-environment CLUSTER-ENVIRONMENT" "$(validate_not_empty "$2")" >&2
-            exit 1
-          fi
-
-          args['--cluster-environment']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--cluster-environment requires an argument: --cluster-environment CLUSTER-ENVIRONMENT" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
-      --cluster-name)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          # :flag.validations
-          if [[ -n $(validate_not_empty "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--cluster-name CLUSTER-NAME" "$(validate_not_empty "$2")" >&2
-            exit 1
-          fi
-
-          args['--cluster-name']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--cluster-name requires an argument: --cluster-name CLUSTER-NAME" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
-      --cluster-creds)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          # :flag.validations
-          if [[ -n $(validate_not_empty "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--cluster-creds CLUSTER-CREDS" "$(validate_not_empty "$2")" >&2
-            exit 1
-          fi
-
-          args['--cluster-creds']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--cluster-creds requires an argument: --cluster-creds CLUSTER-CREDS" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
-      --cluster-schema-registry-creds)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          # :flag.validations
-          if [[ -n $(validate_not_empty "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--cluster-schema-registry-creds CLUSTER-SCHEMA-REGISTRY-CREDS" "$(validate_not_empty "$2")" >&2
-            exit 1
-          fi
-
-          args['--cluster-schema-registry-creds']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--cluster-schema-registry-creds requires an argument: --cluster-schema-registry-creds CLUSTER-SCHEMA-REGISTRY-CREDS" >&2
-          exit 1
-        fi
-        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
@@ -20465,12 +20354,6 @@ playground_switch_ccloud_parse_requirements() {
 
     esac
   done
-
-  # :command.whitelist_filter
-  if [[ ${args['--cluster-type']:-} ]] && [[ ! ${args['--cluster-type']:-} =~ ^(basic|standard|dedicated)$ ]]; then
-    printf "%s\n" "--cluster-type must be one of: basic, standard, dedicated" >&2
-    exit 1
-  fi
 
 }
 

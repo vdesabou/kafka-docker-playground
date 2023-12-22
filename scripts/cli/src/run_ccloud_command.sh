@@ -194,6 +194,9 @@ playground state set run.run_command "playground run -f $test_file $flag_list ${
 echo "" >> "$root_folder/playground-run-history"
 echo "playground run -f $test_file $flag_list ${other_args[*]}" >> "$root_folder/playground-run-history"
 
+increment_cli_metric nb_runs
+log "🚀 Number of examples ran so far: $(get_cli_metric nb_runs)"
+
 log "####################################################"
 log "🚀 Executing $filename in dir $test_file_directory"
 log "####################################################"

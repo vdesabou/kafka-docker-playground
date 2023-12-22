@@ -10,6 +10,10 @@ last_two_folders=$(basename $(dirname $(dirname $test_file)))/$(basename $(dirna
 filename=$(basename $test_file)
 last_folder=$(basename $(dirname $test_file))
 
+log "📊 Metrics"
+log "🚀 Number of examples ran so far: $(get_cli_metric nb_runs)"
+log "👷 Number of repro models created so far: $(get_cli_metric nb_reproduction_models)"
+
 log "🚀 Running example "
 echo $last_two_folders/$filename
 
