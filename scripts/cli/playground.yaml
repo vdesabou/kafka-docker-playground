@@ -25,27 +25,9 @@ subcommands:
     usage: playground state show
     options: []
     subcommands:
-  - name: get
-    description: | 
-        Read a value from the playground.ini file
-    usage: playground state get KEY
-    options: []
-    subcommands:
-  - name: set
-    description: | 
-        Save a value in the playground.ini file
-    usage: playground state set KEY VALUE
-    options: []
-    subcommands:
-  - name: del
-    description: | 
-        Remove a value from the playground.ini file
-    usage: playground state del KEY
-    options: []
-    subcommands:
   - name: config
     description: | 
-        
+        ⚙️ Configure CLI
     usage: playground config COMMAND
     options: []
     subcommands:

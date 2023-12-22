@@ -27,29 +27,8 @@
       "subcommands": null
     },
     {
-      "name": "get",
-      "description": "Read a value from the playground.ini file\n",
-      "usage": "playground state get KEY",
-      "options": [],
-      "subcommands": null
-    },
-    {
-      "name": "set",
-      "description": "Save a value in the playground.ini file\n",
-      "usage": "playground state set KEY VALUE",
-      "options": [],
-      "subcommands": null
-    },
-    {
-      "name": "del",
-      "description": "Remove a value from the playground.ini file\n",
-      "usage": "playground state del KEY",
-      "options": [],
-      "subcommands": null
-    },
-    {
       "name": "config",
-      "description": "",
+      "description": "⚙️ Configure CLI\n",
       "usage": "playground config COMMAND",
       "options": [],
       "subcommands": [

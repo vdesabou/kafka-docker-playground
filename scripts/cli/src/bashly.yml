@@ -129,7 +129,7 @@ commands:
 
   - name: get
     help: Read a value from the playground.ini file
-
+    private: true
     args:
     - name: key
       required: true
@@ -140,7 +140,7 @@ commands:
 
   - name: set
     help: Save a value in the playground.ini file
-
+    private: true
     args:
     - name: key
       required: true
@@ -154,18 +154,18 @@ commands:
 
   - name: del
     help: Remove a value from the playground.ini file
-
+    private: true
     args:
     - name: key
       required: true
       help: playground.ini key
-
     examples:
     - playground state del hello
     - playground state del user.name
 
 
 - name: config
+  help: ⚙️ Configure CLI
   commands:
   - name: show
     help: Show the entire playground_config.ini file

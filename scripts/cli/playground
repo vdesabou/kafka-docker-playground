@@ -39,7 +39,7 @@ playground_usage() {
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   Show help about a command\n" "$(green "help")                                   "
   printf "  %s   🗺️ Show a status\n" "$(green "status")                                 "
-  printf "  %s   \n" "$(green "config")                                 "
+  printf "  %s   ⚙️ Configure CLI\n" "$(green "config")                                 "
   echo
   printf "%s\n" "$(bold "Run commands:")"
   printf "  %s   🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)\n" "$(green "run")                                    "
@@ -702,9 +702,6 @@ playground_state_usage() {
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   Show the entire playground.ini file\n" "$(green "show")"
-  printf "  %s   Read a value from the playground.ini file\n" "$(green "get") "
-  printf "  %s   Save a value in the playground.ini file\n" "$(green "set") "
-  printf "  %s   Remove a value from the playground.ini file\n" "$(green "del") "
   echo
 
   # :command.long_usage
@@ -885,11 +882,11 @@ playground_state_del_usage() {
 # :command.usage
 playground_config_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground config\n"
+    printf "playground config - ⚙️ Configure CLI\n"
     echo
 
   else
-    printf "playground config\n"
+    printf "playground config - ⚙️ Configure CLI\n"
     echo
 
   fi
