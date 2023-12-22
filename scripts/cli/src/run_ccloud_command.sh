@@ -97,6 +97,45 @@ then
   export ENABLE_KCAT=true
 fi
 
+if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_name" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
+then
+  if [ ! -z "$CLUSTER_TYPE" ]
+  then
+    log "🙈 ignoring environment variable CLUSTER_TYPE as one of the flags is set"
+    unset CLUSTER_TYPE
+  fi
+  if [ ! -z "$CLUSTER_CLOUD" ]
+  then
+    log "🙈 ignoring environment variable CLUSTER_CLOUD as one of the flags is set"
+    unset CLUSTER_CLOUD
+  fi
+  if [ ! -z "$CLUSTER_REGION" ]
+  then
+    log "🙈 ignoring environment variable CLUSTER_REGION as one of the flags is set"
+    unset CLUSTER_REGION
+  fi
+  if [ ! -z "$ENVIRONMENT" ]
+  then
+    log "🙈 ignoring environment variable ENVIRONMENT as one of the flags is set"
+    unset ENVIRONMENT
+  fi
+  if [ ! -z "$CLUSTER_NAME" ]
+  then
+    log "🙈 ignoring environment variable CLUSTER_NAME as one of the flags is set"
+    unset CLUSTER_NAME
+  fi
+  if [ ! -z "$CLUSTER_CREDS" ]
+  then
+    log "🙈 ignoring environment variable CLUSTER_CREDS as one of the flags is set"
+    unset CLUSTER_CREDS
+  fi 
+  if [ ! -z "$SCHEMA_REGISTRY_CREDS" ]
+  then
+    log "🙈 ignoring environment variable SCHEMA_REGISTRY_CREDS as one of the flags is set"
+    unset SCHEMA_REGISTRY_CREDS
+  fi 
+fi
+
 if [[ -n "$cluster_type" ]]
 then
   flag_list="$flag_list --cluster-type $cluster_type"
