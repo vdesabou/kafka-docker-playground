@@ -2326,7 +2326,7 @@ commands:
     - name: delete
       group: Topic
       help: |-
-        ❌ Delete topic
+        ❌ Delete topic and associated schema/subject if applicable
       flags:
       - *verbose
       - long: --topic
@@ -2337,6 +2337,11 @@ commands:
           - $(playground get-topic-list)
         help: |-
           🗳 Topic name
+      - long: --skip-delete-schema
+        arg: skip-delete-schema
+        required: false
+        help: |-
+          🔰 Do not delete subject/schema
 
     - name: alter
       group: Topic

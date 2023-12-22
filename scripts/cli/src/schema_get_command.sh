@@ -45,7 +45,26 @@ do
         log "🐞 curl command used"
         echo "curl $sr_security -s "${sr_url}/subjects/${subject}/versions$maybe_include_deleted""
     fi
-    versions=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions$maybe_include_deleted")
+
+    curl_output=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions$maybe_include_deleted")
+    ret=$?
+    if [ $ret -eq 0 ]
+    then
+        if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true 
+        then
+            error_code=$(echo "$curl_output" | jq -r .error_code)
+            message=$(echo "$curl_output" | jq -r .message)
+            if [ "$error_code" == "40401" ]
+            then
+                continue
+            fi
+        else
+            versions=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions$maybe_include_deleted")
+        fi
+    else
+        logerror "❌ curl request failed with error code $ret!"
+        exit 1
+    fi
 
     for version in $(echo "${versions}" | jq -r '.[]')
     do

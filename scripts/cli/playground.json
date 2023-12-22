@@ -1959,7 +1959,7 @@
         },
         {
           "name": "delete",
-          "description": "❌ Delete topic\n",
+          "description": "❌ Delete topic and associated schema/subject if applicable\n",
           "usage": "playground topic delete [OPTIONS]",
           "options": [
             {
@@ -1977,6 +1977,13 @@
               ],
               "argument": "TOPIC",
               "description": "🗳 Topic name\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--skip-delete-schema"
+              ],
+              "argument": "SKIP-DELETE-SCHEMA",
+              "description": "🔰 Do not delete subject/schema\n"
             }
           ]
         },

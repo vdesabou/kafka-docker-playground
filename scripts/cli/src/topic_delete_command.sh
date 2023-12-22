@@ -1,5 +1,6 @@
 topic="${args[--topic]}"
 verbose="${args[--verbose]}"
+skip_delete_schema="${args[--skip-delete-schema]}"
 
 get_security_broker "--command-config"
 get_environment_used
@@ -45,4 +46,24 @@ else
         echo "kafka-topics --delete --topic $topic --bootstrap-server broker:9092 $security"
     fi
     docker exec $container kafka-topics --delete --topic $topic --bootstrap-server broker:9092 $security
+fi
+
+if [[ -n "$skip_delete_schema" ]]
+then
+    log "🔰 Do not delete subject/schema as --skip-delete-schema is set"
+else
+    set +e
+    playground schema get --subject "$topic-key" > /dev/null 2>&1
+    if [ $? -eq 0 ]
+    then
+        log "🔰 Delete subject $topic-key"
+        playground schema delete --subject "$topic-key" --permanent
+    fi
+    
+    playground schema get --subject "$topic-value" > /dev/null 2>&1
+    if [ $? -eq 0 ]
+    then
+        log "🔰 Delete subject $topic-value"
+        playground schema delete --subject "$topic-value" --permanent
+    fi
 fi

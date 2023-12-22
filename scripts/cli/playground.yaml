@@ -2228,7 +2228,7 @@ subcommands:
             
       - name: delete
         description: | 
-          ❌ Delete topic
+          ❌ Delete topic and associated schema/subject if applicable
         usage: playground topic delete [OPTIONS]
         options:
         - names:
@@ -2246,6 +2246,12 @@ subcommands:
             🗳 Topic name
             
             Required: ✓ Yes
+            
+        - names:
+          - --skip-delete-schema
+          argument: SKIP-DELETE-SCHEMA
+          description: | 
+            🔰 Do not delete subject/schema
             
       - name: alter
         description: | 

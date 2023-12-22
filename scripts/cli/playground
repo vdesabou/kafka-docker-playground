@@ -111,7 +111,7 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   📥 Consume topic from beginning\n" "$(green "topic consume")                          "
   [[ -n $long_usage ]] && printf "  %s   📤 Produce to a topic\n" "$(green "topic produce")                          "
   [[ -n $long_usage ]] && printf "  %s   🆕 Create topic\n" "$(green "topic create")                           "
-  [[ -n $long_usage ]] && printf "  %s   ❌ Delete topic\n" "$(green "topic delete")                           "
+  [[ -n $long_usage ]] && printf "  %s   ❌ Delete topic and associated schema/subject if applicable\n" "$(green "topic delete")                           "
   [[ -n $long_usage ]] && printf "  %s   🪛 Alter topic config\n" "$(green "topic alter")                            "
   echo
   printf "%s\n" "$(bold "Connector commands:")"
@@ -3712,7 +3712,7 @@ playground_topic_usage() {
   printf "  %s   📥 Consume topic from beginning\n" "$(green "consume")                 "
   printf "  %s   📤 Produce to a topic\n" "$(green "produce")                 "
   printf "  %s   🆕 Create topic\n" "$(green "create")                  "
-  printf "  %s   ❌ Delete topic\n" "$(green "delete")                  "
+  printf "  %s   ❌ Delete topic and associated schema/subject if applicable\n" "$(green "delete")                  "
   printf "  %s   🪛 Alter topic config\n" "$(green "alter")                   "
   echo
 
@@ -4221,11 +4221,11 @@ playground_topic_create_usage() {
 # :command.usage
 playground_topic_delete_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground topic delete - ❌ Delete topic\n"
+    printf "playground topic delete - ❌ Delete topic and associated schema/subject if applicable\n"
     echo
 
   else
-    printf "playground topic delete - ❌ Delete topic\n"
+    printf "playground topic delete - ❌ Delete topic and associated schema/subject if applicable\n"
     echo
 
   fi
@@ -4248,6 +4248,11 @@ playground_topic_delete_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
     printf "    🗳 Topic name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--skip-delete-schema SKIP-DELETE-SCHEMA")"
+    printf "    🔰 Do not delete subject/schema\n"
     echo
 
     # :command.usage_fixed_flags
@@ -10914,10 +10919,6 @@ playground_run_ccloud_command() {
   test_file_directory="$(dirname "${test_file}")"
   filename=$(basename -- "$test_file")
 
-  base1="${test_file_directory##*/}" # connect-cdc-oracle12-source
-  dir1="${test_file_directory%/*}" #connect
-  dir2="${dir1##*/}/$base1" # connect/connect-cdc-oracle12-source
-
   flag_list=""
   if [[ -n "$tag" ]]
   then
@@ -12784,7 +12785,27 @@ playground_schema_get_command() {
           log "🐞 curl command used"
           echo "curl $sr_security -s "${sr_url}/subjects/${subject}/versions$maybe_include_deleted""
       fi
-      versions=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions$maybe_include_deleted")
+
+      curl_output=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions$maybe_include_deleted")
+      ret=$?
+      if [ $ret -eq 0 ]
+      then
+          if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
+
+          then
+              error_code=$(echo "$curl_output" | jq -r .error_code)
+              message=$(echo "$curl_output" | jq -r .message)
+              if [ "$error_code" == "40401" ]
+              then
+                  continue
+              fi
+          else
+              versions=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions$maybe_include_deleted")
+          fi
+      else
+          logerror "❌ curl request failed with error code $ret!"
+          exit 1
+      fi
 
       for version in $(echo "${versions}" | jq -r '.[]')
       do
@@ -15668,6 +15689,7 @@ playground_topic_delete_command() {
   # src/topic_delete_command.sh
   topic="${args[--topic]}"
   verbose="${args[--verbose]}"
+  skip_delete_schema="${args[--skip-delete-schema]}"
 
   get_security_broker "--command-config"
   get_environment_used
@@ -15711,6 +15733,26 @@ playground_topic_delete_command() {
           echo "kafka-topics --delete --topic $topic --bootstrap-server broker:9092 $security"
       fi
       docker exec $container kafka-topics --delete --topic $topic --bootstrap-server broker:9092 $security
+  fi
+
+  if [[ -n "$skip_delete_schema" ]]
+  then
+      log "🔰 Do not delete subject/schema as --skip-delete-schema is set"
+  else
+      set +e
+      playground schema get --subject "$topic-key" > /dev/null 2>&1
+      if [ $? -eq 0 ]
+      then
+          log "🔰 Delete subject $topic-key"
+          playground schema delete --subject "$topic-key" --permanent
+      fi
+
+      playground schema get --subject "$topic-value" > /dev/null 2>&1
+      if [ $? -eq 0 ]
+      then
+          log "🔰 Delete subject $topic-value"
+          playground schema delete --subject "$topic-value" --permanent
+      fi
   fi
 }
 
@@ -25555,6 +25597,21 @@ playground_topic_delete_parse_requirements() {
           shift
         else
           printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --skip-delete-schema)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--skip-delete-schema']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--skip-delete-schema requires an argument: --skip-delete-schema SKIP-DELETE-SCHEMA" >&2
           exit 1
         fi
         ;;
