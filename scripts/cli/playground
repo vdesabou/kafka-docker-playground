@@ -8295,7 +8295,7 @@ function ccloud::validate_schema_registry_up() {
 function ccloud::get_environment_id_from_service_id() {
   SERVICE_ACCOUNT_ID=$1
 
-  ENVIRONMENT_NAME_PREFIX=${ENVIRONMENT_NAME_PREFIX:-"pg-$SERVICE_ACCOUNT_ID"}
+  ENVIRONMENT_NAME_PREFIX=${ENVIRONMENT_NAME_PREFIX:-"pg-${USER}-$$SERVICE_ACCOUNT_ID"}
   local environment_id=$(confluent environment list -o json | jq -r 'map(select(.name | startswith("'"$ENVIRONMENT_NAME_PREFIX"'"))) | .[].id')
 
   echo $environment_id
@@ -8882,7 +8882,7 @@ function ccloud::create_ccloud_stack() {
     if [[ -z "$SERVICE_ACCOUNT_ID" ]]; then
       # Service Account is not received so it will be created
       local RANDOM_NUM=$((1 + RANDOM % 1000000))
-      SERVICE_NAME=${SERVICE_NAME:-"pg-app-$RANDOM_NUM"}
+      SERVICE_NAME=${SERVICE_NAME:-"pg-${USER}-app-$RANDOM_NUM"}
       SERVICE_ACCOUNT_ID=$(ccloud::create_service_account $SERVICE_NAME)
     fi
 
@@ -8897,14 +8897,14 @@ function ccloud::create_ccloud_stack() {
   if [[ -z "$ENVIRONMENT" ]];
   then
     # Environment is not received so it will be created
-    ENVIRONMENT_NAME=${ENVIRONMENT_NAME:-"pg-$SERVICE_ACCOUNT_ID-$EXAMPLE"}
+    ENVIRONMENT_NAME=${ENVIRONMENT_NAME:-"pg-${USER}-$SERVICE_ACCOUNT_ID-$EXAMPLE"}
     ENVIRONMENT=$(ccloud::create_and_use_environment $ENVIRONMENT_NAME)
     (($? != 0)) && { echo "$ENVIRONMENT"; exit 1; }
   else
     confluent environment use $ENVIRONMENT || exit 1
   fi
 
-  CLUSTER_NAME=${CLUSTER_NAME:-"pg-cluster-$SERVICE_ACCOUNT_ID"}
+  CLUSTER_NAME=${CLUSTER_NAME:-"pg-${USER}-cluster-$SERVICE_ACCOUNT_ID"}
   CLUSTER_CLOUD="${CLUSTER_CLOUD:-aws}"
   CLUSTER_REGION="${CLUSTER_REGION:-us-west-2}"
   CLUSTER_TYPE="${CLUSTER_TYPE:-basic}"
@@ -8957,7 +8957,7 @@ function ccloud::create_ccloud_stack() {
     if [[ -z "$SERVICE_ACCOUNT_ID" ]]; then
       # Service Account is not received so it will be created
       local RANDOM_NUM=$((1 + RANDOM % 1000000))
-      SERVICE_NAME=${SERVICE_NAME:-"pg-app-$RANDOM_NUM"}
+      SERVICE_NAME=${SERVICE_NAME:-"pg-${USER}-app-$RANDOM_NUM"}
       SERVICE_ACCOUNT_ID=$(ccloud::create_service_account $SERVICE_NAME)
     fi
     SCHEMA_REGISTRY_CREDS=$(ccloud::maybe_create_credentials_resource $SERVICE_ACCOUNT_ID $SCHEMA_REGISTRY)
@@ -9048,8 +9048,8 @@ function ccloud::destroy_ccloud_stack() {
 
   PRESERVE_ENVIRONMENT="${PRESERVE_ENVIRONMENT:-false}"
 
-  ENVIRONMENT_NAME_PREFIX=${ENVIRONMENT_NAME_PREFIX:-"pg-$SERVICE_ACCOUNT_ID"}
-  CLUSTER_NAME=${CLUSTER_NAME:-"pg-cluster-$SERVICE_ACCOUNT_ID"}
+  ENVIRONMENT_NAME_PREFIX=${ENVIRONMENT_NAME_PREFIX:-"pg-${USER}-$SERVICE_ACCOUNT_ID"}
+  CLUSTER_NAME=${CLUSTER_NAME:-"pg-${USER}-cluster-$SERVICE_ACCOUNT_ID"}
   CCLOUD_CONFIG_FILE=${CCLOUD_CONFIG_FILE:-"/tmp/tmp.config"}
   KSQLDB_NAME=${KSQLDB_NAME:-"demo-ksqldb-$SERVICE_ACCOUNT_ID"}
 
@@ -10968,6 +10968,47 @@ playground_run_ccloud_command() {
   then
     flag_list="$flag_list --enable-kcat"
     export ENABLE_KCAT=true
+  fi
+
+  if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_name" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
+  then
+    if [ ! -z "$CLUSTER_TYPE" ]
+    then
+      log "🙈 ignoring environment variable CLUSTER_TYPE as one of the flags is set"
+      unset CLUSTER_TYPE
+    fi
+    if [ ! -z "$CLUSTER_CLOUD" ]
+    then
+      log "🙈 ignoring environment variable CLUSTER_CLOUD as one of the flags is set"
+      unset CLUSTER_CLOUD
+    fi
+    if [ ! -z "$CLUSTER_REGION" ]
+    then
+      log "🙈 ignoring environment variable CLUSTER_REGION as one of the flags is set"
+      unset CLUSTER_REGION
+    fi
+    if [ ! -z "$ENVIRONMENT" ]
+    then
+      log "🙈 ignoring environment variable ENVIRONMENT as one of the flags is set"
+      unset ENVIRONMENT
+    fi
+    if [ ! -z "$CLUSTER_NAME" ]
+    then
+      log "🙈 ignoring environment variable CLUSTER_NAME as one of the flags is set"
+      unset CLUSTER_NAME
+    fi
+    if [ ! -z "$CLUSTER_CREDS" ]
+    then
+      log "🙈 ignoring environment variable CLUSTER_CREDS as one of the flags is set"
+      unset CLUSTER_CREDS
+    fi
+
+    if [ ! -z "$SCHEMA_REGISTRY_CREDS" ]
+    then
+      log "🙈 ignoring environment variable SCHEMA_REGISTRY_CREDS as one of the flags is set"
+      unset SCHEMA_REGISTRY_CREDS
+    fi
+
   fi
 
   if [[ -n "$cluster_type" ]]
