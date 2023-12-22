@@ -160,6 +160,7 @@ mongodb/kafka-connect-mongodb
 neo4j/kafka-connect-neo4j
 newrelic/newrelic-kafka-connector
 onewayautomation/ogamma-visual-logger-for-opc
+onibex/onibex-databricks-sink-connector
 opencredo/kafka-connect-venafi
 oracle/goldengate
 oticsinc/maads-viper
