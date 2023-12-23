@@ -16,9 +16,6 @@ services:
 
   connect:
     depends_on:
-      - zookeeper
-      - broker
-      - schema-registry
       - oracle
     volumes:
       - ../../connect/connect-jdbc-oracle21-source/mtls/truststore.jks:/tmp/truststore.jks

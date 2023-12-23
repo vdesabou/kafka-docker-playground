@@ -16,9 +16,6 @@ services:
 
   connect:
     depends_on:
-      - zookeeper
-      - broker
-      - schema-registry
       - ibmdb2
     volumes:
         - ../../connect/connect-jdbc-ibmdb2-source/db2jcc4.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/db2jcc4.jar

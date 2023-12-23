@@ -35,9 +35,6 @@ services:
 
   connect:
     depends_on:
-      - zookeeper
-      - broker
-      - schema-registry
       - kudu
     volumes:
         - ../../connect/connect-kudu-source/ImpalaJDBC42.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-kudu/lib/ImpalaJDBC42.jar

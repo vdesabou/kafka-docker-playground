@@ -30,9 +30,6 @@ services:
       - ../../connect/connect-debezium-oracle19-source/debezium-connector-oracle:/usr/share/confluent-hub-components/debezium-connector-oracle/jars
       - ../../connect/connect-debezium-oracle19-source/ojdbc8.jar:/usr/share/confluent-hub-components/debezium-connector-oracle/lib/ojdbc8.jar
     depends_on:
-      - zookeeper
-      - broker
-      - schema-registry
       - oracle
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components

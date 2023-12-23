@@ -6,9 +6,6 @@ services:
     ports:
       - "5439:5439"
     depends_on:
-      - zookeeper
-      - broker
-      - schema-registry
     volumes:
         - ../../connect/connect-jdbc-aws-redshift-sink/redshift-jdbc42-2.1.0.17/redshift-jdbc42-2.1.0.17.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/redshift-jdbc42-2.1.0.17.jar
     environment:

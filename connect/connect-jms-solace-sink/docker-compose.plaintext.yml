@@ -25,9 +25,6 @@ services:
 
   connect:
     depends_on:
-      - zookeeper
-      - broker
-      - schema-registry
       - solace
     volumes:
         - ../../connect/connect-jms-solace-sink/sol-jms-10.6.4.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/sol-jms-10.6.4.jar

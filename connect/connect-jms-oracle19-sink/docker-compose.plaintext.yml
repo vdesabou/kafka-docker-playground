@@ -16,9 +16,6 @@ services:
 
   connect:
     depends_on:
-      - zookeeper
-      - broker
-      - schema-registry
       - oracle
     volumes:
         - ../../connect/connect-jms-oracle19-sink/ojdbc8.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/ojdbc8.jar

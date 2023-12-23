@@ -4,9 +4,6 @@ services:
 
   connect:
     depends_on:
-      - zookeeper
-      - broker
-      - schema-registry
     volumes:
         - ../../connect/connect-jdbc-aws-athena-source/AthenaJDBC42-2.1.1.1000.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/AthenaJDBC42-2.1.1.1000.jar
     environment:

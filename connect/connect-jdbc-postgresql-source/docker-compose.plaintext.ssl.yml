@@ -18,9 +18,6 @@ services:
 
   connect:
     depends_on:
-      - zookeeper
-      - broker
-      - schema-registry
       - postgres
     volumes:
       - ../../connect/connect-jdbc-postgresql-source/ssl/ca.crt:/tmp/ca.crt

@@ -22,9 +22,6 @@ services:
 
   connect:
     depends_on:
-      - zookeeper
-      - broker
-      - schema-registry
       - umserver
     volumes:
         - ../../connect/connect-jms-sag-um-source/nClient.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms/lib/nClient.jar

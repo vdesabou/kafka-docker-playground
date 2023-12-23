@@ -20,9 +20,6 @@ services:
 
   connect:
     depends_on:
-      - zookeeper
-      - broker
-      - schema-registry
       - ibmmq
     volumes:
         - ../../connect/connect-ibm-mq-source/com.ibm.mq.allclient.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq/lib/com.ibm.mq.allclient.jar
