@@ -7,7 +7,8 @@ source ${DIR}/../../scripts/utils.sh
 # make sure Rest Proxy is not disabled
 export ENABLE_RESTPROXY=true
 
-playground start-environment --environment plaintext
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 log "Produce 5 records to the topic jsontest"
 docker exec -i rest-proxy curl -X POST -H "Content-Type: application/vnd.kafka.json.v2+json" \

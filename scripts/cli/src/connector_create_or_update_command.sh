@@ -58,7 +58,7 @@ then
     log "✅ --validate is set"
     set +e
     connector_class=$(echo "$json_content" | jq -r '."connector.class"')
-    # add mandator name field
+    # add mandatory name field
     new_json_content=$(echo $json_content | jq ". + {\"name\": \"$connector\"}")
     if [[ -n "$verbose" ]]
     then

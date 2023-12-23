@@ -34,7 +34,8 @@ PASSWORD="${PASSWORD}1"
 sed -e "s|:PASSWORD:|$PASSWORD|g" \
     ../../connect/connect-aws-redshift-sink/data.template > ../../connect/connect-aws-redshift-sink/data
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.with-assuming-iam-role.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.with-assuming-iam-role.yml"
 
 CLUSTER_NAME=pg${USER}redshift${TAG}
 CLUSTER_NAME=${CLUSTER_NAME//[-._]/}

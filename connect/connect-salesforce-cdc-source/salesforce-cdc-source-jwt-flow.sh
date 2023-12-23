@@ -60,7 +60,8 @@ then
      exit 1
 fi
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.jwt-flow.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.jwt-flow.yml"
 
 log "Creating Salesforce CDC Source connector"
 playground connector create-or-update --connector salesforce-cdc-source << EOF

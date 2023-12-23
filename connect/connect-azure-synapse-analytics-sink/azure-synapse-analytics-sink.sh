@@ -79,7 +79,8 @@ sed -e "s|:AZURE_SQL_URL:|$AZURE_SQL_URL|g" \
     -e "s|:AZURE_DATA_WAREHOUSE_NAME:|$AZURE_DATA_WAREHOUSE_NAME|g" \
     ../../connect/connect-azure-synapse-analytics-sink/data.template > ../../connect/connect-azure-synapse-analytics-sink/data
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending messages to topic products"
 playground topic produce -t products --nb-messages 2 << 'EOF'

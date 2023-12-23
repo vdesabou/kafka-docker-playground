@@ -36,7 +36,8 @@ then
      cd ${OLDDIR}
 fi
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Use the spark utility to quickly publish few records to the Orders topic"
 docker exec -i amps /AMPS/bin/spark publish -server localhost:9007 -topic Orders -type json << EOF

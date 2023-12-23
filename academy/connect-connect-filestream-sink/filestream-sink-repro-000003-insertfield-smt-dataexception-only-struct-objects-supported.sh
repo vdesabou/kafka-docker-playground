@@ -4,7 +4,8 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.repro-000003-insertfield-smt-dataexception-only-struct-objects-supported.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.repro-000003-insertfield-smt-dataexception-only-struct-objects-supported.yml"
 
 log "Sending messages to topic filestream"
 playground topic produce -t filestream --nb-messages 1 --verbose << 'EOF'

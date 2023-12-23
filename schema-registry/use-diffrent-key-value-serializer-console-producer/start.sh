@@ -4,7 +4,8 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-playground start-environment --environment plaintext
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 log "Create a topic my-topic"
 docker exec -i connect kafka-topics --create --bootstrap-server broker:9092 --topic my-topic --partitions 1

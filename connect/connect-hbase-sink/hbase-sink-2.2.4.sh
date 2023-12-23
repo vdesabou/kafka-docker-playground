@@ -10,7 +10,8 @@ if version_gt $TAG_BASE "5.9.0"; then
      exit 107
 fi
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.2.2.4.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.2.2.4.yml"
 
 
 log "Sending messages to topic hbase-test"

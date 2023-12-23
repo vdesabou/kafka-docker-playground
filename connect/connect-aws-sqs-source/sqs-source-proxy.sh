@@ -40,7 +40,8 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.proxy.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.proxy.yml"
 
 QUEUE_NAME=pg${USER}sqs${TAG}
 QUEUE_NAME=${QUEUE_NAME//[-._]/}

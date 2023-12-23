@@ -5,7 +5,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "create a topic testtopic with 1 hour segment.ms, 100% dirty ratio and 10s max.compaction.lag.ms"
 docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1  --config cleanup.policy=compact --bootstrap-server broker:9092 --config segment.ms=3600000 --config min.cleanable.dirty.ratio=1.0 --config max.compaction.lag.ms=10000

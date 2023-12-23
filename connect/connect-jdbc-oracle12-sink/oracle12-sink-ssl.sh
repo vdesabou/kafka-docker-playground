@@ -7,7 +7,8 @@ source ${DIR}/../../scripts/utils.sh
 create_or_get_oracle_image "linuxx64_12201_database.zip" "../../connect/connect-jdbc-oracle12-sink/ora-setup-scripts"
 
 # required to make utils.sh script being able to work, do not remove:
-# playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+# PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 if [ ! -z "$CONNECTOR_TAG" ]
 then

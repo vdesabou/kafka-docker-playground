@@ -83,7 +83,8 @@ sed -e "s|:AZURE_COSMOSDB_DB_ENDPOINT_URI:|$AZURE_COSMOSDB_DB_ENDPOINT_URI|g" \
     -e "s|:TOPIC_MAP:|$TOPIC_MAP|g" \
     ../../connect/connect-azure-cosmosdb-sink/data.template > ../../connect/connect-azure-cosmosdb-sink/data
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Write data to topic hotels"
 playground topic produce -t hotels --nb-messages 3 << 'EOF'

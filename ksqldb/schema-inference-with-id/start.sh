@@ -7,7 +7,8 @@ source ${DIR}/../../scripts/utils.sh
 # make sure ksqlDB is not disabled
 export ENABLE_KSQLDB=true
 
-playground start-environment --environment plaintext
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 # has to remove the price field otherwise it fails because ksqlDB schema inference is not able to handle float32
 # https://github.com/confluentinc/ksql/issues/9740

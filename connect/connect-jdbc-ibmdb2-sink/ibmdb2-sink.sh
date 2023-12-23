@@ -59,7 +59,8 @@ playground state set run.environment "plaintext"
 ../../scripts/wait-for-connect-and-controlcenter.sh
 
 # Keep it for utils.sh
-# playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+# PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending messages to topic ORDERS"
 playground topic produce -t ORDERS --nb-messages 1 << 'EOF'

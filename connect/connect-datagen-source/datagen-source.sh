@@ -10,7 +10,8 @@ sed -e "s|:NOW:|$NOW|g" \
 sed -e "s|:NOW:|$NOW|g" \
     ../../connect/connect-datagen-source/schemas/shipments-template.avro > ../../connect/connect-datagen-source/schemas/shipments.avro
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 
 log "Create topic orders"

@@ -79,7 +79,8 @@ sed -e "s|:AZURE_DATALAKE_CLIENT_ID:|$AZURE_DATALAKE_CLIENT_ID|g" \
     ../../connect/connect-azure-data-lake-storage-gen1-sink/data.template > ../../connect/connect-azure-data-lake-storage-gen1-sink/data
 
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Data Lake Storage Gen1 Sink connector"
 playground connector create-or-update --connector azure-datalake-gen1-sink << EOF

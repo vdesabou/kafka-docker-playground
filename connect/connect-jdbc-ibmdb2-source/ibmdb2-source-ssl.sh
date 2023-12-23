@@ -117,7 +117,8 @@ log "✨ If you modify a docker-compose file and want to re-create the container
 ../../scripts/wait-for-connect-and-controlcenter.sh
 
 # Keep it for utils.sh
-# playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssl.yml"
+# PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssl.yml"
 
 # sample DB is used https://www.ibm.com/docs/en/db2/11.5?topic=samples-sample-database
 log "List tables"

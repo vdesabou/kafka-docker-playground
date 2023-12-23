@@ -32,7 +32,8 @@ else
      log "🛑 SQL_DATAGEN is not set"
 fi
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.repro-000005-insertfield-smt:-adding-topic-offset-and-partition-not-working.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.repro-000005-insertfield-smt:-adding-topic-offset-and-partition-not-working.yml"
 
 log "Create table"
 docker exec -i mysql mysql --user=root --password=password --database=mydb << EOF

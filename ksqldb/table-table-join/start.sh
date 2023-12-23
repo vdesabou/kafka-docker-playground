@@ -7,7 +7,8 @@ source ${DIR}/../../scripts/utils.sh
 # make sure ksqlDB is not disabled
 export ENABLE_KSQLDB=true
 
-playground start-environment --environment plaintext
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 log "Create the ksqlDB tables"
 log "First, we create a Kafka topic and table to represent the movie reference data. Then, Kafka topic and a second table to represent the additional movie data about leading actor"

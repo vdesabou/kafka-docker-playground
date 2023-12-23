@@ -7,7 +7,8 @@ source ${DIR}/../../scripts/utils.sh
 # make sure ksqlDB is not disabled
 export ENABLE_KSQLDB=true
 
-playground start-environment --environment plaintext
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 # example with JSON
 log "Create a topic named my-structure-json"

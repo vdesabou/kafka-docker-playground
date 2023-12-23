@@ -7,7 +7,8 @@ source ${DIR}/../../scripts/utils.sh
 # make sure ksqlDB is not disabled
 export ENABLE_KSQLDB=true
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 sleep 5
 

@@ -16,7 +16,8 @@ then
      sudo chown root ${DIR}/security/vsftpd.pem
 fi
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 docker exec ftps-server bash -c "
 mkdir -p /home/vsftpd/bob/input

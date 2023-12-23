@@ -33,7 +33,8 @@ docker run -p 9005:9005 -v $PWD/../../connect/connect-gcp-firebase-source/keyfil
 log "Verifying data is in Firebase"
 docker run -p 9005:9005 -v $PWD/../../connect/connect-gcp-firebase-source/keyfile.json:/tmp/keyfile.json -e GOOGLE_APPLICATION_CREDENTIALS="/tmp/keyfile.json" -e PROJECT=$GCP_PROJECT -i andreysenov/firebase-tools firebase database:get / --project "$GCP_PROJECT" | jq .
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating GCP Firebase Source connector"
 playground connector create-or-update --connector firebase-source << EOF

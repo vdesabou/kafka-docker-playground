@@ -34,7 +34,8 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.with-assuming-iam-role.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.with-assuming-iam-role.yml"
 
 KINESIS_STREAM_NAME=kafka_docker_playground$TAG
 KINESIS_STREAM_NAME=${KINESIS_STREAM_NAME//[-.]/}

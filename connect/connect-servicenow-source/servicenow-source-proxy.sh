@@ -57,7 +57,8 @@ then
      wait_for_end_of_hibernation
 fi
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.nginx-proxy.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.nginx-proxy.yml"
 
 export HTTP_PROXY=127.0.0.1:8888
 export HTTPS_PROXY=127.0.0.1:8888

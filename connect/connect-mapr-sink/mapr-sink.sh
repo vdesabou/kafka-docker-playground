@@ -29,7 +29,8 @@ sed -e "s|:HPE_MAPR_EMAIL:|$HPE_MAPR_EMAIL|g" \
     -e "s|:HPE_MAPR_TOKEN:|$HPE_MAPR_TOKEN|g" \
     ../../connect/connect-mapr-sink/maprtech.repo.template > ../../connect/connect-mapr-sink/maprtech.repo
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 # useful script
 # https://docs.ezmeral.hpe.com/datafabric-customer-managed/74/MapRContainerDevelopers/MapRContainerDevelopersOverview.html

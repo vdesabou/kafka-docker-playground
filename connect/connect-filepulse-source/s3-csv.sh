@@ -93,7 +93,8 @@ curl -sSL -k https://raw.githubusercontent.com/streamthoughts/kafka-connect-file
 log "Upload JSON file to AWS S3 bucket $AWS_BUCKET_NAME"
 aws s3 cp /tmp/quickstart-musics-dataset.csv s3://$AWS_BUCKET_NAME/
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.s3.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.s3.yml"
 
 log "Creating S3 CSV FilePulse Source connector"
 playground connector create-or-update --connector filepulse-source-s3-csv << EOF

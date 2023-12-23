@@ -17,7 +17,8 @@ RSA_PRIVATE_KEY=$(awk '{printf "%s\\r\\n", $0}' ssh_host_rsa_key)
 log "RSA_PUBLIC_KEY=$RSA_PUBLIC_KEY"
 log "RSA_PRIVATE_KEY=$RSA_PRIVATE_KEY"
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssh-key.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssh-key.yml"
 
 log "Creating SFTP Sink connector"
 playground connector create-or-update --connector sftp-sink << EOF

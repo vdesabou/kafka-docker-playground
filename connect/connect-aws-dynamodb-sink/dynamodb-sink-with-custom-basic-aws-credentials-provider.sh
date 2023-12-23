@@ -80,7 +80,8 @@ log "Delete table, this might fail"
 aws dynamodb delete-table --table-name mytable --region $AWS_REGION
 set -e
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.with-custom-basic-aws-credentials-provider.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.with-custom-basic-aws-credentials-provider.yml"
 
 log "Sending messages to topic mytable"
 playground topic produce -t mytable --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'

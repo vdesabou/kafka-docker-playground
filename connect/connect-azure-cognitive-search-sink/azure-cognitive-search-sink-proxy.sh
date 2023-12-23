@@ -64,7 +64,8 @@ sed -e "s|:AZURE_SEARCH_SERVICE_NAME:|$AZURE_SEARCH_SERVICE_NAME|g" \
     -e "s|:AZURE_SEARCH_ADMIN_PRIMARY_KEY:|$AZURE_SEARCH_ADMIN_PRIMARY_KEY|g" \
     ../../connect/connect-azure-cognitive-search-sink/data.template > ../../connect/connect-azure-cognitive-search-sink/data
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.proxy.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.proxy.yml"
 
 log "Sending messages to topic hotels-sample"
 playground topic produce -t hotels-sample --nb-messages 1 --forced-value '{"HotelName": "Marriott", "Description": "Marriott description"}' --key "marriottId" << 'EOF'

@@ -10,7 +10,8 @@ if ! version_gt $TAG_BASE "5.4.99"; then
     exit 111
 fi
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Register schema for customer"
 curl -X POST http://localhost:8081/subjects/customer/versions \

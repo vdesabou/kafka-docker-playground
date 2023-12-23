@@ -28,7 +28,8 @@ else
      log "🛑 SQL_DATAGEN is not set"
 fi
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.cdb-table.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.cdb-table.yml"
 
 
 # Verify Oracle DB has started within MAX_WAIT seconds
