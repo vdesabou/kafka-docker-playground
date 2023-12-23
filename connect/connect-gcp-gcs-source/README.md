@@ -107,7 +107,7 @@ $ docker run -i -v ${PWD}:/tmp/ --volumes-from gcloud-config google/cloud-sdk:la
 Creating Generalized GCS Source connector:
 
 ```bash
-playground connector create-or-update --connector gcs-source << EOF
+playground connector create-or-update --connector gcs-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class": "io.confluent.connect.gcs.GcsSourceConnector",
                "gcs.bucket.name" : "$GCS_BUCKET_NAME",

@@ -62,7 +62,7 @@ aws s3 rm s3://$AWS_BUCKET_NAME/$TAG --recursive --region $AWS_REGION
 set -e
 
 log "Creating S3 Sink connector with bucket name <$AWS_BUCKET_NAME>"
-playground connector create-or-update --connector s3-sink << EOF
+playground connector create-or-update --connector s3-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class": "io.confluent.connect.s3.S3SinkConnector",
     "tasks.max": "1",

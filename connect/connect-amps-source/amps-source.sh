@@ -46,7 +46,7 @@ docker exec -i amps /AMPS/bin/spark publish -server localhost:9007 -topic Orders
 EOF
 
 log "Creating AMPS source connector"
-playground connector create-or-update --connector amps-source << EOF
+playground connector create-or-update --connector amps-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.connect.amps.AmpsSourceConnector",
      "tasks.max": "1",

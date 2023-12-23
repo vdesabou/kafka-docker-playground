@@ -56,7 +56,7 @@ playground topic produce -t pokes --nb-messages 10 --forced-value "{\"foo\": %g,
 EOF
 
 log "Creating JDBC Hive (with Datadirect) sink connector"
-playground connector create-or-update --connector jdbc-hive-sink << EOF
+playground connector create-or-update --connector jdbc-hive-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class" : "io.confluent.connect.jdbc.JdbcSinkConnector",
      "tasks.max" : "1",

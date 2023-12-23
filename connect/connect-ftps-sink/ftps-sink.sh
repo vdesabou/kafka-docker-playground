@@ -21,7 +21,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 
 log "Creating JSON file with schema FTPS Sink connector"
-playground connector create-or-update --connector ftps-sink << EOF
+playground connector create-or-update --connector ftps-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "tasks.max": "1",
      "connector.class": "io.confluent.connect.ftps.FtpsSinkConnector",

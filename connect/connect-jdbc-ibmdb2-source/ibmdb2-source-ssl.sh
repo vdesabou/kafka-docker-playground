@@ -130,7 +130,7 @@ EOF
 
 # https://www.ibm.com/docs/en/db2/11.5?topic=dsdjsss-configuring-connections-under-data-server-driver-jdbc-sqlj-use-ssl
 log "Creating JDBC IBM DB2 source connector"
-playground connector create-or-update --connector ibmdb2-source << EOF
+playground connector create-or-update --connector ibmdb2-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
   "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
   "tasks.max": "1",

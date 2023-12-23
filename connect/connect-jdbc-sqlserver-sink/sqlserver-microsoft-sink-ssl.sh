@@ -68,7 +68,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 # https://docs.microsoft.com/en-us/sql/connect/jdbc/connecting-with-ssl-encryption?view=sql-server-ver16
 log "Creating JDBC SQL Server (with Microsoft driver) sink connector"
-playground connector create-or-update --connector sqlserver-sink-ssl << EOF
+playground connector create-or-update --connector sqlserver-sink-ssl --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
     "tasks.max": "1",

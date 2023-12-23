@@ -37,7 +37,7 @@ Replicate from Metrics to Europe and US
 
 ```bash
 $ docker container exec connect-europe \
-playground connector create-or-update --connector replicate-metrics-to-europe << EOF
+playground connector create-or-update --connector replicate-metrics-to-europe --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
@@ -55,7 +55,7 @@ playground connector create-or-update --connector replicate-metrics-to-europe <<
 EOF
 
 $ docker container exec connect-us \
-playground connector create-or-update --connector replicate-metrics-to-us << EOF
+playground connector create-or-update --connector replicate-metrics-to-us --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",

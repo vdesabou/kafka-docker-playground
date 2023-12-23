@@ -75,7 +75,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Azure Service Bus Source connector"
-playground connector create-or-update --connector azure-service-bus-source << EOF
+playground connector create-or-update --connector azure-service-bus-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class": "io.confluent.connect.azure.servicebus.ServiceBusSourceConnector",
     "kafka.topic": "servicebus-topic",

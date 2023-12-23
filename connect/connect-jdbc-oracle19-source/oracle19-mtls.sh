@@ -218,7 +218,7 @@ fi
 sleep 10
 
 log "Creating Oracle source connector"
-playground connector create-or-update --connector oracle-source-mtls << EOF
+playground connector create-or-update --connector oracle-source-mtls --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
      "tasks.max":"1",

@@ -66,7 +66,7 @@ playground topic produce -t gcs_topic --nb-messages 10 --forced-value '{"f1":"va
 EOF
 
 log "Creating GCS Sink connector"
-playground connector create-or-update --connector gcs-sink << EOF
+playground connector create-or-update --connector gcs-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
     "tasks.max" : "1",

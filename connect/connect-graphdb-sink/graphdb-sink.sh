@@ -44,7 +44,7 @@ wait_service 'http://localhost:7200/protocol'
 create_graphdb_repo
 
 log "Creating graphdb-sink connector"
-playground connector create-or-update --connector graphdb-sink << EOF
+playground connector create-or-update --connector graphdb-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class":"com.ontotext.kafka.GraphDBSinkConnector",
      "key.converter": "com.ontotext.kafka.convert.DirectRDFConverter",

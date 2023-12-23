@@ -56,7 +56,7 @@ curl -X POST \
      http://localhost:8083/secret/paths/my-rbac-connector/keys/my-smt-password/versions | jq .
 
 log "Creating FileStream Sink connector"
-playground connector create-or-update --connector my-rbac-connector << EOF
+playground connector create-or-update --connector my-rbac-connector --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "tasks.max": "1",
                "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",

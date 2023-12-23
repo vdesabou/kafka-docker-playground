@@ -74,7 +74,7 @@ GO
 EOF
 
 log "Creating Debezium SQL Server source connector"
-playground connector create-or-update --connector debezium-sqlserver-source << EOF
+playground connector create-or-update --connector debezium-sqlserver-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
      "tasks.max": "1",

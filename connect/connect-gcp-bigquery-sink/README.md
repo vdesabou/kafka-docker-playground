@@ -69,7 +69,7 @@ EOF
 The connector is created with:
 
 ```bash
-playground connector create-or-update --connector gcp-bigquery-sink << EOF
+playground connector create-or-update --connector gcp-bigquery-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
      "tasks.max" : "1",

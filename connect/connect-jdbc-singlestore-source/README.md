@@ -79,7 +79,7 @@ docker exec singlestore memsql -u root -proot -e "USE db;select * from applicati
 Creating JDBC Singlestore source connector:
 
 ```bash
-playground connector create-or-update --connector jdbc-singlestore-source << EOF
+playground connector create-or-update --connector jdbc-singlestore-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max":"1",

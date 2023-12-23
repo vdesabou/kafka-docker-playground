@@ -68,7 +68,7 @@ playground topic produce -t appdynamics-metrics-topic << 'EOF'
 EOF
 
 log "Creating AppDynamics Metrics sink connector"
-playground connector create-or-update --connector appdynamics-metrics-sink << EOF
+playground connector create-or-update --connector appdynamics-metrics-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.connect.appdynamics.metrics.AppDynamicsMetricsSinkConnector",
      "tasks.max": "1",

@@ -102,7 +102,7 @@ log "Blocking spanner.googleapis.com IP $IP to make sure proxy is used"
 docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
 
 log "Creating GCP Spanner Sink connector"
-playground connector create-or-update --connector gcp-spanner-sink << EOF
+playground connector create-or-update --connector gcp-spanner-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
   "connector.class": "io.confluent.connect.gcp.spanner.SpannerSinkConnector",
   "tasks.max" : "1",

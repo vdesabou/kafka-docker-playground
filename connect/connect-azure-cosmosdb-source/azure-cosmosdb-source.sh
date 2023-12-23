@@ -94,7 +94,7 @@ docker exec -e AZURE_COSMOSDB_DB_ENDPOINT_URI="$AZURE_COSMOSDB_DB_ENDPOINT_URI" 
 
 # https://github.com/microsoft/kafka-connect-cosmosdb/blob/dev/doc/README_Source.md#source-configuration-properties
 log "Creating Azure Cosmos DB Source connector"
-playground connector create-or-update --connector azure-cosmosdb-source << EOF
+playground connector create-or-update --connector azure-cosmosdb-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class": "com.azure.cosmos.kafka.connect.source.CosmosDBSourceConnector",
     "tasks.max": "1",

@@ -53,7 +53,7 @@ log "Blocking $DOMAIN IP $IP to make sure proxy is used"
 docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
 
 log "Creating Salesforce Platform Events Source connector"
-playground connector create-or-update --connector salesforce-platform-events-source << EOF
+playground connector create-or-update --connector salesforce-platform-events-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.salesforce.SalesforcePlatformEventSourceConnector",
      "kafka.topic": "sfdc-platform-events",

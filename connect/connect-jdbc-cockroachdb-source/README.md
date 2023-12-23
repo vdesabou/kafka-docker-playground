@@ -56,7 +56,7 @@ EOF
 Creating JDBC CockroachDB source connector
 
 ```bash
-playground connector create-or-update --connector cockroachdb-source << EOF
+playground connector create-or-update --connector cockroachdb-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max": "1",

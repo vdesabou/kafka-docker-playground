@@ -47,7 +47,7 @@ db.customers.find().pretty();
 EOF
 
 log "Creating Debezium MongoDB source connector"
-playground connector create-or-update --connector debezium-mongodb-source << EOF
+playground connector create-or-update --connector debezium-mongodb-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class" : "io.debezium.connector.mongodb.MongoDbConnector",
     "tasks.max" : "1",

@@ -36,7 +36,7 @@ EOF
 Creating AMPS source connector:
 
 ```bash
-playground connector create-or-update --connector amps-source << EOF
+playground connector create-or-update --connector amps-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class": "io.confluent.connect.amps.AmpsSourceConnector",
                "tasks.max": "1",

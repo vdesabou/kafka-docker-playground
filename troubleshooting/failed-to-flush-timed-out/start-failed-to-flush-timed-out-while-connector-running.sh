@@ -16,7 +16,7 @@ log "Adding latency"
 add_latency broker connect 1000ms
 
 log "Creating FileStream Source connector"
-playground connector create-or-update --connector filestream-source << EOF
+playground connector create-or-update --connector filestream-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "tasks.max": "1",
                "connector.class": "org.apache.kafka.connect.file.FileStreamSourceConnector",

@@ -140,7 +140,7 @@ SELECT * FROM CUSTOMERS;
 EOF
 
 log "Creating JDBC PostgreSQL source connector"
-playground connector create-or-update --connector postgres-source-mtls << EOF
+playground connector create-or-update --connector postgres-source-mtls --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
                     "tasks.max": "1",

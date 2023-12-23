@@ -66,7 +66,7 @@ EOF
 DYNAMODB_ENDPOINT="https://dynamodb.$AWS_REGION.amazonaws.com"
 
 log "Creating AWS DynamoDB Sink connector"
-playground connector create-or-update --connector dynamodb-sink << EOF
+playground connector create-or-update --connector dynamodb-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class": "io.confluent.connect.aws.dynamodb.DynamoDbSinkConnector",
     "tasks.max": "1",

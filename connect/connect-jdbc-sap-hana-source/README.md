@@ -29,7 +29,7 @@ EOF
 Creating SAP HANA JDBC Source connector:
 
 ```bash
-playground connector create-or-update --connector jdbc-sap-hana-source << EOF
+playground connector create-or-update --connector jdbc-sap-hana-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",

@@ -136,7 +136,7 @@ playground topic produce -t test_table --nb-messages 3 << 'EOF'
 EOF
 
 log "Creating Snowflake Sink connector"
-playground connector create-or-update --connector snowflake-sink << EOF
+playground connector create-or-update --connector snowflake-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "com.snowflake.kafka.connector.SnowflakeSinkConnector",
      "topics": "test_table",

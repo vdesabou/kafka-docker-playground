@@ -78,7 +78,7 @@ playground topic produce -t orders --nb-messages 1 --forced-value '{"id":2,"prod
 EOF
 
 log "Creating MongoDB sink connector"
-playground connector create-or-update --connector mongodb-sink << EOF
+playground connector create-or-update --connector mongodb-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class" : "com.mongodb.kafka.connect.MongoSinkConnector",
     "tasks.max" : "1",

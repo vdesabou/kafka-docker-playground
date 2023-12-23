@@ -79,7 +79,7 @@ fi
 TODAY=$(date -u '+%Y-%m-%d')
 
 log "Creating ServiceNow Source connector"
-playground connector create-or-update --connector servicenow-source << EOF
+playground connector create-or-update --connector servicenow-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.connect.servicenow.ServiceNowSourceConnector",
      "kafka.topic": "topic-servicenow",

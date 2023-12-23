@@ -230,7 +230,7 @@ log "✨ If you modify a docker-compose file and want to re-create the container
 ../../scripts/wait-for-connect-and-controlcenter.sh
 
 log "Creating Oracle source connector"
-playground connector create-or-update --connector cdc-oracle-source-cdb --package "io.confluent.connect.oracle.cdc.util.metrics.MetricsReporter" --level DEBUG << EOF
+playground connector create-or-update --connector cdc-oracle-source-cdb --package "io.confluent.connect.oracle.cdc.util.metrics.MetricsReporter" --level DEBUG --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
                "tasks.max":1,

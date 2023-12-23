@@ -21,7 +21,7 @@ docker cp tsv-sftp-source.tsv sftp-server:/chroot/home/foo/upload/input/
 rm -f tsv-sftp-source.tsv
 
 log "Creating TSV SFTP Source connector"
-playground connector create-or-update --connector sftp-source-tsv << EOF
+playground connector create-or-update --connector sftp-source-tsv --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "tasks.max": "1",
      "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",

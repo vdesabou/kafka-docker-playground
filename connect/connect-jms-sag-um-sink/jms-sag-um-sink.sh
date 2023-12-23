@@ -64,7 +64,7 @@ playground topic produce -t sink-messages --nb-messages 10 << 'EOF'
 EOF
 
 log "Creating Solace source connector"
-playground connector create-or-update --connector jms-sag-um-sink << EOF
+playground connector create-or-update --connector jms-sag-um-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
      "tasks.max": "1",

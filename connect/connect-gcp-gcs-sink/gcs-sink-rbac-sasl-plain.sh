@@ -72,7 +72,7 @@ log "Checking messages from topic rbac_gcs_topic"
 playground topic consume --topic rbac_gcs_topic --min-expected-messages 1 --timeout 60
 
 log "Creating GCS Sink connector"
-playground connector create-or-update --connector my-rbac-connector << EOF
+playground connector create-or-update --connector my-rbac-connector --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
     "tasks.max" : "1",

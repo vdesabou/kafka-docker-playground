@@ -13,7 +13,7 @@ sleep 10
 docker exec namenode bash -c "/opt/hadoop-3.1.3/bin/hdfs dfs -chmod 777  /"
 
 log "Creating HDFS Sink connector with Hive integration"
-playground connector create-or-update --connector hdfs3-sink << EOF
+playground connector create-or-update --connector hdfs3-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
   "connector.class":"io.confluent.connect.hdfs3.Hdfs3SinkConnector",
   "tasks.max":"1",

@@ -45,7 +45,7 @@ playground topic create --topic songs
 set -e
 
 log "Creating GCP Firebase Sink connector"
-playground connector create-or-update --connector firebase-sink << EOF
+playground connector create-or-update --connector firebase-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
   "connector.class" : "io.confluent.connect.firebase.FirebaseSinkConnector",
   "tasks.max" : "1",

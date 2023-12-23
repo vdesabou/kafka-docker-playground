@@ -54,7 +54,7 @@ playground topic produce -t incidents --nb-messages 3 --forced-value "{\"fromEma
 EOF
 
 log "Creating PagerDuty Sink connector"
-playground connector create-or-update --connector pagerduty-sink << EOF
+playground connector create-or-update --connector pagerduty-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
   "connector.class": "io.confluent.connect.pagerduty.PagerDutySinkConnector",
   "topics": "incidents",

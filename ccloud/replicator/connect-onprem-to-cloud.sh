@@ -28,7 +28,7 @@ playground topic produce -t products --nb-messages 10 << 'EOF'
 %g
 EOF
 
-playground connector create-or-update --connector replicate-onprem-to-cloud << EOF
+playground connector create-or-update --connector replicate-onprem-to-cloud --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
      "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",

@@ -72,7 +72,7 @@ log "Blocking $DOMAIN IP $IP to make sure proxy is used"
 docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
 
 log "Creating Azure Blob Storage Sink connector"
-playground connector create-or-update --connector azure-blob-sink << EOF
+playground connector create-or-update --connector azure-blob-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class": "io.confluent.connect.azure.blob.AzureBlobStorageSinkConnector",
     "tasks.max": "1",
@@ -137,7 +137,7 @@ docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/blob_topic+0+000000
 
 
 log "Creating Azure Blob Storage Source connector"
-playground connector create-or-update --connector azure-blob-source << EOF
+playground connector create-or-update --connector azure-blob-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                 "connector.class": "io.confluent.connect.azure.blob.storage.AzureBlobStorageSourceConnector",
                 "tasks.max": "1",

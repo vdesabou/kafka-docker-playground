@@ -86,7 +86,7 @@ log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
 docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
 
 log "Creating Salesforce Bulk API Source connector"
-playground connector create-or-update --connector salesforce-bulkapi-source << EOF
+playground connector create-or-update --connector salesforce-bulkapi-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.connect.salesforce.SalesforceBulkApiSourceConnector",
      "kafka.topic": "sfdc-bulkapi-leads",
@@ -114,7 +114,7 @@ log "Verify we have received the data in sfdc-bulkapi-leads topic"
 playground topic consume --topic sfdc-bulkapi-leads --min-expected-messages 1 --timeout 60
 
 log "Creating Salesforce Bulk API Sink connector"
-playground connector create-or-update --connector salesforce-bulkapi-sink << EOF
+playground connector create-or-update --connector salesforce-bulkapi-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                     "connector.class": "io.confluent.connect.salesforce.SalesforceBulkApiSinkConnector",
                     "topics": "sfdc-bulkapi-leads",

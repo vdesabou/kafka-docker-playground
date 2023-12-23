@@ -18,7 +18,7 @@ log "Send message to RabbitMQ in myqueue"
 docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"
 
 log "Creating RabbitMQ Source connector"
-playground connector create-or-update --connector rabbitmq-source << EOF
+playground connector create-or-update --connector rabbitmq-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class" : "io.confluent.connect.rabbitmq.RabbitMQSourceConnector",
      "tasks.max" : "1",

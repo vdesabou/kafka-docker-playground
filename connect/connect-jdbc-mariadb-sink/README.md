@@ -18,7 +18,7 @@ $ playground run -f mariadb-sink<use tab key to activate fzf completion (see htt
 Creating MariaDB sink connector
 
 ```bash
-playground connector create-or-update --connector mariadb-sink << EOF
+playground connector create-or-update --connector mariadb-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
      "tasks.max": "1",

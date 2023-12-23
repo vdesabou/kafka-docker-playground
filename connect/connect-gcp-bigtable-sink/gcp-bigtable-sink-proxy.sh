@@ -85,7 +85,7 @@ log "Blocking bigtableadmin.googleapis.com IP $IP to make sure proxy is used"
 docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
 
 log "Creating GCP BigTbale Sink connector"
-playground connector create-or-update --connector gcp-bigtable-sink << EOF
+playground connector create-or-update --connector gcp-bigtable-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class": "io.confluent.connect.gcp.bigtable.BigtableSinkConnector",
     "tasks.max" : "1",

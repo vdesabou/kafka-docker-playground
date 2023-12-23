@@ -111,7 +111,7 @@ docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB <<
 EOF
 
 log "Creating Oracle source connector"
-playground connector create-or-update --connector oracle-source << EOF
+playground connector create-or-update --connector oracle-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max":"1",

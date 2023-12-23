@@ -171,7 +171,7 @@ playground topic produce -t ORDERS --nb-messages 1 --forced-value '{"ID":2,"PROD
 EOF
 
 log "Creating JDBC IBM DB2 sink connector"
-playground connector create-or-update --connector ibmdb2-sink << EOF
+playground connector create-or-update --connector ibmdb2-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
   "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
   "tasks.max": "1",

@@ -83,7 +83,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Data Lake Storage Gen1 Sink connector"
-playground connector create-or-update --connector azure-datalake-gen1-sink << EOF
+playground connector create-or-update --connector azure-datalake-gen1-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class": "io.confluent.connect.azure.datalake.gen1.AzureDataLakeGen1StorageSinkConnector",
     "tasks.max": "1",

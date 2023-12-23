@@ -81,7 +81,7 @@ EOF
 sleep 10
 
 log "Creating Google Cloud Pub/Sub Group Kafka Sink connector"
-playground connector create-or-update --connector pubsub-sink << EOF
+playground connector create-or-update --connector pubsub-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class" : "com.google.pubsub.kafka.sink.CloudPubSubSinkConnector",
      "tasks.max" : "1",

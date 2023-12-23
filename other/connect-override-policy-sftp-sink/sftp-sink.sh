@@ -23,7 +23,7 @@ docker exec broker kafka-acls --bootstrap-server broker:9092 --add --allow-princ
 docker exec broker kafka-acls --bootstrap-server broker:9092 --add --allow-principal User:sftp --operation CREATE --topic test_sftp_sink --command-config /tmp/client.properties
 
 log "Creating SFTP Sink connector"
-playground connector create-or-update --connector sftp-sink << EOF
+playground connector create-or-update --connector sftp-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
   "topics": "test_sftp_sink",
   "tasks.max": "1",

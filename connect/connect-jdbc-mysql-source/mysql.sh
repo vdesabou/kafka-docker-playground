@@ -81,7 +81,7 @@ log "Show content of team table:"
 docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
 
 log "Creating MySQL source connector"
-playground connector create-or-update --connector mysql-source << EOF
+playground connector create-or-update --connector mysql-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max":"10",

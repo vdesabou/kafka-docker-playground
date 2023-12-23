@@ -65,7 +65,7 @@ set -e
 
 
 log "Creating S3 Sink connector with bucket name <$AWS_BUCKET_NAME>"
-playground connector create-or-update --connector s3-sink << EOF
+playground connector create-or-update --connector s3-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class": "io.confluent.connect.s3.S3SinkConnector",
     "key.converter": "org.apache.kafka.connect.storage.StringConverter",

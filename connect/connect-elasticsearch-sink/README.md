@@ -22,7 +22,7 @@ $ playground run -f elasticsearch-sink<use tab key to activate fzf completion (s
 The connector is created with:
 
 ```
-playground connector create-or-update --connector elasticsearch-sink << EOF
+playground connector create-or-update --connector elasticsearch-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
         "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
           "tasks.max": "1",

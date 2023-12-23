@@ -65,7 +65,7 @@ do
 done
 
 log "Creating Solace source connector"
-playground connector create-or-update --connector jms-sag-um-source << EOF
+playground connector create-or-update --connector jms-sag-um-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.connect.jms.JmsSourceConnector",
      "tasks.max": "1",

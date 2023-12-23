@@ -81,7 +81,7 @@ EOF
 Creating JMS Oracle AQ source connector:
 
 ```bash
-playground connector create-or-update --connector jms-oracle-source << EOF
+playground connector create-or-update --connector jms-oracle-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class": "io.confluent.connect.jms.JmsSourceConnector",
                "tasks.max": "1",

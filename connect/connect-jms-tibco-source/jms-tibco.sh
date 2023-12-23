@@ -49,7 +49,7 @@ java tibjmsMsgProducer -user admin -queue connector-quickstart m1 m2 m3 m4 m5'
 
 
 log "Creating JMS TIBCO source connector"
-playground connector create-or-update --connector jms-tibco-source << EOF
+playground connector create-or-update --connector jms-tibco-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.connect.jms.JmsSourceConnector",
      "tasks.max": "1",

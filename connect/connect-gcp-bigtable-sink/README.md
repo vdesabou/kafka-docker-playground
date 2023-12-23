@@ -70,7 +70,7 @@ EOF
 Creating GCP BigTbale Sink connector
 
 ```bash
-playground connector create-or-update --connector gcp-bigtable-sink << EOF
+playground connector create-or-update --connector gcp-bigtable-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class": "io.confluent.connect.gcp.bigtable.BigtableSinkConnector",
                "tasks.max" : "1",

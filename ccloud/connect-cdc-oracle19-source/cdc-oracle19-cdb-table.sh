@@ -138,7 +138,7 @@ playground topic create --topic _confluent-monitoring
 set -e
 
 log "Creating Oracle source connector"
-playground connector create-or-update --connector cdc-oracle-source-cdb-cloud --package "io.confluent.connect.oracle.cdc.util.metrics.MetricsReporter" --level DEBUG << EOF
+playground connector create-or-update --connector cdc-oracle-source-cdb-cloud --package "io.confluent.connect.oracle.cdc.util.metrics.MetricsReporter" --level DEBUG --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
      "tasks.max":2,

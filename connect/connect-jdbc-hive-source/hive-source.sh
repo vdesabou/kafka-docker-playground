@@ -40,7 +40,7 @@ insert into pokes (foo, bar) values (1,'test');
 EOF
 
 log "Creating JDBC Hive source connector"
-playground connector create-or-update --connector jdbc-hive-source << EOF
+playground connector create-or-update --connector jdbc-hive-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
   "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
   "tasks.max": "1",

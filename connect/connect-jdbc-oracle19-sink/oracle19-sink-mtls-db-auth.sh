@@ -191,7 +191,7 @@ sleep 10
 
 log "Creating Oracle sink connector"
 
-playground connector create-or-update --connector oracle-sink-mtls-db-auth << EOF
+playground connector create-or-update --connector oracle-sink-mtls-db-auth --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
   "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
   "tasks.max": "1",

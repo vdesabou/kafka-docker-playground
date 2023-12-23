@@ -154,7 +154,7 @@ playground topic produce -t orders --nb-messages 1 --forced-value '{"id":2,"prod
 EOF
 
 log "Creating AWS Redshift Sink connector with cluster url $CLUSTER"
-playground connector create-or-update --connector redshift-sink << EOF
+playground connector create-or-update --connector redshift-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.connect.aws.redshift.RedshiftSinkConnector",
      "tasks.max": "1",

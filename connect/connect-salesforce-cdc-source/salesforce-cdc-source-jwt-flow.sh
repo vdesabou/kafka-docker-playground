@@ -64,7 +64,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.jwt-flow.yml"
 
 log "Creating Salesforce CDC Source connector"
-playground connector create-or-update --connector salesforce-cdc-source << EOF
+playground connector create-or-update --connector salesforce-cdc-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.salesforce.SalesforceCdcSourceConnector",
      "kafka.topic": "sfdc-cdc-contacts",

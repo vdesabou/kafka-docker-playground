@@ -49,7 +49,7 @@ fi
 OUTPUT_FILE="${CONNECT_CONTAINER_HOME_DIR}/data/ouput/file.json"
 
 log "Creating FileStream Sink connector reading confluent-audit-log-events from the audit log cluster"
-playground connector create-or-update --connector filestream-sink << EOF
+playground connector create-or-update --connector filestream-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "tasks.max": "1",
      "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",

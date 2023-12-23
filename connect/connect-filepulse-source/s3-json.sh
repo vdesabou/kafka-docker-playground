@@ -105,7 +105,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.s3.yml"
 
 log "Creating S3 JSON FilePulse Source connector"
-playground connector create-or-update --connector filepulse-source-s3-json << EOF
+playground connector create-or-update --connector filepulse-source-s3-json --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class":"io.streamthoughts.kafka.connect.filepulse.source.FilePulseSourceConnector",
     "aws.access.key.id": "\${file:/data:aws.access.key.id}",

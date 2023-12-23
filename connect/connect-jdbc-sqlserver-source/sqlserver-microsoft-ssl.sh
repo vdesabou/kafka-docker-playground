@@ -94,7 +94,7 @@ EOF
 
 # https://docs.microsoft.com/en-us/sql/connect/jdbc/connecting-with-ssl-encryption?view=sql-server-ver16
 log "Creating JDBC SQL Server (with Microsoft driver) source connector"
-playground connector create-or-update --connector sqlserver-source-ssl << EOF
+playground connector create-or-update --connector sqlserver-source-ssl --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
   "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
   "tasks.max": "1",

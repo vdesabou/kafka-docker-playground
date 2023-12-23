@@ -61,7 +61,7 @@ playground topic produce -t test_dataproc --nb-messages 10 --forced-value '{"f1"
 EOF
 
 log "Creating GCP Dataproc Sink connector"
-playground connector create-or-update --connector gcp-dataproc-sink << EOF
+playground connector create-or-update --connector gcp-dataproc-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class": "io.confluent.connect.gcp.dataproc.DataprocSinkConnector",
     "tasks.max" : "1",

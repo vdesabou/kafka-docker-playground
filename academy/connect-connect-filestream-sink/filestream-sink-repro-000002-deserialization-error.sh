@@ -24,7 +24,7 @@ playground topic produce -t filestream --nb-messages 1 --verbose << 'EOF'
 EOF
 
 log "Creating FileStream Sink connector"
-playground connector create-or-update --connector filestream-sink << EOF
+playground connector create-or-update --connector filestream-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "tasks.max": "1",
      "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",

@@ -10,7 +10,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.mtls.yml"
 
 log "Creating http-source connector"
-playground connector create-or-update --connector http-cdc-sourc2e << EOF
+playground connector create-or-update --connector http-cdc-sourc2e --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "tasks.max": "1",
      "connector.class": "com.github.castorm.kafka.connect.http.HttpSourceConnector",

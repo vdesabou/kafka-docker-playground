@@ -50,7 +50,7 @@ This is my message
 EOF
 
 log "Creating IBM MQ sink connector"
-playground connector create-or-update --connector ibm-mq-sink-ssl << EOF
+playground connector create-or-update --connector ibm-mq-sink-ssl --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.connect.jms.IbmMqSinkConnector",
      "topics": "sink-messages",

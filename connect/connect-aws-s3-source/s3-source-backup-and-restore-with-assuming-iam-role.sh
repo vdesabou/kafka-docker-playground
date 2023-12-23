@@ -57,7 +57,7 @@ aws s3 rm s3://$AWS_BUCKET_NAME/$TAG --recursive --region $AWS_REGION
 set -e
 
 log "Creating S3 Sink connector with bucket name <$AWS_BUCKET_NAME>"
-playground connector create-or-update --connector s3-sink << EOF
+playground connector create-or-update --connector s3-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.connect.s3.S3SinkConnector",
      "tasks.max": "1",
@@ -104,7 +104,7 @@ docker run --rm -v ${DIR}:/tmp vdesabou/avro-tools tojson /tmp/s3_topic+0+000000
 rm -f s3_topic+0+0000000000.avro
 
 log "Creating Backup and Restore S3 Source connector with bucket name <$AWS_BUCKET_NAME>"
-playground connector create-or-update --connector s3-source << EOF
+playground connector create-or-update --connector s3-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "tasks.max": "1",
      "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",

@@ -87,7 +87,7 @@ Results:
 Connector is created with:
 
 ```yml
-playground connector create-or-update --connector debezium-sqlserver-source-ssl << EOF
+playground connector create-or-update --connector debezium-sqlserver-source-ssl --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
                "tasks.max": "1",

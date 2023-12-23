@@ -76,7 +76,7 @@ EOF
 
 
 log "Creating GCS Sink connector"
-playground connector create-or-update --connector GCSSinkConnector << EOF
+playground connector create-or-update --connector GCSSinkConnector --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                "tasks.max" : "1",
@@ -113,7 +113,7 @@ docker rm -f gcloud-config
 ## SOURCE
 ##########################
 log "Creating Backup and Restore GCS Source connector"
-playground connector create-or-update --connector gcs-source << EOF
+playground connector create-or-update --connector gcs-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class": "io.confluent.connect.gcs.GcsSourceConnector",
                "gcs.bucket.name" : "$GCS_BUCKET_NAME",

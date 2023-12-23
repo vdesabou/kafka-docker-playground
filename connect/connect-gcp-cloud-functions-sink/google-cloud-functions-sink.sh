@@ -38,7 +38,7 @@ value%g
 EOF
 
 log "Creating Google Cloud Functions Sink connector"
-playground connector create-or-update --connector gcp-functions << EOF
+playground connector create-or-update --connector gcp-functions --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class": "io.confluent.connect.gcp.functions.GoogleCloudFunctionsSinkConnector",
     "tasks.max" : "1",

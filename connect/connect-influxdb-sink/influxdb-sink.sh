@@ -46,7 +46,7 @@ docker exec -i connect kafka-avro-console-consumer \
      --max-messages=1
 
 log "Creating InfluxDB sink connector"
-playground connector create-or-update --connector influxdb-sink << EOF
+playground connector create-or-update --connector influxdb-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.influxdb.InfluxDBSinkConnector",
      "tasks.max": "1",

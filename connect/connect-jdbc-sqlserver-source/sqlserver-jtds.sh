@@ -54,7 +54,7 @@ GO
 EOF
 
 log "Creating JDBC SQL Server (with JTDS driver) source connector"
-playground connector create-or-update --connector sqlserver-source << EOF
+playground connector create-or-update --connector sqlserver-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
               "tasks.max": "1",

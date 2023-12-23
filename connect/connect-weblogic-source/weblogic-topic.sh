@@ -57,7 +57,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating JMS weblogic source connector"
-playground connector create-or-update --connector weblogic-topic-source << EOF
+playground connector create-or-update --connector weblogic-topic-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class": "io.confluent.connect.weblogic.WeblogicSourceConnector",
                "kafka.topic": "from-weblogic-messages",

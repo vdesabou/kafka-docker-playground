@@ -474,7 +474,8 @@ commands:
 
     Note: when running an example with <playground run> or <playground run-ccloud>, it is already automatically done
   flags:
-    - long: --environment
+    - &environment
+      long: --environment
       required: false
       default: "plaintext"
       arg: environment
@@ -2658,6 +2659,7 @@ commands:
 
     flags:
     - *verbose
+    - *environment
     - long: --connector
       short: -c
       required: true

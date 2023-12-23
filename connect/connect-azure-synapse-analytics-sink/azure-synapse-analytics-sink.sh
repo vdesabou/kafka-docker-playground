@@ -126,7 +126,7 @@ playground topic produce -t products --nb-messages 1 --forced-value '{"name": "n
 EOF
 
 log "Creating Azure Synapse Analytics Sink connector"
-playground connector create-or-update --connector azure-sql-dw-sink << EOF
+playground connector create-or-update --connector azure-sql-dw-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class": "io.confluent.connect.azuresqldw.AzureSqlDwSinkConnector",
     "tasks.max": "1",

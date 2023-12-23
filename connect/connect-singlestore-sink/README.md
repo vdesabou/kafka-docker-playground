@@ -31,7 +31,7 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-pr
 Creating Singlestore sink connector
 
 ```bash
-playground connector create-or-update --connector singlestore-sink << EOF
+playground connector create-or-update --connector singlestore-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class":"com.singlestore.kafka.SingleStoreSinkConnector",
                "tasks.max":"1",

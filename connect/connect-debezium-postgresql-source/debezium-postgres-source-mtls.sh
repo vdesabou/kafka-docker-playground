@@ -146,7 +146,7 @@ SELECT * FROM CUSTOMERS;
 EOF
 
 log "Creating Debezium PostgreSQL source connector"
-playground connector create-or-update --connector debezium-postgres-source << EOF
+playground connector create-or-update --connector debezium-postgres-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
     "tasks.max": "1",

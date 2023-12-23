@@ -18,7 +18,7 @@ $ playground run -f sybase-sink<use tab key to activate fzf completion (see http
 Create JDBC Sybase sink connector
 
 ```bash
-playground connector create-or-update --connector sybase-sink << EOF
+playground connector create-or-update --connector sybase-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",

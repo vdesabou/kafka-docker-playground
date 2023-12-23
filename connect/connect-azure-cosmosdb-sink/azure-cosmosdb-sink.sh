@@ -96,7 +96,7 @@ EOF
 
 # https://github.com/microsoft/kafka-connect-cosmosdb/blob/dev/doc/README_Sink.md
 log "Creating Azure Cosmos DB Sink connector"
-playground connector create-or-update --connector azure-cosmosdb-sink << EOF
+playground connector create-or-update --connector azure-cosmosdb-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class": "com.azure.cosmos.kafka.connect.sink.CosmosDBSinkConnector",
     "tasks.max": "1",

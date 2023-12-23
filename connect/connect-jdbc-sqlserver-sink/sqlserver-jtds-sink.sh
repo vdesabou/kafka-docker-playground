@@ -8,7 +8,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.jtds.yml"
 
 log "Creating JDBC SQL Server (with JTDS driver) sink connector"
-playground connector create-or-update --connector sqlserver-sink << EOF
+playground connector create-or-update --connector sqlserver-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                     "tasks.max": "1",

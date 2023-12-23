@@ -30,7 +30,7 @@ EOF
 Creating SAP HANA Sink connector:
 
 ```bash
-playground connector create-or-update --connector sap-hana-sink << EOF
+playground connector create-or-update --connector sap-hana-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "tasks.max": "1",
                "connector.class": "com.sap.kafka.connect.sink.hana.HANASinkConnector",

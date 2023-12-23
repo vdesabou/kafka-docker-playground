@@ -26,7 +26,7 @@ playground topic produce -t topic1 --nb-messages 10 --forced-value '{"f1": "valu
 EOF
 
 log "Creating Cassandra Sink connector"
-playground connector create-or-update --connector cassandra-sink << EOF
+playground connector create-or-update --connector cassandra-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.connect.cassandra.CassandraSinkConnector",
      "tasks.max": "1",

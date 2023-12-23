@@ -20,7 +20,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 
 log "Creating JDBC SQL Server (with Microsoft driver) sink connector"
-playground connector create-or-update --connector sqlserver-sink << EOF
+playground connector create-or-update --connector sqlserver-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
      "tasks.max": "1",

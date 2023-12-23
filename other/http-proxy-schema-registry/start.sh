@@ -44,7 +44,7 @@ timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server bro
 
 
 log "Creating FileStream Sink connector"
-playground connector create-or-update --connector filestream-sink << EOF
+playground connector create-or-update --connector filestream-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "tasks.max": "1",
     "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",

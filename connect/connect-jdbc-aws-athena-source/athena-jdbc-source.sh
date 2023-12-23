@@ -57,7 +57,7 @@ log "Create table CUSTOMERS"
 docker run -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_ATHENA_S3_STAGING_DIR=$AWS_ATHENA_S3_STAGING_DIR -e AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION -e ATHENA_WORK_GROUP=$ATHENA_WORK_GROUP --rm -ti -v $(pwd):/home/athena zzl0/athenacli athenacli -e /home/athena/customers.sql
 
 log "Creating JDBC AWS Athena source connector"
-playground connector create-or-update --connector athena-jdbc-source << EOF
+playground connector create-or-update --connector athena-jdbc-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
      "tasks.max": "1",

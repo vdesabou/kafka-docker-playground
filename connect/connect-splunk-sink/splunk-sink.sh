@@ -38,7 +38,7 @@ docker exec broker kafka-topics --create --topic splunk-qs --partitions 10 --rep
 
 
 log "Creating Splunk sink connector"
-playground connector create-or-update --connector splunk-sink << EOF
+playground connector create-or-update --connector splunk-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "com.splunk.kafka.connect.SplunkSinkConnector",
      "tasks.max": "1",

@@ -116,7 +116,7 @@ EOF
 CLOUDWATCH_METRICS_URL="https://monitoring.$AWS_REGION.amazonaws.com"
 
 log "Creating AWS CloudWatch metrics Sink connector"
-playground connector create-or-update --connector aws-cloudwatch-metrics-sink << EOF
+playground connector create-or-update --connector aws-cloudwatch-metrics-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "tasks.max": "1",
     "topics": "cloudwatch-metrics-topic",

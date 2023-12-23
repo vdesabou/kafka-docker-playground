@@ -443,3 +443,23 @@ function get_cli_metric() {
   metric_name="$1"
   playground state get "metrics.$metric_name"
 }
+
+function add_connector_config_based_on_envrionment () {
+  environment="$1"
+  json_content="$2"
+
+  case "${environment}" in
+    plaintext)
+      # nothing to do
+      return
+    ;;
+    ccloud)
+      # nothing to do
+      return
+    ;;
+    *)
+      logerror "ERROR: component name not valid ! Should be one of zookeeper, broker, schema-registry or connect"
+      exit 1
+    ;;
+  esac
+}

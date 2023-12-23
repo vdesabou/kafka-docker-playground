@@ -43,7 +43,7 @@ log "-------------------------------------"
 
 
 log "Creating MySQL source connector"
-playground connector create-or-update --connector mysql-source << EOF
+playground connector create-or-update --connector mysql-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max":"1",
@@ -84,7 +84,7 @@ fi
 
 
 log "Creating http-sink connector"
-playground connector create-or-update --connector http-sink << EOF
+playground connector create-or-update --connector http-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "topics": "mysql-application",
                "tasks.max": "1",
@@ -114,7 +114,7 @@ then
 fi
 
 log "Creating Elasticsearch Sink connector"
-playground connector create-or-update --connector elasticsearch-sink << EOF
+playground connector create-or-update --connector elasticsearch-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
         "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
           "tasks.max": "1",
@@ -152,7 +152,7 @@ seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "
 log "Consolidating all sales in the US"
 
 docker container exec connect-us \
-playground connector create-or-update --connector replicate-europe-to-us << EOF
+playground connector create-or-update --connector replicate-europe-to-us --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
@@ -173,7 +173,7 @@ EOF
 log "Consolidating all sales in Europe"
 
 docker container exec connect-europe \
-playground connector create-or-update --connector replicate-us-to-europe << EOF
+playground connector create-or-update --connector replicate-us-to-europe --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",

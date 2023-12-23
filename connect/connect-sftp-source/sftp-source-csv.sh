@@ -20,7 +20,7 @@ docker cp csv-sftp-source.csv sftp-server:/chroot/home/foo/upload/input/
 rm -f csv-sftp-source.csv
 
 log "Creating CSV SFTP Source connector"
-playground connector create-or-update --connector sftp-source-csv << EOF
+playground connector create-or-update --connector sftp-source-csv --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "tasks.max": "1",
      "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",

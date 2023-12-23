@@ -134,7 +134,7 @@ select owner, table_name from dba_all_tables where table_name = 'FOOQUEUETABLE';
 EOF
 
 log "Creating JMS Oracle AQ source connector"
-playground connector create-or-update --connector jms-oracle-source << EOF
+playground connector create-or-update --connector jms-oracle-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class": "io.confluent.connect.jms.JmsSourceConnector",
                "tasks.max": "1",

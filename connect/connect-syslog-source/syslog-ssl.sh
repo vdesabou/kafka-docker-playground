@@ -12,7 +12,7 @@ docker cp example.key.pem connect:/
 docker cp example.crt.pem connect:/
 
 log "Creating Syslog Source connector"
-playground connector create-or-update --connector syslog-source << EOF
+playground connector create-or-update --connector syslog-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "tasks.max": "1",
                     "connector.class": "io.confluent.connect.syslog.SyslogSourceConnector",

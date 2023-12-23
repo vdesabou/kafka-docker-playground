@@ -21,7 +21,7 @@ EOF
 playground debug log-level set --package "org.apache.http" --level TRACE
 
 log "Creating http-sink connector"
-playground connector create-or-update --connector http-ssl-basic-auth-sink2 << EOF
+playground connector create-or-update --connector http-ssl-basic-auth-sink2 --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "topics": "http-messages",
      "tasks.max": "1",

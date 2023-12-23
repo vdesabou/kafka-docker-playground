@@ -13,7 +13,7 @@ This is my message
 EOF
 
 log "Creating ActiveMQ sink connector"
-playground connector create-or-update --connector active-mq-sink << EOF
+playground connector create-or-update --connector active-mq-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.connect.jms.ActiveMqSinkConnector",
      "topics": "sink-messages",

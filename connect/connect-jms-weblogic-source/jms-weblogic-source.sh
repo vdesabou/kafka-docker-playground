@@ -58,7 +58,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 
 log "Creating JMS weblogic source connector"
-playground connector create-or-update --connector weblogic-source << EOF
+playground connector create-or-update --connector weblogic-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.connect.jms.JmsSourceConnector",
      "kafka.topic": "from-weblogic-messages",

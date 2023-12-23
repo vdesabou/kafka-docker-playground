@@ -72,7 +72,7 @@ aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-message-
 cd -
 
 log "Creating SQS Source connector"
-playground connector create-or-update --connector sqs-source << EOF
+playground connector create-or-update --connector sqs-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
     "tasks.max": "1",

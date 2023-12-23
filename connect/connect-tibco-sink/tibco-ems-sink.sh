@@ -43,7 +43,7 @@ playground topic produce -t sink-messages --nb-messages 10 << 'EOF'
 %g
 EOF
 log "Creating TIBCO EMS sink connector"
-playground connector create-or-update --connector tibco-ems-sink << EOF
+playground connector create-or-update --connector tibco-ems-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class": "io.confluent.connect.jms.TibcoSinkConnector",
                     "tasks.max": "1",

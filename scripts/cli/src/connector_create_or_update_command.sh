@@ -3,6 +3,12 @@ level=${args[--level]}
 package=${args[--package]}
 validate=${args[--validate]}
 verbose="${args[--verbose]}"
+environment="${args[--environment]}"
+
+if [ "$environment" = "" ]
+then
+    environment="plaintext"
+fi
 
 if [ "$json" = "-" ]
 then
@@ -141,6 +147,8 @@ else
 fi
 
 set +e
+
+add_connector_config_based_on_envrionment "$environment" "$json_content"
 if [[ -n "$verbose" ]]
 then
     log "🐞 curl command used"

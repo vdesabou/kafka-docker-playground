@@ -53,7 +53,7 @@ INSERT INTO team (   \
 Creating Debezium MySQL source connector
 
 ```bash
-playground connector create-or-update --connector debezium-mysql-source << EOF
+playground connector create-or-update --connector debezium-mysql-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
               "connector.class": "io.debezium.connector.mysql.MySqlConnector",
               "tasks.max": "1",

@@ -95,7 +95,7 @@ playground topic produce -t stats --nb-messages 3 --key "simple-key-%g" << 'EOF'
 EOF
 
 log "Creating GCP BigTbale Sink connector"
-playground connector create-or-update --connector gcp-bigtable-sink << EOF
+playground connector create-or-update --connector gcp-bigtable-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.connect.gcp.bigtable.BigtableSinkConnector",
      "tasks.max" : "1",

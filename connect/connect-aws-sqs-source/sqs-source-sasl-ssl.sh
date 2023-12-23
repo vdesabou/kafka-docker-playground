@@ -76,7 +76,7 @@ cd -
 
 
 log "Creating SQS Source connector with SASL_SSL authentication"
-playground connector create-or-update --connector sqs-source-sasl-ssl << EOF
+playground connector create-or-update --connector sqs-source-sasl-ssl --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
     "tasks.max": "1",

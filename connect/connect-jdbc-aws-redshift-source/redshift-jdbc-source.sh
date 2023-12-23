@@ -134,7 +134,7 @@ SELECT * from CUSTOMERS;
 EOF
 
 log "Creating JDBC AWS Redshift source connector"
-playground connector create-or-update --connector redshift-jdbc-source << EOF
+playground connector create-or-update --connector redshift-jdbc-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
      "tasks.max": "1",

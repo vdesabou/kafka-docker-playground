@@ -50,7 +50,7 @@ log "Create connector-quickstart queue in the default Message VPN using CLI"
 docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/create_queue_cmd"
 
 log "Creating Solace sink connector"
-playground connector create-or-update --connector jms-solace-sink << EOF
+playground connector create-or-update --connector jms-solace-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
                     "tasks.max": "1",

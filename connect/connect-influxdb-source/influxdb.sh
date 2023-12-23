@@ -15,7 +15,7 @@ log "Verifying data in testdb"
 docker exec -i influxdb bash -c "influx -execute 'SELECT * from coin' -database testdb"
 
 log "Creating InfluxDB source connector"
-playground connector create-or-update --connector influxdb-source << EOF
+playground connector create-or-update --connector influxdb-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                "connector.class": "io.confluent.influxdb.source.InfluxdbSourceConnector",
                     "tasks.max": "1",

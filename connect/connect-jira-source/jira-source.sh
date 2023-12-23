@@ -42,7 +42,7 @@ SINCE="2021-01-01 00:00"
 #      http://localhost:8083/admin/loggers/org.apache.http.wire | jq .
 
 log "Creating Jira Source connector"
-playground connector create-or-update --connector jira-source << EOF
+playground connector create-or-update --connector jira-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
                     "connector.class": "io.confluent.connect.jira.JiraSourceConnector",
                     "topic.name.pattern":"jira-topic-\${resourceName}",

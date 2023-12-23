@@ -119,7 +119,7 @@ EOF
 
 
 log "Creating Azure Search Sink connector"
-playground connector create-or-update --connector azure-cognitive-search << EOF
+playground connector create-or-update --connector azure-cognitive-search --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
     "connector.class": "io.confluent.connect.azure.search.AzureSearchSinkConnector",
     "tasks.max": "1",

@@ -45,7 +45,7 @@ DISPLAY CHANNEL(DEV.APP.SVRCONN)
 EOF
 
 log "Creating IBM MQ source connector"
-playground connector create-or-update --connector ibm-mq-source-ssl << EOF
+playground connector create-or-update --connector ibm-mq-source-ssl --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class": "io.confluent.connect.ibm.mq.IbmMQSourceConnector",
      "kafka.topic": "MyKafkaTopicName",

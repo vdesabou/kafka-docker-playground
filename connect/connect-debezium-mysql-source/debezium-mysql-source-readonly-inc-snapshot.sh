@@ -92,7 +92,7 @@ EOF
 
 
 log "Creating Debezium MySQL source connector"
-playground connector create-or-update --connector debezium-mysql-source << EOF
+playground connector create-or-update --connector debezium-mysql-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
   "connector.class": "io.debezium.connector.mysql.MySqlConnector",
   "tasks.max": "1",
@@ -134,7 +134,7 @@ docker exec mysql bash -c "mysql --user=root --password=password --database=mydb
 
 log "Adding customers table to the connector"
 
-playground connector create-or-update --connector debezium-mysql-source << EOF
+playground connector create-or-update --connector debezium-mysql-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
   "connector.class": "io.debezium.connector.mysql.MySqlConnector",
   "tasks.max": "1",

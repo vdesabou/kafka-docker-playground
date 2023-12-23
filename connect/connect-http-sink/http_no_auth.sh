@@ -43,7 +43,7 @@ curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http
 # curl -X PUT -H "Content-Type: application/json" --data '{"message":"Hello, World!"}' http://localhost:9006/set-response-body
 
 log "Creating http-sink connector"
-playground connector create-or-update --connector http-sink << EOF
+playground connector create-or-update --connector http-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "topics": "http-messages",
      "tasks.max": "1",

@@ -27,7 +27,7 @@ EOF
 sleep 2
 
 log "Creating MongoDB source connector"
-playground connector create-or-update --connector mongodb-source << EOF
+playground connector create-or-update --connector mongodb-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class" : "com.mongodb.kafka.connect.MongoSourceConnector",
      "tasks.max" : "1",

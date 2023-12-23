@@ -94,7 +94,7 @@ sleep 2
 # https://www.mongodb.com/docs/kafka-connector/current/security-and-authentication/tls-and-x509/
 # https://www.mongodb.com/docs/drivers/java/sync/current/fundamentals/connection/tls/
 log "Creating MongoDB source connector"
-playground connector create-or-update --connector mongodb-source << EOF
+playground connector create-or-update --connector mongodb-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
 {
      "connector.class" : "com.mongodb.kafka.connect.MongoSourceConnector",
      "tasks.max" : "1",
