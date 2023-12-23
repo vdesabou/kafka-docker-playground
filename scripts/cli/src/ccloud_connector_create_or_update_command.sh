@@ -165,20 +165,12 @@ then
         if [ $is_create == 1 ]
         then
             log "✅ Connector $connector was successfully created"
-            if [ -z "$GITHUB_RUN_NUMBER" ]
-            then
-                log "💈 Configuration is "
-                echo "$json_content" | jq -S .
-            fi
-            log "🥁 Waiting a few seconds to get new status"
         else
             log "✅ Connector $connector was successfully updated"
-            if [ -z "$GITHUB_RUN_NUMBER" ]
-            then
-                log "💈 Configuration is "
-                echo "$json_content" | jq -S .
-            fi
-            log "🥁 Waiting a few seconds to get new status"
+        fi
+        if [ -z "$GITHUB_RUN_NUMBER" ]
+        then
+            playground ccloud-connector show-config --connector "$connector"
         fi
         sleep 8
         playground ccloud-connector status --connector $connector
