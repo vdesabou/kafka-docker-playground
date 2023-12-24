@@ -1184,8 +1184,8 @@ playground_run_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--environment ENVIRONMENT")"
-    printf "    🔐 The environment to start . \n    \n    - ccloud\n    - 2way-ssl\n    - kerberos\n    - kraft-external-plaintext\n    - kraft-plaintext\n    - ldap-authorizer-sasl-plain\n    - ldap-sasl-plain\n    - mdc-kerberos\n    - mdc-plaintext\n    - mdc-sasl-plain\n    - plaintext\n    - rbac-sasl-plain\n    - sasl-plain\n    - sasl-scram\n    - sasl-ssl\n    - ssl_kerberos\n    \n    Default is plaintext\n"
-    printf "    Allowed: ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos\n"
+    printf "    🔐 The environment to start when running a connector example \n    \n    - plaintext\n    - ccloud\n    - 2way-ssl (not supported yet)\n    - kerberos (not supported yet)\n    - kraft-external-plaintext (not supported yet)\n    - kraft-plaintext (not supported yet)\n    - ldap-authorizer-sasl-plain (not supported yet)\n    - ldap-sasl-plain (not supported yet)\n    - rbac-sasl-plain (not supported yet)\n    - sasl-plain (not supported yet)\n    - sasl-scram (not supported yet)\n    - sasl-ssl (not supported yet)\n    - ssl_kerberos (not supported yet)\n    \n    Default is plaintext.\n    This is only supported when example is a connector example\n"
+    printf "    Allowed: ccloud, plaintext\n"
     printf "    Default: plaintext\n"
     echo
 
@@ -1319,8 +1319,8 @@ playground_re_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--environment ENVIRONMENT")"
-    printf "    🔐 The environment to start . \n    \n    - ccloud\n    - 2way-ssl\n    - kerberos\n    - kraft-external-plaintext\n    - kraft-plaintext\n    - ldap-authorizer-sasl-plain\n    - ldap-sasl-plain\n    - mdc-kerberos\n    - mdc-plaintext\n    - mdc-sasl-plain\n    - plaintext\n    - rbac-sasl-plain\n    - sasl-plain\n    - sasl-scram\n    - sasl-ssl\n    - ssl_kerberos\n    \n    Default is plaintext\n"
-    printf "    Allowed: ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos\n"
+    printf "    🔐 The environment to start when running a connector example \n    \n    - plaintext\n    - ccloud\n    - 2way-ssl (not supported yet)\n    - kerberos (not supported yet)\n    - kraft-external-plaintext (not supported yet)\n    - kraft-plaintext (not supported yet)\n    - ldap-authorizer-sasl-plain (not supported yet)\n    - ldap-sasl-plain (not supported yet)\n    - rbac-sasl-plain (not supported yet)\n    - sasl-plain (not supported yet)\n    - sasl-scram (not supported yet)\n    - sasl-ssl (not supported yet)\n    - ssl_kerberos (not supported yet)\n    \n    Default is plaintext.\n    This is only supported when example is a connector example\n"
+    printf "    Allowed: ccloud, plaintext\n"
     printf "    Default: plaintext\n"
     echo
 
@@ -10584,6 +10584,7 @@ playground_run_command() {
   fi
 
   test_file_directory="$(dirname "${test_file}")"
+  dir1="${test_file_directory%/*}" #connect
   filename=$(basename -- "$test_file")
 
   flag_list=""
@@ -10595,6 +10596,12 @@ playground_run_command() {
 
   if [[ -n "$environment" ]]
   then
+    if [ "$dir1" != "connect" ] && [ "$environment" != "plaintext" ]
+    then
+      logerror "❌ using --environment is only supported for connector examples in connect folder"
+      exit 1
+    fi
+
     flag_list="$flag_list --environment=$environment"
     export PLAYGROUND_ENVIRONMENT=$environment
   fi
@@ -19934,8 +19941,8 @@ playground_run_parse_requirements() {
   [[ -n ${args['--environment']:-} ]] || args['--environment']="plaintext"
 
   # :command.whitelist_filter
-  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|2way-ssl|kerberos|kraft-external-plaintext|kraft-plaintext|ldap-authorizer-sasl-plain|ldap-sasl-plain|mdc-kerberos|mdc-plaintext|mdc-sasl-plain|plaintext|rbac-sasl-plain|sasl-plain|sasl-scram|sasl-ssl|ssl_kerberos)$ ]]; then
-    printf "%s\n" "--environment must be one of: ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos" >&2
+  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|plaintext)$ ]]; then
+    printf "%s\n" "--environment must be one of: ccloud, plaintext" >&2
     exit 1
   fi
 
@@ -20184,8 +20191,8 @@ playground_re_run_parse_requirements() {
   [[ -n ${args['--environment']:-} ]] || args['--environment']="plaintext"
 
   # :command.whitelist_filter
-  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|2way-ssl|kerberos|kraft-external-plaintext|kraft-plaintext|ldap-authorizer-sasl-plain|ldap-sasl-plain|mdc-kerberos|mdc-plaintext|mdc-sasl-plain|plaintext|rbac-sasl-plain|sasl-plain|sasl-scram|sasl-ssl|ssl_kerberos)$ ]]; then
-    printf "%s\n" "--environment must be one of: ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos" >&2
+  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|plaintext)$ ]]; then
+    printf "%s\n" "--environment must be one of: ccloud, plaintext" >&2
     exit 1
   fi
 

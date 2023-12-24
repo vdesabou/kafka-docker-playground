@@ -44,6 +44,7 @@ then
 fi
 
 test_file_directory="$(dirname "${test_file}")"
+dir1="${test_file_directory%/*}" #connect
 filename=$(basename -- "$test_file")
 
 flag_list=""
@@ -55,6 +56,12 @@ fi
 
 if [[ -n "$environment" ]]
 then
+  if [ "$dir1" != "connect" ] && [ "$environment" != "plaintext" ]
+  then
+    logerror "❌ using --environment is only supported for connector examples in connect folder"
+    exit 1
+  fi
+
   flag_list="$flag_list --environment=$environment"
   export PLAYGROUND_ENVIRONMENT=$environment
 fi

@@ -253,33 +253,32 @@ commands:
     🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)
 
   flags:
-  - &environment
+  - &environment-run
     long: --environment
     required: false
     default: "plaintext"
     arg: environment
-    allowed: [ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos]
+    #allowed: [ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos]
+    allowed: [ccloud, plaintext]
     help: |-
-      🔐 The environment to start . 
+      🔐 The environment to start when running a connector example 
       
-      - ccloud
-      - 2way-ssl
-      - kerberos
-      - kraft-external-plaintext
-      - kraft-plaintext
-      - ldap-authorizer-sasl-plain
-      - ldap-sasl-plain
-      - mdc-kerberos
-      - mdc-plaintext
-      - mdc-sasl-plain
       - plaintext
-      - rbac-sasl-plain
-      - sasl-plain
-      - sasl-scram
-      - sasl-ssl
-      - ssl_kerberos
+      - ccloud
+      - 2way-ssl (not supported yet)
+      - kerberos (not supported yet)
+      - kraft-external-plaintext (not supported yet)
+      - kraft-plaintext (not supported yet)
+      - ldap-authorizer-sasl-plain (not supported yet)
+      - ldap-sasl-plain (not supported yet)
+      - rbac-sasl-plain (not supported yet)
+      - sasl-plain (not supported yet)
+      - sasl-scram (not supported yet)
+      - sasl-ssl (not supported yet)
+      - ssl_kerberos (not supported yet)
 
-      Default is plaintext
+      Default is plaintext.
+      This is only supported when example is a connector example
   - long: --file
     short: -f
     required: true
@@ -451,7 +450,7 @@ commands:
       required: false
       help: |- 
         🧼 Clear any previous flags
-    - *environment
+    - *environment-run
     - *tag
     - *connector-tag
     - *connector-zip
@@ -507,7 +506,33 @@ commands:
       Arguments to use by example script
     required: false
   flags:
-    - *environment
+    - &environment
+      long: --environment
+      required: false
+      default: "plaintext"
+      arg: environment
+      allowed: [ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos]
+      help: |-
+        🔐 The environment to start . 
+        
+        - ccloud
+        - 2way-ssl
+        - kerberos
+        - kraft-external-plaintext
+        - kraft-plaintext
+        - ldap-authorizer-sasl-plain
+        - ldap-sasl-plain
+        - mdc-kerberos
+        - mdc-plaintext
+        - mdc-sasl-plain
+        - plaintext
+        - rbac-sasl-plain
+        - sasl-plain
+        - sasl-scram
+        - sasl-ssl
+        - ssl_kerberos
+
+        Default is plaintext
     - long: --docker-compose-override-file
       short: -f
       validate: file_exists
