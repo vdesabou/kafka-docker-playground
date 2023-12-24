@@ -14,7 +14,7 @@
         <maven-assembly-plugin.version>3.1.1</maven-assembly-plugin.version>
         <exec.mainClass>com.example.Ignored</exec.mainClass>
         <confluent.ksql-udf.version>5.4.4</confluent.ksql-udf.version>
-        <logback.version>1.2.3</logback.version>
+        <logback.version>1.2.13</logback.version>
     </properties>
 
     <dependencies>
