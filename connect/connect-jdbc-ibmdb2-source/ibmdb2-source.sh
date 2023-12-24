@@ -62,7 +62,7 @@ log "✨ If you modify a docker-compose file and want to re-create the container
 
 # Keep it for utils.sh
 # PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+# playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 # sample DB is used https://www.ibm.com/docs/en/db2/11.5?topic=samples-sample-database
 log "List tables"
