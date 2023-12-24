@@ -84,7 +84,7 @@ value%g
 EOF
 
 log "Creating Azure Functions Sink connector"
-playground connector create-or-update --connector azure-functions-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector azure-functions-sink  << EOF
 {
     "connector.class": "io.confluent.connect.azure.functions.AzureFunctionsSinkConnector",
     "tasks.max": "1",

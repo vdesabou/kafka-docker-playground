@@ -32,7 +32,7 @@ docker exec couchbase bash -c "/opt/couchbase/bin/cbdocloader -c localhost:8091 
 set -e
 
 log "Creating Couchbase Source connector"
-playground connector create-or-update --connector couchbase-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector couchbase-source  << EOF
 {
      "connector.class": "com.couchbase.connect.kafka.CouchbaseSourceConnector",
      "tasks.max": "2",

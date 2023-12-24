@@ -67,7 +67,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.backup-and-restore.yml"
 
 log "Creating Azure Blob Storage Sink connector"
-playground connector create-or-update --connector azure-blob-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector azure-blob-sink  << EOF
 {
     "connector.class": "io.confluent.connect.azure.blob.AzureBlobStorageSinkConnector",
     "tasks.max": "1",
@@ -131,7 +131,7 @@ docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/blob_topic+0+000000
 
 
 log "Creating Azure Blob Storage Source connector"
-playground connector create-or-update --connector azure-blob-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector azure-blob-source  << EOF
 {
                 "connector.class": "io.confluent.connect.azure.blob.storage.AzureBlobStorageSourceConnector",
                 "tasks.max": "1",

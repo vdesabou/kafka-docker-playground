@@ -45,7 +45,7 @@ curl -s -X PUT \
 Creating Databricks Delta Lake Sink connector:
 
 ```bash
-playground connector create-or-update --connector databricks-delta-lake-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector databricks-delta-lake-sink  << EOF
 {
                "connector.class": "io.confluent.connect.databricks.deltalake.DatabricksDeltaLakeSinkConnector",
                "topics": "pageviews",

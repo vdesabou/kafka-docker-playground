@@ -120,7 +120,7 @@ $ aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-messag
 The connector is created with:
 
 ```bash
-playground connector create-or-update --connector sqs-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector sqs-source  << EOF
 {
         "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
                "tasks.max": "1",
@@ -179,7 +179,7 @@ $ aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-messag
 The connector is created with:
 
 ```bash
-playground connector create-or-update --connector sqs-source-ssl --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector sqs-source-ssl  << EOF
 {
                     "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
                     "tasks.max": "1",
@@ -224,7 +224,7 @@ $ aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-messag
 The connector is created with:
 
 ```bash
-playground connector create-or-update --connector sqs-source-sasl-ssl --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector sqs-source-sasl-ssl  << EOF
 {
                     "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
                     "tasks.max": "1",

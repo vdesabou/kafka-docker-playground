@@ -42,7 +42,7 @@ playground topic produce -t product --nb-messages 3 << 'EOF'
 EOF
 
 log "Creating product InfluxDB sink connector using SMT for fun"
-playground connector create-or-update --connector influxdb-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector influxdb-sink  << EOF
 {
      "connector.class": "io.confluent.influxdb.InfluxDBSinkConnector",
      "tasks.max": "1",

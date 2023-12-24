@@ -24,7 +24,7 @@ GO
 EOF
 
 log "Creating JDBC Sybase source connector"
-playground connector create-or-update --connector jdbc-sybase-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector jdbc-sybase-source  << EOF
 {
       "connector.class" : "io.confluent.connect.jdbc.JdbcSourceConnector",
       "tasks.max" : "1",

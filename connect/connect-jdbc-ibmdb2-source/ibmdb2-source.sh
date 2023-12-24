@@ -73,7 +73,7 @@ db2 LIST TABLES
 EOF
 
 log "Creating JDBC IBM DB2 source connector"
-playground connector create-or-update --connector ibmdb2-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector ibmdb2-source  << EOF
 {
   "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
   "tasks.max": "1",

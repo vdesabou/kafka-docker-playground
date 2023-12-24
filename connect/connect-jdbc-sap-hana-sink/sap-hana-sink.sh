@@ -33,7 +33,7 @@ done
 log "SAP HANA has started!"
 
 log "Creating SAP HANA JDBC Sink connector"
-playground connector create-or-update --connector jdbc-sap-hana-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector jdbc-sap-hana-sink  << EOF
 {
      "tasks.max": "1",
      "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",

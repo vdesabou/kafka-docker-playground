@@ -40,7 +40,7 @@ EOF
 cat /tmp/result.log
 
 log "Creating SAP HANA JDBC Source connector"
-playground connector create-or-update --connector jdbc-sap-hana-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector jdbc-sap-hana-source  << EOF
 {
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",

@@ -98,7 +98,7 @@ INSERT INTO team (
 EOF
 
 log "Creating MySQL source connector"
-playground connector create-or-update --connector mysql-ssl-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector mysql-ssl-source  << EOF
 {
   "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
   "tasks.max":"10",

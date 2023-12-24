@@ -454,7 +454,47 @@ function add_connector_config_based_on_envrionment () {
       return
     ;;
     ccloud)
-      # nothing to do
+      if [ -f /tmp/delta_configs/env.delta ]
+      then
+          source /tmp/delta_configs/env.delta
+      else
+          logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+          exit 1
+      fi
+
+      for prefix in {"confluent.topic","redo.log.consumer"}
+      do
+        if echo "$json_content" | jq ". | has(\"$prefix.bootstrap.servers\")" 2> /dev/null | grep -q true 
+        then
+          log "replacing $prefix config for environment $environment"
+
+          echo "$json_content" > $tmp_dir/input.json
+          jq ".[\"$prefix.bootstrap.servers\"] = \"${file:/data:bootstrap.servers}\" | .[\"$prefix.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"${file:/data:sasl.username}\\\" password=\\\"${file:/data:sasl.password}\\\";\" | .[\"$prefix.security.protocol\"] = \"SASL_SSL\" | .[\"$prefix.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
+          json_content=$(cat $tmp_dir/output.json)
+        fi
+      done
+
+      if echo "$json_content" | jq '. | has("key.converter.schema.registry.url")' 2> /dev/null | grep -q true 
+      then
+        log "replacing key.converter.schema.registry.url config for environment $environment"
+
+        echo "$json_content" > $tmp_dir/input.json
+        jq '.["key.converter.schema.registry.url"] = "$SCHEMA_REGISTRY_URL" | .["key.converter.basic.auth.user.info"] = "${file:/data:schema.registry.basic.auth.user.info}" | .["key.converter.basic.auth.credentials.source"] = "USER_INFO"' $tmp_dir/input.json > $tmp_dir/output.json
+
+        json_content=$(cat $tmp_dir/output.json)
+
+       # diff $tmp_dir/input.json $tmp_dir/output.json
+      fi
+
+      if echo "$json_content" | jq '. | has("value.converter.schema.registry.url")' 2> /dev/null | grep -q true 
+      then
+        log "replacing value.converter.schema.registry.url config for environment $environment"
+
+        echo "$json_content" > $tmp_dir/input.json
+        jq '.["value.converter.schema.registry.url"] = "$SCHEMA_REGISTRY_URL" | .["value.converter.basic.auth.user.info"] = "${file:/data:schema.registry.basic.auth.user.info}" | .["value.converter.basic.auth.credentials.source"] = "USER_INFO"' $tmp_dir/input.json > $tmp_dir/output.json
+
+        json_content=$(cat $tmp_dir/output.json)
+      fi
       return
     ;;
     *)

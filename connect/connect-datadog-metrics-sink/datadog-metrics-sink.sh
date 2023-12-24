@@ -91,7 +91,7 @@ playground topic produce -t datadog-metrics-topic --nb-messages 1 --forced-value
 EOF
 
 log "Creating Datadog metrics sink connector"
-playground connector create-or-update --connector datadog-metrics-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector datadog-metrics-sink  << EOF
 {
      "connector.class": "io.confluent.connect.datadog.metrics.DatadogMetricsSinkConnector",
      "tasks.max": "1",

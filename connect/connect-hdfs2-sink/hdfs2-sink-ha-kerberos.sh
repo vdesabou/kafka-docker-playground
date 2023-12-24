@@ -43,7 +43,7 @@ then
 fi
 
 log "Creating HDFS Sink connector"
-playground connector create-or-update --connector hdfs2-sink-ha-kerberos --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector hdfs2-sink-ha-kerberos  << EOF
 {
   "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
   "tasks.max":"1",

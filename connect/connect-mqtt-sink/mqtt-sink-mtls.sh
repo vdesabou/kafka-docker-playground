@@ -18,7 +18,7 @@ This is my message
 EOF
 
 log "Creating MQTT Sink connector"
-playground connector create-or-update --connector sink-mqtt-mtls --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector sink-mqtt-mtls  << EOF
 {
      "connector.class": "io.confluent.connect.mqtt.MqttSinkConnector",
      "tasks.max": "1",

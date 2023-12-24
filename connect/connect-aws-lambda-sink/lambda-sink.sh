@@ -93,7 +93,7 @@ playground topic produce -t add-topic --nb-messages 10 << 'EOF'
 EOF
 
 log "Creating AWS Lambda Sink connector"
-playground connector create-or-update --connector aws-lambda --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector aws-lambda  << EOF
 {
     "connector.class" : "io.confluent.connect.aws.lambda.AwsLambdaSinkConnector",
     "tasks.max": "1",

@@ -75,7 +75,7 @@ log "##  SSL authentication"
 log "########"
 
 log "Creating SQS Source connector with SSL authentication"
-playground connector create-or-update --connector sqs-source-ssl --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector sqs-source-ssl  << EOF
 {
     "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
     "tasks.max": "1",

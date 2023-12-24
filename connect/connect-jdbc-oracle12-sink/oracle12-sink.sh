@@ -58,7 +58,7 @@ EOF
 
 log "Creating Oracle sink connector"
 
-playground connector create-or-update --connector oracle-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector oracle-sink  << EOF
 {
   "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
   "tasks.max": "1",

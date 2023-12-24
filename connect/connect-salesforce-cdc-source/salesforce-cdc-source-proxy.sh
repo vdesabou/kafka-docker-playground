@@ -53,7 +53,7 @@ log "Blocking $DOMAIN IP $IP to make sure proxy is used"
 docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
 
 log "Creating Salesforce CDC Source connector"
-playground connector create-or-update --connector salesforce-cdc-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector salesforce-cdc-source  << EOF
 {
      "connector.class": "io.confluent.salesforce.SalesforceCdcSourceConnector",
      "kafka.topic": "sfdc-cdc-contacts",

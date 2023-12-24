@@ -76,7 +76,7 @@ cp generalized.quickstart.json /tmp/
 az storage blob upload --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --name quickstart/generalized.quickstart.json --file /tmp/generalized.quickstart.json
 
 log "Creating Generalized Azure Blob Storage Source connector"
-playground connector create-or-update --connector azure-blob-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector azure-blob-source  << EOF
 {
     "connector.class": "io.confluent.connect.azure.blob.storage.AzureBlobStorageSourceConnector",
     "tasks.max": "1",

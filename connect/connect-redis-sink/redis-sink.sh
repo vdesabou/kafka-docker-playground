@@ -14,7 +14,7 @@ value%g
 EOF
 
 log "Creating Redis sink connector"
-playground connector create-or-update --connector redis-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector redis-sink  << EOF
 {
                "connector.class": "com.github.jcustenborder.kafka.connect.redis.RedisSinkConnector",
                     "redis.hosts": "redis:6379",

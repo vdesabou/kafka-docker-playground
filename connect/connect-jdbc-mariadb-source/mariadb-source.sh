@@ -61,7 +61,7 @@ log "Show content of team table:"
 docker exec mariadb bash -c "mariadb --user=user --password=password db -e 'select * from team;'"
 
 log "Creating MariaDB source connector"
-playground connector create-or-update --connector mariadb-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector mariadb-source  << EOF
 {
      "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
      "tasks.max": "1",

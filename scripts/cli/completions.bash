@@ -60,16 +60,12 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
 
-    'ccloud-connector show-config'*'--connector')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
-      ;;
-
-    'connector create-or-update'*'--environment')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "ccloud 2way-ssl kerberos kraft-external-plaintext kraft-plaintext ldap-authorizer-sasl-plain ldap-sasl-plain mdc-kerberos mdc-plaintext mdc-sasl-plain plaintext rbac-sasl-plain sasl-plain sasl-scram sasl-ssl ssl_kerberos")" -- "$cur" )
-      ;;
-
     'schema set-compatibility'*'--compatibility')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "BACKWARD BACKWARD_TRANSITIVE FORWARD FORWARD_TRANSITIVE FULL FULL_TRANSITIVE NONE")" -- "$cur" )
+      ;;
+
+    'ccloud-connector show-config'*'--connector')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
       ;;
 
     'connector search-jar'*'--connector-plugin')
@@ -80,10 +76,6 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --force-refresh --help --only-show-file-path --open --verbose -c -h -o -v")" -- "$cur" )
       ;;
 
-    'topic set-schema-compatibility'*'--topic')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur" )
-      ;;
-
     'connector create-or-update'*'--connector')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
       ;;
@@ -92,11 +84,11 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
 
-    'ccloud-connector show-lag'*'--connector')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
+    'topic set-schema-compatibility'*'--topic')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur" )
       ;;
 
-    'ccloud-connector unpause'*'--connector')
+    'ccloud-connector show-lag'*'--connector')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
       ;;
 
@@ -104,20 +96,24 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
       ;;
 
+    'ccloud-connector unpause'*'--connector')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
+      ;;
+
     'ccloud-connector resume'*'--connector')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
       ;;
 
-    'connector show-config-parameters'*'-c')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
+    'ccloud-connector delete'*'--connector')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
       ;;
 
     'ccloud-connector status'*'--connector')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
       ;;
 
-    'ccloud-connector delete'*'--connector')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
+    'connector show-config-parameters'*'-c')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
       ;;
 
     'ccloud-connector pause'*'--connector')
@@ -136,12 +132,16 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-subject-list)")" -- "$cur" )
       ;;
 
-    'ccloud-connector create-or-update'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --validate --verbose -c -h -v")" -- "$cur" )
+    'topic set-schema-compatibility'*'-t')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur" )
       ;;
 
     'debug flight-recorder'*'--container')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
+      ;;
+
+    'ccloud-connector create-or-update'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --validate --verbose -c -h -v")" -- "$cur" )
       ;;
 
     'topic produce'*'--compression-codec')
@@ -152,10 +152,6 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
       ;;
 
-    'topic set-schema-compatibility'*'-t')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur" )
-      ;;
-
     'debug enable-remote-debugging'*'-c')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
@@ -164,39 +160,55 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur" )
       ;;
 
-    'repro bootstrap'*'--cluster-region')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-kafka-region-list "$cur")")" -- "$cur" )
-      ;;
-
     'connector show-config-parameters'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --force-refresh --help --only-show-file-path --open --verbose -c -h -o -v")" -- "$cur" )
+      ;;
+
+    'repro bootstrap'*'--cluster-region')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-kafka-region-list "$cur")")" -- "$cur" )
       ;;
 
     'start-environment'*'--environment')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "ccloud 2way-ssl kerberos kraft-external-plaintext kraft-plaintext ldap-authorizer-sasl-plain ldap-sasl-plain mdc-kerberos mdc-plaintext mdc-sasl-plain plaintext rbac-sasl-plain sasl-plain sasl-scram sasl-ssl ssl_kerberos")" -- "$cur" )
       ;;
 
-    'debug block-traffic'*'--container')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
+    'connector log-level'*'--connector')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
       ;;
 
     'topic produce'*'--validate-config')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "scrub.invalid.names=true enhanced.avro.schema.support=true connect.meta.data=false object.additional.properties=false use.optional.for.nonrequired=true ignore.default.for.nullables=true generalized.sum.type.support=true enhanced.protobuf.schema.support=true generate.index.for.unions=false int.for.enums=true optional.for.nullables=true generate.struct.for.nulls=true wrapper.for.nullables=true wrapper.for.raw.primitives=false")" -- "$cur" )
       ;;
 
-    'repro bootstrap'*'--connector-zip')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-zip-or-jar-with-fzf --type zip "$cur")")" -- "$cur" )
-      ;;
-
     'ccloud-connector show-config'*'-c')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
       ;;
 
-    'connector log-level'*'--connector')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
+    'repro bootstrap'*'--connector-zip')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-zip-or-jar-with-fzf --type zip "$cur")")" -- "$cur" )
+      ;;
+
+    'debug block-traffic'*'--container')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
 
     'repro bootstrap'*'--connector-jar')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-zip-or-jar-with-fzf --type jar "$cur")")" -- "$cur" )
+      ;;
+
+    'repro bootstrap'*'--cluster-type')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "basic standard dedicated")" -- "$cur" )
+      ;;
+
+    'topic display-consumer-offsets'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --verbose -h -v")" -- "$cur" )
+      ;;
+
+    'update-version'*'--connector-zip')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-zip-or-jar-with-fzf --type zip "$cur")")" -- "$cur" )
+      ;;
+
+    'update-version'*'--connector-jar')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-zip-or-jar-with-fzf --type jar "$cur")")" -- "$cur" )
       ;;
 
@@ -204,47 +216,31 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur" )
       ;;
 
-    'update-version'*'--connector-jar')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-zip-or-jar-with-fzf --type jar "$cur")")" -- "$cur" )
-      ;;
-
-    'topic set-schema-compatibility'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--compatibility --help --topic --verbose -h -t -v")" -- "$cur" )
-      ;;
-
-    'update-version'*'--connector-zip')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-zip-or-jar-with-fzf --type zip "$cur")")" -- "$cur" )
-      ;;
-
     'connector show-lag'*'--connector')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
-      ;;
-
-    'topic display-consumer-offsets'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --verbose -h -v")" -- "$cur" )
       ;;
 
     'debug flight-recorder'*'--action')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "start stop")" -- "$cur" )
       ;;
 
-    'repro bootstrap'*'--cluster-type')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "basic standard dedicated")" -- "$cur" )
+    'topic set-schema-compatibility'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--compatibility --help --topic --verbose -h -t -v")" -- "$cur" )
+      ;;
+
+    'topic produce'*'--compatibility')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "BACKWARD BACKWARD_TRANSITIVE FORWARD FORWARD_TRANSITIVE FULL FULL_TRANSITIVE NONE")" -- "$cur" )
+      ;;
+
+    'connector restart'*'--connector')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
       ;;
 
     'topic consume'*'--value-subject')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-subject-list)")" -- "$cur" )
       ;;
 
-    'connector unpause'*'--connector')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
-      ;;
-
-    'connector create-or-update'*'-l')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "INFO WARN DEBUG TRACE")" -- "$cur" )
-      ;;
-
-    'container unpause'*'--container')
+    'debug generate-diagnostics'*'-c')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
 
@@ -252,51 +248,51 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
       ;;
 
-    'topic produce'*'--compatibility')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "BACKWARD BACKWARD_TRANSITIVE FORWARD FORWARD_TRANSITIVE FULL FULL_TRANSITIVE NONE")" -- "$cur" )
+    'debug enable-remote-debugging'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur" )
+      ;;
+
+    'connector create-or-update'*'-l')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "INFO WARN DEBUG TRACE")" -- "$cur" )
+      ;;
+
+    'connector unpause'*'--connector')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
       ;;
 
     'container restart'*'--container')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
 
-    'debug enable-remote-debugging'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur" )
-      ;;
-
-    'debug generate-diagnostics'*'-c')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
-      ;;
-
-    'connector restart'*'--connector')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
-      ;;
-
     'debug thread-dump'*'--container')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
 
-    'debug block-traffic'*'--action')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "start stop")" -- "$cur" )
-      ;;
-
-    'connector delete'*'--connector')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
-      ;;
-
-    'connector status'*'--connector')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
+    'container unpause'*'--container')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
 
     'container resume'*'--container')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
 
+    'connector status'*'--connector')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
+      ;;
+
+    'connector resume'*'--connector')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
+      ;;
+
+    'debug block-traffic'*'--action')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "start stop")" -- "$cur" )
+      ;;
+
     'ccloud-connector show-lag'*'-c')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
       ;;
 
-    'connector resume'*'--connector')
+    'connector delete'*'--connector')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
       ;;
 
@@ -304,28 +300,12 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur" )
       ;;
 
-    'topic get-number-records'*'-t')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur" )
-      ;;
-
-    'ccloud-connector unpause'*'-c')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
-      ;;
-
     'connector pause'*'--connector')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
       ;;
 
-    'debug heap-dump'*'--container')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
-      ;;
-
-    'run-ccloud'*'--cluster-region')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-kafka-region-list "$cur")")" -- "$cur" )
-      ;;
-
-    'debug log-level set'*'--level')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "INFO WARN DEBUG TRACE")" -- "$cur" )
+    'get-jmx-metrics'*'--component')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "zookeeper broker connect schema-registry")" -- "$cur" )
       ;;
 
     'connector log-level'*'--level')
@@ -336,15 +316,35 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-subject-list)")" -- "$cur" )
       ;;
 
+    'run-ccloud'*'--cluster-region')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-kafka-region-list "$cur")")" -- "$cur" )
+      ;;
+
+    'debug log-level set'*'--level')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "INFO WARN DEBUG TRACE")" -- "$cur" )
+      ;;
+
+    'debug heap-dump'*'--container')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
+      ;;
+
+    'topic get-number-records'*'-t')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur" )
+      ;;
+
     'container pause'*'--container')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
 
-    'get-jmx-metrics'*'--component')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "zookeeper broker connect schema-registry")" -- "$cur" )
+    'ccloud-connector unpause'*'-c')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
       ;;
 
-    'get-properties'*'--container')
+    'connector create-or-update'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --level --package --validate --verbose -c -h -l -p -v")" -- "$cur" )
+      ;;
+
+    'container kill'*'--container')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
 
@@ -352,28 +352,16 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-examples-list-with-fzf --without-repro --sink-only "$cur")")" -- "$cur" )
       ;;
 
-    'connector stop'*'--connector')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
-      ;;
-
     'repro bootstrap'*'--producer')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "none avro avro-with-key protobuf protobuf-with-key json-schema json-schema-with-key")" -- "$cur" )
       ;;
 
-    'ccloud-connector resume'*'-c')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
-      ;;
-
-    'ccloud-connector delete'*'-c')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
+    'get-properties'*'--container')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
 
     'ccloud-connector status'*'-c')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
-      ;;
-
-    'connector create-or-update'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --environment --help --level --package --validate --verbose -c -h -l -p -v")" -- "$cur" )
       ;;
 
     'container logs'*'--container')
@@ -384,6 +372,22 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
 
+    'run-ccloud'*'--cluster-cloud')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "aws gcp azure")" -- "$cur" )
+      ;;
+
+    'ccloud-connector delete'*'-c')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
+      ;;
+
+    'connector stop'*'--connector')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
+      ;;
+
+    'ccloud-connector resume'*'-c')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
+      ;;
+
     'run-ccloud'*'--connector-zip')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-zip-or-jar-with-fzf --type zip "$cur")")" -- "$cur" )
       ;;
@@ -392,27 +396,23 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-zip-or-jar-with-fzf --type jar "$cur")")" -- "$cur" )
       ;;
 
-    'run-ccloud'*'--cluster-cloud')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "aws gcp azure")" -- "$cur" )
-      ;;
-
-    'container kill'*'--container')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
-      ;;
-
     'container get-ip-addresses'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur" )
-      ;;
-
-    'debug tcp-dump'*'--container')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
 
     'debug generate-diagnostics'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur" )
       ;;
 
+    'debug tcp-dump'*'--container')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
+      ;;
+
     'schema register'*'--subject')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-subject-list)")" -- "$cur" )
+      ;;
+
+    'schema set-mode'*'--subject')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-subject-list)")" -- "$cur" )
       ;;
 
@@ -424,20 +424,20 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose --wait-for-zero-lag -c -h -v")" -- "$cur" )
       ;;
 
-    'ccloud-connector pause'*'-c')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
-      ;;
-
     'run-ccloud'*'--cluster-type')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "basic standard dedicated")" -- "$cur" )
       ;;
 
-    'schema set-mode'*'--subject')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-subject-list)")" -- "$cur" )
+    'ccloud-connector pause'*'-c')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-ccloud-connector-list)")" -- "$cur" )
       ;;
 
     'schema get-mode'*'--subject')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-subject-list)")" -- "$cur" )
+      ;;
+
+    'schema register'*'--schema')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-predefined-schemas "$cur")")" -- "$cur" )
       ;;
 
     'schema get-compatibility'*)
@@ -448,8 +448,8 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--compatibility --help --subject --verbose -h -v")" -- "$cur" )
       ;;
 
-    'schema register'*'--schema')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-predefined-schemas "$cur")")" -- "$cur" )
+    'ccloud-connector unpause'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur" )
       ;;
 
     'topic get-number-records'*)
@@ -460,28 +460,24 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
 
-    'connector show-config'*'-c')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
+    'ccloud-connector plugins'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --verbose -h -v")" -- "$cur" )
       ;;
 
     'config folder_zip_or_jar'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur" )
       ;;
 
-    'ccloud-connector plugins'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --verbose -h -v")" -- "$cur" )
+    'connector show-config'*'-c')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
       ;;
 
-    'ccloud-connector unpause'*)
+    'ccloud-connector resume'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur" )
       ;;
 
     'schema delete'*'--subject')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-subject-list)")" -- "$cur" )
-      ;;
-
-    'connector search-jar'*'-c')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-plugin "$cur")")" -- "$cur" )
       ;;
 
     'ccloud-connector delete'*)
@@ -492,8 +488,8 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur" )
       ;;
 
-    'ccloud-connector resume'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur" )
+    'connector search-jar'*'-c')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-plugin "$cur")")" -- "$cur" )
       ;;
 
     'debug log-level set'*'-l')
@@ -504,68 +500,76 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
 
-    'topic describe'*'--topic')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur" )
-      ;;
-
     'schema set-mode'*'--mode')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "IMPORT READONLY READWRITE")" -- "$cur" )
       ;;
 
-    'ccloud-connector pause'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur" )
+    'topic describe'*'--topic')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur" )
       ;;
 
     'repro bootstrap'*'--file')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-examples-list-with-fzf --without-repro "$cur")")" -- "$cur" )
       ;;
 
-    'connector log-level'*'-l')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "INFO WARN DEBUG TRACE")" -- "$cur" )
-      ;;
-
-    'connector log-level'*'-c')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
-      ;;
-
-    're-run'*'--connector-zip')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-zip-or-jar-with-fzf --type zip "$cur")")" -- "$cur" )
-      ;;
-
-    're-run'*'--connector-jar')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-zip-or-jar-with-fzf --type jar "$cur")")" -- "$cur" )
+    'ccloud-connector pause'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur" )
       ;;
 
     'container exec'*'--shell')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "bash sh ksh zsh")" -- "$cur" )
       ;;
 
-    'debug flight-recorder'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--action --container --help -c -h")" -- "$cur" )
+    'connector log-level'*'-c')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
       ;;
 
-    'topic consume'*'--topic')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur" )
+    're-run'*'--connector-jar')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-zip-or-jar-with-fzf --type jar "$cur")")" -- "$cur" )
+      ;;
+
+    're-run'*'--connector-zip')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-zip-or-jar-with-fzf --type zip "$cur")")" -- "$cur" )
+      ;;
+
+    'connector log-level'*'-l')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "INFO WARN DEBUG TRACE")" -- "$cur" )
+      ;;
+
+    'debug flight-recorder'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--action --container --help -c -h")" -- "$cur" )
       ;;
 
     'topic produce'*'--topic')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur" )
       ;;
 
-    'connector show-config'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur" )
-      ;;
-
     'topic produce'*'--value')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-predefined-schemas "$cur")")" -- "$cur" )
+      ;;
+
+    'connector show-config'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur" )
       ;;
 
     'connector show-lag'*'-c')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
       ;;
 
+    'topic consume'*'--topic')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur" )
+      ;;
+
     'container ssh'*'--shell')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "bash sh ksh zsh")" -- "$cur" )
+      ;;
+
+    'container unpause'*'-c')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
+      ;;
+
+    'topic delete'*'--topic')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur" )
       ;;
 
     'debug thread-dump'*'-c')
@@ -576,8 +580,16 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-subject-list)")" -- "$cur" )
       ;;
 
-    'topic delete'*'--topic')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur" )
+    'connector restart'*'-c')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
+      ;;
+
+    'container restart'*'-c')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
+      ;;
+
+    're-run'*'--environment')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "ccloud 2way-ssl kerberos kraft-external-plaintext kraft-plaintext ldap-authorizer-sasl-plain ldap-sasl-plain mdc-kerberos mdc-plaintext mdc-sasl-plain plaintext rbac-sasl-plain sasl-plain sasl-scram sasl-ssl ssl_kerberos")" -- "$cur" )
       ;;
 
     'connector search-jar'*)
@@ -588,72 +600,56 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
       ;;
 
-    'connector restart'*'-c')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
-      ;;
-
-    'container unpause'*'-c')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
-      ;;
-
-    'container restart'*'-c')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
+    'debug log-level get'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --package -h -p")" -- "$cur" )
       ;;
 
     'debug log-level set'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --level --package -h -l -p")" -- "$cur" )
       ;;
 
-    'debug log-level get'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --package -h -p")" -- "$cur" )
-      ;;
-
     'debug block-traffic'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--action --container --destination --help --port -c -h")" -- "$cur" )
-      ;;
-
-    'connector log-level'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --level -c -h -l")" -- "$cur" )
       ;;
 
     'repro import'*'--file')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-playground-repro-export-with-fzf "$cur")")" -- "$cur" )
       ;;
 
-    'connector delete'*'-c')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
+    'connector log-level'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --level -c -h -l")" -- "$cur" )
       ;;
 
-    'run'*'--connector-zip')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-zip-or-jar-with-fzf --type zip "$cur")")" -- "$cur" )
+    'connector delete'*'-c')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
       ;;
 
     'run'*'--connector-jar')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-zip-or-jar-with-fzf --type jar "$cur")")" -- "$cur" )
       ;;
 
+    'run'*'--connector-zip')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-zip-or-jar-with-fzf --type zip "$cur")")" -- "$cur" )
+      ;;
+
     'connector resume'*'-c')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
-      ;;
-
-    'container resume'*'-c')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
-      ;;
-
-    'topic produce'*'--key')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-predefined-schemas "$cur")")" -- "$cur" )
       ;;
 
     'topic alter'*'--topic')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur" )
       ;;
 
-    'connector status'*'-c')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
+    'topic produce'*'--key')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-predefined-schemas "$cur")")" -- "$cur" )
       ;;
 
-    'get-jmx-metrics'*'-c')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "zookeeper broker connect schema-registry")" -- "$cur" )
+    'container resume'*'-c')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
+      ;;
+
+    'connector status'*'-c')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
       ;;
 
     'debug heap-dump'*'-c')
@@ -664,75 +660,75 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur" )
       ;;
 
-    'repro bootstrap'*'-f')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-examples-list-with-fzf --without-repro "$cur")")" -- "$cur" )
-      ;;
-
     'repro bootstrap'*'-p')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "none avro avro-with-key protobuf protobuf-with-key json-schema json-schema-with-key")" -- "$cur" )
       ;;
 
-    'connector versions'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur" )
-      ;;
-
-    'connector show-lag'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose --wait-for-zero-lag -c -h -v")" -- "$cur" )
-      ;;
-
-    'container recreate'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --ignore-current-versions -h")" -- "$cur" )
+    'repro bootstrap'*'-f')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-examples-list-with-fzf --without-repro "$cur")")" -- "$cur" )
       ;;
 
     'connector pause'*'-c')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
       ;;
 
+    'get-jmx-metrics'*'-c')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "zookeeper broker connect schema-registry")" -- "$cur" )
+      ;;
+
+    'connector versions'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur" )
+      ;;
+
     'container pause'*'-c')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
+      ;;
+
+    'connector show-lag'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose --wait-for-zero-lag -c -h -v")" -- "$cur" )
       ;;
 
     'container kill-all'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur" )
       ;;
 
-    'topic describe'*'-t')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur" )
+    'container recreate'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --ignore-current-versions -h")" -- "$cur" )
       ;;
 
-    'connector stop'*'-c')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
+    'debug tcp-dump'*'-c')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
 
     'container kill'*'-c')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
 
-    'connector restart'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur" )
-      ;;
-
     'container unpause'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur" )
       ;;
 
-    'container exec'*'-c')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
+    'topic describe'*'-t')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur" )
       ;;
 
-    'container logs'*'-c')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
-      ;;
-
-    'connector plugins'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--all --help --verbose -h -v")" -- "$cur" )
+    'connector restart'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur" )
       ;;
 
     'container restart'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur" )
       ;;
 
-    'debug tcp-dump'*'-c')
+    'connector plugins'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--all --help --verbose -h -v")" -- "$cur" )
+      ;;
+
+    'container logs'*'-c')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
+      ;;
+
+    'container exec'*'-c')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
 
@@ -744,23 +740,23 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
 
-    'start-environment'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--docker-compose-override-file --enable-conduktor --enable-control-center --enable-jmx-grafana --enable-kcat --enable-ksqldb --enable-multiple-brokers --enable-multiple-connect-workers --enable-rest-proxy --enable-sr-maven-plugin-app --environment --help --tag -f -h")" -- "$cur" )
+    'connector stop'*'-c')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur" )
       ;;
 
     'run-ccloud'*'--file')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-examples-list-with-fzf --ccloud-only "$cur")")" -- "$cur" )
       ;;
 
+    'start-environment'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--docker-compose-override-file --enable-conduktor --enable-control-center --enable-jmx-grafana --enable-kcat --enable-ksqldb --enable-multiple-brokers --enable-multiple-connect-workers --enable-rest-proxy --enable-sr-maven-plugin-app --environment --help --tag -f -h")" -- "$cur" )
+      ;;
+
+    'run'*'--environment')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "ccloud 2way-ssl kerberos kraft-external-plaintext kraft-plaintext ldap-authorizer-sasl-plain ldap-sasl-plain mdc-kerberos mdc-plaintext mdc-sasl-plain plaintext rbac-sasl-plain sasl-plain sasl-scram sasl-ssl ssl_kerberos")" -- "$cur" )
+      ;;
+
     'connector unpause'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur" )
-      ;;
-
-    'ccloud-connector'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help -h create-or-update delete pause plugins resume show-config show-config-parameters show-lag status unpause")" -- "$cur" )
-      ;;
-
-    'connector resume'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur" )
       ;;
 
@@ -772,23 +768,31 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur" )
       ;;
 
-    'container resume'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur" )
+    'connector status'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur" )
       ;;
 
-    'container ssh'*'-s')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "bash sh ksh zsh")" -- "$cur" )
+    'container resume'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur" )
       ;;
 
     'container ssh'*'-c')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(docker ps --format '{{.Names}}')")" -- "$cur" )
       ;;
 
+    'container ssh'*'-s')
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "bash sh ksh zsh")" -- "$cur" )
+      ;;
+
+    'ccloud-connector'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help -h create-or-update delete pause plugins resume show-config show-config-parameters show-lag status unpause")" -- "$cur" )
+      ;;
+
     'connector delete'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur" )
       ;;
 
-    'connector status'*)
+    'connector resume'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur" )
       ;;
 
@@ -804,12 +808,12 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur" )
       ;;
 
-    'get-jmx-metrics'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--component --domain --help --open -c -d -h -o")" -- "$cur" )
-      ;;
-
     'debug log-level'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help -h get set")" -- "$cur" )
+      ;;
+
+    'get-jmx-metrics'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--component --domain --help --open -c -d -h -o")" -- "$cur" )
       ;;
 
     'debug heap-dump'*)
@@ -820,24 +824,28 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --mode --subject --verbose -h -v")" -- "$cur" )
       ;;
 
-    'schema register'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --schema --subject --verbose -h -v")" -- "$cur" )
+    'schema get-mode'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --subject --verbose -h -v")" -- "$cur" )
       ;;
 
-    'repro bootstrap'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--cluster-creds --cluster-environment --cluster-name --cluster-region --cluster-schema-registry-creds --cluster-type --connector-jar --connector-tag --connector-zip --custom-smt --description --enable-conduktor --enable-control-center --enable-jmx-grafana --enable-kcat --enable-ksqldb --enable-multiple-brokers --enable-multiple-connect-workers --enable-rest-proxy --enable-sql-datagen --enable-sr-maven-plugin-app --file --help --nb-producers --pipeline --producer --producer-schema-key --producer-schema-value --tag -d -f -h -n -p")" -- "$cur" )
+    'schema register'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --schema --subject --verbose -h -v")" -- "$cur" )
       ;;
 
     'repro import'*'-f')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-playground-repro-export-with-fzf "$cur")")" -- "$cur" )
       ;;
 
-    'schema get-mode'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --subject --verbose -h -v")" -- "$cur" )
+    'repro bootstrap'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--cluster-creds --cluster-environment --cluster-name --cluster-region --cluster-schema-registry-creds --cluster-type --connector-jar --connector-tag --connector-zip --custom-smt --description --enable-conduktor --enable-control-center --enable-jmx-grafana --enable-kcat --enable-ksqldb --enable-multiple-brokers --enable-multiple-connect-workers --enable-rest-proxy --enable-sql-datagen --enable-sr-maven-plugin-app --file --help --nb-producers --pipeline --producer --producer-schema-key --producer-schema-value --tag -d -f -h -n -p")" -- "$cur" )
       ;;
 
     'topic alter'*'-t')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur" )
+      ;;
+
+    'connector stop'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur" )
       ;;
 
     'topic describe'*)
@@ -868,16 +876,12 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector-jar --connector-tag --connector-zip --help --tag -h")" -- "$cur" )
       ;;
 
-    'connector stop'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur" )
+    'topic consume'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--grep --help --key-subject --max-characters --max-messages --min-expected-messages --plot-latencies-timestamp-field --tail --timeout --topic --value-subject --verbose -h -t -v")" -- "$cur" )
       ;;
 
     'topic produce'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--compatibility --compression-codec --forced-key --forced-value --generate-only --headers --help --key --key-subject-name-strategy --max-nb-messages-per-batch --nb-messages --nb-partitions --producer-property --record-size --sleep-time-between-batch --tombstone --topic --validate --validate-config --value --value-subject-name-strategy --verbose -h -t -v")" -- "$cur" )
-      ;;
-
-    'topic consume'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--grep --help --key-subject --max-characters --max-messages --min-expected-messages --plot-latencies-timestamp-field --tail --timeout --topic --value-subject --verbose -h -t -v")" -- "$cur" )
       ;;
 
     'container ssh'*)
@@ -952,16 +956,16 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-examples-list-with-fzf "$cur")")" -- "$cur" )
       ;;
 
-    'connector'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help -h create-or-update delete log-level pause plugins restart resume search-jar show-config show-config-parameters show-lag status stop unpause versions")" -- "$cur" )
-      ;;
-
     'container'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help -h exec get-ip-addresses kill kill-all logs pause recreate restart resume ssh unpause")" -- "$cur" )
       ;;
 
     'open-docs'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --only-show-url -h")" -- "$cur" )
+      ;;
+
+    'connector'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help -h create-or-update delete log-level pause plugins restart resume search-jar show-config show-config-parameters show-lag status stop unpause versions")" -- "$cur" )
       ;;
 
     'open'*'-f')
@@ -976,12 +980,12 @@ _playground_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help -h delete get get-compatibility get-mode register set-compatibility set-mode")" -- "$cur" )
       ;;
 
-    're-run'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--clear --connector-jar --connector-tag --connector-zip --enable-conduktor --enable-control-center --enable-jmx-grafana --enable-kcat --enable-ksqldb --enable-multiple-brokers --enable-multiple-connect-workers --enable-rest-proxy --enable-sql-datagen --enable-sr-maven-plugin-app --help --tag -h")" -- "$cur" )
-      ;;
-
     'run'*'-f')
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-examples-list-with-fzf "$cur")")" -- "$cur" )
+      ;;
+
+    're-run'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--clear --connector-jar --connector-tag --connector-zip --enable-conduktor --enable-control-center --enable-jmx-grafana --enable-kcat --enable-ksqldb --enable-multiple-brokers --enable-multiple-connect-workers --enable-rest-proxy --enable-sql-datagen --enable-sr-maven-plugin-app --environment --help --tag -h")" -- "$cur" )
       ;;
 
     'config'*)
@@ -1017,7 +1021,7 @@ _playground_completions() {
       ;;
 
     'run'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector-jar --connector-tag --connector-zip --enable-conduktor --enable-control-center --enable-jmx-grafana --enable-kcat --enable-ksqldb --enable-multiple-brokers --enable-multiple-connect-workers --enable-rest-proxy --enable-sql-datagen --enable-sr-maven-plugin-app --file --help --open --tag -f -h -o")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector-jar --connector-tag --connector-zip --enable-conduktor --enable-control-center --enable-jmx-grafana --enable-kcat --enable-ksqldb --enable-multiple-brokers --enable-multiple-connect-workers --enable-rest-proxy --enable-sql-datagen --enable-sr-maven-plugin-app --environment --file --help --open --tag -f -h -o")" -- "$cur" )
       ;;
 
     *)

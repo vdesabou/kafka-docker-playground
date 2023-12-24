@@ -52,7 +52,7 @@ then
 fi
 
 log "Creating HDFS Sink connector"
-playground connector create-or-update --connector hdfs3-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector hdfs3-sink  << EOF
 {
   "connector.class":"io.confluent.connect.hdfs3.Hdfs3SinkConnector",
   "tasks.max":"1",
@@ -105,7 +105,7 @@ docker cp hadoop:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
 docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro
 
 log "Creating HDFS Source connector"
-playground connector create-or-update --connector hdfs3-source-kerberos --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector hdfs3-source-kerberos  << EOF
 {
           "connector.class":"io.confluent.connect.hdfs3.Hdfs3SourceConnector",
           "tasks.max":"1",

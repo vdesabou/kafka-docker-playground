@@ -25,7 +25,7 @@ EOF
 sleep 5
 
 log "Creating Kudu sink connector"
-playground connector create-or-update --connector kudu-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector kudu-sink  << EOF
 {
                     "connector.class": "io.confluent.connect.kudu.KuduSinkConnector",
                     "tasks.max": "1",

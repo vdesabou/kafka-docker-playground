@@ -50,7 +50,7 @@ docker exec connect kinit sshuser -k -t /tmp/sshuser.keytab
 # docker exec -i --privileged --user root connect bash -c "yum update -y && yum install openssh-clients -y"
 
 log "Creating SFTP Sink connector"
-playground connector create-or-update --connector sftp-sink-kerberos --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector sftp-sink-kerberos  << EOF
 {
                "topics": "test_sftp_sink",
                "tasks.max": "1",

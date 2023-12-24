@@ -63,7 +63,7 @@ else
 fi
 
 log "Creating Marketo Source connector"
-playground connector create-or-update --connector marketo-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector marketo-source  << EOF
 {
      "connector.class": "io.confluent.connect.marketo.MarketoSourceConnector",
      "tasks.max": "1",

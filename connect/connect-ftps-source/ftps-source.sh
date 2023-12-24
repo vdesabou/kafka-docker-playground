@@ -33,7 +33,7 @@ docker cp json-ftps-source.json ftps-server:/home/vsftpd/bob/input/
 rm -f json-ftps-source.json
 
 log "Creating JSON file with schema FTPS Source connector"
-playground connector create-or-update --connector ftps-source-json --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector ftps-source-json  << EOF
 {
      "tasks.max": "1",
      "connector.class": "io.confluent.connect.ftps.FtpsSourceConnector",

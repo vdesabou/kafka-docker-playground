@@ -34,7 +34,7 @@ playground topic produce -t mytable --nb-messages 10 --forced-value '{"f1":"valu
 EOF
 
 log "Creating Vertica sink connector"
-playground connector create-or-update --connector vertica-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector vertica-sink  << EOF
 {
   "connector.class" : "io.confluent.vertica.VerticaSinkConnector",
   "tasks.max" : "1",

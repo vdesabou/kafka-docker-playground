@@ -120,7 +120,7 @@ EOF
 
 
 log "Creating JMS Oracle AQ sink connector"
-playground connector create-or-update --connector jms-oracle-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector jms-oracle-sink  << EOF
 {
      "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
      "tasks.max": "1",

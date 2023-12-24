@@ -59,6 +59,13 @@
       "options": [
         {
           "names": [
+            "--environment"
+          ],
+          "argument": "plaintext",
+          "description": "🔐 The environment to start . \n\n- ccloud\n- 2way-ssl\n- kerberos\n- kraft-external-plaintext\n- kraft-plaintext\n- ldap-authorizer-sasl-plain\n- ldap-sasl-plain\n- mdc-kerberos\n- mdc-plaintext\n- mdc-sasl-plain\n- plaintext\n- rbac-sasl-plain\n- sasl-plain\n- sasl-scram\n- sasl-ssl\n- ssl_kerberos\n\nDefault is plaintext\n\nDefault value: plaintext\n\nAllowed values: ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos\n"
+        },
+        {
+          "names": [
             "--file",
             "-f"
           ],
@@ -185,6 +192,13 @@
           ],
           "argument": "",
           "description": "🧼 Clear any previous flags\n"
+        },
+        {
+          "names": [
+            "--environment"
+          ],
+          "argument": "plaintext",
+          "description": "🔐 The environment to start . \n\n- ccloud\n- 2way-ssl\n- kerberos\n- kraft-external-plaintext\n- kraft-plaintext\n- ldap-authorizer-sasl-plain\n- ldap-sasl-plain\n- mdc-kerberos\n- mdc-plaintext\n- mdc-sasl-plain\n- plaintext\n- rbac-sasl-plain\n- sasl-plain\n- sasl-scram\n- sasl-ssl\n- ssl_kerberos\n\nDefault is plaintext\n\nDefault value: plaintext\n\nAllowed values: ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos\n"
         },
         {
           "names": [
@@ -2602,13 +2616,6 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran.\n"
-            },
-            {
-              "names": [
-                "--environment"
-              ],
-              "argument": "plaintext",
-              "description": "🔐 The environment to start . \n\n- ccloud\n- 2way-ssl\n- kerberos\n- kraft-external-plaintext\n- kraft-plaintext\n- ldap-authorizer-sasl-plain\n- ldap-sasl-plain\n- mdc-kerberos\n- mdc-plaintext\n- mdc-sasl-plain\n- plaintext\n- rbac-sasl-plain\n- sasl-plain\n- sasl-scram\n- sasl-ssl\n- ssl_kerberos\n\nDefault is plaintext\n\nDefault value: plaintext\n\nAllowed values: ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos\n"
             },
             {
               "names": [

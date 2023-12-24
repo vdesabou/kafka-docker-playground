@@ -95,7 +95,7 @@ curl -s -X PUT \
 wait_for_datagen_connector_to_inject_data "pageviews" "1"
 
 log "Creating Databricks Delta Lake Sink connector"
-playground connector create-or-update --connector databricks-delta-lake-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector databricks-delta-lake-sink  << EOF
 {
      "connector.class": "io.confluent.connect.databricks.deltalake.DatabricksDeltaLakeSinkConnector",
      "topics": "pageviews",

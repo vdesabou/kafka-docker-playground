@@ -156,7 +156,7 @@ docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 <
 EOF
 
 log "Creating Oracle source connector"
-playground connector create-or-update --connector cdc-oracle-source-pdb-cloud --package "io.confluent.connect.oracle.cdc.util.metrics.MetricsReporter" --level DEBUG --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector cdc-oracle-source-pdb-cloud --package "io.confluent.connect.oracle.cdc.util.metrics.MetricsReporter" --level DEBUG  << EOF
 {
      "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
      "tasks.max":2,

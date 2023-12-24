@@ -35,7 +35,7 @@ playground topic produce -t test-topic --nb-messages 10 << 'EOF'
 EOF
 
 log "Creating Replicator connector"
-playground connector create-or-update --connector duplicate-topic --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector duplicate-topic  << EOF
 {
          "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
                "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",

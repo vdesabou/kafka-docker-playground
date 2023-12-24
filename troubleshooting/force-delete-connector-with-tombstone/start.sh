@@ -22,7 +22,7 @@ playground topic produce -t http-messages --nb-messages 10 << 'EOF'
 EOF
 
 log "Creating http-sink connector"
-playground connector create-or-update --connector http-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector http-sink  << EOF
 {
           "topics": "http-messages",
                "tasks.max": "1",
@@ -89,7 +89,7 @@ docker exec -i broker kafka-console-consumer --bootstrap-server localhost:9092 -
 cat /tmp/connect-configs.backup
 
 log "re-create connector"
-playground connector create-or-update --connector http-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector http-sink  << EOF
 {
           "topics": "http-messages",
                "tasks.max": "1",

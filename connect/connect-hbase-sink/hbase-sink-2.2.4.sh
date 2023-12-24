@@ -20,7 +20,7 @@ value%g
 EOF
 
 log "Creating HBase sink connector"
-playground connector create-or-update --connector hbase-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector hbase-sink  << EOF
 {
      "connector.class": "io.confluent.connect.hbase.HBaseSinkConnector",
      "tasks.max": "1",

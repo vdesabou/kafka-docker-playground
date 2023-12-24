@@ -68,7 +68,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 
 log "Creating JDBC GCP BigQuery Source connector"
-playground connector create-or-update --connector jdbc-gcp-bigquery-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector jdbc-gcp-bigquery-source  << EOF
 {
     "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
     "tasks.max": "1",

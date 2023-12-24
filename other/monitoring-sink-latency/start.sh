@@ -8,7 +8,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating datagen-source-users connector"
-playground connector create-or-update --connector datagen-source-users --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector datagen-source-users  << EOF
 {
                "topics": "users",
                "tasks.max": "1",
@@ -26,7 +26,7 @@ playground connector create-or-update --connector datagen-source-users --environ
 EOF
 
 log "Creating http-sink connector"
-playground connector create-or-update --connector http-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector http-sink  << EOF
 {
                "topics": "users",
                "tasks.max": "1",
@@ -50,7 +50,7 @@ playground connector create-or-update --connector http-sink --environment "${PLA
 EOF
 
 log "Creating http-sink-with-batching connector"
-playground connector create-or-update --connector http-sink-with-batching --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector http-sink-with-batching  << EOF
 {
                "topics": "users",
                "tasks.max": "1",
@@ -75,7 +75,7 @@ playground connector create-or-update --connector http-sink-with-batching --envi
 EOF
 
 log "Creating http-sink-with-consumer-quota connector"
-playground connector create-or-update --connector http-sink-with-consumer-quota --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector http-sink-with-consumer-quota  << EOF
 {
                "topics": "users",
                "tasks.max": "1",
@@ -106,7 +106,7 @@ log "Creating s3-sink bucket"
 docker exec s3 awslocal s3 mb s3://s3-sink-bucket
 
 log "Creating s3-sink connector"
-playground connector create-or-update --connector s3-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector s3-sink  << EOF
 {
                "topics": "users",
                "tasks.max": "1",
@@ -136,7 +136,7 @@ playground connector create-or-update --connector s3-sink --environment "${PLAYG
 EOF
 
 log "Creating http-sink-with-fetch-latency connector"
-playground connector create-or-update --connector http-sink-with-fetch-latency --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector http-sink-with-fetch-latency  << EOF
 {
                "topics": "users",
                "tasks.max": "1",
@@ -161,7 +161,7 @@ playground connector create-or-update --connector http-sink-with-fetch-latency -
 EOF
 
 log "Creating http-sink-with-put-latency connector"
-playground connector create-or-update --connector http-sink-with-put-latency --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector http-sink-with-put-latency  << EOF
 {
                "topics": "users",
                "tasks.max": "1",
@@ -185,7 +185,7 @@ playground connector create-or-update --connector http-sink-with-put-latency --e
 EOF
 
 log "Creating http-sink-with-put-latency-and-batching connector"
-playground connector create-or-update --connector http-sink-with-put-latency-and-batching --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector http-sink-with-put-latency-and-batching  << EOF
 {
                "topics": "users",
                "tasks.max": "1",
@@ -213,7 +213,7 @@ log "Creating s3-sink-with-put-latency bucket"
 docker exec s3 awslocal s3 mb s3://s3-sink-with-put-latency-bucket
 
 log "Creating s3-sink-with-put-latency connector"
-playground connector create-or-update --connector s3-sink-with-put-latency --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector s3-sink-with-put-latency  << EOF
 {
                "topics": "users",
                "tasks.max": "1",

@@ -39,7 +39,7 @@ This is my message
 EOF
 
 log "Creating IBM MQ source connector"
-playground connector create-or-update --connector ibm-mq-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector ibm-mq-sink  << EOF
 {
      "connector.class": "io.confluent.connect.jms.IbmMqSinkConnector",
      "topics": "sink-messages",

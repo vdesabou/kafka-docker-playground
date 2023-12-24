@@ -8,7 +8,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Prometheus sink connector"
-playground connector create-or-update --connector prometheus-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector prometheus-sink  << EOF
 {
   "connector.class": "io.confluent.connect.prometheus.PrometheusMetricsSinkConnector",
   "tasks.max": "1",

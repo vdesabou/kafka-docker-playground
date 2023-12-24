@@ -17,7 +17,7 @@ playground topic produce -t test-topic-ssl --nb-messages 10 << 'EOF'
 EOF
 
 log "Creating Confluent Replicator connector with SSL authentication"
-playground connector create-or-update --connector duplicate-topic-ssl --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector duplicate-topic-ssl  << EOF
 {
                     "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
                     "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",

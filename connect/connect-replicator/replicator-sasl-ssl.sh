@@ -16,7 +16,7 @@ playground topic produce -t test-topic-sasl-ssl --nb-messages 10 << 'EOF'
 EOF
 
 log "Creating Confluent Replicator connector with SASL_SSL authentication"
-playground connector create-or-update --connector replicator-sasl-ssl --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector replicator-sasl-ssl  << EOF
 {
                     "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
                     "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",

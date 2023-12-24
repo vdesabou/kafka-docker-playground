@@ -54,7 +54,7 @@ $ docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM CUS
 Creating Debezium PostgreSQL source connector
 
 ```bash
-playground connector create-or-update --connector debezium-postgres-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector debezium-postgres-source  << EOF
 {
                 "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
                 "tasks.max": "1",

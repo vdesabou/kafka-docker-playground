@@ -10,7 +10,7 @@ log "Generating data"
 docker exec -i connect bash -c "mkdir -p /tmp/kafka-connect/examples/ && curl -sSL -k 'https://api.mockaroo.com/api/17c84440?count=500&key=25fd9c80' -o /tmp/kafka-connect/examples/file.json"
 
 log "Creating FileStream Source connector"
-playground connector create-or-update --connector filestream-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector filestream-source  << EOF
 {
      "tasks.max": "1",
      "connector.class": "org.apache.kafka.connect.file.FileStreamSourceConnector",

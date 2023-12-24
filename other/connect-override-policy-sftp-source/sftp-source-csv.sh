@@ -29,7 +29,7 @@ docker exec broker kafka-acls --bootstrap-server broker:9092 --add --allow-princ
 #         User:sftp has Allow permission for operations: Write from hosts: *
 
 log "Creating CSV SFTP Source connector"
-playground connector create-or-update --connector sftp-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector sftp-source  << EOF
 {
         "topics": "test_sftp_sink",
                "tasks.max": "1",

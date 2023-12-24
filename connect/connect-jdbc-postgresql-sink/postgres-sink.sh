@@ -8,7 +8,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating JDBC PostgreSQL sink connector"
-playground connector create-or-update --connector postgres-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector postgres-sink  << EOF
 {
   "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
   "tasks.max": "1",

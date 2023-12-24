@@ -190,7 +190,7 @@ fi
 sleep 10
 
 log "Creating Oracle source connector"
-playground connector create-or-update --connector oracle-source-ssl --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector oracle-source-ssl  << EOF
 {
      "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
      "tasks.max":"1",

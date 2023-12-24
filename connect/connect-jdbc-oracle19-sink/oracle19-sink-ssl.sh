@@ -158,7 +158,7 @@ sleep 10
 
 log "Creating Oracle sink connector"
 
-playground connector create-or-update --connector oracle-sink-ssl --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector oracle-sink-ssl  << EOF
 {
   "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
   "tasks.max": "1",

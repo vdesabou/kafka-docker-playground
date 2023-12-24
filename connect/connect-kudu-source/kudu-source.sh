@@ -36,7 +36,7 @@ EOF
 sleep 5
 
 log "Creating Kudu source connector"
-playground connector create-or-update --connector kudu-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector kudu-source  << EOF
 {
                     "connector.class": "io.confluent.connect.kudu.KuduSourceConnector",
                     "tasks.max": "1",

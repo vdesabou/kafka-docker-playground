@@ -164,7 +164,7 @@ CONNECTION_URL="jdbc:snowflake://$SNOWFLAKE_ACCOUNT_NAME.snowflakecomputing.com/
 VIEW="$PLAYGROUND_DB.PUBLIC.MYVIEWFORFOO"
 
 log "Creating JDBC Snowflake Source connector"
-playground connector create-or-update --connector jdbc-snowflake-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector jdbc-snowflake-source  << EOF
 {
      "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
      "tasks.max": "1",

@@ -158,7 +158,7 @@ EOF
 # https://docs.snowflake.com/en/user-guide/jdbc-configure.html#jdbc-driver-connection-string
 CONNECTION_URL="jdbc:snowflake://$SNOWFLAKE_ACCOUNT_NAME.snowflakecomputing.com/?warehouse=$PLAYGROUND_WAREHOUSE&db=$PLAYGROUND_DB&role=$PLAYGROUND_CONNECTOR_ROLE&schema=PUBLIC&user=$PLAYGROUND_USER&private_key_file=/tmp/snowflake_key.p8&private_key_file_pwd=confluent&tracing=ALL"
 log "Creating JDBC Snowflake Sink connector"
-playground connector create-or-update --connector jdbc-snowflake-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector jdbc-snowflake-sink  << EOF
 {
      "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
      "tasks.max": "1",

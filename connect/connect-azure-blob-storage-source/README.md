@@ -78,7 +78,7 @@ az storage blob upload --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${A
 Creating Generalized Azure Blob Storage Source connector:
 
 ```
-playground connector create-or-update --connector azure-blob-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector azure-blob-source  << EOF
 {
                 "connector.class": "io.confluent.connect.azure.blob.storage.AzureBlobStorageSourceConnector",
                 "tasks.max": "1",

@@ -83,7 +83,7 @@ docker exec mysql bash -c "mysql --user=root --password=password --database=mydb
 playground debug log-level set --package "org.apache.kafka.connect.runtime.TransformationChain" --level TRACE
 
 log "Creating MySQL source connector"
-playground connector create-or-update --connector mysql-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector mysql-source  << EOF
 {
   "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
   "tasks.max":"1",

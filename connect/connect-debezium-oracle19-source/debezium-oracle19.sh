@@ -179,7 +179,7 @@ docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB <<
 EOF
 
 log "Creating Debezium Oracle source connector"
-playground connector create-or-update --connector debezium-oracle-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector debezium-oracle-source  << EOF
 {
   "connector.class": "io.debezium.connector.oracle.OracleConnector",
   "tasks.max": "1",

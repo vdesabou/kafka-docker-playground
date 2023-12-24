@@ -72,7 +72,7 @@ aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --
 
 
 log "Creating Kinesis Source connector"
-playground connector create-or-update --connector kinesis-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector kinesis-source  << EOF
 {
     "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",
     "tasks.max": "1",

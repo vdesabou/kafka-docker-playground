@@ -1563,6 +1563,14 @@ function bootstrap_ccloud_environment () {
       fi
   done
 
+  if [ ! -z "$CLUSTER_NAME" ]
+  then
+    if [ "$(playground state get "ccloud.CLUSTER_NAME")" == "$CLUSTER_NAME" ]
+    then
+      suggest_use_previous_example_ccloud=0
+    fi
+  fi
+
   if [ $suggest_use_previous_example_ccloud -eq 1 ] && [ -z "$GITHUB_RUN_NUMBER" ]
   then
     log "🙋 Use previously used ccloud cluster:"

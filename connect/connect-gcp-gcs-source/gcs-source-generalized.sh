@@ -65,7 +65,7 @@ log "Copy generalized.quickstart.json to bucket $GCS_BUCKET_NAME/quickstart"
 docker run -i -v ${PWD}:/tmp/ --volumes-from gcloud-config google/cloud-sdk:latest gsutil cp /tmp/generalized.quickstart.json gs://$GCS_BUCKET_NAME/quickstart/generalized.quickstart.json
 
 log "Creating Generalized GCS Source connector"
-playground connector create-or-update --connector gcs-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector gcs-source  << EOF
 {
                "connector.class": "io.confluent.connect.gcs.GcsSourceConnector",
                "gcs.bucket.name" : "$GCS_BUCKET_NAME",

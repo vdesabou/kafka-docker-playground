@@ -8,7 +8,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating SNMP Source connector"
-playground connector create-or-update --connector snmp-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector snmp-source  << EOF
 {
                "tasks.max": "1",
                     "connector.class": "io.confluent.connect.snmp.SnmpTrapSourceConnector",

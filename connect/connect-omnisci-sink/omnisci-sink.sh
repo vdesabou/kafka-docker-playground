@@ -36,7 +36,7 @@ EOF
 
 
 log "Creating OmniSci sink connector"
-playground connector create-or-update --connector omnisci-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector omnisci-sink  << EOF
 {
      "connector.class": "io.confluent.connect.omnisci.OmnisciSinkConnector",
      "tasks.max" : "1",

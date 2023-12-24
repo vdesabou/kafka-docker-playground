@@ -63,7 +63,7 @@ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub
 sleep 10
 
 log "Creating Google Cloud Pub/Sub Group Kafka Source connector"
-playground connector create-or-update --connector pubsub-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector pubsub-source  << EOF
 {
      "connector.class" : "com.google.pubsub.kafka.source.CloudPubSubSourceConnector",
      "tasks.max" : "1",

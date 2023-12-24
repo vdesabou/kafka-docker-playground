@@ -57,7 +57,7 @@ EOF
 Creating Pivotal Gemfire sink connector
 
 ```bash
-playground connector create-or-update --connector pivotal-gemfire-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector pivotal-gemfire-sink  << EOF
 {
                "connector.class": "io.confluent.connect.pivotal.gemfire.PivotalGemfireSinkConnector",
                "tasks.max": "1",

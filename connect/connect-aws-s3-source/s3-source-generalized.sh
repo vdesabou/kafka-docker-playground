@@ -79,7 +79,7 @@ log "Copy generalized.quickstart.json to bucket $AWS_BUCKET_NAME/quickstart"
 aws s3 cp generalized.quickstart.json s3://$AWS_BUCKET_NAME/quickstart/generalized.quickstart.json
 
 log "Creating Generalized S3 Source connector with bucket name <$AWS_BUCKET_NAME>"
-playground connector create-or-update --connector s3-source-generalized --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector s3-source-generalized  << EOF
 {
     "tasks.max": "1",
     "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",

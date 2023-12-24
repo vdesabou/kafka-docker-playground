@@ -253,6 +253,33 @@ commands:
     🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)
 
   flags:
+  - &environment
+    long: --environment
+    required: false
+    default: "plaintext"
+    arg: environment
+    allowed: [ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos]
+    help: |-
+      🔐 The environment to start . 
+      
+      - ccloud
+      - 2way-ssl
+      - kerberos
+      - kraft-external-plaintext
+      - kraft-plaintext
+      - ldap-authorizer-sasl-plain
+      - ldap-sasl-plain
+      - mdc-kerberos
+      - mdc-plaintext
+      - mdc-sasl-plain
+      - plaintext
+      - rbac-sasl-plain
+      - sasl-plain
+      - sasl-scram
+      - sasl-ssl
+      - ssl_kerberos
+
+      Default is plaintext
   - long: --file
     short: -f
     required: true
@@ -424,6 +451,7 @@ commands:
       required: false
       help: |- 
         🧼 Clear any previous flags
+    - *environment
     - *tag
     - *connector-tag
     - *connector-zip
@@ -474,33 +502,7 @@ commands:
 
     Note: when running an example with <playground run> or <playground run-ccloud>, it is already automatically done
   flags:
-    - &environment
-      long: --environment
-      required: false
-      default: "plaintext"
-      arg: environment
-      allowed: [ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos]
-      help: |-
-        🔐 The environment to start . 
-        
-        - ccloud
-        - 2way-ssl
-        - kerberos
-        - kraft-external-plaintext
-        - kraft-plaintext
-        - ldap-authorizer-sasl-plain
-        - ldap-sasl-plain
-        - mdc-kerberos
-        - mdc-plaintext
-        - mdc-sasl-plain
-        - plaintext
-        - rbac-sasl-plain
-        - sasl-plain
-        - sasl-scram
-        - sasl-ssl
-        - ssl_kerberos
-
-        Default is plaintext
+    - *environment
     - long: --docker-compose-override-file
       short: -f
       validate: file_exists
@@ -2659,7 +2661,6 @@ commands:
 
     flags:
     - *verbose
-    - *environment
     - long: --connector
       short: -c
       required: true

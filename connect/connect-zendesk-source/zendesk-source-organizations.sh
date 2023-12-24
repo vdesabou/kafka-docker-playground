@@ -34,7 +34,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 SINCE="2020-09-05"
 
 log "Creating Zendesk Source connector"
-playground connector create-or-update --connector zendesk-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector zendesk-source  << EOF
 {
      "connector.class": "io.confluent.connect.zendesk.ZendeskSourceConnector",
      "topic.name.pattern":"zendesk-topic-\${entityName}",

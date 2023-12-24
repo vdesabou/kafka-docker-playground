@@ -137,7 +137,7 @@ EOF
 
 
 log "Creating Debezium PostgreSQL source connector with customers table"
-playground connector create-or-update --connector debezium-postgres-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector debezium-postgres-source  << EOF
 {
   "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
   "tasks.max": "1",
@@ -176,7 +176,7 @@ playground topic consume --topic asgard.public.customers2 --min-expected-message
 set -e
 
 log "Creating Debezium PostgreSQL source connector with customers and customers2 table"
-playground connector create-or-update --connector debezium-postgres-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector debezium-postgres-source  << EOF
 {
               "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
               "tasks.max": "1",

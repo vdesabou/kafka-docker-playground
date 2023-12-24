@@ -9,7 +9,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 
 log "Creating ActiveMQ source connector"
-playground connector create-or-update --connector active-mq-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector active-mq-source  << EOF
 {
      "connector.class": "io.confluent.connect.activemq.ActiveMQSourceConnector",
      "kafka.topic": "MyKafkaTopicName",

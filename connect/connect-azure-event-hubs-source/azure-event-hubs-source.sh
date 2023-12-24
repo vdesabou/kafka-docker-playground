@@ -81,7 +81,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Azure Event Hubs Source connector"
-playground connector create-or-update --connector azure-event-hubs-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector azure-event-hubs-source  << EOF
 {
     "connector.class": "io.confluent.connect.azure.eventhubs.EventHubsSourceConnector",
     "kafka.topic": "event_hub_topic",

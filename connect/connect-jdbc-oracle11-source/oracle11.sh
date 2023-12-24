@@ -92,7 +92,7 @@ insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, co
 EOF
 
 log "Creating Oracle source connector"
-playground connector create-or-update --connector oracle-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector oracle-source  << EOF
 {
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max":"1",

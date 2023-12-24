@@ -58,7 +58,7 @@ EOFCONNECT
 log "Creating XML FilePulse Source connector"
 if ! version_gt $VERSION "1.9.9"
 then
-    playground connector create-or-update --connector filepulse-source-xml --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+    playground connector create-or-update --connector filepulse-source-xml  << EOF
     {
     "connector.class":"io.streamthoughts.kafka.connect.filepulse.source.FilePulseSourceConnector",
     "fs.scan.directory.path":"/tmp/kafka-connect/examples/",
@@ -75,7 +75,7 @@ then
     }
 EOF
 else
-    playground connector create-or-update --connector filepulse-source-xml --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+    playground connector create-or-update --connector filepulse-source-xml  << EOF
     {
     "connector.class":"io.streamthoughts.kafka.connect.filepulse.source.FilePulseSourceConnector",
     "fs.cleanup.policy.class": "io.streamthoughts.kafka.connect.filepulse.fs.clean.LogCleanupPolicy",

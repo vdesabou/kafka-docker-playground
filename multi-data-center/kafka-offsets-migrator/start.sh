@@ -20,7 +20,7 @@ docker container exec -i connect-europe bash -c "kafka-console-consumer --bootst
 
 log "Replicate from Europe to US"
 docker container exec connect-us \
-playground connector create-or-update --connector replicate-europe-to-us --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector replicate-europe-to-us  << EOF
 {
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",

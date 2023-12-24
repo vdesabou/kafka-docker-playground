@@ -81,7 +81,7 @@ playground topic produce -t mytable --nb-messages 10 --forced-value '{"f1":"valu
 }
 EOF
 log "Creating AWS DynamoDB Sink connector"
-playground connector create-or-update --connector dynamodb-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector dynamodb-sink  << EOF
 {
     "connector.class": "io.confluent.connect.aws.dynamodb.DynamoDbSinkConnector",
     "tasks.max": "1",

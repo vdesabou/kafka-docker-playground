@@ -96,7 +96,7 @@ log "Blocking $DOMAIN IP $IP to make sure proxy is used"
 docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
 
 log "Creating Salesforce Bulk API Source connector"
-playground connector create-or-update --connector salesforce-bulkapi-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector salesforce-bulkapi-source  << EOF
 {
                     "connector.class": "io.confluent.connect.salesforce.SalesforceBulkApiSourceConnector",
                     "kafka.topic": "sfdc-bulkapi-leads",
@@ -125,7 +125,7 @@ log "Verify we have received the data in sfdc-bulkapi-leads topic"
 playground topic consume --topic sfdc-bulkapi-leads --min-expected-messages 1 --timeout 60
 
 log "Creating Salesforce Bulk API Sink connector"
-playground connector create-or-update --connector salesforce-bulkapi-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector salesforce-bulkapi-sink  << EOF
 {
      "connector.class": "io.confluent.connect.salesforce.SalesforceBulkApiSinkConnector",
      "topics": "sfdc-bulkapi-leads",

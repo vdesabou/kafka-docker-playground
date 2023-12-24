@@ -47,7 +47,7 @@ db.customers.find().pretty();
 EOF
 
 log "Creating Debezium MongoDB source connector"
-playground connector create-or-update --connector debezium-mongodb-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector debezium-mongodb-source  << EOF
 {
     "connector.class" : "io.debezium.connector.mongodb.MongoDbConnector",
     "tasks.max" : "1",
@@ -86,7 +86,7 @@ db.customers2.insert([
 EOF
 
 log "Updating connector to include new collection"
-playground connector create-or-update --connector debezium-mongodb-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector debezium-mongodb-source  << EOF
 {
     "connector.class" : "io.debezium.connector.mongodb.MongoDbConnector",
     "tasks.max" : "1",

@@ -257,7 +257,7 @@ log "✨ If you modify a docker-compose file and want to re-create the container
 sleep 15
 
 log "Creating Oracle source connector"
-playground connector create-or-update --connector cdc-oracle-source-pdb --package "io.confluent.connect.oracle.cdc.util.metrics.MetricsReporter" --level DEBUG --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector cdc-oracle-source-pdb --package "io.confluent.connect.oracle.cdc.util.metrics.MetricsReporter" --level DEBUG  << EOF
 {
      "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
      "tasks.max":2,

@@ -28,7 +28,7 @@ do
         echo "curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config""
     fi
     json_config=$(curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config")
-    echo "playground connector create-or-update --connector $connector --environment "${PLAYGROUND_ENVIRONMENT}" << EOF"
+    echo "playground connector create-or-update --connector $connector  << EOF"
     echo "$json_config" | jq -S . | sed 's/\$/\\$/g'
     echo "EOF"
 done

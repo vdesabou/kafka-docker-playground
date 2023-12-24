@@ -69,7 +69,7 @@ log "Blocking $DOMAIN IP $IP to make sure proxy is used"
 docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
 
 log "Creating Marketo Source connector"
-playground connector create-or-update --connector marketo-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector marketo-source  << EOF
 {
                     "connector.class": "io.confluent.connect.marketo.MarketoSourceConnector",
                     "tasks.max": "1",

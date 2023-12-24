@@ -4,6 +4,7 @@ root_folder=${DIR_CLI}/../..
 
 test_file="${args[--file]}"
 open="${args[--open]}"
+environment="${args[--environment]}"
 tag="${args[--tag]}"
 connector_tag="${args[--connector-tag]}"
 connector_zip="${args[--connector-zip]}"
@@ -44,18 +45,18 @@ fi
 
 test_file_directory="$(dirname "${test_file}")"
 filename=$(basename -- "$test_file")
-extension="${filename##*.}"
-
-base1="${test_file_directory##*/}" # connect-cdc-oracle12-source
-dir1="${test_file_directory%/*}" #connect
-dir2="${dir1##*/}/$base1" # connect/connect-cdc-oracle12-source
-final_dir=$(echo $dir2 | tr '/' '-') # connect-connect-cdc-oracle12-source
 
 flag_list=""
 if [[ -n "$tag" ]]
 then
   flag_list="--tag=$tag"
   export TAG=$tag
+fi
+
+if [[ -n "$environment" ]]
+then
+  flag_list="$flag_list --environment=$environment"
+  export PLAYGROUND_ENVIRONMENT=$environment
 fi
 
 if [[ -n "$connector_tag" ]]

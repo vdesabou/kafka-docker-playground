@@ -35,7 +35,7 @@ playground topic produce -t my-secret-value << 'EOF'
 EOF
 
 log "Creating FileStream Sink connector with topics set with secrets variable"
-playground connector create-or-update --connector filestream-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector filestream-sink  << EOF
 {
     "tasks.max": "1",
     "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",

@@ -46,7 +46,7 @@ then
 fi
 
 log "Creating HDFS Sink connector"
-playground connector create-or-update --connector hdfs3-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector hdfs3-sink  << EOF
 {
   "connector.class":"io.confluent.connect.hdfs3.Hdfs3SinkConnector",
   "tasks.max":"1",

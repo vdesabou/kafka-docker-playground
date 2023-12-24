@@ -43,7 +43,7 @@ GO
 EOF
 
 log "Creating Debezium SQL Server source connector"
-playground connector create-or-update --connector debezium-sqlserver-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector debezium-sqlserver-source  << EOF
 {
   "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
   "tasks.max": "1",
@@ -88,7 +88,7 @@ playground topic consume --topic mytable --min-expected-messages 5 --timeout 60
 # {"id":1005,"first_name":"Pam","last_name":"Thomas","email":"pam@office.com"}
 
 log "Creating JDBC PostgreSQL sink connector"
-playground connector create-or-update --connector postgres-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector postgres-sink  << EOF
 {
   "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
   "tasks.max": "1",

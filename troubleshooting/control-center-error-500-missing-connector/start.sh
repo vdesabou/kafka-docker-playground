@@ -32,7 +32,7 @@ ERROR_PATH="${CONNECT_CONTAINER_HOME_DIR}/data/error/"
 FINISHED_PATH="${CONNECT_CONTAINER_HOME_DIR}/data/finished/"
 
 log "Creating CSV Spool Dir Source connector"
-playground connector create-or-update --connector spool-dir --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector spool-dir  << EOF
 {
           "tasks.max": "1",
           "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirCsvSourceConnector",
@@ -54,7 +54,7 @@ log "Verify we have received the data in spooldir-csv-topic topic"
 playground topic consume --topic spooldir-csv-topic --min-expected-messages 10 --timeout 60
 
 log "Creating SFTP Sink connector"
-playground connector create-or-update --connector sftp-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector sftp-sink  << EOF
 {
                "topics": "test_sftp_sink",
                "tasks.max": "1",

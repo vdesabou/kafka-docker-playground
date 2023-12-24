@@ -49,7 +49,7 @@ playground topic produce -t mytable --nb-messages 3 --forced-value '{"f1":"value
 EOF
 
 log "Creating Singlestore sink connector"
-playground connector create-or-update --connector singlestore-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector singlestore-sink  << EOF
 {
   "connector.class":"com.singlestore.kafka.SingleStoreSinkConnector",
   "tasks.max":"1",

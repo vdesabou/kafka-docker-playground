@@ -43,7 +43,7 @@ log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
 docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
 
 log "Creating Salesforce Bulk API Source connector"
-playground connector create-or-update --connector salesforce-bulkapi-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector salesforce-bulkapi-source  << EOF
 {
      "connector.class": "io.confluent.connect.salesforce.SalesforceBulkApiSourceConnector",
      "kafka.topic": "sfdc-bulkapi-leads",

@@ -41,7 +41,7 @@ docker container exec -i connect-europe bash -c "kafka-console-consumer \
 # - "offset.translator.batch.period.ms": 5000 (Defaut 60000ms/1m). For demo purpose, set this value to 5s.
 log "Replicate from Metrics to Europe"
 docker container exec connect-europe \
-playground connector create-or-update --connector replicate-metrics-to-europe --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector replicate-metrics-to-europe  << EOF
 {
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
@@ -60,7 +60,7 @@ EOF
 
 log "Replicate from Metrics to US"
 docker container exec connect-us \
-playground connector create-or-update --connector replicate-metrics-to-us --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector replicate-metrics-to-us  << EOF
 {
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",

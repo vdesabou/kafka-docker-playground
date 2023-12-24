@@ -91,7 +91,7 @@ insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, co
 EOF
 
 log "Creating Oracle source connector"
-playground connector create-or-update --connector cdc-oracle11-source --package "io.confluent.connect.oracle.cdc.util.metrics.MetricsReporter" --level DEBUG --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector cdc-oracle11-source --package "io.confluent.connect.oracle.cdc.util.metrics.MetricsReporter" --level DEBUG  << EOF
 {
      "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
      "tasks.max": 2,

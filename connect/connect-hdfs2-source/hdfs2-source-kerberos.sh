@@ -52,7 +52,7 @@ then
 fi
 
 log "Creating HDFS Sink connector"
-playground connector create-or-update --connector hdfs-sink-kerberos --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector hdfs-sink-kerberos  << EOF
 {
   "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
   "tasks.max":"1",
@@ -107,7 +107,7 @@ docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/test_hdfs+0+0000000
 # docker exec connect kinit -kt /tmp/connect.keytab connect/connect.kerberos.local
 
 log "Creating HDFS Source connector"
-playground connector create-or-update --connector hdfs2-source-kerberos --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector hdfs2-source-kerberos  << EOF
 {
           "connector.class":"io.confluent.connect.hdfs2.Hdfs2SourceConnector",
           "tasks.max":"1",

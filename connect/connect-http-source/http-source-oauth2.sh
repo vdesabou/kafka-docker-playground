@@ -21,7 +21,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 log "Creating http-source connector"
 
-playground connector create-or-update --connector http-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector http-source  << EOF
 {
      "tasks.max": "1",
      "connector.class": "io.confluent.connect.http.HttpSourceConnector",

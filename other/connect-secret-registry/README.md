@@ -70,7 +70,7 @@ curl -X POST \
 Creating FileStream Sink connector:
 
 ```bash
-playground connector create-or-update --connector my-rbac-connector --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector my-rbac-connector  << EOF
 {
                "tasks.max": "1",
                "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",

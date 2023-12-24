@@ -19,7 +19,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 if version_gt $CONNECTOR_TAG "1.9.9"
 then
-     playground connector create-or-update --connector github-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+     playground connector create-or-update --connector github-source  << EOF
 {
      "connector.class": "io.confluent.connect.github.GithubSourceConnector",
      "topic.name.pattern":"github-topic-\${resourceName}",
@@ -42,7 +42,7 @@ then
 }
 EOF
 else
-     playground connector create-or-update --connector github-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+     playground connector create-or-update --connector github-source  << EOF
 {
      "connector.class": "io.confluent.connect.github.GithubSourceConnector",
      "topic.name.pattern":"github-topic-${entityName}",

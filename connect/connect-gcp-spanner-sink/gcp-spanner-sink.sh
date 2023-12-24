@@ -96,7 +96,7 @@ EOF
 
 
 log "Creating GCP Spanner Sink connector"
-playground connector create-or-update --connector gcp-spanner-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector gcp-spanner-sink  << EOF
 {
   "connector.class": "io.confluent.connect.gcp.spanner.SpannerSinkConnector",
   "tasks.max" : "1",

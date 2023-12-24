@@ -48,7 +48,7 @@ do
 done
 
 log "Creating Solace source connector"
-playground connector create-or-update --connector solace-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector solace-source  << EOF
 {
      "connector.class": "io.confluent.connect.solace.SolaceSourceConnector",
      "tasks.max": "1",

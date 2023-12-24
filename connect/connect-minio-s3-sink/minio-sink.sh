@@ -20,7 +20,7 @@ log "Creating bucket in Minio"
 docker container restart create-buckets
 
 log "Creating S3 Sink connector with Minio"
-playground connector create-or-update --connector minio-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector minio-sink  << EOF
 {
      "connector.class": "io.confluent.connect.s3.S3SinkConnector",
      "tasks.max": "1",

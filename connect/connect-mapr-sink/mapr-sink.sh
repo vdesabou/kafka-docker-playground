@@ -93,7 +93,7 @@ playground topic produce -t maprtopic --nb-messages 3 --key "1" << 'EOF'
 EOF
 
 log "Creating Mapr sink connector"
-playground connector create-or-update --connector mapr-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector mapr-sink  << EOF
 {
     "connector.class": "io.confluent.connect.mapr.db.MapRDbSinkConnector",
     "tasks.max": "1",

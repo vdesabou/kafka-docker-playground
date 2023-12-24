@@ -159,7 +159,7 @@ EOF
 set -e
 
 log "Creating JDBC AWS Redshift sink connector"
-playground connector create-or-update --connector redshift-jdbc-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector redshift-jdbc-sink  << EOF
 {
   "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
   "tasks.max": "1",

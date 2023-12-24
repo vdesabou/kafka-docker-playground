@@ -1183,6 +1183,13 @@ playground_run_usage() {
 
     # :command.usage_flags
     # :flag.usage
+    printf "  %s\n" "$(magenta "--environment ENVIRONMENT")"
+    printf "    🔐 The environment to start . \n    \n    - ccloud\n    - 2way-ssl\n    - kerberos\n    - kraft-external-plaintext\n    - kraft-plaintext\n    - ldap-authorizer-sasl-plain\n    - ldap-sasl-plain\n    - mdc-kerberos\n    - mdc-plaintext\n    - mdc-sasl-plain\n    - plaintext\n    - rbac-sasl-plain\n    - sasl-plain\n    - sasl-scram\n    - sasl-ssl\n    - ssl_kerberos\n    \n    Default is plaintext\n"
+    printf "    Allowed: ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos\n"
+    printf "    Default: plaintext\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE (required)")"
     printf "    🔖 Example file to run\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
@@ -1308,6 +1315,13 @@ playground_re_run_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--clear")"
     printf "    🧼 Clear any previous flags\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--environment ENVIRONMENT")"
+    printf "    🔐 The environment to start . \n    \n    - ccloud\n    - 2way-ssl\n    - kerberos\n    - kraft-external-plaintext\n    - kraft-plaintext\n    - ldap-authorizer-sasl-plain\n    - ldap-sasl-plain\n    - mdc-kerberos\n    - mdc-plaintext\n    - mdc-sasl-plain\n    - plaintext\n    - rbac-sasl-plain\n    - sasl-plain\n    - sasl-scram\n    - sasl-ssl\n    - ssl_kerberos\n    \n    Default is plaintext\n"
+    printf "    Allowed: ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos\n"
+    printf "    Default: plaintext\n"
     echo
 
     # :flag.usage
@@ -5431,13 +5445,6 @@ playground_connector_create_or_update_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--environment ENVIRONMENT")"
-    printf "    🔐 The environment to start . \n    \n    - ccloud\n    - 2way-ssl\n    - kerberos\n    - kraft-external-plaintext\n    - kraft-plaintext\n    - ldap-authorizer-sasl-plain\n    - ldap-sasl-plain\n    - mdc-kerberos\n    - mdc-plaintext\n    - mdc-sasl-plain\n    - plaintext\n    - rbac-sasl-plain\n    - sasl-plain\n    - sasl-scram\n    - sasl-ssl\n    - ssl_kerberos\n    \n    Default is plaintext\n"
-    printf "    Allowed: ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos\n"
-    printf "    Default: plaintext\n"
-    echo
-
-    # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR (required)")"
     printf "    🔗 Connector name\n"
     echo
@@ -5975,6 +5982,69 @@ function increment_cli_metric() {
 function get_cli_metric() {
   metric_name="$1"
   playground state get "metrics.$metric_name"
+}
+
+function add_connector_config_based_on_envrionment () {
+  environment="$1"
+  json_content="$2"
+
+  case "${environment}" in
+    plaintext)
+      # nothing to do
+      return
+    ;;
+    ccloud)
+      if [ -f /tmp/delta_configs/env.delta ]
+      then
+          source /tmp/delta_configs/env.delta
+      else
+          logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+          exit 1
+      fi
+
+      for prefix in {"confluent.topic","redo.log.consumer"}
+      do
+        if echo "$json_content" | jq ". | has(\"$prefix.bootstrap.servers\")" 2> /dev/null | grep -q true
+
+        then
+          log "replacing $prefix config for environment $environment"
+
+          echo "$json_content" > $tmp_dir/input.json
+          jq ".[\"$prefix.bootstrap.servers\"] = \"${file:/data:bootstrap.servers}\" | .[\"$prefix.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"${file:/data:sasl.username}\\\" password=\\\"${file:/data:sasl.password}\\\";\" | .[\"$prefix.security.protocol\"] = \"SASL_SSL\" | .[\"$prefix.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
+          json_content=$(cat $tmp_dir/output.json)
+        fi
+      done
+
+      if echo "$json_content" | jq '. | has("key.converter.schema.registry.url")' 2> /dev/null | grep -q true
+
+      then
+        log "replacing key.converter.schema.registry.url config for environment $environment"
+
+        echo "$json_content" > $tmp_dir/input.json
+        jq '.["key.converter.schema.registry.url"] = "$SCHEMA_REGISTRY_URL" | .["key.converter.basic.auth.user.info"] = "${file:/data:schema.registry.basic.auth.user.info}" | .["key.converter.basic.auth.credentials.source"] = "USER_INFO"' $tmp_dir/input.json > $tmp_dir/output.json
+
+        json_content=$(cat $tmp_dir/output.json)
+
+       # diff $tmp_dir/input.json $tmp_dir/output.json
+      fi
+
+      if echo "$json_content" | jq '. | has("value.converter.schema.registry.url")' 2> /dev/null | grep -q true
+
+      then
+        log "replacing value.converter.schema.registry.url config for environment $environment"
+
+        echo "$json_content" > $tmp_dir/input.json
+        jq '.["value.converter.schema.registry.url"] = "$SCHEMA_REGISTRY_URL" | .["value.converter.basic.auth.user.info"] = "${file:/data:schema.registry.basic.auth.user.info}" | .["value.converter.basic.auth.credentials.source"] = "USER_INFO"' $tmp_dir/input.json > $tmp_dir/output.json
+
+        json_content=$(cat $tmp_dir/output.json)
+      fi
+      return
+    ;;
+    *)
+      logerror "ERROR: component name not valid ! Should be one of zookeeper, broker, schema-registry or connect"
+      exit 1
+    ;;
+  esac
 }
 
 # src/lib/colors.sh
@@ -7892,6 +7962,14 @@ function bootstrap_ccloud_environment () {
         break
       fi
   done
+
+  if [ ! -z "$CLUSTER_NAME" ]
+  then
+    if [ "$(playground state get "ccloud.CLUSTER_NAME")" == "$CLUSTER_NAME" ]
+    then
+      suggest_use_previous_example_ccloud=0
+    fi
+  fi
 
   if [ $suggest_use_previous_example_ccloud -eq 1 ] && [ -z "$GITHUB_RUN_NUMBER" ]
   then
@@ -10445,6 +10523,7 @@ playground_run_command() {
 
   test_file="${args[--file]}"
   open="${args[--open]}"
+  environment="${args[--environment]}"
   tag="${args[--tag]}"
   connector_tag="${args[--connector-tag]}"
   connector_zip="${args[--connector-zip]}"
@@ -10485,18 +10564,18 @@ playground_run_command() {
 
   test_file_directory="$(dirname "${test_file}")"
   filename=$(basename -- "$test_file")
-  extension="${filename##*.}"
-
-  base1="${test_file_directory##*/}" # connect-cdc-oracle12-source
-  dir1="${test_file_directory%/*}" #connect
-  dir2="${dir1##*/}/$base1" # connect/connect-cdc-oracle12-source
-  final_dir=$(echo $dir2 | tr '/' '-') # connect-connect-cdc-oracle12-source
 
   flag_list=""
   if [[ -n "$tag" ]]
   then
     flag_list="--tag=$tag"
     export TAG=$tag
+  fi
+
+  if [[ -n "$environment" ]]
+  then
+    flag_list="$flag_list --environment=$environment"
+    export PLAYGROUND_ENVIRONMENT=$environment
   fi
 
   if [[ -n "$connector_tag" ]]
@@ -17190,7 +17269,7 @@ playground_connector_show_config_command() {
           echo "curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config""
       fi
       json_config=$(curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config")
-      echo "playground connector create-or-update --connector $connector --environment "${PLAYGROUND_ENVIRONMENT}" << EOF"
+      echo "playground connector create-or-update --connector $connector  << EOF"
       echo "$json_config" | jq -S . | sed 's/\$/\\$/g'
       echo "EOF"
   done
@@ -17478,6 +17557,17 @@ playground_connector_create_or_update_command() {
   validate=${args[--validate]}
   verbose="${args[--verbose]}"
 
+  environment=$(playground state get run.environment_before_switch)
+  if [ "$environment" = "" ]
+  then
+      environment=$(playground state get run.environment)
+  fi
+
+  if [ "$environment" = "" ]
+  then
+      environment="plaintext"
+  fi
+
   if [ "$json" = "-" ]
   then
       # stdin
@@ -17486,8 +17576,10 @@ playground_connector_create_or_update_command() {
       json_content=$json
   fi
 
-  json_file=/tmp/json
-  trap 'rm -f /tmp/json' EXIT
+  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
+  json_file=$tmp_dir/json
+
   echo "$json_content" > $json_file
 
   # JSON is invalid
@@ -17618,6 +17710,8 @@ playground_connector_create_or_update_command() {
   fi
 
   set +e
+
+  add_connector_config_based_on_envrionment "$environment" "$json_content"
   if [[ -n "$verbose" ]]
   then
       log "🐞 curl command used"
@@ -19591,6 +19685,21 @@ playground_run_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
+      --environment)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--environment']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--environment requires an argument: --environment ENVIRONMENT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --file | -f)
 
         # :flag.case_arg
@@ -19806,6 +19915,15 @@ playground_run_parse_requirements() {
     exit 1
   fi
 
+  # :command.default_assignments
+  [[ -n ${args['--environment']:-} ]] || args['--environment']="plaintext"
+
+  # :command.whitelist_filter
+  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|2way-ssl|kerberos|kraft-external-plaintext|kraft-plaintext|ldap-authorizer-sasl-plain|ldap-sasl-plain|mdc-kerberos|mdc-plaintext|mdc-sasl-plain|plaintext|rbac-sasl-plain|sasl-plain|sasl-scram|sasl-ssl|ssl_kerberos)$ ]]; then
+    printf "%s\n" "--environment must be one of: ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos" >&2
+    exit 1
+  fi
+
 }
 
 # :command.parse_requirements
@@ -19848,6 +19966,21 @@ playground_re_run_parse_requirements() {
         # :flag.case_no_arg
         args['--clear']=1
         shift
+        ;;
+
+      # :flag.case
+      --environment)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--environment']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--environment requires an argument: --environment ENVIRONMENT" >&2
+          exit 1
+        fi
         ;;
 
       # :flag.case
@@ -20031,6 +20164,15 @@ playground_re_run_parse_requirements() {
 
     esac
   done
+
+  # :command.default_assignments
+  [[ -n ${args['--environment']:-} ]] || args['--environment']="plaintext"
+
+  # :command.whitelist_filter
+  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|2way-ssl|kerberos|kraft-external-plaintext|kraft-plaintext|ldap-authorizer-sasl-plain|ldap-sasl-plain|mdc-kerberos|mdc-plaintext|mdc-sasl-plain|plaintext|rbac-sasl-plain|sasl-plain|sasl-scram|sasl-ssl|ssl_kerberos)$ ]]; then
+    printf "%s\n" "--environment must be one of: ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos" >&2
+    exit 1
+  fi
 
 }
 
@@ -27833,21 +27975,6 @@ playground_connector_create_or_update_parse_requirements() {
         ;;
 
       # :flag.case
-      --environment)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-
-          args['--environment']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--environment requires an argument: --environment ENVIRONMENT" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
       --connector | -c)
 
         # :flag.case_arg
@@ -27935,13 +28062,8 @@ playground_connector_create_or_update_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['json']:-} ]] || args['json']="-"
-  [[ -n ${args['--environment']:-} ]] || args['--environment']="plaintext"
 
   # :command.whitelist_filter
-  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|2way-ssl|kerberos|kraft-external-plaintext|kraft-plaintext|ldap-authorizer-sasl-plain|ldap-sasl-plain|mdc-kerberos|mdc-plaintext|mdc-sasl-plain|plaintext|rbac-sasl-plain|sasl-plain|sasl-scram|sasl-ssl|ssl_kerberos)$ ]]; then
-    printf "%s\n" "--environment must be one of: ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos" >&2
-    exit 1
-  fi
   if [[ ${args['--level']:-} ]] && [[ ! ${args['--level']:-} =~ ^(INFO|WARN|DEBUG|TRACE)$ ]]; then
     printf "%s\n" "--level must be one of: INFO, WARN, DEBUG, TRACE" >&2
     exit 1

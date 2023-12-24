@@ -17,7 +17,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -chmod 777  /"
 
 log "Creating HDFS Sink connector"
-playground connector create-or-update --connector hdfs-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector hdfs-sink  << EOF
 {
   "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
   "tasks.max":"1",
@@ -80,7 +80,7 @@ cat /tmp/result.log
 grep "value1" /tmp/result.log
 
 log "Creating HDFS Source connector"
-playground connector create-or-update --connector hdfs2-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector hdfs2-source  << EOF
 {
           "connector.class":"io.confluent.connect.hdfs2.Hdfs2SourceConnector",
           "tasks.max":"1",

@@ -51,7 +51,7 @@ GO
 EOF
 
 log "Creating Debezium SQL Server source connector"
-playground connector create-or-update --connector debezium-sqlserver-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector debezium-sqlserver-source  << EOF
 {
   "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
   "tasks.max": "1",
@@ -112,7 +112,7 @@ EOF
 
 
 log "Updating Debezium SQL Server source connector with new table customers2"
-playground connector create-or-update --connector debezium-sqlserver-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector debezium-sqlserver-source  << EOF
 {
   "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
   "tasks.max": "1",

@@ -3,7 +3,12 @@ level=${args[--level]}
 package=${args[--package]}
 validate=${args[--validate]}
 verbose="${args[--verbose]}"
-environment="${args[--environment]}"
+
+environment=$(playground state get run.environment_before_switch)
+if [ "$environment" = "" ]
+then
+    environment=$(playground state get run.environment)
+fi
 
 if [ "$environment" = "" ]
 then
@@ -18,8 +23,10 @@ else
     json_content=$json
 fi
 
-json_file=/tmp/json
-trap 'rm -f /tmp/json' EXIT
+tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+trap 'rm -rf $tmp_dir' EXIT
+json_file=$tmp_dir/json
+
 echo "$json_content" > $json_file
 
 # JSON is invalid

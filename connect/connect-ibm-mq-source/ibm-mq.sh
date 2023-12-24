@@ -36,7 +36,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 
 log "Creating IBM MQ source connector"
-playground connector create-or-update --connector ibm-mq-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector ibm-mq-source  << EOF
 {
      "connector.class": "io.confluent.connect.ibm.mq.IbmMQSourceConnector",
      "kafka.topic": "MyKafkaTopicName",

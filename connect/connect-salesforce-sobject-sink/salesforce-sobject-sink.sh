@@ -107,7 +107,7 @@ log "Create $PUSH_TOPICS_NAME"
 docker exec sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" -f \"/tmp/MyLeadPushTopics.apex\""
 
 log "Creating Salesforce PushTopics Source connector"
-playground connector create-or-update --connector salesforce-pushtopic-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector salesforce-pushtopic-source  << EOF
 {
      "connector.class": "io.confluent.salesforce.SalesforcePushTopicSourceConnector",
      "kafka.topic": "sfdc-pushtopic-leads",
@@ -629,7 +629,7 @@ playground topic consume --topic sfdc-pushtopic-leads --min-expected-messages 1 
 # }
 
 log "Creating Salesforce SObject Sink connector"
-playground connector create-or-update --connector salesforce-sobject-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector salesforce-sobject-sink  << EOF
 {
      "connector.class": "io.confluent.salesforce.SalesforceSObjectSinkConnector",
      "topics": "sfdc-pushtopic-leads",

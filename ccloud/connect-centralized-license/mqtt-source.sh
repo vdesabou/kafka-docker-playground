@@ -36,7 +36,7 @@ fi
 #############
 
 log "Creating MQTT Source connector"
-playground connector create-or-update --connector mqtt-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector mqtt-source  << EOF
 {
      "connector.class": "io.confluent.connect.mqtt.MqttSourceConnector",
      "tasks.max": "1",

@@ -63,7 +63,7 @@ done
 CLOUDWATCH_LOGS_URL="https://logs.$AWS_REGION.amazonaws.com"
 
 log "Creating AWS CloudWatch Logs Source connector"
-playground connector create-or-update --connector aws-cloudwatch-logs-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector aws-cloudwatch-logs-source  << EOF
 {
      "connector.class": "io.confluent.connect.aws.cloudwatch.AwsCloudWatchSourceConnector",
      "tasks.max": "1",

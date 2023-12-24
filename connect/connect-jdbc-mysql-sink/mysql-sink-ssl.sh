@@ -56,7 +56,7 @@ playground state set run.environment "plaintext"
 ../../scripts/wait-for-connect-and-controlcenter.sh
 
 log "Creating MySQL sink connector with server side Encrypted Connections (using <userssl> user which requires SSL)"
-playground connector create-or-update --connector mysql-ssl-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector mysql-ssl-sink  << EOF
 {
     "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
     "tasks.max": "1",

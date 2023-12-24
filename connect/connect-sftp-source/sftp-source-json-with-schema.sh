@@ -21,7 +21,7 @@ docker cp json-sftp-source.json sftp-server:/chroot/home/foo/upload/input/
 rm -f json-sftp-source.json
 
 log "Creating JSON (with schema) SFTP Source connector"
-playground connector create-or-update --connector sftp-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector sftp-source  << EOF
 {
      "tasks.max": "1",
      "connector.class": "io.confluent.connect.sftp.SftpJsonSourceConnector",

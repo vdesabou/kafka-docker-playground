@@ -20,7 +20,7 @@ EOF
 playground debug log-level set --package "org.apache.http" --level TRACE
 
 log "Creating http-sink connector"
-playground connector create-or-update --connector http-mtls-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector http-mtls-sink  << EOF
 {
      "topics": "http-messages",
      "tasks.max": "1",

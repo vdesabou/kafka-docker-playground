@@ -39,7 +39,7 @@ docker exec mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "
 sleep 5
 
 log "Creating MQTT Source connector"
-playground connector create-or-update --connector mqtt-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector mqtt-source  << EOF
 {
      "connector.class": "io.confluent.connect.mqtt.MqttSourceConnector",
      "tasks.max": "1",

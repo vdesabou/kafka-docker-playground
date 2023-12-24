@@ -83,7 +83,7 @@ playground topic produce -t test_table --nb-messages 3 << 'EOF'
 EOF
 
 log "Creating ServiceNow Sink connector"
-playground connector create-or-update --connector servicenow-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector servicenow-sink  << EOF
 {
      "connector.class": "io.confluent.connect.servicenow.ServiceNowSinkConnector",
      "topics": "test_table",

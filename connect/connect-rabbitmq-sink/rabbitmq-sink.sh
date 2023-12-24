@@ -20,7 +20,7 @@ playground topic produce -t rabbitmq-messages --nb-messages 10 << 'EOF'
 EOF
 
 log "Creating RabbitMQ Sink connector"
-playground connector create-or-update --connector rabbitmq-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector rabbitmq-sink  << EOF
 {
                "connector.class" : "io.confluent.connect.rabbitmq.sink.RabbitMQSinkConnector",
                "tasks.max" : "1",

@@ -80,7 +80,7 @@ playground topic produce -t stats --nb-messages 1 --forced-value '{"users": {"na
 EOF
 
 log "Creating GCP BigTable Sink connector"
-playground connector create-or-update --connector gcp-bigtable-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector gcp-bigtable-sink  << EOF
 {
     "connector.class": "io.confluent.connect.gcp.bigtable.BigtableSinkConnector",
     "tasks.max" : "1",

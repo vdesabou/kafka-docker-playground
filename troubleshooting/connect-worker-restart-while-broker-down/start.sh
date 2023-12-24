@@ -19,7 +19,7 @@ log "Sending messages to topic test-topic"
 seq 10 | docker exec -i broker1 kafka-console-producer --broker-list broker1:9092 --topic test-topic
 
 log "Creating Replicator connector"
-playground connector create-or-update --connector replicator --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector replicator  << EOF
 {
               "tasks.max": "10",
               "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",

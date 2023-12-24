@@ -47,7 +47,7 @@ playground topic produce -t products-avro --nb-messages 3 << 'EOF'
 }
 EOF
 
-playground connector create-or-update --connector replicate-onprem-to-cloud --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector replicate-onprem-to-cloud  << EOF
 {
      "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
      "src.consumer.group.id": "replicate-onprem-to-cloud",

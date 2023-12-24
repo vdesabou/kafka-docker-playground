@@ -50,7 +50,7 @@ java tibjmsMsgProducer -user admin -queue connector-quickstart m1 m2 m3 m4 m5'
 
 
 log "Creating TIBCO EMS source connector"
-playground connector create-or-update --connector tibco-ems-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector tibco-ems-source  << EOF
 {
                "connector.class": "io.confluent.connect.tibco.TibcoSourceConnector",
                     "tasks.max": "1",

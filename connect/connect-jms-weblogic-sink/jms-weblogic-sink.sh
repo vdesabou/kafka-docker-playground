@@ -63,7 +63,7 @@ This is my message
 EOF
 
 log "Creating JMS weblogic sink connector"
-playground connector create-or-update --connector weblogic-topic-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector weblogic-topic-sink  << EOF
 {
      "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
      "topics": "sink-messages",

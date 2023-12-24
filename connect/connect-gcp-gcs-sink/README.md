@@ -98,7 +98,7 @@ EOF
 The connector is created with:
 
 ```bash
-playground connector create-or-update --connector gcs-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector gcs-sink  << EOF
 {
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",

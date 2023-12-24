@@ -35,7 +35,7 @@ SELECT * FROM drivers;
 EOF
 
 log "Creating JDBC CockroachDB source connector"
-playground connector create-or-update --connector cockroachdb-source --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector cockroachdb-source  << EOF
 {
     "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
     "tasks.max": "1",

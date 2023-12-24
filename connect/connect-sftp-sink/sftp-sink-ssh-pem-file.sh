@@ -15,7 +15,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssh-pem-file.yml"
 
 log "Creating SFTP Sink connector"
-playground connector create-or-update --connector sftp-sink --environment "${PLAYGROUND_ENVIRONMENT}" << EOF
+playground connector create-or-update --connector sftp-sink  << EOF
 {
                "topics": "test_sftp_sink",
                "tasks.max": "1",
