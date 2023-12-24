@@ -8,7 +8,7 @@ create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "../../connect/connect
 
 # required to make utils.sh script being able to work, do not remove:
 # PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+# playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 if [ ! -z "$CONNECTOR_TAG" ]
 then

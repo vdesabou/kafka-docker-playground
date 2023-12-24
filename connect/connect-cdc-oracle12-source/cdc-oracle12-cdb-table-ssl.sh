@@ -8,7 +8,7 @@ create_or_get_oracle_image "linuxx64_12201_database.zip" "../../connect/connect-
 
 # required to make utils.sh script being able to work, do not remove:
 # PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.cdb-table.yml"
+# playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.cdb-table.yml"
 log "Starting up oracle container to get generated cert from oracle server wallet"
 docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.cdb-table-ssl.yml" up -d oracle
 
