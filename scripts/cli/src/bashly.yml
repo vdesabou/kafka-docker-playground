@@ -501,6 +501,11 @@ commands:
     - ssl_kerberos
 
     Note: when running an example with <playground run> or <playground run-ccloud>, it is already automatically done
+  catch_all:
+    label: arguments
+    help: |-
+      Arguments to use by example script
+    required: false
   flags:
     - *environment
     - long: --docker-compose-override-file

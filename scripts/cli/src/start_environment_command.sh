@@ -28,12 +28,6 @@ then
   export TAG=$tag
 fi
 
-flag_list=""
-if [[ -n "$tag" ]]
-then
-  flag_list="--tag=$tag"
-fi
-
 if [[ -n "$enable_ksqldb" ]]
 then
   flag_list="$flag_list --enable-ksqldb"
@@ -102,7 +96,7 @@ set -e
 cd $test_file_directory
 if [ -f $docker_compose_override_file ]
 then
-  $test_file "$docker_compose_override_file"
+  $test_file "$docker_compose_override_file" ${other_args[*]}
 else
-  $test_file
+  $test_file ${other_args[*]}
 fi

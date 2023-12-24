@@ -437,7 +437,7 @@ subcommands:
         - ssl_kerberos
         
         Note: when running an example with <playground run> or <playground run-ccloud>, it is already automatically done
-    usage: playground start-environment [OPTIONS]
+    usage: playground start-environment [OPTIONS] [ARGUMENTS...]
     options:
     - names:
       - --environment

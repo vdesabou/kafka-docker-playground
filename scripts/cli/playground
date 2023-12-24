@@ -1460,7 +1460,7 @@ playground_start_environment_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground start-environment [OPTIONS]\n"
+  printf "  playground start-environment [OPTIONS] [ARGUMENTS...]\n"
   printf "  playground start-environment --help | -h\n"
   echo
 
@@ -1534,6 +1534,13 @@ playground_start_environment_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    echo "  ARGUMENTS..."
+    printf "    Arguments to use by example script\n"
     echo
 
     # :command.usage_examples
@@ -10960,12 +10967,6 @@ playground_start_environment_command() {
     export TAG=$tag
   fi
 
-  flag_list=""
-  if [[ -n "$tag" ]]
-  then
-    flag_list="--tag=$tag"
-  fi
-
   if [[ -n "$enable_ksqldb" ]]
   then
     flag_list="$flag_list --enable-ksqldb"
@@ -11034,9 +11035,9 @@ playground_start_environment_command() {
   cd $test_file_directory
   if [ -f $docker_compose_override_file ]
   then
-    $test_file "$docker_compose_override_file"
+    $test_file "$docker_compose_override_file" ${other_args[*]}
   else
-    $test_file
+    $test_file ${other_args[*]}
   fi
 }
 
@@ -20376,16 +20377,22 @@ playground_start_environment_parse_requirements() {
         shift
         ;;
 
+      --)
+        shift
+        other_args+=("$@")
+        break
+        ;;
+
       -?*)
-        printf "invalid option: %s\n" "$key" >&2
-        exit 1
+        other_args+=("$1")
+        shift
         ;;
 
       *)
         # :command.parse_requirements_case
-        # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
+        # :command.parse_requirements_case_catch_all
+        other_args+=("$1")
+        shift
 
         ;;
 
