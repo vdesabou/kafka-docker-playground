@@ -32,25 +32,25 @@ log "Creating CSV SFTP Source connector"
 playground connector create-or-update --connector sftp-source  << EOF
 {
         "topics": "test_sftp_sink",
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",
-               "cleanup.policy":"NONE",
-               "behavior.on.error":"IGNORE",
-               "input.path": "/home/foo/upload/input",
-               "error.path": "/home/foo/upload/error",
-               "finished.path": "/home/foo/upload/finished",
-               "input.file.pattern": "csv-sftp-source.csv",
-               "sftp.username":"foo",
-               "sftp.password":"pass",
-               "sftp.host":"sftp-server",
-               "sftp.port":"22",
-               "kafka.topic": "sftp-testing-topic",
-               "csv.first.row.as.header": "true",
-               "schema.generation.enabled": "true",
-               "producer.override.sasl.mechanism": "PLAIN",
-               "producer.override.security.protocol": "SASL_PLAINTEXT",
-               "producer.override.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"sftp\" password=\"sftp-secret\";"
-          }
+        "tasks.max": "1",
+        "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",
+        "cleanup.policy":"NONE",
+        "behavior.on.error":"IGNORE",
+        "input.path": "/home/foo/upload/input",
+        "error.path": "/home/foo/upload/error",
+        "finished.path": "/home/foo/upload/finished",
+        "input.file.pattern": "csv-sftp-source.csv",
+        "sftp.username":"foo",
+        "sftp.password":"pass",
+        "sftp.host":"sftp-server",
+        "sftp.port":"22",
+        "kafka.topic": "sftp-testing-topic",
+        "csv.first.row.as.header": "true",
+        "schema.generation.enabled": "true",
+        "producer.override.sasl.mechanism": "PLAIN",
+        "producer.override.security.protocol": "SASL_PLAINTEXT",
+        "producer.override.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"sftp\" password=\"sftp-secret\";"
+}
 EOF
 
 sleep 5
