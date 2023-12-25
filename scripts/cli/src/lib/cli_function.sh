@@ -558,8 +558,7 @@ function add_connector_config_based_on_envrionment () {
       return
     ;;
     *)
-      logerror "ERROR: component name not valid ! Should be one of zookeeper, broker, schema-registry or connect"
-      exit 1
+      return
     ;;
   esac
 }
