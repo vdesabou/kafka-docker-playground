@@ -220,6 +220,9 @@ set +e
 # just run it in background in case it is called later, the 
 # file will be present and it will be much faster to display config
 playground connector show-config-parameters > /dev/null 2>&1 &
+# keep those lists up to date
+playground generate-connector-plugin-list > /dev/null 2>&1 &
+playground generate-kafka-region-list  > /dev/null 2>&1 &
 set -e
 if [ $ret -eq 0 ]
 then
