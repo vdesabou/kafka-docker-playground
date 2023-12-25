@@ -71,7 +71,7 @@ subcommands:
         - rbac-sasl-plain (not supported yet)
         - sasl-plain (not supported yet)
         - sasl-scram (not supported yet)
-        - sasl-ssl (not supported yet)
+        - sasl-ssl
         - ssl_kerberos (not supported yet)
         
         Default is plaintext.
@@ -79,7 +79,7 @@ subcommands:
         
         Default value: plaintext
         
-        Allowed values: ccloud, plaintext
+        Allowed values: ccloud, plaintext, sasl-ssl
         
     - names:
       - --file
@@ -262,7 +262,7 @@ subcommands:
         - rbac-sasl-plain (not supported yet)
         - sasl-plain (not supported yet)
         - sasl-scram (not supported yet)
-        - sasl-ssl (not supported yet)
+        - sasl-ssl
         - ssl_kerberos (not supported yet)
         
         Default is plaintext.
@@ -270,7 +270,7 @@ subcommands:
         
         Default value: plaintext
         
-        Allowed values: ccloud, plaintext
+        Allowed values: ccloud, plaintext, sasl-ssl
         
     - names:
       - --tag

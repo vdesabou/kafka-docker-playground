@@ -62,7 +62,7 @@
             "--environment"
           ],
           "argument": "plaintext",
-          "description": "🔐 The environment to start when running a connector example \n\n- plaintext\n- ccloud\n- 2way-ssl (not supported yet)\n- kerberos (not supported yet)\n- kraft-external-plaintext (not supported yet)\n- kraft-plaintext (not supported yet)\n- ldap-authorizer-sasl-plain (not supported yet)\n- ldap-sasl-plain (not supported yet)\n- rbac-sasl-plain (not supported yet)\n- sasl-plain (not supported yet)\n- sasl-scram (not supported yet)\n- sasl-ssl (not supported yet)\n- ssl_kerberos (not supported yet)\n\nDefault is plaintext.\nThis is only supported when example is a connector example\n\nDefault value: plaintext\n\nAllowed values: ccloud, plaintext\n"
+          "description": "🔐 The environment to start when running a connector example \n\n- plaintext\n- ccloud\n- 2way-ssl (not supported yet)\n- kerberos (not supported yet)\n- kraft-external-plaintext (not supported yet)\n- kraft-plaintext (not supported yet)\n- ldap-authorizer-sasl-plain (not supported yet)\n- ldap-sasl-plain (not supported yet)\n- rbac-sasl-plain (not supported yet)\n- sasl-plain (not supported yet)\n- sasl-scram (not supported yet)\n- sasl-ssl\n- ssl_kerberos (not supported yet)\n\nDefault is plaintext.\nThis is only supported when example is a connector example\n\nDefault value: plaintext\n\nAllowed values: ccloud, plaintext, sasl-ssl\n"
         },
         {
           "names": [
@@ -198,7 +198,7 @@
             "--environment"
           ],
           "argument": "plaintext",
-          "description": "🔐 The environment to start when running a connector example \n\n- plaintext\n- ccloud\n- 2way-ssl (not supported yet)\n- kerberos (not supported yet)\n- kraft-external-plaintext (not supported yet)\n- kraft-plaintext (not supported yet)\n- ldap-authorizer-sasl-plain (not supported yet)\n- ldap-sasl-plain (not supported yet)\n- rbac-sasl-plain (not supported yet)\n- sasl-plain (not supported yet)\n- sasl-scram (not supported yet)\n- sasl-ssl (not supported yet)\n- ssl_kerberos (not supported yet)\n\nDefault is plaintext.\nThis is only supported when example is a connector example\n\nDefault value: plaintext\n\nAllowed values: ccloud, plaintext\n"
+          "description": "🔐 The environment to start when running a connector example \n\n- plaintext\n- ccloud\n- 2way-ssl (not supported yet)\n- kerberos (not supported yet)\n- kraft-external-plaintext (not supported yet)\n- kraft-plaintext (not supported yet)\n- ldap-authorizer-sasl-plain (not supported yet)\n- ldap-sasl-plain (not supported yet)\n- rbac-sasl-plain (not supported yet)\n- sasl-plain (not supported yet)\n- sasl-scram (not supported yet)\n- sasl-ssl\n- ssl_kerberos (not supported yet)\n\nDefault is plaintext.\nThis is only supported when example is a connector example\n\nDefault value: plaintext\n\nAllowed values: ccloud, plaintext, sasl-ssl\n"
         },
         {
           "names": [

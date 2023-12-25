@@ -56,9 +56,9 @@ fi
 
 if [[ -n "$environment" ]]
 then
-  if [ "$dir1" != "connect" ] && [ "$environment" != "plaintext" ]
+  if [[ "$dir1" != *connect ]] && [ "$environment" != "plaintext" ]
   then
-    logerror "❌ using --environment is only supported for connector examples in connect folder"
+    logerror "❌ using --environment is only supported for connector examples in connect folder (folder is $dir1)"
     exit 1
   fi
 

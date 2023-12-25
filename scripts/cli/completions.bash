@@ -589,7 +589,7 @@ _playground_completions() {
       ;;
 
     're-run'*'--environment')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "ccloud plaintext")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "ccloud plaintext sasl-ssl")" -- "$cur" )
       ;;
 
     'connector search-jar'*)
@@ -753,7 +753,7 @@ _playground_completions() {
       ;;
 
     'run'*'--environment')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "ccloud plaintext")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "ccloud plaintext sasl-ssl")" -- "$cur" )
       ;;
 
     'connector unpause'*)
