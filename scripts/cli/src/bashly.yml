@@ -135,6 +135,7 @@ commands:
   private: true
   commands:
   - name: show
+    private: true
     help: Show the entire playground.ini file
 
   - name: get
@@ -178,6 +179,7 @@ commands:
   help: ⚙️ Configure CLI
   commands:
   - name: show
+    private: true
     help: Show the entire playground_config.ini file
 
   - name: get

@@ -737,9 +737,6 @@ playground_state_usage() {
   printf "  playground state [COMMAND] --help | -h\n"
   echo
   # :command.usage_commands
-  printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   Show the entire playground.ini file\n" "$(green "show")"
-  echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
@@ -934,7 +931,6 @@ playground_config_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   Show the entire playground_config.ini file\n" "$(green "show")             "
   printf "  %s   editor to use to open files\n" "$(green "editor")           "
   printf "  %s   📂 list of folders where to search for zip or jar\n" "$(green "folder_zip_or_jar")"
   echo

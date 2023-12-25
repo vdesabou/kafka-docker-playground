@@ -19,23 +19,12 @@ subcommands:
     usage: playground status
     options: []
     subcommands:
-  - name: show
-    description: | 
-        Show the entire playground.ini file
-    usage: playground state show
-    options: []
-    subcommands:
   - name: config
     description: | 
         ⚙️ Configure CLI
     usage: playground config COMMAND
     options: []
     subcommands:
-      - name: show
-        description: | 
-          Show the entire playground_config.ini file
-        usage: playground config show
-        options: []
       - name: editor
         description: | 
           editor to use to open files

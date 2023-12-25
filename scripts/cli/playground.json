@@ -20,24 +20,11 @@
       "subcommands": null
     },
     {
-      "name": "show",
-      "description": "Show the entire playground.ini file\n",
-      "usage": "playground state show",
-      "options": [],
-      "subcommands": null
-    },
-    {
       "name": "config",
       "description": "⚙️ Configure CLI\n",
       "usage": "playground config COMMAND",
       "options": [],
       "subcommands": [
-        {
-          "name": "show",
-          "description": "Show the entire playground_config.ini file\n",
-          "usage": "playground config show",
-          "options": []
-        },
         {
           "name": "editor",
           "description": "editor to use to open files\n",
