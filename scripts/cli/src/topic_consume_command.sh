@@ -36,16 +36,16 @@ then
     security="--property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks --property schema.registry.ssl.truststore.password=confluent --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks --property schema.registry.ssl.keystore.password=confluent --consumer.config /etc/kafka/secrets/client_without_interceptors.config"
 elif [[ "$environment" == "rbac-sasl-plain" ]]
 then
-    sr_url_cli="http://schema-registry:8081"
     security="--property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli --consumer.config /etc/kafka/secrets/client_without_interceptors.config"
 elif [[ "$environment" == "ldap-authorizer-sasl-plain" ]]
 then
-    sr_url_cli="http://schema-registry:8081"
     security="--group test-consumer-group --consumer.config /service/kafka/users/alice.properties"
+elif [[ "$environment" == "sasl-plain" ]] || [[ "$environment" == "sasl-scram" ]]
+then
+    security="--consumer.config /tmp/client.properties" 
 elif [[ "$environment" == "kerberos" ]]
 then
     container="client"
-    sr_url_cli="http://schema-registry:8081"
     security="--consumer.config /etc/kafka/consumer.properties"
 
     docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
