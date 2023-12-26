@@ -61,14 +61,14 @@ subcommands:
         - sasl-plain
         - sasl-scram
         - sasl-ssl
-        - ssl_kerberos (not supported yet)
+        - ssl_kerberos
         
         Default is plaintext.
         This is only supported when example is a connector example
         
         Default value: plaintext
         
-        Allowed values: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos
+        Allowed values: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos, ssl_kerberos
         
     - names:
       - --file
@@ -252,14 +252,14 @@ subcommands:
         - sasl-plain
         - sasl-scram
         - sasl-ssl
-        - ssl_kerberos (not supported yet)
+        - ssl_kerberos
         
         Default is plaintext.
         This is only supported when example is a connector example
         
         Default value: plaintext
         
-        Allowed values: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos
+        Allowed values: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos, ssl_kerberos
         
     - names:
       - --tag

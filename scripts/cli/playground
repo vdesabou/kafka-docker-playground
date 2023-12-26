@@ -1180,8 +1180,8 @@ playground_run_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--environment ENVIRONMENT")"
-    printf "    🔐 The environment to start when running a connector example \n    \n    - plaintext\n    - ccloud\n    - 2way-ssl\n    - kerberos\n    - kraft-external-plaintext\n    - kraft-plaintext\n    - ldap-authorizer-sasl-plain (not supported yet)\n    - ldap-sasl-plain (not supported yet)\n    - rbac-sasl-plain (not supported yet)\n    - sasl-plain\n    - sasl-scram\n    - sasl-ssl\n    - ssl_kerberos (not supported yet)\n    \n    Default is plaintext.\n    This is only supported when example is a connector example\n"
-    printf "    Allowed: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos\n"
+    printf "    🔐 The environment to start when running a connector example \n    \n    - plaintext\n    - ccloud\n    - 2way-ssl\n    - kerberos\n    - kraft-external-plaintext\n    - kraft-plaintext\n    - ldap-authorizer-sasl-plain (not supported yet)\n    - ldap-sasl-plain (not supported yet)\n    - rbac-sasl-plain (not supported yet)\n    - sasl-plain\n    - sasl-scram\n    - sasl-ssl\n    - ssl_kerberos\n    \n    Default is plaintext.\n    This is only supported when example is a connector example\n"
+    printf "    Allowed: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos, ssl_kerberos\n"
     printf "    Default: plaintext\n"
     echo
 
@@ -1315,8 +1315,8 @@ playground_re_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--environment ENVIRONMENT")"
-    printf "    🔐 The environment to start when running a connector example \n    \n    - plaintext\n    - ccloud\n    - 2way-ssl\n    - kerberos\n    - kraft-external-plaintext\n    - kraft-plaintext\n    - ldap-authorizer-sasl-plain (not supported yet)\n    - ldap-sasl-plain (not supported yet)\n    - rbac-sasl-plain (not supported yet)\n    - sasl-plain\n    - sasl-scram\n    - sasl-ssl\n    - ssl_kerberos (not supported yet)\n    \n    Default is plaintext.\n    This is only supported when example is a connector example\n"
-    printf "    Allowed: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos\n"
+    printf "    🔐 The environment to start when running a connector example \n    \n    - plaintext\n    - ccloud\n    - 2way-ssl\n    - kerberos\n    - kraft-external-plaintext\n    - kraft-plaintext\n    - ldap-authorizer-sasl-plain (not supported yet)\n    - ldap-sasl-plain (not supported yet)\n    - rbac-sasl-plain (not supported yet)\n    - sasl-plain\n    - sasl-scram\n    - sasl-ssl\n    - ssl_kerberos\n    \n    Default is plaintext.\n    This is only supported when example is a connector example\n"
+    printf "    Allowed: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos, ssl_kerberos\n"
     printf "    Default: plaintext\n"
     echo
 
@@ -6280,6 +6280,44 @@ function add_connector_config_based_on_envrionment () {
 
         echo "$json_content" > $tmp_dir/input.json
         jq ".[\"schema.history.internal.producer.sasl.jaas.config\"] = \"com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab=\"/var/lib/secret/kafka-connect.key\" principal=\"connect@TEST.CONFLUENT.IO\";\" | .[\"schema.history.internal.producer.security.protocol\"] = \"SASL_PLAINTEXT\" | .[\"schema.history.internal.producer.sasl.mechanism\"] = \"GSSAPI\" | .[\"schema.history.internal.producer.sasl.kerberos.service.name\"] = \"kafka\" | .[\"schema.history.internal.consumer.sasl.jaas.config\"] = \"com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab=\"/var/lib/secret/kafka-connect.key\" principal=\"connect@TEST.CONFLUENT.IO\";\" | .[\"schema.history.internal.consumer.security.protocol\"] = \"SASL_PLAINTEXT\" | .[\"schema.history.internal.consumer.sasl.mechanism\"] = \"GSSAPI\" | .[\"schema.history.internal.consumer.sasl.kerberos.service.name\"] = \"kafka\"" $tmp_dir/input.json > $tmp_dir/output.json
+        json_content=$(cat $tmp_dir/output.json)
+      fi
+
+      return
+    ;;
+
+    ssl_kerberos)
+
+      for prefix in {"confluent.topic","redo.log.consumer"}
+      do
+        if echo "$json_content" | jq ". | has(\"$prefix.bootstrap.servers\")" 2> /dev/null | grep -q true
+
+        then
+          log "replacing $prefix config for environment $environment"
+
+          echo "$json_content" > $tmp_dir/input.json
+          jq ".[\"$prefix.sasl.jaas.config\"] = \"com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab=\\\"/var/lib/secret/kafka-connect.key\\\" principal=\\\"connect@TEST.CONFLUENT.IO\\\";\" | .[\"$prefix.security.protocol\"] = \"SASL_SSL\" | .[\"$prefix.sasl.mechanism\"] = \"GSSAPI\" | .[\"$prefix.sasl.kerberos.service.name\"] = \"kafka\" | .[\"$prefix.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"$prefix.ssl.truststore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
+          json_content=$(cat $tmp_dir/output.json)
+        fi
+      done
+
+      if echo "$json_content" | jq ". | has(\"database.history.kafka.bootstrap.servers\")" 2> /dev/null | grep -q true
+
+      then
+        log "replacing database.history.kafka.bootstrap.servers config for environment $environment"
+
+        echo "$json_content" > $tmp_dir/input.json
+        jq ".[\"database.history.producer.sasl.jaas.config\"] = \"com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab=\"/var/lib/secret/kafka-connect.key\" principal=\"connect@TEST.CONFLUENT.IO\";\" | .[\"database.history.producer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.producer.sasl.mechanism\"] = \"GSSAPI\" | .[\"database.history.producer.sasl.kerberos.service.name\"] = \"kafka\" | .[\"database.history.producer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"database.history.producer.ssl.truststore.password\"] = \"confluent\" | .[\"database.history.consumer.sasl.jaas.config\"] = \"com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab=\"/var/lib/secret/kafka-connect.key\" principal=\"connect@TEST.CONFLUENT.IO\";\" | .[\"database.history.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.consumer.sasl.mechanism\"] = \"GSSAPI\" | .[\"database.history.consumer.sasl.kerberos.service.name\"] = \"kafka\" | .[\"database.history.consumer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"database.history.consumer.ssl.truststore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
+        json_content=$(cat $tmp_dir/output.json)
+      fi
+
+      if echo "$json_content" | jq ". | has(\"schema.history.internal.kafka.bootstrap.servers\")" 2> /dev/null | grep -q true
+
+      then
+        log "replacing schema.history.internal.kafka.bootstrap.servers config for environment $environment"
+
+        echo "$json_content" > $tmp_dir/input.json
+        jq ".[\"schema.history.internal.producer.sasl.jaas.config\"] = \"com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab=\"/var/lib/secret/kafka-connect.key\" principal=\"connect@TEST.CONFLUENT.IO\";\" | .[\"schema.history.internal.producer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.producer.sasl.mechanism\"] = \"GSSAPI\" | .[\"schema.history.internal.producer.sasl.kerberos.service.name\"] = \"kafka\" | .[\"schema.history.internal.producer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"schema.history.internal.producer.ssl.truststore.password\"] = \"confluent\" | .[\"schema.history.internal.consumer.sasl.jaas.config\"] = \"com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab=\"/var/lib/secret/kafka-connect.key\" principal=\"connect@TEST.CONFLUENT.IO\";\" | .[\"schema.history.internal.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.consumer.sasl.mechanism\"] = \"GSSAPI\" | .[\"schema.history.internal.consumer.sasl.kerberos.service.name\"] = \"kafka\" | .[\"schema.history.internal.consumer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"schema.history.internal.consumer.ssl.truststore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
         json_content=$(cat $tmp_dir/output.json)
       fi
 
@@ -14570,7 +14608,13 @@ playground_topic_consume_command() {
   container="connect"
   sr_url_cli="http://schema-registry:8081"
   security=""
-  if [[ "$environment" == *"ssl"* ]]
+  if [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
+  then
+      container="client"
+      security="--consumer.config /etc/kafka/consumer.properties"
+
+      docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
+  elif [[ "$environment" == *"ssl"* ]]
   then
       sr_url_cli="https://schema-registry:8081"
       security="--property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks --property schema.registry.ssl.truststore.password=confluent --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks --property schema.registry.ssl.keystore.password=confluent --consumer.config /etc/kafka/secrets/client_without_interceptors.config"
@@ -14584,12 +14628,6 @@ playground_topic_consume_command() {
   then
       security="--consumer.config /tmp/client.properties"
 
-  elif [[ "$environment" == "kerberos" ]]
-  then
-      container="client"
-      security="--consumer.config /etc/kafka/consumer.properties"
-
-      docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
   elif [[ "$environment" == "ccloud" ]]
   then
     if [ -f /tmp/delta_configs/env.delta ]
@@ -15116,29 +15154,25 @@ playground_topic_produce_command() {
   container="connect"
   sr_url_cli="http://schema-registry:8081"
   security=""
-  if [[ "$environment" == *"ssl"* ]]
+  if [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
+  then
+      container="client"
+      security="--producer.config /etc/kafka/producer.properties"
+
+      docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
+  elif [[ "$environment" == *"ssl"* ]]
   then
       sr_url_cli="https://schema-registry:8081"
       security="--property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks --property schema.registry.ssl.truststore.password=confluent --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks --property schema.registry.ssl.keystore.password=confluent --producer.config /etc/kafka/secrets/client_without_interceptors.config"
   elif [[ "$environment" == "rbac-sasl-plain" ]]
   then
-      sr_url_cli="http://schema-registry:8081"
       security="--property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli --producer.config /etc/kafka/secrets/client_without_interceptors.config"
   elif [[ "$environment" == "ldap-authorizer-sasl-plain" ]]
   then
-      sr_url_cli="http://schema-registry:8081"
       security="--producer.config /service/kafka/users/alice.properties"
   elif [[ "$environment" == "sasl-plain" ]] || [[ "$environment" == "sasl-scram" ]]
   then
-      sr_url_cli="http://schema-registry:8081"
       security="--producer.config /tmp/client.properties"
-  elif [[ "$environment" == "kerberos" ]]
-  then
-      container="client"
-      sr_url_cli="http://schema-registry:8081"
-      security="--producer.config /etc/kafka/producer.properties"
-
-      docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
   elif [[ "$environment" == "ccloud" ]]
   then
     if [ -f /tmp/delta_configs/env.delta ]
@@ -20174,8 +20208,8 @@ playground_run_parse_requirements() {
   [[ -n ${args['--environment']:-} ]] || args['--environment']="plaintext"
 
   # :command.whitelist_filter
-  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|plaintext|sasl-ssl|sasl-plain|2way-ssl|sasl-scram|kraft-external-plaintext|kraft-plaintext|kerberos)$ ]]; then
-    printf "%s\n" "--environment must be one of: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos" >&2
+  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|plaintext|sasl-ssl|sasl-plain|2way-ssl|sasl-scram|kraft-external-plaintext|kraft-plaintext|kerberos|ssl_kerberos)$ ]]; then
+    printf "%s\n" "--environment must be one of: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos, ssl_kerberos" >&2
     exit 1
   fi
 
@@ -20424,8 +20458,8 @@ playground_re_run_parse_requirements() {
   [[ -n ${args['--environment']:-} ]] || args['--environment']="plaintext"
 
   # :command.whitelist_filter
-  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|plaintext|sasl-ssl|sasl-plain|2way-ssl|sasl-scram|kraft-external-plaintext|kraft-plaintext|kerberos)$ ]]; then
-    printf "%s\n" "--environment must be one of: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos" >&2
+  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|plaintext|sasl-ssl|sasl-plain|2way-ssl|sasl-scram|kraft-external-plaintext|kraft-plaintext|kerberos|ssl_kerberos)$ ]]; then
+    printf "%s\n" "--environment must be one of: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos, ssl_kerberos" >&2
     exit 1
   fi
 

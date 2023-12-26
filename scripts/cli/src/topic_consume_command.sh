@@ -30,7 +30,13 @@ bootstrap_server="broker:9092"
 container="connect"
 sr_url_cli="http://schema-registry:8081"
 security=""
-if [[ "$environment" == *"ssl"* ]]
+if [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
+then
+    container="client"
+    security="--consumer.config /etc/kafka/consumer.properties"
+
+    docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
+elif [[ "$environment" == *"ssl"* ]]
 then
     sr_url_cli="https://schema-registry:8081"
     security="--property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks --property schema.registry.ssl.truststore.password=confluent --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks --property schema.registry.ssl.keystore.password=confluent --consumer.config /etc/kafka/secrets/client_without_interceptors.config"
@@ -43,12 +49,6 @@ then
 elif [[ "$environment" == "sasl-plain" ]] || [[ "$environment" == "sasl-scram" ]]
 then
     security="--consumer.config /tmp/client.properties" 
-elif [[ "$environment" == "kerberos" ]]
-then
-    container="client"
-    security="--consumer.config /etc/kafka/consumer.properties"
-
-    docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
 elif [[ "$environment" == "ccloud" ]]
 then
   if [ -f /tmp/delta_configs/env.delta ]
