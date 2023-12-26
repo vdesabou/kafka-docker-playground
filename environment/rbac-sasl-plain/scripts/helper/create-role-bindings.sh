@@ -124,40 +124,38 @@ do
 done
 
 ################################### Connectors ###################################
-echo "Creating role bindings for GCP GCS sink connector"
+echo "Creating role bindings for any connector"
 
 confluent iam rolebinding create \
     --principal $C3_ADMIN \
     --role ResourceOwner \
-    --resource Connector:my-rbac-connector \
+    --resource Connector:* \
     --kafka-cluster-id $KAFKA_CLUSTER_ID \
     --connect-cluster-id $CONNECT
 
 confluent iam rolebinding create \
     --principal $CONNECTOR_SUBMITTER \
     --role ResourceOwner \
-    --resource Connector:my-rbac-connector \
+    --resource Connector:* \
     --kafka-cluster-id $KAFKA_CLUSTER_ID \
     --connect-cluster-id $CONNECT
 
 confluent iam rolebinding create \
     --principal $CONNECTOR_PRINCIPAL \
     --role ResourceOwner \
-    --resource Group:connect-my-rbac-connector \
+    --resource Group:connect-* \
     --kafka-cluster-id $KAFKA_CLUSTER_ID \
 
 confluent iam rolebinding create \
     --principal $CONNECTOR_PRINCIPAL \
     --role ResourceOwner \
-    --resource Topic:rbac \
-    --prefix \
+    --resource Topic:* \
     --kafka-cluster-id $KAFKA_CLUSTER_ID
 
 confluent iam rolebinding create \
     --principal $CONNECTOR_PRINCIPAL \
     --role ResourceOwner \
-    --resource Subject:rbac \
-    --prefix \
+    --resource Subject:* \
     --kafka-cluster-id $KAFKA_CLUSTER_ID \
     --schema-registry-cluster-id $SR
 
