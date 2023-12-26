@@ -2,6 +2,5 @@
 version: '3.5'
 services:
   connect:
-    depends_on:
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-datadog-metrics
