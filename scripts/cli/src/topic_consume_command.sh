@@ -46,7 +46,7 @@ then
 elif [[ "$environment" == "ldap-authorizer-sasl-plain" ]]
 then
     security="--group test-consumer-group --consumer.config /service/kafka/users/client.properties"
-elif [[ "$environment" == "sasl-plain" ]] || [[ "$environment" == "sasl-scram" ]]
+elif [[ "$environment" == "sasl-plain" ]] || [[ "$environment" == "sasl-scram" ]] || [[ "$environment" == "ldap-sasl-plain" ]]
 then
     security="--consumer.config /tmp/client.properties" 
 elif [[ "$environment" == "ccloud" ]]

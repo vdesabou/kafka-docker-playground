@@ -84,7 +84,7 @@ then
 elif [[ "$environment" == "ldap-authorizer-sasl-plain" ]]
 then
     security="--producer.config /service/kafka/users/client.properties"
-elif [[ "$environment" == "sasl-plain" ]] || [[ "$environment" == "sasl-scram" ]]
+elif [[ "$environment" == "sasl-plain" ]] || [[ "$environment" == "sasl-scram" ]] || [[ "$environment" == "ldap-sasl-plain" ]]
 then
     security="--producer.config /tmp/client.properties"
 elif [[ "$environment" == "ccloud" ]]
