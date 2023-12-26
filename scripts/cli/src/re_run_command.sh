@@ -110,7 +110,6 @@ then
   fi
 
   log "🚀 Running example again with new flags"
-  log "⛳ Flags used are $flag_list"
   playground run -f $test_file $flag_list ${other_args[*]}
 else
   if [[ -n "$clear" ]]
