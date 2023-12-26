@@ -58,7 +58,7 @@ subcommands:
         - ldap-authorizer-sasl-plain (not supported yet)
         - ldap-sasl-plain (not supported yet)
         - rbac-sasl-plain (not supported yet)
-        - sasl-plain (not supported yet)
+        - sasl-plain
         - sasl-scram (not supported yet)
         - sasl-ssl
         - ssl_kerberos (not supported yet)
@@ -68,7 +68,7 @@ subcommands:
         
         Default value: plaintext
         
-        Allowed values: ccloud, plaintext, sasl-ssl
+        Allowed values: ccloud, plaintext, sasl-ssl, sasl-plain
         
     - names:
       - --file
@@ -249,7 +249,7 @@ subcommands:
         - ldap-authorizer-sasl-plain (not supported yet)
         - ldap-sasl-plain (not supported yet)
         - rbac-sasl-plain (not supported yet)
-        - sasl-plain (not supported yet)
+        - sasl-plain
         - sasl-scram (not supported yet)
         - sasl-ssl
         - ssl_kerberos (not supported yet)
@@ -259,7 +259,7 @@ subcommands:
         
         Default value: plaintext
         
-        Allowed values: ccloud, plaintext, sasl-ssl
+        Allowed values: ccloud, plaintext, sasl-ssl, sasl-plain
         
     - names:
       - --tag
