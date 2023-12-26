@@ -1180,8 +1180,8 @@ playground_run_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--environment ENVIRONMENT")"
-    printf "    🔐 The environment to start when running a connector example \n    \n    - plaintext\n    - ccloud\n    - 2way-ssl (not supported yet)\n    - kerberos (not supported yet)\n    - kraft-external-plaintext (not supported yet)\n    - kraft-plaintext (not supported yet)\n    - ldap-authorizer-sasl-plain (not supported yet)\n    - ldap-sasl-plain (not supported yet)\n    - rbac-sasl-plain (not supported yet)\n    - sasl-plain\n    - sasl-scram (not supported yet)\n    - sasl-ssl\n    - ssl_kerberos (not supported yet)\n    \n    Default is plaintext.\n    This is only supported when example is a connector example\n"
-    printf "    Allowed: ccloud, plaintext, sasl-ssl, sasl-plain\n"
+    printf "    🔐 The environment to start when running a connector example \n    \n    - plaintext\n    - ccloud\n    - 2way-ssl\n    - kerberos (not supported yet)\n    - kraft-external-plaintext (not supported yet)\n    - kraft-plaintext (not supported yet)\n    - ldap-authorizer-sasl-plain (not supported yet)\n    - ldap-sasl-plain (not supported yet)\n    - rbac-sasl-plain (not supported yet)\n    - sasl-plain\n    - sasl-scram (not supported yet)\n    - sasl-ssl\n    - ssl_kerberos (not supported yet)\n    \n    Default is plaintext.\n    This is only supported when example is a connector example\n"
+    printf "    Allowed: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl\n"
     printf "    Default: plaintext\n"
     echo
 
@@ -1315,8 +1315,8 @@ playground_re_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--environment ENVIRONMENT")"
-    printf "    🔐 The environment to start when running a connector example \n    \n    - plaintext\n    - ccloud\n    - 2way-ssl (not supported yet)\n    - kerberos (not supported yet)\n    - kraft-external-plaintext (not supported yet)\n    - kraft-plaintext (not supported yet)\n    - ldap-authorizer-sasl-plain (not supported yet)\n    - ldap-sasl-plain (not supported yet)\n    - rbac-sasl-plain (not supported yet)\n    - sasl-plain\n    - sasl-scram (not supported yet)\n    - sasl-ssl\n    - ssl_kerberos (not supported yet)\n    \n    Default is plaintext.\n    This is only supported when example is a connector example\n"
-    printf "    Allowed: ccloud, plaintext, sasl-ssl, sasl-plain\n"
+    printf "    🔐 The environment to start when running a connector example \n    \n    - plaintext\n    - ccloud\n    - 2way-ssl\n    - kerberos (not supported yet)\n    - kraft-external-plaintext (not supported yet)\n    - kraft-plaintext (not supported yet)\n    - ldap-authorizer-sasl-plain (not supported yet)\n    - ldap-sasl-plain (not supported yet)\n    - rbac-sasl-plain (not supported yet)\n    - sasl-plain\n    - sasl-scram (not supported yet)\n    - sasl-ssl\n    - ssl_kerberos (not supported yet)\n    \n    Default is plaintext.\n    This is only supported when example is a connector example\n"
+    printf "    Allowed: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl\n"
     printf "    Default: plaintext\n"
     echo
 
@@ -6131,7 +6131,7 @@ function add_connector_config_based_on_envrionment () {
           log "replacing $prefix.converter.schema.registry.url config for environment $environment"
 
           echo "$json_content" > $tmp_dir/input.json
-          jq ".[\"$prefix.converter.schema.registry.url\"] = \"$SCHEMA_REGISTRY_URL\" | .[\"$prefix.converter.basic.auth.user.info\"] = \"\${file:/data:schema.registry.basic.auth.user.info}\" | .[\"$prefix.converter.basic.auth.credentials.source\"] = \"USER_INFO\" | .[\"$prefix.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"$prefix.ssl.truststore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
+          jq ".[\"$prefix.converter.schema.registry.url\"] = \"https://schema-registry:8081\" | .[\"$prefix.converter.schema.registry.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"$prefix.converter.schema.registry.ssl.truststore.password\"] = \"confluent\" | .[\"$prefix.converter.schema.registry.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"$prefix.converter.schema.registry.ssl.keystore.password\"] = \"confluent\" | .[\"$prefix.converter.schema.registry.ssl.key.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
           json_content=$(cat $tmp_dir/output.json)
         fi
       done
@@ -10879,6 +10879,7 @@ playground_run_command() {
 playground_re_run_command() {
   # src/re_run_command.sh
   tag="${args[--tag]}"
+  environment="${args[--environment]}"
   connector_tag="${args[--connector-tag]}"
   connector_zip="${args[--connector-zip]}"
   connector_jar="${args[--connector-jar]}"
@@ -10898,6 +10899,11 @@ playground_re_run_command() {
   if [[ -n "$tag" ]]
   then
     flag_list="--tag=$tag"
+  fi
+
+  if [[ -n "$environment" ]]
+  then
+    flag_list="$flag_list --environment=$environment"
   fi
 
   if [[ -n "$connector_tag" ]]
@@ -20040,8 +20046,8 @@ playground_run_parse_requirements() {
   [[ -n ${args['--environment']:-} ]] || args['--environment']="plaintext"
 
   # :command.whitelist_filter
-  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|plaintext|sasl-ssl|sasl-plain)$ ]]; then
-    printf "%s\n" "--environment must be one of: ccloud, plaintext, sasl-ssl, sasl-plain" >&2
+  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|plaintext|sasl-ssl|sasl-plain|2way-ssl)$ ]]; then
+    printf "%s\n" "--environment must be one of: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl" >&2
     exit 1
   fi
 
@@ -20290,8 +20296,8 @@ playground_re_run_parse_requirements() {
   [[ -n ${args['--environment']:-} ]] || args['--environment']="plaintext"
 
   # :command.whitelist_filter
-  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|plaintext|sasl-ssl|sasl-plain)$ ]]; then
-    printf "%s\n" "--environment must be one of: ccloud, plaintext, sasl-ssl, sasl-plain" >&2
+  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|plaintext|sasl-ssl|sasl-plain|2way-ssl)$ ]]; then
+    printf "%s\n" "--environment must be one of: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl" >&2
     exit 1
   fi
 
