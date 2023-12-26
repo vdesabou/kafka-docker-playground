@@ -1180,8 +1180,8 @@ playground_run_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--environment ENVIRONMENT")"
-    printf "    🔐 The environment to start when running a connector example \n    \n    - plaintext\n    - ccloud\n    - 2way-ssl\n    - kerberos (not supported yet)\n    - kraft-external-plaintext\n    - kraft-plaintext\n    - ldap-authorizer-sasl-plain (not supported yet)\n    - ldap-sasl-plain (not supported yet)\n    - rbac-sasl-plain (not supported yet)\n    - sasl-plain\n    - sasl-scram\n    - sasl-ssl\n    - ssl_kerberos (not supported yet)\n    \n    Default is plaintext.\n    This is only supported when example is a connector example\n"
-    printf "    Allowed: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext\n"
+    printf "    🔐 The environment to start when running a connector example \n    \n    - plaintext\n    - ccloud\n    - 2way-ssl\n    - kerberos\n    - kraft-external-plaintext\n    - kraft-plaintext\n    - ldap-authorizer-sasl-plain (not supported yet)\n    - ldap-sasl-plain (not supported yet)\n    - rbac-sasl-plain (not supported yet)\n    - sasl-plain\n    - sasl-scram\n    - sasl-ssl\n    - ssl_kerberos (not supported yet)\n    \n    Default is plaintext.\n    This is only supported when example is a connector example\n"
+    printf "    Allowed: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos\n"
     printf "    Default: plaintext\n"
     echo
 
@@ -1315,8 +1315,8 @@ playground_re_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--environment ENVIRONMENT")"
-    printf "    🔐 The environment to start when running a connector example \n    \n    - plaintext\n    - ccloud\n    - 2way-ssl\n    - kerberos (not supported yet)\n    - kraft-external-plaintext\n    - kraft-plaintext\n    - ldap-authorizer-sasl-plain (not supported yet)\n    - ldap-sasl-plain (not supported yet)\n    - rbac-sasl-plain (not supported yet)\n    - sasl-plain\n    - sasl-scram\n    - sasl-ssl\n    - ssl_kerberos (not supported yet)\n    \n    Default is plaintext.\n    This is only supported when example is a connector example\n"
-    printf "    Allowed: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext\n"
+    printf "    🔐 The environment to start when running a connector example \n    \n    - plaintext\n    - ccloud\n    - 2way-ssl\n    - kerberos\n    - kraft-external-plaintext\n    - kraft-plaintext\n    - ldap-authorizer-sasl-plain (not supported yet)\n    - ldap-sasl-plain (not supported yet)\n    - rbac-sasl-plain (not supported yet)\n    - sasl-plain\n    - sasl-scram\n    - sasl-ssl\n    - ssl_kerberos (not supported yet)\n    \n    Default is plaintext.\n    This is only supported when example is a connector example\n"
+    printf "    Allowed: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos\n"
     printf "    Default: plaintext\n"
     echo
 
@@ -6242,6 +6242,44 @@ function add_connector_config_based_on_envrionment () {
 
         echo "$json_content" > $tmp_dir/input.json
         jq ".[\"schema.history.internal.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.scram.ScramLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"schema.history.internal.producer.security.protocol\"] = \"SASL_PLAINTEXT\" | .[\"schema.history.internal.producer.sasl.mechanism\"] = \"SCRAM-SHA-256\" | .[\"schema.history.internal.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.scram.ScramLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"schema.history.internal.consumer.security.protocol\"] = \"SASL_PLAINTEXT\" | .[\"schema.history.internal.consumer.sasl.mechanism\"] = \"SCRAM-SHA-256\"" $tmp_dir/input.json > $tmp_dir/output.json
+        json_content=$(cat $tmp_dir/output.json)
+      fi
+
+      return
+    ;;
+
+    kerberos)
+
+      for prefix in {"confluent.topic","redo.log.consumer"}
+      do
+        if echo "$json_content" | jq ". | has(\"$prefix.bootstrap.servers\")" 2> /dev/null | grep -q true
+
+        then
+          log "replacing $prefix config for environment $environment"
+
+          echo "$json_content" > $tmp_dir/input.json
+          jq ".[\"$prefix.sasl.jaas.config\"] = \"com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab=\\\"/var/lib/secret/kafka-connect.key\\\" principal=\\\"connect@TEST.CONFLUENT.IO\\\";\" | .[\"$prefix.security.protocol\"] = \"SASL_PLAINTEXT\" | .[\"$prefix.sasl.mechanism\"] = \"GSSAPI\" | .[\"$prefix.sasl.kerberos.service.name\"] = \"kafka\"" $tmp_dir/input.json > $tmp_dir/output.json
+          json_content=$(cat $tmp_dir/output.json)
+        fi
+      done
+
+      if echo "$json_content" | jq ". | has(\"database.history.kafka.bootstrap.servers\")" 2> /dev/null | grep -q true
+
+      then
+        log "replacing database.history.kafka.bootstrap.servers config for environment $environment"
+
+        echo "$json_content" > $tmp_dir/input.json
+        jq ".[\"database.history.producer.sasl.jaas.config\"] = \"com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab=\"/var/lib/secret/kafka-connect.key\" principal=\"connect@TEST.CONFLUENT.IO\";\" | .[\"database.history.producer.security.protocol\"] = \"SASL_PLAINTEXT\" | .[\"database.history.producer.sasl.mechanism\"] = \"GSSAPI\" | .[\"database.history.producer.sasl.kerberos.service.name\"] = \"kafka\" | .[\"database.history.consumer.sasl.jaas.config\"] = \"com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab=\"/var/lib/secret/kafka-connect.key\" principal=\"connect@TEST.CONFLUENT.IO\";\" | .[\"database.history.consumer.security.protocol\"] = \"SASL_PLAINTEXT\" | .[\"database.history.consumer.sasl.mechanism\"] = \"GSSAPI\" | .[\"database.history.consumer.sasl.kerberos.service.name\"] = \"kafka\"" $tmp_dir/input.json > $tmp_dir/output.json
+        json_content=$(cat $tmp_dir/output.json)
+      fi
+
+      if echo "$json_content" | jq ". | has(\"schema.history.internal.kafka.bootstrap.servers\")" 2> /dev/null | grep -q true
+
+      then
+        log "replacing schema.history.internal.kafka.bootstrap.servers config for environment $environment"
+
+        echo "$json_content" > $tmp_dir/input.json
+        jq ".[\"schema.history.internal.producer.sasl.jaas.config\"] = \"com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab=\"/var/lib/secret/kafka-connect.key\" principal=\"connect@TEST.CONFLUENT.IO\";\" | .[\"schema.history.internal.producer.security.protocol\"] = \"SASL_PLAINTEXT\" | .[\"schema.history.internal.producer.sasl.mechanism\"] = \"GSSAPI\" | .[\"schema.history.internal.producer.sasl.kerberos.service.name\"] = \"kafka\" | .[\"schema.history.internal.consumer.sasl.jaas.config\"] = \"com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab=\"/var/lib/secret/kafka-connect.key\" principal=\"connect@TEST.CONFLUENT.IO\";\" | .[\"schema.history.internal.consumer.security.protocol\"] = \"SASL_PLAINTEXT\" | .[\"schema.history.internal.consumer.sasl.mechanism\"] = \"GSSAPI\" | .[\"schema.history.internal.consumer.sasl.kerberos.service.name\"] = \"kafka\"" $tmp_dir/input.json > $tmp_dir/output.json
         json_content=$(cat $tmp_dir/output.json)
       fi
 
@@ -20136,8 +20174,8 @@ playground_run_parse_requirements() {
   [[ -n ${args['--environment']:-} ]] || args['--environment']="plaintext"
 
   # :command.whitelist_filter
-  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|plaintext|sasl-ssl|sasl-plain|2way-ssl|sasl-scram|kraft-external-plaintext|kraft-plaintext)$ ]]; then
-    printf "%s\n" "--environment must be one of: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext" >&2
+  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|plaintext|sasl-ssl|sasl-plain|2way-ssl|sasl-scram|kraft-external-plaintext|kraft-plaintext|kerberos)$ ]]; then
+    printf "%s\n" "--environment must be one of: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos" >&2
     exit 1
   fi
 
@@ -20386,8 +20424,8 @@ playground_re_run_parse_requirements() {
   [[ -n ${args['--environment']:-} ]] || args['--environment']="plaintext"
 
   # :command.whitelist_filter
-  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|plaintext|sasl-ssl|sasl-plain|2way-ssl|sasl-scram|kraft-external-plaintext|kraft-plaintext)$ ]]; then
-    printf "%s\n" "--environment must be one of: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext" >&2
+  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|plaintext|sasl-ssl|sasl-plain|2way-ssl|sasl-scram|kraft-external-plaintext|kraft-plaintext|kerberos)$ ]]; then
+    printf "%s\n" "--environment must be one of: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos" >&2
     exit 1
   fi
 

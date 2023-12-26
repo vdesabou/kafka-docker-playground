@@ -52,7 +52,7 @@ subcommands:
         - plaintext
         - ccloud
         - 2way-ssl
-        - kerberos (not supported yet)
+        - kerberos
         - kraft-external-plaintext
         - kraft-plaintext
         - ldap-authorizer-sasl-plain (not supported yet)
@@ -68,7 +68,7 @@ subcommands:
         
         Default value: plaintext
         
-        Allowed values: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext
+        Allowed values: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos
         
     - names:
       - --file
@@ -243,7 +243,7 @@ subcommands:
         - plaintext
         - ccloud
         - 2way-ssl
-        - kerberos (not supported yet)
+        - kerberos
         - kraft-external-plaintext
         - kraft-plaintext
         - ldap-authorizer-sasl-plain (not supported yet)
@@ -259,7 +259,7 @@ subcommands:
         
         Default value: plaintext
         
-        Allowed values: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext
+        Allowed values: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos
         
     - names:
       - --tag
