@@ -8,6 +8,14 @@ then
     export TAG=$tag
 fi
 
+environment="$3"
+flag_environment=""
+if [ "$environment" != "" ]
+then
+    flag_environment="--environment $environment"
+    export PLAYGROUND_ENVIRONMENT=$environment
+fi
+
 IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../scripts/utils.sh
@@ -189,7 +197,7 @@ do
         log "🚀 Executing $script in dir $dir"
         log "####################################################"
         SECONDS=0
-        retry playground run -f "$PWD/$script" $flag_tag
+        retry playground run -f "$PWD/$script" $flag_tag $flag_environment
         ret=$?
         ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
         let ELAPSED_TOTAL+=$SECONDS
