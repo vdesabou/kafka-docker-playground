@@ -71,6 +71,7 @@ then
     log "✅ --validate is set"
     set +e
     connector_class=$(echo "$json_content" | jq -r '."connector.class"')
+    add_connector_config_based_on_envrionment "$environment" "$json_content"
     # add mandatory name field
     new_json_content=$(echo $json_content | jq ". + {\"name\": \"$connector\"}")
     if [[ -n "$verbose" ]]
