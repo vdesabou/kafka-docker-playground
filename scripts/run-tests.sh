@@ -165,6 +165,11 @@ do
                 log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 14 days ago...re-running. Test url: $html_url"
                 log "####################################################"
                 aws s3 rm $s3_file --region us-east-1
+            elif [ "$environment" != "plaintext" ]
+            then
+                log "####################################################"
+                log "🔐 Test with environment not plaintext ($environment)...re-running. Test url: $html_url"
+                log "####################################################"
             elif [ "$status" = "failure" ]
             then
                 log "####################################################"
