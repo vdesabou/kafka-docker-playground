@@ -703,10 +703,10 @@ commands:
     
     It will bootstrap ccloud environment based on your previously ran ccloud example.
 
-- name: switch-onprem
+- name: switch-back
   group: Run
   help: |-
-    💺  Switch back from ccloud environment to onprem environment. 
+    💺  Switch back from previous environment before switch-ccloud was called.
 
 - name: update-version
   group: Run

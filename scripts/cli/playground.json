@@ -526,9 +526,9 @@
       "subcommands": null
     },
     {
-      "name": "switch-onprem",
-      "description": "💺  Switch back from ccloud environment to onprem environment. \n",
-      "usage": "playground switch-onprem",
+      "name": "switch-back",
+      "description": "💺  Switch back from previous environment before switch-ccloud was called.\n",
+      "usage": "playground switch-back",
       "options": [],
       "subcommands": null
     },

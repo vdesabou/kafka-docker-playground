@@ -746,10 +746,10 @@ subcommands:
     usage: playground switch-ccloud
     options: []
     subcommands:
-  - name: switch-onprem
+  - name: switch-back
     description: | 
-        💺  Switch back from ccloud environment to onprem environment. 
-    usage: playground switch-onprem
+        💺  Switch back from previous environment before switch-ccloud was called.
+    usage: playground switch-back
     options: []
     subcommands:
   - name: update-version

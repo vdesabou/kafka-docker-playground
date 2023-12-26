@@ -1,11 +1,11 @@
-log "💺 Switch back to onprem environment"
-
 environment_before_switch=$(playground state get run.environment_before_switch)
 if [ "$environment_before_switch" == "" ]
 then
     logerror "switch-ccloud was probably not executed before"
     exit 1
 fi
+
+log "💺 Switch back to previous environment ($environment_before_switch)"
 
 playground state set run.environment "$environment_before_switch"
 playground state del run.environment_before_switch
