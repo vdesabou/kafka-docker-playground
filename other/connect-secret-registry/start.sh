@@ -28,25 +28,7 @@ EOF
 log "Checking messages from topic rbac_topic"
 playground topic consume --topic rbac_topic --min-expected-messages 1 --timeout 60
 
-log "Registering secret username with superUser"
-curl -X POST \
-     -u superUser:superUser \
-     -H "Content-Type: application/json" \
-     --data '{
-               "secret": "connectorSA"
-          }' \
-     http://localhost:8083/secret/paths/my-rbac-connector/keys/username/versions | jq .
-
-log "Registering secret password with superUser"
-curl -X POST \
-     -u superUser:superUser \
-     -H "Content-Type: application/json" \
-     --data '{
-               "secret": "connectorSA"
-          }' \
-     http://localhost:8083/secret/paths/my-rbac-connector/keys/password/versions | jq .
-
-log "Registering secret my-smt-password with superUser"
+log "Registering secret my-smt-password with this-is-my-secret-value"
 curl -X POST \
      -u superUser:superUser \
      -H "Content-Type: application/json" \
@@ -58,20 +40,17 @@ curl -X POST \
 log "Creating FileStream Sink connector"
 playground connector create-or-update --connector my-rbac-connector  << EOF
 {
-               "tasks.max": "1",
-               "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
-               "topics": "rbac_topic",
-               "file": "/tmp/output.json",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "value.converter.basic.auth.credentials.source": "USER_INFO",
-               "value.converter.basic.auth.user.info": "\${secret:my-rbac-connector:username}:\${secret:my-rbac-connector:username}",
-               "consumer.override.sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required username=\"\${secret:my-rbac-connector:username}\" password=\"\${secret:my-rbac-connector:password}\" metadataServerUrls=\"http://broker:8091\";",
-               "transforms": "InsertField",
-               "transforms.InsertField.type": "org.apache.kafka.connect.transforms.InsertField\$Value",
-               "transforms.InsertField.static.field": "AddedBySMT",
-               "transforms.InsertField.static.value": "\${secret:my-rbac-connector:my-smt-password}"
-          }
+     "tasks.max": "1",
+     "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+     "topics": "rbac_topic",
+     "file": "/tmp/output.json",
+     "value.converter": "io.confluent.connect.avro.AvroConverter",
+     "value.converter.schema.registry.url": "http://schema-registry:8081",
+     "transforms": "InsertField",
+     "transforms.InsertField.type": "org.apache.kafka.connect.transforms.InsertField\$Value",
+     "transforms.InsertField.static.field": "AddedBySMT",
+     "transforms.InsertField.static.value": "\${secret:my-rbac-connector:my-smt-password}"
+}
 EOF
 
 
