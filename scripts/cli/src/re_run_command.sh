@@ -1,4 +1,5 @@
 tag="${args[--tag]}"
+environment="${args[--environment]}"
 connector_tag="${args[--connector-tag]}"
 connector_zip="${args[--connector-zip]}"
 connector_jar="${args[--connector-jar]}"
@@ -18,6 +19,11 @@ flag_list=""
 if [[ -n "$tag" ]]
 then
   flag_list="--tag=$tag"
+fi
+
+if [[ -n "$environment" ]]
+then
+  flag_list="$flag_list --environment=$environment"
 fi
 
 if [[ -n "$connector_tag" ]]
