@@ -333,7 +333,7 @@ $ docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/rbac_gcs_topic+0+
 
 ### With LDAP Authorizer with SASL/PLAIN:
 
-We need to add ACL for topic `gcs_topic-ldap-authorizer-sasl-plain` (user `alice` is part of group `KafkaDevelopers`):
+We need to add ACL for topic `gcs_topic-ldap-authorizer-sasl-plain` (user `client` is part of group `KafkaDevelopers`):
 
 ```bash
 $ docker exec broker kafka-acls --bootstrap-server broker:9092 --add --topic=gcs_topic-ldap-authorizer-sasl-plain --producer --allow-principal="Group:KafkaDevelopers" --command-config /service/kafka/users/kafka.properties
@@ -344,7 +344,7 @@ Messages are sent to `gcs_topic-ldap-authorizer-sasl-plain` topic using:
 ```bash
 $ docker exec -i client kinit -k -t /var/lib/secret/kafka-client.key kafka_producer
 
-$ seq -f "{\"f1\": \"This is a message sent with LDAP Authorizer SASL/PLAIN authentication %g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic gcs_topic-ldap-authorizer-sasl-plain --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --producer.config /service/kafka/users/alice.properties
+$ seq -f "{\"f1\": \"This is a message sent with LDAP Authorizer SASL/PLAIN authentication %g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic gcs_topic-ldap-authorizer-sasl-plain --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --producer.config /service/kafka/users/client.properties
 ```
 
 The connector is created with:

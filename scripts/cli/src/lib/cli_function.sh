@@ -511,7 +511,7 @@ function add_connector_config_based_on_envrionment () {
       return
     ;;
 
-    sasl-plain)
+    sasl-plain|ldap-authorizer-sasl-plain)
 
       for prefix in {"confluent.topic","redo.log.consumer"}
       do
@@ -744,7 +744,7 @@ function add_connector_config_based_on_envrionment () {
 
       return
     ;;
-    
+
     *)
       return
     ;;

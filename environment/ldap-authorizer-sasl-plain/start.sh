@@ -47,27 +47,27 @@ display_jmx_info
 log "Create topic testtopic"
 docker exec broker kafka-topics --create --topic testtopic --partitions 10 --replication-factor 1 --bootstrap-server broker:9092 --command-config /service/kafka/users/kafka.properties
 
-log "Run console producer without authorizing user alice: SHOULD FAIL"
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/alice.properties << EOF
-message Alice
+log "Run console producer without authorizing user client: SHOULD FAIL"
+docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/client.properties << EOF
+message client
 EOF
 
-log "Authorize group Group:KafkaDevelopers and rerun producer for alice: SHOULD BE SUCCESS"
+log "Authorize group Group:KafkaDevelopers and rerun producer for client: SHOULD BE SUCCESS"
 docker exec broker kafka-acls --bootstrap-server broker:9092 --add --topic=testtopic --producer --allow-principal="Group:KafkaDevelopers" --command-config /service/kafka/users/kafka.properties
 
 sleep 1
 
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/alice.properties << EOF
-message Alice
+docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/client.properties << EOF
+message client
 EOF
 
 log "Run console consumer without access to consumer group: SHOULD FAIL"
-# Consume should fail authorization since neither user alice nor the group KafkaDevelopers that alice belongs to has authorization to consume using the group test-consumer-group
-timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic testtopic --from-beginning --group test-consumer-group --consumer.config /service/kafka/users/alice.properties --max-messages 1
+# Consume should fail authorization since neither user client nor the group KafkaDevelopers that client belongs to has authorization to consume using the group test-consumer-group
+timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic testtopic --from-beginning --group test-consumer-group --consumer.config /service/kafka/users/client.properties --max-messages 1
 
 log "Authorize group and rerun consumer"
 docker exec broker kafka-acls --bootstrap-server broker:9092 --add --topic=testtopic --group test-consumer-group --allow-principal="Group:KafkaDevelopers" --command-config /service/kafka/users/kafka.properties
-timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic testtopic --from-beginning --group test-consumer-group --consumer.config /service/kafka/users/alice.properties --max-messages 1
+timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic testtopic --from-beginning --group test-consumer-group --consumer.config /service/kafka/users/client.properties --max-messages 1
 
 log "Run console producer with authorized user barnie (barnie is in group): SHOULD BE SUCCESS"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/barnie.properties << EOF

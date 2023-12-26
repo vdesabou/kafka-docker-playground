@@ -83,7 +83,7 @@ then
     security="--property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli --producer.config /etc/kafka/secrets/client_without_interceptors.config"
 elif [[ "$environment" == "ldap-authorizer-sasl-plain" ]]
 then
-    security="--producer.config /service/kafka/users/alice.properties"
+    security="--producer.config /service/kafka/users/client.properties"
 elif [[ "$environment" == "sasl-plain" ]] || [[ "$environment" == "sasl-scram" ]]
 then
     security="--producer.config /tmp/client.properties"

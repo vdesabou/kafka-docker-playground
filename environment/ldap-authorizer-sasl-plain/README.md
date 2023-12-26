@@ -29,7 +29,7 @@ LDAP server (using docker image `osixia/openldap:1.3.0`) is loading at startup `
 The users in the example are:
 
 * `broker` : for brokers (groups are not used in the example for authorization of brokers, but broker authorization could also be configured using groups if required)
-* alice and barnie are in `KafkaDevelopers` group
+* client and barnie are in `KafkaDevelopers` group
 * charlie is **not** in `KafkaDevelopers` group
 
 Activate the Plugin:
@@ -90,11 +90,11 @@ Create topic testtopic
 $ docker exec broker kafka-topics --create --topic testtopic --partitions 10 --replication-factor 1 --bootstrap-server broker:9092
 ```
 
-Run console producer without authorizing user `alice`: SHOULD FAIL
+Run console producer without authorizing user `client`: SHOULD FAIL
 
 ```bash
-$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/alice.properties << EOF
-message Alice
+$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/client.properties << EOF
+message client
 EOF
 ```
 
@@ -113,17 +113,17 @@ Authorize group `Group:KafkaDevelopers`
 $ docker exec broker kafka-acls --bootstrap-server broker:9092 --add --topic=testtopic --producer --allow-principal="Group:KafkaDevelopers" --command-config /service/kafka/users/kafka.properties
 ```
 
-Rerun producer for `alice`: SHOULD BE SUCCESS
+Rerun producer for `client`: SHOULD BE SUCCESS
 
 ```bash
-$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/alice.properties << EOF
-message Alice
+$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/client.properties << EOF
+message client
 EOF
 ```
 
 Run console consumer without access to consumer group: SHOULD FAIL
 
-Note: Consume should fail authorization since neither user alice nor the group KafkaDevelopers that alice belongs to has authorization to consume using the group test-consumer-group
+Note: Consume should fail authorization since neither user client nor the group KafkaDevelopers that client belongs to has authorization to consume using the group test-consumer-group
 
 ```bash
 playground topic consume --topic testtopic --min-expected-messages 1 --timeout 60
