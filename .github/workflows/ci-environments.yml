@@ -31,7 +31,7 @@ jobs:
     if: ${{ github.event.inputs.test_name == '' }}
     runs-on: ubuntu-latest
     needs: pre-build
-    name: ${{ matrix.tag }} ${{ matrix.test_list }} ${{ matrix.environment }}
+    name: ${{ matrix.environment }} ${{ matrix.test_list }}
     strategy:
       fail-fast: false
       matrix:
@@ -188,7 +188,7 @@ jobs:
   execute_one_test:
     if: ${{ github.event.inputs.test_name != '' }}
     runs-on: ubuntu-latest
-    name: ${{ matrix.tag }} ${{ matrix.test_list }}
+    name: ${{ matrix.environment }} ${{ matrix.test_list }}
     strategy:
       fail-fast: false
       matrix:
