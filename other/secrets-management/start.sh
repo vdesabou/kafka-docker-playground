@@ -9,18 +9,20 @@ if ! version_gt $TAG_BASE "5.2.99"; then
     exit 111
 fi
 
+verify_installed "confluent"
+check_confluent_version 3.0.0 || exit 1
+
 cd ../../other/secrets-management
 rm -f ${DIR}/secrets/secret.txt
 rm -f ${DIR}/secrets/CONFLUENT_SECURITY_MASTER_KEY
-docker run -i --rm -v ${DIR}/secrets:/secrets cnfldemos/tools:0.3 bash -c '
-echo "Generate master key"
-confluent-v1 secret master-key generate --local-secrets-file /secrets/secret.txt --passphrase @/secrets/passphrase.txt > /tmp/result.log 2>&1
+
+log "Generate master key"
+confluent secret master-key generate --local-secrets-file ${DIR}/secrets/secret.txt --passphrase @${DIR}/secrets/passphrase.txt > /tmp/result.log 2>&1
 cat /tmp/result.log
 export CONFLUENT_SECURITY_MASTER_KEY=$(grep "Master Key" /tmp/result.log | cut -d"|" -f 3 | sed "s/ //g" | tail -1 | tr -d "\n")
-echo "$CONFLUENT_SECURITY_MASTER_KEY" > /secrets/CONFLUENT_SECURITY_MASTER_KEY
-echo "Encrypting my-secret-property in file my-config-file.properties"
-confluent-v1 secret file encrypt --local-secrets-file /secrets/secret.txt --remote-secrets-file /etc/kafka/secrets/secret.txt --config my-secret-property --config-file /secrets/my-config-file.properties
-'
+echo "$CONFLUENT_SECURITY_MASTER_KEY" > ${DIR}/secrets/CONFLUENT_SECURITY_MASTER_KEY
+log "Encrypting my-secret-property in file my-config-file.properties"
+confluent secret file encrypt --local-secrets-file ${DIR}/secrets/secret.txt --remote-secrets-file ${DIR}/secrets/secret.txt --config my-secret-property --config-file ${DIR}/secrets/my-config-file.properties
 cd -
 
 export CONFLUENT_SECURITY_MASTER_KEY=$(cat ${DIR}/secrets/CONFLUENT_SECURITY_MASTER_KEY | sed 's/ //g' | tail -1 | tr -d '\n')
