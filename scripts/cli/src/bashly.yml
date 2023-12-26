@@ -261,7 +261,7 @@ commands:
     default: "plaintext"
     arg: environment
     #allowed: [ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos]
-    allowed: [ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl]
+    allowed: [ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram]
     help: |-
       🔐 The environment to start when running a connector example 
       
@@ -275,7 +275,7 @@ commands:
       - ldap-sasl-plain (not supported yet)
       - rbac-sasl-plain (not supported yet)
       - sasl-plain
-      - sasl-scram (not supported yet)
+      - sasl-scram
       - sasl-ssl
       - ssl_kerberos (not supported yet)
 
