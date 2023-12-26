@@ -80,7 +80,7 @@ elif [[ "$environment" == "ldap-authorizer-sasl-plain" ]]
 then
     sr_url_cli="http://schema-registry:8081"
     security="--producer.config /service/kafka/users/alice.properties"
-elif [[ "$environment" == "sasl-plain" ]]
+elif [[ "$environment" == "sasl-plain" ]] || [[ "$environment" == "sasl-scram" ]]
 then
     sr_url_cli="http://schema-registry:8081"
     security="--producer.config /tmp/client.properties"
