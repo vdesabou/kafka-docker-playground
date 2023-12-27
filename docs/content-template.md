@@ -177,6 +177,7 @@
 
 
 ## ☁️ Confluent Cloud
+
 ### 🤖 Fully-Managed Connectors
 
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/s3.png" width="15"> [Amazon S3 Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fully-managed-connect-aws-s3-sink) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
@@ -200,14 +201,7 @@
 
 ### 🔗 Self-Managed Connectors
 
-  - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/kinesis.svg" width="15"> [AWS Kinesis](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-aws-kinesis-source) source :connect/connect-aws-kinesis-source:
-  - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/mongodb.png" width="15"> [Debezium CDC MongoDB](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-debezium-mongodb-source) source :ccloud/connect-debezium-mongodb-source:
-  - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/mysql.png" width="15"> [Debezium CDC MySQL](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-debezium-mysql-source) source :ccloud/connect-debezium-mysql-source:
-  - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/firebase.svg" width="15"> [Firebase](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-gcp-firebase-sink) sink :ccloud/connect-gcp-firebase-sink:
-  - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/servicenow.png" width="15"> [ServiceNow](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-servicenow-source) source ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
-  - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/servicenow.png" width="15"> [ServiceNow](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-servicenow-sink) sink :ccloud/connect-servicenow-sink:
-  - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/mqtt.png" width="15"> [MQTT Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-mqtt-source) :ccloud/connect-mqtt-source:
-  - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/oracle_12.jpg" width="15"> [Oracle 19c CDC Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-cdc-oracle19-source) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
+💫 Any connector example can be run as *self-managed* by using `--environment ccloud` option when running it with [playground run](/playground%20run) command ! This is also the case for any other [environment](/content?id=%f0%9f%94%90-environments)
 
 ### 🚀 And much more...
 
