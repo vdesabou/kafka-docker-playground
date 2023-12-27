@@ -9,8 +9,16 @@ if ! version_gt $TAG_BASE "5.2.99"; then
     exit 111
 fi
 
-verify_installed "confluent"
-check_confluent_version 3.0.0 || exit 1
+if [ -z "$GITHUB_RUN_NUMBER" ] && [ -z "$CLOUDFORMATION" ]
+then
+    # not running with CI
+    verify_installed "confluent"
+    check_confluent_version 3.0.0 || exit 1
+else
+    log "Installing confluent CLI"
+    curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
+    export PATH=$PATH:/usr/local/bin
+fi
 
 cd ../../other/secrets-management
 rm -f ${DIR}/secrets/secret.txt
