@@ -8,6 +8,12 @@ source ${DIR}/../../scripts/utils.sh
 export ENABLE_CONTROL_CENTER=true
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+
+if [ "$environment" != "plaintext" ]
+then
+  logwarn "Only plaintext environment is supported with that example (you have set $environment)"
+  exit 0
+fi
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.standalone-worker.yml" -a -b
 
 log "Create table"
