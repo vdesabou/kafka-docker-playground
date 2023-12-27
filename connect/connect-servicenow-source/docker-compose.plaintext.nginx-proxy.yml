@@ -17,4 +17,4 @@ services:
     environment:
       KAFKA_OPTS: -Djava.util.logging.config.file=/tmp/logging.properties
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-servicenow
-    dns: 0.0.0.0
+    #dns: 0.0.0.0

@@ -14,4 +14,4 @@ services:
   connect:
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-aws-dynamodb
-    dns: 0.0.0.0
+    #dns: 0.0.0.0
