@@ -6033,6 +6033,13 @@ function add_connector_config_based_on_envrionment () {
           echo "$json_content" > $tmp_dir/input.json
           jq ".[\"$prefix.bootstrap.servers\"] = \"\${file:/data:bootstrap.servers}\" | .[\"$prefix.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"$prefix.security.protocol\"] = \"SASL_SSL\" | .[\"$prefix.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
           json_content=$(cat $tmp_dir/output.json)
+
+          if [ "$prefix" == "confluent.topic" ]
+          then
+            echo "$json_content" > $tmp_dir/input.json
+            jq ".[\"confluent.topic.replication.factor\"] = \"3\"" $tmp_dir/input.json > $tmp_dir/output.json
+            json_content=$(cat $tmp_dir/output.json)
+          fi
         fi
       done
 
