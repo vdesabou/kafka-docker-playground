@@ -74,6 +74,6 @@ EOF
     openssl pkcs12 -in /tmp/$i.keystore.p12 -nodes -nocerts -out /tmp/$i.key -passin pass:confluent
 
     
-    cacerts_path=$(bash -c "find /usr/lib/jvm -name cacerts" | tail -1)
+    cacerts_path="$(readlink -f /usr/bin/java | sed "s:bin/java::")lib/security/cacerts"
     keytool -noprompt -destkeystore /tmp/kafka.$i.truststore.jks -importkeystore -srckeystore $cacerts_path -srcstorepass changeit -deststorepass confluent
 done
