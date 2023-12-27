@@ -60,7 +60,9 @@ EOF
      keytool -noprompt -keystore /tmp/kafka.$i.truststore.jks -alias CARoot -import -file /tmp/snakeoil-ca-1.crt -storepass confluent -keypass confluent
 
     # Save creds
-      echo  "confluent" > ${i}_sslkey_creds
-      echo  "confluent" > ${i}_keystore_creds
-      echo  "confluent" > ${i}_truststore_creds
+      echo  "confluent" > /tmp/${i}_sslkey_creds
+      echo  "confluent" > /tmp/${i}_keystore_creds
+      echo  "confluent" > /tmp/${i}_truststore_creds
+
+    keytool -noprompt -destkeystore /tmp/kafka.$i.truststore.jks -importkeystore -srckeystore "/usr/local/openjdk-8/lib/security/cacerts" -srcstorepass changeit -deststorepass confluent
 done

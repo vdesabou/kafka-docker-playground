@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 cd ${DIR}/security
 log "🔐 Generate keys and certificates used for SSL using rmohr/activemq:5.15.9 image"
-docker run -u0 --rm -v $PWD:/tmp rmohr/activemq:5.15.9 bash -c "/tmp/certs-create.sh && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
+docker run -u0 --rm -v $PWD:/tmp rmohr/activemq:5.15.9 bash -c "/tmp/certs-create.sh > /dev/null 2>&1 && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
 cd ${DIR}
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
