@@ -62,8 +62,11 @@ then
     exit 1
   fi
 
-  flag_list="$flag_list --environment=$environment"
-  export PLAYGROUND_ENVIRONMENT=$environment
+  if [ "$environment" != "plaintext" ]
+  then
+    flag_list="$flag_list --environment=$environment"
+    export PLAYGROUND_ENVIRONMENT=$environment
+  fi
 fi
 
 if [[ -n "$connector_tag" ]]

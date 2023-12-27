@@ -23,7 +23,10 @@ fi
 
 if [[ -n "$environment" ]]
 then
-  flag_list="$flag_list --environment=$environment"
+  if [ "$environment" != "plaintext" ]
+  then
+    flag_list="$flag_list --environment=$environment"
+  fi
 fi
 
 if [[ -n "$connector_tag" ]]
