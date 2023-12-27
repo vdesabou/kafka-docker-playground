@@ -16,4 +16,4 @@ services:
       JDBC_TRACE: "true"
       # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
       # CONNECT_LOG4J_LOGGERS: org.reflections=ERROR,com.snowflake.kafka.connector=TRACE,net.snowflake.client.jdbc=TRACE
-    dns: 0.0.0.0
+    #dns: 0.0.0.0
