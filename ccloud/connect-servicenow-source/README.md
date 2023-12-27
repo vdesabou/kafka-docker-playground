@@ -30,7 +30,7 @@ In case you want to use your own existing cluster, you need to setup these envir
 ## Register a test account
 
 Go to [ServiceNow developer portal](https://developer.servicenow.com) and register an account.
-Click on `Manage`->`Instance` and register for a New-York instance. After some time (about one hour in my case) on the waiting list, you should receive an email with details of your test instance.
+Click on `Manage`->`Instance` and register for a Vancouver instance. After some time (about one hour in my case) on the waiting list, you should receive an email with details of your test instance.
 
 
 ## How to run

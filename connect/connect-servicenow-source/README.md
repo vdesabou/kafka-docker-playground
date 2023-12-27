@@ -11,7 +11,7 @@ Quickly test [ServiceNow Source](https://docs.confluent.io/current/connect/kafka
 ## Register a test account
 
 Go to [ServiceNow developer portal](https://developer.servicenow.com) and register an account.
-Click on `Manage`->`Instance` and register for a New-York instance. After some time (about one hour in my case) on the waiting list, you should receive an email with details of your test instance.
+Click on `Manage`->`Instance` and register for a Vancouver instance. After some time (about one hour in my case) on the waiting list, you should receive an email with details of your test instance.
 
 
 ## How to run

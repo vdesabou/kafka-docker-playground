@@ -11,7 +11,7 @@ Quickly test [ServiceNow Sink](https://docs.confluent.io/current/connect/kafka-c
 ## Register a test account
 
 Go to [ServiceNow developer portal](https://developer.servicenow.com) and register an account.
-Click on `Manage`->`Instance` and register for a New-York instance. After some time (about one hour in my case) on the waiting list, you should receive an email with details of your test instance.
+Click on `Manage`->`Instance` and register for a Vancouver instance. After some time (about one hour in my case) on the waiting list, you should receive an email with details of your test instance.
 
 ## Create the test_table in ServiceNow
 
