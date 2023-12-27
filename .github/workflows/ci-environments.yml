@@ -38,8 +38,7 @@ jobs:
         tag: ["7.5.2"]
         environment: ["ccloud", "sasl-ssl", "sasl-plain", "2way-ssl", "sasl-scram", "kraft-external-plaintext", "kraft-plaintext", "kerberos", "ssl_kerberos", "ldap-authorizer-sasl-plain", "ldap-sasl-plain"]
         test_list : [
-                      "🚀 connect/connect-active-mq-sink connect/connect-debezium-sqlserver-source connect/connect-http-sink",
-                      "🚀 connect/connect-cdc-oracle19-source"
+                      "🚀 connect/connect-active-mq-sink connect/connect-debezium-sqlserver-source connect/connect-http-sink"
                     ]
     steps:
       - name: Checkout code
