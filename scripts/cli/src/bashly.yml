@@ -481,7 +481,7 @@ commands:
 - name: start-environment
   group: Run
   help: |-
-    🔐 Simply start an environment listed in https://kafka-docker-playground.io/#/content?id=%f0%9f%94%90-environments:
+    🔐 Simply start an environment listed in http://tinyurl.com/y4ybbw32:
 
     - ccloud
     - 2way-ssl
@@ -755,7 +755,7 @@ commands:
       🌐 Only show url
 
 - name: repro
-  expose: true
+  expose: always
   group: Repro
   help: |-
     👷‍♂️ Reproduction model commands
@@ -957,7 +957,7 @@ commands:
   - playground get-properties -c broker
 
 - name: schema
-  expose: true
+  expose: always
   group: Schema
   help: |-
      🔰 Schema commands
@@ -1169,7 +1169,7 @@ commands:
     - *verbose
         
 - name: debug
-  expose: true
+  expose: always
   group: Debug
   help: |-
     🐞 Debug commands
@@ -1394,7 +1394,7 @@ commands:
   - playground get-jmx-metrics -c broker
 
 - name: container
-  expose: true
+  expose: always
   group: Container
   help: |-
     🐳 Container commands
@@ -1554,7 +1554,7 @@ commands:
       - *container
 
 - name: topic
-  expose: true
+  expose: always
   group: Topic
   filters:
   - not_mdc_environment
@@ -2411,7 +2411,7 @@ commands:
         playground topic alter --topic atopic --add-config max.message.bytes=5242940
 
 - name: ccloud-connector
-  expose: true
+  expose: always
   group: Connector
   filters:
   - ccloud_environment
@@ -2544,7 +2544,7 @@ commands:
       EOF
 
 - name: connector
-  expose: true
+  expose: always
   group: Connector
   filters:
   - not_mdc_environment
