@@ -5999,7 +5999,7 @@ function get_cli_metric() {
   playground state get "metrics.$metric_name"
 }
 
-function add_connector_config_based_on_envrionment () {
+function add_connector_config_based_on_environment () {
   environment="$1"
   json_content="$2"
 
@@ -18066,7 +18066,7 @@ playground_connector_create_or_update_command() {
       log "✅ --validate is set"
       set +e
       connector_class=$(echo "$json_content" | jq -r '."connector.class"')
-      add_connector_config_based_on_envrionment "$environment" "$json_content"
+      add_connector_config_based_on_environment "$environment" "$json_content"
       # add mandatory name field
       new_json_content=$(echo $json_content | jq ". + {\"name\": \"$connector\"}")
       if [[ -n "$verbose" ]]
@@ -18154,7 +18154,7 @@ playground_connector_create_or_update_command() {
 
   set +e
 
-  add_connector_config_based_on_envrionment "$environment" "$json_content"
+  add_connector_config_based_on_environment "$environment" "$json_content"
   if [[ -n "$verbose" ]]
   then
       log "🐞 curl command used"
