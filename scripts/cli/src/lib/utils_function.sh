@@ -1653,6 +1653,21 @@ function bootstrap_ccloud_environment () {
     log "🌤  CLUSTER_CLOUD is set with $CLUSTER_CLOUD"
     log "🗺  CLUSTER_REGION is set with $CLUSTER_REGION"
 
+    for row in $(confluent kafka cluster list --output json | jq -r '.[] | @base64'); do
+        _jq() {
+        echo ${row} | base64 --decode | jq -r ${1}
+        }
+        
+        is_current=$(echo $(_jq '.is_current'))
+        name=$(echo $(_jq '.name'))
+
+        if [ "$is_current" == "true" ] && [ "$name" == "$CLUSTER_NAME" ]
+        then
+          log "🌱 cluster $CLUSTER_NAME is ready to be used!"
+          return
+        fi
+    done
+    
     export WARMUP_TIME=0
   fi
 
