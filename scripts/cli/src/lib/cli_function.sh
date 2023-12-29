@@ -45,14 +45,14 @@ function generate_get_examples_list_with_fzf () {
 }
 
 function get_ccloud_connect() {
-  if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+  if [ ! -f $root_folder/.ccloud/ak-tools-ccloud.delta ]
   then
-      logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
+      logerror "ERROR: $root_folder/.ccloud/ak-tools-ccloud.delta has not been generated"
       exit 1
   fi
 
-  environment=$(grep "ENVIRONMENT ID" /tmp/delta_configs/ak-tools-ccloud.delta | cut -d " " -f 4)
-  cluster=$(grep "KAFKA CLUSTER ID" /tmp/delta_configs/ak-tools-ccloud.delta | cut -d " " -f 5)
+  environment=$(grep "ENVIRONMENT ID" $root_folder/.ccloud/ak-tools-ccloud.delta | cut -d " " -f 4)
+  cluster=$(grep "KAFKA CLUSTER ID" $root_folder/.ccloud/ak-tools-ccloud.delta | cut -d " " -f 5)
 
   if [[ "$OSTYPE" == "darwin"* ]]
   then
@@ -82,11 +82,11 @@ function get_sr_url_and_security() {
       sr_security="-u superUser:superUser"
   elif [[ "$environment" == "ccloud" ]]
   then
-    if [ -f /tmp/delta_configs/env.delta ]
+    if [ -f $root_folder/.ccloud/env.delta ]
     then
-        source /tmp/delta_configs/env.delta
+        source $root_folder/.ccloud/env.delta
     else
-        logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+        logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
         exit 1
     fi
     sr_url=$SCHEMA_REGISTRY_URL
@@ -456,11 +456,11 @@ function add_connector_config_based_on_environment () {
       return
     ;;
     ccloud)
-      if [ -f /tmp/delta_configs/env.delta ]
+      if [ -f $root_folder/.ccloud/env.delta ]
       then
-          source /tmp/delta_configs/env.delta
+          source $root_folder/.ccloud/env.delta
       else
-          logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+          logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
           exit 1
       fi
 

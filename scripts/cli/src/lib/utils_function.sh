@@ -1496,7 +1496,8 @@ function exit_with_error()
 }
 
 function maybe_delete_ccloud_environment () {
-  DELTA_CONFIGS_ENV=/tmp/delta_configs/env.delta
+  DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  DELTA_CONFIGS_ENV=${DIR_UTILS}/../../.ccloud/env.delta
 
   if [ -f $DELTA_CONFIGS_ENV ]
   then
@@ -1533,7 +1534,9 @@ function maybe_delete_ccloud_environment () {
 }
 
 function bootstrap_ccloud_environment () {
-  DELTA_CONFIGS_ENV=/tmp/delta_configs/env.delta
+
+  DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  DELTA_CONFIGS_ENV=${DIR_UTILS}/../../.ccloud/env.delta
 
   if [ -z "$GITHUB_RUN_NUMBER" ] && [ -z "$CLOUDFORMATION" ]
   then
@@ -1667,7 +1670,7 @@ function bootstrap_ccloud_environment () {
           return
         fi
     done
-    
+
     export WARMUP_TIME=0
   fi
 
@@ -2934,7 +2937,8 @@ function ccloud::generate_configs() {
   fi
 
   # Make destination
-  DEST="/tmp/delta_configs"
+  DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  DEST=${DIR_UTILS}/../../.ccloud
   mkdir -p $DEST
 
   ################################################################################

@@ -18,21 +18,21 @@ else
     log "🪛 Altering topic $topic"
     if [[ "$environment" == "ccloud" ]]
     then
-        if [ -f /tmp/delta_configs/env.delta ]
+        if [ -f $root_folder/.ccloud/env.delta ]
         then
-            source /tmp/delta_configs/env.delta
+            source $root_folder/.ccloud/env.delta
         else
-            logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+            logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
             exit 1
         fi
-        if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+        if [ ! -f $root_folder/.ccloud/ak-tools-ccloud.delta ]
         then
-            logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
+            logerror "ERROR: $root_folder/.ccloud/ak-tools-ccloud.delta has not been generated"
             exit 1
         fi
 
         get_connect_image
-        docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties ${other_args[*]}
+        docker run --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties ${other_args[*]}
     else
         docker exec $container kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server broker:9092 $security ${other_args[*]}
     fi

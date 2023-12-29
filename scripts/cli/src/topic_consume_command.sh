@@ -51,16 +51,16 @@ then
     security="--consumer.config /tmp/client.properties" 
 elif [[ "$environment" == "ccloud" ]]
 then
-  if [ -f /tmp/delta_configs/env.delta ]
+  if [ -f $root_folder/.ccloud/env.delta ]
   then
-      source /tmp/delta_configs/env.delta
+      source $root_folder/.ccloud/env.delta
   else
-      logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+      logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
       exit 1
   fi
-  if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+  if [ ! -f $root_folder/.ccloud/ak-tools-ccloud.delta ]
   then
-      logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
+      logerror "ERROR: $root_folder/.ccloud/ak-tools-ccloud.delta has not been generated"
       exit 1
   fi
 fi
@@ -325,7 +325,7 @@ do
       if [[ "$environment" == "ccloud" ]]
       then
         get_connect_image
-        docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $nottailing2 kafka-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer.config /tmp/configuration/ccloud.properties --property print.partition=true --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator="|" $security $nottailing1 > "$fifo_path" 2>&1 &
+        docker run -i --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $nottailing2 kafka-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer.config /tmp/configuration/ccloud.properties --property print.partition=true --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator="|" $security $nottailing1 > "$fifo_path" 2>&1 &
       else
         docker exec $container $nottailing2 kafka-console-consumer --bootstrap-server $bootstrap_server --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator="|" $security $nottailing1 > "$fifo_path" 2>&1  &
       fi

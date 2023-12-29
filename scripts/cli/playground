@@ -5603,14 +5603,14 @@ function generate_get_examples_list_with_fzf () {
 }
 
 function get_ccloud_connect() {
-  if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+  if [ ! -f $root_folder/.ccloud/ak-tools-ccloud.delta ]
   then
-      logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
+      logerror "ERROR: $root_folder/.ccloud/ak-tools-ccloud.delta has not been generated"
       exit 1
   fi
 
-  environment=$(grep "ENVIRONMENT ID" /tmp/delta_configs/ak-tools-ccloud.delta | cut -d " " -f 4)
-  cluster=$(grep "KAFKA CLUSTER ID" /tmp/delta_configs/ak-tools-ccloud.delta | cut -d " " -f 5)
+  environment=$(grep "ENVIRONMENT ID" $root_folder/.ccloud/ak-tools-ccloud.delta | cut -d " " -f 4)
+  cluster=$(grep "KAFKA CLUSTER ID" $root_folder/.ccloud/ak-tools-ccloud.delta | cut -d " " -f 5)
 
   if [[ "$OSTYPE" == "darwin"* ]]
   then
@@ -5639,11 +5639,11 @@ function get_sr_url_and_security() {
       sr_security="-u superUser:superUser"
   elif [[ "$environment" == "ccloud" ]]
   then
-    if [ -f /tmp/delta_configs/env.delta ]
+    if [ -f $root_folder/.ccloud/env.delta ]
     then
-        source /tmp/delta_configs/env.delta
+        source $root_folder/.ccloud/env.delta
     else
-        logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+        logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
         exit 1
     fi
     sr_url=$SCHEMA_REGISTRY_URL
@@ -6011,11 +6011,11 @@ function add_connector_config_based_on_environment () {
       return
     ;;
     ccloud)
-      if [ -f /tmp/delta_configs/env.delta ]
+      if [ -f $root_folder/.ccloud/env.delta ]
       then
-          source /tmp/delta_configs/env.delta
+          source $root_folder/.ccloud/env.delta
       else
-          logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+          logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
           exit 1
       fi
 
@@ -8311,7 +8311,8 @@ function exit_with_error()
 }
 
 function maybe_delete_ccloud_environment () {
-  DELTA_CONFIGS_ENV=/tmp/delta_configs/env.delta
+  DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  DELTA_CONFIGS_ENV=${DIR_UTILS}/../../.ccloud/env.delta
 
   if [ -f $DELTA_CONFIGS_ENV ]
   then
@@ -8348,7 +8349,9 @@ function maybe_delete_ccloud_environment () {
 }
 
 function bootstrap_ccloud_environment () {
-  DELTA_CONFIGS_ENV=/tmp/delta_configs/env.delta
+
+  DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  DELTA_CONFIGS_ENV=${DIR_UTILS}/../../.ccloud/env.delta
 
   if [ -z "$GITHUB_RUN_NUMBER" ] && [ -z "$CLOUDFORMATION" ]
   then
@@ -9735,7 +9738,8 @@ function ccloud::generate_configs() {
   fi
 
   # Make destination
-  DEST="/tmp/delta_configs"
+  DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  DEST=${DIR_UTILS}/../../.ccloud
   mkdir -p $DEST
 
   # Glean parameters from the Confluent Cloud configuration file
@@ -11793,11 +11797,11 @@ playground_switch_ccloud_command() {
   log "🔌 boostrapping ccloud environment"
   bootstrap_ccloud_environment
 
-  if [ -f /tmp/delta_configs/env.delta ]
+  if [ -f $root_folder/.ccloud/env.delta ]
   then
-      source /tmp/delta_configs/env.delta
+      source $root_folder/.ccloud/env.delta
   else
-      logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+      logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
       exit 1
   fi
 }
@@ -13871,9 +13875,9 @@ playground_debug_enable_remote_debugging_command() {
   log "Enable remote debugging for $container"
 
   # For ccloud case
-  if [ -f /tmp/delta_configs/env.delta ]
+  if [ -f $root_folder/.ccloud/env.delta ]
   then
-       source /tmp/delta_configs/env.delta
+       source $root_folder/.ccloud/env.delta
   fi
 
   # keep TAG, CONNECT TAG and ORACLE_IMAGE
@@ -14554,24 +14558,24 @@ playground_topic_get_number_records_command() {
           esac
           fi
 
-          if [ ! -f /tmp/delta_configs/librdkafka.delta ]
+          if [ ! -f $root_folder/.ccloud/librdkafka.delta ]
           then
-              logerror "ERROR: /tmp/delta_configs/librdkafka.delta has not been generated"
+              logerror "ERROR: $root_folder/.ccloud/librdkafka.delta has not been generated"
               exit 1
           fi
-          tr -d '"' < /tmp/delta_configs/librdkafka.delta > /tmp/delta_configs/librdkafka_no_quotes_tmp.delta
-          sr_url=$(grep "schema.registry.url=" /tmp/delta_configs/librdkafka_no_quotes_tmp.delta | cut -d "=" -f2)
+          tr -d '"' < $root_folder/.ccloud/librdkafka.delta > $root_folder/.ccloud/librdkafka_no_quotes_tmp.delta
+          sr_url=$(grep "schema.registry.url=" $root_folder/.ccloud/librdkafka_no_quotes_tmp.delta | cut -d "=" -f2)
           sr_url_hostname=$(echo $sr_url | cut -d "/" -f 3)
-          sr_auth=$(grep "basic.auth.user.info=" /tmp/delta_configs/librdkafka_no_quotes_tmp.delta | cut -d "=" -f2)
+          sr_auth=$(grep "basic.auth.user.info=" $root_folder/.ccloud/librdkafka_no_quotes_tmp.delta | cut -d "=" -f2)
           sr_username=$(echo $sr_auth | cut -d ":" -f 1)
           sr_password=$(echo $sr_auth | cut -d ":" -f 2)
           # sr_password_url_encoded=$(urlencode $sr_password)
-          grep -v "basic.auth.user.info" /tmp/delta_configs/librdkafka_no_quotes_tmp.delta > /tmp/delta_configs/librdkafka_no_quotes.delta
+          grep -v "basic.auth.user.info" $root_folder/.ccloud/librdkafka_no_quotes_tmp.delta > $root_folder/.ccloud/librdkafka_no_quotes.delta
 
           case "${value_type}" in
           avro)
           docker run -i --network=host \
-                  -v /tmp/delta_configs/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
+                  -v $root_folder/.ccloud/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
               confluentinc/cp-kcat:latest kcat \
                   -F /tmp/configuration/ccloud.properties \
                   -C -t $topic \
@@ -14581,7 +14585,7 @@ playground_topic_get_number_records_command() {
               ;;
           *)
           docker run -i --network=host \
-                  -v /tmp/delta_configs/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
+                  -v $root_folder/.ccloud/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
               confluentinc/cp-kcat:latest kcat \
                   -F /tmp/configuration/ccloud.properties \
                   -C -t $topic \
@@ -14662,16 +14666,16 @@ playground_topic_describe_command() {
       log "🔎 Describing topic $topic"
       if [[ "$environment" == "ccloud" ]]
       then
-          if [ -f /tmp/delta_configs/env.delta ]
+          if [ -f $root_folder/.ccloud/env.delta ]
           then
-              source /tmp/delta_configs/env.delta
+              source $root_folder/.ccloud/env.delta
           else
-              logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+              logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
               exit 1
           fi
-          if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+          if [ ! -f $root_folder/.ccloud/ak-tools-ccloud.delta ]
           then
-              logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
+              logerror "ERROR: $root_folder/.ccloud/ak-tools-ccloud.delta has not been generated"
               exit 1
           fi
           if [[ -n "$verbose" ]]
@@ -14680,7 +14684,7 @@ playground_topic_describe_command() {
               echo "kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
           fi
           get_connect_image
-          docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
+          docker run --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
       else
           if [[ -n "$verbose" ]]
           then
@@ -14783,16 +14787,16 @@ playground_topic_consume_command() {
 
   elif [[ "$environment" == "ccloud" ]]
   then
-    if [ -f /tmp/delta_configs/env.delta ]
+    if [ -f $root_folder/.ccloud/env.delta ]
     then
-        source /tmp/delta_configs/env.delta
+        source $root_folder/.ccloud/env.delta
     else
-        logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+        logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
         exit 1
     fi
-    if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+    if [ ! -f $root_folder/.ccloud/ak-tools-ccloud.delta ]
     then
-        logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
+        logerror "ERROR: $root_folder/.ccloud/ak-tools-ccloud.delta has not been generated"
         exit 1
     fi
   fi
@@ -15058,7 +15062,7 @@ playground_topic_consume_command() {
         if [[ "$environment" == "ccloud" ]]
         then
           get_connect_image
-          docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $nottailing2 kafka-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer.config /tmp/configuration/ccloud.properties --property print.partition=true --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator="|" $security $nottailing1 > "$fifo_path" 2>&1 &
+          docker run -i --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $nottailing2 kafka-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer.config /tmp/configuration/ccloud.properties --property print.partition=true --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator="|" $security $nottailing1 > "$fifo_path" 2>&1 &
         else
           docker exec $container $nottailing2 kafka-console-consumer --bootstrap-server $bootstrap_server --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator="|" $security $nottailing1 > "$fifo_path" 2>&1  &
         fi
@@ -15328,16 +15332,16 @@ playground_topic_produce_command() {
       security="--producer.config /tmp/client.properties"
   elif [[ "$environment" == "ccloud" ]]
   then
-    if [ -f /tmp/delta_configs/env.delta ]
+    if [ -f $root_folder/.ccloud/env.delta ]
     then
-        source /tmp/delta_configs/env.delta
+        source $root_folder/.ccloud/env.delta
     else
-        logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+        logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
         exit 1
     fi
-    if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+    if [ ! -f $root_folder/.ccloud/ak-tools-ccloud.delta ]
     then
-        logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
+        logerror "ERROR: $root_folder/.ccloud/ak-tools-ccloud.delta has not been generated"
         exit 1
     fi
   fi
@@ -15367,7 +15371,7 @@ playground_topic_produce_command() {
       if [[ "$environment" == "ccloud" ]]
       then
           get_connect_image
-          echo "$key|NULL" | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security --property parse.key=true --property key.separator="|" --property null.marker=NULL
+          echo "$key|NULL" | docker run -i --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security --property parse.key=true --property key.separator="|" --property null.marker=NULL
       else
           echo "$key|NULL" | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security --property parse.key=true --property key.separator="|" --property null.marker=NULL
       fi
@@ -16044,7 +16048,7 @@ playground_topic_produce_command() {
                               echo "cat /tmp/verbose_input_file.txt | kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression --property parse.key=true --property key.separator=\"|\" --property parse.headers=true --property headers.delimiter=\"|\" --property headers.separator=\",\" --property headers.key.separator=\":\""
                           fi
                           get_connect_image
-                          head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression --property parse.key=true --property key.separator="|" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
+                          head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression --property parse.key=true --property key.separator="|" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
                       else
                           if [[ -n "$verbose" ]]
                           then
@@ -16052,7 +16056,7 @@ playground_topic_produce_command() {
                               echo "cat /tmp/verbose_input_file.txt | kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression --property parse.key=true --property key.separator=\"|\" "
                           fi
                           get_connect_image
-                          head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression --property parse.key=true --property key.separator="|"
+                          head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression --property parse.key=true --property key.separator="|"
 
                       fi
                   else
@@ -16064,7 +16068,7 @@ playground_topic_produce_command() {
                               echo "cat /tmp/verbose_input_file.txt | kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression --property parse.headers=true --property headers.delimiter=\"|\" --property headers.separator=\",\" --property headers.key.separator=\":\""
                           fi
                           get_connect_image
-                          head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
+                          head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
                       else
                           if [[ -n "$verbose" ]]
                           then
@@ -16072,7 +16076,7 @@ playground_topic_produce_command() {
                               echo "cat /tmp/verbose_input_file.txt | kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression"
                           fi
                           get_connect_image
-                          head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression
+                          head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression
                       fi
                   fi
               else
@@ -16313,16 +16317,16 @@ playground_topic_create_command() {
       log "🆕 Creating topic $topic"
       if [[ "$environment" == "ccloud" ]]
       then
-          if [ -f /tmp/delta_configs/env.delta ]
+          if [ -f $root_folder/.ccloud/env.delta ]
           then
-              source /tmp/delta_configs/env.delta
+              source $root_folder/.ccloud/env.delta
           else
-              logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+              logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
               exit 1
           fi
-          if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+          if [ ! -f $root_folder/.ccloud/ak-tools-ccloud.delta ]
           then
-              logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
+              logerror "ERROR: $root_folder/.ccloud/ak-tools-ccloud.delta has not been generated"
               exit 1
           fi
           if [[ -n "$verbose" ]]
@@ -16331,7 +16335,7 @@ playground_topic_create_command() {
               echo "kafka-topics --create --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --partitions $nb_partitions ${other_args[*]}"
           fi
           get_connect_image
-          docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --create --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --partitions $nb_partitions ${other_args[*]}
+          docker run --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --create --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --partitions $nb_partitions ${other_args[*]}
       else
           if [[ -n "$verbose" ]]
           then
@@ -16369,16 +16373,16 @@ playground_topic_delete_command() {
   log "❌ Deleting topic $topic"
   if [[ "$environment" == "ccloud" ]]
   then
-      if [ -f /tmp/delta_configs/env.delta ]
+      if [ -f $root_folder/.ccloud/env.delta ]
       then
-          source /tmp/delta_configs/env.delta
+          source $root_folder/.ccloud/env.delta
       else
-          logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+          logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
           exit 1
       fi
-      if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+      if [ ! -f $root_folder/.ccloud/ak-tools-ccloud.delta ]
       then
-          logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
+          logerror "ERROR: $root_folder/.ccloud/ak-tools-ccloud.delta has not been generated"
           exit 1
       fi
       if [[ -n "$verbose" ]]
@@ -16387,7 +16391,7 @@ playground_topic_delete_command() {
           echo "kafka-topics --delete --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
       fi
       get_connect_image
-      docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --delete --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
+      docker run --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --delete --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
   else
       if [[ -n "$verbose" ]]
       then
@@ -16439,21 +16443,21 @@ playground_topic_alter_command() {
       log "🪛 Altering topic $topic"
       if [[ "$environment" == "ccloud" ]]
       then
-          if [ -f /tmp/delta_configs/env.delta ]
+          if [ -f $root_folder/.ccloud/env.delta ]
           then
-              source /tmp/delta_configs/env.delta
+              source $root_folder/.ccloud/env.delta
           else
-              logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+              logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
               exit 1
           fi
-          if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+          if [ ! -f $root_folder/.ccloud/ak-tools-ccloud.delta ]
           then
-              logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
+              logerror "ERROR: $root_folder/.ccloud/ak-tools-ccloud.delta has not been generated"
               exit 1
           fi
 
           get_connect_image
-          docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties ${other_args[*]}
+          docker run --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties ${other_args[*]}
       else
           docker exec $container kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server broker:9092 $security ${other_args[*]}
       fi
@@ -16675,16 +16679,16 @@ playground_ccloud_connector_show_lag_command() {
       set -e
   fi
 
-  if [ -f /tmp/delta_configs/env.delta ]
+  if [ -f $root_folder/.ccloud/env.delta ]
   then
-      source /tmp/delta_configs/env.delta
+      source $root_folder/.ccloud/env.delta
   else
-      logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+      logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
       exit 1
   fi
-  if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+  if [ ! -f $root_folder/.ccloud/ak-tools-ccloud.delta ]
   then
-      logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
+      logerror "ERROR: $root_folder/.ccloud/ak-tools-ccloud.delta has not been generated"
       exit 1
   fi
 
@@ -16707,7 +16711,7 @@ playground_ccloud_connector_show_lag_command() {
           while true
           do
               get_connect_image
-              lag_output=$(docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group connect-$connectorId --describe)
+              lag_output=$(docker run --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group connect-$connectorId --describe)
 
               set +e
               echo "$lag_output" | awk -F" " '{ print $6 }' | grep "-"
@@ -16738,7 +16742,7 @@ playground_ccloud_connector_show_lag_command() {
               echo "kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group connect-$connectorId --describe"
           fi
           get_connect_image
-          docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group connect-$connectorId --describe
+          docker run --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group connect-$connectorId --describe
       fi
   done
 
@@ -16817,16 +16821,16 @@ playground_ccloud_connector_show_config_parameters_command() {
       set -e
   fi
 
-  if [ -f /tmp/delta_configs/env.delta ]
+  if [ -f $root_folder/.ccloud/env.delta ]
   then
-      source /tmp/delta_configs/env.delta
+      source $root_folder/.ccloud/env.delta
   else
-      logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+      logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
       exit 1
   fi
-  if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+  if [ ! -f $root_folder/.ccloud/ak-tools-ccloud.delta ]
   then
-      logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
+      logerror "ERROR: $root_folder/.ccloud/ak-tools-ccloud.delta has not been generated"
       exit 1
   fi
 

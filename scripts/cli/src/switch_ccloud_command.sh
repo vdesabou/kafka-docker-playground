@@ -23,10 +23,10 @@ playground state set run.environment_before_switch "$(playground state get run.e
 log "🔌 boostrapping ccloud environment"
 bootstrap_ccloud_environment
 
-if [ -f /tmp/delta_configs/env.delta ]
+if [ -f $root_folder/.ccloud/env.delta ]
 then
-    source /tmp/delta_configs/env.delta
+    source $root_folder/.ccloud/env.delta
 else
-    logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+    logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
     exit 1
 fi

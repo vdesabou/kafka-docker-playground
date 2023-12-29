@@ -7,11 +7,11 @@ source ${DIR}/../../scripts/utils.sh
 #############
 playground start-environment --environment ccloud --docker-compose-override-file "${PWD}/docker-compose.yml"
 
-if [ -f /tmp/delta_configs/env.delta ]
+if [ -f ${DIR}/../../.ccloud/env.delta ]
 then
-     source /tmp/delta_configs/env.delta
+     source ${DIR}/../../.ccloud/env.delta
 else
-     logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+     logerror "ERROR: ${DIR}/../../.ccloud/env.delta has not been generated"
      exit 1
 fi
 #############

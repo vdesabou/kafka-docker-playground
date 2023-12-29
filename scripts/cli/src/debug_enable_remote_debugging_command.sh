@@ -5,9 +5,9 @@ container="${args[--container]}"
 log "Enable remote debugging for $container"
 
 # For ccloud case
-if [ -f /tmp/delta_configs/env.delta ]
+if [ -f $root_folder/.ccloud/env.delta ]
 then
-     source /tmp/delta_configs/env.delta
+     source $root_folder/.ccloud/env.delta
 fi
 
 # keep TAG, CONNECT TAG and ORACLE_IMAGE

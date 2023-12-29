@@ -52,24 +52,24 @@ do
         esac
         fi
 
-        if [ ! -f /tmp/delta_configs/librdkafka.delta ]
+        if [ ! -f $root_folder/.ccloud/librdkafka.delta ]
         then
-            logerror "ERROR: /tmp/delta_configs/librdkafka.delta has not been generated"
+            logerror "ERROR: $root_folder/.ccloud/librdkafka.delta has not been generated"
             exit 1
         fi
-        tr -d '"' < /tmp/delta_configs/librdkafka.delta > /tmp/delta_configs/librdkafka_no_quotes_tmp.delta
-        sr_url=$(grep "schema.registry.url=" /tmp/delta_configs/librdkafka_no_quotes_tmp.delta | cut -d "=" -f2)
+        tr -d '"' < $root_folder/.ccloud/librdkafka.delta > $root_folder/.ccloud/librdkafka_no_quotes_tmp.delta
+        sr_url=$(grep "schema.registry.url=" $root_folder/.ccloud/librdkafka_no_quotes_tmp.delta | cut -d "=" -f2)
         sr_url_hostname=$(echo $sr_url | cut -d "/" -f 3)
-        sr_auth=$(grep "basic.auth.user.info=" /tmp/delta_configs/librdkafka_no_quotes_tmp.delta | cut -d "=" -f2)
+        sr_auth=$(grep "basic.auth.user.info=" $root_folder/.ccloud/librdkafka_no_quotes_tmp.delta | cut -d "=" -f2)
         sr_username=$(echo $sr_auth | cut -d ":" -f 1)
         sr_password=$(echo $sr_auth | cut -d ":" -f 2)
         # sr_password_url_encoded=$(urlencode $sr_password)
-        grep -v "basic.auth.user.info" /tmp/delta_configs/librdkafka_no_quotes_tmp.delta > /tmp/delta_configs/librdkafka_no_quotes.delta
+        grep -v "basic.auth.user.info" $root_folder/.ccloud/librdkafka_no_quotes_tmp.delta > $root_folder/.ccloud/librdkafka_no_quotes.delta
 
         case "${value_type}" in
         avro)
         docker run -i --network=host \
-                -v /tmp/delta_configs/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
+                -v $root_folder/.ccloud/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
             confluentinc/cp-kcat:latest kcat \
                 -F /tmp/configuration/ccloud.properties \
                 -C -t $topic \
@@ -79,7 +79,7 @@ do
             ;;
         *)
         docker run -i --network=host \
-                -v /tmp/delta_configs/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
+                -v $root_folder/.ccloud/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
             confluentinc/cp-kcat:latest kcat \
                 -F /tmp/configuration/ccloud.properties \
                 -C -t $topic \
