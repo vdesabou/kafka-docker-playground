@@ -1495,9 +1495,14 @@ function exit_with_error()
   exit $CODE
 }
 
-function maybe_delete_ccloud_environment () {
+function get_kafka_docker_playground_dir () {
   DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  DELTA_CONFIGS_ENV=${DIR_UTILS}/../../.ccloud/env.delta
+  KAFKA_DOCKER_PLAYGROUND_DIR="$(echo "$DIR_UTILS" | awk -F'/kafka-docker-playground' '{print $1}')/kafka-docker-playground"
+}
+
+function maybe_delete_ccloud_environment () {
+  get_kafka_docker_playground_dir
+  DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
 
   if [ -f $DELTA_CONFIGS_ENV ]
   then
@@ -1536,7 +1541,8 @@ function maybe_delete_ccloud_environment () {
 function bootstrap_ccloud_environment () {
 
   DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  DELTA_CONFIGS_ENV=${DIR_UTILS}/../../.ccloud/env.delta
+  get_kafka_docker_playground_dir
+  DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
 
   if [ -z "$GITHUB_RUN_NUMBER" ] && [ -z "$CLOUDFORMATION" ]
   then
@@ -1666,7 +1672,13 @@ function bootstrap_ccloud_environment () {
 
         if [ "$is_current" == "true" ] && [ "$name" == "$CLUSTER_NAME" ]
         then
-          log "🌱 cluster $CLUSTER_NAME is ready to be used!"
+          if [ -f $DELTA_CONFIGS_ENV ]
+          then
+            log "🌱 cluster $CLUSTER_NAME is ready to be used!"
+          else
+            logwarn "$DELTA_CONFIGS_ENV has not been generated, doing it now..."
+            break
+          fi
           return
         fi
     done
@@ -2783,9 +2795,6 @@ ksql.endpoint=${KSQLDB_ENDPOINT}
 ksql.basic.auth.user.info=`echo $KSQLDB_CREDS | awk -F: '{print $1}'`:`echo $KSQLDB_CREDS | awk -F: '{print $2}'`
 EOF
     fi
-
-    echo
-    echo "Client configuration file saved to: $CCLOUD_CONFIG_FILE"
   fi
 
   return 0
@@ -2923,8 +2932,8 @@ function ccloud::generate_configs() {
     return 1
   fi
 
-  echo -e "\nGenerating component configurations from $CCLOUD_CONFIG_FILE"
-  echo -e "\n(If you want to run any of these components to talk to Confluent Cloud, these are the configurations to add to the properties file for each component)"
+  log "Generating component configurations"
+  log "(If you want to run any of these components to talk to Confluent Cloud, these are the configurations to add to the properties file for each component)"
 
   # Set permissions
   PERM=600
@@ -2937,10 +2946,9 @@ function ccloud::generate_configs() {
   fi
 
   # Make destination
-  DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  DEST=${DIR_UTILS}/../../.ccloud
+  get_kafka_docker_playground_dir
+  DEST=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud
   mkdir -p $DEST
-
   ################################################################################
   # Glean parameters from the Confluent Cloud configuration file
   ################################################################################
@@ -3008,7 +3016,7 @@ function ccloud::generate_configs() {
   done < "$CCLOUD_CONFIG_FILE"
   chmod $PERM $INTERCEPTORS_CONFIG_FILE
 
-  echo -e "\nConfluent Platform Components:"
+  log "Confluent Platform Components:"
 
   ################################################################################
   # Confluent Schema Registry instance (local) for Confluent Cloud
@@ -3244,7 +3252,7 @@ EOF
   chmod $PERM $AK_TOOLS_DELTA
 
 
-  echo -e "\nKafka Clients:"
+  log "Kafka Clients:"
 
   ################################################################################
   # Java (Producer/Consumer)
@@ -3565,9 +3573,11 @@ EOF
   ################################################################################
   # ENV
   ################################################################################
-  ENV_CONFIG=$DEST/env.delta
-  echo "$ENV_CONFIG"
-  rm -f $ENV_CONFIG
+  get_kafka_docker_playground_dir
+  DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
+  ENV_CONFIG=$DELTA_CONFIGS_ENV
+  echo "$DELTA_CONFIGS_ENV"
+  rm -f $DELTA_CONFIGS_ENV
 
   cat <<EOF >> $ENV_CONFIG
 export BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS"
