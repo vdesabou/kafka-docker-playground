@@ -24,6 +24,10 @@ commands:
   help: Return some completion for connector list
   private: true
 
+- name: generate-fzf-find-files
+  help: force call to generate_fzf_find_files
+  private: true
+
 - name: generate-connector-plugin-list
   help: generate the confluent hub plugin list
   private: true

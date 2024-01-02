@@ -24,16 +24,19 @@ do
     log "🔎 Describing topic $topic"
     if [[ "$environment" == "ccloud" ]]
     then
-        if [ -f $root_folder/.ccloud/env.delta ]
+        get_kafka_docker_playground_dir
+        DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
+
+        if [ -f $DELTA_CONFIGS_ENV ]
         then
-            source $root_folder/.ccloud/env.delta
+            source $DELTA_CONFIGS_ENV
         else
-            logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
+            logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
             exit 1
         fi
-        if [ ! -f $root_folder/.ccloud/ak-tools-ccloud.delta ]
+        if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
         then
-            logerror "ERROR: $root_folder/.ccloud/ak-tools-ccloud.delta has not been generated"
+            logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
             exit 1
         fi
         if [[ -n "$verbose" ]]
@@ -42,7 +45,7 @@ do
             echo "kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
         fi
         get_connect_image
-        docker run --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
+        docker run --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
     else
         if [[ -n "$verbose" ]]
         then

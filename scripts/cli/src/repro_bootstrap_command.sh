@@ -1151,7 +1151,7 @@ fi
 
 increment_cli_metric nb_reproduction_models
 log "👷 Number of repro models created so far: $(get_cli_metric nb_reproduction_models)"
-
+playground generate-fzf-find-files &
 log "🕹️  Ready? Run it now?"
 check_if_continue
 playground run -f $repro_dir/$repro_test_filename $flag_list ${other_args[*]}

@@ -253,6 +253,35 @@ playground_get_connector_list_usage() {
 }
 
 # :command.usage
+playground_generate_fzf_find_files_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground generate-fzf-find-files - force call to generate_fzf_find_files\n"
+    echo
+
+  else
+    printf "playground generate-fzf-find-files - force call to generate_fzf_find_files\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground generate-fzf-find-files\n"
+  printf "  playground generate-fzf-find-files --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_generate_connector_plugin_list_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground generate-connector-plugin-list - generate the confluent hub plugin list\n"
@@ -5587,30 +5616,33 @@ function generate_fzf_find_files() {
 }
 
 function generate_get_examples_list_with_fzf_without_repro_sink_only () {
-  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' > /tmp/get_examples_list_with_fzf_without_repro_sink_only
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' > $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro_sink_only
 }
 
 function generate_get_examples_list_with_fzf_without_repro () {
-  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' > /tmp/get_examples_list_with_fzf_without_repro
+  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' > $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro
 }
 
 function generate_get_examples_list_with_fzf_ccloud_only () {
-  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/ccloud*' ! -path '*/ora-*/*' ! -path '*/security/*' > /tmp/get_examples_list_with_fzf_ccloud_only
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/ccloud*' ! -path '*/ora-*/*' ! -path '*/security/*' > $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only
 }
 
 function generate_get_examples_list_with_fzf () {
-  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ccloud/*' ! -path '*/ora-*/*' ! -path '*/security/*' > /tmp/get_examples_list_with_fzf
+  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ccloud/*' ! -path '*/ora-*/*' ! -path '*/security/*' > $root_folder/scripts/cli/get_examples_list_with_fzf
 }
 
 function get_ccloud_connect() {
-  if [ ! -f $root_folder/.ccloud/ak-tools-ccloud.delta ]
+
+  get_kafka_docker_playground_dir
+
+  if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
   then
-      logerror "ERROR: $root_folder/.ccloud/ak-tools-ccloud.delta has not been generated"
+      logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
       exit 1
   fi
 
-  environment=$(grep "ENVIRONMENT ID" $root_folder/.ccloud/ak-tools-ccloud.delta | cut -d " " -f 4)
-  cluster=$(grep "KAFKA CLUSTER ID" $root_folder/.ccloud/ak-tools-ccloud.delta | cut -d " " -f 5)
+  environment=$(grep "ENVIRONMENT ID" $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta | cut -d " " -f 4)
+  cluster=$(grep "KAFKA CLUSTER ID" $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta | cut -d " " -f 5)
 
   if [[ "$OSTYPE" == "darwin"* ]]
   then
@@ -5700,12 +5732,12 @@ function get_examples_list_with_fzf() {
   then
     if [[ $(type -f bat 2>&1) =~ "not found" ]]
     then
-        res=$(cat /tmp/get_examples_list_with_fzf | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
+        res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
     else
-      res=$(cat /tmp/get_examples_list_with_fzf | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
+      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
     fi
   else
-    res=$(cat /tmp/get_examples_list_with_fzf | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+    res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
   fi
 }
 
@@ -5729,12 +5761,12 @@ function get_examples_list_with_fzf_ccloud_only() {
   then
     if [[ $(type -f bat 2>&1) =~ "not found" ]]
     then
-      res=$(cat /tmp/get_examples_list_with_fzf_ccloud_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
+      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
     else
-      res=$(cat /tmp/get_examples_list_with_fzf_ccloud_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
+      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
     fi
   else
-    res=$(cat /tmp/get_examples_list_with_fzf_ccloud_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+    res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
   fi
 }
 
@@ -5758,12 +5790,12 @@ function get_examples_list_with_fzf_without_repro() {
   then
     if [[ $(type -f bat 2>&1) =~ "not found" ]]
     then
-      res=$(cat /tmp/get_examples_list_with_fzf_without_repro | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
+      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
     else
-      res=$(cat /tmp/get_examples_list_with_fzf_without_repro | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
+      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
     fi
   else
-    res=$(cat /tmp/get_examples_list_with_fzf_without_repro | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+    res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
   fi
 }
 
@@ -5787,12 +5819,12 @@ function get_examples_list_with_fzf_without_repro_sink_only() {
   then
     if [[ $(type -f bat 2>&1) =~ "not found" ]]
     then
-      res=$(cat /tmp/get_examples_list_with_fzf_without_repro_sink_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
+      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro_sink_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
     else
-      res=$(cat /tmp/get_examples_list_with_fzf_without_repro_sink_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
+      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro_sink_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
     fi
   else
-    res=$(cat /tmp/get_examples_list_with_fzf_without_repro_sink_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+    res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro_sink_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
   fi
 }
 
@@ -5886,7 +5918,7 @@ function get_any_files_with_fzf() {
     fzf_option_rounded=""
   fi
 
-  res=$(cat /tmp/get_any_files_with_fzf | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+  res=$(cat $root_folder/scripts/cli/get_any_files_with_fzf | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
 }
 
 function get_predefined_schemas_with_fzf() {
@@ -10603,6 +10635,12 @@ playground_get_connector_list_command() {
 }
 
 # :command.function
+playground_generate_fzf_find_files_command() {
+  # src/generate_fzf_find_files_command.sh
+  generate_fzf_find_files
+}
+
+# :command.function
 playground_generate_connector_plugin_list_command() {
   # src/generate_connector_plugin_list_command.sh
   curl -s -S 'https://api.hub.confluent.io/api/plugins?per_page=100000' | jq '. | sort_by(.release_date) | reverse | .' > /tmp/allmanis.json
@@ -10719,38 +10757,38 @@ playground_get_examples_list_with_fzf_command() {
 
   if [[ -n "$without_repro" ]] && [[ -n "$sink_only" ]]
   then
-      # if [ ! -f /tmp/get_examples_list_with_fzf_without_repro_sink_only ]
-      # then
+      if [ ! -f $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro_sink_only ]
+      then
           generate_get_examples_list_with_fzf_without_repro_sink_only
-      # fi
+      fi
       get_examples_list_with_fzf_without_repro_sink_only "$cur"
       return
   fi
 
   if [[ -n "$without_repro" ]]
   then
-      # if [ ! -f /tmp/get_examples_list_with_fzf_without_repro ]
-      # then
+      if [ ! -f $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro ]
+      then
           generate_get_examples_list_with_fzf_without_repro
-      # fi
+      fi
       get_examples_list_with_fzf_without_repro "$cur"
       return
   fi
 
   if [[ -n "$ccloud_only" ]]
   then
-      # if [ ! -f /tmp/get_examples_list_with_fzf_ccloud_only ]
-      # then
+      if [ ! -f $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only ]
+      then
           generate_get_examples_list_with_fzf_ccloud_only
-      # fi
+      fi
       get_examples_list_with_fzf_ccloud_only "$cur"
       return
   fi
 
-  # if [ ! -f /tmp/get_examples_list_with_fzf ]
-  # then
+  if [ ! -f $root_folder/scripts/cli/get_examples_list_with_fzf ]
+  then
       generate_get_examples_list_with_fzf
-  # fi
+  fi
   get_examples_list_with_fzf "$cur"
 }
 
@@ -11170,7 +11208,7 @@ playground_run_command() {
   else
     trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground connector versions;playground open-docs --only-show-url' EXIT
   fi
-  #generate_fzf_find_files &
+  playground generate-fzf-find-files &
   touch /tmp/playground-run-command-used
   bash $filename ${other_args[*]}
   ret=$?
@@ -11748,7 +11786,7 @@ playground_run_ccloud_command() {
   cd $test_file_directory
   trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground ccloud-connector status;playground connector versions' EXIT
   touch /tmp/playground-run-command-used
-  #generate_fzf_find_files &
+  playground generate-fzf-find-files &
   bash $filename ${other_args[*]}
   ret=$?
   ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
@@ -13373,7 +13411,7 @@ playground_repro_bootstrap_command() {
 
   increment_cli_metric nb_reproduction_models
   log "👷 Number of repro models created so far: $(get_cli_metric nb_reproduction_models)"
-
+  playground generate-fzf-find-files &
   log "🕹️  Ready? Run it now?"
   check_if_continue
   playground run -f $repro_dir/$repro_test_filename $flag_list ${other_args[*]}
@@ -14673,16 +14711,19 @@ playground_topic_describe_command() {
       log "🔎 Describing topic $topic"
       if [[ "$environment" == "ccloud" ]]
       then
-          if [ -f $root_folder/.ccloud/env.delta ]
+          get_kafka_docker_playground_dir
+          DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
+
+          if [ -f $DELTA_CONFIGS_ENV ]
           then
-              source $root_folder/.ccloud/env.delta
+              source $DELTA_CONFIGS_ENV
           else
-              logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
+              logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
               exit 1
           fi
-          if [ ! -f $root_folder/.ccloud/ak-tools-ccloud.delta ]
+          if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
           then
-              logerror "ERROR: $root_folder/.ccloud/ak-tools-ccloud.delta has not been generated"
+              logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
               exit 1
           fi
           if [[ -n "$verbose" ]]
@@ -14691,7 +14732,7 @@ playground_topic_describe_command() {
               echo "kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
           fi
           get_connect_image
-          docker run --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
+          docker run --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
       else
           if [[ -n "$verbose" ]]
           then
@@ -14794,16 +14835,19 @@ playground_topic_consume_command() {
 
   elif [[ "$environment" == "ccloud" ]]
   then
-    if [ -f $root_folder/.ccloud/env.delta ]
+    get_kafka_docker_playground_dir
+    DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
+
+    if [ -f $DELTA_CONFIGS_ENV ]
     then
-        source $root_folder/.ccloud/env.delta
+        source $DELTA_CONFIGS_ENV
     else
-        logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
+        logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
         exit 1
     fi
-    if [ ! -f $root_folder/.ccloud/ak-tools-ccloud.delta ]
+    if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
     then
-        logerror "ERROR: $root_folder/.ccloud/ak-tools-ccloud.delta has not been generated"
+        logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
         exit 1
     fi
   fi
@@ -15069,7 +15113,7 @@ playground_topic_consume_command() {
         if [[ "$environment" == "ccloud" ]]
         then
           get_connect_image
-          docker run -i --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $nottailing2 kafka-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer.config /tmp/configuration/ccloud.properties --property print.partition=true --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator="|" $security $nottailing1 > "$fifo_path" 2>&1 &
+          docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $nottailing2 kafka-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer.config /tmp/configuration/ccloud.properties --property print.partition=true --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator="|" $security $nottailing1 > "$fifo_path" 2>&1 &
         else
           docker exec $container $nottailing2 kafka-console-consumer --bootstrap-server $bootstrap_server --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator="|" $security $nottailing1 > "$fifo_path" 2>&1  &
         fi
@@ -15339,18 +15383,21 @@ playground_topic_produce_command() {
       security="--producer.config /tmp/client.properties"
   elif [[ "$environment" == "ccloud" ]]
   then
-    if [ -f $root_folder/.ccloud/env.delta ]
-    then
-        source $root_folder/.ccloud/env.delta
-    else
-        logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
-        exit 1
-    fi
-    if [ ! -f $root_folder/.ccloud/ak-tools-ccloud.delta ]
-    then
-        logerror "ERROR: $root_folder/.ccloud/ak-tools-ccloud.delta has not been generated"
-        exit 1
-    fi
+      get_kafka_docker_playground_dir
+      DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
+
+      if [ -f $DELTA_CONFIGS_ENV ]
+      then
+          source $DELTA_CONFIGS_ENV
+      else
+          logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+          exit 1
+      fi
+      if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
+      then
+          logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
+          exit 1
+      fi
   fi
 
   if [[ -n "$tombstone" ]]
@@ -15378,7 +15425,7 @@ playground_topic_produce_command() {
       if [[ "$environment" == "ccloud" ]]
       then
           get_connect_image
-          echo "$key|NULL" | docker run -i --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security --property parse.key=true --property key.separator="|" --property null.marker=NULL
+          echo "$key|NULL" | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security --property parse.key=true --property key.separator="|" --property null.marker=NULL
       else
           echo "$key|NULL" | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security --property parse.key=true --property key.separator="|" --property null.marker=NULL
       fi
@@ -16055,7 +16102,7 @@ playground_topic_produce_command() {
                               echo "cat /tmp/verbose_input_file.txt | kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression --property parse.key=true --property key.separator=\"|\" --property parse.headers=true --property headers.delimiter=\"|\" --property headers.separator=\",\" --property headers.key.separator=\":\""
                           fi
                           get_connect_image
-                          head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression --property parse.key=true --property key.separator="|" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
+                          head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression --property parse.key=true --property key.separator="|" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
                       else
                           if [[ -n "$verbose" ]]
                           then
@@ -16063,7 +16110,7 @@ playground_topic_produce_command() {
                               echo "cat /tmp/verbose_input_file.txt | kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression --property parse.key=true --property key.separator=\"|\" "
                           fi
                           get_connect_image
-                          head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression --property parse.key=true --property key.separator="|"
+                          head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression --property parse.key=true --property key.separator="|"
 
                       fi
                   else
@@ -16075,7 +16122,7 @@ playground_topic_produce_command() {
                               echo "cat /tmp/verbose_input_file.txt | kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression --property parse.headers=true --property headers.delimiter=\"|\" --property headers.separator=\",\" --property headers.key.separator=\":\""
                           fi
                           get_connect_image
-                          head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
+                          head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
                       else
                           if [[ -n "$verbose" ]]
                           then
@@ -16083,7 +16130,7 @@ playground_topic_produce_command() {
                               echo "cat /tmp/verbose_input_file.txt | kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression"
                           fi
                           get_connect_image
-                          head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression
+                          head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression
                       fi
                   fi
               else
@@ -16324,16 +16371,19 @@ playground_topic_create_command() {
       log "🆕 Creating topic $topic"
       if [[ "$environment" == "ccloud" ]]
       then
-          if [ -f $root_folder/.ccloud/env.delta ]
+          get_kafka_docker_playground_dir
+          DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
+
+          if [ -f $DELTA_CONFIGS_ENV ]
           then
-              source $root_folder/.ccloud/env.delta
+              source $DELTA_CONFIGS_ENV
           else
-              logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
+              logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
               exit 1
           fi
-          if [ ! -f $root_folder/.ccloud/ak-tools-ccloud.delta ]
+          if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
           then
-              logerror "ERROR: $root_folder/.ccloud/ak-tools-ccloud.delta has not been generated"
+              logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
               exit 1
           fi
           if [[ -n "$verbose" ]]
@@ -16342,7 +16392,7 @@ playground_topic_create_command() {
               echo "kafka-topics --create --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --partitions $nb_partitions ${other_args[*]}"
           fi
           get_connect_image
-          docker run --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --create --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --partitions $nb_partitions ${other_args[*]}
+          docker run --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --create --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --partitions $nb_partitions ${other_args[*]}
       else
           if [[ -n "$verbose" ]]
           then
@@ -16380,16 +16430,19 @@ playground_topic_delete_command() {
   log "❌ Deleting topic $topic"
   if [[ "$environment" == "ccloud" ]]
   then
-      if [ -f $root_folder/.ccloud/env.delta ]
+      get_kafka_docker_playground_dir
+      DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
+
+      if [ -f $DELTA_CONFIGS_ENV ]
       then
-          source $root_folder/.ccloud/env.delta
+          source $DELTA_CONFIGS_ENV
       else
-          logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
+          logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
           exit 1
       fi
-      if [ ! -f $root_folder/.ccloud/ak-tools-ccloud.delta ]
+      if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
       then
-          logerror "ERROR: $root_folder/.ccloud/ak-tools-ccloud.delta has not been generated"
+          logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
           exit 1
       fi
       if [[ -n "$verbose" ]]
@@ -16398,7 +16451,7 @@ playground_topic_delete_command() {
           echo "kafka-topics --delete --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
       fi
       get_connect_image
-      docker run --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --delete --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
+      docker run --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --delete --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
   else
       if [[ -n "$verbose" ]]
       then
@@ -16450,21 +16503,24 @@ playground_topic_alter_command() {
       log "🪛 Altering topic $topic"
       if [[ "$environment" == "ccloud" ]]
       then
-          if [ -f $root_folder/.ccloud/env.delta ]
+          get_kafka_docker_playground_dir
+          DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
+
+          if [ -f $DELTA_CONFIGS_ENV ]
           then
-              source $root_folder/.ccloud/env.delta
+              source $DELTA_CONFIGS_ENV
           else
-              logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
+              logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
               exit 1
           fi
-          if [ ! -f $root_folder/.ccloud/ak-tools-ccloud.delta ]
+          if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
           then
-              logerror "ERROR: $root_folder/.ccloud/ak-tools-ccloud.delta has not been generated"
+              logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
               exit 1
           fi
 
           get_connect_image
-          docker run --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties ${other_args[*]}
+          docker run --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties ${other_args[*]}
       else
           docker exec $container kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server broker:9092 $security ${other_args[*]}
       fi
@@ -16721,7 +16777,7 @@ playground_ccloud_connector_show_lag_command() {
           while true
           do
               get_connect_image
-              lag_output=$(docker run --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group connect-$connectorId --describe)
+              lag_output=$(docker run --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group connect-$connectorId --describe)
 
               set +e
               echo "$lag_output" | awk -F" " '{ print $6 }' | grep "-"
@@ -16752,7 +16808,7 @@ playground_ccloud_connector_show_lag_command() {
               echo "kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group connect-$connectorId --describe"
           fi
           get_connect_image
-          docker run --rm -v $root_folder/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group connect-$connectorId --describe
+          docker run --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group connect-$connectorId --describe
       fi
   done
 
@@ -18279,6 +18335,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    generate-fzf-find-files)
+      action="generate-fzf-find-files"
+      shift
+      playground_generate_fzf_find_files_parse_requirements "$@"
+      shift $#
+      ;;
+
     generate-connector-plugin-list)
       action="generate-connector-plugin-list"
       shift
@@ -18688,6 +18751,50 @@ playground_get_connector_list_parse_requirements() {
 
   # :command.command_filter
   action="get-connector-list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_generate_fzf_find_files_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_generate_fzf_find_files_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="generate-fzf-find-files"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -28573,6 +28680,7 @@ run() {
     "help") playground_help_command ;;
     "status") playground_status_command ;;
     "get-connector-list") playground_get_connector_list_command ;;
+    "generate-fzf-find-files") playground_generate_fzf_find_files_command ;;
     "generate-connector-plugin-list") playground_generate_connector_plugin_list_command ;;
     "generate-kafka-region-list") playground_generate_kafka_region_list_command ;;
     "get-connector-plugin") playground_get_connector_plugin_command ;;
