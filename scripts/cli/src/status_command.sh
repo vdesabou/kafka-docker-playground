@@ -6,6 +6,7 @@ then
     exit 1
 fi
 
+playground generate-fzf-find-files &
 last_two_folders=$(basename $(dirname $(dirname $test_file)))/$(basename $(dirname $test_file))
 filename=$(basename $test_file)
 last_folder=$(basename $(dirname $test_file))
