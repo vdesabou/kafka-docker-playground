@@ -8338,7 +8338,13 @@ function exit_with_error()
 
 function get_kafka_docker_playground_dir () {
   DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  KAFKA_DOCKER_PLAYGROUND_DIR="$(echo "$DIR_UTILS" | awk -F'/kafka-docker-playground' '{print $1}')/kafka-docker-playground"
+
+  if [ -z "$GITHUB_RUN_NUMBER" ]
+  then
+    KAFKA_DOCKER_PLAYGROUND_DIR="$(echo "$DIR_UTILS" | awk -F'/kafka-docker-playground' '{print $1}')/kafka-docker-playground"
+  else
+    KAFKA_DOCKER_PLAYGROUND_DIR="$(echo "$DIR_UTILS" | awk -F'/kafka-docker-playground' '{print $1}')"
+  fi
 }
 
 function maybe_delete_ccloud_environment () {
