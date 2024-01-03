@@ -155,4 +155,4 @@ cat /tmp/result.log
 grep "notebooks" /tmp/result.log
 
 log "Deleting resource group"
-az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
+az group delete --name $AZURE_RESOURCE_GROUP --yes

@@ -162,4 +162,4 @@ grep "HolidayInn" /tmp/result.log
 grep "Motel8" /tmp/result.log
 
 log "Deleting resource group"
-az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
+az group delete --name $AZURE_RESOURCE_GROUP --yes
