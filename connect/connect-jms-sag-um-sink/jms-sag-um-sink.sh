@@ -83,7 +83,7 @@ playground connector create-or-update --connector jms-sag-um-sink  << EOF
 }
 EOF
 
-sleep 30
+playground connector show-lag --wait-for-zero-lag --connector jms-sag-um-sink
 
 log "Confirm the messages were delivered to the test-queue queue"
 set +e
