@@ -9,13 +9,7 @@ export ENABLE_CONTROL_CENTER=true
 
 playground start-environment --environment ccloud --docker-compose-override-file "${PWD}/docker-compose.plaintext.standalone-worker-docker-image.yml" -a -b
 
-if [ -f ${DIR}/../../.ccloud/env.delta ]
-then
-     source ${DIR}/../../.ccloud/env.delta
-else
-     logerror "ERROR: ${DIR}/../../.ccloud/env.delta has not been generated"
-     exit 1
-fi
+
 #############
 
 cp ../../ccloud/environment/data standalone-worker-docker-image/data

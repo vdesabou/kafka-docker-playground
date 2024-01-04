@@ -21,13 +21,7 @@ done
 
 bootstrap_ccloud_environment
 
-if [ -f ${DIR}/../../.ccloud/env.delta ]
-then
-     source ${DIR}/../../.ccloud/env.delta
-else
-     logerror "ERROR: ${DIR}/../../.ccloud/env.delta has not been generated"
-     exit 1
-fi
+
 
 
 if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]

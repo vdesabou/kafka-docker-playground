@@ -6,13 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 bootstrap_ccloud_environment
 
-if [ -f ${DIR}/../../.ccloud/env.delta ]
-then
-     source ${DIR}/../../.ccloud/env.delta
-else
-     logerror "ERROR: ${DIR}/../../.ccloud/env.delta has not been generated"
-     exit 1
-fi
+
 
 SALESFORCE_USERNAME=${SALESFORCE_USERNAME:-$1}
 SALESFORCE_PASSWORD=${SALESFORCE_PASSWORD:-$2}

@@ -28,13 +28,7 @@ check_if_continue
 
 bootstrap_ccloud_environment
 
-if [ -f ${DIR}/../../.ccloud/env.delta ]
-then
-     source ${DIR}/../../.ccloud/env.delta
-else
-     logerror "ERROR: ${DIR}/../../.ccloud/env.delta has not been generated"
-     exit 1
-fi
+
 
 create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "../../ccloud/fully-managed-connect-cdc-oracle19-source/ora-setup-scripts-cdb-table"
 

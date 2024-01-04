@@ -10,13 +10,7 @@ verify_installed "helm"
 
 bootstrap_ccloud_environment
 
-if [ -f ${DIR}/../../.ccloud/env.delta ]
-then
-     source ${DIR}/../../.ccloud/env.delta
-else
-     logerror "ERROR: ${DIR}/../../.ccloud/env.delta has not been generated"
-     exit 1
-fi
+
 
 # Use most basic values file and override it with --set
 VALUES_FILE="${DIR}/../../operator/private.yaml"

@@ -1674,12 +1674,13 @@ function bootstrap_ccloud_environment () {
         then
           if [ -f $DELTA_CONFIGS_ENV ]
           then
+            source $DELTA_CONFIGS_ENV
             log "🌱 cluster $CLUSTER_NAME is ready to be used!"
+            return
           else
             logwarn "$DELTA_CONFIGS_ENV has not been generated, doing it now..."
             break
           fi
-          return
         fi
     done
 

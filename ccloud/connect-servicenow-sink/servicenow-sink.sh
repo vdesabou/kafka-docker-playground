@@ -59,13 +59,7 @@ fi
 
 playground start-environment --environment ccloud --docker-compose-override-file "${PWD}/docker-compose.yml"
 
-if [ -f ${DIR}/../../.ccloud/env.delta ]
-then
-     source ${DIR}/../../.ccloud/env.delta
-else
-     logerror "ERROR: ${DIR}/../../.ccloud/env.delta has not been generated"
-     exit 1
-fi
+
 #############
 
 log "Creating topic in Confluent Cloud"

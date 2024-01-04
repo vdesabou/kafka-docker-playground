@@ -10,13 +10,7 @@ verify_installed "ansible-playbook"
 
 bootstrap_ccloud_environment
 
-if [ -f ${DIR}/../../.ccloud/env.delta ]
-then
-     source ${DIR}/../../.ccloud/env.delta
-else
-     logerror "ERROR: ${DIR}/../../.ccloud/env.delta has not been generated"
-     exit 1
-fi
+
 
 # Offer to refresh images
 ret=$(docker images --format "{{.Repository}}|{{.Tag}}|{{.CreatedSince}}" | grep vdesabou/cp-ansible-playground-connect | grep "$TAG" | cut -d "|" -f 3)

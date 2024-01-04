@@ -25,13 +25,7 @@ fi
 
 bootstrap_ccloud_environment
 
-if [ -f ${DIR}/../../.ccloud/env.delta ]
-then
-     source ${DIR}/../../.ccloud/env.delta
-else
-     logerror "ERROR: ${DIR}/../../.ccloud/env.delta has not been generated"
-     exit 1
-fi
+
 
 # generate kafka-admin.properties config
 sed -e "s|:CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY:|$CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY|g" \

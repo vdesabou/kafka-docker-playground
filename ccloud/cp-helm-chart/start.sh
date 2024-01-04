@@ -12,13 +12,7 @@ verify_installed "helm"
 
 bootstrap_ccloud_environment
 
-if [ -f ${DIR}/../../.ccloud/env.delta ]
-then
-     source ${DIR}/../../.ccloud/env.delta
-else
-     logerror "ERROR: ${DIR}/../../.ccloud/env.delta has not been generated"
-     exit 1
-fi
+
 
 # https://github.com/confluentinc/cp-helm-charts#appendix-create-a-local-kubernetes-cluster
 set +e
