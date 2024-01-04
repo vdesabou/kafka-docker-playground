@@ -41,7 +41,7 @@ fi
 connector="${args[--connector]}"
 
 is_create=1
-connectors=$(playground get-ccloud-connector-list)
+connectors=$(playground get-fully-managed-connector-list)
 items=($connectors)
 for con in ${items[@]}
 do
@@ -170,10 +170,10 @@ then
         fi
         if [ -z "$GITHUB_RUN_NUMBER" ]
         then
-            playground ccloud-connector show-config --connector "$connector"
+            playground fully-managed-connector show-config --connector "$connector"
         fi
         sleep 8
-        playground ccloud-connector status --connector $connector
+        playground fully-managed-connector status --connector $connector
     fi
 else
     logerror "❌ curl request failed with error code $ret!"

@@ -49,11 +49,11 @@ NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
 connector_name="MqttSource"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
-playground ccloud-connector delete --connector $connector_name
+playground fully-managed-connector delete --connector $connector_name
 set -e
 
 log "Creating fully managed connector"
-playground ccloud-connector create-or-update --connector $connector_name << EOF
+playground fully-managed-connector create-or-update --connector $connector_name << EOF
 {
      "connector.class": "MqttSource",
      "name": "MqttSource",
@@ -85,4 +85,4 @@ playground topic consume --topic mqtt-source-1 --min-expected-messages 2 --timeo
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
-playground ccloud-connector delete --connector $connector_name
+playground fully-managed-connector delete --connector $connector_name

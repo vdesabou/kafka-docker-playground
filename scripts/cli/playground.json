@@ -2022,15 +2022,15 @@
       ]
     },
     {
-      "name": "ccloud-connector",
+      "name": "fully-managed-connector",
       "description": "🔗☁️ Fully Managed Connector commands\n",
-      "usage": "playground ccloud-connector COMMAND",
+      "usage": "playground fully-managed-connector COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "status",
           "description": "🧩 Show status of all connectors\n",
-          "usage": "playground ccloud-connector status [OPTIONS]",
+          "usage": "playground fully-managed-connector status [OPTIONS]",
           "options": [
             {
               "names": [
@@ -2053,7 +2053,7 @@
         {
           "name": "plugins",
           "description": "🎨 Show all plugins installed\n",
-          "usage": "playground ccloud-connector plugins [OPTIONS]",
+          "usage": "playground fully-managed-connector plugins [OPTIONS]",
           "options": [
             {
               "names": [
@@ -2068,7 +2068,7 @@
         {
           "name": "pause",
           "description": "⏸️  Pause connector\n",
-          "usage": "playground ccloud-connector pause [OPTIONS]",
+          "usage": "playground fully-managed-connector pause [OPTIONS]",
           "options": [
             {
               "names": [
@@ -2091,7 +2091,7 @@
         {
           "name": "resume",
           "description": "⏯️  Resume connector\n",
-          "usage": "playground ccloud-connector resume [OPTIONS]",
+          "usage": "playground fully-managed-connector resume [OPTIONS]",
           "options": [
             {
               "names": [
@@ -2114,7 +2114,7 @@
         {
           "name": "delete",
           "description": "🗑️  Delete connector\n",
-          "usage": "playground ccloud-connector delete [OPTIONS]",
+          "usage": "playground fully-managed-connector delete [OPTIONS]",
           "options": [
             {
               "names": [
@@ -2137,7 +2137,7 @@
         {
           "name": "show-lag",
           "description": "🐢 Show lag of sink connector\n",
-          "usage": "playground ccloud-connector show-lag [OPTIONS]",
+          "usage": "playground fully-managed-connector show-lag [OPTIONS]",
           "options": [
             {
               "names": [
@@ -2167,7 +2167,7 @@
         {
           "name": "show-config",
           "description": "🧰 Show current connector config\n",
-          "usage": "playground ccloud-connector show-config [OPTIONS]",
+          "usage": "playground fully-managed-connector show-config [OPTIONS]",
           "options": [
             {
               "names": [
@@ -2190,7 +2190,7 @@
         {
           "name": "show-config-parameters",
           "description": "🔩 Show all possible configuration parameters of connector\n",
-          "usage": "playground ccloud-connector show-config-parameters [OPTIONS]",
+          "usage": "playground fully-managed-connector show-config-parameters [OPTIONS]",
           "options": [
             {
               "names": [
@@ -2235,7 +2235,7 @@
         {
           "name": "create-or-update",
           "description": "🧑‍🎨  Create or update connector\n",
-          "usage": "playground ccloud-connector create-or-update [JSON] [OPTIONS]",
+          "usage": "playground fully-managed-connector create-or-update [JSON] [OPTIONS]",
           "options": [
             {
               "names": [

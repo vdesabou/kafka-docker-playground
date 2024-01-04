@@ -22,9 +22,9 @@ playground open-docs --only-show-url
 
 if [[ $filename == "fully-managed"* ]]
 then
-    playground ccloud-connector status | grep -v "applying command to all connectors"
-    playground ccloud-connector show-config | grep -v "applying command to all connectors"
-    playground ccloud-connector show-config-parameters --only-show-file-path | grep -v "applying command to all connectors"
+    playground fully-managed-connector status | grep -v "applying command to all connectors"
+    playground fully-managed-connector show-config | grep -v "applying command to all connectors"
+    playground fully-managed-connector show-config-parameters --only-show-file-path | grep -v "applying command to all connectors"
 fi
 
 if [[ $last_folder == "connect"* ]]

@@ -140,11 +140,11 @@ EOF
 connector_name="PostgresCdcSource"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
-playground ccloud-connector delete --connector $connector_name
+playground fully-managed-connector delete --connector $connector_name
 set -e
 
 log "Creating fully managed connector"
-playground ccloud-connector create-or-update --connector $connector_name << EOF
+playground fully-managed-connector create-or-update --connector $connector_name << EOF
 {
      "connector.class": "PostgresCdcSource",
      "name": "PostgresCdcSource",

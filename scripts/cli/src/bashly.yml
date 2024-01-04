@@ -46,7 +46,7 @@ commands:
     required: false
     help: correspond to completion $cur
 
-- name: get-ccloud-connector-list
+- name: get-fully-managed-connector-list
   help: Return some completion for ccloud connector list
   private: true
   dependencies:
@@ -2414,7 +2414,7 @@ commands:
       examples: |
         playground topic alter --topic atopic --add-config max.message.bytes=5242940
 
-- name: ccloud-connector
+- name: fully-managed-connector
   expose: always
   group: Fully Managed Connector
   filters:
@@ -2442,7 +2442,7 @@ commands:
       required: false
       arg: connector
       completions:
-        - $(playground get-ccloud-connector-list)
+        - $(playground get-fully-managed-connector-list)
       help: |-
         🔗 Connector name
 
@@ -2523,7 +2523,7 @@ commands:
       required: true
       arg: connector
       completions:
-        - $(playground get-ccloud-connector-list)
+        - $(playground get-fully-managed-connector-list)
       help: |-
         🔗 Connector name
     - long: --validate
@@ -2532,7 +2532,7 @@ commands:
         ✅ Validate config using PUT https://api.confluent.cloud/connect/v1/environments/{environment_id}/clusters/{kafka_cluster_id}/connector-plugins/{plugin_name}/config/validate (https://docs.confluent.io/cloud/current/api.html#tag/Managed-Connector-Plugins-(connectv1)/operation/validateConnectv1ConnectorPlugin)
 
     examples: |
-      playground ccloud-connector create-or-update --connector HttpSink << EOF
+      playground fully-managed-connector create-or-update --connector HttpSink << EOF
       {
           "connector.class": "HttpSink",
           "name": "HttpSink",

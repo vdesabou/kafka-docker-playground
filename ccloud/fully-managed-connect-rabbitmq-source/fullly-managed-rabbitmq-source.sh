@@ -51,11 +51,11 @@ docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"
 connector_name="RabbitMQSource"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
-playground ccloud-connector delete --connector $connector_name
+playground fully-managed-connector delete --connector $connector_name
 set -e
 
 log "Creating fully managed connector"
-playground ccloud-connector create-or-update --connector $connector_name << EOF
+playground fully-managed-connector create-or-update --connector $connector_name << EOF
 {
      "connector.class": "RabbitMQSource",
      "name": "RabbitMQSource",
@@ -85,4 +85,4 @@ playground topic consume --topic rabbitmq --min-expected-messages 5 --timeout 60
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
-playground ccloud-connector delete --connector $connector_name
+playground fully-managed-connector delete --connector $connector_name

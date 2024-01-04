@@ -7,7 +7,7 @@ if [[ ! -n "$connector" ]]
 then
     logwarn "--connector flag was not provided, applying command to all ccloud connectors"
     check_if_continue
-    connector=$(playground get-ccloud-connector-list)
+    connector=$(playground get-fully-managed-connector-list)
     if [ $? -ne 0 ]
     then
         logerror "❌ Could not get list of connectors"
