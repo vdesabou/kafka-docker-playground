@@ -2416,7 +2416,7 @@ commands:
 
 - name: ccloud-connector
   expose: always
-  group: Connector
+  group: Fully Managed Connector
   filters:
   - ccloud_environment
   dependencies:

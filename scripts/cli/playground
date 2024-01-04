@@ -114,7 +114,7 @@ playground_usage() {
   printf "  %s   ❌ Delete topic and associated schema/subject if applicable\n" "$(green "topic delete")                           "
   printf "  %s   🪛 Alter topic config\n" "$(green "topic alter")                            "
   echo
-  printf "%s\n" "$(bold "Connector commands:")"
+  printf "%s\n" "$(bold "Fully Managed Connector commands:")"
   printf "  %s   🔗☁️ Fully Managed Connector commands\n" "$(green "ccloud-connector")                       "
   printf "  %s   🧩 Show status of all connectors\n" "$(green "ccloud-connector status")                "
   printf "  %s   🎨 Show all plugins installed\n" "$(green "ccloud-connector plugins")               "
@@ -125,6 +125,8 @@ playground_usage() {
   printf "  %s   🧰 Show current connector config\n" "$(green "ccloud-connector show-config")           "
   printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "ccloud-connector show-config-parameters")"
   printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "ccloud-connector create-or-update")      "
+  echo
+  printf "%s\n" "$(bold "Connector commands:")"
   printf "  %s   🔗 Connector commands\n" "$(green "connector")                              "
   printf "  %s   🧩 Show status of all connectors\n" "$(green "connector status")                       "
   printf "  %s   🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n" "$(green "connector plugins")                      "
