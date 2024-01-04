@@ -91,7 +91,7 @@ esac
 
 if [[ -n "$port" ]]
 then
-  docker exec --privileged --user root ${container} bash -c "iptables -${action} INPUT -p tcp -s ${ip} --dport ${port} -j DROP"
+  docker exec --privileged --user root ${container} bash -c "iptables -${action} INPUT -p tcp -s ${ip} --sport ${port} -j DROP"
 else
   docker exec --privileged --user root ${container} bash -c "iptables -${action} INPUT -p tcp -s ${ip} -j DROP"
 fi
