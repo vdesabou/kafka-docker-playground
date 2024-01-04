@@ -10,3 +10,4 @@ hdfs3-source-ha-kerberos.sh
 azure-service-bus-source.sh
 sap-hana-sink.sh
 databricks-delta-lake-sink.sh
+mapr-sink.sh
