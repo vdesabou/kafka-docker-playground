@@ -4,9 +4,16 @@ get_environment_used
 
 if [[ "$environment" == "ccloud" ]]
 then
-  set +e
-  confluent kafka topic list | awk '{if(NR>2) print $1}'
-  set -e
+  if [[ -n "$skip_connect_internal_topics" ]]
+  then
+    set +e
+    confluent kafka topic list | grep -v "connect-" | grep -v "_confluent-monitoring" | grep -v "_confluent-command" | awk '{if(NR>2) print $1}'
+    set -e
+  else
+    set +e
+    confluent kafka topic list | awk '{if(NR>2) print $1}'
+    set -e
+  fi
 else
   # trick to be faster
   docker exec broker ls /var/lib/kafka/data > /dev/null 2>&1

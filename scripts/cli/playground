@@ -5673,6 +5673,7 @@ function get_sr_url_and_security() {
   then
     if [[ ! -n "$root_folder" ]]
     then
+      # can happen in filter function where before hook is not called
       DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
       dir1=$(echo ${DIR_CLI%/*})
       root_folder=$(echo ${dir1%/*})
@@ -10723,9 +10724,16 @@ playground_get_topic_list_command() {
 
   if [[ "$environment" == "ccloud" ]]
   then
-    set +e
-    confluent kafka topic list | awk '{if(NR>2) print $1}'
-    set -e
+    if [[ -n "$skip_connect_internal_topics" ]]
+    then
+      set +e
+      confluent kafka topic list | grep -v "connect-" | grep -v "_confluent-monitoring" | grep -v "_confluent-command" | awk '{if(NR>2) print $1}'
+      set -e
+    else
+      set +e
+      confluent kafka topic list | awk '{if(NR>2) print $1}'
+      set -e
+    fi
   else
     # trick to be faster
     docker exec broker ls /var/lib/kafka/data > /dev/null 2>&1
@@ -11846,17 +11854,6 @@ playground_switch_ccloud_command() {
 
   log "🔌 boostrapping ccloud environment"
   bootstrap_ccloud_environment
-
-  get_kafka_docker_playground_dir
-  DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
-
-  if [ -f $DELTA_CONFIGS_ENV ]
-  then
-      source $DELTA_CONFIGS_ENV
-  else
-      logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
-      exit 1
-  fi
 }
 
 # :command.function

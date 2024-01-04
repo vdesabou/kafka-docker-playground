@@ -22,14 +22,3 @@ playground state set run.environment_before_switch "$(playground state get run.e
 
 log "🔌 boostrapping ccloud environment"
 bootstrap_ccloud_environment
-
-get_kafka_docker_playground_dir
-DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
-
-if [ -f $DELTA_CONFIGS_ENV ]
-then
-    source $DELTA_CONFIGS_ENV
-else
-    logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
-    exit 1
-fi
