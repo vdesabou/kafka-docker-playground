@@ -80,25 +80,32 @@ log "Deleting fully managed connector $connector_name, it might fail..."
 playground fully-managed-connector delete --connector $connector_name
 set -e
 
+confluent connect custom-plugin create S3_SINK_CUSTOM --plugin-file ~/Downloads/confluentinc-kafka-connect-s3-10.5.7.zip --connector-class io.confluent.connect.s3.S3SinkConnector --connector-type SINK --sensitive-properties "aws.secret.access.key"
+
+# https://docs.confluent.io/cloud/current/connectors/connect-api-section.html#ccloud-connect-api
 log "Creating fully managed connector"
 playground fully-managed-connector create-or-update --connector $connector_name << EOF
 {
-     "connector.class": "S3_SINK_CUSTOM",
-     "name": "$connector_name",
-     "kafka.auth.mode": "KAFKA_API_KEY",
-     "kafka.api.key": "$CLOUD_KEY",
-     "kafka.api.secret": "$CLOUD_SECRET",
-     "topics": "s3_topic",
-     "topics.dir": "$TAG",
-     "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
-     "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
-     "input.data.format": "AVRO",
-     "output.data.format": "AVRO",
-     "s3.bucket.name": "$AWS_BUCKET_NAME",
-     "time.interval" : "HOURLY",
-     "flush.size": "1000",
-     "schema.compatibility": "NONE",
-     "tasks.max" : "1"
+    "confluent.connector.type": "CUSTOM",
+    "confluent.custom.schema.registry.auto": "true",
+    "confluent.custom.plugin.id": "",
+    "confluent.custom.connection.endpoints": "",
+    "kafka.api.key": "$CLOUD_KEY",
+    "kafka.api.secret": "$CLOUD_SECRET",
+    "name": "$connector_name",
+    "tasks.max": "1",
+    "topics": "s3_topic",
+    "s3.region": "$AWS_REGION",
+    "s3.bucket.name": "$AWS_BUCKET_NAME",
+    "topics.dir": "$TAG",
+    "s3.part.size": 52428801,
+    "flush.size": "3",
+    "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
+    "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
+    "storage.class": "io.confluent.connect.s3.storage.S3Storage",
+    "input.data.format": "AVRO",
+    "output.data.format": "AVRO",
+    "schema.compatibility": "NONE"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 300
