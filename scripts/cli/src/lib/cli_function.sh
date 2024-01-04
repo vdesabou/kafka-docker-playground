@@ -85,6 +85,13 @@ function get_sr_url_and_security() {
       sr_security="-u superUser:superUser"
   elif [[ "$environment" == "ccloud" ]]
   then
+    if [[ ! -n "$root_folder" ]]
+    then
+      # can happen in filter function where before hook is not called
+      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+      dir1=$(echo ${DIR_CLI%/*})
+      root_folder=$(echo ${dir1%/*})
+    fi
     if [ -f $root_folder/.ccloud/env.delta ]
     then
         source $root_folder/.ccloud/env.delta
