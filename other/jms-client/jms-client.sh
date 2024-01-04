@@ -20,7 +20,7 @@ fi
 export ENABLE_CONTROL_CENTER=true
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml" -a -b
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml" "-a -b"
 
 
 log "Sending messages to topic test-queue using JMS client"

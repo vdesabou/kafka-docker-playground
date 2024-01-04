@@ -9,7 +9,7 @@ source ${DIR}/../../scripts/utils.sh
 export ENABLE_CONTROL_CENTER=true
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml" -a -b
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml" "-a -b"
 
 log "Create a topic kafkajs"
 docker exec broker kafka-topics --create --topic kafkajs --partitions 3 --replication-factor 1 --bootstrap-server broker:9092
