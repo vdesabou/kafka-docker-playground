@@ -11,3 +11,4 @@ azure-service-bus-source.sh
 sap-hana-sink.sh
 databricks-delta-lake-sink.sh
 mapr-sink.sh
+jms-sag-um-sink.sh
