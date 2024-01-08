@@ -4,17 +4,8 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-# if version_gt $TAG_BASE "5.9.0"; then
-#      log "Hbase does not support JDK 11, see https://hbase.apache.org/book.html#java"
-#      # known_issue https://github.com/vdesabou/kafka-docker-playground/issues/907
-#      exit 107
-# fi
-
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.kerberos.yml"
-
-
-
 
 log "Add connect kerberos principal"
 docker exec -i kerberos kadmin.local << EOF
@@ -33,7 +24,6 @@ if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
      docker exec -u 0 connect chown appuser:appuser /tmp/connect.keytab
 fi
-
 
 log "Creating HBase sink connector"
 playground connector create-or-update --connector hbase-sink  << EOF
