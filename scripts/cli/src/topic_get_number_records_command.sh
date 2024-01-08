@@ -88,7 +88,13 @@ do
         esac
         wc -l /tmp/result.log | awk '{print $1}'
     else
-        if ! version_gt $TAG_BASE "6.9.9" && [ "$security" != "" ]
+        tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+        if [ $? != 0 ] || [ "$tag" == "" ]
+        then
+            logerror "Could not find current CP version from docker ps"
+            exit 1
+        fi
+        if ! version_gt $tag "6.9.9" && [ "$security" != "" ]
         then
             # GetOffsetShell does not support security before 7.x
             get_security_broker "--consumer.config"

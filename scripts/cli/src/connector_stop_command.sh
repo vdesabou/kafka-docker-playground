@@ -3,7 +3,14 @@ get_connect_url_and_security
 connector="${args[--connector]}"
 verbose="${args[--verbose]}"
 
-if ! version_gt $TAG_BASE "7.4.99"; then
+tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+if [ $? != 0 ] || [ "$tag" == "" ]
+then
+    logerror "Could not find current CP version from docker ps"
+    exit 1
+fi
+
+if ! version_gt $tag "7.4.99"; then
     logerror "❌ stop connector is available since CP 7.5 only"
     exit 1
 fi

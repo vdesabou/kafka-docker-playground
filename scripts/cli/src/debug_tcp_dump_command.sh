@@ -7,9 +7,16 @@ set +e
 docker exec $container type tcpdump > /dev/null 2>&1
 if [ $? != 0 ]
 then
+    tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+    if [ $? != 0 ] || [ "$tag" == "" ]
+    then
+        logerror "Could not find current CP version from docker ps"
+        exit 1
+    fi
+
     logwarn "tcpdump is not installed on container $container, attempting to install it"
     
-    if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
+    if [[ "$tag" == *ubi8 ]] || version_gt $tag "5.9.0"
     then
       if [ `uname -m` = "arm64" ]
       then
