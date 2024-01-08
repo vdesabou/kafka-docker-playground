@@ -836,7 +836,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"count_processed_transactions_in_cache\"}",
+          "expr": "kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"count-processed-transactions-in-cache\"}",
           "format": "time_series",
           "hide": false,
           "instant": false,
@@ -898,7 +898,7 @@
               }
             ]
           },
-          "unit": "ms"
+          "unit": "none"
         },
         "overrides": []
       },
