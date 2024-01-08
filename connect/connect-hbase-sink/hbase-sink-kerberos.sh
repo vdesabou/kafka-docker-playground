@@ -69,7 +69,7 @@ EOF
 sleep 10
 
 log "Verify data is in HBase:"
-docker exec -i hbase hbase shell > /tmp/result.log  2>&1 <<-EOF
+docker exec -i hbase bash -c "kinit -kt /opt/keytabs/hbase.keytab hbase/hbase.kerberos-demo.local && hbase shell -Djava.security.auth.login.config=/opt/hbase-2.2.3/conf/hbase-client.jaas -Dsun.security.krb5.debug=true" > /tmp/result.log  2>&1 <<-EOF
 scan 'example_table'
 EOF
 cat /tmp/result.log
