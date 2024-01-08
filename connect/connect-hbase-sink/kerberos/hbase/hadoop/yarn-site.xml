@@ -1,0 +1,96 @@
+<?xml version="1.0" ?>
+<!--
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License. See accompanying LICENSE file.
+-->
+<configuration>
+	<property>
+		<name>yarn.nodemanager.linux-container-executor.group</name>
+		<value>root</value>
+	</property>
+	<property>
+		<name>yarn.resourcemanager.webapp.delegation-token-auth-filter.enabled</name>
+		<value>true</value>
+	</property>
+	<property>
+		<name>yarn.nodemanager.linux-container-executor.path</name>
+		<value>/opt/hadoop-2.7.4/bin/container-executor</value>
+	</property>
+	<property>
+		<name>yarn.timeline-service.leveldb-timeline-store.path</name>
+		<value>/hadoop/yarn/timeline</value>
+	</property>
+	<property>
+		<name>yarn.nodemanager.container-executor.class</name>
+		<value>org.apache.hadoop.yarn.server.nodemanager.LinuxContainerExecutor</value>
+	</property>
+	<property>
+		<name>yarn.timeline-service.http-authentication.kerberos.keytab</name>
+		<value>/opt/keytabs/yarn.service.keytab</value>
+	</property>
+	<property>
+		<name>yarn.timeline-service.http-authentication.kerberos.principal</name>
+		<value>HTTP/_HOST@KERBEROS.SERVER</value>
+	</property>
+	<property>
+		<name>yarn.nodemanager.delete.debug-delay-sec</name>
+		<value>600</value>
+	</property>
+	<property>
+		<name>yarn.timeline-service.http-authentication.type</name>
+		<value>kerberos</value>
+	</property>
+	<property>
+		<name>yarn.nodemanager.principal</name>
+		<value>nm/_HOST@KERBEROS.SERVER</value>
+	</property>
+	<property>
+		<name>yarn.nodemanager.aux-services</name>
+		<value>mapreduce_shuffle</value>
+	</property>
+	<property>
+		<name>yarn.resourcemanager.principal</name>
+		<value>rm/_HOST@KERBEROS.SERVER</value>
+	</property>
+	<property>
+		<name>yarn.application.classpath</name>
+		<value>/opt/hadoop-2.7.4/etc/hadoop,/opt/hadoop-2.7.4/share/hadoop/common/*,/opt/hadoop-2.7.4/share/hadoop/common/lib/*,/opt/hadoop-2.7.4/share/hadoop/hdfs/*,/opt/hadoop-2.7.4/share/hadoop/hdfs/lib/*,/opt/hadoop-2.7.4/share/hadoop/mapreduce/*,/opt/hadoop-2.7.4/share/hadoop/mapreduce/lib/*,/opt/hadoop-2.7.4/share/hadoop/yarn/*,/opt/hadoop-2.7.4/share/hadoop/yarn/lib/*</value>
+	</property>
+	<property>
+		<name>yarn.resourcemanager.keytab</name>
+		<value>/opt/keytabs/rm.service.keytab</value>
+	</property>
+	<property>
+		<name>yarn.nodemanager.keytab</name>
+		<value>/opt/keytabs/nm.service.keytab</value>
+	</property>
+	<property>
+		<name>yarn.timeline-service.keytab</name>
+		<value>/opt/keytabs/yarn.service.keytab</value>
+	</property>
+	<property>
+		<name>yarn.timeline-service.principal</name>
+		<value>yarn/_HOST@KERBEROS.SERVER</value>
+	</property>
+	<property>
+		<name>yarn.resourcemanager.bind-host</name>
+		<value>0.0.0.0</value>
+	</property>
+	<property>
+		<name>yarn.nodemanager.bind-host</name>
+		<value>0.0.0.0</value>
+	</property>
+	<property>
+		<name>yarn.timeline-service.bind-host</name>
+		<value>0.0.0.0</value>
+	</property>
+</configuration>

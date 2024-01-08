@@ -1,0 +1,52 @@
+---
+version: '3.5'
+services:
+
+  # https://github.com/lenchv/kerberized-hbase
+  hbase:
+    image: lenchv/kerberized-hbase:1.0
+    container_name: hbase
+    hostname: hbase.kerberos-demo.local
+    volumes:
+      - ../../connect/connect-hbase-sink/kerberos/krb5.conf:/etc/krb5.conf
+      - krb-server:/opt/keytabs/
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - kerberos
+    environment:
+      HBASE_MANAGES_ZK: "true"
+      KRB_ROOT_PASSWORD: root
+
+
+  kerberos:
+    #image: lenchv/hbase-kerberos-server:1.0
+    build: ../../connect/connect-hbase-sink/kerberos/kerberos
+    container_name: kerberos
+    hostname: kerberos.kerberos-demo.local
+    environment:
+      REALM: KERBEROS.SERVER
+      DOMAIN_REALM: kerberos
+      KERBEROS_ROOT_USER_PASSWORD: root
+      CLIENT_USER: hbase
+      CLIENT_PASS: hbase
+      SEARCH_DOMAINS: kerberos-demo.local
+    volumes:
+      - krb-server:/opt/keytabs/
+      - /etc/localtime:/etc/localtime:ro
+
+  connect:
+    depends_on:
+      - hbase
+    hostname: connect.kerberos-demo.local
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hbase
+    volumes:
+      - ../../connect/connect-hbase-sink/kerberos/krb5.conf:/etc/krb5.conf
+      - krb-server:/opt/keytabs/
+
+volumes:
+  krb-server:
+
+networks:
+  default:
+    name: kerberos-demo.local

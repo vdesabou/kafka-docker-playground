@@ -1,0 +1,60 @@
+FROM bde2020/hadoop-base:2.0.0-hadoop2.7.4-java8
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV HADOOP_HOME=$HADOOP_PREFIX
+ENV HBASE_HOME=/opt/hbase-2.2.3
+ENV HADOOP_HOME=/opt/hadoop-2.7.4
+ENV ZOO_HOME=/opt/zookeeper-3.4.14
+ENV ZOO_CONF_DIR=$ZOO_HOME/conf
+ENV PATH=$PATH:$HBASE_HOME/bin:$ZOO_HOME/bin
+ENV HBASE_CONF_DIR=$HBASE_HOME/conf
+
+WORKDIR /opt
+
+RUN curl -L http://archive.apache.org/dist/hbase/2.2.3/hbase-2.2.3-bin.tar.gz | tar zxf -
+RUN curl -L http://mirror.csclub.uwaterloo.ca/apache/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz | tar zxf -
+
+RUN echo "deb [check-valid-until=no] http://cdn-fastly.deb.debian.org/debian jessie main" > /etc/apt/sources.list \
+	&& echo "deb [check-valid-until=no] http://archive.debian.org/debian jessie-backports main" >> /etc/apt/sources.list \
+	&& apt-get -o Acquire::Check-Valid-Until=false update \
+	&& apt-get install -y krb5-user
+
+RUN mkdir -p /hadoop/dfs/name && \
+	mkdir -p /hadoop/dfs/data && \
+	mkdir -p /hadoop/yarn/timeline
+
+RUN chmod a+x $HADOOP_PREFIX/etc/hadoop/hadoop-env.sh
+
+CMD ["/hadoop.sh"]
+
+# Namenode
+EXPOSE 50070
+EXPOSE 50470
+
+# Datanode
+EXPOSE 50075
+EXPOSE 50475
+
+# Resourcemanager
+EXPOSE 8088
+
+# Nodemanager
+EXPOSE 8042
+
+# Historyserver
+EXPOSE 8188
+
+# Hbase
+
+# REST API
+EXPOSE 8080
+# REST Web UI at :8085/rest.jsp
+EXPOSE 8085
+# Thrift API
+EXPOSE 9090
+# Thrift Web UI at :9095/thrift.jsp
+EXPOSE 9095
+# HBase's Embedded zookeeper cluster
+EXPOSE 2181
+# HBase Master web UI at :16010/master-status;  ZK at :16010/zk.jsp
+EXPOSE 16010
