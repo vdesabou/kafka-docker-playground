@@ -49,8 +49,8 @@ playground connector create-or-update --connector hbase-sink  << EOF
      "zookeeper.znode.parent": "/hbase-secure",
 
      "hbase.keytab.file": "/tmp/connect.keytab",
-     "hbase.master.kerberos.principal": "hbase@KERBEROS.SERVER",
-     "hbase.regionserver.kerberos.principal": "hbase@KERBEROS.SERVER",
+     "hbase.master.kerberos.principal": "hbase/hbase.kerberos-demo.local@KERBEROS.SERVER",
+     "hbase.regionserver.kerberos.principal": "hbase/hbase.kerberos-demo.local@KERBEROS.SERVER",
      "hbase.rpc.protection": "AUTHENTICATION",
      "hbase.user.principal": "connect/connect.kerberos-demo.local@KERBEROS.SERVER",
 
