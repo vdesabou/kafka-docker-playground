@@ -1162,23 +1162,6 @@ subcommands:
     usage: playground get-docker-compose
     options: []
     subcommands:
-  - name: get-properties
-    description: | 
-        📝 Get properties file from a container
-        
-        👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%93%9d-see-properties-file
-    usage: playground get-properties [OPTIONS]
-    options:
-    - names:
-      - --container
-      - -c
-      argument: connect
-      description: | 
-        🐳 Container name
-        
-        Default value: connect
-        
-    subcommands:
   - name: schema
     description: | 
         🔰 Schema commands
@@ -1652,6 +1635,22 @@ subcommands:
     usage: playground container COMMAND
     options: []
     subcommands:
+      - name: get-properties
+        description: | 
+          📝 Get properties file from a container
+            
+            👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%93%9d-see-properties-file
+        usage: playground container get-properties [OPTIONS]
+        options:
+        - names:
+          - --container
+          - -c
+          argument: connect
+          description: | 
+            🐳 Container name
+            
+            Default value: connect
+            
       - name: recreate
         description: | 
           💫 Recreate container(s)

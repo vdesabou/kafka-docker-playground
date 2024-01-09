@@ -936,30 +936,6 @@ commands:
   help: |-
     🐋 Get docker-compose
 
-- name: get-properties
-  group: Kafka
-  help: |-
-    📝 Get properties file from a container
-    
-    👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%93%9d-see-properties-file
-
-  flags:
-  - &container
-    long: --container
-    short: -c
-    required: false
-    default: "connect"
-    arg: container
-    completions:
-      - $(docker ps --format '{{.Names}}')
-    help: |-
-      🐳 Container name
-
-  examples:
-  - playground get-properties
-  - playground get-properties --container broker
-  - playground get-properties -c broker
-
 - name: schema
   expose: always
   group: Schema
@@ -1201,7 +1177,16 @@ commands:
       
       👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%e2%9c%a8-remote-debugging
     flags:
-      - *container
+      - &container
+        long: --container
+        short: -c
+        required: false
+        default: "connect"
+        arg: container
+        completions:
+          - $(docker ps --format '{{.Names}}')
+        help: |-
+          🐳 Container name
     examples:
     - playground debug enable-remote-debugging
     - playground debug enable-remote-debugging --container broker
@@ -1403,6 +1388,19 @@ commands:
   help: |-
     🐳 Container commands
   commands:
+
+    - name: get-properties
+      help: |-
+        📝 Get properties file from a container
+        
+        👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%93%9d-see-properties-file
+
+      flags:
+      - *container
+      examples:
+      - playground get-properties
+      - playground get-properties --container broker
+      - playground get-properties -c broker
 
     - name: recreate
       group: Container
