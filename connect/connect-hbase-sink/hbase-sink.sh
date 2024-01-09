@@ -4,14 +4,8 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if version_gt $TAG_BASE "5.9.0"; then
-     log "Hbase does not support JDK 11, see https://hbase.apache.org/book.html#java"
-     # known_issue https://github.com/vdesabou/kafka-docker-playground/issues/907
-     exit 107
-fi
-
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.1.2.0.yml"
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 
 log "Sending messages to topic hbase-test"
@@ -31,7 +25,7 @@ playground connector create-or-update --connector hbase-sink  << EOF
      "hbase.zookeeper.quorum": "hbase",
      "hbase.zookeeper.property.clientPort": "2181",
      "auto.create.tables": "true",
-     "auto.create.column.families": "true",
+     "auto.create.column.families": "false",
      "table.name.format": "example_table",
      "topics": "hbase-test"
 }
