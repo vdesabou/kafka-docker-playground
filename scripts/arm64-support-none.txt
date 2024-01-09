@@ -11,9 +11,6 @@ connect/connect-jdbc-oracle21-source
 connect/connect-jms-oracle21-sink
 connect/connect-jms-oracle21-source
 
-# requires CP 
-connect/connect-hbase-sink
-
 # https://integration-development.ideas.ibm.com/ideas/MESNS-I-369
 connect/connect-ibm-mq-sink
 connect/connect-ibm-mq-source
