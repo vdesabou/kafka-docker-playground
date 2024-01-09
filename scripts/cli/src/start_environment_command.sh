@@ -93,6 +93,12 @@ fi
 set +e
 playground container kill-all
 set -e
+
+playground state set run.test_file "$test_file"
+playground state set run.run_command "playground run -f $test_file $flag_list ${other_args[*]}"
+echo "" >> "$root_folder/playground-run-history"
+echo "playground run -f $test_file $flag_list ${other_args[*]}" >> "$root_folder/playground-run-history"
+
 cd $test_file_directory
 if [ -f $docker_compose_override_file ]
 then
