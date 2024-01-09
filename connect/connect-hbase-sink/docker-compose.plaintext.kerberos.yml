@@ -9,6 +9,7 @@ services:
     hostname: hbase.kerberos-demo.local
     volumes:
       - ../../connect/connect-hbase-sink/kerberos/krb5.conf:/etc/krb5.conf
+      - ../../connect/connect-hbase-sink/kerberos/hbase/hbase/hbase-site.xml:/opt/hbase-2.2.3/conf/hbase-site.xml
       - krb-server:/opt/keytabs/
       - /etc/localtime:/etc/localtime:ro
     depends_on:

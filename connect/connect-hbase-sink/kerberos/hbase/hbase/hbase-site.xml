@@ -23,11 +23,11 @@
 <configuration>
 	<property>
 		<name>hbase.rootdir</name>
-		<value>hdfs://_HOST:9000/hbase/data</value>
+		<value>hdfs://hbase.kerberos-demo.local:9000/hbase/data</value>
 	</property>
 	<property>
 		<name>hbase.zookeeper.quorum</name>
-		<value>_HOST</value>
+		<value>hbase.kerberos-demo.local</value>
 	</property>
 	<property>
 		<name>hbase.zookeeper.property.clientPort</name>
@@ -43,7 +43,7 @@
 	</property>
 	<property>
 		<name>hbase.master.kerberos.principal</name>
-		<value>hbase/_HOST@KERBEROS.SERVER</value>
+		<value>hbase/hbase.kerberos-demo.local@KERBEROS.SERVER</value>
 	</property>
 	<property>
 		<name>hbase.regionserver.keytab.file</name>
@@ -51,7 +51,7 @@
 	</property>
 	<property>
 		<name>hbase.regionserver.kerberos.principal</name>
-		<value>hbase/_HOST@KERBEROS.SERVER</value>
+		<value>hbase/hbase.kerberos-demo.local@KERBEROS.SERVER</value>
 	</property>
 	<property>
 		<name>hbase.superuser</name>
@@ -81,9 +81,9 @@
 
 	<property>
 		<name>phoenix.queryserver.kerberos.principal</name>
-		<value>HTTP/_HOST@KERBEROS.SERVER</value>
+		<value>HTTP/hbase.kerberos-demo.local@KERBEROS.SERVER</value>
 		<description>The Kerberos principal name that should be used to run the Phoenix Query Server process.
-    The principal name should be in the form: user/hostname@DOMAIN.  If "_HOST" is used as the hostname
+    The principal name should be in the form: user/hostname@DOMAIN.  If "hbase.kerberos-demo.local" is used as the hostname
     portion, it will be replaced with the actual hostname of the running instance.
     </description>
 	</property>
@@ -106,7 +106,7 @@
 	</property>
 	<property>
 		<name>hbase.rest.authentication.kerberos.principal</name>
-		<value>HTTP/_HOST@KERBEROS.SERVER</value>
+		<value>HTTP/hbase.kerberos-demo.local@KERBEROS.SERVER</value>
 	</property>
 	<property>
 		<name>hbase.rest.authentication.kerberos.keytab</name>
@@ -114,7 +114,7 @@
 	</property>
 	<property>
 		<name>hbase.rest.kerberos.principal</name>
-		<value>HTTP/_HOST@KERBEROS.SERVER</value>
+		<value>HTTP/hbase.kerberos-demo.local@KERBEROS.SERVER</value>
 	</property>
 	<property>
 		<name>hbase.rest.keytab.file</name>
@@ -129,23 +129,4 @@
 		<value>*</value>
 	</property>
 
-	<property>
-		<name>hbase.rest.ssl.enabled</name>
-		<value>true</value>
-	</property>
-
-	<property>
-		<name>hbase.rest.ssl.keystore.store</name>
-		<value>/opt/hbase-2.2.3/certs/keystore.jks</value>
-	</property>
-
-	<property>
-		<name>hbase.rest.ssl.keystore.password</name>
-		<value>1a2b3c</value>
-	</property>
-
-	<property>
-		<name>hbase.rest.ssl.keystore.keypassword</name>
-		<value>1a2b3c</value>
-	</property>
 </configuration>
