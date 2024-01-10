@@ -20,3 +20,5 @@ hdfs2-sink-kerberos.sh
 hdfs2-source-kerberos.sh
 # getting same issue as https://github.com/confluentinc/kafka-connect-jdbc/issues/1140
 redshift-jdbc-sink.sh
+
+snowflake-sink-snowpipe-streaming.sh
