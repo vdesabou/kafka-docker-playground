@@ -9,6 +9,7 @@ asapio/confluent-sap-connector
 aws/kafka-eventbridge-sink
 baffleinc/baffle-transforms
 bossoftware/tcvision
+camunda/kafka-connect-zeebe
 celonis/kafka-connect-ems
 cjmatta/kafka-connect-irc
 cjmatta/kafka-connect-sse
