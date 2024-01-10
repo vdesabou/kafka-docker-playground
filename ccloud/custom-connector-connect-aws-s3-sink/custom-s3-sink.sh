@@ -80,16 +80,16 @@ log "Deleting fully managed connector $connector_name, it might fail..."
 playground fully-managed-connector delete --connector $connector_name
 set -e
 
-confluent connect custom-plugin create S3_SINK_CUSTOM --plugin-file ~/Downloads/confluentinc-kafka-connect-s3-10.5.7.zip --connector-class io.confluent.connect.s3.S3SinkConnector --connector-type SINK --sensitive-properties "aws.secret.access.key"
+#confluent connect custom-plugin create S3_SINK_CUSTOM --plugin-file ~/Downloads/confluentinc-kafka-connect-s3-10.5.7.zip --connector-class io.confluent.connect.s3.S3SinkConnector --connector-type SINK --sensitive-properties "aws.secret.access.key"
 
 # https://docs.confluent.io/cloud/current/connectors/connect-api-section.html#ccloud-connect-api
 log "Creating fully managed connector"
-playground fully-managed-connector create-or-update --connector $connector_name << EOF
+playground fully-managed-connector create-or-update --connector $connector_name --verbose << EOF
 {
     "confluent.connector.type": "CUSTOM",
     "confluent.custom.schema.registry.auto": "true",
-    "confluent.custom.plugin.id": "",
-    "confluent.custom.connection.endpoints": "",
+    "confluent.custom.plugin.id": "ccp-4nv2zz",
+    "confluent.custom.connection.endpoints": "sts.amazonaws.com",
     "kafka.api.key": "$CLOUD_KEY",
     "kafka.api.secret": "$CLOUD_SECRET",
     "name": "$connector_name",
