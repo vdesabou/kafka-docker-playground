@@ -76,3 +76,4 @@ playground-run-history
 playground.ini
 playground_config.ini
 .ccloud
+.connector_config
