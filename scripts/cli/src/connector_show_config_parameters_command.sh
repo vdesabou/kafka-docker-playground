@@ -165,6 +165,8 @@ do
                         default=""
                     fi
                     echo "\"$param\": \"$default\"," >> "$json_filename"
+                    sort "$json_filename" -o /tmp/tmp
+                    mv /tmp/tmp "$json_filename"
                 done <<< "$(echo "$configs" | jq -c '.[]')"
             fi
         else
