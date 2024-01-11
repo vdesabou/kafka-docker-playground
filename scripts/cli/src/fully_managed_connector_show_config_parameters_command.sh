@@ -224,6 +224,9 @@ do
             echo "$filename"
         else
             cat $filename
+
+            log "🔩 list of all available parameters for connector $connector ($class) (with default value when applicable)"
+            cat $json_filename
         fi
     fi
 done
