@@ -201,8 +201,9 @@ do
         then
             filename=$json_filename
         else
-            echo "" >> $filename
-            log "🔩 list of all available parameters for connector $connector ($class) (with default value when applicable)" >> $filename
+            cat $filename > "/tmp/config-$connector_class.txt"
+            filename="/tmp/config-$connector_class-$version.txt"
+            echo "🔩 list of all available parameters for connector $connector ($class) (with default value when applicable)" >> $filename
             cat $json_filename >> $filename
         fi
 

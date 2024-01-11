@@ -181,11 +181,12 @@ do
         then
             filename=$json_filename
         else
-            echo "" >> $filename
+            cat $filename > "/tmp/config-$connector_class-$version.txt"
+            filename="/tmp/config-$connector_class-$version.txt"
             echo "🔩 list of all available parameters for connector $connector ($class) and version $version (with default value when applicable)" >> $filename
             cat $json_filename >> $filename
         fi
-        
+
         editor=$(playground config get editor)
         if [ "$editor" != "" ]
         then
