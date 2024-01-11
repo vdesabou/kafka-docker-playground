@@ -38,6 +38,11 @@ subcommands:
             default is ~ (home dir)
         usage: playground config folder_zip_or_jar FOLDER...
         options: []
+      - name: clipboard
+        description: | 
+          copy to clipboard connector config (only working on MacOS)
+        usage: playground config clipboard [ENABLED]
+        options: []
   - name: run
     description: | 
         🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)

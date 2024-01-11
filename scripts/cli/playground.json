@@ -36,6 +36,12 @@
           "description": "📂 list of folders where to search for zip or jar\n  current folder is always included\n  \n  default is ~ (home dir)\n",
           "usage": "playground config folder_zip_or_jar FOLDER...",
           "options": []
+        },
+        {
+          "name": "clipboard",
+          "description": "copy to clipboard connector config (only working on MacOS)\n",
+          "usage": "playground config clipboard [ENABLED]",
+          "options": []
         }
       ]
     },

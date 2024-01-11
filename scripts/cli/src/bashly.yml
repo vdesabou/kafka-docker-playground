@@ -240,6 +240,17 @@ commands:
     - playground config folder_zip_or_jar ~/Downloads ~/Documents/github/kafka-connect-*
     - playground config folder_zip_or_jar ~/Downloads
 
+  - name: clipboard
+    help: copy to clipboard connector config (only working on MacOS)
+    args:
+    - name: enabled
+      required: false
+      default: "true"
+      help: editor
+    examples:
+    - playground config clipboard false
+    - playground config clipboard true
+
 - name: run
   group: Run
   catch_all:

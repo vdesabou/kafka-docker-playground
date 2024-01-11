@@ -966,6 +966,7 @@ playground_config_usage() {
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   editor to use to open files\n" "$(green "editor")           "
   printf "  %s   📂 list of folders where to search for zip or jar\n" "$(green "folder_zip_or_jar")"
+  printf "  %s   copy to clipboard connector config (only working on MacOS)\n" "$(green "clipboard")        "
   echo
 
   # :command.long_usage
@@ -1184,6 +1185,50 @@ playground_config_folder_zip_or_jar_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground config folder_zip_or_jar ~/Downloads\n  ~/Documents/github/kafka-connect-*\n"
     printf "  playground config folder_zip_or_jar ~/Downloads\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_config_clipboard_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground config clipboard - copy to clipboard connector config (only working on MacOS)\n"
+    echo
+
+  else
+    printf "playground config clipboard - copy to clipboard connector config (only working on MacOS)\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground config clipboard [ENABLED]\n"
+  printf "  playground config clipboard --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "ENABLED")"
+    printf "    editor\n"
+    printf "    Default: true\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground config clipboard false\n"
+    printf "  playground config clipboard true\n"
     echo
 
   fi
@@ -11053,6 +11098,7 @@ playground_config_get_command() {
   then
       # set defaults
       playground config editor code > /dev/null 2>&1
+      playground config clipboard true > /dev/null 2>&1
       playground config folder_zip_or_jar ~ > /dev/null 2>&1
   fi
   ini_load $root_folder/playground_config.ini
@@ -11108,6 +11154,19 @@ playground_config_folder_zip_or_jar_command() {
 
   log "📁 configuring folder_zip_or_jar with $folder_list"
   playground config set folder_zip_or_jar "$folder_list"
+}
+
+# :command.function
+playground_config_clipboard_command() {
+  # src/config_clipboard_command.sh
+  if [[ "$OSTYPE" != "darwin"* ]]
+  then
+      logerror "❌ clipboard is only working on MacOS"
+      exit 1
+  fi
+
+  log "📋 configuring clipboard with ${args[enabled]}"
+  playground config set clipboard "${args[enabled]}"
 }
 
 # :command.function
@@ -16988,6 +17047,27 @@ playground_fully_managed_connector_show_config_command() {
       echo "playground fully-managed-connector create-or-update --connector $connector << EOF"
       echo "$json_config" | jq -S . | sed 's/\$/\\$/g'
       echo "EOF"
+
+      if [[ "$OSTYPE" == "darwin"* ]]
+      then
+          clipboard=$(playground config get clipboard)
+          if [ "$clipboard" == "" ]
+          then
+              playground config set clipboard true
+          fi
+
+          if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
+          then
+              tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+              trap 'rm -rf $tmp_dir' EXIT
+              echo "playground fully-managed-connector --connector $connector << EOF" > $tmp_dir/tmp
+              echo "$json_config" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
+              echo "EOF" >> $tmp_dir/tmp
+
+              cat $tmp_dir/tmp | pbcopy
+              log "📋 connector config has been copied to the clipboard (disable with 'playground config set clipboard false')"
+          fi
+      fi
   done
 }
 
@@ -17958,9 +18038,30 @@ playground_connector_show_config_command() {
           echo "curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config""
       fi
       json_config=$(curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config")
-      echo "playground connector create-or-update --connector $connector  << EOF"
+      echo "playground connector create-or-update --connector $connector << EOF"
       echo "$json_config" | jq -S . | sed 's/\$/\\$/g'
       echo "EOF"
+
+      if [[ "$OSTYPE" == "darwin"* ]]
+      then
+          clipboard=$(playground config get clipboard)
+          if [ "$clipboard" == "" ]
+          then
+              playground config set clipboard true
+          fi
+
+          if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
+          then
+              tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+              trap 'rm -rf $tmp_dir' EXIT
+              echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
+              echo "$json_config" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
+              echo "EOF" >> $tmp_dir/tmp
+
+              cat $tmp_dir/tmp | pbcopy
+              log "📋 connector config has been copied to the clipboard (disable with 'playground config set clipboard false')"
+          fi
+      fi
   done
 }
 
@@ -20169,6 +20270,13 @@ playground_config_parse_requirements() {
       shift $#
       ;;
 
+    clipboard)
+      action="clipboard"
+      shift
+      playground_config_clipboard_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_config_usage >&2
@@ -20490,6 +20598,59 @@ playground_config_folder_zip_or_jar_parse_requirements() {
     printf "missing required argument: FOLDER\nusage: playground config folder_zip_or_jar FOLDER...\n" >&2
     exit 1
   fi
+
+}
+
+# :command.parse_requirements
+playground_config_clipboard_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_config_clipboard_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="config clipboard"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        if [[ -z ${args['enabled']+x} ]]; then
+
+          args['enabled']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['enabled']:-} ]] || args['enabled']="true"
 
 }
 
@@ -29141,6 +29302,7 @@ run() {
     "config set") playground_config_set_command ;;
     "config editor") playground_config_editor_command ;;
     "config folder_zip_or_jar") playground_config_folder_zip_or_jar_command ;;
+    "config clipboard") playground_config_clipboard_command ;;
     "run") playground_run_command ;;
     "re-run") playground_re_run_command ;;
     "history") playground_history_command ;;
