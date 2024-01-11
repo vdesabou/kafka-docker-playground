@@ -49,7 +49,7 @@ fi
 docker compose -f ../../ccloud/environment/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} build
 docker compose -f ../../ccloud/environment/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} down -v --remove-orphans
 docker compose -f ../../ccloud/environment/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_conduktor_command} up -d
-log "📝 To see the actual properties file, use cli command playground get-properties -c <container>"
+log "📝 To see the actual properties file, use cli command playground container get-properties -c <container>"
 command="source ${DIR}/../../scripts/utils.sh && docker compose -f ${DIR}/../../ccloud/environment/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_conduktor_command} up -d"
 playground state set run.docker_command "$command"
 playground state set run.environment "ccloud"
