@@ -197,6 +197,15 @@ do
 
     if [[ -n "$open" ]]
     then
+        if [[ -n "$only_show_json" ]]
+        then
+            filename=$json_filename
+        else
+            echo "" >> $filename
+            log "🔩 list of all available parameters for connector $connector ($class) (with default value when applicable)" >> $filename
+            cat $json_filename >> $filename
+        fi
+
         editor=$(playground config get editor)
         if [ "$editor" != "" ]
         then
