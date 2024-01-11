@@ -2228,6 +2228,13 @@
               ],
               "argument": "",
               "description": "📂 Only show the path of the file containing the configuration parameters\n"
+            },
+            {
+              "names": [
+                "--only-show-json"
+              ],
+              "argument": "",
+              "description": "📗 Only show list of all available parameters for connector (with default value when applicable)\n"
             }
           ]
         },
@@ -2530,6 +2537,13 @@
               ],
               "argument": "",
               "description": "📂 Only show the path of the file containing the configuration parameters\n"
+            },
+            {
+              "names": [
+                "--only-show-json"
+              ],
+              "argument": "",
+              "description": "📗 Only show list of all available parameters for connector (with default value when applicable)\n"
             }
           ]
         },
@@ -2559,6 +2573,35 @@
               ],
               "argument": "CLASS",
               "description": "☕ Java class name to search for in all jars\n"
+            }
+          ]
+        },
+        {
+          "name": "snippets",
+          "description": "🔌 useful snippets\n",
+          "usage": "playground connector snippets [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--converter"
+              ],
+              "argument": [
+                "avro",
+                "protobuf",
+                "json-schema",
+                "json",
+                "json-schema-enabled",
+                "string",
+                "bytearray"
+              ],
+              "description": "🔌 Converter\n\nAllowed values: avro, protobuf, json-schema, json, json-schema-enabled, string, bytearray\n"
+            },
+            {
+              "names": [
+                "--dlq"
+              ],
+              "argument": "",
+              "description": "🔗 dlq\n"
             }
           ]
         },

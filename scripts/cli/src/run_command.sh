@@ -209,9 +209,9 @@ SECONDS=0
 cd $test_file_directory
 if [[ -n "$enable_multiple_connect_workers" ]]
 then
-  trap "cp /tmp/playground-backup-docker-compose.yml $docker_compose_file;rm /tmp/playground-run-command-used;echo '';sleep 3;set +e;playground connector status;playground connector versions;playground open-docs --only-show-url" EXIT
+  trap "cp /tmp/playground-backup-docker-compose.yml $docker_compose_file;rm /tmp/playground-run-command-used;echo '';sleep 3;set +e;playground connector status;playground connector versions;playground open-docs --only-show-url;playground connector show-config-parameters --only-show-json" EXIT
 else
-  trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground connector versions;playground open-docs --only-show-url' EXIT
+  trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground connector versions;playground open-docs --only-show-url;playground connector show-config-parameters --only-show-json' EXIT
 fi
 playground generate-fzf-find-files &
 touch /tmp/playground-run-command-used

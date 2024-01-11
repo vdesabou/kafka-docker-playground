@@ -1,11 +1,11 @@
+connector="${args[--connector]}"
 open="${args[--open]}"
 force_refresh="${args[--force-refresh]}"
 only_show_file_path="${args[--only-show-file-path]}"
+only_show_json="${args[--only-show-json]}"
 verbose="${args[--verbose]}"
 
 get_connect_url_and_security
-
-connector="${args[--connector]}"
 
 if [[ ! -n "$connector" ]]
 then
@@ -55,10 +55,18 @@ do
         exit 1
     fi
 
-    filename="/tmp/config-$connector_class-$version.txt"
+    mkdir -p $root_folder/.connector_config
+    filename="$root_folder/.connector_config/config-$connector_class-$version.txt"
+    json_filename="$root_folder/.connector_config/config-$connector_class-$version.json"
 
     class=$(echo $connector_class | rev | cut -d '.' -f 1 | rev)
-    log "🔩 getting parameters for connector $connector ($class) and version $version"
+
+    if [[ -n "$only_show_json" ]]
+    then
+        log "🔩 list of all available parameters for connector $connector ($class) and version $version (with default value when applicable)"
+    else
+        log "🔩 getting parameters for connector $connector ($class) and version $version"
+    fi
 
     if [[ -n "$force_refresh" ]]
     then
@@ -66,8 +74,12 @@ do
         then
             rm -f $filename
         fi
+        if [ -f $json_filename ]
+        then
+            rm -f $json_filename
+        fi
     fi
-    if [ ! -f $filename ]
+    if [ ! -f $filename ] || [ ! -f $json_filename ]
     then
         set +e
         if [[ -n "$verbose" ]]
@@ -147,6 +159,12 @@ do
                     echo -e "\t - Importance: $importance" >> $filename
                     echo -e "\t - Required: $required" >> $filename
                     echo -e "" >> $filename
+
+                    if [ "$default" == "null" ]
+                    then
+                        default=""
+                    fi
+                    echo "\"$param\": \"$default\"," >> $json_filename
                 done
             fi
         else
@@ -173,6 +191,12 @@ do
             fi
         fi
     else
+        if [[ -n "$only_show_json" ]]
+        then
+            cat $json_filename
+            return
+        fi
+
         if [[ -n "$only_show_file_path" ]]
         then
             echo "$filename"

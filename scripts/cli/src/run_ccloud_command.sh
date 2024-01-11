@@ -246,7 +246,7 @@ log "🚀 Executing $filename in dir $test_file_directory"
 log "####################################################"
 SECONDS=0
 cd $test_file_directory
-trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground fully-managed-connector status;playground connector versions' EXIT
+trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground fully-managed-connector status;playground connector versions;playground connector fully-managed-show-config-parameters --only-show-json' EXIT
 touch /tmp/playground-run-command-used
 playground generate-fzf-find-files &
 bash $filename ${other_args[*]}

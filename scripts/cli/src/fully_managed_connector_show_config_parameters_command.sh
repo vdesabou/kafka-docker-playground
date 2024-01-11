@@ -2,6 +2,7 @@ connector="${args[--connector]}"
 open="${args[--open]}"
 force_refresh="${args[--force-refresh]}"
 only_show_file_path="${args[--only-show-file-path]}"
+only_show_json="${args[--only-show-json]}"
 verbose="${args[--verbose]}"
 
 get_ccloud_connect
@@ -9,7 +10,6 @@ get_ccloud_connect
 if [[ ! -n "$connector" ]]
 then
     set +e
-    log "✨ --connector flag was not provided, applying command to all ccloud connectors"
     connector=$(playground get-fully-managed-connector-list)
     if [ $? -ne 0 ]
     then
@@ -19,7 +19,7 @@ then
     fi
     if [ "$connector" == "" ]
     then
-        logerror "💤 No ccloud connector is running !"
+        logerror "💤 No fully managed connector is running !"
         exit 1
     fi
     set -e
@@ -42,6 +42,11 @@ then
 fi
 
 items=($connector)
+length=${#items[@]}
+if ((length > 1))
+then
+    log "✨ --connector flag was not provided, applying command to all connectors"
+fi
 for connector in ${items[@]}
 do
     json_config=$(curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config" --header "authorization: Basic $authorization")
@@ -67,9 +72,21 @@ do
     fi
 
     filename="/tmp/config-$connector_class.txt"
+    json_filename="/tmp/config-$connector_class.json"
+
+    mkdir -p $root_folder/.connector_config
+    filename="$root_folder/.connector_config/config-$connector_class.txt"
+    json_filename="$root_folder/.connector_config/config-$connector_class.json"
 
     class=$(echo $connector_class | rev | cut -d '.' -f 1 | rev)
-    log "🔩 getting parameters for connector $connector ($class)"
+
+    if [[ -n "$only_show_json" ]]
+    then
+        log "🔩 list of all available parameters for connector $connector ($class) (with default value when applicable)"
+    else
+        log "🔩 getting parameters for connector $connector ($class)"
+    fi
+    
 
     if [[ -n "$force_refresh" ]]
     then
@@ -77,8 +94,12 @@ do
         then
             rm -f $filename
         fi
+        if [ -f $json_filename ]
+        then
+            rm -f $json_filename
+        fi
     fi
-    if [ ! -f $filename ]
+    if [ ! -f $filename ] || [ ! -f $json_filename ]
     then
         set +e
         if [[ -n "$verbose" ]]
@@ -158,6 +179,12 @@ do
                     echo -e "\t - Importance: $importance" >> $filename
                     echo -e "\t - Required: $required" >> $filename
                     echo -e "" >> $filename
+
+                    if [ "$default" == "null" ]
+                    then
+                        default=""
+                    fi
+                    echo "\"$param\": \"$default\"," >> $json_filename
                 done
             fi
         else
@@ -184,6 +211,12 @@ do
             fi
         fi
     else
+        if [[ -n "$only_show_json" ]]
+        then
+            cat $json_filename
+            return
+        fi
+
         if [[ -n "$only_show_file_path" ]]
         then
             echo "$filename"
