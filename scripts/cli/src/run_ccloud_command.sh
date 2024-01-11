@@ -246,7 +246,7 @@ log "🚀 Executing $filename in dir $test_file_directory"
 log "####################################################"
 SECONDS=0
 cd $test_file_directory
-trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground fully-managed-connector status;playground connector versions;playground connector fully-managed-show-config-parameters --only-show-json' EXIT
+trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground fully-managed-connector status;playground connector versions' EXIT
 touch /tmp/playground-run-command-used
 playground generate-fzf-find-files &
 bash $filename ${other_args[*]}
@@ -254,9 +254,6 @@ ret=$?
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 let ELAPSED_TOTAL+=$SECONDS
 set +e
-# just run it in background in case it is called later, the 
-# file will be present and it will be much faster to display config
-playground fully-managed-connector show-config-parameters > /dev/null 2>&1 &
 set -e
 if [ $ret -eq 0 ]
 then

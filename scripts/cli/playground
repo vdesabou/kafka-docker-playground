@@ -11286,9 +11286,9 @@ playground_run_command() {
   cd $test_file_directory
   if [[ -n "$enable_multiple_connect_workers" ]]
   then
-    trap "cp /tmp/playground-backup-docker-compose.yml $docker_compose_file;rm /tmp/playground-run-command-used;echo '';sleep 3;set +e;playground connector status;playground connector versions;playground open-docs --only-show-url;playground connector show-config-parameters --only-show-json" EXIT
+    trap "cp /tmp/playground-backup-docker-compose.yml $docker_compose_file;rm /tmp/playground-run-command-used;echo '';sleep 3;set +e;playground connector status;playground connector versions;playground open-docs --only-show-url" EXIT
   else
-    trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground connector versions;playground open-docs --only-show-url;playground connector show-config-parameters --only-show-json' EXIT
+    trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground connector versions;playground open-docs --only-show-url' EXIT
   fi
   playground generate-fzf-find-files &
   touch /tmp/playground-run-command-used
@@ -11297,10 +11297,6 @@ playground_run_command() {
   ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
   let ELAPSED_TOTAL+=$SECONDS
   set +e
-  # just run it in background in case it is called later, the
-
-  # file will be present and it will be much faster to display config
-  playground connector show-config-parameters > /dev/null 2>&1 &
   # keep those lists up to date
   playground generate-connector-plugin-list > /dev/null 2>&1 &
   playground generate-kafka-region-list  > /dev/null 2>&1 &
@@ -11867,7 +11863,7 @@ playground_run_ccloud_command() {
   log "####################################################"
   SECONDS=0
   cd $test_file_directory
-  trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground fully-managed-connector status;playground connector versions;playground connector fully-managed-show-config-parameters --only-show-json' EXIT
+  trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground fully-managed-connector status;playground connector versions' EXIT
   touch /tmp/playground-run-command-used
   playground generate-fzf-find-files &
   bash $filename ${other_args[*]}
@@ -11875,10 +11871,6 @@ playground_run_ccloud_command() {
   ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
   let ELAPSED_TOTAL+=$SECONDS
   set +e
-  # just run it in background in case it is called later, the
-
-  # file will be present and it will be much faster to display config
-  playground fully-managed-connector show-config-parameters > /dev/null 2>&1 &
   set -e
   if [ $ret -eq 0 ]
   then
@@ -17373,7 +17365,9 @@ playground_fully_managed_connector_create_or_update_command() {
           then
               playground fully-managed-connector show-config --connector "$connector"
           fi
-          sleep 8
+          playground fully-managed-connector show-config-parameters --only-show-json
+          log "🥁 Waiting a few seconds to get new status"
+          sleep 5
           playground fully-managed-connector status --connector $connector
       fi
   else
@@ -18452,8 +18446,9 @@ playground_connector_create_or_update_command() {
           then
               playground connector show-config --connector "$connector"
           fi
+          playground connector show-config-parameters --only-show-json
           log "🥁 Waiting a few seconds to get new status"
-          sleep 8
+          sleep 5
           playground connector status --connector $connector
       fi
   else

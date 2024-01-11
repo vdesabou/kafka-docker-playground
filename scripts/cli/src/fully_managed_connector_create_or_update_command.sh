@@ -172,7 +172,9 @@ then
         then
             playground fully-managed-connector show-config --connector "$connector"
         fi
-        sleep 8
+        playground fully-managed-connector show-config-parameters --only-show-json
+        log "🥁 Waiting a few seconds to get new status"
+        sleep 5
         playground fully-managed-connector status --connector $connector
     fi
 else

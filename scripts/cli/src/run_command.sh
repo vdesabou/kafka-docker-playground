@@ -209,9 +209,9 @@ SECONDS=0
 cd $test_file_directory
 if [[ -n "$enable_multiple_connect_workers" ]]
 then
-  trap "cp /tmp/playground-backup-docker-compose.yml $docker_compose_file;rm /tmp/playground-run-command-used;echo '';sleep 3;set +e;playground connector status;playground connector versions;playground open-docs --only-show-url;playground connector show-config-parameters --only-show-json" EXIT
+  trap "cp /tmp/playground-backup-docker-compose.yml $docker_compose_file;rm /tmp/playground-run-command-used;echo '';sleep 3;set +e;playground connector status;playground connector versions;playground open-docs --only-show-url" EXIT
 else
-  trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground connector versions;playground open-docs --only-show-url;playground connector show-config-parameters --only-show-json' EXIT
+  trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground connector versions;playground open-docs --only-show-url' EXIT
 fi
 playground generate-fzf-find-files &
 touch /tmp/playground-run-command-used
@@ -220,9 +220,6 @@ ret=$?
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 let ELAPSED_TOTAL+=$SECONDS
 set +e
-# just run it in background in case it is called later, the 
-# file will be present and it will be much faster to display config
-playground connector show-config-parameters > /dev/null 2>&1 &
 # keep those lists up to date
 playground generate-connector-plugin-list > /dev/null 2>&1 &
 playground generate-kafka-region-list  > /dev/null 2>&1 &
