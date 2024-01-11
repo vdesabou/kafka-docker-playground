@@ -124,10 +124,10 @@ do
                 fi
 
                 current_group=""
-                rows=()
-                for row in $(echo "$curl_output" | jq -r '.configs[] | @base64'); do
+                configs=$(echo "$curl_output" | jq -r '.configs')
+                while IFS= read -r row; do
                     _jq() {
-                        echo ${row} | base64 --decode | jq -r ${1}
+                        echo "$row" | jq -r "${1}"
                     }
 
                     group=$(_jq '.definition.group')
@@ -137,9 +137,9 @@ do
 
                     if [ "$group" != "$current_group" ]
                     then
-                        echo -e "==========================" >> $filename
-                        echo -e "$group"                     >> $filename
-                        echo -e "==========================" >> $filename
+                        echo -e "==========================" >> "$filename"
+                        echo -e "$group"                     >> "$filename"
+                        echo -e "==========================" >> "$filename"
                         current_group=$group
                     fi
 
@@ -150,22 +150,22 @@ do
                     importance=$(_jq '.definition.importance')
                     description=$(_jq '.definition.documentation')
 
-                    echo -e "🔘 $param" >> $filename
-                    echo -e "" >> $filename
-                    echo -e "$description" >> $filename
-                    echo -e "" >> $filename
-                    echo -e "\t - Type: $type" >> $filename
-                    echo -e "\t - Default: $default" >> $filename
-                    echo -e "\t - Importance: $importance" >> $filename
-                    echo -e "\t - Required: $required" >> $filename
-                    echo -e "" >> $filename
+                    echo -e "🔘 $param" >> "$filename"
+                    echo -e "" >> "$filename"
+                    echo -e "$description" >> "$filename"
+                    echo -e "" >> "$filename"
+                    echo -e "\t - Type: $type" >> "$filename"
+                    echo -e "\t - Default: $default" >> "$filename"
+                    echo -e "\t - Importance: $importance" >> "$filename"
+                    echo -e "\t - Required: $required" >> "$filename"
+                    echo -e "" >> "$filename"
 
                     if [ "$default" == "null" ]
                     then
                         default=""
                     fi
-                    echo "\"$param\": \"$default\"," >> $json_filename
-                done
+                    echo "\"$param\": \"$default\"," >> "$json_filename"
+                done <<< "$(echo "$configs" | jq -c '.[]')"
             fi
         else
             logerror "❌ curl request failed with error code $ret!"
