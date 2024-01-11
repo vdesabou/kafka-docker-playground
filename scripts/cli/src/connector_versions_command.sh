@@ -27,7 +27,6 @@ else
     log "🎯 Version currently used for confluent platform"
     echo "$current_tag"
 
-    my_array_connector_tag=($(echo $CONNECTOR_TAG | tr "," "\n"))
     for connector_path in ${connector_paths//,/ }
     do
         full_connector_name=$(basename "$connector_path")

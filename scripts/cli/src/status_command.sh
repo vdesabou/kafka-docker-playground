@@ -31,6 +31,7 @@ if [[ $last_folder == "connect"* ]]
 then
     playground connector versions | grep -v "applying command to all connectors"
     playground connector status | grep -v "applying command to all connectors"
+    playground connector open-docs --only-show-url
     playground connector show-config | grep -v "applying command to all connectors"
     playground connector show-config-parameters --only-show-file-path | grep -v "applying command to all connectors"
 fi

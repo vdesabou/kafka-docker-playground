@@ -2848,6 +2848,17 @@ subcommands:
           description: | 
             🔗 dlq
             
+      - name: open-docs
+        description: | 
+          🧑‍🎓 Open connector documentation of currently running conector(s)
+        usage: playground connector open-docs [OPTIONS]
+        options:
+        - names:
+          - --only-show-url
+          argument: ""
+          description: | 
+            🌐 Only show url
+            
       - name: log-level
         description: | 
           🧬 Set connect log level

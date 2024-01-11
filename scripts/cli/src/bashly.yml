@@ -2703,6 +2703,14 @@ commands:
     examples: |
       playground connector snippets --converter avro --dlq
 
+  - name: open-docs
+    help: |-
+      🧑‍🎓 Open connector documentation of currently running conector(s)
+    flags:
+    - long: --only-show-url
+      help: |-
+        🌐 Only show url
+
   - name: log-level
     help: |-
       🧬 Set connect log level

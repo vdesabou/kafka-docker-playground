@@ -198,6 +198,7 @@ then
         log "🥁 Waiting a few seconds to get new status"
         sleep 5
         playground connector status --connector $connector
+        playground connector open-docs --only-show-url
     fi
 else
     logerror "❌ curl request failed with error code $ret!"

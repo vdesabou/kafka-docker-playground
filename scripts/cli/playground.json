@@ -2606,6 +2606,20 @@
           ]
         },
         {
+          "name": "open-docs",
+          "description": "🧑‍🎓 Open connector documentation of currently running conector(s)\n",
+          "usage": "playground connector open-docs [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--only-show-url"
+              ],
+              "argument": "",
+              "description": "🌐 Only show url\n"
+            }
+          ]
+        },
+        {
           "name": "log-level",
           "description": "🧬 Set connect log level\n  \n  🎓 Tip: it will also set io.confluent.kafka.schemaregistry.client.rest.RestService (to see schema registry rest requests) and org.apache.kafka.connect.runtime.TransformationChain (to see records before and after SMTs)\n",
           "usage": "playground connector log-level [OPTIONS]",
