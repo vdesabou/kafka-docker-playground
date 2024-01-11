@@ -17259,7 +17259,7 @@ playground_fully_managed_connector_show_config_parameters_command() {
                       then
                           default=""
                       fi
-                      echo "\"$param\": \"$default\"," >> "$json_filename"
+                      echo -e "    \"$param\": \"$default\"," >> "$json_filename"
                       sort "$json_filename" -o /tmp/tmp
                       mv /tmp/tmp "$json_filename"
                   done <<< "$(echo "$configs" | jq -c '.[]')"
@@ -18237,7 +18237,7 @@ playground_connector_show_config_parameters_command() {
                       then
                           default=""
                       fi
-                      echo "\"$param\": \"$default\"," >> "$json_filename"
+                      echo -e "    \"$param\": \"$default\"," >> "$json_filename"
                       sort "$json_filename" -o /tmp/tmp
                       mv /tmp/tmp "$json_filename"
                   done <<< "$(echo "$configs" | jq -c '.[]')"
