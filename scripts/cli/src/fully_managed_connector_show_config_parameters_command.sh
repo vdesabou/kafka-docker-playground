@@ -146,11 +146,11 @@ do
                 current_group=""
                 configs=$(echo "$curl_output" | jq -r '.configs')
                 while IFS= read -r row; do
-                    _jq() {
-                        echo "$row" | jq -r "${1}"
-                    }
-
-                    group=$(_jq '.definition.group')
+                    
+                    IFS=$'\n'
+                    arr=($(echo "$row" | jq -r '.definition.group, .definition.name, .definition.default_value, .definition.type, .definition.required, .definition.importance, .definition.documentation'))
+                    group="${arr[0]}"
+                                        set +x
                     if [[ "$group" == "Common" || "$group" == "Transforms" || "$group" == "Error Handling" || "$group" == "Topic Creation" || "$group" == "offsets.topic" || "$group" == "Exactly Once Support" || "$group" == "Predicates" || "$group" == "Confluent Licensing" ]] ; then
                         continue
                     fi
@@ -163,12 +163,12 @@ do
                         current_group=$group
                     fi
 
-                    param=$(_jq '.definition.name')
-                    default=$(_jq '.definition.default_value')
-                    type=$(_jq '.definition.type')
-                    required=$(_jq '.definition.required')
-                    importance=$(_jq '.definition.importance')
-                    description=$(_jq '.definition.documentation')
+                    param="${arr[1]}"
+                    default="${arr[2]}"
+                    type="${arr[3]}"
+                    required="${arr[4]}"
+                    importance="${arr[5]}"
+                    description="${arr[6]}"
 
                     echo -e "🔘 $param" >> "$filename"
                     echo -e "" >> "$filename"
