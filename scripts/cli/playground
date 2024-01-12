@@ -17734,8 +17734,8 @@ playground_connector_versions_command() {
               version=$(cat $manifest_file | jq -r '.version')
               release_date=$(cat $manifest_file | jq -r '.release_date')
           else
-              logerror "file $manifest_file does not exist"
-              exit 1
+              logwarn "file $manifest_file does not exist, could not retrieve version"
+              exit 0
           fi
 
           current="\"🔢 v$version - 📅 release date: $release_date\""
@@ -18429,8 +18429,7 @@ playground_connector_open_docs_command() {
                   exit 1
               fi
           else
-              logerror "❌ file $manifest_file does not exist"
-              exit 1
+              logwarn "❌ file $manifest_file does not exist, could not retrieve documentation link."
           fi
       done
   fi

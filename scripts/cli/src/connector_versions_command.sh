@@ -57,8 +57,8 @@ else
             version=$(cat $manifest_file | jq -r '.version')
             release_date=$(cat $manifest_file | jq -r '.release_date')
         else
-            logerror "file $manifest_file does not exist"
-            exit 1
+            logwarn "file $manifest_file does not exist, could not retrieve version"
+            exit 0
         fi
 
         current="\"🔢 v$version - 📅 release date: $release_date\""

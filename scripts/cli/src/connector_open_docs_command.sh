@@ -51,8 +51,7 @@ else
                 exit 1
             fi
         else
-            logerror "❌ file $manifest_file does not exist"
-            exit 1
+            logwarn "❌ file $manifest_file does not exist, could not retrieve documentation link."
         fi
     done
 fi
