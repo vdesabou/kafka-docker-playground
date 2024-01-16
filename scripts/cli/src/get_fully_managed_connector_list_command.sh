@@ -12,10 +12,16 @@ then
         echo ""
         return
     fi
-    if echo "$curl_output" | jq '.error | has("error_code")' 2> /dev/null | grep -q true
+    if echo "$curl_output" | jq 'if .error then .error | has("error_code") else has("error_code") end' 2> /dev/null | grep -q true 
     then
-        code=$(echo "$curl_output" | jq -r .error.code)
-        message=$(echo "$curl_output" | jq -r .error.message)
+        if echo "$curl_output" | jq '.error | has("error_code")' 2> /dev/null | grep -q true 
+        then
+            code=$(echo "$curl_output" | jq -r .error.code)
+            message=$(echo "$curl_output" | jq -r .error.message)
+        else
+            code=$(echo "$curl_output" | jq -r .error_code)
+            message=$(echo "$curl_output" | jq -r .message)
+        fi
         logerror "Command failed with error code $code"
         logerror "$message"
         exit 1
