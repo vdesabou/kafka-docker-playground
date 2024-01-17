@@ -1,3 +1,4 @@
+connector="${args[--connector]}"
 json=${args[json]}
 level=${args[--level]}
 package=${args[--package]}
@@ -26,6 +27,7 @@ fi
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
 json_file=$tmp_dir/json
+json_validate_file=$tmp_dir/json_validate_file
 
 echo "$json_content" > $json_file
 
@@ -52,8 +54,6 @@ then
 fi
 
 get_connect_url_and_security
-
-connector="${args[--connector]}"
 
 is_create=1
 connectors=$(playground get-connector-list)
@@ -95,8 +95,8 @@ then
             if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
             then
                 set +e
-                echo "$curl_output" > $json_file
-                jq_output=$(jq . "$json_file" 2>&1)
+                echo "$curl_output" > $json_validate_file
+                jq_output=$(jq . "$json_validate_file" 2>&1)
                 error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
 
                 if [[ -n "$error_line" ]]; then
@@ -106,9 +106,9 @@ then
 
                 if [[ $(type -f bat 2>&1) =~ "not found" ]]
                 then
-                    cat -n $json_file
+                    cat -n $json_validate_file
                 else
-                    bat $json_file --highlight-line $error_line
+                    bat $json_validate_file --highlight-line $error_line
                 fi
 
                 exit 1
@@ -191,6 +191,7 @@ then
         fi
         if [ -z "$GITHUB_RUN_NUMBER" ]
         then
+            cat $json_file > "/tmp/config-$connector"
             playground connector show-config --connector "$connector"
         fi
         playground connector show-config-parameters --connector "$connector" --only-show-json

@@ -17043,19 +17043,11 @@ playground_fully_managed_connector_show_config_command() {
   items=($connector)
   for connector in ${items[@]}
   do
-      log "🧰 Current config for ccloud connector $connector"
-      if [[ -n "$verbose" ]]
+      if [ -f "/tmp/config-$connector" ] && [ -z "$GITHUB_RUN_NUMBER" ]
       then
-          log "🐞 curl command used"
-          echo "curl $security -s -X GET -H "Content-Type: application/json" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config" --header "authorization: Basic $authorization""
-      fi
-      curl_output=$(curl $security -s -X GET -H "Content-Type: application/json" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config" --header "authorization: Basic $authorization")
-      ret=$?
-      set -e
-      if [ $ret -eq 0 ]
-      then
-          echo "playground fully-managed-connector create-or-update --connector $connector << EOF"
-          echo "$curl_output" | jq -S . | sed 's/\$/\\$/g'
+          log "🧰 Current config for connector $connector (including all sensitive data)"
+          echo "playground fully-managed-connector --connector $connector << EOF"
+          cat "/tmp/config-$connector" | jq -S . | sed 's/\$/\\$/g'
           echo "EOF"
 
           if [[ "$OSTYPE" == "darwin"* ]]
@@ -17071,7 +17063,7 @@ playground_fully_managed_connector_show_config_command() {
                   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
                   trap 'rm -rf $tmp_dir' EXIT
                   echo "playground fully-managed-connector --connector $connector << EOF" > $tmp_dir/tmp
-                  echo "$curl_output" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
+                  cat "/tmp/config-$connector" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
                   echo "EOF" >> $tmp_dir/tmp
 
                   cat $tmp_dir/tmp | pbcopy
@@ -17079,8 +17071,45 @@ playground_fully_managed_connector_show_config_command() {
               fi
           fi
       else
-          logerror "❌ curl request failed with error code $ret!"
-          exit 1
+          log "🧰 Current config for connector $connector (not including all sensitive data)"
+          if [[ -n "$verbose" ]]
+          then
+              log "🐞 curl command used"
+              echo "curl $security -s -X GET -H "Content-Type: application/json" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config" --header "authorization: Basic $authorization""
+          fi
+          curl_output=$(curl $security -s -X GET -H "Content-Type: application/json" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config" --header "authorization: Basic $authorization")
+          ret=$?
+          set -e
+          if [ $ret -eq 0 ]
+          then
+              echo "playground fully-managed-connector create-or-update --connector $connector << EOF"
+              echo "$curl_output" | jq -S . | sed 's/\$/\\$/g'
+              echo "EOF"
+
+              if [[ "$OSTYPE" == "darwin"* ]]
+              then
+                  clipboard=$(playground config get clipboard)
+                  if [ "$clipboard" == "" ]
+                  then
+                      playground config set clipboard true
+                  fi
+
+                  if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
+                  then
+                      tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+                      trap 'rm -rf $tmp_dir' EXIT
+                      echo "playground fully-managed-connector --connector $connector << EOF" > $tmp_dir/tmp
+                      echo "$curl_output" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
+                      echo "EOF" >> $tmp_dir/tmp
+
+                      cat $tmp_dir/tmp | pbcopy
+                      log "📋 connector config has been copied to the clipboard (disable with 'playground config set clipboard false')"
+                  fi
+              fi
+          else
+              logerror "❌ curl request failed with error code $ret!"
+              exit 1
+          fi
       fi
   done
 }
@@ -17340,6 +17369,7 @@ playground_fully_managed_connector_show_config_parameters_command() {
 # :command.function
 playground_fully_managed_connector_create_or_update_command() {
   # src/fully_managed_connector_create_or_update_command.sh
+  connector="${args[--connector]}"
   json=${args[json]}
   validate=${args[--validate]}
   verbose="${args[--verbose]}"
@@ -17357,7 +17387,8 @@ playground_fully_managed_connector_create_or_update_command() {
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
   json_file=$tmp_dir/json
-  trap 'rm -f /tmp/json' EXIT
+  json_validate_file=$tmp_dir/json_validate_file
+
   echo "$json_content" > $json_file
 
   # JSON is invalid
@@ -17381,8 +17412,6 @@ playground_fully_managed_connector_create_or_update_command() {
 
       exit 1
   fi
-
-  connector="${args[--connector]}"
 
   is_create=1
   connectors=$(playground get-fully-managed-connector-list)
@@ -17429,8 +17458,8 @@ playground_fully_managed_connector_create_or_update_command() {
               if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
               then
                   set +e
-                  echo "$curl_output" > $json_file
-                  jq_output=$(jq . "$json_file" 2>&1)
+                  echo "$curl_output" > $json_validate_file
+                  jq_output=$(jq . "$json_validate_file" 2>&1)
                   error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
 
                   if [[ -n "$error_line" ]]; then
@@ -17440,9 +17469,9 @@ playground_fully_managed_connector_create_or_update_command() {
 
                   if [[ $(type -f bat 2>&1) =~ "not found" ]]
                   then
-                      cat -n $json_file
+                      cat -n $json_validate_file
                   else
-                      bat $json_file --highlight-line $error_line
+                      bat $json_validate_file --highlight-line $error_line
                   fi
 
                   exit 1
@@ -17527,6 +17556,7 @@ playground_fully_managed_connector_create_or_update_command() {
           fi
           if [ -z "$GITHUB_RUN_NUMBER" ]
           then
+              cat $json_file > "/tmp/config-$connector"
               playground fully-managed-connector show-config --connector "$connector"
           fi
           playground fully-managed-connector show-config-parameters --connector "$connector" --only-show-json
@@ -18077,54 +18107,83 @@ playground_connector_show_config_command() {
   fi
   for connector in ${items[@]}
   do
-      log "🧰 Current config for connector $connector"
-      if [[ -n "$verbose" ]]
+      if [ -f "/tmp/config-$connector" ] && [ -z "$GITHUB_RUN_NUMBER" ]
       then
-          log "🐞 curl command used"
-          echo "curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config""
-      fi
-      curl_output=$(curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config")
-      ret=$?
-      set -e
-      if [ $ret -eq 0 ]
-      then
-          if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
+          log "🧰 Current config for connector $connector (including all sensitive data)"
+          echo "playground connector create-or-update --connector $connector << EOF"
+          cat "/tmp/config-$connector" | jq -S . | sed 's/\$/\\$/g'
+          echo "EOF"
 
+          if [[ "$OSTYPE" == "darwin"* ]]
           then
-              error_code=$(echo "$curl_output" | jq -r .error_code)
-              message=$(echo "$curl_output" | jq -r .message)
-              logerror "Command failed with error code $error_code"
-              logerror "$message"
-              exit 1
-          else
-              echo "playground connector create-or-update --connector $connector << EOF"
-              echo "$curl_output" | jq -S . | sed 's/\$/\\$/g'
-              echo "EOF"
-
-              if [[ "$OSTYPE" == "darwin"* ]]
+              clipboard=$(playground config get clipboard)
+              if [ "$clipboard" == "" ]
               then
-                  clipboard=$(playground config get clipboard)
-                  if [ "$clipboard" == "" ]
-                  then
-                      playground config set clipboard true
-                  fi
+                  playground config set clipboard true
+              fi
 
-                  if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
-                  then
-                      tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-                      trap 'rm -rf $tmp_dir' EXIT
-                      echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
-                      echo "$curl_output" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
-                      echo "EOF" >> $tmp_dir/tmp
+              if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
+              then
+                  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+                  trap 'rm -rf $tmp_dir' EXIT
+                  echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
+                  cat "/tmp/config-$connector" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
+                  echo "EOF" >> $tmp_dir/tmp
 
-                      cat $tmp_dir/tmp | pbcopy
-                      log "📋 connector config has been copied to the clipboard (disable with 'playground config set clipboard false')"
-                  fi
+                  cat $tmp_dir/tmp | pbcopy
+                  log "📋 connector config has been copied to the clipboard (disable with 'playground config set clipboard false')"
               fi
           fi
       else
-          logerror "❌ curl request failed with error code $ret!"
-          exit 1
+          log "🧰 Current config for connector $connector (not including all sensitive data)"
+          if [[ -n "$verbose" ]]
+          then
+              log "🐞 curl command used"
+              echo "curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config""
+          fi
+          curl_output=$(curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config")
+          ret=$?
+          set -e
+          if [ $ret -eq 0 ]
+          then
+              if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
+
+              then
+                  error_code=$(echo "$curl_output" | jq -r .error_code)
+                  message=$(echo "$curl_output" | jq -r .message)
+                  logerror "Command failed with error code $error_code"
+                  logerror "$message"
+                  exit 1
+              else
+                  echo "playground connector create-or-update --connector $connector << EOF"
+                  echo "$curl_output" | jq -S . | sed 's/\$/\\$/g'
+                  echo "EOF"
+
+                  if [[ "$OSTYPE" == "darwin"* ]]
+                  then
+                      clipboard=$(playground config get clipboard)
+                      if [ "$clipboard" == "" ]
+                      then
+                          playground config set clipboard true
+                      fi
+
+                      if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
+                      then
+                          tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+                          trap 'rm -rf $tmp_dir' EXIT
+                          echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
+                          echo "$curl_output" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
+                          echo "EOF" >> $tmp_dir/tmp
+
+                          cat $tmp_dir/tmp | pbcopy
+                          log "📋 connector config has been copied to the clipboard (disable with 'playground config set clipboard false')"
+                      fi
+                  fi
+              fi
+          else
+              logerror "❌ curl request failed with error code $ret!"
+              exit 1
+          fi
       fi
   done
 }
@@ -18525,6 +18584,7 @@ playground_connector_log_level_command() {
 # :command.function
 playground_connector_create_or_update_command() {
   # src/connector_create_or_update_command.sh
+  connector="${args[--connector]}"
   json=${args[json]}
   level=${args[--level]}
   package=${args[--package]}
@@ -18553,6 +18613,7 @@ playground_connector_create_or_update_command() {
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
   json_file=$tmp_dir/json
+  json_validate_file=$tmp_dir/json_validate_file
 
   echo "$json_content" > $json_file
 
@@ -18579,8 +18640,6 @@ playground_connector_create_or_update_command() {
   fi
 
   get_connect_url_and_security
-
-  connector="${args[--connector]}"
 
   is_create=1
   connectors=$(playground get-connector-list)
@@ -18623,8 +18682,8 @@ playground_connector_create_or_update_command() {
               if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
               then
                   set +e
-                  echo "$curl_output" > $json_file
-                  jq_output=$(jq . "$json_file" 2>&1)
+                  echo "$curl_output" > $json_validate_file
+                  jq_output=$(jq . "$json_validate_file" 2>&1)
                   error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
 
                   if [[ -n "$error_line" ]]; then
@@ -18634,9 +18693,9 @@ playground_connector_create_or_update_command() {
 
                   if [[ $(type -f bat 2>&1) =~ "not found" ]]
                   then
-                      cat -n $json_file
+                      cat -n $json_validate_file
                   else
-                      bat $json_file --highlight-line $error_line
+                      bat $json_validate_file --highlight-line $error_line
                   fi
 
                   exit 1
@@ -18722,6 +18781,7 @@ playground_connector_create_or_update_command() {
           fi
           if [ -z "$GITHUB_RUN_NUMBER" ]
           then
+              cat $json_file > "/tmp/config-$connector"
               playground connector show-config --connector "$connector"
           fi
           playground connector show-config-parameters --connector "$connector" --only-show-json
