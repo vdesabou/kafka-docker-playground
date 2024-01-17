@@ -27,29 +27,46 @@ do
         log "🐞 curl command used"
         echo "curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config""
     fi
-    json_config=$(curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config")
-    echo "playground connector create-or-update --connector $connector << EOF"
-    echo "$json_config" | jq -S . | sed 's/\$/\\$/g'
-    echo "EOF"
-
-    if [[ "$OSTYPE" == "darwin"* ]]
+    curl_output=$(curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config")
+    ret=$?
+    set -e
+    if [ $ret -eq 0 ]
     then
-        clipboard=$(playground config get clipboard)
-        if [ "$clipboard" == "" ]
+        if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true 
         then
-            playground config set clipboard true
-        fi
+            error_code=$(echo "$curl_output" | jq -r .error_code)
+            message=$(echo "$curl_output" | jq -r .message)
+            logerror "Command failed with error code $error_code"
+            logerror "$message"
+            exit 1
+        else
+            echo "playground connector create-or-update --connector $connector << EOF"
+            echo "$curl_output" | jq -S . | sed 's/\$/\\$/g'
+            echo "EOF"
 
-        if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
-        then
-            tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-            trap 'rm -rf $tmp_dir' EXIT
-            echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
-            echo "$json_config" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
-            echo "EOF" >> $tmp_dir/tmp
+            if [[ "$OSTYPE" == "darwin"* ]]
+            then
+                clipboard=$(playground config get clipboard)
+                if [ "$clipboard" == "" ]
+                then
+                    playground config set clipboard true
+                fi
 
-            cat $tmp_dir/tmp | pbcopy
-            log "📋 connector config has been copied to the clipboard (disable with 'playground config set clipboard false')"
+                if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
+                then
+                    tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+                    trap 'rm -rf $tmp_dir' EXIT
+                    echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
+                    echo "$curl_output" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
+                    echo "EOF" >> $tmp_dir/tmp
+
+                    cat $tmp_dir/tmp | pbcopy
+                    log "📋 connector config has been copied to the clipboard (disable with 'playground config set clipboard false')"
+                fi
+            fi
         fi
+    else
+        logerror "❌ curl request failed with error code $ret!"
+        exit 1
     fi
 done
