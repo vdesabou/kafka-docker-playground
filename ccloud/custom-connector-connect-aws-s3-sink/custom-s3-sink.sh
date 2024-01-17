@@ -176,7 +176,8 @@ sleep 120
 # aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
 
 
-log "Do you want to delete the custom connector $connector_name ?"
+log "Do you want to delete the custom plugin $plugin_name ($plugin_id) and custom connector $connector_name ?"
 check_if_continue
 
 playground fully-managed-connector delete --connector $connector_name
+confluent connect custom-plugin delete $plugin_id --force
