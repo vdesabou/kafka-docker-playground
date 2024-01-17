@@ -12,7 +12,9 @@ else
     json_content=$json
 fi
 
-json_file=/tmp/json
+tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+trap 'rm -rf $tmp_dir' EXIT
+json_file=$tmp_dir/json
 trap 'rm -f /tmp/json' EXIT
 echo "$json_content" > $json_file
 
@@ -85,7 +87,6 @@ then
             if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
             then
                 set +e
-                json_file=/tmp/json
                 echo "$curl_output" > $json_file
                 jq_output=$(jq . "$json_file" 2>&1)
                 error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')

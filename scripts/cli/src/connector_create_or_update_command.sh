@@ -95,7 +95,6 @@ then
             if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
             then
                 set +e
-                json_file=/tmp/json
                 echo "$curl_output" > $json_file
                 jq_output=$(jq . "$json_file" 2>&1)
                 error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
