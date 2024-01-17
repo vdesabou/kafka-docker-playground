@@ -4,6 +4,66 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -f confluentinc-kafka-connect-s3-10.5.7.zip ]
+then
+    log "Downloading confluentinc-kafka-connect-s3-10.5.7.zip from confluent hub"
+    wget https://d1i4a15mxbxib1.cloudfront.net/api/plugins/confluentinc/kafka-connect-s3/versions/10.5.7/confluentinc-kafka-connect-s3-10.5.7.zip
+fi
+
+plugin_name="pg_${USER}_s3_sink_10_5_7"
+
+set +e
+for row in $(confluent connect custom-plugin list --output json | jq -r '.[] | @base64'); do
+    _jq() {
+    echo ${row} | base64 --decode | jq -r ${1}
+    }
+    
+    id=$(echo $(_jq '.id'))
+    name=$(echo $(_jq '.name'))
+
+    if [[ "$name" = "$plugin_name" ]]
+    then
+        log "deleting plugin $id ($name)"
+        confluent connect custom-plugin delete $id --force
+    fi
+done
+set -e
+
+log "Uploading custom plugin $plugin_name"
+confluent connect custom-plugin create $plugin_name --plugin-file confluentinc-kafka-connect-s3-10.5.7.zip --connector-class io.confluent.connect.s3.S3SinkConnector --connector-type SINK --sensitive-properties "aws.secret.access.key"
+ret=$?
+set -e
+if [ $ret -eq 0 ]
+then
+    found=0
+    set +e
+    for row in $(confluent connect custom-plugin list --output json | jq -r '.[] | @base64'); do
+        _jq() {
+        echo ${row} | base64 --decode | jq -r ${1}
+        }
+        
+        id=$(echo $(_jq '.id'))
+        name=$(echo $(_jq '.name'))
+
+        if [[ "$name" = "$plugin_name" ]]
+        then
+            plugin_id="$id"
+            log "custom plugin $plugin_name ($plugin_id) was successfully uploaded!"
+            found=1
+            break
+        fi
+    done
+else
+    logerror "❌ command failed with error code $ret!"
+    exit 1
+fi
+set -e
+if [ $found -eq 0 ]
+then
+     logerror "❌ plugin could not be uploaded !"
+     exit 1
+fi
+
 if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
 then
      logerror "ERROR: either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
@@ -80,14 +140,11 @@ log "Deleting fully managed connector $connector_name, it might fail..."
 playground fully-managed-connector delete --connector $connector_name
 set -e
 
-#confluent connect custom-plugin create S3_SINK_CUSTOM --plugin-file ~/Downloads/confluentinc-kafka-connect-s3-10.5.7.zip --connector-class io.confluent.connect.s3.S3SinkConnector --connector-type SINK --sensitive-properties "aws.secret.access.key"
-
-# https://docs.confluent.io/cloud/current/connectors/connect-api-section.html#ccloud-connect-api
 log "Creating fully managed connector"
-playground fully-managed-connector create-or-update --connector $connector_name --verbose << EOF
+playground fully-managed-connector create-or-update --connector $connector_name << EOF
 {
     "confluent.connector.type": "CUSTOM",
-    "confluent.custom.plugin.id": "ccp-4nv2zz",
+    "confluent.custom.plugin.id": "$plugin_id",
     "confluent.custom.connection.endpoints": "s3.$AWS_REGION.amazonaws.com:443:TCP",
 
     "kafka.api.key": "$CLOUD_KEY",
@@ -119,7 +176,7 @@ sleep 120
 # aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
 
 
-log "Do you want to delete the fully managed connector $connector_name ?"
+log "Do you want to delete the custom connector $connector_name ?"
 check_if_continue
 
 playground fully-managed-connector delete --connector $connector_name

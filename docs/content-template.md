@@ -199,6 +199,10 @@
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/sftp.png" width="15"> [SFTP Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fully-managed-connect-sftp-source) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/snowflake.png" width="15"> [Snowflake Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fully-managed-connect-snowflake-sink) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 
+### 🛃 Custom Connectors
+
+  - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/s3.png" width="15"> [Amazon S3 Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/custom-connector-connect-aws-s3-sink) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
+
 ### 🔗 Self-Managed Connectors
 
 💫 Any connector example can be run as *self-managed* by using `--environment ccloud` option when running it with [playground run](/playground%20run) command ! This is also the case for any other [environment](/content?id=%f0%9f%94%90-environments)
