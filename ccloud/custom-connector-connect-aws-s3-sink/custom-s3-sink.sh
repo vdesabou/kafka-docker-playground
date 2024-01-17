@@ -98,7 +98,7 @@ playground fully-managed-connector create-or-update --connector $connector_name 
     "s3.region": "$AWS_REGION",
     "s3.bucket.name": "$AWS_BUCKET_NAME",
     "topics.dir": "$TAG",
-    "s3.part.size": 52428801,
+    "s3.part.size": "52428801",
     "flush.size": "3",
     "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
     "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
