@@ -87,9 +87,9 @@ log "Creating fully managed connector"
 playground fully-managed-connector create-or-update --connector $connector_name --verbose << EOF
 {
     "confluent.connector.type": "CUSTOM",
-    "confluent.custom.schema.registry.auto": "true",
     "confluent.custom.plugin.id": "ccp-4nv2zz",
-    "confluent.custom.connection.endpoints": "sts.amazonaws.com",
+    "confluent.custom.connection.endpoints": "s3.$AWS_REGION.amazonaws.com:443:TCP",
+
     "kafka.api.key": "$CLOUD_KEY",
     "kafka.api.secret": "$CLOUD_SECRET",
     "name": "$connector_name",
@@ -103,9 +103,12 @@ playground fully-managed-connector create-or-update --connector $connector_name 
     "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
     "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
     "storage.class": "io.confluent.connect.s3.storage.S3Storage",
-    "input.data.format": "AVRO",
-    "output.data.format": "AVRO",
-    "schema.compatibility": "NONE"
+    "schema.compatibility": "NONE",
+    "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
+
+    "confluent.custom.schema.registry.auto": "true",
+    "key.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter": "io.confluent.connect.avro.AvroConverter"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 300
