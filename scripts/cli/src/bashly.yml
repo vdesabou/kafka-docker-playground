@@ -2710,7 +2710,7 @@ commands:
     - long: --dlq
       required: false
       help: |- 
-        🔗 dlq
+        💀 dlq
     examples: |
       playground connector snippets --converter avro --dlq
 

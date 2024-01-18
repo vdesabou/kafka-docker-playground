@@ -2851,7 +2851,7 @@ subcommands:
           - --dlq
           argument: ""
           description: | 
-            🔗 dlq
+            💀 dlq
             
       - name: open-docs
         description: | 
