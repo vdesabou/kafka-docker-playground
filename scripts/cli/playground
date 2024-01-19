@@ -15891,10 +15891,14 @@ playground_topic_produce_command() {
                   then
                       log "💫 payload is single json, it will be sent as one record"
                       jq -c . "$schema_file" > $tmp_dir/minified.json
-                      input_file=$tmp_dir/minified.json
+                      set +e
+                      repcat "$tmp_dir/minified.json" | head -n "$nb_messages_to_generate" > $tmp_dir/out.json
+                      set -e
                   else
                       log "💫 payload is not single json, one record per line will be sent"
-                      input_file=$schema_file
+                      set +e
+                      repcat "$schema_file" | head -n "$nb_messages_to_generate" > $tmp_dir/out.json
+                      set -e
                   fi
               ;;
               *)
