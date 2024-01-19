@@ -190,6 +190,12 @@ do
                 fi
             fi
 
+            if [ ! -f $filename ]
+            then
+                logwarn "there was no specific config for this connector"
+                exit 0
+            fi
+
             if [[ -n "$open" ]]
             then
                 if [[ -n "$only_show_json" ]]

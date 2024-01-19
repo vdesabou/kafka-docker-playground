@@ -17424,6 +17424,12 @@ playground_fully_managed_connector_show_config_parameters_command() {
           fi
       fi
 
+      if [ ! -f $filename ]
+      then
+          logwarn "there was no specific config for this connector"
+          exit 0
+      fi
+
       if [[ -n "$open" ]]
       then
           if [[ -n "$only_show_json" ]]
@@ -18565,6 +18571,12 @@ playground_connector_show_config_parameters_command() {
                       logerror "❌ curl request failed with error code $ret!"
                       exit 1
                   fi
+              fi
+
+              if [ ! -f $filename ]
+              then
+                  logwarn "there was no specific config for this connector"
+                  exit 0
               fi
 
               if [[ -n "$open" ]]
