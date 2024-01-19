@@ -2535,6 +2535,12 @@ subcommands:
           description: | 
             📗 Only show list of all available parameters for connector (with default value when applicable)
             
+        - names:
+          - --only-show-json-file-path
+          argument: ""
+          description: | 
+            📂 Only show the path of the json file containing the configuration parameters
+            
       - name: create-or-update
         description: | 
           🧑‍🎨  Create or update connector
@@ -2819,6 +2825,12 @@ subcommands:
           argument: ""
           description: | 
             📗 Only show list of all available parameters for connector (with default value when applicable)
+            
+        - names:
+          - --only-show-json-file-path
+          argument: ""
+          description: | 
+            📂 Only show the path of the json file containing the configuration parameters
             
       - name: search-jar
         description: | 

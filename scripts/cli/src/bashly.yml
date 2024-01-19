@@ -2521,6 +2521,7 @@ commands:
     -  &only_show_file_path
       long: --only-show-file-path
       required: false
+      private: true
       help: |-
         📂 Only show the path of the file containing the configuration parameters
     - &only_show_json
@@ -2528,6 +2529,12 @@ commands:
       required: false
       help: |-
         📗 Only show list of all available parameters for connector (with default value when applicable)
+    -  &only_show_json_file_path
+      long: --only-show-json-file-path
+      required: false
+      private: true
+      help: |-
+        📂 Only show the path of the json file containing the configuration parameters
 
   - name: create-or-update
     help: 🧑‍🎨  Create or update connector
@@ -2673,6 +2680,7 @@ commands:
         ☢️ Force refresh.
     - *only_show_file_path
     - *only_show_json
+    - *only_show_json_file_path
 
   - name: search-jar
     help: 🔌 List jars for a connector plugin from confluent hub https://www.confluent.io/hub/

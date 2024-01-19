@@ -4836,11 +4836,6 @@ playground_fully_managed_connector_show_config_parameters_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--only-show-file-path")"
-    printf "    📂 Only show the path of the file containing the configuration parameters\n"
-    echo
-
-    # :flag.usage
     printf "  %s\n" "$(magenta "--only-show-json")"
     printf "    📗 Only show list of all available parameters for connector (with default\n    value when applicable)\n"
     echo
@@ -5414,11 +5409,6 @@ playground_connector_show_config_parameters_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--force-refresh")"
     printf "    ☢️ Force refresh.\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--only-show-file-path")"
-    printf "    📂 Only show the path of the file containing the configuration parameters\n"
     echo
 
     # :flag.usage
@@ -17153,6 +17143,7 @@ playground_fully_managed_connector_show_config_parameters_command() {
   force_refresh="${args[--force-refresh]}"
   only_show_file_path="${args[--only-show-file-path]}"
   only_show_json="${args[--only-show-json]}"
+  only_show_json_file_path="${args[--only-show-json-file-path]}"
   verbose="${args[--verbose]}"
 
   get_ccloud_connect
@@ -17230,11 +17221,14 @@ playground_fully_managed_connector_show_config_parameters_command() {
 
       class=$(echo $connector_class | rev | cut -d '.' -f 1 | rev)
 
-      if [[ -n "$only_show_json" ]]
+      if [[ ! -n "$only_show_json_file_path" ]]
       then
-          log "🔩 list of all available parameters for connector $connector ($class) (with default value when applicable)"
-      else
-          log "🔩 getting parameters for connector $connector ($class)"
+          if [[ -n "$only_show_json" ]]
+          then
+              log "🔩 list of all available parameters for connector $connector ($class) (with default value when applicable)"
+          else
+              log "🔩 getting parameters for connector $connector ($class)"
+          fi
       fi
 
       if [[ -n "$force_refresh" ]]
@@ -17378,9 +17372,14 @@ playground_fully_managed_connector_show_config_parameters_command() {
               fi
           fi
       else
-          if [[ -n "$only_show_json" ]]
+          if [[ -n "$only_show_json" ]] || [[ -n "$only_show_json_file_path" ]]
           then
-              cat $json_filename
+              if [[ -n "$only_show_json_file_path" ]]
+              then
+                  echo "$json_filename"
+              else
+                  cat $json_filename
+              fi
               return
           fi
 
@@ -18228,6 +18227,7 @@ playground_connector_show_config_parameters_command() {
   force_refresh="${args[--force-refresh]}"
   only_show_file_path="${args[--only-show-file-path]}"
   only_show_json="${args[--only-show-json]}"
+  only_show_json_file_path="${args[--only-show-json-file-path]}"
   verbose="${args[--verbose]}"
 
   get_connect_url_and_security
@@ -18298,11 +18298,14 @@ playground_connector_show_config_parameters_command() {
 
               class=$(echo $connector_class | rev | cut -d '.' -f 1 | rev)
 
-              if [[ -n "$only_show_json" ]]
+              if [[ ! -n "$only_show_json_file_path" ]]
               then
-                  log "🔩 list of all available parameters for connector $connector ($class) and version $version (with default value when applicable)"
-              else
-                  log "🔩 getting parameters for connector $connector ($class) and version $version"
+                  if [[ -n "$only_show_json" ]]
+                  then
+                      log "🔩 list of all available parameters for connector $connector ($class) and version $version (with default value when applicable)"
+                  else
+                      log "🔩 getting parameters for connector $connector ($class) and version $version"
+                  fi
               fi
 
               if [[ -n "$force_refresh" ]]
@@ -18441,9 +18444,14 @@ playground_connector_show_config_parameters_command() {
                       fi
                   fi
               else
-                  if [[ -n "$only_show_json" ]]
+                  if [[ -n "$only_show_json" ]] || [[ -n "$only_show_json_file_path" ]]
                   then
-                      cat $json_filename
+                      if [[ -n "$only_show_json_file_path" ]]
+                      then
+                          echo "$json_filename"
+                      else
+                          cat $json_filename
+                      fi
                       return
                   fi
 
@@ -28071,6 +28079,14 @@ playground_fully_managed_connector_show_config_parameters_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --only-show-json-file-path)
+
+        # :flag.case_no_arg
+        args['--only-show-json-file-path']=1
+        shift
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -29087,6 +29103,14 @@ playground_connector_show_config_parameters_parse_requirements() {
 
         # :flag.case_no_arg
         args['--only-show-json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --only-show-json-file-path)
+
+        # :flag.case_no_arg
+        args['--only-show-json-file-path']=1
         shift
         ;;
 

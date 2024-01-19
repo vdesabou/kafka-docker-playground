@@ -3,6 +3,7 @@ open="${args[--open]}"
 force_refresh="${args[--force-refresh]}"
 only_show_file_path="${args[--only-show-file-path]}"
 only_show_json="${args[--only-show-json]}"
+only_show_json_file_path="${args[--only-show-json-file-path]}"
 verbose="${args[--verbose]}"
 
 get_ccloud_connect
@@ -80,13 +81,15 @@ do
 
     class=$(echo $connector_class | rev | cut -d '.' -f 1 | rev)
 
-    if [[ -n "$only_show_json" ]]
+    if [[ ! -n "$only_show_json_file_path" ]]
     then
-        log "🔩 list of all available parameters for connector $connector ($class) (with default value when applicable)"
-    else
-        log "🔩 getting parameters for connector $connector ($class)"
+        if [[ -n "$only_show_json" ]]
+        then
+            log "🔩 list of all available parameters for connector $connector ($class) (with default value when applicable)"
+        else
+            log "🔩 getting parameters for connector $connector ($class)"
+        fi
     fi
-    
 
     if [[ -n "$force_refresh" ]]
     then
@@ -229,9 +232,14 @@ do
             fi
         fi
     else
-        if [[ -n "$only_show_json" ]]
+        if [[ -n "$only_show_json" ]] || [[ -n "$only_show_json_file_path" ]]
         then
-            cat $json_filename
+            if [[ -n "$only_show_json_file_path" ]]
+            then
+                echo "$json_filename"
+            else
+                cat $json_filename
+            fi
             return
         fi
 

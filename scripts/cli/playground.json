@@ -2248,6 +2248,13 @@
               ],
               "argument": "",
               "description": "📗 Only show list of all available parameters for connector (with default value when applicable)\n"
+            },
+            {
+              "names": [
+                "--only-show-json-file-path"
+              ],
+              "argument": "",
+              "description": "📂 Only show the path of the json file containing the configuration parameters\n"
             }
           ]
         },
@@ -2564,6 +2571,13 @@
               ],
               "argument": "",
               "description": "📗 Only show list of all available parameters for connector (with default value when applicable)\n"
+            },
+            {
+              "names": [
+                "--only-show-json-file-path"
+              ],
+              "argument": "",
+              "description": "📂 Only show the path of the json file containing the configuration parameters\n"
             }
           ]
         },
