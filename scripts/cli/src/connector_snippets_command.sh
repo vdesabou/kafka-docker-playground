@@ -4,6 +4,12 @@ dlq=${args[--dlq]}
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
 
+if [[ ! -n "$converter" ]] && [[ ! -n "$dlq" ]]
+then
+    logerror "❌ neither --converter or --dlq were provided"
+    exit 1
+fi
+
 if [[ -n "$dlq" ]]
 then
     dlq_file=$tmp_dir/dlq

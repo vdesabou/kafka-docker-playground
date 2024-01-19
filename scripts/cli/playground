@@ -18811,6 +18811,12 @@ playground_connector_snippets_command() {
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
 
+  if [[ ! -n "$converter" ]] && [[ ! -n "$dlq" ]]
+  then
+      logerror "❌ neither --converter or --dlq were provided"
+      exit 1
+  fi
+
   if [[ -n "$dlq" ]]
   then
       dlq_file=$tmp_dir/dlq
@@ -18930,7 +18936,7 @@ playground_connector_snippets_command() {
   fi
 
   clipboard_file=$tmp_dir/clipboard
-  if [ -f $dlq_file ]
+  if [ -f "$dlq_file" ]
   then
       log "💀 add this for getting dead letter queue"
       cat $dlq_file
@@ -18938,7 +18944,7 @@ playground_connector_snippets_command() {
       cat $dlq_file >> $clipboard_file
   fi
 
-  if [ -f $converter_file ]
+  if [ -f "$converter_file" ]
   then
       log "🔌 converter config for $converter"
       cat $converter_file
@@ -18954,7 +18960,7 @@ playground_connector_snippets_command() {
           playground config set clipboard true
       fi
 
-      if [ -f $clipboard_file ]
+      if [ -f "$clipboard_file" ]
       then
           if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
           then
