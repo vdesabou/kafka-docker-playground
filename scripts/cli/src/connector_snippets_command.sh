@@ -123,7 +123,7 @@ then
 fi
 
 clipboard_file=$tmp_dir/clipboard
-if [ -f $dlq_file ]
+if [ -f "$dlq_file" ]
 then
     log "💀 add this for getting dead letter queue"
     cat $dlq_file
@@ -131,7 +131,7 @@ then
     cat $dlq_file >> $clipboard_file
 fi
 
-if [ -f $converter_file ]
+if [ -f "$converter_file" ]
 then
     log "🔌 converter config for $converter"
     cat $converter_file
@@ -147,7 +147,7 @@ then
         playground config set clipboard true
     fi
 
-    if [ -f $clipboard_file ]
+    if [ -f "$clipboard_file" ]
     then
         if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
         then
