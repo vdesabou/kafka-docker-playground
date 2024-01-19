@@ -810,7 +810,7 @@ function add_connector_config_based_on_environment () {
     rbac-sasl-plain)
 
       echo "$json_content" > $tmp_dir/input.json
-      jq ".[\"consumer.override.sasl.jaas.config\"] = \"org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required username=\\\"connectorSA\\\" password=\\\"connectorSA\\\" metadataServerUrls=\\\"http://broker:8091\\\";\" | .[\"admin.override.sasl.jaas.config\"] = \"org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required username=\\\"connectorSA\\\" password=\\\"connectorSA\\\" metadataServerUrls=\\\"http://broker:8091\\\";\"  | .[\"producer.override.sasl.jaas.config\"] = \"org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required username=\\\"connectorSA\\\" password=\\\"connectorSA\\\" metadataServerUrls=\\\"http://broker:8091\\\";\"" $tmp_dir/input.json > $tmp_dir/output.json
+      jq ".[\"principal.service.name\"] = \"connectorSA\" | \"principal.service.password\"] = \"connectorSA\"" $tmp_dir/input.json > $tmp_dir/output.json
       json_content=$(cat $tmp_dir/output.json)
 
       for prefix in {"confluent.topic","redo.log.consumer"}
@@ -821,18 +821,6 @@ function add_connector_config_based_on_environment () {
 
           echo "$json_content" > $tmp_dir/input.json
           jq ".[\"$prefix.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"admin\\\" password=\\\"admin-secret\\\";\" | .[\"$prefix.security.protocol\"] = \"SASL_PLAINTEXT\" | .[\"$prefix.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
-          json_content=$(cat $tmp_dir/output.json)
-        fi
-      done
-
-      for prefix in {"key","value"}
-      do
-        if echo "$json_content" | jq ". | has(\"$prefix.converter.schema.registry.url\")" 2> /dev/null | grep -q true 
-        then
-          # log "replacing $prefix.converter.schema.registry.url config for environment $environment"
-
-          echo "$json_content" > $tmp_dir/input.json
-          jq ".[\"$prefix.converter.schema.registry.url\"] = \"http://schema-registry:8081\" | .[\"$prefix.converter.basic.auth.user.info\"] = \"connectorSA:connectorSA\" | .[\"$prefix.converter.basic.auth.credentials.source\"] = \"USER_INFO\"" $tmp_dir/input.json > $tmp_dir/output.json
           json_content=$(cat $tmp_dir/output.json)
         fi
       done
