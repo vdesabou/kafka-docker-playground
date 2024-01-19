@@ -26,20 +26,20 @@ then
 fi
 for connector in ${items[@]}
 do
-    curl_output=$(curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config")
+    json_config=$(curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config")
     ret=$?
     set -e
     if [ $ret -eq 0 ]
     then
-        if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true 
+        if echo "$json_config" | jq '. | has("error_code")' 2> /dev/null | grep -q true 
         then
-            error_code=$(echo "$curl_output" | jq -r .error_code)
-            message=$(echo "$curl_output" | jq -r .message)
+            error_code=$(echo "$json_config" | jq -r .error_code)
+            message=$(echo "$json_config" | jq -r .message)
             logerror "Command failed with error code $error_code"
             logerror "$message"
             exit 1
         else
-            connector_class=$(echo "$curl_output" | jq -r '."connector.class"')
+            connector_class=$(echo "$json_config" | jq -r '."connector.class"')
             version="unknown"
             set +e
             curl_output=$(curl $security -s -X GET \
@@ -100,9 +100,9 @@ do
                 if [[ -n "$verbose" ]]
                 then
                     log "🐞 curl command used"
-                    echo "curl $security -s -X PUT -H "Content-Type: application/json" --data "$curl_output" $connect_url/connector-plugins/$connector_class/config/validate"
+                    echo "curl $security -s -X PUT -H "Content-Type: application/json" --data "$json_config" $connect_url/connector-plugins/$connector_class/config/validate"
                 fi
-                curl_output=$(curl $security -s -X PUT -H "Content-Type: application/json" --data "$curl_output" $connect_url/connector-plugins/$connector_class/config/validate)
+                curl_output=$(curl $security -s -X PUT -H "Content-Type: application/json" --data "$json_config" $connect_url/connector-plugins/$connector_class/config/validate)
                 ret=$?
                 set -e
                 if [ $ret -eq 0 ]
