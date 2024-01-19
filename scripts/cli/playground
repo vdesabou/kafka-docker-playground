@@ -13556,8 +13556,24 @@ playground_repro_bootstrap_command() {
   chmod u+x $repro_test_file
   repro_test_filename=$(basename -- "$repro_test_file")
 
-  log "🌟 Command to run generated example"
+  log "🌟 command to run generated example"
   echo "playground run -f $repro_dir/$repro_test_filename"
+
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+      clipboard=$(playground config get clipboard)
+      if [ "$clipboard" == "" ]
+      then
+          playground config set clipboard true
+      fi
+
+      if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
+      then
+          echo "playground run -f $repro_dir/$repro_test_filename"| pbcopy
+          log "📋 command to run generated example has been copied to the clipboard (disable with 'playground config set clipboard false')"
+      fi
+  fi
+
   playground state set run.test_file "$repro_dir/$repro_test_filename"
   playground state set run.run_command "playground run -f $repro_dir/$repro_test_filename"
 
