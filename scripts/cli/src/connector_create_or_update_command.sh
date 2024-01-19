@@ -191,7 +191,7 @@ then
         fi
         if [ -z "$GITHUB_RUN_NUMBER" ]
         then
-            cat $json_file > "/tmp/config-$connector"
+            echo "$json_content" > "/tmp/config-$connector"
             playground connector show-config --connector "$connector"
         fi
         playground connector show-config-parameters --connector "$connector" --only-show-json
