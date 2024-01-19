@@ -100,9 +100,9 @@ do
                 if [[ -n "$verbose" ]]
                 then
                     log "🐞 curl command used"
-                    echo "curl $security -s -X PUT -H "Content-Type: application/json" --data "$json_config" $connect_url/connector-plugins/$connector_class/config/validate"
+                    echo "curl $security -s -X PUT -H "Content-Type: application/json" --data "$curl_output" $connect_url/connector-plugins/$connector_class/config/validate"
                 fi
-                curl_output=$(curl $security -s -X PUT -H "Content-Type: application/json" --data "$json_config" $connect_url/connector-plugins/$connector_class/config/validate)
+                curl_output=$(curl $security -s -X PUT -H "Content-Type: application/json" --data "$curl_output" $connect_url/connector-plugins/$connector_class/config/validate)
                 ret=$?
                 set -e
                 if [ $ret -eq 0 ]
