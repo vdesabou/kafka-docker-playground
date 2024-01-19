@@ -810,7 +810,7 @@ function add_connector_config_based_on_environment () {
     rbac-sasl-plain)
 
       echo "$json_content" > $tmp_dir/input.json
-      jq ".[\"principal.service.name\"] = \"connectorSA\" | \"principal.service.password\"] = \"connectorSA\"" $tmp_dir/input.json > $tmp_dir/output.json
+      jq ".[\"principal.service.name\"] = \"connectorSA\" | .[\"principal.service.password\"] = \"connectorSA\"" $tmp_dir/input.json > $tmp_dir/output.json
       json_content=$(cat $tmp_dir/output.json)
 
       for prefix in {"confluent.topic","redo.log.consumer"}
