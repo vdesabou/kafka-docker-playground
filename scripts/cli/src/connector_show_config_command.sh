@@ -1,6 +1,7 @@
 get_connect_url_and_security
 
 connector="${args[--connector]}"
+force_rest_endpoint="${args[--force-rest-endpoint]}"
 verbose="${args[--verbose]}"
 
 if [[ ! -n "$connector" ]]
@@ -21,9 +22,9 @@ then
 fi
 for connector in ${items[@]}
 do
-    if [ -f "/tmp/config-$connector" ] && [ -z "$GITHUB_RUN_NUMBER" ]
+    if [ -f "/tmp/config-$connector" ] && [ -z "$GITHUB_RUN_NUMBER" ] && [[ ! -n "$force_rest_endpoint" ]]
     then
-        log "🧰 Current config for connector $connector (including all sensitive data)"
+        log "🧰 Current config for connector $connector"
         echo "playground connector create-or-update --connector $connector << EOF"
         cat "/tmp/config-$connector" | jq -S . | sed 's/\$/\\$/g'
         echo "EOF"
@@ -49,7 +50,7 @@ do
             fi
         fi
     else
-        log "🧰 Current config for connector $connector (not including all sensitive data)"
+        log "🧰 Current config for connector $connector (using REST API /config endpoint)"
         if [[ -n "$verbose" ]]
         then
             log "🐞 curl command used"

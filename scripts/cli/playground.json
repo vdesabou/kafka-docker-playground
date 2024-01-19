@@ -2171,7 +2171,7 @@
         },
         {
           "name": "show-config",
-          "description": "🧰 Show current connector config\n",
+          "description": "🧰 Show current connector config that was applied\n  \n  use --force-rest-endpoint to get results with REST API /config endpoint (https://docs.confluent.io/cloud/current/api.html#tag/Connectors-(connectv1)/operation/getConnectv1ConnectorConfig)\n  \n",
           "usage": "playground fully-managed-connector show-config [OPTIONS]",
           "options": [
             {
@@ -2189,6 +2189,13 @@
               ],
               "argument": "CONNECTOR",
               "description": "🔗 Connector name\n\n🎓 Tip: If not specified, the command will apply to all connectors\n"
+            },
+            {
+              "names": [
+                "--force-rest-endpoint"
+              ],
+              "argument": "",
+              "description": "☢️ Force using REST API /config endpoint (https://docs.confluent.io/cloud/current/api.html#tag/Connectors-(connectv1)/operation/getConnectv1ConnectorConfig)\n"
             }
           ]
         },
@@ -2480,7 +2487,7 @@
         },
         {
           "name": "show-config",
-          "description": "🧰 Show current connector config\n",
+          "description": "🧰 Show current connector config that was applied\n  \n  use --force-rest-endpoint to get results with REST API /config endpoint (https://docs.confluent.io/platform/current/connect/references/restapi.html#get--connectors-(string-name)-config)\n  \n",
           "usage": "playground connector show-config [OPTIONS]",
           "options": [
             {
@@ -2498,6 +2505,13 @@
               ],
               "argument": "CONNECTOR",
               "description": "🔗 Connector name\n\n🎓 Tip: If not specified, the command will apply to all connectors\n"
+            },
+            {
+              "names": [
+                "--force-rest-endpoint"
+              ],
+              "argument": "",
+              "description": "☢️ Force using REST API /config endpoint (https://docs.confluent.io/platform/current/connect/references/restapi.html#get--connectors-(string-name)-config)\n"
             }
           ]
         },

@@ -2461,7 +2461,10 @@ subcommands:
             
       - name: show-config
         description: | 
-          🧰 Show current connector config
+          🧰 Show current connector config that was applied
+            
+            use --force-rest-endpoint to get results with REST API /config endpoint (https://docs.confluent.io/cloud/current/api.html#tag/Connectors-(connectv1)/operation/getConnectv1ConnectorConfig)
+            
         usage: playground fully-managed-connector show-config [OPTIONS]
         options:
         - names:
@@ -2479,6 +2482,12 @@ subcommands:
             🔗 Connector name
             
             🎓 Tip: If not specified, the command will apply to all connectors
+            
+        - names:
+          - --force-rest-endpoint
+          argument: ""
+          description: | 
+            ☢️ Force using REST API /config endpoint (https://docs.confluent.io/cloud/current/api.html#tag/Connectors-(connectv1)/operation/getConnectv1ConnectorConfig)
             
       - name: show-config-parameters
         description: | 
@@ -2737,7 +2746,10 @@ subcommands:
             
       - name: show-config
         description: | 
-          🧰 Show current connector config
+          🧰 Show current connector config that was applied
+            
+            use --force-rest-endpoint to get results with REST API /config endpoint (https://docs.confluent.io/platform/current/connect/references/restapi.html#get--connectors-(string-name)-config)
+            
         usage: playground connector show-config [OPTIONS]
         options:
         - names:
@@ -2755,6 +2767,12 @@ subcommands:
             🔗 Connector name
             
             🎓 Tip: If not specified, the command will apply to all connectors
+            
+        - names:
+          - --force-rest-endpoint
+          argument: ""
+          description: | 
+            ☢️ Force using REST API /config endpoint (https://docs.confluent.io/platform/current/connect/references/restapi.html#get--connectors-(string-name)-config)
             
       - name: show-config-parameters
         description: | 

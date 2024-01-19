@@ -2492,10 +2492,18 @@ commands:
         😴 Wait until lag becomes 0
 
   - name: show-config
-    help:  🧰 Show current connector config
+    help:  |
+      🧰 Show current connector config that was applied
+      
+      use --force-rest-endpoint to get results with REST API /config endpoint (https://docs.confluent.io/cloud/current/api.html#tag/Connectors-(connectv1)/operation/getConnectv1ConnectorConfig)
     flags:
     - *verbose
     - *ccloudconnector
+    - long: --force-rest-endpoint
+      required: false
+      help: |-
+        ☢️ Force using REST API /config endpoint (https://docs.confluent.io/cloud/current/api.html#tag/Connectors-(connectv1)/operation/getConnectv1ConnectorConfig)
+
 
   - name: show-config-parameters
     help: 🔩 Show all possible configuration parameters of connector
@@ -2638,10 +2646,17 @@ commands:
     - *waitforzerolag
 
   - name: show-config
-    help:  🧰 Show current connector config
+    help:  |
+      🧰 Show current connector config that was applied
+      
+      use --force-rest-endpoint to get results with REST API /config endpoint (https://docs.confluent.io/platform/current/connect/references/restapi.html#get--connectors-(string-name)-config)
     flags:
     - *verbose
     - *connector
+    - long: --force-rest-endpoint
+      required: false
+      help: |-
+        ☢️ Force using REST API /config endpoint (https://docs.confluent.io/platform/current/connect/references/restapi.html#get--connectors-(string-name)-config)
 
   - name: show-config-parameters
     help: 🔩 Show all possible configuration parameters of connector
