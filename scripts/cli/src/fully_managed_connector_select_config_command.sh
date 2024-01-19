@@ -2,7 +2,7 @@ connector="${args[--connector]}"
 
 if [[ ! -n "$connector" ]]
 then
-    connector=$(playground get-connector-list)
+    connector=$(playground get-fully-managed-connector-list)
     if [ "$connector" == "" ]
     then
         logerror "💤 No connector is running !"

@@ -17483,7 +17483,7 @@ playground_fully_managed_connector_select_config_command() {
 
   if [[ ! -n "$connector" ]]
   then
-      connector=$(playground get-connector-list)
+      connector=$(playground get-fully-managed-connector-list)
       if [ "$connector" == "" ]
       then
           logerror "💤 No connector is running !"
