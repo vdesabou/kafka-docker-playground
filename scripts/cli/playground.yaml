@@ -2541,6 +2541,22 @@ subcommands:
           description: | 
             📂 Only show the path of the json file containing the configuration parameters
             
+      - name: select-config
+        description: | 
+          🗜️ Easily select config from all possible configuration parameters of connector
+            
+            🎓 Tip: use <tab> to select multiple config at once !
+        usage: playground fully-managed-connector select-config [OPTIONS]
+        options:
+        - names:
+          - --connector
+          - -c
+          argument: CONNECTOR
+          description: | 
+            🔗 Connector name
+            
+            🎓 Tip: If not specified, the command will apply to all connectors
+            
       - name: create-or-update
         description: | 
           🧑‍🎨  Create or update connector
@@ -2831,6 +2847,22 @@ subcommands:
           argument: ""
           description: | 
             📂 Only show the path of the json file containing the configuration parameters
+            
+      - name: select-config
+        description: | 
+          🗜️ Easily select config from all possible configuration parameters of connector
+            
+            🎓 Tip: use <tab> to select multiple config at once !
+        usage: playground connector select-config [OPTIONS]
+        options:
+        - names:
+          - --connector
+          - -c
+          argument: CONNECTOR
+          description: | 
+            🔗 Connector name
+            
+            🎓 Tip: If not specified, the command will apply to all connectors
             
       - name: search-jar
         description: | 

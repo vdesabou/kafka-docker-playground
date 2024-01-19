@@ -2536,6 +2536,16 @@ commands:
       help: |-
         📂 Only show the path of the json file containing the configuration parameters
 
+  - name: select-config
+    help: |-
+      🗜️ Easily select config from all possible configuration parameters of connector
+
+      🎓 Tip: use <tab> to select multiple config at once !
+    dependencies:
+      fzf: visit https://github.com/junegunn/fzf#installation to install
+    flags:
+    - *ccloudconnector
+
   - name: create-or-update
     help: 🧑‍🎨  Create or update connector
     args:
@@ -2681,6 +2691,16 @@ commands:
     - *only_show_file_path
     - *only_show_json
     - *only_show_json_file_path
+
+  - name: select-config
+    help: |-
+      🗜️ Easily select config from all possible configuration parameters of connector
+
+      🎓 Tip: use <tab> to select multiple config at once !
+    dependencies:
+      fzf: visit https://github.com/junegunn/fzf#installation to install
+    flags:
+    - *connector
 
   - name: search-jar
     help: 🔌 List jars for a connector plugin from confluent hub https://www.confluent.io/hub/

@@ -124,6 +124,7 @@ playground_usage() {
   printf "  %s   🐢 Show lag of sink connector\n" "$(green "fully-managed-connector show-lag")              "
   printf "  %s   🧰 Show current connector config that was applied\n" "$(green "fully-managed-connector show-config")           "
   printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "fully-managed-connector show-config-parameters")"
+  printf "  %s   🗜️ Easily select config from all possible configuration parameters of connector\n" "$(green "fully-managed-connector select-config")         "
   printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "fully-managed-connector create-or-update")      "
   echo
   printf "%s\n" "$(bold "Connector commands:")"
@@ -139,6 +140,7 @@ playground_usage() {
   printf "  %s   🐢 Show lag of sink connector\n" "$(green "connector show-lag")                            "
   printf "  %s   🧰 Show current connector config that was applied\n" "$(green "connector show-config")                         "
   printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "connector show-config-parameters")              "
+  printf "  %s   🗜️ Easily select config from all possible configuration parameters of connector\n" "$(green "connector select-config")                       "
   printf "  %s   🔌 List jars for a connector plugin from confluent hub https://www.confluent.io/hub/ Search for specific class and display method signatures\n" "$(green "connector search-jar")                          "
   printf "  %s   🔌 useful snippets\n" "$(green "connector snippets")                            "
   printf "  %s   🧑‍🎓 Open connector documentation of currently running conector(s)\n" "$(green "connector open-docs")                           "
@@ -4474,6 +4476,7 @@ playground_fully_managed_connector_usage() {
   printf "  %s   🐢 Show lag of sink connector\n" "$(green "show-lag")              "
   printf "  %s   🧰 Show current connector config that was applied\n" "$(green "show-config")           "
   printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "show-config-parameters")"
+  printf "  %s   🗜️ Easily select config from all possible configuration parameters of connector\n" "$(green "select-config")         "
   printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "create-or-update")      "
   echo
 
@@ -4849,6 +4852,44 @@ playground_fully_managed_connector_show_config_parameters_usage() {
 }
 
 # :command.usage
+playground_fully_managed_connector_select_config_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground fully-managed-connector select-config\n"
+    echo
+
+    printf "  🗜️ Easily select config from all possible configuration parameters of\n  connector\n  \n  🎓 Tip: use <tab> to select multiple config at once !\n"
+    echo
+
+  else
+    printf "playground fully-managed-connector select-config - 🗜️ Easily select config from all possible configuration parameters of connector\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground fully-managed-connector select-config [OPTIONS]\n"
+  printf "  playground fully-managed-connector select-config --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_fully_managed_connector_create_or_update_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground fully-managed-connector create-or-update - 🧑‍🎨  Create or update connector\n"
@@ -4936,6 +4977,7 @@ playground_connector_usage() {
   printf "  %s   🐢 Show lag of sink connector\n" "$(green "show-lag")              "
   printf "  %s   🧰 Show current connector config that was applied\n" "$(green "show-config")           "
   printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "show-config-parameters")"
+  printf "  %s   🗜️ Easily select config from all possible configuration parameters of connector\n" "$(green "select-config")         "
   printf "  %s   🔌 List jars for a connector plugin from confluent hub https://www.confluent.io/hub/ Search for specific class and display method signatures\n" "$(green "search-jar")            "
   printf "  %s   🔌 useful snippets\n" "$(green "snippets")              "
   printf "  %s   🧑‍🎓 Open connector documentation of currently running conector(s)\n" "$(green "open-docs")             "
@@ -5414,6 +5456,44 @@ playground_connector_show_config_parameters_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--only-show-json")"
     printf "    📗 Only show list of all available parameters for connector (with default\n    value when applicable)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_select_config_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector select-config\n"
+    echo
+
+    printf "  🗜️ Easily select config from all possible configuration parameters of\n  connector\n  \n  🎓 Tip: use <tab> to select multiple config at once !\n"
+    echo
+
+  else
+    printf "playground connector select-config - 🗜️ Easily select config from all possible configuration parameters of connector\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector select-config [OPTIONS]\n"
+  printf "  playground connector select-config --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
     echo
 
     # :command.usage_fixed_flags
@@ -17397,6 +17477,77 @@ playground_fully_managed_connector_show_config_parameters_command() {
 }
 
 # :command.function
+playground_fully_managed_connector_select_config_command() {
+  # src/fully_managed_connector_select_config_command.sh
+  connector="${args[--connector]}"
+
+  if [[ ! -n "$connector" ]]
+  then
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No connector is running !"
+          exit 1
+      fi
+  fi
+
+  log "🗜️ Easily select config from all possible configuration parameters"
+  log "🎓 Tip: use <tab> to select multiple config at once !"
+
+  items=($connector)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "✨ --connector flag was not provided, applying command to all connectors"
+  fi
+      for connector in ${items[@]}
+      do
+
+      json_file=$(playground fully-managed-connector show-config-parameters --only-show-json --only-show-json-file-path --connector $connector)
+      if [ ! -f $json_file ]
+      then
+          logwarn "❌ file $json_file does not exist, could not retrieve json config file for connector $connector."
+      fi
+
+      fzf_version=$(get_fzf_version)
+      if version_gt $fzf_version "0.38"
+      then
+          fzf_option_wrap="--preview-window=40%,wrap"
+          fzf_option_pointer="--pointer=👉"
+          fzf_option_rounded="--border=rounded"
+      else
+          fzf_options=""
+          fzf_option_pointer=""
+          fzf_option_rounded=""
+      fi
+
+      res=$(cat $json_file | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🏰" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
+
+      log "🗜️ selected config parameter for connector $connector"
+      echo "$res"
+
+      if [[ "$OSTYPE" == "darwin"* ]]
+      then
+          clipboard=$(playground config get clipboard)
+          if [ "$clipboard" == "" ]
+          then
+              playground config set clipboard true
+          fi
+
+          if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
+          then
+              tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+              trap 'rm -rf $tmp_dir' EXIT
+              echo "$res" > $tmp_dir/tmp
+
+              cat $tmp_dir/tmp | pbcopy
+              log "📋 config parameter has been copied to the clipboard (disable with 'playground config set clipboard false')"
+          fi
+      fi
+  done
+}
+
+# :command.function
 playground_fully_managed_connector_create_or_update_command() {
   # src/fully_managed_connector_create_or_update_command.sh
   connector="${args[--connector]}"
@@ -18468,6 +18619,77 @@ playground_connector_show_config_parameters_command() {
       else
           logerror "❌ curl request failed with error code $ret!"
           exit 1
+      fi
+  done
+}
+
+# :command.function
+playground_connector_select_config_command() {
+  # src/connector_select_config_command.sh
+  connector="${args[--connector]}"
+
+  if [[ ! -n "$connector" ]]
+  then
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No connector is running !"
+          exit 1
+      fi
+  fi
+
+  log "🗜️ Easily select config from all possible configuration parameters"
+  log "🎓 Tip: use <tab> to select multiple config at once !"
+
+  items=($connector)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "✨ --connector flag was not provided, applying command to all connectors"
+  fi
+      for connector in ${items[@]}
+      do
+
+      json_file=$(playground connector show-config-parameters --only-show-json --only-show-json-file-path --connector $connector)
+      if [ ! -f $json_file ]
+      then
+          logwarn "❌ file $json_file does not exist, could not retrieve json config file for connector $connector."
+      fi
+
+      fzf_version=$(get_fzf_version)
+      if version_gt $fzf_version "0.38"
+      then
+          fzf_option_wrap="--preview-window=40%,wrap"
+          fzf_option_pointer="--pointer=👉"
+          fzf_option_rounded="--border=rounded"
+      else
+          fzf_options=""
+          fzf_option_pointer=""
+          fzf_option_rounded=""
+      fi
+
+      res=$(cat $json_file | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🏰" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
+
+      log "🗜️ selected config parameter for connector $connector"
+      echo "$res"
+
+      if [[ "$OSTYPE" == "darwin"* ]]
+      then
+          clipboard=$(playground config get clipboard)
+          if [ "$clipboard" == "" ]
+          then
+              playground config set clipboard true
+          fi
+
+          if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
+          then
+              tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+              trap 'rm -rf $tmp_dir' EXIT
+              echo "$res" > $tmp_dir/tmp
+
+              cat $tmp_dir/tmp | pbcopy
+              log "📋 config parameter has been copied to the clipboard (disable with 'playground config set clipboard false')"
+          fi
       fi
   done
 }
@@ -27486,6 +27708,13 @@ playground_fully_managed_connector_parse_requirements() {
       shift $#
       ;;
 
+    select-config)
+      action="select-config"
+      shift
+      playground_fully_managed_connector_select_config_parse_requirements "$@"
+      shift $#
+      ;;
+
     create-or-update)
       action="create-or-update"
       shift
@@ -28106,6 +28335,73 @@ playground_fully_managed_connector_show_config_parameters_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_fully_managed_connector_select_config_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_fully_managed_connector_select_config_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+  if command -v fzf >/dev/null 2>&1; then
+    deps['fzf']="$(command -v fzf | head -n1)"
+  else
+    printf "missing dependency: fzf\n" >&2
+    printf "%s\n" "visit https://github.com/junegunn/fzf#installation to install" >&2
+    exit 1
+  fi
+
+  # :command.command_filter
+  action="fully-managed-connector select-config"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
 playground_fully_managed_connector_create_or_update_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
@@ -28292,6 +28588,13 @@ playground_connector_parse_requirements() {
       action="show-config-parameters"
       shift
       playground_connector_show_config_parameters_parse_requirements "$@"
+      shift $#
+      ;;
+
+    select-config)
+      action="select-config"
+      shift
+      playground_connector_select_config_parse_requirements "$@"
       shift $#
       ;;
 
@@ -29133,6 +29436,73 @@ playground_connector_show_config_parameters_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_connector_select_config_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_select_config_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+  if command -v fzf >/dev/null 2>&1; then
+    deps['fzf']="$(command -v fzf | head -n1)"
+  else
+    printf "missing dependency: fzf\n" >&2
+    printf "%s\n" "visit https://github.com/junegunn/fzf#installation to install" >&2
+    exit 1
+  fi
+
+  # :command.command_filter
+  action="connector select-config"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
 playground_connector_search_jar_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
@@ -29704,6 +30074,7 @@ run() {
     "fully-managed-connector show-lag") playground_fully_managed_connector_show_lag_command ;;
     "fully-managed-connector show-config") playground_fully_managed_connector_show_config_command ;;
     "fully-managed-connector show-config-parameters") playground_fully_managed_connector_show_config_parameters_command ;;
+    "fully-managed-connector select-config") playground_fully_managed_connector_select_config_command ;;
     "fully-managed-connector create-or-update") playground_fully_managed_connector_create_or_update_command ;;
     "connector") playground_connector_command ;;
     "connector status") playground_connector_status_command ;;
@@ -29717,6 +30088,7 @@ run() {
     "connector show-lag") playground_connector_show_lag_command ;;
     "connector show-config") playground_connector_show_config_command ;;
     "connector show-config-parameters") playground_connector_show_config_parameters_command ;;
+    "connector select-config") playground_connector_select_config_command ;;
     "connector search-jar") playground_connector_search_jar_command ;;
     "connector snippets") playground_connector_snippets_command ;;
     "connector open-docs") playground_connector_open_docs_command ;;
