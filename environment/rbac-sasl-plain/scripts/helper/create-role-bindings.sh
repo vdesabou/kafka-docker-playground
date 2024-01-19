@@ -143,7 +143,7 @@ confluent iam rolebinding create \
 confluent iam rolebinding create \
     --principal $CONNECTOR_PRINCIPAL \
     --role ResourceOwner \
-    --resource Group:connect-* \
+    --resource Group:* \
     --kafka-cluster-id $KAFKA_CLUSTER_ID \
 
 confluent iam rolebinding create \
@@ -358,8 +358,7 @@ confluent iam rolebinding create \
 confluent iam rolebinding create \
     --principal $CLIENT_AVRO_PRINCIPAL \
     --role ResourceOwner \
-    --resource Topic:rbac \
-    --prefix \
+    --resource Topic:* \
     --kafka-cluster-id $KAFKA_CLUSTER_ID
 
 confluent iam rolebinding create \
@@ -371,8 +370,7 @@ confluent iam rolebinding create \
 confluent iam rolebinding create \
     --principal $CLIENT_AVRO_PRINCIPAL \
     --role ResourceOwner \
-    --resource Subject:rbac \
-    --prefix \
+    --resource Subject:* \
     --kafka-cluster-id $KAFKA_CLUSTER_ID \
     --schema-registry-cluster-id $SR
 
