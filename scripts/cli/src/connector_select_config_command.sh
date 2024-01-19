@@ -23,9 +23,10 @@ fi
     do
 
     json_file=$(playground connector show-config-parameters --only-show-json --only-show-json-file-path --connector $connector)
-    if [ ! -f $json_file ]
+    if [ ! -f "$json_file" ]
     then
-        logwarn "❌ file $json_file does not exist, could not retrieve json config file for connector $connector."
+        logwarn "❌ file <$json_file> does not exist, could not retrieve json config file for connector $connector."
+        exit 1
     fi
 
     fzf_version=$(get_fzf_version)
