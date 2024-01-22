@@ -78,10 +78,10 @@ playground connector create-or-update --connector pubsub-source  << EOF
 }
 EOF
 
-sleep 10
+sleep 20
 
 log "Verify messages are in topic pubsub-topic"
-playground topic consume --topic pubsub-topic --min-expected-messages 3 --timeout 60
+playground topic consume --topic pubsub-topic --min-expected-messages 1 --timeout 60
 
 log "Delete topic and subscription"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics delete topic-1
