@@ -4,7 +4,8 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-
+logwarn "Azure Data Lake Storage Gen1 will be retired 29 February 2024"
+check_if_continue
 
 if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
 then
