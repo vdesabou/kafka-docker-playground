@@ -22,3 +22,6 @@ hdfs2-source-kerberos.sh
 redshift-jdbc-sink.sh
 
 snowflake-sink-snowpipe-streaming.sh
+
+# no need to test in CI
+azure-cognitive-search-sink-proxy.sh
