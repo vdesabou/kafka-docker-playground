@@ -22,8 +22,8 @@ services:
         - ../../connect/connect-jdbc-mysql-source/security:/etc/kafka/secrets
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
-      KAFKA_OPTS: -Djavax.net.ssl.trustStore=/etc/kafka/secrets/truststore.jks
-                  -Djavax.net.ssl.trustStorePassword=mypassword
-                  -Djavax.net.ssl.keyStore=/etc/kafka/secrets/keystore.jks
-                  -Djavax.net.ssl.keyStorePassword=mypassword
+      # KAFKA_OPTS: -Djavax.net.ssl.trustStore=/etc/kafka/secrets/truststore.jks
+      #             -Djavax.net.ssl.trustStorePassword=mypassword
+      #             -Djavax.net.ssl.keyStore=/etc/kafka/secrets/keystore.jks
+      #             -Djavax.net.ssl.keyStorePassword=mypassword
                   # -Djavax.net.debug=all

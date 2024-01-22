@@ -58,11 +58,15 @@ playground state set run.environment "plaintext"
 log "Creating MySQL sink connector with server side Encrypted Connections (using <usermtls> user which requires SSL)"
 playground connector create-or-update --connector mysql-mtls-sink  << EOF
 {
-    "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-    "tasks.max": "1",
-    "connection.url": "jdbc:mysql://mysql:3306/db?user=usermtls&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1,TLSv1.1,TLSv1.2,TLSv1.3",
-    "topics": "orders",
-    "auto.create": "true"
+  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+  "tasks.max": "1",
+  "connection.url": "jdbc:mysql://mysql:3306/db?user=usermtls&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1,TLSv1.1,TLSv1.2,TLSv1.3",
+  "topics": "orders",
+  "auto.create": "true",
+  "connection.javax.net.ssl.trustStore": "/etc/kafka/secrets/truststore.jks",
+  "connection.javax.net.ssl.trustStorePassword": "mypassword",
+  "connection.javax.net.ssl.keyStore": "/etc/kafka/secrets/keystore.jks",
+  "connection.javax.net.ssl.keyStorePassword": "mypassword"
 }
 EOF
 

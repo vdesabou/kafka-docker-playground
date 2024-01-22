@@ -107,7 +107,9 @@ playground connector create-or-update --connector mysql-ssl-source  << EOF
   "mode":"timestamp+incrementing",
   "timestamp.column.name":"last_modified",
   "incrementing.column.name":"id",
-  "topic.prefix":"mysql-"
+  "topic.prefix":"mysql-",
+  "connection.javax.net.ssl.trustStore": "/etc/kafka/secrets/truststore.jks",
+  "connection.javax.net.ssl.trustStorePassword": "mypassword"
 }
 EOF
 
