@@ -633,7 +633,7 @@ function display_docker_container_error_log() {
       if [[ "$container" == "connect" ]] || [[ "$container" == "sap" ]]
       then
           # always show all logs for connect
-          docker container logs --tail=100 $container 2>&1 | grep -v "was supplied but isn't a known config"
+          docker container logs --tail=500 $container 2>&1 | grep -v "was supplied but isn't a known config"
       else
           docker container logs $container 2>&1 | egrep "ERROR|FATAL"
       fi
