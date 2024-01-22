@@ -14,19 +14,22 @@ services:
       - '1414:1414'
       - '9443:9443'
 
-  # https://github.com/shkoliar/docker-ngrok
+  # https://ngrok.com/docs/using-ngrok-with/docker/
   ngrok:
-    image: shkoliar/ngrok:latest
+    image: ngrok/ngrok:latest
     hostname: ngrok
     container_name: ngrok
     ports:
-      - 4551:4551
+      - 4040:4040
+    restart: unless-stopped
     links:
       - ibmmq
+    command:
+      - "start"
+      - "--all"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ../../ccloud/fully-managed-connect-ibm-mq-source/ngrok.yml:/etc/ngrok.yml
     environment:
-      DOMAIN: ibmmq
-      PORT: 1414
-      PROTOCOL: tcp
-      REGION: eu
-      AUTH_TOKEN: $NGROK_AUTH_TOKEN
-      DEBUG: "true"
+      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN

@@ -26,18 +26,22 @@ services:
       MYSQL_PASSWORD: password
       MYSQL_ROOT_HOST: 172.%  # Allow docker containers to connect to mysql
 
+  # https://ngrok.com/docs/using-ngrok-with/docker/
   ngrok:
-    image: shkoliar/ngrok:latest
+    image: ngrok/ngrok:latest
     hostname: ngrok
     container_name: ngrok
     ports:
-      - 4551:4551
+      - 4040:4040
+    restart: unless-stopped
     links:
       - mysql
+    command:
+      - "start"
+      - "--all"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ../../ccloud/fully-managed-connect-debezium-mysql-source/ngrok.yml:/etc/ngrok.yml
     environment:
-      DOMAIN: mysql
-      PORT: 3306
-      PROTOCOL: tcp
-      REGION: eu
-      AUTH_TOKEN: $NGROK_AUTH_TOKEN
-      DEBUG: "true"
+      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN

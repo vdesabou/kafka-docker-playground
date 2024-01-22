@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  sftp-server:
+    addr: sftp-server:22
+    proto: tcp

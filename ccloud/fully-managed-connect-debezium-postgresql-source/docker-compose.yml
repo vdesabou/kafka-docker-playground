@@ -21,18 +21,22 @@ services:
       - POSTGRES_PASSWORD=mypassword
       - POSTGRES_DB=postgres
 
+  # https://ngrok.com/docs/using-ngrok-with/docker/
   ngrok:
-    image: shkoliar/ngrok:latest
+    image: ngrok/ngrok:latest
     hostname: ngrok
     container_name: ngrok
     ports:
-      - 4551:4551
+      - 4040:4040
+    restart: unless-stopped
     links:
       - postgres
+    command:
+      - "start"
+      - "--all"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ../../ccloud/fully-managed-connect-debezium-postgresql-source/ngrok.yml:/etc/ngrok.yml
     environment:
-      DOMAIN: postgres
-      PORT: 5432
-      PROTOCOL: tcp
-      REGION: eu
-      AUTH_TOKEN: $NGROK_AUTH_TOKEN
-      DEBUG: "true"
+      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN
