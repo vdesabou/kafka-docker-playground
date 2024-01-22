@@ -62,9 +62,7 @@ playground connector create-or-update --connector mysql-ssl-sink  << EOF
   "tasks.max": "1",
   "connection.url": "jdbc:mysql://mysql:3306/db?user=userssl&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1,TLSv1.1,TLSv1.2,TLSv1.3",
   "topics": "orders",
-  "auto.create": "true",
-  "connection.javax.net.ssl.trustStore": "/etc/kafka/secrets/truststore.jks",
-  "connection.javax.net.ssl.trustStorePassword": "mypassword"
+  "auto.create": "true"
 }
 EOF
 

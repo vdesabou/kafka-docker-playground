@@ -108,11 +108,7 @@ playground connector create-or-update --connector mysql-mtls-source  << EOF
   "mode":"timestamp+incrementing",
   "timestamp.column.name":"last_modified",
   "incrementing.column.name":"id",
-  "topic.prefix":"mysql-",
-  "connection.javax.net.ssl.trustStore": "/etc/kafka/secrets/truststore.jks",
-  "connection.javax.net.ssl.trustStorePassword": "mypassword",
-  "connection.javax.net.ssl.keyStore": "/etc/kafka/secrets/keystore.jks",
-  "connection.javax.net.ssl.keyStorePassword": "mypassword"
+  "topic.prefix":"mysql-"
 }
 EOF
 
