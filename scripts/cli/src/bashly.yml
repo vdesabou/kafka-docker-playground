@@ -760,6 +760,11 @@ commands:
   help: |-
     🛑 Stop currently running example
 
+- name: remove-all-docker-images
+  group: Run
+  help: |-
+    🧨 Remove all docker images (including docker volumes)
+
 - name: open-docs
   group: Run
   help: |-

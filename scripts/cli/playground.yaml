@@ -830,6 +830,12 @@ subcommands:
     usage: playground stop
     options: []
     subcommands:
+  - name: remove-all-docker-images
+    description: | 
+        🧨 Remove all docker images (including docker volumes)
+    usage: playground remove-all-docker-images
+    options: []
+    subcommands:
   - name: open-docs
     description: | 
         🧑‍🎓 Open Confluent documentation of currently running example

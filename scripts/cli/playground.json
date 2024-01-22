@@ -598,6 +598,13 @@
       "subcommands": null
     },
     {
+      "name": "remove-all-docker-images",
+      "description": "🧨 Remove all docker images (including docker volumes)\n",
+      "usage": "playground remove-all-docker-images",
+      "options": [],
+      "subcommands": null
+    },
+    {
       "name": "open-docs",
       "description": "🧑‍🎓 Open Confluent documentation of currently running example\n",
       "usage": "playground open-docs [OPTIONS]",
