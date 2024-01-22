@@ -43,7 +43,7 @@ fi
 
     res=$(cat $json_file | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🗜️" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
 
-    log "🗜️ selected config parameter for connector $connector"
+    log "🗜️ selected config parameter(s) for connector $connector"
     echo "$res"
 
     if [[ "$OSTYPE" == "darwin"* ]]
@@ -61,7 +61,7 @@ fi
             echo "$res" > $tmp_dir/tmp
 
             cat $tmp_dir/tmp | pbcopy
-            log "📋 config parameter has been copied to the clipboard (disable with 'playground config set clipboard false')"
+            log "📋 config has been copied to the clipboard (disable with 'playground config set clipboard false')"
         fi
     fi
 done
