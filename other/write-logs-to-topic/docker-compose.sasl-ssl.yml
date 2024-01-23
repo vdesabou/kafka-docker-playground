@@ -1,0 +1,9 @@
+---
+version: '3.5'
+services:
+
+  connect:
+    volumes:
+      - ../../other/write-logs-to-topic/log4j-sasl-ssl.properties:/tmp/connect/log4j.properties
+    environment:
+      KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/tmp/connect/log4j.properties"
