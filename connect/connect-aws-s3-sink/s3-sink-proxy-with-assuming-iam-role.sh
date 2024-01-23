@@ -81,7 +81,7 @@ playground connector create-or-update --connector s3-sink  << EOF
     "topics": "s3_topic",
     "s3.region": "$AWS_REGION",
     "s3.bucket.name": "$AWS_BUCKET_NAME",
-    "s3.part.size": 52428801,
+    "s3.part.size": "52428801",
     "topics.dir": "$TAG",
     "flush.size": "3",
     "s3.proxy.url": "https://nginx-proxy:8888",
