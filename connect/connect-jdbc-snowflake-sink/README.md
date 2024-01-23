@@ -11,7 +11,7 @@ JDBC connector does not have a specific *Snowflake* dialect therefore *Generic* 
  
 For example:
  
-* It was identified that latest version of Snowflake driver `3.13.26`` is creating issue with *TIMESTAMP*:
+* It was identified that latest version of Snowflake driver `3.14.4`` is creating issue with *TIMESTAMP*:
 
 ```log
 WARN [jdbc-snowflake|task-0] JDBC type 2014 (TIMESTAMPTZ) not currently supported (io.confluent.connect.jdbc.dialect.GenericDatabaseDialect:1204)
