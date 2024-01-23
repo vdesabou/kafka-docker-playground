@@ -16,6 +16,7 @@ app.use((req, res, next) => {
 
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} to ${req.url}`);
+  console.log(`Request size: ${req.get('Content-Length')} bytes`);
   next();
 });
 
