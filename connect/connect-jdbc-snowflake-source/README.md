@@ -17,7 +17,7 @@ For example:
 WARN [jdbc-snowflake|task-0] JDBC type 2014 (TIMESTAMPTZ) not currently supported (io.confluent.connect.jdbc.dialect.GenericDatabaseDialect:1204)
 ```
 
-After testing lower versions, I’ve identified that `3.13.16`` is working fine (I assume it comes as *TIMESTAMP* instead as *TIMESTAMPTZ* which is not supported by GenericDialect)
+After testing lower versions, I’ve identified that `3.13.16` is working fine (I assume it comes as *TIMESTAMP* instead as *TIMESTAMPTZ* which is not supported by GenericDialect)
   
 * It was also identified that to make it work with timestamps, we had to create a view where each DATE and TIMESTAMP columns have to be explicitly converted to UTC, example:
 
