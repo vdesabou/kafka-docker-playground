@@ -2313,6 +2313,43 @@
       ]
     },
     {
+      "name": "connector-plugin",
+      "description": "🔌 Connector-plugin commands\n",
+      "usage": "playground connector-plugin COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "search-jar",
+          "description": "☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/ Search for specific class and display method signatures\n",
+          "usage": "playground connector-plugin search-jar [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--connector-plugin",
+                "-c"
+              ],
+              "argument": "CONNECTOR-PLUGIN",
+              "description": "🔌 Connector plugin name\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--connector-tag"
+              ],
+              "argument": "latest",
+              "description": "🔗 Connector version to use\n\nBy default, for each connector, the latest available version on Confluent Hub is used\n\nDefault value: latest\n"
+            },
+            {
+              "names": [
+                "--class"
+              ],
+              "argument": "CLASS",
+              "description": "☕ Java class name to search for in all jars\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "connector",
       "description": "🔗 Connector commands\n",
       "usage": "playground connector COMMAND",
@@ -2615,35 +2652,6 @@
               ],
               "argument": "CONNECTOR",
               "description": "🔗 Connector name\n\n🎓 Tip: If not specified, the command will apply to all connectors\n"
-            }
-          ]
-        },
-        {
-          "name": "search-jar",
-          "description": "🔌 List jars for a connector plugin from confluent hub https://www.confluent.io/hub/ Search for specific class and display method signatures\n",
-          "usage": "playground connector search-jar [OPTIONS]",
-          "options": [
-            {
-              "names": [
-                "--connector-plugin",
-                "-c"
-              ],
-              "argument": "CONNECTOR-PLUGIN",
-              "description": "🔌 Connector plugin name\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes\n"
-            },
-            {
-              "names": [
-                "--connector-tag"
-              ],
-              "argument": "latest",
-              "description": "🔗 Connector version to use\n\nBy default, for each connector, the latest available version on Confluent Hub is used\n\nDefault value: latest\n"
-            },
-            {
-              "names": [
-                "--class"
-              ],
-              "argument": "CLASS",
-              "description": "☕ Java class name to search for in all jars\n"
             }
           ]
         },

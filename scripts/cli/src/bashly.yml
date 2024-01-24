@@ -2591,6 +2591,45 @@ commands:
       }
       EOF
 
+- name: connector-plugin
+  expose: always
+  group: Connector-Plugin
+  help: |-
+    🔌 Connector-plugin commands
+
+  commands:
+  - name: search-jar
+    help: ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/
+          Search for specific class and display method signatures
+    dependencies:
+      javap: visit https://openjdk.org/install/ to install
+    flags:
+    - long: --connector-plugin
+      short: -c
+      required: true
+      arg: connector-plugin
+      completions:
+        - $(playground get-connector-plugin "$cur")
+      help: |-
+        🔌 Connector plugin name
+
+        🎓 Tip: use <tab> completion to trigger fzf completion
+    - long: --connector-tag
+      arg: connector_tag
+      required: false
+      default: "latest"
+      help: |- 
+        🔗 Connector version to use
+  
+        By default, for each connector, the latest available version on Confluent Hub is used
+    - long: --class
+      arg: class
+      required: false
+      help: |- 
+        ☕ Java class name to search for in all jars
+    examples: |
+      playground connector search-jar --connector-plugin confluentinc/kafka-connect-s3 --class WebIdentityTokenCredentialsProvider
+
 - name: connector
   expose: always
   group: Connector
@@ -2706,38 +2745,6 @@ commands:
       fzf: visit https://github.com/junegunn/fzf#installation to install
     flags:
     - *connector
-
-  - name: search-jar
-    help: 🔌 List jars for a connector plugin from confluent hub https://www.confluent.io/hub/
-          Search for specific class and display method signatures
-    dependencies:
-      javap: visit https://openjdk.org/install/ to install
-    flags:
-    - long: --connector-plugin
-      short: -c
-      required: true
-      arg: connector-plugin
-      completions:
-        - $(playground get-connector-plugin "$cur")
-      help: |-
-        🔌 Connector plugin name
-
-        🎓 Tip: use <tab> completion to trigger fzf completion
-    - long: --connector-tag
-      arg: connector_tag
-      required: false
-      default: "latest"
-      help: |- 
-        🔗 Connector version to use
-  
-        By default, for each connector, the latest available version on Confluent Hub is used
-    - long: --class
-      arg: class
-      required: false
-      help: |- 
-        ☕ Java class name to search for in all jars
-    examples: |
-      playground connector search-jar --connector-plugin confluentinc/kafka-connect-s3 --class WebIdentityTokenCredentialsProvider
 
   - name: snippets
     help: 🔌 useful snippets

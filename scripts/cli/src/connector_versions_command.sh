@@ -40,6 +40,9 @@ else
 
         curl -s -S 'https://api.hub.confluent.io/api/plugins?per_page=100000' | jq '. | sort_by(.release_date) | reverse | .' > /tmp/allmanis.json
 
+https://www.confluent.io/hub/confluentinc/kafka-connect-pagerduty
+
+https://api.hub.confluent.io/api/plugin/
         connectors_string=""
         delim=""
         for conn in "${connectors[@]}"; do
