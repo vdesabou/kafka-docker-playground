@@ -115,4 +115,5 @@ log "Confirm that the messages were delivered to the result topic in Kafka"
 playground topic consume --topic test-result --min-expected-messages 3 --timeout 60
 
 log "Deleting resource group"
+check_if_continue
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

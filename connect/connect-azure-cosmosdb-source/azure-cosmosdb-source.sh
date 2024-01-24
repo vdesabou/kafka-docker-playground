@@ -123,6 +123,7 @@ log "Verifying topic apparels"
 playground topic consume --topic apparels --min-expected-messages 2 --timeout 60
 
 log "Delete Cosmos DB instance"
+check_if_continue
 az cosmosdb delete -g $AZURE_RESOURCE_GROUP -n $AZURE_COSMOSDB_SERVER_NAME --yes
 
 log "Deleting resource group"

@@ -122,4 +122,5 @@ az storage blob download --account-name "${AZURE_ACCOUNT_NAME}" --account-key "$
 docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/blob_topic+0+0000000000.avro
 
 log "Deleting resource group"
+check_if_continue
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

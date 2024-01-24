@@ -9,6 +9,7 @@ import com.azure.messaging.eventhubs.models.CreateBatchOptions;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 public class SimpleSend {
 
@@ -33,7 +34,7 @@ public class SimpleSend {
         // sample events in an array
         List<EventData> allEvents = Arrays.asList(new EventData("Foo"), new EventData("Bar"));
 
-        final CreateBatchOptions options = new CreateBatchOptions().setPartitionKey("mykey");
+        final CreateBatchOptions options = new CreateBatchOptions().setPartitionKey(UUID.randomUUID().toString());
         
         // create a batch
         EventDataBatch eventDataBatch = producer.createBatch(options);

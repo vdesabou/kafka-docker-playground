@@ -126,6 +126,7 @@ az dls fs download --account "${AZURE_DATALAKE_ACCOUNT_NAME}" --overwrite --sour
 docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/datalake_topic+0+0000000000.avro
 
 log "Deleting resource group"
+check_if_continue
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
 
 log "Deleting active directory app"

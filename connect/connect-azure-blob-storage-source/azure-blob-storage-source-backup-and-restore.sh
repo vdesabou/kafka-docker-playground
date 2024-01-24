@@ -155,4 +155,5 @@ log "Verifying topic copy_of_blob_topic"
 playground topic consume --topic copy_of_blob_topic --min-expected-messages 3 --timeout 60
 
 log "Deleting resource group"
+check_if_continue
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

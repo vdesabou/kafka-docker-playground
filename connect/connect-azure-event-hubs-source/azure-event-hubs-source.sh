@@ -111,4 +111,5 @@ log "Verifying topic event_hub_topic"
 playground topic consume --topic event_hub_topic --min-expected-messages 2 --timeout 60
 
 log "Deleting resource group"
+check_if_continue
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

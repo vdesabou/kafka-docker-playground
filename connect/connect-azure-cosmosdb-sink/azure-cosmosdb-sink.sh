@@ -123,6 +123,7 @@ grep "HolidayInn" /tmp/result.log
 grep "Motel8" /tmp/result.log
 
 log "Delete Cosmos DB instance"
+check_if_continue
 az cosmosdb delete -g $AZURE_RESOURCE_GROUP -n $AZURE_COSMOSDB_SERVER_NAME --yes
 
 log "Deleting resource group"

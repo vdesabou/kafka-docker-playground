@@ -121,4 +121,5 @@ check_if_continue
 playground fully-managed-connector delete --connector $connector_name
 
 log "Deleting resource group"
+check_if_continue
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

@@ -102,4 +102,5 @@ log "Verifying topic quick-start-topic"
 playground topic consume --topic quick-start-topic --min-expected-messages 9 --timeout 60
 
 log "Deleting resource group"
+check_if_continue
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

@@ -108,4 +108,5 @@ log "Verifying topic servicebus-topic"
 playground topic consume --topic servicebus-topic --min-expected-messages 5 --timeout 60
 
 log "Deleting resource group"
+check_if_continue
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
