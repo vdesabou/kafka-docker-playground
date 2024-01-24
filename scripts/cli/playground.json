@@ -2346,6 +2346,21 @@
               "description": "☕ Java class name to search for in all jars\n"
             }
           ]
+        },
+        {
+          "name": "versions",
+          "description": "💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n",
+          "usage": "playground connector-plugin versions [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--connector-plugin",
+                "-c"
+              ],
+              "argument": "CONNECTOR-PLUGIN",
+              "description": "🔌 Connector plugin name\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes\n"
+            }
+          ]
         }
       ]
     },

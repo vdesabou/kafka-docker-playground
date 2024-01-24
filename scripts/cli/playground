@@ -131,6 +131,7 @@ playground_usage() {
   printf "%s\n" "$(bold "Connector-Plugin commands:")"
   printf "  %s   🔌 Connector-plugin commands\n" "$(green "connector-plugin")                              "
   printf "  %s   ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/ Search for specific class and display method signatures\n" "$(green "connector-plugin search-jar")                   "
+  printf "  %s   💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "connector-plugin versions")                     "
   echo
   printf "%s\n" "$(bold "Connector commands:")"
   printf "  %s   🔗 Connector commands\n" "$(green "connector")                                     "
@@ -5000,6 +5001,7 @@ playground_connector_plugin_usage() {
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/ Search for specific class and display method signatures\n" "$(green "search-jar")"
+  printf "  %s   💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "versions")  "
   echo
 
   # :command.long_usage
@@ -5059,7 +5061,47 @@ playground_connector_plugin_search_jar_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground connector search-jar --connector-plugin\n  confluentinc/kafka-connect-s3 --class WebIdentityTokenCredentialsProvider\n"
+    printf "  playground connector-plugin search-jar --connector-plugin\n  confluentinc/kafka-connect-s3 --class WebIdentityTokenCredentialsProvider\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_plugin_versions_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector-plugin versions - 💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n"
+    echo
+
+  else
+    printf "playground connector-plugin versions - 💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector-plugin versions [OPTIONS]\n"
+  printf "  playground connector-plugin versions --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-plugin, -c CONNECTOR-PLUGIN (required)")"
+    printf "    🔌 Connector plugin name\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector-plugin versions --connector-plugin\n  confluentinc/kafka-connect-s3\n"
     echo
 
   fi
@@ -17932,6 +17974,65 @@ playground_connector_plugin_search_jar_command() {
 }
 
 # :command.function
+playground_connector_plugin_versions_command() {
+  # src/connector_plugin_versions_command.sh
+  connector_plugin="${args[--connector-plugin]}"
+
+  if [[ $connector_plugin == *"@"* ]]
+  then
+    connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+  fi
+
+  owner=$(echo "$connector_plugin" | cut -d "/" -f 1)
+  name=$(echo "$connector_plugin" | cut -d "/" -f 2)
+
+  log "💯 List all versions for connector plugin $connector_plugin"
+  curl_output=$(curl -s https://api.hub.confluent.io/api/plugins/$owner/$name/versions)
+  ret=$?
+  set -e
+  if [ $ret -eq 0 ]
+  then
+      if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
+      then
+          set +e
+          json_file=/tmp/json
+          echo "$curl_output" > $json_file
+          jq_output=$(jq . "$json_file" 2>&1)
+          error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
+
+          if [[ -n "$error_line" ]]; then
+              logerror "❌ Invalid JSON at line $error_line"
+          fi
+          set -e
+
+          if [[ $(type -f bat 2>&1) =~ "not found" ]]
+          then
+              cat -n $json_file
+          else
+              bat $json_file --highlight-line $error_line
+          fi
+
+          exit 1
+      fi
+
+      while IFS= read -r row; do
+
+          IFS=$'\n'
+          arr=($(echo "$row" | jq -r '.version, .manifest_url, .release_date'))
+          version="${arr[0]}"
+          manifest_url="${arr[1]}"
+          release_date="${arr[2]}"
+
+          echo "$version 📅 $release_date"
+
+      done <<< "$(echo "$curl_output" | jq -c '.[]')"
+  else
+      logerror "❌ curl request failed with error code $ret!"
+      exit 1
+  fi
+}
+
+# :command.function
 playground_connector_status_command() {
   # src/connector_status_command.sh
   get_connect_url_and_security
@@ -28767,6 +28868,13 @@ playground_connector_plugin_parse_requirements() {
       shift $#
       ;;
 
+    versions)
+      action="versions"
+      shift
+      playground_connector_plugin_versions_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_connector_plugin_usage >&2
@@ -28906,6 +29014,70 @@ playground_connector_plugin_search_jar_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['--connector-tag']:-} ]] || args['--connector-tag']="latest"
+
+}
+
+# :command.parse_requirements
+playground_connector_plugin_versions_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_plugin_versions_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector-plugin versions"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector-plugin | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector-plugin']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector-plugin requires an argument: --connector-plugin, -c CONNECTOR-PLUGIN" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--connector-plugin']+x} ]]; then
+    printf "missing required flag: --connector-plugin, -c CONNECTOR-PLUGIN\n" >&2
+    exit 1
+  fi
 
 }
 
@@ -30385,6 +30557,7 @@ run() {
     "fully-managed-connector create-or-update") playground_fully_managed_connector_create_or_update_command ;;
     "connector-plugin") playground_connector_plugin_command ;;
     "connector-plugin search-jar") playground_connector_plugin_search_jar_command ;;
+    "connector-plugin versions") playground_connector_plugin_versions_command ;;
     "connector") playground_connector_command ;;
     "connector status") playground_connector_status_command ;;
     "connector plugins") playground_connector_plugins_command ;;

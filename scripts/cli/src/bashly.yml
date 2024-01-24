@@ -2604,7 +2604,8 @@ commands:
     dependencies:
       javap: visit https://openjdk.org/install/ to install
     flags:
-    - long: --connector-plugin
+    - &connector-plugin
+      long: --connector-plugin
       short: -c
       required: true
       arg: connector-plugin
@@ -2628,7 +2629,14 @@ commands:
       help: |- 
         ☕ Java class name to search for in all jars
     examples: |
-      playground connector search-jar --connector-plugin confluentinc/kafka-connect-s3 --class WebIdentityTokenCredentialsProvider
+      playground connector-plugin search-jar --connector-plugin confluentinc/kafka-connect-s3 --class WebIdentityTokenCredentialsProvider
+
+  - name: versions
+    help: 💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/
+    flags:
+    - *connector-plugin
+    examples: |
+      playground connector-plugin versions --connector-plugin confluentinc/kafka-connect-s3
 
 - name: connector
   expose: always
