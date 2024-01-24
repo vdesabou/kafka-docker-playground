@@ -33,6 +33,8 @@ else
         owner=$(echo "$full_connector_name" | cut -d'-' -f1)
         name=$(echo "$full_connector_name" | cut -d'-' -f2-)
 
+        playground connector-plugin versions --connector-plugin $owner/$name --last 10
+
         # latest
         latest=$(playground connector-plugin versions --connector-plugin $owner/$name --last 1)
 
