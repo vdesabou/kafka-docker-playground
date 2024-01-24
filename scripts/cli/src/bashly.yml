@@ -2635,6 +2635,13 @@ commands:
     help: 💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/
     flags:
     - *connector-plugin
+    - long: --last
+      arg: last
+      required: false
+      validate: integer
+      conflicts: [--all]
+      help: |-
+        🆕 Number of last versions to show
     examples: |
       playground connector-plugin versions --connector-plugin confluentinc/kafka-connect-s3
 

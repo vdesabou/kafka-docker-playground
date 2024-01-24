@@ -2359,6 +2359,13 @@
               ],
               "argument": "CONNECTOR-PLUGIN",
               "description": "🔌 Connector plugin name\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--last"
+              ],
+              "argument": "LAST",
+              "description": "🆕 Number of last versions to show\n\nConflicts with: --all\n"
             }
           ]
         }

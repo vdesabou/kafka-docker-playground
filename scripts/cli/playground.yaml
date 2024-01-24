@@ -2644,6 +2644,14 @@ subcommands:
             
             Required: ✓ Yes
             
+        - names:
+          - --last
+          argument: LAST
+          description: | 
+            🆕 Number of last versions to show
+            
+            Conflicts with: --all
+            
   - name: connector
     description: | 
         🔗 Connector commands

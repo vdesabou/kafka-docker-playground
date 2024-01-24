@@ -5094,6 +5094,11 @@ playground_connector_plugin_versions_usage() {
     printf "    🔌 Connector plugin name\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--last LAST")"
+    printf "    🆕 Number of last versions to show\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -17977,6 +17982,7 @@ playground_connector_plugin_search_jar_command() {
 playground_connector_plugin_versions_command() {
   # src/connector_plugin_versions_command.sh
   connector_plugin="${args[--connector-plugin]}"
+  last="${args[--last]}"
 
   if [[ $connector_plugin == *"@"* ]]
   then
@@ -17986,49 +17992,74 @@ playground_connector_plugin_versions_command() {
   owner=$(echo "$connector_plugin" | cut -d "/" -f 1)
   name=$(echo "$connector_plugin" | cut -d "/" -f 2)
 
-  log "💯 List all versions for connector plugin $connector_plugin"
-  curl_output=$(curl -s https://api.hub.confluent.io/api/plugins/$owner/$name/versions)
-  ret=$?
-  set -e
-  if [ $ret -eq 0 ]
+  filename="/tmp/version_$owner_$name"
+
+  if [[ -n "$last" ]]
   then
-      if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
+      if [ "$last" != "1" ]
       then
-          set +e
-          json_file=/tmp/json
-          echo "$curl_output" > $json_file
-          jq_output=$(jq . "$json_file" 2>&1)
-          error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
+          log "💯 Listing last $last versions for connector plugin $connector_plugin"
+      fi
+  else
+      log "💯 Listing all versions for connector plugin $connector_plugin"
+  fi
 
-          if [[ -n "$error_line" ]]; then
-              logerror "❌ Invalid JSON at line $error_line"
-          fi
-          set -e
-
-          if [[ $(type -f bat 2>&1) =~ "not found" ]]
+  if [ ! -f $filename ]
+  then
+      curl_output=$(curl -s https://api.hub.confluent.io/api/plugins/$owner/$name/versions)
+      ret=$?
+      set -e
+      if [ $ret -eq 0 ]
+      then
+          if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
           then
-              cat -n $json_file
-          else
-              bat $json_file --highlight-line $error_line
+              set +e
+              json_file=/tmp/json
+              echo "$curl_output" > $json_file
+              jq_output=$(jq . "$json_file" 2>&1)
+              error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
+
+              if [[ -n "$error_line" ]]; then
+                  logerror "❌ Invalid JSON at line $error_line"
+              fi
+              set -e
+
+              if [[ $(type -f bat 2>&1) =~ "not found" ]]
+              then
+                  cat -n $json_file
+              else
+                  bat $json_file --highlight-line $error_line
+              fi
+
+              exit 1
           fi
 
+          while IFS= read -r row; do
+              IFS=$'\n'
+              arr=($(echo "$row" | jq -r '.version, .manifest_url, .release_date'))
+              version="${arr[0]}"
+              #manifest_url="${arr[1]}"
+              release_date="${arr[2]}"
+
+              echo "🔢 v$version - 📅 release date: $release_date" >> $filename
+          done <<< "$(echo "$curl_output" | jq -c '.[]')"
+      else
+          logerror "❌ curl request failed with error code $ret!"
           exit 1
       fi
 
-      while IFS= read -r row; do
+      if [ ! -f $filename ]
+      then
+          logerror "❌ could not get versions for connector plugin $connector_plugin"
+          exit 1
+      fi
+  fi
 
-          IFS=$'\n'
-          arr=($(echo "$row" | jq -r '.version, .manifest_url, .release_date'))
-          version="${arr[0]}"
-          manifest_url="${arr[1]}"
-          release_date="${arr[2]}"
-
-          echo "$version 📅 $release_date"
-
-      done <<< "$(echo "$curl_output" | jq -c '.[]')"
+  if [[ -n "$last" ]]
+  then
+      tail -${last} $filename
   else
-      logerror "❌ curl request failed with error code $ret!"
-      exit 1
+      cat $filename
   fi
 }
 
@@ -18229,30 +18260,11 @@ playground_connector_versions_command() {
       for connector_path in ${connector_paths//,/ }
       do
           full_connector_name=$(basename "$connector_path")
-          connector_name=$(echo "$full_connector_name" | cut -d'-' -f2-)
+          owner=$(echo "$full_connector_name" | cut -d'-' -f1)
+          name=$(echo "$full_connector_name" | cut -d'-' -f2-)
 
-          connectors=(
-          "$connector_name"
-          )
-
-          output_format="\"🔢 v\" + .version + \" - 📅 release date: \" + .release_date"
-
-          curl -s -S 'https://api.hub.confluent.io/api/plugins?per_page=100000' | jq '. | sort_by(.release_date) | reverse | .' > /tmp/allmanis.json
-
-  https://www.confluent.io/hub/confluentinc/kafka-connect-pagerduty
-
-  https://api.hub.confluent.io/api/plugin/
-          connectors_string=""
-          delim=""
-          for conn in "${connectors[@]}"; do
-              connectors_string="$connectors_string$delim\"$conn\""
-              delim=","
-          done
-
-          latest=$(jq '.[] | select(IN(.name; '"${connectors_string}"')) | '"${output_format}"'' /tmp/allmanis.json)
-
-          rm /tmp/allmanis.json
-
+          # latest
+          latest=$(playground connector-plugin versions --connector-plugin $owner/$name --last 1)
 
           manifest_file="$root_folder/confluent-hub/$full_connector_name/manifest.json"
           if [ -f $manifest_file ]
@@ -18264,13 +18276,13 @@ playground_connector_versions_command() {
               exit 0
           fi
 
-          current="\"🔢 v$version - 📅 release date: $release_date\""
+          current="🔢 v$version - 📅 release date: $release_date"
           if [ "$current" == "$latest" ]
           then
-              log "👻 Version currently used for $full_connector_name is latest"
+              log "👻 Version currently used for $owner/$name is latest"
               echo "$current"
           else
-              log "🗯️ Version currently used for $full_connector_name is not latest"
+              log "🗯️ Version currently used for $owner/$name is not latest"
               log "Current"
               echo "$current"
               log "Latest on Hub"
@@ -29053,6 +29065,31 @@ playground_connector_plugin_versions_parse_requirements() {
           shift
         else
           printf "%s\n" "--connector-plugin requires an argument: --connector-plugin, -c CONNECTOR-PLUGIN" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --last)
+        # :flag.conflicts
+        if [[ -n "${args['--all']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--all" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_integer "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--last LAST" "$(validate_integer "$2")" >&2
+            exit 1
+          fi
+
+          args['--last']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--last requires an argument: --last LAST" >&2
           exit 1
         fi
         ;;

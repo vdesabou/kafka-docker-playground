@@ -30,30 +30,13 @@ else
     for connector_path in ${connector_paths//,/ }
     do
         full_connector_name=$(basename "$connector_path")
-        connector_name=$(echo "$full_connector_name" | cut -d'-' -f2-)
+        owner=$(echo "$full_connector_name" | cut -d'-' -f1)
+        name=$(echo "$full_connector_name" | cut -d'-' -f2-)
 
-        connectors=(
-        "$connector_name"
-        )
+        # latest
+        latest=$(playground connector-plugin versions --connector-plugin $owner/$name --last 1)
 
-        output_format="\"🔢 v\" + .version + \" - 📅 release date: \" + .release_date"
-
-        curl -s -S 'https://api.hub.confluent.io/api/plugins?per_page=100000' | jq '. | sort_by(.release_date) | reverse | .' > /tmp/allmanis.json
-
-https://www.confluent.io/hub/confluentinc/kafka-connect-pagerduty
-
-https://api.hub.confluent.io/api/plugin/
-        connectors_string=""
-        delim=""
-        for conn in "${connectors[@]}"; do
-            connectors_string="$connectors_string$delim\"$conn\""
-            delim=","
-        done 
-        latest=$(jq '.[] | select(IN(.name; '"${connectors_string}"')) | '"${output_format}"'' /tmp/allmanis.json)
-
-        rm /tmp/allmanis.json
-
-        ## current version        
+        ## current version
         manifest_file="$root_folder/confluent-hub/$full_connector_name/manifest.json"
         if [ -f $manifest_file ]
         then
@@ -64,13 +47,13 @@ https://api.hub.confluent.io/api/plugin/
             exit 0
         fi
 
-        current="\"🔢 v$version - 📅 release date: $release_date\""
+        current="🔢 v$version - 📅 release date: $release_date"
         if [ "$current" == "$latest" ]
         then
-            log "👻 Version currently used for $full_connector_name is latest"
+            log "👻 Version currently used for $owner/$name is latest"
             echo "$current"
         else
-            log "🗯️ Version currently used for $full_connector_name is not latest"
+            log "🗯️ Version currently used for $owner/$name is not latest"
             log "Current"
             echo "$current"
             log "Latest on Hub"
