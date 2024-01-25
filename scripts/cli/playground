@@ -138,7 +138,7 @@ playground_usage() {
   printf "  %s   🧩 Show status of all connectors\n" "$(green "connector status")                              "
   printf "  %s   🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n" "$(green "connector plugins")                             "
   printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")                               "
-  printf "  %s   🧞 Get current and latest version available on Confluent Hub for connector(s) used in example\n" "$(green "connector versions")                            "
+  printf "  %s   🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n" "$(green "connector versions")                            "
   printf "  %s   ♻️  Restart connector\n" "$(green "connector restart")                             "
   printf "  %s   🛑 Stop connector (only available if CP > 7.5 )\n" "$(green "connector stop")                                "
   printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")                              "
@@ -390,11 +390,11 @@ playground_get_connector_plugin_usage() {
 # :command.usage
 playground_get_fully_managed_connector_list_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground get-fully-managed-connector-list - Return some completion for ccloud connector list\n"
+    printf "playground get-fully-managed-connector-list - Return some completion for fully managed connector list\n"
     echo
 
   else
-    printf "playground get-fully-managed-connector-list - Return some completion for ccloud connector list\n"
+    printf "playground get-fully-managed-connector-list - Return some completion for fully managed connector list\n"
     echo
 
   fi
@@ -1287,7 +1287,7 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG")"
-    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n"
     echo
 
     # :flag.usage
@@ -1412,7 +1412,7 @@ playground_re_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG")"
-    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n"
     echo
 
     # :flag.usage
@@ -1675,7 +1675,7 @@ playground_run_ccloud_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG")"
-    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n"
     echo
 
     # :flag.usage
@@ -1850,7 +1850,7 @@ playground_update_version_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG")"
-    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n"
     echo
 
     # :flag.usage
@@ -2148,7 +2148,7 @@ playground_repro_bootstrap_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG")"
-    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n"
     echo
 
     # :flag.usage
@@ -5045,8 +5045,7 @@ playground_connector_plugin_search_jar_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG")"
-    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n"
-    printf "    Default: latest\n"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n"
     echo
 
     # :flag.usage
@@ -5133,7 +5132,7 @@ playground_connector_usage() {
   printf "  %s   🧩 Show status of all connectors\n" "$(green "status")                "
   printf "  %s   🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n" "$(green "plugins")               "
   printf "  %s   ⏸️  Pause connector\n" "$(green "pause")                 "
-  printf "  %s   🧞 Get current and latest version available on Confluent Hub for connector(s) used in example\n" "$(green "versions")              "
+  printf "  %s   🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n" "$(green "versions")              "
   printf "  %s   ♻️  Restart connector\n" "$(green "restart")               "
   printf "  %s   🛑 Stop connector (only available if CP > 7.5 )\n" "$(green "stop")                  "
   printf "  %s   ⏯️  Resume connector\n" "$(green "resume")                "
@@ -5292,11 +5291,14 @@ playground_connector_pause_usage() {
 # :command.usage
 playground_connector_versions_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground connector versions - 🧞 Get current and latest version available on Confluent Hub for connector(s) used in example\n"
+    printf "playground connector versions\n"
+    echo
+
+    printf "  🧞 Get current and latest versions available on Confluent Hub for connector(s)\n  used in example\n"
     echo
 
   else
-    printf "playground connector versions - 🧞 Get current and latest version available on Confluent Hub for connector(s) used in example\n"
+    printf "playground connector versions - 🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n"
     echo
 
   fi
@@ -6250,7 +6252,7 @@ function get_confluent_kafka_region_list_with_fzf() {
     fzf_option_rounded=""
   fi
 
-  res=$(cat $root_folder/scripts/cli/confluent-kafka-region-list.txt | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+  res=$(cat $root_folder/scripts/cli/confluent-kafka-region-list.txt | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🌍" --header="select region (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
 }
 
 function get_any_files_with_fzf() {
@@ -6313,7 +6315,41 @@ function get_plugin_list() {
     fzf_option_rounded=""
   fi
 
-  res=$(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+  res=$(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🔌" --header="select connector plugin (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+}
+
+function choose_connector_tag() {
+  connector_plugin="$1"
+
+  owner=$(echo "$connector_plugin" | cut -d "/" -f 1)
+  name=$(echo "$connector_plugin" | cut -d "/" -f 2)
+
+  filename="/tmp/version_$owner_$name"
+
+  if [ ! -f $filename ]
+  then
+    playground connector-plugin versions --connector-plugin $owner/$name > /dev/null 2>&1
+  fi
+
+  if [ ! -f $filename ]
+  then
+      logerror "❌ could not get versions for connector plugin $connector_plugin"
+      exit 1
+  fi
+
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
+  then
+    fzf_option_wrap="--preview-window=40%,wrap"
+    fzf_option_pointer="--pointer=👉"
+    fzf_option_rounded="--border=rounded"
+  else
+    fzf_options=""
+    fzf_option_pointer=""
+    fzf_option_rounded=""
+  fi
+
+  tac $filename | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🔢" --header="select connector version for $owner/$name (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer
 }
 
 function filter_not_mdc_environment() {
@@ -11436,8 +11472,48 @@ playground_run_command() {
 
   if [[ -n "$connector_tag" ]]
   then
+    if [ "$connector_tag" == " " ]
+    then
+      # determining the docker-compose file from from test_file
+      docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
+      test_file_directory="$(dirname "${test_file}")"
+      docker_compose_file="${test_file_directory}/${docker_compose_file}"
+
+      if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
+      then
+          logwarn "❌ skipping as docker-compose override file could not be detemined"
+          exit 1
+      fi
+
+      connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
+      if [ "$connector_paths" == "" ]
+      then
+          logwarn "❌ skipping as it is not an example with connector"
+          exit 1
+      else
+          connector_tags=""
+          for connector_path in ${connector_paths//,/ }
+          do
+            full_connector_name=$(basename "$connector_path")
+            owner=$(echo "$full_connector_name" | cut -d'-' -f1)
+            name=$(echo "$full_connector_name" | cut -d'-' -f2-)
+
+            ret=$(choose_connector_tag "$owner/$name")
+            connector_tag=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
+
+            if [ -z "$connector_tags" ]; then
+              connector_tags="$connector_tag"
+            else
+              connector_tags="$connector_tags,$connector_tag"
+            fi
+          done
+
+          connector_tag="$connector_tags"
+      fi
+    fi
+
     flag_list="$flag_list --connector-tag=$connector_tag"
-    export CONNECTOR_TAG=$connector_tag
+    export CONNECTOR_TAG="$connector_tag"
   fi
 
   if [[ -n "$connector_zip" ]]
@@ -11959,8 +12035,48 @@ playground_run_ccloud_command() {
 
   if [[ -n "$connector_tag" ]]
   then
+    if [ "$connector_tag" == " " ]
+    then
+      # determining the docker-compose file from from test_file
+      docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
+      test_file_directory="$(dirname "${test_file}")"
+      docker_compose_file="${test_file_directory}/${docker_compose_file}"
+
+      if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
+      then
+          logwarn "❌ skipping as docker-compose override file could not be detemined"
+          exit 1
+      fi
+
+      connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
+      if [ "$connector_paths" == "" ]
+      then
+          logwarn "❌ skipping as it is not an example with connector"
+          exit 1
+      else
+          connector_tags=""
+          for connector_path in ${connector_paths//,/ }
+          do
+            full_connector_name=$(basename "$connector_path")
+            owner=$(echo "$full_connector_name" | cut -d'-' -f1)
+            name=$(echo "$full_connector_name" | cut -d'-' -f2-)
+
+            ret=$(choose_connector_tag "$owner/$name")
+            connector_tag=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
+
+            if [ -z "$connector_tags" ]; then
+              connector_tags="$connector_tag"
+            else
+              connector_tags="$connector_tags,$connector_tag"
+            fi
+          done
+
+          connector_tag="$connector_tags"
+      fi
+    fi
+
     flag_list="$flag_list --connector-tag=$connector_tag"
-    export CONNECTOR_TAG=$connector_tag
+    export CONNECTOR_TAG="$connector_tag"
   fi
 
   if [[ -n "$connector_zip" ]]
@@ -12271,10 +12387,59 @@ playground_update_version_command() {
     export TAG=$tag
   fi
 
+  test_file=$(playground state get run.test_file)
+
+  if [ ! -f $test_file ]
+  then
+
+      logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
+      exit 1
+  fi
+
+  # determining the docker-compose file from from test_file
+  docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
+  test_file_directory="$(dirname "${test_file}")"
+  docker_compose_file="${test_file_directory}/${docker_compose_file}"
+
+  if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
+  then
+      logwarn "Skipping as docker-compose override file could not be detemined"
+      exit 0
+  fi
+
   if [[ -n "$connector_tag" ]]
   then
+    if [ "$connector_tag" == " " ]
+    then
+      connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
+      if [ "$connector_paths" == "" ]
+      then
+          logwarn "❌ skipping as it is not an example with connector"
+          exit 1
+      else
+          connector_tags=""
+          for connector_path in ${connector_paths//,/ }
+          do
+            full_connector_name=$(basename "$connector_path")
+            owner=$(echo "$full_connector_name" | cut -d'-' -f1)
+            name=$(echo "$full_connector_name" | cut -d'-' -f2-)
+
+            ret=$(choose_connector_tag "$owner/$name")
+            connector_tag=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
+
+            if [ -z "$connector_tags" ]; then
+              connector_tags="$connector_tag"
+            else
+              connector_tags="$connector_tags,$connector_tag"
+            fi
+          done
+
+          connector_tag="$connector_tags"
+      fi
+    fi
+
     flag_list="$flag_list --connector-tag=$connector_tag"
-    export CONNECTOR_TAG=$connector_tag
+    export CONNECTOR_TAG="$connector_tag"
   fi
 
   if [[ -n "$connector_zip" ]]
@@ -12295,26 +12460,6 @@ playground_update_version_command() {
     fi
     flag_list="$flag_list --connector-jar=$connector_jar"
     export CONNECTOR_JAR=$connector_jar
-  fi
-
-  test_file=$(playground state get run.test_file)
-
-  if [ ! -f $test_file ]
-  then
-
-      logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
-      exit 1
-  fi
-
-  # determining the docker-compose file from from test_file
-  docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
-  test_file_directory="$(dirname "${test_file}")"
-  docker_compose_file="${test_file_directory}/${docker_compose_file}"
-
-  if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
-  then
-      logwarn "Skipping as docker-compose override file could not be detemined"
-      exit 0
   fi
 
   test_file_directory="$(dirname "${test_file}")"
@@ -17942,6 +18087,17 @@ playground_connector_plugin_search_jar_command() {
   if [[ $connector_plugin == *"@"* ]]
   then
     connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+  fi
+
+  if [[ -n "$connector_tag" ]]
+  then
+      if [ "$connector_tag" == " " ]
+      then
+          ret=$(choose_connector_tag "$connector_plugin")
+          connector_tag=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
+      fi
+  else
+      connector_tag="latest"
   fi
 
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
@@ -28976,6 +29132,11 @@ playground_connector_plugin_search_jar_parse_requirements() {
 
       # :flag.case
       --connector-tag)
+        # :flag.conflicts
+        if [[ -n "${args['--connector-zip']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--connector-zip" >&2
+          exit 1
+        fi
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
@@ -29025,9 +29186,6 @@ playground_connector_plugin_search_jar_parse_requirements() {
     printf "missing required flag: --connector-plugin, -c CONNECTOR-PLUGIN\n" >&2
     exit 1
   fi
-
-  # :command.default_assignments
-  [[ -n ${args['--connector-tag']:-} ]] || args['--connector-tag']="latest"
 
 }
 

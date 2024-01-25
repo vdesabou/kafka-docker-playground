@@ -47,7 +47,7 @@ commands:
     help: correspond to completion $cur
 
 - name: get-fully-managed-connector-list
-  help: Return some completion for ccloud connector list
+  help: Return some completion for fully managed connector list
   private: true
   dependencies:
     confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
@@ -328,6 +328,9 @@ commands:
       🔗 Connector version to use
 
       By default, for each connector, the latest available version on Confluent Hub is used
+
+      🎓 Tip: set to " " in order to select the version dynamically
+
     conflicts: [--connector-zip]
   - &connector-zip
     long: --connector-zip
@@ -2615,14 +2618,7 @@ commands:
         🔌 Connector plugin name
 
         🎓 Tip: use <tab> completion to trigger fzf completion
-    - long: --connector-tag
-      arg: connector_tag
-      required: false
-      default: "latest"
-      help: |- 
-        🔗 Connector version to use
-  
-        By default, for each connector, the latest available version on Confluent Hub is used
+    - *connector-tag
     - long: --class
       arg: class
       required: false
@@ -2687,7 +2683,8 @@ commands:
     - *connector
 
   - name: versions
-    help:  🧞 Get current and latest version available on Confluent Hub for connector(s) used in example
+    help:  |
+      🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example
 
   - name: restart
     help: ♻️  Restart connector

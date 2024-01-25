@@ -322,7 +322,7 @@ function get_confluent_kafka_region_list_with_fzf() {
     fzf_option_rounded=""
   fi
   
-  res=$(cat $root_folder/scripts/cli/confluent-kafka-region-list.txt | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+  res=$(cat $root_folder/scripts/cli/confluent-kafka-region-list.txt | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🌍" --header="select region (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
 }
 
 function get_any_files_with_fzf() {
@@ -385,7 +385,42 @@ function get_plugin_list() {
     fzf_option_rounded=""
   fi
 
-  res=$(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+  res=$(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🔌" --header="select connector plugin (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+}
+
+function choose_connector_tag() {
+  connector_plugin="$1"
+
+  owner=$(echo "$connector_plugin" | cut -d "/" -f 1)
+  name=$(echo "$connector_plugin" | cut -d "/" -f 2)
+
+  filename="/tmp/version_$owner_$name"
+
+  if [ ! -f $filename ]
+  then
+    playground connector-plugin versions --connector-plugin $owner/$name > /dev/null 2>&1
+  fi
+
+  if [ ! -f $filename ]
+  then
+      logerror "❌ could not get versions for connector plugin $connector_plugin"
+      exit 1
+  fi
+
+
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
+  then
+    fzf_option_wrap="--preview-window=40%,wrap"
+    fzf_option_pointer="--pointer=👉"
+    fzf_option_rounded="--border=rounded"
+  else
+    fzf_options=""
+    fzf_option_pointer=""
+    fzf_option_rounded=""
+  fi
+
+  tac $filename | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🔢" --header="select connector version for $owner/$name (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer
 }
 
 function filter_not_mdc_environment() {

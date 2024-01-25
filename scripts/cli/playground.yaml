@@ -111,6 +111,8 @@ subcommands:
         
         By default, for each connector, the latest available version on Confluent Hub is used
         
+        🎓 Tip: set to " " in order to select the version dynamically
+        
         Conflicts with: --connector-zip
         
     - names:
@@ -281,6 +283,8 @@ subcommands:
         🔗 Connector version to use
         
         By default, for each connector, the latest available version on Confluent Hub is used
+        
+        🎓 Tip: set to " " in order to select the version dynamically
         
         Conflicts with: --connector-zip
         
@@ -616,6 +620,8 @@ subcommands:
         
         By default, for each connector, the latest available version on Confluent Hub is used
         
+        🎓 Tip: set to " " in order to select the version dynamically
+        
         Conflicts with: --connector-zip
         
     - names:
@@ -778,6 +784,8 @@ subcommands:
         
         By default, for each connector, the latest available version on Confluent Hub is used
         
+        🎓 Tip: set to " " in order to select the version dynamically
+        
         Conflicts with: --connector-zip
         
     - names:
@@ -904,6 +912,8 @@ subcommands:
             🔗 Connector version to use
             
             By default, for each connector, the latest available version on Confluent Hub is used
+            
+            🎓 Tip: set to " " in order to select the version dynamically
             
             Conflicts with: --connector-zip
             
@@ -2614,13 +2624,15 @@ subcommands:
             
         - names:
           - --connector-tag
-          argument: latest
+          argument: CONNECTOR_TAG
           description: | 
             🔗 Connector version to use
             
             By default, for each connector, the latest available version on Confluent Hub is used
             
-            Default value: latest
+            🎓 Tip: set to " " in order to select the version dynamically
+            
+            Conflicts with: --connector-zip
             
         - names:
           - --class
@@ -2720,7 +2732,8 @@ subcommands:
             
       - name: versions
         description: | 
-          🧞 Get current and latest version available on Confluent Hub for connector(s) used in example
+          🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example
+            
         usage: playground connector versions
         options: []
       - name: restart

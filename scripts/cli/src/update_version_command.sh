@@ -30,10 +30,58 @@ then
   export TAG=$tag
 fi
 
+test_file=$(playground state get run.test_file)
+
+if [ ! -f $test_file ]
+then 
+    logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
+    exit 1
+fi
+
+# determining the docker-compose file from from test_file
+docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
+test_file_directory="$(dirname "${test_file}")"
+docker_compose_file="${test_file_directory}/${docker_compose_file}"
+
+if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
+then
+    logwarn "Skipping as docker-compose override file could not be detemined"
+    exit 0
+fi
+
 if [[ -n "$connector_tag" ]]
 then
+  if [ "$connector_tag" == " " ]
+  then
+    connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
+    if [ "$connector_paths" == "" ]
+    then
+        logwarn "❌ skipping as it is not an example with connector"
+        exit 1
+    else
+        connector_tags=""
+        for connector_path in ${connector_paths//,/ }
+        do
+          full_connector_name=$(basename "$connector_path")
+          owner=$(echo "$full_connector_name" | cut -d'-' -f1)
+          name=$(echo "$full_connector_name" | cut -d'-' -f2-)
+
+          ret=$(choose_connector_tag "$owner/$name")
+          connector_tag=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
+          
+          if [ -z "$connector_tags" ]; then
+            connector_tags="$connector_tag"
+          else
+            connector_tags="$connector_tags,$connector_tag"
+          fi
+        done
+
+        connector_tag="$connector_tags"
+    fi
+  fi
+
   flag_list="$flag_list --connector-tag=$connector_tag"
-  export CONNECTOR_TAG=$connector_tag
+  export CONNECTOR_TAG="$connector_tag"
 fi
 
 if [[ -n "$connector_zip" ]]
@@ -54,25 +102,6 @@ then
   fi
   flag_list="$flag_list --connector-jar=$connector_jar"
   export CONNECTOR_JAR=$connector_jar
-fi
-
-test_file=$(playground state get run.test_file)
-
-if [ ! -f $test_file ]
-then 
-    logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
-    exit 1
-fi
-
-# determining the docker-compose file from from test_file
-docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
-test_file_directory="$(dirname "${test_file}")"
-docker_compose_file="${test_file_directory}/${docker_compose_file}"
-
-if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
-then
-    logwarn "Skipping as docker-compose override file could not be detemined"
-    exit 0
 fi
 
 test_file_directory="$(dirname "${test_file}")"

@@ -2,10 +2,20 @@ connector_plugin="${args[--connector-plugin]}"
 connector_tag="${args[--connector-tag]}"
 class="${args[--class]}"
 
-
 if [[ $connector_plugin == *"@"* ]]
 then
   connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+fi
+
+if [[ -n "$connector_tag" ]]
+then
+    if [ "$connector_tag" == " " ]
+    then
+        ret=$(choose_connector_tag "$connector_plugin")
+        connector_tag=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
+    fi
+else
+    connector_tag="latest"
 fi
 
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
