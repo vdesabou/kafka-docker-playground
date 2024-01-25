@@ -33,6 +33,13 @@ else
         owner=$(echo "$full_connector_name" | cut -d'-' -f1)
         name=$(echo "$full_connector_name" | cut -d'-' -f2-)
 
+        if [ "$owner" == "java" ] || [ "$name" == "hub-components" ] || [ "$owner" == "filestream" ]
+        then
+        # happens when plugin is not coming from confluent hub
+        logwarn "skipping as plugin $owner/$name does not appear to be coming from confluent hub"
+        continue
+        fi
+
         playground connector-plugin versions --connector-plugin $owner/$name --last 10
 
         # latest
