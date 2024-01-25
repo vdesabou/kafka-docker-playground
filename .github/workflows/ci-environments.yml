@@ -35,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: ["7.5.2"]
+        tag: ["7.5.3"]
         #environment: ["ccloud", "sasl-ssl", "sasl-plain", "2way-ssl", "sasl-scram", "kraft-external-plaintext", "kraft-plaintext", "kerberos", "ssl_kerberos", "ldap-authorizer-sasl-plain", "ldap-sasl-plain"]
         environment: [ "2way-ssl", "ssl_kerberos"]
         test_list : [
@@ -191,7 +191,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: ["7.5.2"]
+        tag: ["7.5.3"]
         environment: ["ccloud", "sasl-ssl", "sasl-plain", "2way-ssl", "sasl-scram", "kraft-external-plaintext", "kraft-plaintext", "kerberos", "ssl_kerberos", "ldap-authorizer-sasl-plain", "ldap-sasl-plain"]
         test_list : [
                       "🚀 ${{ github.event.inputs.test_name }}"
