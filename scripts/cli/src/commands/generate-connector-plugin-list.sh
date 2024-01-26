@@ -1,4 +1,5 @@
-echo "# this file is located in 'src/commands/generate-connector-plugin-list.sh'"
-echo "# code for 'playground generate-connector-plugin-list' goes here"
-echo "# you can edit it freely and regenerate (it will not be overwritten)"
-inspect_args
+curl -s -S 'https://api.hub.confluent.io/api/plugins?per_page=100000' | jq '. | sort_by(.release_date) | reverse | .' > /tmp/allmanis.json
+
+jq -r '.[] | "\(.owner.username)/\(.name)"' /tmp/allmanis.json | sort | uniq > $root_folder/scripts/cli/confluent-hub-plugin-list.txt
+
+rm -f /tmp/allmanis.json

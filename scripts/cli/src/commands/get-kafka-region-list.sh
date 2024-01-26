@@ -1,4 +1,3 @@
-echo "# this file is located in 'src/commands/get-kafka-region-list.sh'"
-echo "# code for 'playground get-kafka-region-list' goes here"
-echo "# you can edit it freely and regenerate (it will not be overwritten)"
-inspect_args
+cur="${args[cur]}"
+
+get_confluent_kafka_region_list_with_fzf "$cur"

@@ -1,4 +1,16 @@
-echo "# this file is located in 'src/commands/get-jmx-metrics.sh'"
-echo "# code for 'playground get-jmx-metrics' goes here"
-echo "# you can edit it freely and regenerate (it will not be overwritten)"
-inspect_args
+IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
+
+component="${args[--component]}"
+domain="${args[--domain]}"
+open="${args[--open]}"
+
+case "${component}" in
+  zookeeper|broker|schema-registry|connect)
+  ;;
+  *)
+    logerror "ERROR: component name not valid ! Should be one of zookeeper, broker, schema-registry or connect"
+    exit 1
+  ;;
+esac
+
+get_jmx_metrics "$component" "$domain" "$open"

@@ -1,4 +1,1 @@
-echo "# this file is located in 'src/commands/generate-kafka-region-list.sh'"
-echo "# code for 'playground generate-kafka-region-list' goes here"
-echo "# you can edit it freely and regenerate (it will not be overwritten)"
-inspect_args
+confluent kafka region list | awk -F'|' '{print $1"/"$3}' | sed 's/[[:blank:]]//g' | grep -v "CloudID" | grep -v "\-\-\-" | grep -v '^/' > $root_folder/scripts/cli/confluent-kafka-region-list.txt

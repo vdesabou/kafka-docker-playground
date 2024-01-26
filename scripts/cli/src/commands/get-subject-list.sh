@@ -1,4 +1,9 @@
-echo "# this file is located in 'src/commands/get-subject-list.sh'"
-echo "# code for 'playground get-subject-list' goes here"
-echo "# you can edit it freely and regenerate (it will not be overwritten)"
-inspect_args
+get_sr_url_and_security
+deleted="${args[--deleted]}"
+
+if [[ -n "$deleted" ]]
+then
+    curl $sr_security -s "${sr_url}/subjects?deleted=true" | jq -r '.[]'
+else
+    curl $sr_security -s "${sr_url}/subjects" | jq -r '.[]'
+fi

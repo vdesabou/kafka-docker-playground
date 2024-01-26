@@ -1,4 +1,8 @@
-echo "# this file is located in 'src/commands/remove-all-docker-images.sh'"
-echo "# code for 'playground remove-all-docker-images' goes here"
-echo "# you can edit it freely and regenerate (it will not be overwritten)"
-inspect_args
+log "🧨 Remove all docker images (including docker volumes)"
+check_if_continue
+
+set +e
+playground container kill-all
+docker image rm $(docker image list | grep -v "oracle/database"  | grep -v "db-prebuilt" | awk 'NR>1 {print $3}') -f
+docker system prune -a -f
+docker volume rm $(docker volume ls -qf dangling=true)
