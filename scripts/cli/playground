@@ -17176,7 +17176,7 @@ playground_fully_managed_connector_status_command() {
               exit 1
           else
               printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
-              echo "-----------------------------------------------------------------------------------------------------------------------------"
+              echo "-------------------------------------------------------------------------------------------------------------"
               status=$(echo "$curl_output" | jq -r '.connector.state')
 
               if [ "$status" == "RUNNING" ]
@@ -18383,7 +18383,7 @@ playground_connector_status_command() {
               exit 1
           else
               printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
-              echo "-----------------------------------------------------------------------------------------------------------------------------"
+              echo "-------------------------------------------------------------------------------------------------------------"
               status=$(echo "$curl_output" | jq -r '.connector.state')
 
               if [ "$status" == "RUNNING" ]
