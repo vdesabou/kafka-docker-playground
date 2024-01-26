@@ -30,13 +30,14 @@ AZURE_NAME=pg${USER}dl${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 AZURE_RESOURCE_GROUP=$AZURE_NAME
 AZURE_DATALAKE_ACCOUNT_NAME=$AZURE_NAME
-AZURE_AD_APP_NAME=$AZURE_NAME
+AZURE_AD_APP_NAME=pg${USER}
 AZURE_REGION=westeurope
 
 set +e
 az group delete --name $AZURE_RESOURCE_GROUP --yes
-AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --is-fallback-public-client false --sign-in-audience AzureADandPersonalMicrosoftAccount --query appId -o tsv)
-az ad app delete --id $AZURE_DATALAKE_CLIENT_ID
+# keep AD app
+# AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --is-fallback-public-client false --sign-in-audience AzureADandPersonalMicrosoftAccount --query appId -o tsv)
+# az ad app delete --id $AZURE_DATALAKE_CLIENT_ID
 set -e
 
 log "Add the CLI extension for Azure Data Lake Gen 2"
@@ -50,9 +51,11 @@ az group create \
 
 AZURE_RESOURCE_GROUP_ID=$(az group show --name $AZURE_RESOURCE_GROUP | jq -r '.id')
 
-log "Registering active directory App $AZURE_AD_APP_NAME"
+set +e
+log "Registering active directory App $AZURE_AD_APP_NAME, it might fail if already exist"
 AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --is-fallback-public-client false --sign-in-audience AzureADandPersonalMicrosoftAccount --query appId -o tsv)
 AZURE_DATALAKE_CLIENT_PASSWORD=$(az ad app credential reset --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.password')
+set -e
 
 if [ "$AZURE_DATALAKE_CLIENT_PASSWORD" == "" ]
 then
@@ -64,8 +67,20 @@ then
   exit 1
 fi
 
-log "Creating Service Principal associated to the App"
-SERVICE_PRINCIPAL_ID=$(az ad sp create --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.id')
+log "Getting Service Principal associated to the App $AZURE_DATALAKE_CLIENT_ID"
+set +e
+SERVICE_PRINCIPAL_ID=$(az ad sp show --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.id')
+if [ $? != 0 ]
+then
+  log "Service Principal does not appear to exist...Creating Service Principal associated to the App $AZURE_DATALAKE_CLIENT_ID" 
+  SERVICE_PRINCIPAL_ID=$(az ad sp create --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.id')
+  if [ $? != 0 ]
+  then
+    logerror "❌ Could not get or create Service Principal associated to the App $AZURE_DATALAKE_CLIENT_ID"
+    exit 1
+  fi
+fi
+set -e
 
 AZURE_TENANT_ID=$(az account list --query "[?name=='$AZURE_TENANT_NAME']" | jq -r '.[].tenantId')
 AZURE_DATALAKE_TOKEN_ENDPOINT="https://login.microsoftonline.com/$AZURE_TENANT_ID/oauth2/token"
@@ -139,6 +154,7 @@ log "Deleting resource group"
 check_if_continue
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
 
-log "Deleting active directory app"
-az ad app delete --id $AZURE_DATALAKE_CLIENT_ID
+# keep AD app
+# log "Deleting active directory app"
+# az ad app delete --id $AZURE_DATALAKE_CLIENT_ID
 
