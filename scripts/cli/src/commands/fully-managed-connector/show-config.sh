@@ -29,7 +29,7 @@ do
     if [ -f "/tmp/config-$connector" ] && [ -z "$GITHUB_RUN_NUMBER" ] && [[ ! -n "$force_rest_endpoint" ]]
     then
         log "🧰 Current config for connector $connector"
-        echo "playground fully-managed-connector --connector $connector << EOF"
+        echo "playground fully-managed-connector create-or-update --connector $connector << EOF"
         cat "/tmp/config-$connector" | jq -S . | sed 's/\$/\\$/g'
         echo "EOF"
 
@@ -45,7 +45,7 @@ do
             then
                 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
                 trap 'rm -rf $tmp_dir' EXIT
-                echo "playground fully-managed-connector --connector $connector << EOF" > $tmp_dir/tmp
+                echo "playground fully-managed-connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
                 cat "/tmp/config-$connector" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
                 echo "EOF" >> $tmp_dir/tmp
 
@@ -94,7 +94,7 @@ do
                     then
                         tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
                         trap 'rm -rf $tmp_dir' EXIT
-                        echo "playground fully-managed-connector --connector $connector << EOF" > $tmp_dir/tmp
+                        echo "playground fully-managed-connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
                         echo "$curl_output" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
                         echo "EOF" >> $tmp_dir/tmp
 
