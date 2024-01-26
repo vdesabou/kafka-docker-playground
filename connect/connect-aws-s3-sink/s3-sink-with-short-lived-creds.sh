@@ -4,49 +4,61 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ] && [ -z $AWS_SESSION_TOKEN ]
+
+tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+trap 'rm -rf $tmp_dir' EXIT
+export TMP_CREDENTIALS_FILE="$tmp_dir/credentials"
+
+if [ ! -z $AWS_ACCESS_KEY_ID ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ] && [ ! -z "$AWS_SESSION_TOKEN" ]
 then
-    :
-else
-    if [ ! -z $AWS_SESSION_TOKEN ] || grep -q "aws_session_token" $HOME/.aws/credentials
+    log "💭 Using environment variables AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_SESSION_TOKEN"
+    export AWS_ACCESS_KEY_ID
+    export AWS_SECRET_ACCESS_KEY
+    export AWS_SESSION_TOKEN
+
+cat << EOF > $TMP_CREDENTIALS_FILE
+[default]
+aws_access_key_id=$AWS_ACCESS_KEY_ID
+aws_secret_access_key=$AWS_SECRET_ACCESS_KEY
+aws_session_token=$AWS_SESSION_TOKEN
+EOF
+elif grep -q "aws_session_token" $HOME/.aws/credentials
+then
+    head -4 $HOME/.aws/credentials > $TMP_CREDENTIALS_FILE
+
+    set +e
+    grep -q default $TMP_CREDENTIALS_FILE
+    if [ $? != 0 ]
     then
-        if [ ! -z $AWS_SESSION_TOKEN ]
-        then
-            logwarn "AWS_SESSION_TOKEN environment variable is set, running example s3-sink-with-short-lived-creds.sh"
-        else
-            logwarn "the file $HOME/.aws/credentials contains aws_session_token, running example s3-sink-with-short-lived-creds.sh"
-        fi
-        ./s3-sink-with-short-lived-creds.sh
-        exit 0
+        logerror "$HOME/.aws/credentials does not have expected format, the 4 first lines must be:"
+        echo "[default]"
+        echo "aws_access_key_id=<AWS_ACCESS_KEY_ID>"
+        echo "aws_secret_access_key=<AWS_SECRET_ACCESS_KEY>"
+        echo "aws_session_token=<AWS_SESSION_TOKEN>"
+        exit 1
     fi
+    grep -q aws_session_token $TMP_CREDENTIALS_FILE
+    if [ $? != 0 ]
+    then
+        logerror "$HOME/.aws/credentials does not have expected format, the 4 first lines must be:"
+        echo "[default]"
+        echo "aws_access_key_id=<AWS_ACCESS_KEY_ID>"
+        echo "aws_secret_access_key=<AWS_SECRET_ACCESS_KEY>"
+        echo "aws_session_token=<AWS_SESSION_TOKEN>"
+        exit 1
+    fi
+    set +e
 fi
 
-if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
+log "✨ Using credentials file $TMP_CREDENTIALS_FILE"
+
+if [ -z "$AWS_REGION" ]
 then
-     logerror "ERROR: either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
-     exit 1
-else
-    if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
+    AWS_REGION=$(aws configure get region | tr '\r' '\n')
+    if [ "$AWS_REGION" == "" ]
     then
-        log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
-        export AWS_ACCESS_KEY_ID
-        export AWS_SECRET_ACCESS_KEY
-    else
-        if [ -f $HOME/.aws/credentials ]
-        then
-            logwarn "💭 AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
-            export AWS_ACCESS_KEY_ID=$( grep "^aws_access_key_id" $HOME/.aws/credentials | head -1 | awk -F'=' '{print $2;}' )
-            export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/credentials | head -1 | awk -F'=' '{print $2;}' ) 
-        fi
-    fi
-    if [ -z "$AWS_REGION" ]
-    then
-        AWS_REGION=$(aws configure get region | tr '\r' '\n')
-        if [ "$AWS_REGION" == "" ]
-        then
-            logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
-            exit 1
-        fi
+        logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+        exit 1
     fi
 fi
 
@@ -58,7 +70,7 @@ else
 fi
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.with-short-lived-creds.yml"
 
 AWS_BUCKET_NAME=pg-bucket-${USER}
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
@@ -89,8 +101,6 @@ playground connector create-or-update --connector s3-sink  << EOF
     "topics.dir": "$TAG",
     "s3.part.size": "52428801",
     "flush.size": "3",
-    "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
-    "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
     "storage.class": "io.confluent.connect.s3.storage.S3Storage",
     "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
     "schema.compatibility": "NONE"
