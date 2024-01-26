@@ -29,11 +29,9 @@ check_if_continue
 
 bootstrap_ccloud_environment
 
-
-
-docker compose -f docker-compose.oauth2.yml build
-docker compose -f docker-compose.oauth2.yml down -v --remove-orphans
-docker compose -f docker-compose.oauth2.yml up -d
+docker compose -f docker-compose.basic-auth.yml build
+docker compose -f docker-compose.basic-auth.yml down -v --remove-orphans
+docker compose -f docker-compose.basic-auth.yml up -d
 
 sleep 5
 
@@ -67,11 +65,6 @@ log "Deleting fully managed connector $connector_name, it might fail..."
 playground fully-managed-connector delete --connector $connector_name
 set -e
 
-log "Set webserver to reply with 200"
-curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006/set-response-error-code
-# curl -X PUT -H "Content-Type: application/json" --data '{"delay": 2000}' http://localhost:9006/set-response-time
-# curl -X PUT -H "Content-Type: application/json" --data '{"message":"Hello, World!"}' http://localhost:9006/set-response-body
-
 log "Creating fully managed connector"
 playground fully-managed-connector create-or-update --connector $connector_name << EOF
 {
@@ -82,13 +75,11 @@ playground fully-managed-connector create-or-update --connector $connector_name 
      "kafka.api.secret": "$CLOUD_SECRET",
      "topics": "http-topic",
      "input.data.format": "AVRO",
-     "http.api.url": "http://$NGROK_HOSTNAME:$NGROK_PORT",
+     "http.api.url": "http://$NGROK_HOSTNAME:$NGROK_PORT/api/messages",
      "tasks.max" : "1",
-     "auth.type": "OAUTH2",
-     "oauth2.token.url": "http://$NGROK_HOSTNAME:$NGROK_PORT/oauth/token",
-     "oauth2.client.id": "confidentialApplication",
-     "oauth2.client.secret": "topSecret",
-     "oauth2.token.property": "accessToken",
+     "auth.type": "BASIC",
+     "connection.user": "admin",
+     "connection.password": "password",
      "request.body.format" : "json",
      "headers": "Content-Type: application/json"
 }
@@ -104,11 +95,3 @@ log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
 playground fully-managed-connector delete --connector $connector_name
-
-
-# create token, see https://github.com/pedroetb/node-oauth2-server-example#with-client_credentials-grant-1
-# token=$(curl -X POST \
-#   http://localhost:9006/oauth/token \
-#   -H 'Content-Type: application/x-www-form-urlencoded' \
-#   -H 'Authorization: Basic Y29uZmlkZW50aWFsQXBwbGljYXRpb246dG9wU2VjcmV0' \
-#   -d 'grant_type=client_credentials&scope=any' | jq -r '.accessToken')
