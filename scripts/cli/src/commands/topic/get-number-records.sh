@@ -15,8 +15,6 @@ fi
 
 get_environment_used
 
-
-
 items=($topic)
 for topic in ${items[@]}
 do

@@ -2,8 +2,6 @@ get_security_broker "--consumer.config"
 get_environment_used
 verbose="${args[--verbose]}"
 
-
-
 log "Display content of __consumer_offsets topic, press crtl-c to stop..."
 if [[ "$environment" == "ccloud" ]]
 then

@@ -12,6 +12,8 @@
 # The path containing the bashly source files
 source_dir: src
 
+commands_dir: commands
+
 # Tha path to bashly.yml
 config_path: "%{source_dir}/bashly.yml"
 

@@ -21,9 +21,6 @@ then
 fi
 
 get_environment_used
-
-
-
 get_sr_url_and_security
 
 bootstrap_server="broker:9092"

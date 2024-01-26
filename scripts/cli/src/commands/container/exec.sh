@@ -11,4 +11,3 @@ else
   log "Executing command in container $container with $shell"
   docker exec $container $shell -c "$command"
 fi
-

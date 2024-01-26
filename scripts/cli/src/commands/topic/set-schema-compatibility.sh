@@ -3,9 +3,6 @@ compatibility="${args[--compatibility]}"
 verbose="${args[--verbose]}"
 
 get_environment_used
-
-
-
 get_sr_url_and_security
 
 if [[ ! -n "$topic" ]]

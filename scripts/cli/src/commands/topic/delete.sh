@@ -5,8 +5,6 @@ skip_delete_schema="${args[--skip-delete-schema]}"
 get_security_broker "--command-config"
 get_environment_used
 
-
-
 playground topic get-number-records --topic $topic > /tmp/result.log 2>/tmp/result.log
 set +e
 grep "does not exist" /tmp/result.log > /dev/null 2>&1
