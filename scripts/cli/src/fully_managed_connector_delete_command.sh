@@ -29,7 +29,7 @@ do
     if [[ -n "$verbose" ]]
     then
         log "🐞 curl command used"
-        echo "curl -s --request DELETE "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector" --header "authorization: Basic $authorization""
+        echo "curl -s --request DELETE \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector\" --header \"authorization: Basic $authorization\""
     fi
     curl -s --request DELETE "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector" --header "authorization: Basic $authorization" | jq .
 done

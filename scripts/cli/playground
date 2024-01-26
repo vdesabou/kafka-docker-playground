@@ -17154,7 +17154,7 @@ playground_fully_managed_connector_status_command() {
       if [[ -n "$verbose" ]]
       then
           log "🐞 curl command used"
-          echo "curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status" --header "authorization: Basic $authorization""
+          echo "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status\" --header \"authorization: Basic $authorization\""
       fi
       curl_output=$(curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status" --header "authorization: Basic $authorization")
       ret=$?
@@ -17257,8 +17257,8 @@ playground_fully_managed_connector_plugins_command() {
   if [[ -n "$verbose" ]]
   then
       log "🐞 curl command used"
-      echo "curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins" \
-  --header "authorization: Basic $authorization" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t"
+      echo "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins\" \
+  --header \"authorization: Basic $authorization\" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t"
   fi
   curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins" \
   --header "authorization: Basic $authorization" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t
@@ -17298,7 +17298,7 @@ playground_fully_managed_connector_pause_command() {
       if [[ -n "$verbose" ]]
       then
           log "🐞 curl command used"
-          echo "curl -s --request PUT "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/pause" --header "authorization: Basic $authorization""
+          echo "curl -s --request PUT \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/pause\" --header \"authorization: Basic $authorization\""
       fi
       curl -s --request PUT "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/pause" --header "authorization: Basic $authorization" | jq .
 
@@ -17342,7 +17342,7 @@ playground_fully_managed_connector_resume_command() {
       if [[ -n "$verbose" ]]
       then
           log "🐞 curl command used"
-          echo "curl -s --request PUT "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/resume" --header "authorization: Basic $authorization""
+          echo "curl -s --request PUT \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/resume\" --header \"authorization: Basic $authorization\""
       fi
       curl -s --request PUT "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/resume" --header "authorization: Basic $authorization" | jq .
 
@@ -17386,7 +17386,7 @@ playground_fully_managed_connector_delete_command() {
       if [[ -n "$verbose" ]]
       then
           log "🐞 curl command used"
-          echo "curl -s --request DELETE "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector" --header "authorization: Basic $authorization""
+          echo "curl -s --request DELETE \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector\" --header \"authorization: Basic $authorization\""
       fi
       curl -s --request DELETE "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector" --header "authorization: Basic $authorization" | jq .
   done
@@ -17555,7 +17555,7 @@ playground_fully_managed_connector_show_config_command() {
           if [[ -n "$verbose" ]]
           then
               log "🐞 curl command used"
-              echo "curl $security -s -X GET -H "Content-Type: application/json" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config" --header "authorization: Basic $authorization""
+              echo "curl $security -s -X GET -H "Content-Type: application/json" \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config\" --header \"authorization: Basic $authorization\""
           fi
           curl_output=$(curl $security -s -X GET -H "Content-Type: application/json" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config" --header "authorization: Basic $authorization")
           ret=$?
@@ -17752,7 +17752,7 @@ playground_fully_managed_connector_show_config_parameters_command() {
                           if [[ -n "$verbose" ]]
                           then
                               log "🐞 curl command used"
-                              echo "curl -s --request PUT -H "Content-Type: application/json" --data "$json_config" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate" --header "authorization: Basic $authorization""
+                              echo "curl -s --request PUT -H "Content-Type: application/json" --data "$json_config" \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate\" --header \"authorization: Basic $authorization\""
                           fi
                           curl_output=$(curl -s --request PUT -H "Content-Type: application/json" --data "$json_config" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate" --header "authorization: Basic $authorization")
                           ret=$?
@@ -18055,7 +18055,7 @@ playground_fully_managed_connector_create_or_update_command() {
       if [[ -n "$verbose" ]]
       then
           log "🐞 curl command used"
-          echo "curl $security -s -X PUT -H "Content-Type: application/json" -H "authorization: Basic $authorization" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate"
+          echo "curl $security -s -X PUT -H "Content-Type: application/json" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate"
       fi
       curl_output=$(curl $security -s -X PUT -H "Content-Type: application/json" -H "authorization: Basic $authorization" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate)
 

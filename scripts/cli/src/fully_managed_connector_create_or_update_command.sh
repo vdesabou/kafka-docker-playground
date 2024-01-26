@@ -62,7 +62,7 @@ then
     if [[ -n "$verbose" ]]
     then
         log "🐞 curl command used"
-        echo "curl $security -s -X PUT -H "Content-Type: application/json" -H "authorization: Basic $authorization" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate"
+        echo "curl $security -s -X PUT -H "Content-Type: application/json" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate"
     fi
     curl_output=$(curl $security -s -X PUT -H "Content-Type: application/json" -H "authorization: Basic $authorization" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate)
 

@@ -139,7 +139,7 @@ do
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 curl command used"
-                            echo "curl -s --request PUT -H "Content-Type: application/json" --data "$json_config" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate" --header "authorization: Basic $authorization""
+                            echo "curl -s --request PUT -H "Content-Type: application/json" --data "$json_config" \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate\" --header \"authorization: Basic $authorization\""
                         fi
                         curl_output=$(curl -s --request PUT -H "Content-Type: application/json" --data "$json_config" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate" --header "authorization: Basic $authorization")
                         ret=$?
