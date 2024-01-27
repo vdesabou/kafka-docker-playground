@@ -44,6 +44,7 @@ else
 
         # latest
         latest=$(playground connector-plugin versions --connector-plugin $owner/$name --last 1)
+        latest_to_compare=$(echo "$latest" | sed 's/ ([0-9]* days ago)//')
 
         ## current version
         manifest_file="$root_folder/confluent-hub/$full_connector_name/manifest.json"
@@ -57,7 +58,7 @@ else
         fi
 
         current="🔢 v$version - 📅 release date: $release_date"
-        if [ "$current" == "$latest" ]
+        if [ "$current" == "$latest_to_compare" ]
         then
             log "👻 Version currently used for $owner/$name is latest"
             echo "$current"
