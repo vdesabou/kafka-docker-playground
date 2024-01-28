@@ -5,23 +5,11 @@ then
     logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
     exit 1
 fi
-
-# determining the docker-compose file from from test_file
-docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
-test_file_directory="$(dirname "${test_file}")"
-docker_compose_file="${test_file_directory}/${docker_compose_file}"
-
-if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
-then
-    logwarn "Skipping as docker-compose override file could not be detemined"
-    exit 0
-fi
-
-connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
+get_connector_paths
 if [ "$connector_paths" == "" ]
 then
-    logwarn "Skipping as it is not an example with connector"
-    exit 0
+    logwarn "❌ skipping as it is not an example with connector, but --connector-tag is set"
+    exit 1
 else
     current_tag=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
     log "🎯 Version currently used for confluent platform"

@@ -707,11 +707,10 @@ then
   { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/build_custom_smt; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
 
 
-  connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
   if [ "$connector_paths" == "" ]
   then
-    logerror "not a connector test"
-    exit 1
+      logwarn "❌ skipping as it is not an example with connector, but --connector-tag is set"
+      exit 1
   else
     ###
     #  Loop on all connectors in CONNECT_PLUGIN_PATH and install custom SMT jar in lib folder

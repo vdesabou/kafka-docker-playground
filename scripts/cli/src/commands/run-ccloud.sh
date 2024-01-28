@@ -57,21 +57,10 @@ if [[ -n "$connector_tag" ]]
 then
   if [ "$connector_tag" == " " ]
   then
-    # determining the docker-compose file from from test_file
-    docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
-    test_file_directory="$(dirname "${test_file}")"
-    docker_compose_file="${test_file_directory}/${docker_compose_file}"
-
-    if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
-    then
-        logwarn "❌ skipping as docker-compose override file could not be detemined"
-        exit 1
-    fi
-
-    connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
+    get_connector_paths
     if [ "$connector_paths" == "" ]
     then
-        logwarn "❌ skipping as it is not an example with connector"
+        logwarn "❌ skipping as it is not an example with connector, but --connector-tag is set"
         exit 1
     else
         connector_tags=""
@@ -296,6 +285,7 @@ cd $test_file_directory
 trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground fully-managed-connector status;playground connector versions' EXIT
 touch /tmp/playground-run-command-used
 playground generate-fzf-find-files &
+generate_connector_versions > /dev/null 2>&1 &
 bash $filename ${other_args[*]}
 ret=$?
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
