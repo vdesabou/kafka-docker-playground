@@ -2362,6 +2362,13 @@
             },
             {
               "names": [
+                "--force-refresh"
+              ],
+              "argument": "",
+              "description": "☢️ Force refresh.\n"
+            },
+            {
+              "names": [
                 "--last"
               ],
               "argument": "LAST",

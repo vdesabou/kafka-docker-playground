@@ -2522,7 +2522,8 @@ commands:
       short: -o
       help: |- 
         🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
-    - long: --force-refresh
+    - &force_refresh
+      long: --force-refresh
       required: false
       help: |-
         ☢️ Force refresh.
@@ -2631,6 +2632,7 @@ commands:
     help: 💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/
     flags:
     - *connector-plugin
+    - *force_refresh
     - long: --last
       arg: last
       required: false
@@ -2740,10 +2742,7 @@ commands:
       short: -o
       help: |- 
         🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
-    - long: --force-refresh
-      required: false
-      help: |-
-        ☢️ Force refresh.
+    - *force_refresh
     - *only_show_file_path
     - *only_show_json
     - *only_show_json_file_path

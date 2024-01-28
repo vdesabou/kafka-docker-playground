@@ -5094,6 +5094,11 @@ playground_connector_plugin_versions_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--force-refresh")"
+    printf "    ☢️ Force refresh.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--last LAST")"
     printf "    🆕 Number of last versions to show\n"
     echo
@@ -18251,6 +18256,7 @@ playground_connector_plugin_versions_command() {
   # src/commands/connector-plugin/versions.sh
   connector_plugin="${args[--connector-plugin]}"
   last="${args[--last]}"
+  force_refresh="${args[--force-refresh]}"
 
   if [[ $connector_plugin == *"@"* ]]
   then
@@ -18261,6 +18267,13 @@ playground_connector_plugin_versions_command() {
   name=$(echo "$connector_plugin" | cut -d "/" -f 2)
 
   filename="/tmp/version_$owner_$name"
+  if [[ -n "$force_refresh" ]]
+  then
+      if [ -f $filename ]
+      then
+          rm -f $filename
+      fi
+  fi
 
   if [[ -n "$last" ]]
   then
@@ -29384,6 +29397,14 @@ playground_connector_plugin_versions_parse_requirements() {
           printf "%s\n" "--connector-plugin requires an argument: --connector-plugin, -c CONNECTOR-PLUGIN" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --force-refresh)
+
+        # :flag.case_no_arg
+        args['--force-refresh']=1
+        shift
         ;;
 
       # :flag.case

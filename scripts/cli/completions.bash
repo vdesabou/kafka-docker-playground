@@ -485,7 +485,7 @@ _playground_completions() {
       ;;
 
     'connector-plugin versions'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector-plugin --help --last -c -h")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector-plugin --force-refresh --help --last -c -h")" -- "$cur" )
       ;;
 
     'schema set-mode'*'--subject')

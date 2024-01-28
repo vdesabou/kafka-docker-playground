@@ -1,5 +1,6 @@
 connector_plugin="${args[--connector-plugin]}"
 last="${args[--last]}"
+force_refresh="${args[--force-refresh]}"
 
 if [[ $connector_plugin == *"@"* ]]
 then
@@ -10,6 +11,13 @@ owner=$(echo "$connector_plugin" | cut -d "/" -f 1)
 name=$(echo "$connector_plugin" | cut -d "/" -f 2)
 
 filename="/tmp/version_$owner_$name"
+if [[ -n "$force_refresh" ]]
+then
+    if [ -f $filename ]
+    then
+        rm -f $filename
+    fi
+fi
 
 if [[ -n "$last" ]]
 then

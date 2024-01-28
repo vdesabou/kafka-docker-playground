@@ -2657,6 +2657,12 @@ subcommands:
             Required: ✓ Yes
             
         - names:
+          - --force-refresh
+          argument: ""
+          description: | 
+            ☢️ Force refresh.
+            
+        - names:
           - --last
           argument: LAST
           description: | 
