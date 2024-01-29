@@ -60,11 +60,11 @@ then
         fi
 
         if [[ "$(uname)" == "Darwin" ]]; then
-        # macOS
-        current_date=$(date -j -f "%Y-%m-%d" "$(date "+%Y-%m-%d")" "+%s")
+            # macOS
+            current_date=$(date -j -f "%Y-%m-%d" "$(date "+%Y-%m-%d")" "+%s")
         else
-        # Linux
-        current_date=$(date +%s)
+            # Linux
+            current_date=$(date +%s)
         fi
         while IFS= read -r row; do
             IFS=$'\n'
@@ -72,18 +72,22 @@ then
             version="${arr[0]}"
             #manifest_url="${arr[1]}"
             release_date="${arr[2]}"
-            if [[ "$(uname)" == "Darwin" ]]; then
-            # macOS
-            release_date_sec=$(date -j -f "%Y-%m-%d" "$release_date" "+%s")
+            if [ "$release_date" != "null" ]
+            then
+                if [[ "$(uname)" == "Darwin" ]]; then
+                    # macOS
+                    release_date_sec=$(date -j -f "%Y-%m-%d" "$release_date" "+%s")
+                else
+                    # Linux
+                    release_date_sec=$(date -d "$release_date" "+%s")
+                fi
+
+                # Calculate the difference in days
+                diff=$(( (current_date - release_date_sec) / 60 / 60 / 24 ))
+                echo "🔢 v$version - 📅 release date: $release_date ($diff days ago)" >> $filename
             else
-            # Linux
-            release_date_sec=$(date -d "$release_date" "+%s")
+                echo "🔢 v$version - 📅 release date: <unknown>" >> $filename
             fi
-
-            # Calculate the difference in days
-            diff=$(( (current_date - release_date_sec) / 60 / 60 / 24 ))
-
-            echo "🔢 v$version - 📅 release date: $release_date ($diff days ago)" >> $filename
         done <<< "$(echo "$curl_output" | jq -c '.[]')"
     else
         logerror "❌ curl request failed with error code $ret!"
