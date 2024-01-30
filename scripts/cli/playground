@@ -12306,14 +12306,18 @@ playground_run_ccloud_command() {
   SECONDS=0
   cd $test_file_directory
   trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground fully-managed-connector status;playground connector versions' EXIT
-  touch /tmp/playground-run-command-used
+
   playground generate-fzf-find-files &
   generate_connector_versions > /dev/null 2>&1 &
+  touch /tmp/playground-run-command-used
   bash $filename ${other_args[*]}
   ret=$?
   ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
   let ELAPSED_TOTAL+=$SECONDS
   set +e
+  # keep those lists up to date
+  playground generate-connector-plugin-list > /dev/null 2>&1 &
+  playground generate-kafka-region-list  > /dev/null 2>&1 &
   set -e
   if [ $ret -eq 0 ]
   then
