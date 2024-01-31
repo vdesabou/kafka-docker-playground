@@ -13,6 +13,7 @@ then
     logwarn "❌ skipping as it is not an example with connector, but --connector-tag is set"
     exit 1
 else
+    doc_unavailable=0
     for connector_path in ${connector_paths//,/ }
     do
         full_connector_name=$(basename "$connector_path")
@@ -40,7 +41,11 @@ else
                 exit 1
             fi
         else
-            logwarn "❌ file $manifest_file does not exist, could not retrieve documentation link."
+            doc_available=0
         fi
     done
+    if [ $doc_available -eq 0 ]
+    then
+        log "🌐 documentation could not be retrieved"
+    fi
 fi
