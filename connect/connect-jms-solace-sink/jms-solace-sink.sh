@@ -52,22 +52,22 @@ docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/c
 log "Creating Solace sink connector"
 playground connector create-or-update --connector jms-solace-sink  << EOF
 {
-               "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
-                    "tasks.max": "1",
-                    "topics": "sink-messages",
-                    "java.naming.factory.initial": "com.solacesystems.jndi.SolJNDIInitialContextFactory",
-                    "java.naming.provider.url": "smf://solace:55555",
-                    "java.naming.security.principal": "admin",
-                    "java.naming.security.credentials": "admin",
-                    "connection.factory.name": "/jms/cf/default",
-                    "Solace_JMS_VPN": "default",
-                    "jms.destination.type": "queue",
-                    "jms.destination.name": "connector-quickstart",
-                    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }
+     "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
+     "tasks.max": "1",
+     "topics": "sink-messages",
+     "java.naming.factory.initial": "com.solacesystems.jndi.SolJNDIInitialContextFactory",
+     "java.naming.provider.url": "smf://solace:55555",
+     "java.naming.security.principal": "admin",
+     "java.naming.security.credentials": "admin",
+     "connection.factory.name": "/jms/cf/default",
+     "Solace_JMS_VPN": "default",
+     "jms.destination.type": "queue",
+     "jms.destination.name": "connector-quickstart",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 10
