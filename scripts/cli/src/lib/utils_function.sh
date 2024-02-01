@@ -293,7 +293,7 @@ function check_if_continue()
     case "$choice" in
     y|Y ) ;;
     n|N ) exit 1;;
-    * ) logerror "invalid response!";exit 1;;
+    * ) logerror "invalid response <$choice>!";exit 1;;
     esac
 }
 
