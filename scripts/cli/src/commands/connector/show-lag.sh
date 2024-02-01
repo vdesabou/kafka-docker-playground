@@ -14,11 +14,42 @@ then
     fi
 fi
 
+get_security_broker "--command-config"
+
+declare -A prev_lags
+prev_lags=()
+
 function show_output () {
-  cat "$lag_output" | awk -F" " '{ print "partition: "$3," current-offset: "$4," end-offset: "$5," lag: "$6 }' | sort -k2n | column -t
+  while read line; do
+    arr=($line)
+    partition=${arr[2]}
+    current_offset=${arr[3]}
+    end_offset=${arr[4]}
+    lag=${arr[5]}
+    prev_lag=${prev_lags[$partition]}
+    compare_line=""
+    if [ -n "$prev_lag" ]
+    then
+      if [ $lag -lt $prev_lag ]
+      then
+        compare_line="🔻 $(($prev_lag - $lag))"
+      elif [ $lag -eq $prev_lag ]
+      then
+        compare_line="🔸"
+      else
+        compare_line="🔺 $(($lag - $prev_lag))"
+      fi
+    fi
+    prev_lags[$partition]=$lag
+    if [ "$compare_line" != "" ]
+    then
+      printf "partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s %s\n" "$partition" "$current_offset" "$end_offset" "$lag" "$compare_line"
+    else
+      printf "partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s\n" "$partition" "$current_offset" "$end_offset" "$lag"
+    fi
+  done < <(cat "$lag_output" | grep -v PARTITION | sed '/^$/d' | sort -k2n)
 }
 
-get_security_broker "--command-config"
 
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
@@ -27,6 +58,12 @@ items=($connector)
 length=${#items[@]}
 if ((length > 1))
 then
+    if [[ -n "$wait_for_zero_lag" ]]
+    then
+      logerror "❌ --connector shhould be set when used with --wait-for-zero-lag"
+      exit 1
+    fi
+
     log "✨ --connector flag was not provided, applying command to all connectors"
 fi
 for connector in ${items[@]}
@@ -50,7 +87,16 @@ do
 
   while true
   do
-    docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d' > $lag_output
+    docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d' &> $lag_output
+
+    if grep -q "Warning" $lag_output
+    then
+      logwarn "🐢 consumer group for connector $connector is rebalancing"
+      cat $lag_output
+      sleep $CHECK_INTERVAL
+      continue
+    fi
+
     set +e
     lag_not_set=$(cat "$lag_output" | awk -F" " '{ print $6 }' | grep "-")
 
@@ -71,14 +117,14 @@ do
             compare="🔻 $(($prev_lag - $total_lag))"
           elif [ $total_lag -eq $prev_lag ]
           then
-            compare="🟰"
+            compare="🔸"
           else
             compare="🔺 $(($total_lag - $prev_lag))"
           fi
         fi
         if [ "$compare" != "" ]
         then
-          log "🐢 consumer lag for connector $connector is $total_lag ($compare)"
+          log "🐢 consumer lag for connector $connector is $total_lag $compare"
         else
           log "🐢 consumer lag for connector $connector is $total_lag"
         fi
