@@ -13,7 +13,7 @@ then
     logwarn "❌ skipping as it is not an example with connector, but --connector-tag is set"
     exit 1
 else
-    doc_unavailable=0
+    doc_available=1
     for connector_path in ${connector_paths//,/ }
     do
         full_connector_name=$(basename "$connector_path")

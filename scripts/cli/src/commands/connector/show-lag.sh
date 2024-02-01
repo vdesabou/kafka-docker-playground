@@ -27,31 +27,28 @@ function show_output () {
     current_offset=${arr[3]}
     end_offset=${arr[4]}
     lag=${arr[5]}
-    prev_lag=${prev_lags[$partition]}
+    prev_lag=${prev_lags["${topic}_${partition}"]}
     compare_line=""
     compare_action=""
-    if expr "$total_lag" : '[0-9]*$' >/dev/null
+    if [[ "$total_lag" =~ ^[0-9]+$ ]]
     then
-      if expr "$prev_lag" : '[0-9]*$' >/dev/null
+      if [[ "$prev_lag" =~ ^[0-9]+$ ]]
       then
-        if [ -n "$prev_lag" ]
+        if [ $lag -lt $prev_lag ]
         then
-          if [ $lag -lt $prev_lag ]
-          then
-            compare_line="🔻 $(($prev_lag - $lag))"
-            compare_action="up"
-          elif [ $lag -eq $prev_lag ]
-          then
-            compare_line="🔸"
-            compare_action="same"
-          else
-            compare_line="🔺 $(($lag - $prev_lag))"
-            compare_action="down"
-          fi
+          compare_line="🔻 $(($prev_lag - $lag))"
+          compare_action="up"
+        elif [ $lag -eq $prev_lag ]
+        then
+          compare_line="🔸"
+          compare_action="same"
+        else
+          compare_line="🔺 $(($lag - $prev_lag))"
+          compare_action="down"
         fi
       fi
     fi
-    prev_lags[$partition]=$lag
+    prev_lags["${topic}_${partition}"]=$lag
     if [ "$compare_line" != "" ]
     then
       case "${compare_action}" in
@@ -138,12 +135,12 @@ do
     else
       total_lag=$(cat "$lag_output" | grep -v "PARTITION" | awk -F" " '{sum+=$6;} END{print sum;}')
 
-      if expr "$total_lag" : '[0-9]*$' >/dev/null
+      if [[ "$total_lag" =~ ^[0-9]+$ ]]
       then
         if [ $total_lag -ne 0 ]
         then
           compare=""
-          if expr "$prev_lag" : '[0-9]*$' >/dev/null
+          if [[ "$prev_lag" =~ ^[0-9]+$ ]]
           then
             if [ $prev_lag != 0 ]
             then
