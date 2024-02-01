@@ -18844,22 +18844,39 @@ playground_connector_show_lag_command() {
       lag=${arr[5]}
       prev_lag=${prev_lags[$partition]}
       compare_line=""
-      if [ -n "$prev_lag" ]
+      compare_action=""
+      if expr "$total_lag" : '[0-9]*$' >/dev/null
       then
-        if [ $lag -lt $prev_lag ]
+        if [ -n "$prev_lag" ]
         then
-          compare_line="🔻 $(($prev_lag - $lag))"
-        elif [ $lag -eq $prev_lag ]
-        then
-          compare_line="🔸"
-        else
-          compare_line="🔺 $(($lag - $prev_lag))"
+          if [ $lag -lt $prev_lag ]
+          then
+            compare_line="🔻 $(($prev_lag - $lag))"
+            compare_action="up"
+          elif [ $lag -eq $prev_lag ]
+          then
+            compare_line="🔸"
+            compare_action="same"
+          else
+            compare_line="🔺 $(($lag - $prev_lag))"
+            compare_action="down"
+          fi
         fi
       fi
       prev_lags[$partition]=$lag
       if [ "$compare_line" != "" ]
       then
-        printf "partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s %s\n" "$partition" "$current_offset" "$end_offset" "$lag" "$compare_line"
+        case "${compare_action}" in
+          up)
+            printf "\033[32mpartition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s %s\033[0m\n" "$partition" "$current_offset" "$end_offset" "$lag" "$compare_line"
+          ;;
+          down)
+            printf "\033[31mpartition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s %s\033[0m\n" "$partition" "$current_offset" "$end_offset" "$lag" "$compare_line"
+          ;;
+          *)
+            printf "partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s %s\n" "$partition" "$current_offset" "$end_offset" "$lag" "$compare_line"
+          ;;
+        esac
       else
         printf "partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s\n" "$partition" "$current_offset" "$end_offset" "$lag"
       fi
@@ -18923,41 +18940,45 @@ playground_connector_show_lag_command() {
         sleep $CHECK_INTERVAL
       else
         total_lag=$(cat "$lag_output" | grep -v "PARTITION" | awk -F" " '{sum+=$6;} END{print sum;}')
-        if [ $total_lag -ne 0 ]
-        then
-          compare=""
-          if [ $prev_lag != 0 ]
-          then
-            if [ $total_lag -lt $prev_lag ]
-            then
-              compare="🔻 $(($prev_lag - $total_lag))"
-            elif [ $total_lag -eq $prev_lag ]
-            then
-              compare="🔸"
-            else
-              compare="🔺 $(($total_lag - $prev_lag))"
-            fi
-          fi
-          if [ "$compare" != "" ]
-          then
-            log "🐢 consumer lag for connector $connector is $total_lag $compare"
-          else
-            log "🐢 consumer lag for connector $connector is $total_lag"
-          fi
-          show_output
 
-          prev_lag=$total_lag
-          sleep $CHECK_INTERVAL
-        else
-          if [[ ! -n "$wait_for_zero_lag" ]]
+        if expr "$total_lag" : '[0-9]*$' >/dev/null
+        then
+          if [ $total_lag -ne 0 ]
           then
-            log "🏁 consumer lag for connector $connector is 0 !"
+            compare=""
+            if [ $prev_lag != 0 ]
+            then
+              if [ $total_lag -lt $prev_lag ]
+              then
+                compare="🔻 $(($prev_lag - $total_lag))"
+              elif [ $total_lag -eq $prev_lag ]
+              then
+                compare="🔸"
+              else
+                compare="🔺 $(($total_lag - $prev_lag))"
+              fi
+            fi
+            if [ "$compare" != "" ]
+            then
+              log "🐢 consumer lag for connector $connector is $total_lag $compare"
+            else
+              log "🐢 consumer lag for connector $connector is $total_lag"
+            fi
+            show_output
+
+            prev_lag=$total_lag
+            sleep $CHECK_INTERVAL
           else
-            ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
-            log "🏁 consumer lag for connector $connector is 0 ! $ELAPSED"
+            if [[ ! -n "$wait_for_zero_lag" ]]
+            then
+              log "🏁 consumer lag for connector $connector is 0 !"
+            else
+              ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
+              log "🏁 consumer lag for connector $connector is 0 ! $ELAPSED"
+            fi
+            show_output
+            break
           fi
-          show_output
-          break
         fi
       fi
     done
