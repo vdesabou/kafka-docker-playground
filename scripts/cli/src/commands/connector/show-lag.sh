@@ -56,32 +56,38 @@ function show_output () {
       fi
     fi
 
+    if [ $lag == 0 ]
+    then
+      compare_line="🏁"
+    fi
+
     # calculate the percentage of lag
     percentage=$((100 * lag / end_offset))
+    inverse_percentage=$((100 - percentage))
 
     # create the progress bar
     bar_length=20
     filled_length=$((percentage * bar_length / 100))
     empty_length=$((bar_length - filled_length))
-    bar=$(printf "%${filled_length}s" | tr ' ' '🔹')
-    bar+=$(printf "%${empty_length}s" | tr ' ' ' ')
+    bar=$(printf "%${empty_length}s" | tr ' ' '🔹')
+    bar+=$(printf "%${filled_length}s" | tr ' ' '💠')
 
     prev_lags["${topic}_${partition}"]=$lag
     if [ "$compare_line" != "" ]
     then
       case "${compare_action}" in
         up)
-          printf "\033[32mtopic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s [%s] %3d%% %s\033[0m\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag" "$bar" "$percentage" "$compare_line"
+          printf "\033[32mtopic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s [%s] %3d%% %s\033[0m\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag" "$bar" "$inverse_percentage" "$compare_line"
         ;;
         down)
-          printf "\033[31mtopic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s [%s] %3d%% %s\033[0m\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag" "$bar" "$percentage" "$compare_line"
+          printf "\033[31mtopic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s [%s] %3d%% %s\033[0m\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag" "$bar" "$inverse_percentage" "$compare_line"
         ;;
         *)
-          printf "topic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s [%s] %3d%% %s\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag" "$bar" "$percentage" "$compare_line"
+          printf "topic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s [%s] %3d%% %s\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag" "$bar" "$inverse_percentage" "$compare_line"
         ;;
       esac
     else
-      printf "topic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s [%s] %3d%%\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag" "$bar" "$percentage"
+      printf "topic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s [%s] %3d%%\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag" "$bar" "$inverse_percentage"
     fi
     prev_topic="$topic"
   done < <(cat "$lag_output" | grep -v PARTITION | sed '/^$/d' | sort -k2n)
@@ -126,7 +132,7 @@ do
       echo "kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security"
   fi
 
-  CHECK_INTERVAL=5
+  CHECK_INTERVAL=10
   SECONDS=0
   prev_lag=0
   stop=0
