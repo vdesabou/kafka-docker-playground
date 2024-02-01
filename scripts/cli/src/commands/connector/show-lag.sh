@@ -14,6 +14,10 @@ then
     fi
 fi
 
+function show_output () {
+  cat "$lag_output" | awk -F" " '{ print "partition: "$3," current-offset: "$4," end-offset: "$5," lag: "$6 }' | sort -k2n | column -t
+}
+
 get_security_broker "--command-config"
 
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
@@ -42,6 +46,8 @@ do
 
   CHECK_INTERVAL=5
   SECONDS=0
+  prev_lag=0
+
   while true
   do
     docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d' > $lag_output
@@ -51,14 +57,34 @@ do
     if [ ! -z "$lag_not_set" ]
     then
       logwarn "🐢 consumer lag for connector $connector is not set"
-      cat "$lag_output" | awk -F" " '{ print "partition: "$3," current-offset: "$4," log-end-offset: "$5," lag: "$6 }' | sort -k2n | column -t
+      show_output
       sleep $CHECK_INTERVAL
     else
       total_lag=$(cat "$lag_output" | grep -v "PARTITION" | awk -F" " '{sum+=$6;} END{print sum;}')
       if [ $total_lag -ne 0 ]
       then
-        log "🐢 consumer lag for connector $connector is $total_lag"
-        cat "$lag_output" | awk -F" " '{ print "partition: "$3," current-offset: "$4," log-end-offset: "$5," lag: "$6 }' | sort -k2n | column -t
+        compare=""
+        if [ $prev_lag != 0 ]
+        then
+          if [ $total_lag -lt $prev_lag ]
+          then
+            compare="🔻 $(($prev_lag - $total_lag))"
+          elif [ $total_lag -eq $prev_lag ]
+          then
+            compare="🟰"
+          else
+            compare="🔺 $(($total_lag - $prev_lag))"
+          fi
+        fi
+        if [ "$compare" != "" ]
+        then
+          log "🐢 consumer lag for connector $connector is $total_lag ($compare)"
+        else
+          log "🐢 consumer lag for connector $connector is $total_lag"
+        fi
+        show_output
+        
+        prev_lag=$total_lag
         sleep $CHECK_INTERVAL
       else
         if [[ ! -n "$wait_for_zero_lag" ]]
@@ -68,14 +94,9 @@ do
           ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
           log "🏁 consumer lag for connector $connector is 0 ! $ELAPSED"
         fi
-        cat "$lag_output" | awk -F" " '{ print "partition: "$3," current-offset: "$4," log-end-offset: "$5," lag: "$6 }' | sort -k2n | column -t
+        show_output
         break
       fi
-    fi
-
-    if [[ ! -n "$wait_for_zero_lag" ]]
-    then
-      break
     fi
   done
 done
