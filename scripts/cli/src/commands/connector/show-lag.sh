@@ -31,7 +31,7 @@ function show_output () {
     prev_lag=${prev_lags["${topic}_${partition}"]}
     compare_line=""
     compare_action=""
-    
+
     if [ "$topic" != "$prev_topic" ] && [ "$prev_topic" != "" ]
     then
       printf "\n"
@@ -55,22 +55,33 @@ function show_output () {
         fi
       fi
     fi
+
+    # calculate the percentage of lag
+    percentage=$((100 * lag / end_offset))
+
+    # create the progress bar
+    bar_length=20
+    filled_length=$((percentage * bar_length / 100))
+    empty_length=$((bar_length - filled_length))
+    bar=$(printf "%${filled_length}s" | tr ' ' '🔹')
+    bar+=$(printf "%${empty_length}s" | tr ' ' ' ')
+
     prev_lags["${topic}_${partition}"]=$lag
     if [ "$compare_line" != "" ]
     then
       case "${compare_action}" in
         up)
-          printf "\033[32mtopic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s %s\033[0m\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag" "$compare_line"
+          printf "\033[32mtopic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s [%s] %3d%% %s\033[0m\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag" "$bar" "$percentage" "$compare_line"
         ;;
         down)
-          printf "\033[31mtopic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s %s\033[0m\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag" "$compare_line"
+          printf "\033[31mtopic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s [%s] %3d%% %s\033[0m\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag" "$bar" "$percentage" "$compare_line"
         ;;
         *)
-          printf "topic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s %s\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag" "$compare_line"
+          printf "topic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s [%s] %3d%% %s\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag" "$bar" "$percentage" "$compare_line"
         ;;
       esac
     else
-      printf "topic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag"
+      printf "topic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s [%s] %3d%%\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag" "$bar" "$percentage"
     fi
     prev_topic="$topic"
   done < <(cat "$lag_output" | grep -v PARTITION | sed '/^$/d' | sort -k2n)
