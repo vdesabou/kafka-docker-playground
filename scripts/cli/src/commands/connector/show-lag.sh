@@ -20,6 +20,7 @@ declare -A prev_lags
 prev_lags=()
 
 function show_output () {
+  prev_topic=""
   while read line; do
     arr=($line)
     topic=${arr[1]}
@@ -30,6 +31,12 @@ function show_output () {
     prev_lag=${prev_lags["${topic}_${partition}"]}
     compare_line=""
     compare_action=""
+    
+    if [ "$topic" != "$prev_topic" ] && [ "$prev_topic" != "" ]
+    then
+      printf "\n"
+    fi
+
     if [[ "$total_lag" =~ ^[0-9]+$ ]]
     then
       if [[ "$prev_lag" =~ ^[0-9]+$ ]]
@@ -65,6 +72,7 @@ function show_output () {
     else
       printf "topic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag"
     fi
+    prev_topic="$topic"
   done < <(cat "$lag_output" | grep -v PARTITION | sed '/^$/d' | sort -k2n)
 }
 
