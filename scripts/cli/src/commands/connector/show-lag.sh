@@ -22,6 +22,7 @@ prev_lags=()
 function show_output () {
   while read line; do
     arr=($line)
+    topic=${arr[1]}
     partition=${arr[2]}
     current_offset=${arr[3]}
     end_offset=${arr[4]}
@@ -55,17 +56,17 @@ function show_output () {
     then
       case "${compare_action}" in
         up)
-          printf "\033[32mpartition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s %s\033[0m\n" "$partition" "$current_offset" "$end_offset" "$lag" "$compare_line"
+          printf "\033[32mtopic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s %s\033[0m\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag" "$compare_line"
         ;;
         down)
-          printf "\033[31mpartition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s %s\033[0m\n" "$partition" "$current_offset" "$end_offset" "$lag" "$compare_line"
+          printf "\033[31mtopic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s %s\033[0m\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag" "$compare_line"
         ;;
         *)
-          printf "partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s %s\n" "$partition" "$current_offset" "$end_offset" "$lag" "$compare_line"
+          printf "topic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s %s\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag" "$compare_line"
         ;;
       esac
     else
-      printf "partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s\n" "$partition" "$current_offset" "$end_offset" "$lag"
+      printf "topic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag"
     fi
   done < <(cat "$lag_output" | grep -v PARTITION | sed '/^$/d' | sort -k2n)
 }
@@ -74,6 +75,14 @@ function show_output () {
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
 lag_output=$tmp_dir/lag_output
+
+function handle_signal {
+  echo "Stopping..."
+  stop=1
+}
+# Set the signal handler
+trap handle_signal SIGINT
+
 items=($connector)
 length=${#items[@]}
 if ((length > 1))
@@ -104,8 +113,9 @@ do
   CHECK_INTERVAL=5
   SECONDS=0
   prev_lag=0
+  stop=0
 
-  while true
+  while [ $stop != 1 ]
   do
     docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d' &> $lag_output
 
@@ -150,7 +160,7 @@ do
           fi
           if [ "$compare" != "" ]
           then
-            log "🐢 consumer lag for connector $connector is $total_lag $compare"
+            log "🐢 consumer lag for connector $connector is $total_lag $compare (press ctrl-c to stop)"
           else
             log "🐢 consumer lag for connector $connector is $total_lag"
           fi
