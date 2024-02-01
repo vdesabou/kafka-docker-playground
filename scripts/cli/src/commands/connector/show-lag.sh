@@ -61,16 +61,19 @@ function show_output () {
       compare_line="🏁"
     fi
 
-    # calculate the percentage of lag
-    percentage=$((100 * lag / end_offset))
-    inverse_percentage=$((100 - percentage))
+    if [[ "$end_offset" =~ ^[0-9]+$ ]] && [[ "$end_offset" =~ ^[0-9]+$ ]] && [ $end_offset != 0 ]
+    then
+      # calculate the percentage of lag
+      percentage=$((100 * lag / end_offset))
+      inverse_percentage=$((100 - percentage))
 
-    # create the progress bar
-    bar_length=20
-    filled_length=$((percentage * bar_length / 100))
-    empty_length=$((bar_length - filled_length))
-    bar=$(printf "%${empty_length}s" | tr ' ' '🔹')
-    bar+=$(printf "%${filled_length}s" | tr ' ' '💠')
+      # create the progress bar
+      bar_length=20
+      filled_length=$((percentage * bar_length / 100))
+      empty_length=$((bar_length - filled_length))
+      bar=$(printf "%${empty_length}s" | tr ' ' '🔹')
+      bar+=$(printf "%${filled_length}s" | tr ' ' '💠')
+    fi
 
     prev_lags["${topic}_${partition}"]=$lag
     if [ "$compare_line" != "" ]
