@@ -31,19 +31,22 @@ function show_output () {
     compare_action=""
     if expr "$total_lag" : '[0-9]*$' >/dev/null
     then
-      if [ -n "$prev_lag" ]
+      if expr "$prev_lag" : '[0-9]*$' >/dev/null
       then
-        if [ $lag -lt $prev_lag ]
+        if [ -n "$prev_lag" ]
         then
-          compare_line="🔻 $(($prev_lag - $lag))"
-          compare_action="up"
-        elif [ $lag -eq $prev_lag ]
-        then
-          compare_line="🔸"
-          compare_action="same"
-        else
-          compare_line="🔺 $(($lag - $prev_lag))"
-          compare_action="down"
+          if [ $lag -lt $prev_lag ]
+          then
+            compare_line="🔻 $(($prev_lag - $lag))"
+            compare_action="up"
+          elif [ $lag -eq $prev_lag ]
+          then
+            compare_line="🔸"
+            compare_action="same"
+          else
+            compare_line="🔺 $(($lag - $prev_lag))"
+            compare_action="down"
+          fi
         fi
       fi
     fi
@@ -119,7 +122,7 @@ do
 
     if [ ! -z "$lag_not_set" ]
     then
-      logwarn "🐢 consumer lag for connector $connector is not set"
+      logwarn "🐢 consumer lag for connector $connector is not available"
       show_output
       sleep $CHECK_INTERVAL
     else
@@ -130,16 +133,19 @@ do
         if [ $total_lag -ne 0 ]
         then
           compare=""
-          if [ $prev_lag != 0 ]
+          if expr "$prev_lag" : '[0-9]*$' >/dev/null
           then
-            if [ $total_lag -lt $prev_lag ]
+            if [ $prev_lag != 0 ]
             then
-              compare="🔻 $(($prev_lag - $total_lag))"
-            elif [ $total_lag -eq $prev_lag ]
-            then
-              compare="🔸"
-            else
-              compare="🔺 $(($total_lag - $prev_lag))"
+              if [ $total_lag -lt $prev_lag ]
+              then
+                compare="🔻 $(($prev_lag - $total_lag))"
+              elif [ $total_lag -eq $prev_lag ]
+              then
+                compare="🔸"
+              else
+                compare="🔺 $(($total_lag - $prev_lag))"
+              fi
             fi
           fi
           if [ "$compare" != "" ]
