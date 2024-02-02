@@ -85,10 +85,14 @@ EOF
 
 playground connector show-lag --wait-for-zero-lag --connector jms-sag-um-sink
 
+if [ ! -z "$GITHUB_RUN_NUMBER" ]
+then
+     # running with github actions
+     # it is sometime failing in CI, so relying on consumer lag being 0 to have the test successful instead
+     exit 0
+fi
+
 log "Confirm the messages were delivered to the test-queue queue"
-# it is sometime failing in CI, so relying on consumer lag being 0 to have the test successful instead
-set +e
 docker exec -i umserver timeout 10 runUMTool.sh JMSSubscribe -rname=nsp://localhost:9000 -connectionfactory=QueueConnectionFactory -destination=test-queue > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "JMS MSG ID" /tmp/result.log
-exit 0
