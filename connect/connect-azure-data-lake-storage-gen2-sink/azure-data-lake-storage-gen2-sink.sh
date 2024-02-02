@@ -70,7 +70,7 @@ fi
 log "Getting Service Principal associated to the App $AZURE_DATALAKE_CLIENT_ID"
 set +e
 SERVICE_PRINCIPAL_ID=$(az ad sp show --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.id')
-if [ $? != 0 ]
+if [ $? != 0 ] || [ "$SERVICE_PRINCIPAL_ID" == "" ]
 then
   log "Service Principal does not appear to exist...Creating Service Principal associated to the App $AZURE_DATALAKE_CLIENT_ID" 
   SERVICE_PRINCIPAL_ID=$(az ad sp create --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.id')
