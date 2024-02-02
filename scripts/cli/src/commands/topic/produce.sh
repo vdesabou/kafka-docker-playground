@@ -644,15 +644,22 @@ then
         fi
     fi
 else
+    nb_messages=$(playground topic get-number-records -t $topic | tail -1)
     if [ "$nb_partitions" != "" ]
     then
-        logwarn "--nb-partitions is set, re-creating topic with $nb_partitions partitions ?"
-        check_if_continue
-        playground topic delete --topic $topic
-        playground topic create --topic $topic --nb-partitions $nb_partitions
+        if [ $nb_messages == 0 ]
+        then
+            log "--nb-partitions is set and topic is empty, re-creating it with $nb_partitions partitions..."
+            playground topic delete --topic $topic
+            playground topic create --topic $topic --nb-partitions $nb_partitions
+        else
+            logerror "--nb-partitions is set, but topic is not empty, delete it first and retry:"
+            echo "playground topic delete --topic $topic"
+            exit 0
+        fi
     else
         log "💯 Get number of records in topic $topic"
-        tail -1 $tmp_dir/result.log
+        echo $nb_messages
     fi
 fi
 
