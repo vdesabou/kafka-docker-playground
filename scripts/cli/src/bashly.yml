@@ -2503,9 +2503,9 @@ commands:
       arg: waitforzerolaginterval
       validate: integer
       required: false
-      default: "10"
+      default: "20"
       help: |-
-        Interval between lag checks when --wait-for-zero-lag is used (default is 10 seconds).
+        Interval between lag checks when --wait-for-zero-lag is used (default is 20 seconds).
 
   - name: show-config
     help:  |

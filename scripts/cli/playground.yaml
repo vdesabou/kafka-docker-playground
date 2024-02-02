@@ -2477,11 +2477,11 @@ subcommands:
             
         - names:
           - --wait-for-zero-lag-interval
-          argument: 10
+          argument: 20
           description: | 
-            Interval between lag checks when --wait-for-zero-lag is used (default is 10 seconds).
+            Interval between lag checks when --wait-for-zero-lag is used (default is 20 seconds).
             
-            Default value: 10
+            Default value: 20
             
       - name: show-config
         description: | 
@@ -2863,11 +2863,11 @@ subcommands:
             
         - names:
           - --wait-for-zero-lag-interval
-          argument: 10
+          argument: 20
           description: | 
-            Interval between lag checks when --wait-for-zero-lag is used (default is 10 seconds).
+            Interval between lag checks when --wait-for-zero-lag is used (default is 20 seconds).
             
-            Default value: 10
+            Default value: 20
             
       - name: show-config
         description: | 

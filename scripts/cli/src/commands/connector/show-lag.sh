@@ -35,7 +35,7 @@ function show_output () {
 
     if [ "$topic" != "$prev_topic" ] && [ "$prev_topic" != "" ]
     then
-      printf "\n"
+      echo "---"
     fi
 
     if [[ "$total_lag" =~ ^[0-9]+$ ]]
@@ -97,6 +97,23 @@ function show_output () {
   done < <(cat "$lag_output" | grep -v PARTITION | sed '/^$/d' | sort -k2n)
 }
 
+function log_down() {
+  GREEN='\033[0;32m'
+  NC='\033[0m' # No Color
+  echo -e "$GREEN$(date +"%H:%M:%S") 🔻$@$NC"
+}
+
+function log_up() {
+  RED='\033[0;31m'
+  NC='\033[0m' # No Color
+  echo -e "$RED$(date +"%H:%M:%S") 🔺$@$NC"
+}
+
+function log_same() {
+  ORANGE='\033[0;33m'
+  NC='\033[0m' # No Color
+  echo -e "$ORANGE`date +"%H:%M:%S"` 🔸$@$NC"
+}
 
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
@@ -168,6 +185,7 @@ do
         if [ $total_lag -ne 0 ]
         then
           compare=""
+          compare_action=""
           if [[ "$prev_lag" =~ ^[0-9]+$ ]]
           then
             if [ $prev_lag != 0 ]
@@ -175,17 +193,30 @@ do
               if [ $total_lag -lt $prev_lag ]
               then
                 compare="🔻 $(($prev_lag - $total_lag))"
+                compare_action="down"
               elif [ $total_lag -eq $prev_lag ]
               then
                 compare="🔸"
+                compare_action="same"
               else
                 compare="🔺 $(($total_lag - $prev_lag))"
+                compare_action="up"
               fi
             fi
           fi
           if [ "$compare" != "" ]
           then
-            log "🐢 consumer lag for connector $connector is $total_lag $compare (press ctrl-c to stop)"
+            case "${compare_action}" in
+              up)
+                log_up "🔥 total consumer lag for connector $connector has increased to $total_lag $compare (press ctrl-c to stop)"
+              ;;
+              down)
+                log_down "🚀 consumer lag for connector $connector has decreased to $total_lag $compare (press ctrl-c to stop)"
+              ;;
+              *)
+                log_same "🐌 consumer lag for connector $connector is still $total_lag $compare (press ctrl-c to stop)"
+              ;;
+            esac
           else
             log "🐢 consumer lag for connector $connector is $total_lag"
           fi
