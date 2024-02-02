@@ -17228,7 +17228,7 @@ playground_fully_managed_connector_status_command() {
 
               stacktrace_connector=$(echo "$curl_output" | jq -r '.connector.trace | select(length > 0)')
               errors_from_trace=$(echo "$curl_output" | jq -r '.errors_from_trace[0].error | select(length > 0)')
-              validation_errors=$(echo "$curl_output" | jq -r '.validation_errors[0].error | select(length > 0)')
+              validation_errors=$(echo "$curl_output" | jq -r '.validation_errors[0] | select(length > 0)')
               stacktrace=""
               if [ "$stacktrace_connector" != "" ]
               then
