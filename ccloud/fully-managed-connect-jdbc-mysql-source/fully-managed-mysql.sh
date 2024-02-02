@@ -43,35 +43,9 @@ docker compose up -d
 
 sleep 15
 
-log "Getting certs from mysql container and transform them to JKS"
-mkdir -p ${PWD}/security/
-rm -rf ${PWD}/security/*
-# https://dev.mysql.com/doc/connector-j/5.1/en/connector-j-reference-using-ssl.html
-docker cp mysql:/var/lib/mysql/ca.pem ${PWD}/security/
-docker cp mysql:/var/lib/mysql/client-key.pem ${PWD}/security/
-docker cp mysql:/var/lib/mysql/client-cert.pem ${PWD}/security/
-
-log "Creating JKS from pem files"
-cd ${PWD}/security/
-if [[ "$OSTYPE" == "darwin"* ]]
-then
-    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-    chmod -R a+rw .
-else
-    # on CI, docker is run as runneradmin user, need to use sudo
-    ls -lrt
-    sudo chmod -R a+rw .
-    ls -lrt
-fi
-docker run --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} keytool -importcert -alias MySQLCACert -noprompt -file /tmp/ca.pem -keystore /tmp/truststore.jks -storepass mypassword
-# Convert the client key and certificate files to a PKCS #12 archive
-docker run --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} openssl pkcs12 -export -in /tmp/client-cert.pem -inkey /tmp/client-key.pem -name "mysqlclient" -passout pass:mypassword -out /tmp/client-keystore.p12
-# Import the client key and certificate into a Java keystore:
-docker run --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} keytool -importkeystore -srckeystore /tmp/client-keystore.p12 -srcstoretype pkcs12 -srcstorepass mypassword -destkeystore /tmp/keystore.jks -deststoretype JKS -deststorepass mypassword
-cd -
 
 log "Create table"
-docker exec -i mysql mysql --user=root --password=password --user=userssl --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=mydb << EOF
+docker exec -i mysql mysql --user=root --password=password --database=mydb << EOF
 USE mydb;
 
 CREATE TABLE team (
@@ -98,7 +72,7 @@ select * from team;
 EOF
 
 log "Adding an element to the table"
-docker exec -i mysql mysql --user=root --password=password --user=userssl --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=mydb << EOF
+docker exec -i mysql mysql --user=root --password=password --database=mydb << EOF
 USE mydb;
 
 INSERT INTO team (
@@ -111,6 +85,9 @@ INSERT INTO team (
   NOW()
 );
 EOF
+
+log "Show content of team table:"
+docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
 
 log "Getting ngrok hostname and port"
 NGROK_URL=$(curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url')
@@ -134,7 +111,7 @@ playground fully-managed-connector create-or-update --connector $connector_name 
   "output.data.format": "JSON",
   "connection.host": "$NGROK_HOSTNAME",
   "connection.port": "$NGROK_PORT",
-  "connection.user": "userssl",
+  "connection.user": "user",
   "connection.password": "password",
   "db.name": "mydb",
   "table.whitelist": "team",
@@ -142,10 +119,7 @@ playground fully-managed-connector create-or-update --connector $connector_name 
   "timestamp.column.name":"last_modified",
   "incrementing.column.name":"id",
   "topic.prefix":"mysql-",
-  "tasks.max": "1",
-  "ssl.mode": "verify-ca",
-  "ssl.truststorefile": "$PWD/security/truststore.jks",
-  "ssl.truststorepassword": "mypassword"
+  "tasks.max": "1"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 300

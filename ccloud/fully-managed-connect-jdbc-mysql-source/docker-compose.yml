@@ -2,16 +2,6 @@
 version: '3.5'
 services:
 
-  # sql-datagen:
-  #   build:
-  #     context: ../../ccloud/fully-managed-connect-jdbc-mysql-source/mysql-datagen/
-  #   hostname: sql-datagen
-  #   container_name: sql-datagen
-  #   profiles:
-  #   - sql_datagen
-  #   volumes:
-  #     - ../../ccloud/fully-managed-connect-jdbc-mysql-source/mysql-datagen//target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
-
   mysql:
     image: mysql:8.1
     hostname: mysql
