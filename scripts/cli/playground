@@ -4774,6 +4774,12 @@ playground_fully_managed_connector_show_lag_usage() {
     printf "    😴 Wait until lag becomes 0\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--wait-for-zero-lag-interval WAITFORZEROLAGINTERVAL")"
+    printf "    Interval between lag checks when --wait-for-zero-lag is used (default is 10\n    seconds).\n"
+    printf "    Default: 10\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -5523,6 +5529,12 @@ playground_connector_show_lag_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--wait-for-zero-lag")"
     printf "    😴 Wait until lag becomes 0\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--wait-for-zero-lag-interval WAITFORZEROLAGINTERVAL")"
+    printf "    Interval between lag checks when --wait-for-zero-lag is used (default is 10\n    seconds).\n"
+    printf "    Default: 10\n"
     echo
 
     # :command.usage_fixed_flags
@@ -17411,6 +17423,7 @@ playground_fully_managed_connector_show_lag_command() {
   connector="${args[--connector]}"
   wait_for_zero_lag="${args[--wait-for-zero-lag]}"
   verbose="${args[--verbose]}"
+  waitforzerolaginterval="${args[--wait-for-zero-lag-interval]}"
 
   get_ccloud_connect
 
@@ -17493,7 +17506,7 @@ playground_fully_managed_connector_show_lag_command() {
         compare_line="🏁"
       fi
 
-      if [[ "$end_offset" =~ ^[0-9]+$ ]] && [[ "$end_offset" =~ ^[0-9]+$ ]] && [ $end_offset != 0 ]
+      if [[ "$end_offset" =~ ^[0-9]+$ ]] && [[ "$end_offset" =~ ^[0-9]+$ ]] && [ $end_offset != 0 ] && [[ "$lag" =~ ^[0-9]+$ ]]
       then
         # calculate the percentage of lag
         percentage=$((100 * lag / end_offset))
@@ -17545,7 +17558,7 @@ playground_fully_managed_connector_show_lag_command() {
   then
       if [[ -n "$wait_for_zero_lag" ]]
       then
-        logerror "❌ --connector shhould be set when used with --wait-for-zero-lag"
+        logerror "❌ --connector should be set when used with --wait-for-zero-lag"
         exit 1
       fi
 
@@ -17568,7 +17581,6 @@ playground_fully_managed_connector_show_lag_command() {
         echo "kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security"
     fi
 
-    CHECK_INTERVAL=10
     SECONDS=0
     prev_lag=0
     stop=0
@@ -17582,7 +17594,7 @@ playground_fully_managed_connector_show_lag_command() {
       then
         logwarn "🐢 consumer group for connector $connector is rebalancing"
         cat $lag_output
-        sleep $CHECK_INTERVAL
+        sleep $waitforzerolaginterval
         continue
       fi
 
@@ -17593,7 +17605,7 @@ playground_fully_managed_connector_show_lag_command() {
       then
         logwarn "🐢 consumer lag for connector $connector is not available"
         show_output
-        sleep $CHECK_INTERVAL
+        sleep $waitforzerolaginterval
       else
         total_lag=$(cat "$lag_output" | grep -v "PARTITION" | awk -F" " '{sum+=$6;} END{print sum;}')
 
@@ -17626,7 +17638,7 @@ playground_fully_managed_connector_show_lag_command() {
             show_output
 
             prev_lag=$total_lag
-            sleep $CHECK_INTERVAL
+            sleep $waitforzerolaginterval
           else
             if [[ ! -n "$wait_for_zero_lag" ]]
             then
@@ -18957,6 +18969,7 @@ playground_connector_show_lag_command() {
   connector="${args[--connector]}"
   wait_for_zero_lag="${args[--wait-for-zero-lag]}"
   verbose="${args[--verbose]}"
+  waitforzerolaginterval="${args[--wait-for-zero-lag-interval]}"
 
   get_connect_url_and_security
 
@@ -19017,7 +19030,7 @@ playground_connector_show_lag_command() {
         compare_line="🏁"
       fi
 
-      if [[ "$end_offset" =~ ^[0-9]+$ ]] && [[ "$end_offset" =~ ^[0-9]+$ ]] && [ $end_offset != 0 ]
+      if [[ "$end_offset" =~ ^[0-9]+$ ]] && [[ "$end_offset" =~ ^[0-9]+$ ]] && [ $end_offset != 0 ] && [[ "$lag" =~ ^[0-9]+$ ]]
       then
         # calculate the percentage of lag
         percentage=$((100 * lag / end_offset))
@@ -19069,7 +19082,7 @@ playground_connector_show_lag_command() {
   then
       if [[ -n "$wait_for_zero_lag" ]]
       then
-        logerror "❌ --connector shhould be set when used with --wait-for-zero-lag"
+        logerror "❌ --connector should be set when used with --wait-for-zero-lag"
         exit 1
       fi
 
@@ -19091,7 +19104,6 @@ playground_connector_show_lag_command() {
         echo "kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security"
     fi
 
-    CHECK_INTERVAL=10
     SECONDS=0
     prev_lag=0
     stop=0
@@ -19104,7 +19116,7 @@ playground_connector_show_lag_command() {
       then
         logwarn "🐢 consumer group for connector $connector is rebalancing"
         cat $lag_output
-        sleep $CHECK_INTERVAL
+        sleep $waitforzerolaginterval
         continue
       fi
 
@@ -19115,7 +19127,7 @@ playground_connector_show_lag_command() {
       then
         logwarn "🐢 consumer lag for connector $connector is not available"
         show_output
-        sleep $CHECK_INTERVAL
+        sleep $waitforzerolaginterval
       else
         total_lag=$(cat "$lag_output" | grep -v "PARTITION" | awk -F" " '{sum+=$6;} END{print sum;}')
 
@@ -19148,7 +19160,7 @@ playground_connector_show_lag_command() {
             show_output
 
             prev_lag=$total_lag
-            sleep $CHECK_INTERVAL
+            sleep $waitforzerolaginterval
           else
             if [[ ! -n "$wait_for_zero_lag" ]]
             then
@@ -29097,6 +29109,26 @@ playground_fully_managed_connector_show_lag_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --wait-for-zero-lag-interval)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_integer "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--wait-for-zero-lag-interval WAITFORZEROLAGINTERVAL" "$(validate_integer "$2")" >&2
+            exit 1
+          fi
+
+          args['--wait-for-zero-lag-interval']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--wait-for-zero-lag-interval requires an argument: --wait-for-zero-lag-interval WAITFORZEROLAGINTERVAL" >&2
+          exit 1
+        fi
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -29112,6 +29144,9 @@ playground_fully_managed_connector_show_lag_parse_requirements() {
 
     esac
   done
+
+  # :command.default_assignments
+  [[ -n ${args['--wait-for-zero-lag-interval']:-} ]] || args['--wait-for-zero-lag-interval']="10"
 
 }
 
@@ -30470,6 +30505,26 @@ playground_connector_show_lag_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --wait-for-zero-lag-interval)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_integer "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--wait-for-zero-lag-interval WAITFORZEROLAGINTERVAL" "$(validate_integer "$2")" >&2
+            exit 1
+          fi
+
+          args['--wait-for-zero-lag-interval']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--wait-for-zero-lag-interval requires an argument: --wait-for-zero-lag-interval WAITFORZEROLAGINTERVAL" >&2
+          exit 1
+        fi
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -30485,6 +30540,9 @@ playground_connector_show_lag_parse_requirements() {
 
     esac
   done
+
+  # :command.default_assignments
+  [[ -n ${args['--wait-for-zero-lag-interval']:-} ]] || args['--wait-for-zero-lag-interval']="10"
 
 }
 

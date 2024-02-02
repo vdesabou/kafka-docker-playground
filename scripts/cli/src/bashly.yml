@@ -2498,6 +2498,14 @@ commands:
       long: --wait-for-zero-lag
       help: |- 
         😴 Wait until lag becomes 0
+    - &waitforzerolaginterval
+      long: --wait-for-zero-lag-interval
+      arg: waitforzerolaginterval
+      validate: integer
+      required: false
+      default: "10"
+      help: |-
+        Interval between lag checks when --wait-for-zero-lag is used (default is 10 seconds).
 
   - name: show-config
     help:  |
@@ -2719,6 +2727,7 @@ commands:
     - *verbose
     - *connector
     - *waitforzerolag
+    - *waitforzerolaginterval
 
   - name: show-config
     help:  |

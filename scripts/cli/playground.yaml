@@ -2475,6 +2475,14 @@ subcommands:
           description: | 
             😴 Wait until lag becomes 0
             
+        - names:
+          - --wait-for-zero-lag-interval
+          argument: 10
+          description: | 
+            Interval between lag checks when --wait-for-zero-lag is used (default is 10 seconds).
+            
+            Default value: 10
+            
       - name: show-config
         description: | 
           🧰 Show current connector config that was applied
@@ -2852,6 +2860,14 @@ subcommands:
           argument: ""
           description: | 
             😴 Wait until lag becomes 0
+            
+        - names:
+          - --wait-for-zero-lag-interval
+          argument: 10
+          description: | 
+            Interval between lag checks when --wait-for-zero-lag is used (default is 10 seconds).
+            
+            Default value: 10
             
       - name: show-config
         description: | 

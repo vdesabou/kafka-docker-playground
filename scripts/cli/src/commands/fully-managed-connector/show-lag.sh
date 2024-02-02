@@ -1,6 +1,7 @@
 connector="${args[--connector]}"
 wait_for_zero_lag="${args[--wait-for-zero-lag]}"
 verbose="${args[--verbose]}"
+waitforzerolaginterval="${args[--wait-for-zero-lag-interval]}"
 
 get_ccloud_connect
 
@@ -83,7 +84,7 @@ function show_output () {
       compare_line="🏁"
     fi
 
-    if [[ "$end_offset" =~ ^[0-9]+$ ]] && [[ "$end_offset" =~ ^[0-9]+$ ]] && [ $end_offset != 0 ]
+    if [[ "$end_offset" =~ ^[0-9]+$ ]] && [[ "$end_offset" =~ ^[0-9]+$ ]] && [ $end_offset != 0 ] && [[ "$lag" =~ ^[0-9]+$ ]]
     then
       # calculate the percentage of lag
       percentage=$((100 * lag / end_offset))
@@ -136,7 +137,7 @@ if ((length > 1))
 then
     if [[ -n "$wait_for_zero_lag" ]]
     then
-      logerror "❌ --connector shhould be set when used with --wait-for-zero-lag"
+      logerror "❌ --connector should be set when used with --wait-for-zero-lag"
       exit 1
     fi
 
@@ -158,7 +159,6 @@ do
       echo "kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security"
   fi
 
-  CHECK_INTERVAL=10
   SECONDS=0
   prev_lag=0
   stop=0
@@ -172,7 +172,7 @@ do
     then
       logwarn "🐢 consumer group for connector $connector is rebalancing"
       cat $lag_output
-      sleep $CHECK_INTERVAL
+      sleep $waitforzerolaginterval
       continue
     fi
 
@@ -183,7 +183,7 @@ do
     then
       logwarn "🐢 consumer lag for connector $connector is not available"
       show_output
-      sleep $CHECK_INTERVAL
+      sleep $waitforzerolaginterval
     else
       total_lag=$(cat "$lag_output" | grep -v "PARTITION" | awk -F" " '{sum+=$6;} END{print sum;}')
 
@@ -216,7 +216,7 @@ do
           show_output
           
           prev_lag=$total_lag
-          sleep $CHECK_INTERVAL
+          sleep $waitforzerolaginterval
         else
           if [[ ! -n "$wait_for_zero_lag" ]]
           then

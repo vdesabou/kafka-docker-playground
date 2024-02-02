@@ -2173,6 +2173,13 @@
               ],
               "argument": "",
               "description": "😴 Wait until lag becomes 0\n"
+            },
+            {
+              "names": [
+                "--wait-for-zero-lag-interval"
+              ],
+              "argument": 10,
+              "description": "Interval between lag checks when --wait-for-zero-lag is used (default is 10 seconds).\n\nDefault value: 10\n"
             }
           ]
         },
@@ -2577,6 +2584,13 @@
               ],
               "argument": "",
               "description": "😴 Wait until lag becomes 0\n"
+            },
+            {
+              "names": [
+                "--wait-for-zero-lag-interval"
+              ],
+              "argument": 10,
+              "description": "Interval between lag checks when --wait-for-zero-lag is used (default is 10 seconds).\n\nDefault value: 10\n"
             }
           ]
         },
