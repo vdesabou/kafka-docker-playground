@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  mysql:
+    addr: mysql:3306
+    proto: tcp
