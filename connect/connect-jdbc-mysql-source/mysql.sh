@@ -83,15 +83,15 @@ docker exec mysql bash -c "mysql --user=root --password=password --database=mydb
 log "Creating MySQL source connector"
 playground connector create-or-update --connector mysql-source  << EOF
 {
-               "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
-               "tasks.max":"10",
-               "connection.url":"jdbc:mysql://mysql:3306/mydb?user=user&password=password&useSSL=false",
-               "table.whitelist":"team",
-               "mode":"timestamp+incrementing",
-               "timestamp.column.name":"last_modified",
-               "incrementing.column.name":"id",
-               "topic.prefix":"mysql-"
-          }
+     "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
+     "tasks.max":"10",
+     "connection.url":"jdbc:mysql://mysql:3306/mydb?user=user&password=password&useSSL=false",
+     "table.whitelist":"team",
+     "mode":"timestamp+incrementing",
+     "timestamp.column.name":"last_modified",
+     "incrementing.column.name":"id",
+     "topic.prefix":"mysql-"
+}
 EOF
 
 sleep 5
