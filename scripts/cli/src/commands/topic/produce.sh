@@ -644,10 +644,10 @@ then
         fi
     fi
 else
-    nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+    nb=$(playground topic get-number-records -t $topic | tail -1)
     if [ "$nb_partitions" != "" ]
     then
-        if [ $nb_messages == 0 ]
+        if [ $nb == 0 ]
         then
             log "--nb-partitions is set and topic is empty, re-creating it with $nb_partitions partitions..."
             playground topic delete --topic $topic
@@ -659,7 +659,7 @@ else
         fi
     else
         log "💯 Get number of records in topic $topic"
-        echo $nb_messages
+        echo $nb
     fi
 fi
 
