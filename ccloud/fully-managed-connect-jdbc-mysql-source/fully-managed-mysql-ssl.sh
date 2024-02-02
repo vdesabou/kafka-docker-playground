@@ -144,7 +144,7 @@ playground fully-managed-connector create-or-update --connector $connector_name 
   "topic.prefix":"mysql-",
   "tasks.max": "1",
   "ssl.mode": "verify-ca",
-  "ssl.truststorefile": "$PWD/security/keystore.jks",
+  "ssl.truststorefile": "$PWD/security/truststore.jks",
   "ssl.truststorepassword": "mypassword"
 }
 EOF
