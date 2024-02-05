@@ -38,14 +38,25 @@ then
     exit 1
 fi
 
+# determining the docker-compose file from from test_file
+docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
+test_file_directory="$(dirname "${test_file}")"
+docker_compose_file="${test_file_directory}/${docker_compose_file}"
+
+if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
+then
+    logwarn "Skipping as docker-compose override file could not be detemined"
+    exit 0
+fi
+
 if [[ -n "$connector_tag" ]]
 then
   if [ "$connector_tag" == " " ]
   then
-    get_connector_paths
+    connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
     if [ "$connector_paths" == "" ]
     then
-        logwarn "❌ skipping as it is not an example with connector, but --connector-tag is set"
+        logwarn "❌ skipping as it is not an example with connector"
         exit 1
     else
         connector_tags=""
