@@ -68,7 +68,11 @@ docker exec -i connect tail -1 /tmp/output.json > /tmp/results.log 2>&1
 if [ -s /tmp/results.log ]
 then
      log "File is not empty"
-     cat /tmp/results.log
+     if [ -z "$GITHUB_RUN_NUMBER" ]
+     then
+          # not running with github actions
+          cat /tmp/results.log
+     fi
 else
      logerror "File is empty"
      exit 1
