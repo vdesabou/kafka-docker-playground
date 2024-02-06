@@ -1,2 +1,2 @@
-FROM adoptopenjdk/openjdk11:slim
+FROM eclipse-temurin:11-jdk
 CMD sleep infinity
