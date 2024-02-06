@@ -64,7 +64,7 @@ function show_output () {
     then
       if [[ "$prev_lag" =~ ^[0-9]+$ ]]
       then
-        if [ $lag -lt $prev_lag ]
+        if [[ "$prev_lag" =~ ^[0-9]+$ ]] && [[ "$lag" =~ ^[0-9]+$ ]]
         then
           compare_line="🔻 $(($prev_lag - $lag))"
           compare_action="up"

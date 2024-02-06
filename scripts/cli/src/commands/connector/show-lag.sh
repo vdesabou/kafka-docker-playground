@@ -40,7 +40,7 @@ function show_output () {
 
     if [[ "$total_lag" =~ ^[0-9]+$ ]]
     then
-      if [[ "$prev_lag" =~ ^[0-9]+$ ]]
+      if [[ "$prev_lag" =~ ^[0-9]+$ ]] && [[ "$lag" =~ ^[0-9]+$ ]]
       then
         if [ $lag -lt $prev_lag ]
         then
