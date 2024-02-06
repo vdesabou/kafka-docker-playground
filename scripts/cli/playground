@@ -17982,231 +17982,193 @@ playground_fully_managed_connector_show_config_parameters_command() {
               exit 1
           else
               connector_class=$(echo "$json_config" | jq -r '."connector.class"')
-              curl_output=$(curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins" --header "authorization: Basic $authorization")
-              ret=$?
-              if [ $ret -eq 0 ]
+
+              filename="/tmp/config-$connector_class.txt"
+              json_filename="/tmp/config-$connector_class.json"
+
+              mkdir -p $root_folder/.connector_config
+              filename="$root_folder/.connector_config/config-$connector_class.txt"
+              json_filename="$root_folder/.connector_config/config-$connector_class.json"
+
+              class=$(echo $connector_class | rev | cut -d '.' -f 1 | rev)
+
+              if [[ ! -n "$only_show_json_file_path" ]]
               then
-                  if [ "$curl_output" == "[]" ]
+                  if [[ -n "$only_show_json" ]]
                   then
-                      # logerror "No connector running"
-                      # exit 1
-                      echo ""
-                      return
-                  fi
-                  if echo "$curl_output" | jq 'if .error then .error | has("code") else has("error_code") end' 2> /dev/null | grep -q true
-                  then
-                      if echo "$curl_output" | jq '.error | has("code")' 2> /dev/null | grep -q true
-                      then
-                          code=$(echo "$curl_output" | jq -r .error.code)
-                          message=$(echo "$curl_output" | jq -r .error.message)
-                      else
-                          code=$(echo "$curl_output" | jq -r .error_code)
-                          message=$(echo "$curl_output" | jq -r .message)
-                      fi
-                      logerror "Command failed with error code $code"
-                      logerror "$message"
-                      exit 1
+                      log "🔩 list of all available parameters for connector $connector ($class) (with default value when applicable)"
                   else
-                      current_group=""
-                      for row in $(echo "$curl_output" | jq -r '.[] | @base64'); do
-                          _jq() {
-                              echo ${row} | base64 --decode | jq -r ${1}
-                          }
+                      log "🔩 getting parameters for connector $connector ($class)"
+                  fi
+              fi
 
-                          class=$(_jq '.class')
-                      done
-
-                      filename="/tmp/config-$connector_class.txt"
-                      json_filename="/tmp/config-$connector_class.json"
-
-                      mkdir -p $root_folder/.connector_config
-                      filename="$root_folder/.connector_config/config-$connector_class.txt"
-                      json_filename="$root_folder/.connector_config/config-$connector_class.json"
-
-                      class=$(echo $connector_class | rev | cut -d '.' -f 1 | rev)
-
-                      if [[ ! -n "$only_show_json_file_path" ]]
+              if [[ -n "$force_refresh" ]]
+              then
+                  if [ -f $filename ]
+                  then
+                      rm -f $filename
+                  fi
+                  if [ -f $json_filename ]
+                  then
+                      rm -f $json_filename
+                  fi
+              fi
+              if [ ! -f $filename ] || [ ! -f $json_filename ]
+              then
+                  set +e
+                  if [[ -n "$verbose" ]]
+                  then
+                      log "🐞 curl command used"
+                      echo "curl -s --request PUT -H "Content-Type: application/json" --data "$json_config" \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate\" --header \"authorization: Basic $authorization\""
+                  fi
+                  curl_output=$(curl -s --request PUT -H "Content-Type: application/json" --data "$json_config" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate" --header "authorization: Basic $authorization")
+                  ret=$?
+                  set -e
+                  if [ $ret -eq 0 ]
+                  then
+                      if echo "$curl_output" | jq 'if .error then .error | has("code") else has("error_code") end' 2> /dev/null | grep -q true
                       then
-                          if [[ -n "$only_show_json" ]]
+                          if echo "$curl_output" | jq '.error | has("code")' 2> /dev/null | grep -q true
                           then
-                              log "🔩 list of all available parameters for connector $connector ($class) (with default value when applicable)"
+                              code=$(echo "$curl_output" | jq -r .error.code)
+                              message=$(echo "$curl_output" | jq -r .error.message)
                           else
-                              log "🔩 getting parameters for connector $connector ($class)"
+                              code=$(echo "$curl_output" | jq -r .error_code)
+                              message=$(echo "$curl_output" | jq -r .message)
                           fi
-                      fi
-
-                      if [[ -n "$force_refresh" ]]
-                      then
-                          if [ -f $filename ]
+                          logerror "Command failed with error code $code"
+                          logerror "$message"
+                          exit 1
+                      else
+                          if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
                           then
-                              rm -f $filename
-                          fi
-                          if [ -f $json_filename ]
-                          then
-                              rm -f $json_filename
-                          fi
-                      fi
-                      if [ ! -f $filename ] || [ ! -f $json_filename ]
-                      then
-                          set +e
-                          if [[ -n "$verbose" ]]
-                          then
-                              log "🐞 curl command used"
-                              echo "curl -s --request PUT -H "Content-Type: application/json" --data "$json_config" \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate\" --header \"authorization: Basic $authorization\""
-                          fi
-                          curl_output=$(curl -s --request PUT -H "Content-Type: application/json" --data "$json_config" "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate" --header "authorization: Basic $authorization")
-                          ret=$?
-                          set -e
-                          if [ $ret -eq 0 ]
-                          then
-                              if echo "$curl_output" | jq 'if .error then .error | has("code") else has("error_code") end' 2> /dev/null | grep -q true
-                              then
-                                  if echo "$curl_output" | jq '.error | has("code")' 2> /dev/null | grep -q true
-                                  then
-                                      code=$(echo "$curl_output" | jq -r .error.code)
-                                      message=$(echo "$curl_output" | jq -r .error.message)
-                                  else
-                                      code=$(echo "$curl_output" | jq -r .error_code)
-                                      message=$(echo "$curl_output" | jq -r .message)
-                                  fi
-                                  logerror "Command failed with error code $code"
-                                  logerror "$message"
-                                  exit 1
-                              else
-                                  if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
-                                  then
-                                      set +e
-                                      json_file=/tmp/json
-                                      echo "$curl_output" > $json_file
-                                      jq_output=$(jq . "$json_file" 2>&1)
-                                      error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
+                              set +e
+                              json_file=/tmp/json
+                              echo "$curl_output" > $json_file
+                              jq_output=$(jq . "$json_file" 2>&1)
+                              error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
 
-                                      if [[ -n "$error_line" ]]; then
-                                          logerror "❌ Invalid JSON at line $error_line"
-                                      fi
-                                      set -e
-
-                                      if [[ $(type -f bat 2>&1) =~ "not found" ]]
-                                      then
-                                          cat -n $json_file
-                                      else
-                                          bat $json_file --highlight-line $error_line
-                                      fi
-
-                                      exit 1
-                                  fi
-
-                                  current_group=""
-                                  configs=$(echo "$curl_output" | jq -r '.configs')
-                                  while IFS= read -r row; do
-
-                                      IFS=$'\n'
-                                      arr=($(echo "$row" | jq -r '.definition.group, .definition.name, .definition.default_value, .definition.type, .definition.required, .definition.importance, .definition.documentation'))
-                                      group="${arr[0]}"
-                                                          set +x
-                                      if [[ "$group" == "Common" || "$group" == "Transforms" || "$group" == "Error Handling" || "$group" == "Topic Creation" || "$group" == "offsets.topic" || "$group" == "Exactly Once Support" || "$group" == "Predicates" || "$group" == "Confluent Licensing" ]] ; then
-                                          continue
-                                      fi
-
-                                      if [ "$group" != "$current_group" ]
-                                      then
-                                          echo -e "==========================" >> "$filename"
-                                          echo -e "$group"                     >> "$filename"
-                                          echo -e "==========================" >> "$filename"
-                                          current_group=$group
-                                      fi
-
-                                      param="${arr[1]}"
-                                      default="${arr[2]}"
-                                      type="${arr[3]}"
-                                      required="${arr[4]}"
-                                      importance="${arr[5]}"
-                                      description="${arr[6]}"
-
-                                      echo -e "🔘 $param" >> "$filename"
-                                      echo -e "" >> "$filename"
-                                      echo -e "$description" >> "$filename"
-                                      echo -e "" >> "$filename"
-                                      echo -e "\t - Type: $type" >> "$filename"
-                                      echo -e "\t - Default: $default" >> "$filename"
-                                      echo -e "\t - Importance: $importance" >> "$filename"
-                                      echo -e "\t - Required: $required" >> "$filename"
-                                      echo -e "" >> "$filename"
-
-                                      if [ "$default" == "null" ]
-                                      then
-                                          default=""
-                                      fi
-                                      echo -e "    \"$param\": \"$default\"," >> "$json_filename"
-                                      sort "$json_filename" -o /tmp/tmp
-                                      mv /tmp/tmp "$json_filename"
-                                  done <<< "$(echo "$configs" | jq -c '.[]')"
+                              if [[ -n "$error_line" ]]; then
+                                  logerror "❌ Invalid JSON at line $error_line"
                               fi
-                          else
-                              logerror "❌ curl request failed with error code $ret!"
+                              set -e
+
+                              if [[ $(type -f bat 2>&1) =~ "not found" ]]
+                              then
+                                  cat -n $json_file
+                              else
+                                  bat $json_file --highlight-line $error_line
+                              fi
+
                               exit 1
                           fi
-                      fi
 
-                      if [ ! -f $filename ]
-                      then
-                          logwarn "there was no specific config for this connector"
-                          exit 0
-                      fi
+                          current_group=""
+                          configs=$(echo "$curl_output" | jq -r '.configs')
+                          while IFS= read -r row; do
 
-                      if [[ -n "$open" ]]
-                      then
-                          if [[ -n "$only_show_json" ]]
-                          then
-                              filename=$json_filename
-                          else
-                              cat $filename > "/tmp/config-$connector_class.txt"
-                              filename="/tmp/config-$connector_class-$version.txt"
-                              echo "🔩 list of all available parameters for connector $connector ($class) (with default value when applicable)" >> $filename
-                              cat $json_filename >> $filename
-                          fi
-
-                          editor=$(playground config get editor)
-                          if [ "$editor" != "" ]
-                          then
-                              log "📖 Opening ${filename} using configured editor $editor"
-                              $editor ${filename}
-                          else
-                              if [[ $(type code 2>&1) =~ "not found" ]]
-                              then
-                                  logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
-                                  exit 1
-                              else
-                                  log "📖 Opening ${filename} with code (default) - you can change editor by using playground config editor <editor>"
-                                  code ${filename}
+                              IFS=$'\n'
+                              arr=($(echo "$row" | jq -r '.definition.group, .definition.name, .definition.default_value, .definition.type, .definition.required, .definition.importance, .definition.documentation'))
+                              group="${arr[0]}"
+                                                  set +x
+                              if [[ "$group" == "Common" || "$group" == "Transforms" || "$group" == "Error Handling" || "$group" == "Topic Creation" || "$group" == "offsets.topic" || "$group" == "Exactly Once Support" || "$group" == "Predicates" || "$group" == "Confluent Licensing" ]] ; then
+                                  continue
                               fi
-                          fi
+
+                              if [ "$group" != "$current_group" ]
+                              then
+                                  echo -e "==========================" >> "$filename"
+                                  echo -e "$group"                     >> "$filename"
+                                  echo -e "==========================" >> "$filename"
+                                  current_group=$group
+                              fi
+
+                              param="${arr[1]}"
+                              default="${arr[2]}"
+                              type="${arr[3]}"
+                              required="${arr[4]}"
+                              importance="${arr[5]}"
+                              description="${arr[6]}"
+
+                              echo -e "🔘 $param" >> "$filename"
+                              echo -e "" >> "$filename"
+                              echo -e "$description" >> "$filename"
+                              echo -e "" >> "$filename"
+                              echo -e "\t - Type: $type" >> "$filename"
+                              echo -e "\t - Default: $default" >> "$filename"
+                              echo -e "\t - Importance: $importance" >> "$filename"
+                              echo -e "\t - Required: $required" >> "$filename"
+                              echo -e "" >> "$filename"
+
+                              if [ "$default" == "null" ]
+                              then
+                                  default=""
+                              fi
+                              echo -e "    \"$param\": \"$default\"," >> "$json_filename"
+                              sort "$json_filename" -o /tmp/tmp
+                              mv /tmp/tmp "$json_filename"
+                          done <<< "$(echo "$configs" | jq -c '.[]')"
+                      fi
+                  else
+                      logerror "❌ curl request failed with error code $ret!"
+                      exit 1
+                  fi
+              fi
+
+              if [ ! -f $filename ]
+              then
+                  logwarn "there was no specific config for this connector"
+                  exit 0
+              fi
+
+              if [[ -n "$open" ]]
+              then
+                  if [[ -n "$only_show_json" ]]
+                  then
+                      filename=$json_filename
+                  else
+                      cat $filename > "/tmp/config-$connector_class.txt"
+                      filename="/tmp/config-$connector_class-$version.txt"
+                      echo "🔩 list of all available parameters for connector $connector ($class) (with default value when applicable)" >> $filename
+                      cat $json_filename >> $filename
+                  fi
+
+                  editor=$(playground config get editor)
+                  if [ "$editor" != "" ]
+                  then
+                      log "📖 Opening ${filename} using configured editor $editor"
+                      $editor ${filename}
+                  else
+                      if [[ $(type code 2>&1) =~ "not found" ]]
+                      then
+                          logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
+                          exit 1
                       else
-                          if [[ -n "$only_show_json" ]] || [[ -n "$only_show_json_file_path" ]]
-                          then
-                              if [[ -n "$only_show_json_file_path" ]]
-                              then
-                                  echo "$json_filename"
-                              else
-                                  cat $json_filename
-                              fi
-                              return
-                          fi
-
-                          if [[ -n "$only_show_file_path" ]]
-                          then
-                              echo "$filename"
-                          else
-                              cat $filename
-
-                              log "🔩 list of all available parameters for connector $connector ($class) (with default value when applicable)"
-                              cat $json_filename
-                          fi
+                          log "📖 Opening ${filename} with code (default) - you can change editor by using playground config editor <editor>"
+                          code ${filename}
                       fi
                   fi
               else
-                  logerror "❌ curl request failed with error code $ret!"
-                  exit 1
+                  if [[ -n "$only_show_json" ]] || [[ -n "$only_show_json_file_path" ]]
+                  then
+                      if [[ -n "$only_show_json_file_path" ]]
+                      then
+                          echo "$json_filename"
+                      else
+                          cat $json_filename
+                      fi
+                      return
+                  fi
+
+                  if [[ -n "$only_show_file_path" ]]
+                  then
+                      echo "$filename"
+                  else
+                      cat $filename
+
+                      log "🔩 list of all available parameters for connector $connector ($class) (with default value when applicable)"
+                      cat $json_filename
+                  fi
               fi
           fi
       else
