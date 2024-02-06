@@ -4,42 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-logwarn "WARN: This is not working, getting same issue as https://github.com/confluentinc/kafka-connect-jdbc/issues/1140"
-exit 111
-
-# [2023-10-26 15:54:29,575] ERROR [redshift-jdbc-sink|task-0] WorkerSinkTask{id=redshift-jdbc-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:237)
-# org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:628)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:340)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:238)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:207)
-#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:229)
-#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:284)
-#         at org.apache.kafka.connect.runtime.isolation.Plugins.lambda$withClassLoader$1(Plugins.java:181)
-#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
-#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-#         at java.base/java.lang.Thread.run(Thread.java:829)
-# Caused by: org.apache.kafka.connect.errors.ConnectException: null (INT32) type doesn't have a mapping to the SQL database column type
-#         at io.confluent.connect.jdbc.dialect.GenericDatabaseDialect.getSqlType(GenericDatabaseDialect.java:1948)
-#         at io.confluent.connect.jdbc.dialect.GenericDatabaseDialect.writeColumnSpec(GenericDatabaseDialect.java:1864)
-#         at io.confluent.connect.jdbc.dialect.GenericDatabaseDialect.lambda$writeColumnsSpec$39(GenericDatabaseDialect.java:1853)
-#         at io.confluent.connect.jdbc.util.ExpressionBuilder.append(ExpressionBuilder.java:560)
-#         at io.confluent.connect.jdbc.util.ExpressionBuilder$BasicListBuilder.of(ExpressionBuilder.java:599)
-#         at io.confluent.connect.jdbc.dialect.GenericDatabaseDialect.writeColumnsSpec(GenericDatabaseDialect.java:1855)
-#         at io.confluent.connect.jdbc.dialect.GenericDatabaseDialect.buildCreateTableStatement(GenericDatabaseDialect.java:1772)
-#         at io.confluent.connect.jdbc.sink.DbStructure.create(DbStructure.java:121)
-#         at io.confluent.connect.jdbc.sink.DbStructure.createOrAmendIfNecessary(DbStructure.java:67)
-#         at io.confluent.connect.jdbc.sink.BufferedRecords.add(BufferedRecords.java:122)
-#         at io.confluent.connect.jdbc.sink.JdbcDbWriter.write(JdbcDbWriter.java:74)
-#         at io.confluent.connect.jdbc.sink.JdbcSinkTask.put(JdbcSinkTask.java:90)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:593)
-#         ... 11 more
-
-# string
-# org.apache.kafka.connect.errors.ConnectException: null (STRING) type doesn't have a mapping to the SQL database column type
-
 if [ ! -f ${PWD}/redshift-jdbc42-2.1.0.17/redshift-jdbc42-2.1.0.17.jar ]
 then
      mkdir -p redshift-jdbc42-2.1.0.17
@@ -152,51 +116,35 @@ aws redshift modify-cluster --cluster-identifier $CLUSTER_NAME --vpc-security-gr
 CLUSTER=$(aws redshift describe-clusters --cluster-identifier $CLUSTER_NAME | jq -r .Clusters[0].Endpoint.Address)
 
 set +e
-docker run -i -e CLUSTER="$CLUSTER" -v "${DIR}/customers.sql":/tmp/customers.sql debezium/postgres:15-alpine psql -h "$CLUSTER" -U "masteruser" -d "dev" -p "5439" << EOF
+docker run -i -e CLUSTER="$CLUSTER" debezium/postgres:15-alpine psql -h "$CLUSTER" -U "masteruser" -d "dev" -p "5439" << EOF
 myPassword1
-DROP TABLE ORDERS;
+DROP TABLE orders;
 EOF
 set -e
+
+# need to pre-create otherwise getting ConnectException: null (INT32) type doesn't have a mapping to the SQL database column type
+docker run -i -e CLUSTER="$CLUSTER" debezium/postgres:15-alpine psql -h "$CLUSTER" -U "masteruser" -d "dev" -p "5439" << EOF
+myPassword1
+     create table orders (id INT,product TEXT,quantity INT,price REAL);
+EOF
+
 
 log "Creating JDBC AWS Redshift sink connector"
 playground connector create-or-update --connector redshift-jdbc-sink  << EOF
 {
   "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
   "tasks.max": "1",
-  "connection.url": "jdbc:redshift://$CLUSTER:5439/dev?user=masteruser&password=myPassword1&ssl=false",
-  "topics": "ORDERS",
-  "auto.create": "true",
-  "dialect.name": "PostgreSqlDatabaseDialect"
+  "connection.url": "jdbc:redshift://$CLUSTER:5439/dev?user=masteruser&password=myPassword1&ssl=true&reWriteBatchedInserts=true&reWriteBatchedInsertsSize=512",
+  "topics": "orders",
+  "auto.create": "false",
+  "auto.evolve": "false",
+  "insert.mode": "insert",
+  "batch.size": "512"
 }
 EOF
 
-log "Sending messages to topic ORDERS"
-playground topic produce -t ORDERS --nb-messages 1 << 'EOF'
-{
-  "type": "record",
-  "name": "myrecord",
-  "fields": [
-    {
-      "name": "id",
-      "type": "int"
-    },
-    {
-      "name": "product",
-      "type": "string"
-    },
-    {
-      "name": "quantity",
-      "type": "int"
-    },
-    {
-      "name": "price",
-      "type": "float"
-    }
-  ]
-}
-EOF
-
-playground topic produce -t ORDERS --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
+log "Sending messages to topic orders"
+playground topic produce -t orders --nb-messages 512 << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -226,5 +174,5 @@ sleep 10
 log "Verify data is in Redshift"
 docker run -i -e CLUSTER="$CLUSTER" -v "${DIR}/customers.sql":/tmp/customers.sql debezium/postgres:15-alpine psql -h "$CLUSTER" -U "masteruser" -d "dev" -p "5439" << EOF
 myPassword1
-SELECT * from ORDERS;
+SELECT * from orders;
 EOF
