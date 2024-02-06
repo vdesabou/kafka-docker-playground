@@ -2210,6 +2210,13 @@
               ],
               "argument": "",
               "description": "☢️ Force using REST API /config endpoint (https://docs.confluent.io/cloud/current/api.html#tag/Connectors-(connectv1)/operation/getConnectv1ConnectorConfig)\n"
+            },
+            {
+              "names": [
+                "--no-clipboard"
+              ],
+              "argument": "",
+              "description": "do not copy to clipboard (internal)\n"
             }
           ]
         },
@@ -2314,6 +2321,21 @@
               ],
               "argument": "",
               "description": "✅ Validate config using PUT https://api.confluent.cloud/connect/v1/environments/{environment_id}/clusters/{kafka_cluster_id}/connector-plugins/{plugin_name}/config/validate (https://docs.confluent.io/cloud/current/api.html#tag/Managed-Connector-Plugins-(connectv1)/operation/validateConnectv1ConnectorPlugin)\n"
+            }
+          ]
+        },
+        {
+          "name": "update",
+          "description": "🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.\n",
+          "usage": "playground fully-managed-connector update [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--connector",
+                "-c"
+              ],
+              "argument": "CONNECTOR",
+              "description": "🔗 Connector name\n\n🎓 Tip: If not specified, the command will apply to all connectors\n"
             }
           ]
         }
@@ -2617,6 +2639,13 @@
             },
             {
               "names": [
+                "--no-clipboard"
+              ],
+              "argument": "",
+              "description": "do not copy to clipboard (internal)\n"
+            },
+            {
+              "names": [
                 "--force-rest-endpoint"
               ],
               "argument": "",
@@ -2817,6 +2846,21 @@
               ],
               "argument": "",
               "description": "✅ Validate config using PUT /connector-plugins/(string:name)/config/validate (https://docs.confluent.io/platform/current/connect/references/restapi.html#put--connector-plugins-(string-name)-config-validate)\n"
+            }
+          ]
+        },
+        {
+          "name": "update",
+          "description": "🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.\n",
+          "usage": "playground connector update [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--connector",
+                "-c"
+              ],
+              "argument": "CONNECTOR",
+              "description": "🔗 Connector name\n\n🎓 Tip: If not specified, the command will apply to all connectors\n"
             }
           ]
         }

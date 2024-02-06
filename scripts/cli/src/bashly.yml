@@ -2519,7 +2519,12 @@ commands:
       required: false
       help: |-
         ☢️ Force using REST API /config endpoint (https://docs.confluent.io/cloud/current/api.html#tag/Connectors-(connectv1)/operation/getConnectv1ConnectorConfig)
-
+    - &noclipboard
+      long: --no-clipboard
+      required: false
+      private: true
+      help: |-
+        do not copy to clipboard (internal)
 
   - name: show-config-parameters
     help: 🔩 Show all possible configuration parameters of connector
@@ -2602,6 +2607,12 @@ commands:
           "tasks.max" : "1"
       }
       EOF
+  - name: update
+    help: 🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.
+    flags:
+    - *ccloudconnector
+    examples: |
+      playground fully-managed-connector update
 
 - name: connector-plugin
   expose: always
@@ -2737,6 +2748,7 @@ commands:
     flags:
     - *verbose
     - *connector
+    - *noclipboard
     - long: --force-rest-endpoint
       required: false
       help: |-
@@ -2849,6 +2861,13 @@ commands:
           "value.converter.schemas.enable": "false"
       }
       EOF
+
+  - name: update
+    help: 🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.
+    flags:
+    - *connector
+    examples: |
+      playground connector update -c filestream-sink
 
   examples:
   - playground connector status

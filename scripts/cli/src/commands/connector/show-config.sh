@@ -3,6 +3,7 @@ get_connect_url_and_security
 connector="${args[--connector]}"
 force_rest_endpoint="${args[--force-rest-endpoint]}"
 verbose="${args[--verbose]}"
+no_clipboard="${args[--no-clipboard]}"
 
 if [[ ! -n "$connector" ]]
 then
@@ -37,7 +38,7 @@ do
                 playground config set clipboard true
             fi
 
-            if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
+            if ( [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] ) && [[ ! -n "$no_clipboard" ]]
             then
                 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
                 trap 'rm -rf $tmp_dir' EXIT
@@ -81,7 +82,7 @@ do
                         playground config set clipboard true
                     fi
 
-                    if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
+                    if ( [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] ) && [[ ! -n "$no_clipboard" ]]
                     then
                         tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
                         trap 'rm -rf $tmp_dir' EXIT
