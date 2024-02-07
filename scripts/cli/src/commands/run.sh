@@ -231,7 +231,7 @@ fi
 set +e
 playground container kill-all
 set -e
-playground state set run.connector_type "$(get_connector_type)"
+playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
 playground state set run.test_file "$test_file"
 playground state set run.run_command "playground run -f $test_file $flag_list ${other_args[*]}"
 echo "" >> "$root_folder/playground-run-history"
