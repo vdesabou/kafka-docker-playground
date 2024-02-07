@@ -17398,9 +17398,11 @@ playground_fully_managed_connector_plugins_command() {
   if [[ -n "$verbose" ]]
   then
       log "🐞 curl command used"
-      echo "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins\" --header \"authorization: Basic $authorization\" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t"
+      echo "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins\" \
+  --header \"authorization: Basic $authorization\" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t"
   fi
-  curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins" --header "authorization: Basic $authorization" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t
+  curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins" \
+  --header "authorization: Basic $authorization" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t
 
 }
 
@@ -19403,19 +19405,19 @@ playground_connector_show_lag_command() {
 # :command.function
 playground_connector_show_config_command() {
   # src/commands/connector/show-config.sh
-  get_connect_url_and_security
-
   connector="${args[--connector]}"
   force_rest_endpoint="${args[--force-rest-endpoint]}"
   verbose="${args[--verbose]}"
   no_clipboard="${args[--no-clipboard]}"
+
+  connector_type=$(playground state get run.connector_type)
 
   if [[ ! -n "$connector" ]]
   then
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
-          logerror "💤 No connector is running !"
+          logerror "💤 No $connector_type connector is running !"
           exit 1
       fi
   fi
@@ -19430,7 +19432,7 @@ playground_connector_show_config_command() {
   do
       if [ -f "/tmp/config-$connector" ] && [ -z "$GITHUB_RUN_NUMBER" ] && [[ ! -n "$force_rest_endpoint" ]]
       then
-          log "🧰 Current config for connector $connector"
+          log "🧰 Current config for $connector_type connector $connector"
           echo "playground connector create-or-update --connector $connector << EOF"
           cat "/tmp/config-$connector" | jq -S . | sed 's/\$/\\$/g'
           echo "EOF"
@@ -19456,54 +19458,40 @@ playground_connector_show_config_command() {
               fi
           fi
       else
-          log "🧰 Current config for connector $connector (using REST API /config endpoint)"
-          if [[ -n "$verbose" ]]
+          log "🧰 Current config for $connector_type connector $connector (using REST API /config endpoint)"
+
+          if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
           then
-              log "🐞 curl command used"
-              echo "curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config""
-          fi
-          curl_output=$(curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connectors/$connector/config")
-          ret=$?
-          set -e
-          if [ $ret -eq 0 ]
-          then
-              if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
-
-              then
-                  error_code=$(echo "$curl_output" | jq -r .error_code)
-                  message=$(echo "$curl_output" | jq -r .message)
-                  logerror "Command failed with error code $error_code"
-                  logerror "$message"
-                  exit 1
-              else
-                  echo "playground connector create-or-update --connector $connector << EOF"
-                  echo "$curl_output" | jq -S . | sed 's/\$/\\$/g'
-                  echo "EOF"
-
-                  if [[ "$OSTYPE" == "darwin"* ]]
-                  then
-                      clipboard=$(playground config get clipboard)
-                      if [ "$clipboard" == "" ]
-                      then
-                          playground config set clipboard true
-                      fi
-
-                      if ( [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] ) && [[ ! -n "$no_clipboard" ]]
-                      then
-                          tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-                          trap 'rm -rf $tmp_dir' EXIT
-                          echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
-                          echo "$curl_output" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
-                          echo "EOF" >> $tmp_dir/tmp
-
-                          cat $tmp_dir/tmp | pbcopy
-                          log "📋 connector config has been copied to the clipboard (disable with 'playground config set clipboard false')"
-                      fi
-                  fi
-              fi
+              get_ccloud_connect
+              handle_ccloud_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config\" --header \"authorization: Basic $authorization\""
           else
-              logerror "❌ curl request failed with error code $ret!"
-              exit 1
+              get_connect_url_and_security
+              handle_onprem_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/config\""
+          fi
+
+          echo "playground connector create-or-update --connector $connector << EOF"
+          echo "$curl_output" | jq -S . | sed 's/\$/\\$/g'
+          echo "EOF"
+
+          if [[ "$OSTYPE" == "darwin"* ]]
+          then
+              clipboard=$(playground config get clipboard)
+              if [ "$clipboard" == "" ]
+              then
+                  playground config set clipboard true
+              fi
+
+              if ( [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] ) && [[ ! -n "$no_clipboard" ]]
+              then
+                  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+                  trap 'rm -rf $tmp_dir' EXIT
+                  echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
+                  echo "$curl_output" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
+                  echo "EOF" >> $tmp_dir/tmp
+
+                  cat $tmp_dir/tmp | pbcopy
+                  log "📋 connector config has been copied to the clipboard (disable with 'playground config set clipboard false')"
+              fi
           fi
       fi
   done
