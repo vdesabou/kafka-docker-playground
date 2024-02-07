@@ -15,7 +15,7 @@ fi
 
 playground state set run.environment "$environment_before_switch"
 playground state del run.environment_before_switch
-playground state set run.environment "$connector_type_before_switch"
+playground state set run.connector_type "$connector_type_before_switch"
 playground state del run.connector_type_before_switch
 
 test_file=$(playground state get run.test_file)

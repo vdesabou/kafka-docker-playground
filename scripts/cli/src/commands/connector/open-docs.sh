@@ -38,7 +38,7 @@ else
                 short_url=$(echo $url | cut -d '#' -f 1)
                 if [[ -n "$only_show_url" ]]
                 then
-                    log "🌐 documentation $connector_type for connector $name is available at:"
+                    log "🌐 documentation for $connector_type connector $name is available at:"
                     echo "$short_url"
                 else
                     log "🌐 opening documentation for $connector_type connector $name $short_url"

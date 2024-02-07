@@ -11930,6 +11930,7 @@ playground_switch_ccloud_command() {
 
   playground state set run.environment_before_switch "$(playground state get run.environment)"
   playground state set run.connector_type_before_switch "$(playground state get run.connector_type)"
+  playground state set run.connector_type "$CONNECTOR_TYPE_FULLY_MANAGED"
 
   log "🔌 boostrapping ccloud environment"
   bootstrap_ccloud_environment
@@ -11955,7 +11956,7 @@ playground_switch_back_command() {
 
   playground state set run.environment "$environment_before_switch"
   playground state del run.environment_before_switch
-  playground state set run.environment "$connector_type_before_switch"
+  playground state set run.connector_type "$connector_type_before_switch"
   playground state del run.connector_type_before_switch
 
   test_file=$(playground state get run.test_file)
@@ -18325,7 +18326,7 @@ playground_connector_open_docs_command() {
                   short_url=$(echo $url | cut -d '#' -f 1)
                   if [[ -n "$only_show_url" ]]
                   then
-                      log "🌐 documentation $connector_type for connector $name is available at:"
+                      log "🌐 documentation for $connector_type connector $name is available at:"
                       echo "$short_url"
                   else
                       log "🌐 opening documentation for $connector_type connector $name $short_url"

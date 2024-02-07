@@ -20,6 +20,7 @@ SCHEMA_REGISTRY_CREDS=$(playground state get ccloud.SCHEMA_REGISTRY_CREDS)
 
 playground state set run.environment_before_switch "$(playground state get run.environment)"
 playground state set run.connector_type_before_switch "$(playground state get run.connector_type)"
+playground state set run.connector_type "$CONNECTOR_TYPE_FULLY_MANAGED"
 
 log "🔌 boostrapping ccloud environment"
 bootstrap_ccloud_environment
