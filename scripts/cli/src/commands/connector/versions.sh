@@ -1,5 +1,12 @@
 test_file=$(playground state get run.test_file)
 
+connector_type=$(playground state get run.connector_type)
+if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+then
+    logerror "❌ versions command is not available with $connector_type connector"
+    exit 1
+fi
+
 if [ ! -f $test_file ]
 then 
     logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
@@ -23,9 +30,9 @@ else
 
         if [ "$owner" == "java" ] || [ "$name" == "hub-components" ] || [ "$owner" == "filestream" ]
         then
-        # happens when plugin is not coming from confluent hub
-        logwarn "skipping as plugin $owner/$name does not appear to be coming from confluent hub"
-        continue
+            # happens when plugin is not coming from confluent hub
+            logwarn "skipping as plugin $owner/$name does not appear to be coming from confluent hub"
+            continue
         fi
 
         playground connector-plugin versions --connector-plugin $owner/$name --last 10

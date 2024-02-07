@@ -1,11 +1,13 @@
 connector="${args[--connector]}"
 
+connector_type=$(playground state get run.connector_type)
+
 if [[ ! -n "$connector" ]]
 then
     connector=$(playground get-connector-list)
     if [ "$connector" == "" ]
     then
-        logerror "💤 No connector is running !"
+        logerror "💤 No $connector_type connector is running !"
         exit 1
     fi
 fi
@@ -21,7 +23,7 @@ then
 fi
 for connector in ${items[@]}
 do
-    log "🛠️ Updating connector $connector"
+    log "🛠️ Updating $connector_type connector $connector"
     file=$tmp_dir/config-$connector.sh
 
     set +e
@@ -29,7 +31,7 @@ do
     echo -e "" >> $file
     echo -e "##########################" >> $file
     echo "# this is the part to edit" >> $file
-    playground connector show-config --connector "$connector" --no-clipboard | grep -v "Current config for connector" >> $file
+    playground connector show-config --connector "$connector" --no-clipboard | grep -v "Current config for" >> $file
     if [ $? -ne 0 ]
     then
         logerror "❌ playground connector show-config --connector $connector failed with:"

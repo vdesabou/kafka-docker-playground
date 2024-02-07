@@ -3,19 +3,39 @@ wait_for_zero_lag="${args[--wait-for-zero-lag]}"
 verbose="${args[--verbose]}"
 waitforzerolaginterval="${args[--wait-for-zero-lag-interval]}"
 
-get_connect_url_and_security
+connector_type=$(playground state get run.connector_type)
 
 if [[ ! -n "$connector" ]]
 then
     connector=$(playground get-connector-list)
     if [ "$connector" == "" ]
     then
-        logerror "💤 No connector is running !"
+        logerror "💤 No $connector_type connector is running !"
         exit 1
     fi
 fi
 
-get_security_broker "--command-config"
+if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+then
+  get_ccloud_connect
+  get_kafka_docker_playground_dir
+  DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
+
+  if [ -f $DELTA_CONFIGS_ENV ]
+  then
+      source $DELTA_CONFIGS_ENV
+  else
+      logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+      exit 1
+  fi
+  if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
+  then
+      logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
+      exit 1
+  fi
+else
+  get_security_broker "--command-config"
+fi
 
 declare -A prev_lags
 prev_lags=()
@@ -140,10 +160,19 @@ then
 fi
 for connector in ${items[@]}
 do
-  type=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.type')
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+      get_ccloud_connect
+      handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config\" --header \"authorization: Basic $authorization\""
+  else
+      get_connect_url_and_security
+      handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\""
+  fi
+
+  type=$(echo "$json_content" | jq -r '.type')
   if [ "$type" != "sink" ]
   then
-    logwarn "⏭️ Skipping $type connector $connector, it must be a sink to show the lag"
+    logwarn "⏭️ Skipping $type $connector_type connector $connector, it must be a sink to show the lag"
     continue 
   fi
 
@@ -159,11 +188,16 @@ do
 
   while [ $stop != 1 ]
   do
-    docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d' &> $lag_output
+    if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+    then
+      docker run --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group connect-$connectorId --describe | grep -v PARTITION | sed '/^$/d' &> $lag_output
+    else
+      docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d' &> $lag_output
+    fi
 
     if grep -q "Warning" $lag_output
     then
-      logwarn "🐢 consumer group for connector $connector is rebalancing"
+      logwarn "🐢 consumer group for $connector_type connector $connector is rebalancing"
       cat $lag_output
       sleep $waitforzerolaginterval
       continue
@@ -174,7 +208,7 @@ do
 
     if [ ! -z "$lag_not_set" ]
     then
-      logwarn "🐢 consumer lag for connector $connector is not available"
+      logwarn "🐢 consumer lag for $connector_type connector $connector is not available"
       show_output
       if [[ ! -n "$wait_for_zero_lag" ]]
       then
@@ -212,17 +246,17 @@ do
           then
             case "${compare_action}" in
               up)
-                log_up "🔥 total consumer lag for connector $connector has increased to $total_lag $compare (press ctrl-c to stop)"
+                log_up "🔥 total consumer lag for $connector_type connector $connector has increased to $total_lag $compare (press ctrl-c to stop)"
               ;;
               down)
-                log_down "🚀 consumer lag for connector $connector has decreased to $total_lag $compare (press ctrl-c to stop)"
+                log_down "🚀 consumer lag for $connector_type connector $connector has decreased to $total_lag $compare (press ctrl-c to stop)"
               ;;
               *)
-                log_same "🐌 consumer lag for connector $connector is still $total_lag $compare (press ctrl-c to stop)"
+                log_same "🐌 consumer lag for $connector_type connector $connector is still $total_lag $compare (press ctrl-c to stop)"
               ;;
             esac
           else
-            log "🐢 consumer lag for connector $connector is $total_lag"
+            log "🐢 consumer lag for $connector_type connector $connector is $total_lag"
           fi
           show_output
           if [[ ! -n "$wait_for_zero_lag" ]]
@@ -234,11 +268,11 @@ do
         else
           if [[ ! -n "$wait_for_zero_lag" ]]
           then
-            log "🏁 consumer lag for connector $connector is 0 !"
+            log "🏁 consumer lag for $connector_type connector $connector is 0 !"
             stop=1
           else
             ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
-            log "🏁 consumer lag for connector $connector is 0 ! $ELAPSED"
+            log "🏁 consumer lag for $connector_type connector $connector is 0 ! $ELAPSED"
           fi
           show_output
           break
