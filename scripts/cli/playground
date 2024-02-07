@@ -10593,6 +10593,8 @@ playground_status_command() {
       exit 1
   fi
 
+  connector_type=$(playground state get run.connector_type)
+
   playground generate-fzf-find-files &
   last_two_folders=$(basename $(dirname $(dirname $test_file)))/$(basename $(dirname $test_file))
   filename=$(basename $test_file)
@@ -10607,7 +10609,7 @@ playground_status_command() {
 
   playground open-docs --only-show-url
 
-  if [[ $last_folder == "connect"* ]]
+  if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
   then
       playground connector versions | grep -v "applying command to all connectors"
       playground connector open-docs --only-show-url
@@ -11231,12 +11233,25 @@ playground_run_command() {
   log "####################################################"
   SECONDS=0
   cd $test_file_directory
-  if [[ -n "$enable_multiple_connect_workers" ]]
-  then
-    trap "cp /tmp/playground-backup-docker-compose.yml $docker_compose_file;rm /tmp/playground-run-command-used;echo '';sleep 3;set +e;playground connector status;playground connector versions;playground open-docs --only-show-url" EXIT
-  else
-    trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground connector versions;playground open-docs --only-show-url' EXIT
-  fi
+  function cleanup {
+    if [[ -n "$enable_multiple_connect_workers" ]]
+    then
+      cp /tmp/playground-backup-docker-compose.yml $docker_compose_file
+    fi
+    rm /tmp/playground-run-command-used
+    echo ""
+    sleep 3
+    set +e
+    playground connector status
+    connector_type=$(playground state get run.connector_type)
+    if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
+    then
+      playground connector versions
+      playground open-docs --only-show-url
+    fi
+  }
+  trap cleanup EXIT
+
   playground generate-fzf-find-files &
   generate_connector_versions > /dev/null 2>&1 &
   touch /tmp/playground-run-command-used
@@ -11849,7 +11864,20 @@ playground_run_ccloud_command() {
   log "####################################################"
   SECONDS=0
   cd $test_file_directory
-  trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground connector status;playground connector versions' EXIT
+
+  function cleanup {
+    rm /tmp/playground-run-command-used
+    echo ""
+    sleep 3
+    set +e
+    playground connector status
+    connector_type=$(playground state get run.connector_type)
+    if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
+    then
+      playground connector versions
+    fi
+  }
+  trap cleanup EXIT
 
   playground generate-fzf-find-files &
   generate_connector_versions > /dev/null 2>&1 &
@@ -18557,7 +18585,10 @@ playground_connector_create_or_update_command() {
   log "🥁 Waiting a few seconds to get new status"
   sleep 5
   playground connector status --connector $connector
-  playground connector open-docs --only-show-url
+  if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
+  then
+      playground connector open-docs --only-show-url
+  fi
 }
 
 # :command.function

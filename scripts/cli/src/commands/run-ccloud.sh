@@ -283,7 +283,20 @@ log "🚀 Executing $filename in dir $test_file_directory"
 log "####################################################"
 SECONDS=0
 cd $test_file_directory
-trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground connector status;playground connector versions' EXIT
+
+function cleanup {
+  rm /tmp/playground-run-command-used
+  echo ""
+  sleep 3
+  set +e
+  playground connector status
+  connector_type=$(playground state get run.connector_type)
+  if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
+  then
+    playground connector versions
+  fi
+}
+trap cleanup EXIT
 
 playground generate-fzf-find-files &
 generate_connector_versions > /dev/null 2>&1 &

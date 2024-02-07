@@ -193,4 +193,7 @@ playground connector show-config-parameters --connector "$connector" --only-show
 log "🥁 Waiting a few seconds to get new status"
 sleep 5
 playground connector status --connector $connector
-playground connector open-docs --only-show-url
+if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
+then
+    playground connector open-docs --only-show-url
+fi
