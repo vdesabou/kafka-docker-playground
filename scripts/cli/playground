@@ -11929,6 +11929,7 @@ playground_switch_ccloud_command() {
   SCHEMA_REGISTRY_CREDS=$(playground state get ccloud.SCHEMA_REGISTRY_CREDS)
 
   playground state set run.environment_before_switch "$(playground state get run.environment)"
+  playground state set run.connector_type_before_switch "$(playground state get run.connector_type)"
 
   log "🔌 boostrapping ccloud environment"
   bootstrap_ccloud_environment
@@ -11943,11 +11944,19 @@ playground_switch_back_command() {
       logerror "switch-ccloud was probably not executed before"
       exit 1
   fi
+  connector_type_before_switch=$(playground state get run.connector_type_before_switch)
 
-  log "💺 Switch back to previous environment ($environment_before_switch)"
+  if [ "$connector_type_before_switch" != "" ]
+  then
+      log "💺 Switch back to previous environment ($environment_before_switch) with $connector_type_before_switch connector"
+  else
+      log "💺 Switch back to previous environment ($environment_before_switch)"
+  fi
 
   playground state set run.environment "$environment_before_switch"
   playground state del run.environment_before_switch
+  playground state set run.environment "$connector_type_before_switch"
+  playground state del run.connector_type_before_switch
 
   test_file=$(playground state get run.test_file)
 
@@ -11960,7 +11969,6 @@ playground_switch_back_command() {
 
   last_two_folders=$(basename $(dirname $(dirname $test_file)))/$(basename $(dirname $test_file))
   filename=$(basename $test_file)
-  last_folder=$(basename $(dirname $test_file))
 
   log "🚀 Running example "
   echo $last_two_folders/$filename
@@ -17588,7 +17596,7 @@ playground_connector_show_lag_command() {
         handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\""
     fi
 
-    type=$(echo "$json_content" | jq -r '.type')
+    type=$(echo "$curl_output" | jq -r '.type')
     if [ "$type" != "sink" ]
     then
       logwarn "⏭️ Skipping $type $connector_type connector $connector, it must be a sink to show the lag"
@@ -17755,7 +17763,7 @@ playground_connector_show_config_command() {
                   echo "EOF" >> $tmp_dir/tmp
 
                   cat $tmp_dir/tmp | pbcopy
-                  log "📋 connector config has been copied to the clipboard (disable with 'playground config set clipboard false')"
+                  log "📋 $connector_type connector config has been copied to the clipboard (disable with 'playground config set clipboard false')"
               fi
           fi
       else
@@ -17791,7 +17799,7 @@ playground_connector_show_config_command() {
                   echo "EOF" >> $tmp_dir/tmp
 
                   cat $tmp_dir/tmp | pbcopy
-                  log "📋 connector config has been copied to the clipboard (disable with 'playground config set clipboard false')"
+                  log "📋 $connector_type connector config has been copied to the clipboard (disable with 'playground config set clipboard false')"
               fi
           fi
       fi
@@ -18317,10 +18325,10 @@ playground_connector_open_docs_command() {
                   short_url=$(echo $url | cut -d '#' -f 1)
                   if [[ -n "$only_show_url" ]]
                   then
-                      log "🌐 documentation for connector $name is available at:"
+                      log "🌐 documentation $connector_type for connector $name is available at:"
                       echo "$short_url"
                   else
-                      log "🌐 opening documentation for connector $name $short_url"
+                      log "🌐 opening documentation for $connector_type connector $name $short_url"
                       open "$short_url"
                   fi
               else

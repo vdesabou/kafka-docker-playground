@@ -169,7 +169,7 @@ do
       handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\""
   fi
 
-  type=$(echo "$json_content" | jq -r '.type')
+  type=$(echo "$curl_output" | jq -r '.type')
   if [ "$type" != "sink" ]
   then
     logwarn "⏭️ Skipping $type $connector_type connector $connector, it must be a sink to show the lag"
