@@ -1,5 +1,3 @@
-get_connect_url_and_security
-
 connector="${args[--connector]}"
 verbose="${args[--verbose]}"
 
@@ -21,13 +19,18 @@ then
 fi
 for connector in ${items[@]}
 do
-    log "⏸️ Pausing connector $connector"
-    if [[ -n "$verbose" ]]
+    connector_type=$(playground state get run.connector_type)
+    log "⏸️ Pausing $connector_type connector $connector"
+    if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
     then
-        log "🐞 curl command used"
-        echo "curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/pause""
+        get_ccloud_connect
+        handle_ccloud_connect_rest_api "curl -s --request PUT \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/pause\" --header \"authorization: Basic $authorization\""
+    else
+        get_connect_url_and_security
+        handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/pause\""
     fi
-    curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/pause" | jq .
+
+    echo "$curl_output" | jq .
 
     sleep 1
     playground connector status --connector $connector

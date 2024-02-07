@@ -390,35 +390,6 @@ playground_get_connector_plugin_usage() {
 }
 
 # :command.usage
-playground_get_fully_managed_connector_list_usage() {
-  if [[ -n $long_usage ]]; then
-    printf "playground get-fully-managed-connector-list - Return some completion for fully managed connector list\n"
-    echo
-
-  else
-    printf "playground get-fully-managed-connector-list - Return some completion for fully managed connector list\n"
-    echo
-
-  fi
-
-  printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground get-fully-managed-connector-list\n"
-  printf "  playground get-fully-managed-connector-list --help | -h\n"
-  echo
-
-  # :command.long_usage
-  if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "== Options ==")"
-
-    # :command.usage_fixed_flags
-    printf "  %s\n" "$(magenta "--help, -h")"
-    printf "    Show this help\n"
-    echo
-
-  fi
-}
-
-# :command.usage
 playground_get_kafka_region_list_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground get-kafka-region-list - Return some completion for confluent cloud kafka cluster region list\n"
@@ -10991,6 +10962,101 @@ function generate_connector_versions () {
   fi
 }
 
+readonly CONNECTOR_TYPE_FULLY_MANAGED="🌤️🤖fully managed"
+readonly CONNECTOR_TYPE_CUSTOM="🌤️⚙️custom"
+readonly CONNECTOR_TYPE_SELF_MANAGED="⛈️👷self managed"
+readonly CONNECTOR_TYPE_ONPREM="🌎onprem"
+
+function get_connector_type () {
+  get_connector_paths
+  if [ "$connector_paths" == "" ]
+  then
+    if grep -q -e "fully-managed-connect" <<< "$test_file"
+    then
+      echo "$CONNECTOR_TYPE_FULLY_MANAGED"
+    elif grep -q -e "custom-conector" <<< "$test_file"
+    then
+      echo "$CONNECTOR_TYPE_CUSTOM"
+    else
+      echo ""
+    fi
+  else
+    if grep -q -e "ccloud" <<< "$test_file"
+    then
+      echo "$CONNECTOR_TYPE_SELF_MANAGED"
+    else
+      echo "$CONNECTOR_TYPE_ONPREM"
+    fi
+  fi
+}
+
+function handle_ccloud_connect_rest_api () {
+  curl_request="$1"
+  get_ccloud_connect
+  if [[ -n "$verbose" ]]
+  then
+    log "🐞 curl command used"
+    echo "$curl_request"
+  fi
+  eval "curl_output=\$($curl_request)"
+  ret=$?
+  if [ $ret -eq 0 ]
+  then
+      if [ "$curl_output" == "[]" ]
+      then
+        # logerror "No connector running"
+        # exit 1
+        echo ""
+        return
+      fi
+      if echo "$curl_output" | jq 'if .error then .error | has("code") else has("error_code") end' 2> /dev/null | grep -q true
+      then
+        if echo "$curl_output" | jq '.error | has("code")' 2> /dev/null | grep -q true
+        then
+          code=$(echo "$curl_output" | jq -r .error.code)
+          message=$(echo "$curl_output" | jq -r .error.message)
+        else
+          code=$(echo "$curl_output" | jq -r .error_code)
+          message=$(echo "$curl_output" | jq -r .message)
+        fi
+        logerror "Command failed with error code $code"
+        logerror "$message"
+        exit 1
+      fi
+  else
+    logerror "❌ curl request failed with error code $ret!"
+    exit 1
+  fi
+}
+
+function handle_onprem_connect_rest_api () {
+  curl_request="$1"
+  eval "curl_output=\$($curl_request)"
+  ret=$?
+  if [ $ret -eq 0 ]
+  then
+      if [ "$curl_output" == "[]" ]
+      then
+        # logerror "No connector running"
+        # exit 1
+        echo ""
+        return
+      fi
+      if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
+
+      then
+        error_code=$(echo "$curl_output" | jq -r .error_code)
+        message=$(echo "$curl_output" | jq -r .message)
+        logerror "Command failed with error code $error_code"
+        logerror "$message"
+        exit 1
+      fi
+  else
+      logerror "❌ curl request failed with error code $ret!"
+      exit 1
+  fi
+}
+
 # src/lib/validations/validate_dir_exists.sh
 validate_dir_exists() {
   [[ -d "$1" ]] || logerror "<$1> must be an existing directory"
@@ -11122,34 +11188,18 @@ playground_status_command() {
 # :command.function
 playground_get_connector_list_command() {
   # src/commands/get-connector-list.sh
-  get_connect_url_and_security
+  connector_type=$(playground state get run.connector_type)
 
-  curl_output=$(curl $security -s "$connect_url/connectors")
-  ret=$?
-  if [ $ret -eq 0 ]
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then
-      if [ "$curl_output" == "[]" ]
-      then
-          # logerror "No connector running"
-          # exit 1
-          echo ""
-          return
-      fi
-      if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
-
-      then
-          error_code=$(echo "$curl_output" | jq -r .error_code)
-          message=$(echo "$curl_output" | jq -r .message)
-          logerror "Command failed with error code $error_code"
-          logerror "$message"
-          exit 1
-      else
-      echo "$curl_output" | jq -r '.[]' | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
-      fi
+      get_ccloud_connect
+      handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors\" --header \"authorization: Basic $authorization\""
   else
-      logerror "❌ curl request failed with error code $ret!"
-      exit 1
+      get_connect_url_and_security
+      handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors\""
   fi
+
+  echo "$curl_output" | jq -r '.[]' | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
 }
 
 # :command.function
@@ -11181,45 +11231,6 @@ playground_get_connector_plugin_command() {
   cur="${args[cur]}"
 
   get_plugin_list "$cur"
-}
-
-# :command.function
-playground_get_fully_managed_connector_list_command() {
-  # src/commands/get-fully-managed-connector-list.sh
-  get_ccloud_connect
-
-  curl_output=$(curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors" \
-  --header "authorization: Basic $authorization")
-  ret=$?
-  if [ $ret -eq 0 ]
-  then
-      if [ "$curl_output" == "[]" ]
-      then
-          # logerror "No connector running"
-          # exit 1
-          echo ""
-          return
-      fi
-      if echo "$curl_output" | jq 'if .error then .error | has("code") else has("error_code") end' 2> /dev/null | grep -q true
-      then
-          if echo "$curl_output" | jq '.error | has("code")' 2> /dev/null | grep -q true
-          then
-              code=$(echo "$curl_output" | jq -r .error.code)
-              message=$(echo "$curl_output" | jq -r .error.message)
-          else
-              code=$(echo "$curl_output" | jq -r .error_code)
-              message=$(echo "$curl_output" | jq -r .message)
-          fi
-          logerror "Command failed with error code $code"
-          logerror "$message"
-          exit 1
-      else
-      echo "$curl_output" | jq -r '.[]' | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
-      fi
-  else
-      logerror "❌ curl request failed with error code $ret!"
-      exit 1
-  fi
 }
 
 # :command.function
@@ -11771,6 +11782,7 @@ playground_run_command() {
   set +e
   playground container kill-all
   set -e
+  playground state set run.connector_type "$(get_connector_type)"
   playground state set run.test_file "$test_file"
   playground state set run.run_command "playground run -f $test_file $flag_list ${other_args[*]}"
   echo "" >> "$root_folder/playground-run-history"
@@ -12389,6 +12401,7 @@ playground_run_ccloud_command() {
   playground container kill-all
   set -e
   playground state set run.test_file "$test_file"
+  playground state set run.connector_type "$(get_connector_type)"
   playground state set run.run_command "playground run -f $test_file $flag_list ${other_args[*]}"
   echo "" >> "$root_folder/playground-run-history"
   echo "playground run -f $test_file $flag_list ${other_args[*]}" >> "$root_folder/playground-run-history"
@@ -13977,6 +13990,7 @@ playground_repro_bootstrap_command() {
   fi
 
   playground state set run.test_file "$repro_dir/$repro_test_filename"
+  playground state set run.connector_type "$(get_connector_type)"
   playground state set run.run_command "playground run -f $repro_dir/$repro_test_filename"
 
   editor=$(playground config get editor)
@@ -17586,9 +17600,9 @@ playground_fully_managed_connector_show_lag_command() {
 
       if [[ "$total_lag" =~ ^[0-9]+$ ]]
       then
-        if [[ "$prev_lag" =~ ^[0-9]+$ ]]
+        if [[ "$prev_lag" =~ ^[0-9]+$ ]] && [[ "$lag" =~ ^[0-9]+$ ]]
         then
-          if [[ "$prev_lag" =~ ^[0-9]+$ ]] && [[ "$lag" =~ ^[0-9]+$ ]]
+          if [ $lag -lt $prev_lag ]
           then
             compare_line="🔻 $(($prev_lag - $lag))"
             compare_action="up"
@@ -17725,6 +17739,10 @@ playground_fully_managed_connector_show_lag_command() {
       then
         logwarn "🐢 consumer lag for connector $connector is not available"
         show_output
+        if [[ ! -n "$wait_for_zero_lag" ]]
+        then
+          stop=1
+        fi
         sleep $waitforzerolaginterval
       else
         total_lag=$(cat "$lag_output" | grep -v "PARTITION" | awk -F" " '{sum+=$6;} END{print sum;}')
@@ -17770,13 +17788,17 @@ playground_fully_managed_connector_show_lag_command() {
               log "🐢 consumer lag for connector $connector is $total_lag"
             fi
             show_output
-
+            if [[ ! -n "$wait_for_zero_lag" ]]
+            then
+              stop=1
+            fi
             prev_lag=$total_lag
             sleep $waitforzerolaginterval
           else
             if [[ ! -n "$wait_for_zero_lag" ]]
             then
               log "🏁 consumer lag for connector $connector is 0 !"
+              stop=1
             else
               ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
               log "🏁 consumer lag for connector $connector is 0 ! $ELAPSED"
@@ -18859,8 +18881,6 @@ playground_connector_plugins_command() {
 # :command.function
 playground_connector_pause_command() {
   # src/commands/connector/pause.sh
-  get_connect_url_and_security
-
   connector="${args[--connector]}"
   verbose="${args[--verbose]}"
 
@@ -18882,13 +18902,18 @@ playground_connector_pause_command() {
   fi
   for connector in ${items[@]}
   do
-      log "⏸️ Pausing connector $connector"
-      if [[ -n "$verbose" ]]
+      connector_type=$(playground state get run.connector_type)
+      log "⏸️ Pausing $connector_type connector $connector"
+      if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
       then
-          log "🐞 curl command used"
-          echo "curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/pause""
+          get_ccloud_connect
+          handle_ccloud_connect_rest_api "curl -s --request PUT \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/pause\" --header \"authorization: Basic $authorization\""
+      else
+          get_connect_url_and_security
+          handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/pause\""
       fi
-      curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/pause" | jq .
+
+      echo "$curl_output" | jq .
 
       sleep 1
       playground connector status --connector $connector
@@ -19077,8 +19102,6 @@ playground_connector_stop_command() {
 # :command.function
 playground_connector_resume_command() {
   # src/commands/connector/resume.sh
-  get_connect_url_and_security
-
   connector="${args[--connector]}"
   verbose="${args[--verbose]}"
 
@@ -19100,13 +19123,18 @@ playground_connector_resume_command() {
   fi
   for connector in ${items[@]}
   do
-      log "⏯️ Resuming connector $connector"
-      if [[ -n "$verbose" ]]
+      connector_type=$(playground state get run.connector_type)
+      log "⏯️ Resuming $connector_type connector $connector"
+      if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
       then
-          log "🐞 curl command used"
-          echo "curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/resume""
+          get_ccloud_connect
+          handle_ccloud_connect_rest_api "curl -s --request PUT \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/resume\" --header \"authorization: Basic $authorization\""
+      else
+          get_connect_url_and_security
+          handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/resume\""
       fi
-      curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/resume"  | jq .
+
+      echo "$curl_output" | jq .
 
       sleep 1
       playground connector status --connector $connector
@@ -19331,6 +19359,10 @@ playground_connector_show_lag_command() {
       then
         logwarn "🐢 consumer lag for connector $connector is not available"
         show_output
+        if [[ ! -n "$wait_for_zero_lag" ]]
+        then
+          stop=1
+        fi
         sleep $waitforzerolaginterval
       else
         total_lag=$(cat "$lag_output" | grep -v "PARTITION" | awk -F" " '{sum+=$6;} END{print sum;}')
@@ -19376,13 +19408,17 @@ playground_connector_show_lag_command() {
               log "🐢 consumer lag for connector $connector is $total_lag"
             fi
             show_output
-
+            if [[ ! -n "$wait_for_zero_lag" ]]
+            then
+              stop=1
+            fi
             prev_lag=$total_lag
             sleep $waitforzerolaginterval
           else
             if [[ ! -n "$wait_for_zero_lag" ]]
             then
               log "🏁 consumer lag for connector $connector is 0 !"
+              stop=1
             else
               ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
               log "🏁 consumer lag for connector $connector is 0 ! $ELAPSED"
@@ -20484,13 +20520,6 @@ parse_requirements() {
       shift $#
       ;;
 
-    get-fully-managed-connector-list)
-      action="get-fully-managed-connector-list"
-      shift
-      playground_get_fully_managed_connector_list_parse_requirements "$@"
-      shift $#
-      ;;
-
     get-kafka-region-list)
       action="get-kafka-region-list"
       shift
@@ -21086,59 +21115,6 @@ playground_get_connector_plugin_parse_requirements() {
           printf "invalid argument: %s\n" "$key" >&2
           exit 1
         fi
-
-        ;;
-
-    esac
-  done
-
-}
-
-# :command.parse_requirements
-playground_get_fully_managed_connector_list_parse_requirements() {
-  # :command.fixed_flags_filter
-  while [[ $# -gt 0 ]]; do
-    case "${1:-}" in
-      --help | -h)
-        long_usage=yes
-        playground_get_fully_managed_connector_list_usage
-        exit
-        ;;
-
-      *)
-        break
-        ;;
-
-    esac
-  done
-
-  # :command.dependencies_filter
-  if command -v confluent >/dev/null 2>&1; then
-    deps['confluent']="$(command -v confluent | head -n1)"
-  else
-    printf "missing dependency: confluent\n" >&2
-    printf "%s\n" "visit https://docs.confluent.io/confluent-cli/current/overview.html to install" >&2
-    exit 1
-  fi
-
-  # :command.command_filter
-  action="get-fully-managed-connector-list"
-
-  # :command.parse_requirements_while
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-
-      -?*)
-        printf "invalid option: %s\n" "$key" >&2
-        exit 1
-        ;;
-
-      *)
-        # :command.parse_requirements_case
-        # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
 
         ;;
 
@@ -31614,7 +31590,6 @@ run() {
     "generate-connector-plugin-list") playground_generate_connector_plugin_list_command ;;
     "generate-kafka-region-list") playground_generate_kafka_region_list_command ;;
     "get-connector-plugin") playground_get_connector_plugin_command ;;
-    "get-fully-managed-connector-list") playground_get_fully_managed_connector_list_command ;;
     "get-kafka-region-list") playground_get_kafka_region_list_command ;;
     "get-topic-list") playground_get_topic_list_command ;;
     "get-subject-list") playground_get_subject_list_command ;;

@@ -3741,3 +3741,97 @@ function generate_connector_versions () {
       done
   fi
 }
+
+readonly CONNECTOR_TYPE_FULLY_MANAGED="🌤️🤖fully managed"
+readonly CONNECTOR_TYPE_CUSTOM="🌤️⚙️custom"
+readonly CONNECTOR_TYPE_SELF_MANAGED="⛈️👷self managed"
+readonly CONNECTOR_TYPE_ONPREM="🌎onprem"
+
+function get_connector_type () {
+  get_connector_paths
+  if [ "$connector_paths" == "" ]
+  then
+    if grep -q -e "fully-managed-connect" <<< "$test_file"
+    then
+      echo "$CONNECTOR_TYPE_FULLY_MANAGED"
+    elif grep -q -e "custom-conector" <<< "$test_file"
+    then
+      echo "$CONNECTOR_TYPE_CUSTOM"
+    else
+      echo ""
+    fi
+  else
+    if grep -q -e "ccloud" <<< "$test_file"
+    then
+      echo "$CONNECTOR_TYPE_SELF_MANAGED"
+    else
+      echo "$CONNECTOR_TYPE_ONPREM"
+    fi
+  fi
+}
+
+function handle_ccloud_connect_rest_api () {
+  curl_request="$1"
+  get_ccloud_connect
+  if [[ -n "$verbose" ]]
+  then
+    log "🐞 curl command used"
+    echo "$curl_request"
+  fi
+  eval "curl_output=\$($curl_request)"
+  ret=$?
+  if [ $ret -eq 0 ]
+  then
+      if [ "$curl_output" == "[]" ]
+      then
+        # logerror "No connector running"
+        # exit 1
+        echo ""
+        return
+      fi
+      if echo "$curl_output" | jq 'if .error then .error | has("code") else has("error_code") end' 2> /dev/null | grep -q true
+      then
+        if echo "$curl_output" | jq '.error | has("code")' 2> /dev/null | grep -q true
+        then
+          code=$(echo "$curl_output" | jq -r .error.code)
+          message=$(echo "$curl_output" | jq -r .error.message)
+        else
+          code=$(echo "$curl_output" | jq -r .error_code)
+          message=$(echo "$curl_output" | jq -r .message)
+        fi
+        logerror "Command failed with error code $code"
+        logerror "$message"
+        exit 1
+      fi
+  else
+    logerror "❌ curl request failed with error code $ret!"
+    exit 1
+  fi
+}
+
+function handle_onprem_connect_rest_api () {
+  curl_request="$1"
+  eval "curl_output=\$($curl_request)"
+  ret=$?
+  if [ $ret -eq 0 ]
+  then
+      if [ "$curl_output" == "[]" ]
+      then
+        # logerror "No connector running"
+        # exit 1
+        echo ""
+        return
+      fi
+      if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true 
+      then
+        error_code=$(echo "$curl_output" | jq -r .error_code)
+        message=$(echo "$curl_output" | jq -r .message)
+        logerror "Command failed with error code $error_code"
+        logerror "$message"
+        exit 1
+      fi
+  else
+      logerror "❌ curl request failed with error code $ret!"
+      exit 1
+  fi
+}

@@ -62,9 +62,9 @@ function show_output () {
 
     if [[ "$total_lag" =~ ^[0-9]+$ ]]
     then
-      if [[ "$prev_lag" =~ ^[0-9]+$ ]]
+      if [[ "$prev_lag" =~ ^[0-9]+$ ]] && [[ "$lag" =~ ^[0-9]+$ ]]
       then
-        if [[ "$prev_lag" =~ ^[0-9]+$ ]] && [[ "$lag" =~ ^[0-9]+$ ]]
+        if [ $lag -lt $prev_lag ]
         then
           compare_line="🔻 $(($prev_lag - $lag))"
           compare_action="up"
@@ -200,6 +200,10 @@ do
     then
       logwarn "🐢 consumer lag for connector $connector is not available"
       show_output
+      if [[ ! -n "$wait_for_zero_lag" ]]
+      then
+        stop=1
+      fi
       sleep $waitforzerolaginterval
     else
       total_lag=$(cat "$lag_output" | grep -v "PARTITION" | awk -F" " '{sum+=$6;} END{print sum;}')
@@ -245,13 +249,17 @@ do
             log "🐢 consumer lag for connector $connector is $total_lag"
           fi
           show_output
-          
+          if [[ ! -n "$wait_for_zero_lag" ]]
+          then
+            stop=1
+          fi
           prev_lag=$total_lag
           sleep $waitforzerolaginterval
         else
           if [[ ! -n "$wait_for_zero_lag" ]]
           then
             log "🏁 consumer lag for connector $connector is 0 !"
+            stop=1
           else
             ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
             log "🏁 consumer lag for connector $connector is 0 ! $ELAPSED"

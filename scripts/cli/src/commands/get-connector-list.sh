@@ -1,27 +1,12 @@
-get_connect_url_and_security
+connector_type=$(playground state get run.connector_type)
 
-curl_output=$(curl $security -s "$connect_url/connectors")
-ret=$?
-if [ $ret -eq 0 ]
+if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
 then
-    if [ "$curl_output" == "[]" ]
-    then
-        # logerror "No connector running"
-        # exit 1
-        echo ""
-        return
-    fi
-    if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true 
-    then
-        error_code=$(echo "$curl_output" | jq -r .error_code)
-        message=$(echo "$curl_output" | jq -r .message)
-        logerror "Command failed with error code $error_code"
-        logerror "$message"
-        exit 1
-    else
-    echo "$curl_output" | jq -r '.[]' | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
-    fi
+    get_ccloud_connect
+    handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors\" --header \"authorization: Basic $authorization\""
 else
-    logerror "❌ curl request failed with error code $ret!"
-    exit 1
+    get_connect_url_and_security
+    handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors\""
 fi
+
+echo "$curl_output" | jq -r '.[]' | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
