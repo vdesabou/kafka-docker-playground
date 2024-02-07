@@ -1,11 +1,13 @@
 connector="${args[--connector]}"
 
+connector_type=$(playground state get run.connector_type)
+
 if [[ ! -n "$connector" ]]
 then
     connector=$(playground get-connector-list)
     if [ "$connector" == "" ]
     then
-        logerror "💤 No connector is running !"
+        logerror "💤 No $connector_type connector is running !"
         exit 1
     fi
 fi
@@ -19,9 +21,8 @@ if ((length > 1))
 then
     log "✨ --connector flag was not provided, applying command to all connectors"
 fi
-    for connector in ${items[@]}
-    do
-
+for connector in ${items[@]}
+do
     json_file=$(playground connector show-config-parameters --only-show-json --only-show-json-file-path --connector $connector)
     if [ ! -f "$json_file" ]
     then

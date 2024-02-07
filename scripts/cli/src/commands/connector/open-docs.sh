@@ -1,6 +1,14 @@
 test_file=$(playground state get run.test_file)
 only_show_url="${args[--only-show-url]}"
 
+connector_type=$(playground state get run.connector_type)
+
+if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+then
+    logerror "❌ command not supported with $connector_type connector"
+    exit 1
+fi
+
 if [ ! -f $test_file ]
 then 
     logerror "❌ File $test_file retrieved from $root_folder/playground.ini does not exist!"

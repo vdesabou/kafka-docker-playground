@@ -1,4 +1,3 @@
-get_connect_url_and_security
 all="${args[--all]}"
 verbose="${args[--verbose]}"
 
@@ -6,17 +5,26 @@ log "🎨 Displaying all connector plugins installed"
 if [[ -n "$all" ]]
 then
     log "🌕 Displaying also transforms, converters, predicates available"
-    if [[ -n "$verbose" ]]
+    if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
     then
-        log "🐞 curl command used"
-        echo "curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins?connectorsOnly=false" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t"
+        logerror "❌ --all is set but not supported with $connector_type connector"
+        exit 1
+    else
+        get_connect_url_and_security
+        handle_onprem_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"$connect_url/connector-plugins?connectorsOnly=false\""
     fi
-    curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins?connectorsOnly=false" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t
+
+    echo "$curl_output" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t
+
 else
-    if [[ -n "$verbose" ]]
+    if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
     then
-        log "🐞 curl command used"
-        echo "curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t"
+        get_ccloud_connect
+        handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins\" --header \"authorization: Basic $authorization\""
+    else
+        get_connect_url_and_security
+        handle_onprem_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"$connect_url/connector-plugins\""
     fi
-    curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t
+
+    echo "$curl_output" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t
 fi

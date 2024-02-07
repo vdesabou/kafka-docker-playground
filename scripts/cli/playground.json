@@ -2830,7 +2830,7 @@
                 "DEBUG",
                 "TRACE"
               ],
-              "description": "❕Log level\n\nAllowed values: INFO, WARN, DEBUG, TRACE\n"
+              "description": "❕Log level\n\n⚠️ Not available for ccloud connectors\n\nAllowed values: INFO, WARN, DEBUG, TRACE\n"
             },
             {
               "names": [

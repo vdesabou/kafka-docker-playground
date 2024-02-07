@@ -3078,6 +3078,8 @@ subcommands:
           description: | 
             ❕Log level
             
+            ⚠️ Not available for ccloud connectors
+            
             Allowed values: INFO, WARN, DEBUG, TRACE
             
         - names:
