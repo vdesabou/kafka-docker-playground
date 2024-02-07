@@ -41,7 +41,7 @@ EOF
 connector_name="HttpSink"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
-playground fully-managed-connector delete --connector $connector_name
+playground connector delete --connector $connector_name
 set -e
 
 log "Set webserver to reply with 200"
@@ -50,7 +50,7 @@ curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http
 # curl -X PUT -H "Content-Type: application/json" --data '{"message":"Hello, World!"}' http://localhost:9006/set-response-body
 
 log "Creating fully managed connector"
-playground fully-managed-connector create-or-update --connector $connector_name << EOF
+playground connector create-or-update --connector $connector_name << EOF
 {
      "connector.class": "HttpSink",
      "name": "HttpSink",
@@ -76,4 +76,4 @@ playground topic consume --topic success-$connectorId --min-expected-messages 10
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
-playground fully-managed-connector delete --connector $connector_name
+playground connector delete --connector $connector_name

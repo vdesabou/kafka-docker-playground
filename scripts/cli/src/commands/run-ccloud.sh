@@ -283,7 +283,7 @@ log "🚀 Executing $filename in dir $test_file_directory"
 log "####################################################"
 SECONDS=0
 cd $test_file_directory
-trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground fully-managed-connector status;playground connector versions' EXIT
+trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status;playground connector status;playground connector versions' EXIT
 
 playground generate-fzf-find-files &
 generate_connector_versions > /dev/null 2>&1 &

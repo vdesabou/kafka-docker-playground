@@ -119,11 +119,11 @@ log "Creating Salesforce PushTopics Source connector"
 connector_name="SalesforcePushTopicSource"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
-playground fully-managed-connector delete --connector $connector_name
+playground connector delete --connector $connector_name
 set -e
 
 log "Creating fully managed connector"
-playground fully-managed-connector create-or-update --connector $connector_name << EOF
+playground connector create-or-update --connector $connector_name << EOF
 {
      "connector.class": "SalesforcePushTopicSource",
      "name": "SalesforcePushTopicSource",
@@ -160,11 +160,11 @@ log "Creating Salesforce SObject Sink connector"
 connector_name="SalesforceSObjectSink"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
-playground fully-managed-connector delete --connector $connector_name
+playground connector delete --connector $connector_name
 set -e
 
 log "Creating fully managed connector"
-playground fully-managed-connector create-or-update --connector $connector_name << EOF
+playground connector create-or-update --connector $connector_name << EOF
 {
      "connector.class": "SalesforceSObjectSink",
      "name": "SalesforceSObjectSink",

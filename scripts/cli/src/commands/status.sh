@@ -20,20 +20,14 @@ echo $last_two_folders/$filename
 
 playground open-docs --only-show-url
 
-if [[ $filename == "fully-managed"* ]]
-then
-    playground fully-managed-connector status | grep -v "applying command to all connectors"
-    playground fully-managed-connector show-config | grep -v "applying command to all connectors"
-    playground fully-managed-connector show-config-parameters --only-show-file-path | grep -v "applying command to all connectors"
-fi
-
 if [[ $last_folder == "connect"* ]]
 then
     playground connector versions | grep -v "applying command to all connectors"
-    playground connector status | grep -v "applying command to all connectors"
     playground connector open-docs --only-show-url
-    playground connector show-config | grep -v "applying command to all connectors"
-    playground connector show-config-parameters --only-show-file-path | grep -v "applying command to all connectors"
 fi
+
+playground connector status | grep -v "applying command to all connectors"
+playground connector show-config | grep -v "applying command to all connectors"
+playground connector show-config-parameters --only-show-file-path | grep -v "applying command to all connectors"
 
 playground topic list

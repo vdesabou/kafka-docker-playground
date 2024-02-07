@@ -10,7 +10,7 @@ bootstrap_ccloud_environment
 
 
 log "Creating MongoDB source connector"
-playground fully-managed-connector create-or-update --connector mongodb-source2 << EOF
+playground connector create-or-update --connector mongodb-source2 << EOF
 {
      "connector.class" : "MongoDbAtlasSource",
      "name": "mongodb-source2",

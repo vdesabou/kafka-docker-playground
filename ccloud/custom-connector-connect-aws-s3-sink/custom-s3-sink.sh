@@ -137,11 +137,11 @@ EOF
 connector_name="S3_SINK_CUSTOM"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
-playground fully-managed-connector delete --connector $connector_name
+playground connector delete --connector $connector_name
 set -e
 
 log "Creating fully managed connector"
-playground fully-managed-connector create-or-update --connector $connector_name << EOF
+playground connector create-or-update --connector $connector_name << EOF
 {
     "confluent.connector.type": "CUSTOM",
     "confluent.custom.plugin.id": "$plugin_id",
@@ -179,5 +179,5 @@ sleep 120
 log "Do you want to delete the custom plugin $plugin_name ($plugin_id) and custom connector $connector_name ?"
 check_if_continue
 
-playground fully-managed-connector delete --connector $connector_name
+playground connector delete --connector $connector_name
 confluent connect custom-plugin delete $plugin_id --force

@@ -67,11 +67,11 @@ docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_
 connector_name="SalesforceCdcSource"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
-playground fully-managed-connector delete --connector $connector_name
+playground connector delete --connector $connector_name
 set -e
 
 log "Creating fully managed connector"
-playground fully-managed-connector create-or-update --connector $connector_name << EOF
+playground connector create-or-update --connector $connector_name << EOF
 {
      "connector.class": "SalesforceCdcSource",
      "name": "SalesforceCdcSource",

@@ -3712,10 +3712,10 @@ function get_connector_paths () {
 
     if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
     then
-      logwarn "❌ skipping as docker-compose override file could not be detemined"
-      return
+      echo ""
+    else
+      connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
     fi
-    connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
 }
 
 function generate_connector_versions () {

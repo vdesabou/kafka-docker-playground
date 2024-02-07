@@ -2425,188 +2425,22 @@ commands:
       examples: |
         playground topic alter --topic atopic --add-config max.message.bytes=5242940
 
-- name: fully-managed-connector
-  expose: always
-  group: Fully Managed Connector
-  filters:
-  - ccloud_environment
-  dependencies:
-    confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
-  help: |-
-    🔗☁️ Fully Managed Connector commands
-  environment_variables:
-  - name: CLOUD_API_KEY
-    help: Cloud API key, see https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys
-    required: true
-  - name: CLOUD_API_SECRET
-    help: Cloud API secret, see https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys
-    required: true
-
-  commands:
-  - name: status
-    help: 🧩 Show status of all connectors
-    flags:
-    - *verbose
-    - &ccloudconnector
-      long: --connector
-      short: -c
-      required: false
-      arg: connector
-      completions:
-        - $(playground get-fully-managed-connector-list)
-      help: |-
-        🔗 Connector name
-
-        🎓 Tip: If not specified, the command will apply to all connectors
-
-  - name: plugins
-    help: 🎨 Show all plugins installed
-    flags:
-    - *verbose
-
-  - name: pause
-    help: ⏸️  Pause connector
-    flags:
-    - *verbose
-    - *ccloudconnector
-
-  - name: resume
-    alias: unpause
-    help: ⏯️  Resume connector
-    flags:
-    - *verbose
-    - *ccloudconnector
-
-  - name: delete
-    help: 🗑️  Delete connector
-    flags:
-    - *verbose
-    - *ccloudconnector
-
-  - name: show-lag
-    help: 🐢 Show lag of sink connector
-    flags:
-    - *verbose
-    - *ccloudconnector
-    - &waitforzerolag
-      long: --wait-for-zero-lag
-      help: |- 
-        😴 Wait until lag becomes 0
-    - &waitforzerolaginterval
-      long: --wait-for-zero-lag-interval
-      arg: waitforzerolaginterval
-      validate: integer
-      required: false
-      default: "20"
-      help: |-
-        Interval between lag checks when --wait-for-zero-lag is used (default is 20 seconds).
-
-  - name: show-config
-    help:  |
-      🧰 Show current connector config that was applied
-      
-      use --force-rest-endpoint to get results with REST API /config endpoint (https://docs.confluent.io/cloud/current/api.html#tag/Connectors-(connectv1)/operation/getConnectv1ConnectorConfig)
-    flags:
-    - *verbose
-    - *ccloudconnector
-    - long: --force-rest-endpoint
-      required: false
-      help: |-
-        ☢️ Force using REST API /config endpoint (https://docs.confluent.io/cloud/current/api.html#tag/Connectors-(connectv1)/operation/getConnectv1ConnectorConfig)
-    - &noclipboard
-      long: --no-clipboard
-      required: false
-      private: true
-      help: |-
-        do not copy to clipboard (internal)
-
-  - name: show-config-parameters
-    help: 🔩 Show all possible configuration parameters of connector
-    flags:
-    - *verbose
-    - *ccloudconnector
-    - long: --open
-      short: -o
-      help: |- 
-        🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
-    - &force_refresh
-      long: --force-refresh
-      required: false
-      help: |-
-        ☢️ Force refresh.
-    -  &only_show_file_path
-      long: --only-show-file-path
-      required: false
-      private: true
-      help: |-
-        📂 Only show the path of the file containing the configuration parameters
-    - &only_show_json
-      long: --only-show-json
-      required: false
-      help: |-
-        📗 Only show list of all available parameters for connector (with default value when applicable)
-    -  &only_show_json_file_path
-      long: --only-show-json-file-path
-      required: false
-      private: true
-      help: |-
-        📂 Only show the path of the json file containing the configuration parameters
-
-  - name: select-config
-    help: |-
-      🗜️ Easily select config from all possible configuration parameters of connector
-
-      🎓 Tip: use <tab> to select multiple config at once !
-    dependencies:
-      fzf: visit https://github.com/junegunn/fzf#installation to install
-    flags:
-    - *ccloudconnector
-
-  - name: create-or-update
-    help: 🧑‍🎨  Create or update connector
-    args:
-    - name: json
-      
-      # Set the default path value to -, which is the standard operator for stdin.
-      default: "-"
-      help: json (reads from stdin if empty)
-
-    flags:
-    - *verbose
-    - long: --connector
-      short: -c
-      required: true
-      arg: connector
-      completions:
-        - $(playground get-fully-managed-connector-list)
-      help: |-
-        🔗 Connector name
-    - long: --validate
-      required: false
-      help: |-
-        ✅ Validate config using PUT https://api.confluent.cloud/connect/v1/environments/{environment_id}/clusters/{kafka_cluster_id}/connector-plugins/{plugin_name}/config/validate (https://docs.confluent.io/cloud/current/api.html#tag/Managed-Connector-Plugins-(connectv1)/operation/validateConnectv1ConnectorPlugin)
-
-    examples: |
-      playground fully-managed-connector create-or-update --connector HttpSink << EOF
-      {
-          "connector.class": "HttpSink",
-          "name": "HttpSink",
-          "kafka.auth.mode": "KAFKA_API_KEY",
-          "kafka.api.key": "$CLOUD_KEY",
-          "kafka.api.secret": "$CLOUD_SECRET",
-          "topics": "http-topic",
-          "input.data.format": "AVRO",
-          "http.api.url": "http://httpstat.us/200/",
-          "behavior.on.error": "fail",
-          "tasks.max" : "1"
-      }
-      EOF
-  - name: update
-    help: 🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.
-    flags:
-    - *ccloudconnector
-    examples: |
-      playground fully-managed-connector update
+# - name: fully-managed-connector
+#   expose: always
+#   group: Fully Managed Connector
+#   filters:
+#   - ccloud_environment
+#   dependencies:
+#     confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+#   help: |-
+#     🔗☁️ Fully Managed Connector commands
+#   environment_variables:
+#   - name: CLOUD_API_KEY
+#     help: Cloud API key, see https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys
+#     required: true
+#   - name: CLOUD_API_SECRET
+#     help: Cloud API secret, see https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys
+#     required: true
 
 - name: connector-plugin
   expose: always
@@ -2645,7 +2479,11 @@ commands:
     help: 💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/
     flags:
     - *connector-plugin
-    - *force_refresh
+    - &force_refresh
+      long: --force-refresh
+      required: false
+      help: |-
+        ☢️ Force refresh.
     - long: --last
       arg: last
       required: false
@@ -2661,7 +2499,6 @@ commands:
   group: Connector
   filters:
   - not_mdc_environment
-  - connect_running
   help: |-
     🔗 Connector commands
 
@@ -2731,8 +2568,18 @@ commands:
     flags:
     - *verbose
     - *connector
-    - *waitforzerolag
-    - *waitforzerolaginterval
+    - &waitforzerolag
+      long: --wait-for-zero-lag
+      help: |- 
+        😴 Wait until lag becomes 0
+    - &waitforzerolaginterval
+      long: --wait-for-zero-lag-interval
+      arg: waitforzerolaginterval
+      validate: integer
+      required: false
+      default: "20"
+      help: |-
+        Interval between lag checks when --wait-for-zero-lag is used (default is 20 seconds).
 
   - name: show-config
     help:  |
@@ -2742,7 +2589,12 @@ commands:
     flags:
     - *verbose
     - *connector
-    - *noclipboard
+    - &noclipboard
+      long: --no-clipboard
+      required: false
+      private: true
+      help: |-
+        do not copy to clipboard (internal)
     - long: --force-rest-endpoint
       required: false
       help: |-
@@ -2758,9 +2610,23 @@ commands:
       help: |- 
         🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
     - *force_refresh
-    - *only_show_file_path
-    - *only_show_json
-    - *only_show_json_file_path
+    -  &only_show_file_path
+      long: --only-show-file-path
+      required: false
+      private: true
+      help: |-
+        📂 Only show the path of the file containing the configuration parameters
+    - &only_show_json
+      long: --only-show-json
+      required: false
+      help: |-
+        📗 Only show list of all available parameters for connector (with default value when applicable)
+    -  &only_show_json_file_path
+      long: --only-show-json-file-path
+      required: false
+      private: true
+      help: |-
+        📂 Only show the path of the json file containing the configuration parameters
 
   - name: select-config
     help: |-

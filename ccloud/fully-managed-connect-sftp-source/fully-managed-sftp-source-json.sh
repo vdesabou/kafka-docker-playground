@@ -64,11 +64,11 @@ NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
 connector_name="SftpSource"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
-playground fully-managed-connector delete --connector $connector_name
+playground connector delete --connector $connector_name
 set -e
 
 log "Creating fully managed connector"
-playground fully-managed-connector create-or-update --connector $connector_name << EOF
+playground connector create-or-update --connector $connector_name << EOF
 {
      "connector.class": "SftpSource",
      "name": "SftpSource",
@@ -104,4 +104,4 @@ playground topic consume --topic sftp-testing-topic --min-expected-messages 2 --
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
-playground fully-managed-connector delete --connector $connector_name
+playground connector delete --connector $connector_name
