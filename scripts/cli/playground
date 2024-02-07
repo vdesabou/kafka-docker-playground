@@ -5490,7 +5490,6 @@ function generate_get_examples_list_with_fzf () {
 }
 
 function get_ccloud_connect() {
-
   get_kafka_docker_playground_dir
 
   if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
@@ -5501,6 +5500,20 @@ function get_ccloud_connect() {
 
   environment=$(grep "ENVIRONMENT ID" $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta | cut -d " " -f 4)
   cluster=$(grep "KAFKA CLUSTER ID" $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta | cut -d " " -f 5)
+
+  if [ -z $CLOUD_API_KEY ]
+  then
+    logerror "❌ environment variable CLOUD_API_KEY should be set to use $CONNECTOR_TYPE_FULLY_MANAGED or $CONNECTOR_TYPE_CUSTOM connector"
+    logerror "Set it with Cloud API key, see https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys"
+    exit 1
+  fi
+
+  if [ -z $CLOUD_API_SECRET ]
+  then
+    logerror "❌ environment variable CLOUD_API_SECRET should be set to use $CONNECTOR_TYPE_FULLY_MANAGED or $CONNECTOR_TYPE_CUSTOM connector"
+    logerror "Set it with Cloud API secret, see https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys"
+    exit 1
+  fi
 
   if [[ "$OSTYPE" == "darwin"* ]]
   then

@@ -2425,23 +2425,6 @@ commands:
       examples: |
         playground topic alter --topic atopic --add-config max.message.bytes=5242940
 
-# - name: fully-managed-connector
-#   expose: always
-#   group: Fully Managed Connector
-#   filters:
-#   - ccloud_environment
-#   dependencies:
-#     confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
-#   help: |-
-#     🔗☁️ Fully Managed Connector commands
-#   environment_variables:
-#   - name: CLOUD_API_KEY
-#     help: Cloud API key, see https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys
-#     required: true
-#   - name: CLOUD_API_SECRET
-#     help: Cloud API secret, see https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys
-#     required: true
-
 - name: connector-plugin
   expose: always
   group: Connector-Plugin
