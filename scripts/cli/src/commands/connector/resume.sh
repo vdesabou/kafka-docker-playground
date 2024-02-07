@@ -1,12 +1,14 @@
 connector="${args[--connector]}"
 verbose="${args[--verbose]}"
 
+connector_type=$(playground state get run.connector_type)
+
 if [[ ! -n "$connector" ]]
 then
     connector=$(playground get-connector-list)
     if [ "$connector" == "" ]
     then
-        logerror "💤 No connector is running !"
+        logerror "💤 No $connector_type connector is running !"
         exit 1
     fi
 fi
@@ -19,7 +21,6 @@ then
 fi
 for connector in ${items[@]}
 do
-    connector_type=$(playground state get run.connector_type)
     log "⏯️ Resuming $connector_type connector $connector"
     if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
     then

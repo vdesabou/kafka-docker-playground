@@ -17409,128 +17409,31 @@ playground_fully_managed_connector_plugins_command() {
 # :command.function
 playground_fully_managed_connector_pause_command() {
   # src/commands/fully-managed-connector/pause.sh
-  connector="${args[--connector]}"
-  verbose="${args[--verbose]}"
-  get_ccloud_connect
-
-  if [[ ! -n "$connector" ]]
-  then
-      set +e
-      log "✨ --connector flag was not provided, applying command to all ccloud connectors"
-      connector=$(playground get-fully-managed-connector-list)
-      if [ $? -ne 0 ]
-      then
-          logerror "❌ Could not get list of connectors"
-          echo "$connector"
-          exit 1
-      fi
-      if [ "$connector" == "" ]
-      then
-          logerror "💤 No ccloud connector is running !"
-          exit 1
-      fi
-      set -e
-  fi
-
-  items=($connector)
-  for connector in ${items[@]}
-  do
-      log "⏸️ Pausing ccloud connector $connector"
-      if [[ -n "$verbose" ]]
-      then
-          log "🐞 curl command used"
-          echo "curl -s --request PUT \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/pause\" --header \"authorization: Basic $authorization\""
-      fi
-      curl -s --request PUT "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/pause" --header "authorization: Basic $authorization" | jq .
-
-      sleep 3
-      playground fully-managed-connector status --connector $connector
-  done
+  echo "# this file is located in 'src/commands/fully-managed-connector/pause.sh'"
+  echo "# code for 'playground fully-managed-connector pause' goes here"
+  echo "# you can edit it freely and regenerate (it will not be overwritten)"
+  inspect_args
 
 }
 
 # :command.function
 playground_fully_managed_connector_resume_command() {
   # src/commands/fully-managed-connector/resume.sh
-  connector="${args[--connector]}"
-  verbose="${args[--verbose]}"
-
-  get_ccloud_connect
-
-  if [[ ! -n "$connector" ]]
-  then
-      set +e
-      log "✨ --connector flag was not provided, applying command to all ccloud connectors"
-      connector=$(playground get-fully-managed-connector-list)
-      if [ $? -ne 0 ]
-      then
-          logerror "❌ Could not get list of connectors"
-          echo "$connector"
-          exit 1
-      fi
-      if [ "$connector" == "" ]
-      then
-          logerror "💤 No ccloud connector is running !"
-          exit 1
-      fi
-      set -e
-  fi
-
-  items=($connector)
-  for connector in ${items[@]}
-  do
-      log "⏯️ Resuming ccloud connector $connector"
-      if [[ -n "$verbose" ]]
-      then
-          log "🐞 curl command used"
-          echo "curl -s --request PUT \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/resume\" --header \"authorization: Basic $authorization\""
-      fi
-      curl -s --request PUT "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/resume" --header "authorization: Basic $authorization" | jq .
-
-      sleep 3
-      playground fully-managed-connector status --connector $connector
-  done
+  echo "# this file is located in 'src/commands/fully-managed-connector/resume.sh'"
+  echo "# code for 'playground fully-managed-connector resume' goes here"
+  echo "# you can edit it freely and regenerate (it will not be overwritten)"
+  inspect_args
 
 }
 
 # :command.function
 playground_fully_managed_connector_delete_command() {
   # src/commands/fully-managed-connector/delete.sh
-  connector="${args[--connector]}"
-  verbose="${args[--verbose]}"
+  echo "# this file is located in 'src/commands/fully-managed-connector/delete.sh'"
+  echo "# code for 'playground fully-managed-connector delete' goes here"
+  echo "# you can edit it freely and regenerate (it will not be overwritten)"
+  inspect_args
 
-  get_ccloud_connect
-
-  if [[ ! -n "$connector" ]]
-  then
-      logwarn "--connector flag was not provided, applying command to all ccloud connectors"
-      check_if_continue
-      connector=$(playground get-fully-managed-connector-list)
-      if [ $? -ne 0 ]
-      then
-          logerror "❌ Could not get list of connectors"
-          echo "$connector"
-          exit 1
-      fi
-      if [ "$connector" == "" ]
-      then
-          logerror "💤 No ccloud connector is running !"
-          exit 1
-      fi
-      set -e
-  fi
-
-  items=($connector)
-  for connector in ${items[@]}
-  do
-      log "❌ Deleting ccloud connector $connector"
-      if [[ -n "$verbose" ]]
-      then
-          log "🐞 curl command used"
-          echo "curl -s --request DELETE \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector\" --header \"authorization: Basic $authorization\""
-      fi
-      curl -s --request DELETE "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector" --header "authorization: Basic $authorization" | jq .
-  done
 }
 
 # :command.function
@@ -18884,12 +18787,14 @@ playground_connector_pause_command() {
   connector="${args[--connector]}"
   verbose="${args[--verbose]}"
 
+  connector_type=$(playground state get run.connector_type)
+
   if [[ ! -n "$connector" ]]
   then
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
-          logerror "💤 No connector is running !"
+          logerror "💤 No $connector_type connector is running !"
           exit 1
       fi
   fi
@@ -18902,7 +18807,6 @@ playground_connector_pause_command() {
   fi
   for connector in ${items[@]}
   do
-      connector_type=$(playground state get run.connector_type)
       log "⏸️ Pausing $connector_type connector $connector"
       if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
       then
@@ -18990,19 +18894,25 @@ playground_connector_versions_command() {
 # :command.function
 playground_connector_restart_command() {
   # src/commands/connector/restart.sh
-  get_connect_url_and_security
-
   connector="${args[--connector]}"
   verbose="${args[--verbose]}"
+
+  connector_type=$(playground state get run.connector_type)
 
   if [[ ! -n "$connector" ]]
   then
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
-          logerror "💤 No connector is running !"
+          logerror "💤 No $connector_type connector is running !"
           exit 1
       fi
+  fi
+
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+      logerror "❌ restart command is not available with $connector_type connector"
+      exit 1
   fi
 
   tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
@@ -19020,29 +18930,25 @@ playground_connector_restart_command() {
   fi
   for connector in ${items[@]}
   do
+      log "🔄 Restarting $connector_type connector $connector"
+
+      get_connect_url_and_security
       log "🔄 Restarting connector $connector"
       if ! version_gt $tag "6.9.9"
       then
-          task_ids=$(curl $security -s -X GET "$connect_url/connectors/$connector/tasks" | jq -r '.[].id.task')
+          handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/tasks"
+
+          task_ids=$(echo "$curl_output" | jq -r '.[].id.task')
 
           for task_id in $task_ids
           do
               log "🤹‍♂️ Restart task $task_id"
-              if [[ -n "$verbose" ]]
-              then
-                  log "🐞 curl command used"
-                  echo "curl $security -s -X POST -H "Content-Type: application/json" "$connect_url/connectors/$connector/tasks/$task_id/restart""
-              fi
-              curl $security -s -X POST -H "Content-Type: application/json" "$connect_url/connectors/$connector/tasks/$task_id/restart"
+              handle_onprem_connect_rest_api "curl $security -s -X POST -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/tasks/$task_id/restart\""
           done
       else
-          if [[ -n "$verbose" ]]
-          then
-              log "🐞 curl command used"
-              echo "curl $security -s -X POST -H "Content-Type: application/json" "$connect_url/connectors/$connector/restart?includeTasks=true&onlyFailed=false""
-          fi
-          curl $security -s -X POST -H "Content-Type: application/json" "$connect_url/connectors/$connector/restart?includeTasks=true&onlyFailed=false" | jq .
+          handle_onprem_connect_rest_api "curl $security -s -X POST -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/restart?includeTasks=true&onlyFailed=false\""
       fi
+      echo "$curl_output" | jq .
   done
   sleep 3
   playground connector status --connector $connector
@@ -19105,12 +19011,14 @@ playground_connector_resume_command() {
   connector="${args[--connector]}"
   verbose="${args[--verbose]}"
 
+  connector_type=$(playground state get run.connector_type)
+
   if [[ ! -n "$connector" ]]
   then
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
-          logerror "💤 No connector is running !"
+          logerror "💤 No $connector_type connector is running !"
           exit 1
       fi
   fi
@@ -19123,7 +19031,6 @@ playground_connector_resume_command() {
   fi
   for connector in ${items[@]}
   do
-      connector_type=$(playground state get run.connector_type)
       log "⏯️ Resuming $connector_type connector $connector"
       if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
       then
@@ -19144,16 +19051,17 @@ playground_connector_resume_command() {
 # :command.function
 playground_connector_delete_command() {
   # src/commands/connector/delete.sh
-  get_connect_url_and_security
   verbose="${args[--verbose]}"
   connector="${args[--connector]}"
+
+  connector_type=$(playground state get run.connector_type)
 
   if [[ ! -n "$connector" ]]
   then
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
-          logerror "💤 No connector is running !"
+          logerror "💤 No $connector_type connector is running !"
           exit 1
       fi
   fi
@@ -19167,13 +19075,17 @@ playground_connector_delete_command() {
   fi
   for connector in ${items[@]}
   do
-      log "❌ Deleting connector $connector"
-      if [[ -n "$verbose" ]]
+      log "❌ Deleting $connector_type connector $connector"
+      if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
       then
-          log "🐞 curl command used"
-          echo "curl $security -s -X DELETE "$connect_url/connectors/$connector""
+          get_ccloud_connect
+          handle_ccloud_connect_rest_api "curl -s --request DELETE \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector\" --header \"authorization: Basic $authorization\""
+      else
+          get_connect_url_and_security
+          handle_onprem_connect_rest_api "curl $security -s -X DELETE \"$connect_url/connectors/$connector\""
       fi
-      curl $security -s -X DELETE "$connect_url/connectors/$connector" | jq .
+
+      echo "$curl_output" | jq .
   done
 }
 
