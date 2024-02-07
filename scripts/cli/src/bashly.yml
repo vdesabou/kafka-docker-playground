@@ -2838,6 +2838,8 @@ commands:
       required: false
       help: |-
         ❕Log level
+
+        ⚠️ Not available for ccloud connectors
     - *package
     - long: --validate
       required: false

@@ -17264,128 +17264,11 @@ playground_topic_alter_command() {
 # :command.function
 playground_fully_managed_connector_status_command() {
   # src/commands/fully-managed-connector/status.sh
-  connector="${args[--connector]}"
-  verbose="${args[--verbose]}"
+  echo "# this file is located in 'src/commands/fully-managed-connector/status.sh'"
+  echo "# code for 'playground fully-managed-connector status' goes here"
+  echo "# you can edit it freely and regenerate (it will not be overwritten)"
+  inspect_args
 
-  get_ccloud_connect
-
-  if [[ ! -n "$connector" ]]
-  then
-      set +e
-      log "✨ --connector flag was not provided, applying command to all ccloud connectors"
-      connector=$(playground get-fully-managed-connector-list)
-      if [ $? -ne 0 ]
-      then
-          logerror "❌ Could not get list of connectors"
-          echo "$connector"
-          exit 1
-      fi
-      if [ "$connector" == "" ]
-      then
-          logerror "💤 No ccloud connector is running !"
-          exit 1
-      fi
-      set -e
-  fi
-
-  items=($connector)
-  for connector in ${items[@]}
-  do
-      log "🧩 Displaying connector status for $connector"
-      if [[ -n "$verbose" ]]
-      then
-          log "🐞 curl command used"
-          echo "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status\" --header \"authorization: Basic $authorization\""
-      fi
-      curl_output=$(curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status" --header "authorization: Basic $authorization")
-      ret=$?
-      set -e
-      if [ $ret -eq 0 ]
-      then
-          if echo "$curl_output" | jq 'if .error then .error | has("code") else has("error_code") end' 2> /dev/null | grep -q true
-          then
-              if echo "$curl_output" | jq '.error | has("code")' 2> /dev/null | grep -q true
-              then
-                  code=$(echo "$curl_output" | jq -r .error.code)
-                  message=$(echo "$curl_output" | jq -r .error.message)
-              else
-                  code=$(echo "$curl_output" | jq -r .error_code)
-                  message=$(echo "$curl_output" | jq -r .message)
-              fi
-              logerror "Command failed with error code $code"
-              logerror "$message"
-              exit 1
-          else
-              printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
-              echo "-------------------------------------------------------------------------------------------------------------"
-              status=$(echo "$curl_output" | jq -r '.connector.state')
-
-              if [ "$status" == "RUNNING" ]
-              then
-                  status="✅ RUNNING"
-              elif [ "$status" == "PAUSED" ]
-              then
-                  status="⏸️  PAUSED"
-              elif [ "$status" == "FAILED" ]
-              then
-                  status="❌ FAILED"
-              elif [ "$status" == "STOPPED" ]
-              then
-                  status="🛑 STOPPED"
-              else
-                  status="🤔 UNKNOWN"
-              fi
-
-              tasks=$(echo "$curl_output" | jq -r '.tasks[] | "\(.id):\(.state)"' | tr '\n' ',' | sed 's/,$/\n/')
-
-              if [[ "$tasks" == *"RUNNING"* ]]
-              then
-                  tasks="${tasks//RUNNING/🟢 RUNNING}"
-              elif [[ "$tasks" == *"PAUSED"* ]]
-              then
-                  tasks="${tasks//PAUSED/⏸️  PAUSED}"
-              elif [[ "$tasks" == *"STOPPED"* ]]
-              then
-                  tasks="${tasks//STOPPED/🛑  STOPPED}"
-              elif [[ "$tasks" == *"FAILED"* ]]
-              then
-                  tasks="${tasks//FAILED/🛑 FAILED}"
-              else
-                  tasks="🤔 N/A"
-              fi
-
-              stacktrace_connector=$(echo "$curl_output" | jq -r '.connector.trace | select(length > 0)')
-              errors_from_trace=$(echo "$curl_output" | jq -r '.errors_from_trace[0].error | select(length > 0)')
-              validation_errors=$(echo "$curl_output" | jq -r '.validation_errors[0] | select(length > 0)')
-              stacktrace=""
-              if [ "$stacktrace_connector" != "" ]
-              then
-                  stacktrace="connector: $stacktrace_connector"
-              fi
-
-              if [ "$errors_from_trace" != "" ]
-              then
-                  stacktrace="$stacktrace errors_from_trace: $errors_from_trace"
-              fi
-
-              if [ "$validation_errors" != "" ]
-              then
-                  stacktrace="$stacktrace validation_errors: $validation_errors"
-              fi
-
-              if [ -z "$stacktrace" ]
-              then
-                  stacktrace="-"
-              fi
-
-              printf "%-30s %-12s %-30s %-50s\n" "$connector" "$status" "$tasks" "$stacktrace"
-              echo "-------------------------------------------------------------------------------------------------------------"
-          fi
-      else
-          logerror "❌ curl request failed with error code $ret!"
-          exit 1
-      fi
-  done
 }
 
 # :command.function
@@ -20108,6 +19991,23 @@ playground_connector_create_or_update_command() {
   validate=${args[--validate]}
   verbose="${args[--verbose]}"
 
+  connector_type=$(playground state get run.connector_type)
+
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+      if [[ -n "$level" ]]
+      then
+          logerror "❌ --level is set but not supported with $connector_type connector"
+          exit 1
+      fi
+
+      if [[ -n "$package" ]]
+      then
+          logerror "❌ --package is set but not supported with $connector_type connector"
+          exit 1
+      fi
+  fi
+
   environment=$(playground state get run.environment_before_switch)
   if [ "$environment" = "" ]
   then
@@ -20129,7 +20029,8 @@ playground_connector_create_or_update_command() {
 
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
-  json_file=$tmp_dir/json
+  json_file=$tmp_dir/connector.json
+  new_json_file=$tmp_dir/connector_new.json
   json_validate_file=$tmp_dir/json_validate_file
 
   echo "$json_content" > $json_file
@@ -20156,8 +20057,6 @@ playground_connector_create_or_update_command() {
       exit 1
   fi
 
-  get_connect_url_and_security
-
   is_create=1
   connectors=$(playground get-connector-list)
   items=($connectors)
@@ -20174,143 +20073,115 @@ playground_connector_create_or_update_command() {
       log "✅ --validate is set"
       set +e
       connector_class=$(echo "$json_content" | jq -r '."connector.class"')
-      add_connector_config_based_on_environment "$environment" "$json_content"
-      # add mandatory name field
-      new_json_content=$(echo $json_content | jq ". + {\"name\": \"$connector\"}")
-      if [[ -n "$verbose" ]]
+
+      if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
       then
-          log "🐞 curl command used"
-          echo "curl $security -s -X PUT -H "Content-Type: application/json" --data "$new_json_content" $connect_url/connector-plugins/$connector_class/config/validate"
-      fi
-      curl_output=$(curl $security -s -X PUT -H "Content-Type: application/json" --data "$new_json_content" $connect_url/connector-plugins/$connector_class/config/validate)
-      ret=$?
-      set -e
-      if [ $ret -eq 0 ]
-      then
-          if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
-
-          then
-              error_code=$(echo "$curl_output" | jq -r .error_code)
-              message=$(echo "$curl_output" | jq -r .message)
-              logerror "Command failed with error code $error_code"
-              logerror "$message"
-              exit 1
-          else
-              if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
-              then
-                  set +e
-                  echo "$curl_output" > $json_validate_file
-                  jq_output=$(jq . "$json_validate_file" 2>&1)
-                  error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
-
-                  if [[ -n "$error_line" ]]; then
-                      logerror "❌ Invalid JSON at line $error_line"
-                  fi
-                  set -e
-
-                  if [[ $(type -f bat 2>&1) =~ "not found" ]]
-                  then
-                      cat -n $json_validate_file
-                  else
-                      bat $json_validate_file --highlight-line $error_line
-                  fi
-
-                  exit 1
-              fi
-
-              is_valid=1
-              rows=()
-              for row in $(echo "$curl_output" | jq -r '.configs[] | @base64'); do
-                  _jq() {
-                      echo ${row} | base64 --decode | jq -r ${1}
-                  }
-
-                  name=$(_jq '.value.name')
-                  value=$(_jq '.value.value')
-                  errors=$(_jq '.value.errors')
-
-                  if [ "$(echo "$errors" | jq 'length')" -gt 0 ]
-                  then
-                      is_valid=0
-                      logerror "❌ validation error for config <$name=$value>"
-
-                      echo "$errors" | jq .
-                  fi
-              done
-
-              if [ $is_valid -eq 1 ]
-              then
-                  log "✅ connector config is valid !"
-
-              else
-                  exit 1
-              fi
-          fi
+          get_ccloud_connect
+          handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate"
       else
-          logerror "❌ curl request failed with error code $ret!"
+          get_connect_url_and_security
+          add_connector_config_based_on_environment "$environment" "$json_content"
+          # add mandatory name field
+          new_json_content=$(echo $json_content | jq ". + {\"name\": \"$connector\"}")
+
+          echo "$new_json_content" > $new_json_file
+          handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$new_json_file $connect_url/connector-plugins/$connector_class/config/validate"
+      fi
+      set -e
+      if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
+      then
+          set +e
+          echo "$curl_output" > $json_validate_file
+          jq_output=$(jq . "$json_validate_file" 2>&1)
+          error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
+
+          if [[ -n "$error_line" ]]; then
+              logerror "❌ Invalid JSON at line $error_line"
+          fi
+          set -e
+
+          if [[ $(type -f bat 2>&1) =~ "not found" ]]
+          then
+              cat -n $json_validate_file
+          else
+              bat $json_validate_file --highlight-line $error_line
+          fi
+
+          exit 1
+      fi
+
+      is_valid=1
+      for row in $(echo "$curl_output" | jq -r '.configs[] | @base64'); do
+          _jq() {
+              echo ${row} | base64 --decode | jq -r ${1}
+          }
+
+          name=$(_jq '.value.name')
+          value=$(_jq '.value.value')
+          errors=$(_jq '.value.errors')
+
+          if [ "$(echo "$errors" | jq 'length')" -gt 0 ]
+          then
+              is_valid=0
+              logerror "❌ validation error for config <$name=$value>"
+
+              echo "$errors" | jq .
+          fi
+      done
+
+      if [ $is_valid -eq 1 ]
+      then
+          log "✅ $connector_type connector config is valid !"
+
+      else
           exit 1
       fi
   fi
 
   if [ $is_create == 1 ]
   then
-      log "🛠️ Creating connector $connector"
+      log "🛠️ Creating $connector_type connector $connector"
   else
-      log "🔄 Updating connector $connector"
+      log "🔄 Updating $connector_type connector $connector"
   fi
 
   set +e
 
-  add_connector_config_based_on_environment "$environment" "$json_content"
-  if [[ -n "$verbose" ]]
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then
-      log "🐞 curl command used"
-      echo "curl $security -s -X PUT -H "Content-Type: application/json" --data "$json_content" $connect_url/connectors/$connector/config"
-  fi
-  curl_output=$(curl $security -s -X PUT -H "Content-Type: application/json" --data "$json_content" $connect_url/connectors/$connector/config)
-  ret=$?
-  set -e
-  if [ $ret -eq 0 ]
-  then
-      if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
-
-      then
-          error_code=$(echo "$curl_output" | jq -r .error_code)
-          message=$(echo "$curl_output" | jq -r .message)
-          logerror "Command failed with error code $error_code"
-          logerror "$message"
-          exit 1
-      else
-          if [[ -n "$level" ]]
-          then
-              if [[ -n "$package" ]]
-              then
-                  playground debug log-level set --level $level --package $package
-              else
-                  playground connector log-level --connector $connector --level $level
-              fi
-          fi
-          if [ $is_create == 1 ]
-          then
-              log "✅ Connector $connector was successfully created"
-          else
-              log "✅ Connector $connector was successfully updated"
-          fi
-          if [ -z "$GITHUB_RUN_NUMBER" ]
-          then
-              echo "$json_content" > "/tmp/config-$connector"
-              playground connector show-config --connector "$connector"
-          fi
-          playground connector show-config-parameters --connector "$connector" --only-show-json
-          log "🥁 Waiting a few seconds to get new status"
-          sleep 5
-          playground connector status --connector $connector
-          playground connector open-docs --only-show-url
-      fi
+      get_ccloud_connect
+      handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config"
   else
-      logerror "❌ curl request failed with error code $ret!"
-      exit 1
+      get_connect_url_and_security
+      add_connector_config_based_on_environment "$environment" "$json_content"
+      handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$json_file $connect_url/connectors/$connector/config"
   fi
+
+  if [[ -n "$level" ]]
+  then
+      if [[ -n "$package" ]]
+      then
+          playground debug log-level set --level $level --package $package
+      else
+          playground connector log-level --connector $connector --level $level
+      fi
+  fi
+  if [ $is_create == 1 ]
+  then
+      log "✅ $connector_type connector $connector was successfully created"
+  else
+      log "✅ $connector_type connector $connector was successfully updated"
+  fi
+  if [ -z "$GITHUB_RUN_NUMBER" ]
+  then
+      echo "$json_content" > "/tmp/config-$connector"
+      playground connector show-config --connector "$connector"
+  fi
+  playground connector show-config-parameters --connector "$connector" --only-show-json
+  log "🥁 Waiting a few seconds to get new status"
+  sleep 5
+  playground connector status --connector $connector
+  playground connector open-docs --only-show-url
 }
 
 # :command.function
