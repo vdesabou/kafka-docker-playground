@@ -160,10 +160,13 @@ then
 fi
 for connector in ${items[@]}
 do
+  maybe_id=""
   if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then
       get_ccloud_connect
-      handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config\" --header \"authorization: Basic $authorization\""
+      handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status\" --header \"authorization: Basic $authorization\""
+      connectorId=$(get_ccloud_connector_lcc $connector)
+      maybe_id=" ($connectorId)"
   else
       get_connect_url_and_security
       handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\""
@@ -172,7 +175,7 @@ do
   type=$(echo "$curl_output" | jq -r '.type')
   if [ "$type" != "sink" ]
   then
-    logwarn "⏭️ Skipping $type $connector_type connector $connector, it must be a sink to show the lag"
+    logwarn "⏭️ Skipping $type $connector_type connector ${connector}${maybe_id}, it must be a sink to show the lag"
     continue 
   fi
 
@@ -207,7 +210,7 @@ do
 
     if grep -q "Warning" $lag_output
     then
-      logwarn "🐢 consumer group for $connector_type connector $connector is rebalancing"
+      logwarn "🐢 consumer group for $connector_type connector ${connector}${maybe_id} is rebalancing"
       cat $lag_output
       sleep $waitforzerolaginterval
       continue
@@ -218,7 +221,7 @@ do
 
     if [ ! -z "$lag_not_set" ]
     then
-      logwarn "🐢 consumer lag for $connector_type connector $connector is not available"
+      logwarn "🐢 consumer lag for $connector_type connector ${connector}${maybe_id} is not available"
       show_output
       if [[ ! -n "$wait_for_zero_lag" ]]
       then
@@ -256,17 +259,17 @@ do
           then
             case "${compare_action}" in
               up)
-                log_up "🔥 total consumer lag for $connector_type connector $connector has increased to $total_lag $compare (press ctrl-c to stop)"
+                log_up "🔥 total consumer lag for $connector_type connector ${connector}${maybe_id} has increased to $total_lag $compare (press ctrl-c to stop)"
               ;;
               down)
-                log_down "🚀 consumer lag for $connector_type connector $connector has decreased to $total_lag $compare (press ctrl-c to stop)"
+                log_down "🚀 consumer lag for $connector_type connector ${connector}${maybe_id} has decreased to $total_lag $compare (press ctrl-c to stop)"
               ;;
               *)
-                log_same "🐌 consumer lag for $connector_type connector $connector is still $total_lag $compare (press ctrl-c to stop)"
+                log_same "🐌 consumer lag for $connector_type connector ${connector}${maybe_id} is still $total_lag $compare (press ctrl-c to stop)"
               ;;
             esac
           else
-            log "🐢 consumer lag for $connector_type connector $connector is $total_lag"
+            log "🐢 consumer lag for $connector_type connector ${connector}${maybe_id} is $total_lag"
           fi
           show_output
           if [[ ! -n "$wait_for_zero_lag" ]]
@@ -278,11 +281,11 @@ do
         else
           if [[ ! -n "$wait_for_zero_lag" ]]
           then
-            log "🏁 consumer lag for $connector_type connector $connector is 0 !"
+            log "🏁 consumer lag for $connector_type connector ${connector}${maybe_id} is 0 !"
             stop=1
           else
             ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
-            log "🏁 consumer lag for $connector_type connector $connector is 0 ! $ELAPSED"
+            log "🏁 consumer lag for $connector_type connector ${connector}${maybe_id} is 0 ! $ELAPSED"
           fi
           show_output
           break

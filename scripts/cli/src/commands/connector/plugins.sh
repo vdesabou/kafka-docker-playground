@@ -1,6 +1,8 @@
 all="${args[--all]}"
 verbose="${args[--verbose]}"
 
+connector_type=$(playground state get run.connector_type)
+
 log "🎨 Displaying all connector plugins installed"
 if [[ -n "$all" ]]
 then
