@@ -22,6 +22,7 @@ then
     exit 1
 else
     doc_available=1
+    doc_links=""
     for connector_path in ${connector_paths//,/ }
     do
         full_connector_name=$(basename "$connector_path")
@@ -40,6 +41,7 @@ else
                 then
                     log "🌐 documentation for $connector_type connector $name is available at:"
                     echo "$short_url"
+                    doc_links="${doc_links}|$name@$short_url"
                 else
                     log "🌐 opening documentation for $connector_type connector $name $short_url"
                     open "$short_url"
@@ -55,5 +57,9 @@ else
     if [ $doc_available -eq 0 ]
     then
         log "🌐 documentation could not be retrieved"
+
+    else
+        doc_links="${doc_links#|}"
+        playground state set run.connector_docs_links "$doc_links"
     fi
 fi

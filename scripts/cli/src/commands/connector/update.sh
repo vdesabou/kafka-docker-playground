@@ -45,7 +45,19 @@ do
     echo "exit 0" >> $file
 
     echo -e "" >> $file
-    playground connector open-docs --only-show-url  | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> $file
+    docs_links=$(playground state get run.connector_docs_links)
+    if [ "$docs_links" != "" ]
+    then
+        for docs_link in $(echo "${docs_links}" | tr '|' ' ')
+        do
+            name=$(echo "$docs_link" | cut -d "@" -f 1)
+            url=$(echo "$docs_link" | cut -d "@" -f 2)
+            echo "🌐⚡ documentation for $connector_type connector $name is available at:" >> $file
+            echo "$url" >> $file
+        done
+    else
+        playground connector open-docs --only-show-url | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> $file
+    fi
 
     echo -e "" >> $file
     playground connector show-config-parameters --connector $connector  | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> $file
