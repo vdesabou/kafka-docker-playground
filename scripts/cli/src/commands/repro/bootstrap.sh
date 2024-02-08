@@ -1167,6 +1167,11 @@ fi
 
 increment_cli_metric nb_reproduction_models
 log "👷 Number of repro models created so far: $(get_cli_metric nb_reproduction_models)"
+
+nb=$(find $root_folder -name *repro*.sh | wc -l)
+set_cli_metric nb_existing_reproduction_models $nb
+log "🛠️ Number of repro models available: $(get_cli_metric nb_existing_reproduction_models)"
+
 playground generate-fzf-find-files &
 playground open-docs --only-show-url
 log "🕹️  Ready? Run it now?"

@@ -496,6 +496,12 @@ function get_cli_metric() {
   playground state get "metrics.$metric_name"
 }
 
+function set_cli_metric() {
+  metric_name="$1"
+  metric_value="$2"
+  playground state set "metrics.$metric_name" "$metric_value"
+}
+
 function add_connector_config_based_on_environment () {
   environment="$1"
   json_content="$2"
