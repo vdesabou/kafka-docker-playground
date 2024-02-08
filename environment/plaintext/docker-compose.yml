@@ -598,17 +598,6 @@ services:
     profiles:
       - "conduktor"
 
-  sr_plugins:
-    image: cdpop001/sr_plugins:latest
-    hostname: sr_plugins
-    container_name: sr_plugins
-    depends_on:
-      - broker
-    ports:
-      - 8080:8080
-    profiles:
-      - "sr_plugin_app"
-
   pyroscope:
     hostname: pyroscope
     image: pyroscope/pyroscope:0.37.2

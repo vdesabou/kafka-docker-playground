@@ -10,7 +10,6 @@ enable_multiple_brokers="${args[--enable-multiple-brokers]}"
 enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
 enable_jmx_grafana="${args[--enable-jmx-grafana]}"
 enable_kcat="${args[--enable-kcat]}"
-enable_sr_maven_plugin_app="${args[--enable-sr-maven-plugin-app]}"
 docker_compose_override_file="${args[--docker-compose-override-file]}"
 
 if [ "$environment" = "ccloud" ]
@@ -82,12 +81,6 @@ if [[ -n "$enable_kcat" ]]
 then
   flag_list="$flag_list --enable-kcat"
   export ENABLE_KCAT=true
-fi
-
-if [[ -n "$enable_sr_maven_plugin_app" ]]
-then
-  flag_list="$flag_list --enable-sr-maven-plugin-app"
-  export ENABLE_SR_MAVEN_PLUGIN_NODE=true
 fi
 
 set +e

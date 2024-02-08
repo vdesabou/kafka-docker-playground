@@ -425,11 +425,6 @@ commands:
       You can use it with:
 
       $ docker exec kcat kcat -b broker:9092 -L
-  - &enable-sr-maven-plugin-app
-    long: --enable-sr-maven-plugin-app
-    required: false
-    help: |- 
-      🔰 Enable Schema Registry Maven plugin App
   - &enable-sql-datagen
     long: --enable-sql-datagen
     required: false
@@ -476,7 +471,6 @@ commands:
     - *enable-multiple-connect-workers
     - *enable-jmx-grafana
     - *enable-kcat
-    - *enable-sr-maven-plugin-app
     - *enable-sql-datagen
   examples:
   - playground re-run
@@ -563,7 +557,6 @@ commands:
     - *enable-multiple-connect-workers
     - *enable-jmx-grafana
     - *enable-kcat
-    - *enable-sr-maven-plugin-app
   examples:
   - playground start-environment
   - playground start-environment --environment rbac-sasl-plain
@@ -843,7 +836,6 @@ commands:
     - *enable-multiple-connect-workers
     - *enable-jmx-grafana
     - *enable-kcat
-    - *enable-sr-maven-plugin-app
     - *enable-sql-datagen
     - *cluster-type
     - *cluster-region

@@ -450,18 +450,6 @@ function set_profiles() {
     playground state set flags.ENABLE_KAFKA_NODES 1
   fi
 
-  # Adding Schema Registry plugin profile
-  profile_schema_registry_command=""
-  if [ -z "$ENABLE_SR_MAVEN_PLUGIN_NODE" ]
-  then
-    profile_schema_registry_command=""
-    playground state del flags.ENABLE_SR_MAVEN_PLUGIN_NODE
-  else
-    log " Starting Schema Registry plugin profile"
-    profile_schema_registry_command="--profile sr_plugin_app"
-    playground state set flags.ENABLE_SR_MAVEN_PLUGIN_NODE 1
-  fi
-
   # defined 3 Connect variable and when profile is included/excluded
   profile_connect_nodes_command=""
   if [ -z "$ENABLE_CONNECT_NODES" ]
@@ -3693,7 +3681,7 @@ function force_enable () {
 }
 
 function load_env_variables () {
-  for item in {ENABLE_CONTROL_CENTER,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,SQL_DATAGEN,ENABLE_KAFKA_NODES,ENABLE_SR_MAVEN_PLUGIN_NODE,CONNECT_NODES_PROFILES,CONNECT_NODES_PROFILES}
+  for item in {ENABLE_CONTROL_CENTER,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,SQL_DATAGEN,ENABLE_KAFKA_NODES,CONNECT_NODES_PROFILES,CONNECT_NODES_PROFILES}
   do
     i=$(playground state get "flags.${item}")
     if [ "$i" != "" ]

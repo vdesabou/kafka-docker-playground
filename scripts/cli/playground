@@ -1300,11 +1300,6 @@ playground_run_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-sr-maven-plugin-app")"
-    printf "    🔰 Enable Schema Registry Maven plugin App\n"
-    echo
-
-    # :flag.usage
     printf "  %s\n" "$(magenta "--enable-sql-datagen")"
     printf "    🌪️ Enable SQL Datagen injection\n    \n    This only works for Oracle, MySql, Postgres and Microsoft Sql Server source\n    connector examples with JDBC and Debezium\n"
     echo
@@ -1422,11 +1417,6 @@ playground_re_run_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-kcat")"
     printf "    🐈‍⬛ Enable kcat\n    \n    You can use it with:\n    \n    $ docker exec kcat kcat -b broker:9092 -L\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-sr-maven-plugin-app")"
-    printf "    🔰 Enable Schema Registry Maven plugin App\n"
     echo
 
     # :flag.usage
@@ -1564,11 +1554,6 @@ playground_start_environment_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-kcat")"
     printf "    🐈‍⬛ Enable kcat\n    \n    You can use it with:\n    \n    $ docker exec kcat kcat -b broker:9092 -L\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-sr-maven-plugin-app")"
-    printf "    🔰 Enable Schema Registry Maven plugin App\n"
     echo
 
     # :command.usage_fixed_flags
@@ -2158,11 +2143,6 @@ playground_repro_bootstrap_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-kcat")"
     printf "    🐈‍⬛ Enable kcat\n    \n    You can use it with:\n    \n    $ docker exec kcat kcat -b broker:9092 -L\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-sr-maven-plugin-app")"
-    printf "    🔰 Enable Schema Registry Maven plugin App\n"
     echo
 
     # :flag.usage
@@ -7199,18 +7179,6 @@ function set_profiles() {
     playground state set flags.ENABLE_KAFKA_NODES 1
   fi
 
-  # Adding Schema Registry plugin profile
-  profile_schema_registry_command=""
-  if [ -z "$ENABLE_SR_MAVEN_PLUGIN_NODE" ]
-  then
-    profile_schema_registry_command=""
-    playground state del flags.ENABLE_SR_MAVEN_PLUGIN_NODE
-  else
-    log " Starting Schema Registry plugin profile"
-    profile_schema_registry_command="--profile sr_plugin_app"
-    playground state set flags.ENABLE_SR_MAVEN_PLUGIN_NODE 1
-  fi
-
   # defined 3 Connect variable and when profile is included/excluded
   profile_connect_nodes_command=""
   if [ -z "$ENABLE_CONNECT_NODES" ]
@@ -10373,7 +10341,7 @@ function force_enable () {
 }
 
 function load_env_variables () {
-  for item in {ENABLE_CONTROL_CENTER,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,SQL_DATAGEN,ENABLE_KAFKA_NODES,ENABLE_SR_MAVEN_PLUGIN_NODE,CONNECT_NODES_PROFILES,CONNECT_NODES_PROFILES}
+  for item in {ENABLE_CONTROL_CENTER,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,SQL_DATAGEN,ENABLE_KAFKA_NODES,CONNECT_NODES_PROFILES,CONNECT_NODES_PROFILES}
   do
     i=$(playground state get "flags.${item}")
     if [ "$i" != "" ]
@@ -11027,7 +10995,6 @@ playground_run_command() {
   enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
   enable_jmx_grafana="${args[--enable-jmx-grafana]}"
   enable_kcat="${args[--enable-kcat]}"
-  enable_sr_maven_plugin_app="${args[--enable-sr-maven-plugin-app]}"
   enable_sql_datagen="${args[--enable-sql-datagen]}"
 
   if [ "$test_file" = "" ]
@@ -11054,7 +11021,6 @@ playground_run_command() {
   fi
 
   test_file_directory="$(dirname "${test_file}")"
-  dir1="${test_file_directory%/*}" #connect
   filename=$(basename -- "$test_file")
 
   flag_list=""
@@ -11198,12 +11164,6 @@ playground_run_command() {
     export ENABLE_KCAT=true
   fi
 
-  if [[ -n "$enable_sr_maven_plugin_app" ]]
-  then
-    flag_list="$flag_list --enable-sr-maven-plugin-app"
-    export ENABLE_SR_MAVEN_PLUGIN_NODE=true
-  fi
-
   if [[ -n "$enable_sql_datagen" ]]
   then
     flag_list="$flag_list --enable-sql-datagen"
@@ -11316,7 +11276,6 @@ playground_re_run_command() {
   enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
   enable_jmx_grafana="${args[--enable-jmx-grafana]}"
   enable_kcat="${args[--enable-kcat]}"
-  enable_sr_maven_plugin_app="${args[--enable-sr-maven-plugin-app]}"
   enable_sql_datagen="${args[--enable-sql-datagen]}"
   clear="${args[--clear]}"
 
@@ -11395,11 +11354,6 @@ playground_re_run_command() {
   if [[ -n "$enable_kcat" ]]
   then
     flag_list="$flag_list --enable-kcat"
-  fi
-
-  if [[ -n "$enable_sr_maven_plugin_app" ]]
-  then
-    flag_list="$flag_list --enable-sr-maven-plugin-app"
   fi
 
   if [[ -n "$enable_sql_datagen" ]]
@@ -11503,7 +11457,6 @@ playground_start_environment_command() {
   enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
   enable_jmx_grafana="${args[--enable-jmx-grafana]}"
   enable_kcat="${args[--enable-kcat]}"
-  enable_sr_maven_plugin_app="${args[--enable-sr-maven-plugin-app]}"
   docker_compose_override_file="${args[--docker-compose-override-file]}"
 
   if [ "$environment" = "ccloud" ]
@@ -11575,12 +11528,6 @@ playground_start_environment_command() {
   then
     flag_list="$flag_list --enable-kcat"
     export ENABLE_KCAT=true
-  fi
-
-  if [[ -n "$enable_sr_maven_plugin_app" ]]
-  then
-    flag_list="$flag_list --enable-sr-maven-plugin-app"
-    export ENABLE_SR_MAVEN_PLUGIN_NODE=true
   fi
 
   set +e
@@ -12458,7 +12405,6 @@ playground_repro_bootstrap_command() {
   enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
   enable_jmx_grafana="${args[--enable-jmx-grafana]}"
   enable_kcat="${args[--enable-kcat]}"
-  enable_sr_maven_plugin_app="${args[--enable-sr-maven-plugin-app]}"
   enable_sql_datagen="${args[--enable-sql-datagen]}"
 
   if [[ $test_file == *"@"* ]]
@@ -13576,11 +13522,6 @@ playground_repro_bootstrap_command() {
   if [[ -n "$enable_kcat" ]]
   then
     force_enable --enable-kcat ENABLE_KCAT
-  fi
-
-  if [[ -n "$enable_sr_maven_plugin_app" ]]
-  then
-    force_enable --enable-sr-maven-plugin-app ENABLE_SR_MAVEN_PLUGIN_NODE
   fi
 
   if [[ -n "$enable_sql_datagen" ]]
@@ -20912,14 +20853,6 @@ playground_run_parse_requirements() {
         ;;
 
       # :flag.case
-      --enable-sr-maven-plugin-app)
-
-        # :flag.case_no_arg
-        args['--enable-sr-maven-plugin-app']=1
-        shift
-        ;;
-
-      # :flag.case
       --enable-sql-datagen)
 
         # :flag.case_no_arg
@@ -21168,14 +21101,6 @@ playground_re_run_parse_requirements() {
         ;;
 
       # :flag.case
-      --enable-sr-maven-plugin-app)
-
-        # :flag.case_no_arg
-        args['--enable-sr-maven-plugin-app']=1
-        shift
-        ;;
-
-      # :flag.case
       --enable-sql-datagen)
 
         # :flag.case_no_arg
@@ -21405,14 +21330,6 @@ playground_start_environment_parse_requirements() {
 
         # :flag.case_no_arg
         args['--enable-kcat']=1
-        shift
-        ;;
-
-      # :flag.case
-      --enable-sr-maven-plugin-app)
-
-        # :flag.case_no_arg
-        args['--enable-sr-maven-plugin-app']=1
         shift
         ;;
 
@@ -22604,14 +22521,6 @@ playground_repro_bootstrap_parse_requirements() {
 
         # :flag.case_no_arg
         args['--enable-kcat']=1
-        shift
-        ;;
-
-      # :flag.case
-      --enable-sr-maven-plugin-app)
-
-        # :flag.case_no_arg
-        args['--enable-sr-maven-plugin-app']=1
         shift
         ;;
 

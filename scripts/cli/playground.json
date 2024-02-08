@@ -159,13 +159,6 @@
         },
         {
           "names": [
-            "--enable-sr-maven-plugin-app"
-          ],
-          "argument": "",
-          "description": "🔰 Enable Schema Registry Maven plugin App\n"
-        },
-        {
-          "names": [
             "--enable-sql-datagen"
           ],
           "argument": "",
@@ -279,13 +272,6 @@
         },
         {
           "names": [
-            "--enable-sr-maven-plugin-app"
-          ],
-          "argument": "",
-          "description": "🔰 Enable Schema Registry Maven plugin App\n"
-        },
-        {
-          "names": [
             "--enable-sql-datagen"
           ],
           "argument": "",
@@ -383,13 +369,6 @@
           ],
           "argument": "",
           "description": "🐈‍⬛ Enable kcat\n\nYou can use it with:\n\n$ docker exec kcat kcat -b broker:9092 -L\n"
-        },
-        {
-          "names": [
-            "--enable-sr-maven-plugin-app"
-          ],
-          "argument": "",
-          "description": "🔰 Enable Schema Registry Maven plugin App\n"
         }
       ],
       "subcommands": null
@@ -742,13 +721,6 @@
               ],
               "argument": "",
               "description": "🐈‍⬛ Enable kcat\n\nYou can use it with:\n\n$ docker exec kcat kcat -b broker:9092 -L\n"
-            },
-            {
-              "names": [
-                "--enable-sr-maven-plugin-app"
-              ],
-              "argument": "",
-              "description": "🔰 Enable Schema Registry Maven plugin App\n"
             },
             {
               "names": [

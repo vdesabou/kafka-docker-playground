@@ -11,7 +11,6 @@ enable_multiple_brokers="${args[--enable-multiple-brokers]}"
 enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
 enable_jmx_grafana="${args[--enable-jmx-grafana]}"
 enable_kcat="${args[--enable-kcat]}"
-enable_sr_maven_plugin_app="${args[--enable-sr-maven-plugin-app]}"
 enable_sql_datagen="${args[--enable-sql-datagen]}"
 clear="${args[--clear]}"
 
@@ -90,11 +89,6 @@ fi
 if [[ -n "$enable_kcat" ]]
 then
   flag_list="$flag_list --enable-kcat"
-fi
-
-if [[ -n "$enable_sr_maven_plugin_app" ]]
-then
-  flag_list="$flag_list --enable-sr-maven-plugin-app"
 fi
 
 if [[ -n "$enable_sql_datagen" ]]

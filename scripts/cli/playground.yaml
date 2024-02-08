@@ -216,12 +216,6 @@ subcommands:
         $ docker exec kcat kcat -b broker:9092 -L
         
     - names:
-      - --enable-sr-maven-plugin-app
-      argument: ""
-      description: | 
-        🔰 Enable Schema Registry Maven plugin App
-        
-    - names:
       - --enable-sql-datagen
       argument: ""
       description: | 
@@ -389,12 +383,6 @@ subcommands:
         $ docker exec kcat kcat -b broker:9092 -L
         
     - names:
-      - --enable-sr-maven-plugin-app
-      argument: ""
-      description: | 
-        🔰 Enable Schema Registry Maven plugin App
-        
-    - names:
       - --enable-sql-datagen
       argument: ""
       description: | 
@@ -554,12 +542,6 @@ subcommands:
         You can use it with:
         
         $ docker exec kcat kcat -b broker:9092 -L
-        
-    - names:
-      - --enable-sr-maven-plugin-app
-      argument: ""
-      description: | 
-        🔰 Enable Schema Registry Maven plugin App
         
     subcommands:
   - name: run-ccloud
@@ -1016,12 +998,6 @@ subcommands:
             You can use it with:
             
             $ docker exec kcat kcat -b broker:9092 -L
-            
-        - names:
-          - --enable-sr-maven-plugin-app
-          argument: ""
-          description: | 
-            🔰 Enable Schema Registry Maven plugin App
             
         - names:
           - --enable-sql-datagen
