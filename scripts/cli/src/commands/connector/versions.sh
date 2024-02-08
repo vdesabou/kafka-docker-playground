@@ -3,8 +3,8 @@ test_file=$(playground state get run.test_file)
 connector_type=$(playground state get run.connector_type)
 if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
 then
-    logerror "❌ versions command is not available with $connector_type connector"
-    exit 1
+    log "connector versions command is not supported with $connector_type connector"
+    exit 0
 fi
 
 if [ ! -f $test_file ]

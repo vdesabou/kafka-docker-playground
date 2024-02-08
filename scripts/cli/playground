@@ -17173,8 +17173,8 @@ playground_connector_versions_command() {
   connector_type=$(playground state get run.connector_type)
   if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then
-      logerror "❌ versions command is not available with $connector_type connector"
-      exit 1
+      log "connector versions command is not supported with $connector_type connector"
+      exit 0
   fi
 
   if [ ! -f $test_file ]
@@ -17259,8 +17259,8 @@ playground_connector_restart_command() {
 
   if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then
-      logerror "❌ restart command is not available with $connector_type connector"
-      exit 1
+      log "connector restart command is not supported with $connector_type connector"
+      exit 0
   fi
 
   tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
@@ -17312,8 +17312,8 @@ playground_connector_stop_command() {
 
   if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then
-      logerror "❌ stop command is not available with $connector_type connector"
-      exit 1
+      log "connector stop command is not available with $connector_type connector"
+      exit 0
   fi
 
   if [[ ! -n "$connector" ]]
@@ -17854,7 +17854,7 @@ playground_connector_show_config_parameters_command() {
 
   if [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then
-      log "config parameters cannot be retrieved with $connector_type connector"
+      log "connector show-config-parameters command is not supported with $connector_type connector"
       exit 0
   fi
 
@@ -18330,8 +18330,8 @@ playground_connector_open_docs_command() {
 
   if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then
-      logerror "❌ command not supported with $connector_type connector"
-      exit 1
+      log "connector open-docs command is not supported with $connector_type connector"
+      exit 0
   fi
 
   if [ ! -f $test_file ]
@@ -18395,8 +18395,8 @@ playground_connector_log_level_command() {
 
   if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then
-      logerror "❌ command not supported with $connector_type connector"
-      exit 1
+      log "connector log-level command is not supported with $connector_type connector"
+      exit 0
   fi
 
   if [[ ! -n "$connector" ]]

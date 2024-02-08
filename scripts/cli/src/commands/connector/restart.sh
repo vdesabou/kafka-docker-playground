@@ -15,8 +15,8 @@ fi
 
 if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
 then
-    logerror "❌ restart command is not available with $connector_type connector"
-    exit 1
+    log "connector restart command is not supported with $connector_type connector"
+    exit 0
 fi
 
 tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
