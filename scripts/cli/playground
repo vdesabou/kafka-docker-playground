@@ -10438,6 +10438,9 @@ function get_connector_type () {
     if grep -q -e "ccloud" <<< "$test_file"
     then
       echo "$CONNECTOR_TYPE_SELF_MANAGED"
+    elif [[ -n "$environment" ]] && [ "$environment" == "ccloud" ]
+    then
+      echo "$CONNECTOR_TYPE_SELF_MANAGED"
     else
       echo "$CONNECTOR_TYPE_ONPREM"
     fi
@@ -18580,7 +18583,8 @@ playground_connector_create_or_update_command() {
   else
       get_connect_url_and_security
       add_connector_config_based_on_environment "$environment" "$json_content"
-      handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$json_file $connect_url/connectors/$connector/config"
+      echo "$json_content" > $new_json_file
+      handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$new_json_file $connect_url/connectors/$connector/config"
   fi
 
   if [[ -n "$level" ]]

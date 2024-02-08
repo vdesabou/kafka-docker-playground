@@ -3764,6 +3764,9 @@ function get_connector_type () {
     if grep -q -e "ccloud" <<< "$test_file"
     then
       echo "$CONNECTOR_TYPE_SELF_MANAGED"
+    elif [[ -n "$environment" ]] && [ "$environment" == "ccloud" ]
+    then
+      echo "$CONNECTOR_TYPE_SELF_MANAGED"
     else
       echo "$CONNECTOR_TYPE_ONPREM"
     fi

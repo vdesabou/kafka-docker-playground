@@ -166,7 +166,8 @@ then
 else
     get_connect_url_and_security
     add_connector_config_based_on_environment "$environment" "$json_content"
-    handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$json_file $connect_url/connectors/$connector/config"
+    echo "$json_content" > $new_json_file
+    handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$new_json_file $connect_url/connectors/$connector/config"
 fi
 
 if [[ -n "$level" ]]
