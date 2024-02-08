@@ -10428,7 +10428,7 @@ function get_connector_type () {
     if grep -q -e "fully-managed-connect" <<< "$test_file"
     then
       echo "$CONNECTOR_TYPE_FULLY_MANAGED"
-    elif grep -q -e "custom-conector" <<< "$test_file"
+    elif grep -q -e "custom-connector" <<< "$test_file"
     then
       echo "$CONNECTOR_TYPE_CUSTOM"
     else

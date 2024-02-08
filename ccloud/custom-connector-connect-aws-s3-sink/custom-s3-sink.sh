@@ -136,11 +136,11 @@ EOF
 
 connector_name="S3_SINK_CUSTOM"
 set +e
-log "Deleting fully managed connector $connector_name, it might fail..."
+log "Deleting confluent cloud custom connector $connector_name, it might fail..."
 playground connector delete --connector $connector_name
 set -e
 
-log "Creating fully managed connector"
+log "Creating confluent cloud custom connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
     "confluent.connector.type": "CUSTOM",
