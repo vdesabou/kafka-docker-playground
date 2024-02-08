@@ -18,9 +18,7 @@ playground topic create --topic products
 set -e
 
 log "Sending messages to topic products on source OnPREM cluster"
-playground topic produce -t products --nb-messages 10 << 'EOF'
-%g
-EOF
+seq -f "This is a message %g" 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic products
 
 playground connector create-or-update --connector replicate-onprem-to-cloud  << EOF
 {
