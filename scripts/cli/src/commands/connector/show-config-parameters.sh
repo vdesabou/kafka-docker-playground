@@ -191,8 +191,8 @@ do
         else
             cat $filename > "/tmp/config-$connector_class-$version.txt"
             filename="/tmp/config-$connector_class-$version.txt"
-            echo "🔩 list of all available parameters for connector $connector ($class) and version $version (with default value when applicable)" >> $filename
             cat $json_filename >> $filename
+            echo "🔩 list of all available parameters for connector $connector ($class) and version $version (with default value when applicable)" >> $filename
         fi
 
         editor=$(playground config get editor)

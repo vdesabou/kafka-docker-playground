@@ -48,9 +48,6 @@ do
     playground connector open-docs --only-show-url  | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> $file
 
     echo -e "" >> $file
-    playground connector show-config-parameters --only-show-json --connector $connector  | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> $file
-
-    echo -e "" >> $file
     playground connector show-config-parameters --connector $connector  | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> $file
 
     editor=$(playground config get editor)
