@@ -8,6 +8,12 @@ verbose="${args[--verbose]}"
 
 connector_type=$(playground state get run.connector_type)
 
+if [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+then
+    log "config parameters cannot be retrieved with $connector_type connector"
+    exit 0
+fi
+
 if [[ ! -n "$connector" ]]
 then
     connector=$(playground get-connector-list)
