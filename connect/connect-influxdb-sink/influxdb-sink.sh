@@ -48,10 +48,10 @@ docker exec -i connect kafka-avro-console-consumer \
 log "Creating InfluxDB sink connector"
 playground connector create-or-update --connector influxdb-sink  << EOF
 {
-     "connector.class": "io.confluent.influxdb.InfluxDBSinkConnector",
-     "tasks.max": "1",
-     "influxdb.url": "http://influxdb:8086",
-     "topics": "orders"
+  "connector.class": "io.confluent.influxdb.InfluxDBSinkConnector",
+  "tasks.max": "1",
+  "influxdb.url": "http://influxdb:8086",
+  "topics": "orders"
 }
 EOF
 
