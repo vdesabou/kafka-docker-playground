@@ -2192,29 +2192,6 @@ playground_repro_bootstrap_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--producer, -p PRODUCER-TYPE")"
-    printf "    ♨️ Java producer type to use\n    \n    One of avro, avro-with-key, protobuf, protobuf-with-key, json-schema,\n    json-schema-with-key\n    \n    🎓 Tip: Most of times, it's much simpler to use 'playground topic produce'.\n    Use java producer only if you have very specific requirements such as\n    specifying record timestamp or to do perf testing (even though CLI is also\n    good for that)\n    \n    🎓 Tip: 'with-key' will also produce key with selected converter, otherwise\n    LongConverter is used\n"
-    printf "    Allowed: none, avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key\n"
-    printf "    Default: none\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--nb-producers, -n NB-PRODUCERS")"
-    printf "    2️⃣ Number of java producers to generate\n"
-    printf "    Default: \n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--producer-schema-key")"
-    printf "    🔰 Schema to use for the key\n    \n    ✨ Copy and paste the schema you want to use for the key, save and close the\n    file to continue\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--producer-schema-value")"
-    printf "    🔰 Schema to use for the value\n    \n    ✨ Copy and paste the schema you want to use for the key, save and close the\n    file to continue\n"
-    echo
-
-    # :flag.usage
     printf "  %s\n" "$(magenta "--custom-smt")"
     printf "    ⚙️ Add a custom SMT (which is a no-op)\n"
     echo
@@ -6792,6 +6769,11 @@ function version_gt() {
 
 function set_kafka_client_tag()
 {
+    if [[ $TAG_BASE = 7.6.* ]]
+    then
+      export KAFKA_CLIENT_TAG="3.6.0"
+    fi
+
     if [[ $TAG_BASE = 7.5.* ]]
     then
       export KAFKA_CLIENT_TAG="3.5.0"

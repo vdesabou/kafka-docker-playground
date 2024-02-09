@@ -867,6 +867,7 @@ commands:
         💭 Description for the reproduction model
 
     - long: --producer
+      private: true
       short: -p
       arg: producer-type
       conflicts: [--pipeline]
@@ -889,6 +890,7 @@ commands:
         🎓 Tip: 'with-key' will also produce key with selected converter, otherwise LongConverter is used
 
     - long: --nb-producers
+      private: true
       short: -n
       arg: nb-producers
       validate: integer
@@ -897,6 +899,7 @@ commands:
         2️⃣ Number of java producers to generate
 
     - long: --producer-schema-key
+      private: true
       required: false
       help: |-
         🔰 Schema to use for the key
@@ -904,6 +907,7 @@ commands:
         ✨ Copy and paste the schema you want to use for the key, save and close the file to continue
 
     - long: --producer-schema-value
+      private: true
       required: false
       help: |-
         🔰 Schema to use for the value

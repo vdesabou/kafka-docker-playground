@@ -138,7 +138,7 @@ end
 if flags.any?
   > ## Options
   >
-  flags.each do |flag|
+  flags.reject(&:private).each do |flag|
     attributes = flag.required || flag.repeatable || flag.default || flag.allowed || flag.conflicts
 
     > #### *{{ flag.usage_string }}*
