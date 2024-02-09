@@ -59,26 +59,26 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 log "Creating JMS weblogic source connector"
 playground connector create-or-update --connector weblogic-topic-source  << EOF
 {
-               "connector.class": "io.confluent.connect.weblogic.WeblogicSourceConnector",
-               "kafka.topic": "from-weblogic-messages",
-               "java.naming.factory.initial": "weblogic.jndi.WLInitialContextFactory",
-               "jms.destination.name": "myJMSServer/mySystemModule!myJMSServer@MyDistributedTopic",
-               "jms.destination.type": "TOPIC",
-               "java.naming.provider.url": "t3://weblogic-jms:7001",
-               "connection.factory.name": "myFactory",
-               "java.naming.security.principal": "weblogic",
-               "java.naming.security.credentials": "welcome1",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "tasks.max" : "1",
-               "batch.size": "1",
-               "max.pending.messages": "1",
-               "jms.subscription.durable": true,
-               "jms.subscription.name": "sub1",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+     "connector.class": "io.confluent.connect.weblogic.WeblogicSourceConnector",
+     "kafka.topic": "from-weblogic-messages",
+     "java.naming.factory.initial": "weblogic.jndi.WLInitialContextFactory",
+     "jms.destination.name": "myJMSServer/mySystemModule!myJMSServer@MyDistributedTopic",
+     "jms.destination.type": "TOPIC",
+     "java.naming.provider.url": "t3://weblogic-jms:7001",
+     "connection.factory.name": "myFactory",
+     "java.naming.security.principal": "weblogic",
+     "java.naming.security.credentials": "welcome1",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "tasks.max" : "1",
+     "batch.size": "1",
+     "max.pending.messages": "1",
+     "jms.subscription.durable": true,
+     "jms.subscription.name": "sub1",
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 
