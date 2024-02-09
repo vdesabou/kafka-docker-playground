@@ -6,10 +6,8 @@ source ${DIR}/../../scripts/utils.sh
 
 if test -z "$(docker images -q container-registry.oracle.com/middleware/weblogic:12.2.1.3)"
 then
-     if [ ! -z "$GITHUB_RUN_NUMBER" ]
+     if [ ! -z "$ORACLE_CONTAINER_REGISTRY_USERNAME" ] && [ ! -z "$ORACLE_CONTAINER_REGISTRY_PASSWORD" ]
      then
-          # running with github actions
-
           docker login container-registry.oracle.com -u $ORACLE_CONTAINER_REGISTRY_USERNAME -p "$ORACLE_CONTAINER_REGISTRY_PASSWORD"
           docker pull container-registry.oracle.com/middleware/weblogic:12.2.1.3
      else
