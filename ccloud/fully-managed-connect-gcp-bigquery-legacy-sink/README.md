@@ -1,8 +1,8 @@
-# Fully Managed GCP BigQuery Sink connector
+# Fully Managed GCP BigQuery Sink (Legacy) connector
 
 ## Objective
 
-Quickly test [GCP BigQuery Sink](https://docs.confluent.io/cloud/current/connectors/cc-gcp-bigquery-sink.html) connector.
+Quickly test [GCP BigQuery Sink (Legacy)](https://docs.confluent.io/cloud/current/connectors/cc-gcp-bigquery-sink.html) connector.
 
 * Active Google Cloud Platform (GCP) account with authorization to create resources
 
@@ -59,5 +59,5 @@ Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment v
 Simply run:
 
 ```bash
-$ playground run -f fully-managed-gcp-bigquery<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <GCP_PROJECT>
+$ playground run -f fully-managed-gcp-bigquery-legacy<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <GCP_PROJECT>
 ```
