@@ -8814,8 +8814,17 @@ function ccloud::create_and_use_cluster() {
   (($? != 0)) && { echo "$OUTPUT"; exit 1; }
   CLUSTER=$(echo "$OUTPUT" | jq -r .id)
   confluent kafka cluster use $CLUSTER 2>/dev/null
-  echo $CLUSTER
 
+  # Wait until the cluster status is not PROVISIONING
+  while true; do
+    CLUSTER_STATUS=$(confluent kafka cluster describe $CLUSTER --output json | jq -r .status)
+    if [ "$CLUSTER_STATUS" != "PROVISIONING" ]; then
+      break
+    fi
+    sleep 5
+  done
+
+  echo $CLUSTER
   return 0
 }
 
