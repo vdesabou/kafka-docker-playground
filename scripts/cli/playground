@@ -31,9 +31,9 @@ playground_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground COMMAND\n"
+  printf "  playground [OPTIONS] COMMAND\n"
   printf "  playground [COMMAND] --help | -h\n"
-  printf "  playground --version | -v\n"
+  printf "  playground --version\n"
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
@@ -145,11 +145,17 @@ playground_usage() {
   if [[ -n $long_usage ]]; then
     printf "%s\n" "$(bold "== Options ==")"
 
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐛 set verbose output (set -x)\n    \n    ❗ it can print sensitive information ❗\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
     echo
-    printf "  %s\n" "$(magenta "--version, -v")"
+    printf "  %s\n" "$(magenta "--version")"
     printf "    Show version number\n"
     echo
 
@@ -18686,7 +18692,7 @@ parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
     case "${1:-}" in
-      --version | -v)
+      --version)
         version_command
         exit
         ;;
@@ -18695,6 +18701,14 @@ parse_requirements() {
         long_usage=yes
         playground_usage
         exit
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
         ;;
 
       *)
@@ -28784,6 +28798,16 @@ before_hook() {
   DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
   dir1=$(echo ${DIR_CLI%/*})
   root_folder=$(echo ${dir1%/*})
+
+  verbose="${args[--verbose]}"
+
+  if [[ -n "$verbose" ]]
+  then
+      log "🐛 --verbose is set"
+      export PS4='\[\033[0;35m\]+ $(date "+%Y-%m-%d %H:%M:%S") [debug] \[\033[0m\]'
+      set -x
+
+  fi
 }
 
 # :command.initialize

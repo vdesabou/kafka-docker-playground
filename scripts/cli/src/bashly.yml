@@ -8,6 +8,15 @@ help: |-
   👉 Check documentation https://kafka-docker-playground.io/#/cli
 filters:
 - docker_running
+
+flags:
+- long: --verbose
+  short: -v
+  help: |
+    🐛 set verbose output (set -x)
+
+    ❗ it can print sensitive information ❗
+
 commands:
 
 - name: help

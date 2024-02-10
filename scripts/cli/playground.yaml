@@ -3,7 +3,7 @@ description: |
   🧠 CLI for Kafka Docker Playground 🐳
   
   👉 Check documentation https://kafka-docker-playground.io/#/cli
-usage: playground COMMAND
+usage: playground [OPTIONS] COMMAND
 options: []
 inheritedOptions: []
 subcommands:

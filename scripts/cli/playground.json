@@ -1,7 +1,7 @@
 {
   "name": "playground",
   "description": "🧠 CLI for Kafka Docker Playground 🐳\n\n👉 Check documentation https://kafka-docker-playground.io/#/cli\n",
-  "usage": "playground COMMAND",
+  "usage": "playground [OPTIONS] COMMAND",
   "options": [],
   "inheritedOptions": [],
   "subcommands": [
