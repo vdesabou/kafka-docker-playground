@@ -1,19 +1,45 @@
+function verbose_begin () {
+  # Check if set -x is currently active
+  if [[ $- = *x* ]]
+  then
+    # Disable set -x
+    set +x
+    was_x_set=1
+  else
+    was_x_set=0
+  fi
+}
+
+function verbose_end () {
+  # If set -x was initially active, re-enable it
+  if [[ $was_x_set -eq 1 ]]
+  then
+    set -x
+  fi
+}
+
 function log() {
+  verbose_begin
   YELLOW='\033[0;33m'
   NC='\033[0m' # No Color
   echo -e "$YELLOW$(date +"%H:%M:%S") ℹ️ $@$NC"
+  verbose_end
 }
 
 function logerror() {
+  verbose_begin
   RED='\033[0;31m'
   NC='\033[0m' # No Color
   echo -e "$RED$(date +"%H:%M:%S") 🔥 $@$NC"
+  verbose_end
 }
 
 function logwarn() {
+  verbose_begin
   PURPLE='\033[0;35m'
   NC='\033[0m' # No Color
   echo -e "$PURPLE`date +"%H:%M:%S"` ❗ $@$NC"
+  verbose_end
 }
 
 function urlencode() {
@@ -36,21 +62,25 @@ function urlencode() {
 }
 
 function jq() {
-    if [[ $(type -f jq 2>&1) =~ "not found" ]]
-    then
-      docker run --rm -i imega/jq "$@"
-    else
-      $(type -f jq | awk '{print $3}') "$@"
-    fi
+  verbose_begin
+  if [[ $(type -f jq 2>&1) =~ "not found" ]]
+  then
+    docker run --rm -i imega/jq "$@"
+  else
+    $(type -f jq | awk '{print $3}') "$@"
+  fi
+  verbose_end
 }
 
 function yq() {
-    if [[ $(type -f yq 2>&1) =~ "not found" ]]
-    then
-      docker run -u0 -v /tmp:/tmp --rm -i mikefarah/yq "$@"
-    else
-      $(type -f yq | awk '{print $3}') "$@"
-    fi
+  verbose_begin
+  if [[ $(type -f yq 2>&1) =~ "not found" ]]
+  then
+    docker run -u0 -v /tmp:/tmp --rm -i mikefarah/yq "$@"
+  else
+    $(type -f yq | awk '{print $3}') "$@"
+  fi
+  verbose_end
 }
 
 # https://stackoverflow.com/a/24067243
@@ -577,6 +607,7 @@ EOF
 }
 
 function timeout() {
+  verbose_begin
   if [[ $(type -f timeout 2>&1) =~ "not found" ]]; then
     # ignore
     shift
@@ -584,6 +615,7 @@ function timeout() {
   else
     $(type -f timeout | awk '{print $3}') "$@"
   fi
+  verbose_end
 }
 
 function get_connect_image() {
@@ -3670,12 +3702,14 @@ function check_arm64_support() {
 }
 
 function playground() {
+  verbose_begin
   if [[ $(type -f playground 2>&1) =~ "not found" ]]
   then
     ../../scripts/cli/playground "$@"
   else
     $(which playground) "$@"
   fi
+  verbose_end
 }
 
 function force_enable () {

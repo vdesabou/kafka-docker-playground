@@ -14,6 +14,6 @@ vvv="${args[--vvv]}"
 if [[ -n "$vvv" ]]
 then
     log "🐛 --vvv is set"
-    export PS4='\[\033[0;35m\]+ $(date "+%Y-%m-%d %H:%M:%S") [debug] \[\033[0m\]'
+    export PS4='\[\033[0;36m\]+ $(date "+%H:%M:%S") [$(basename $0):${LINENO}] \[\033[0m\]'
     set -x 
 fi
