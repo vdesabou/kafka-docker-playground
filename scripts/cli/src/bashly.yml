@@ -10,7 +10,7 @@ filters:
 - docker_running
 
 flags:
-- long: --verbose
+- long: --vvv
   short: -v
   help: |
     🐛 set verbose output (set -x)

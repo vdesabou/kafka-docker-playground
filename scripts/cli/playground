@@ -147,7 +147,7 @@ playground_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "  %s\n" "$(magenta "--vvv, -v")"
     printf "    🐛 set verbose output (set -x)\n    \n    ❗ it can print sensitive information ❗\n"
     echo
 
@@ -10459,6 +10459,11 @@ function handle_ccloud_connect_rest_api () {
 
 function handle_onprem_connect_rest_api () {
   curl_request="$1"
+  if [[ -n "$verbose" ]]
+  then
+    log "🐞 curl command used"
+    echo "$curl_request"
+  fi
   eval "curl_output=\$($curl_request)"
   ret=$?
   if [ $ret -eq 0 ]
@@ -18704,10 +18709,10 @@ parse_requirements() {
         ;;
 
       # :flag.case
-      --verbose | -v)
+      --vvv | -v)
 
         # :flag.case_no_arg
-        args['--verbose']=1
+        args['--vvv']=1
         shift
         ;;
 
@@ -28799,11 +28804,11 @@ before_hook() {
   dir1=$(echo ${DIR_CLI%/*})
   root_folder=$(echo ${dir1%/*})
 
-  verbose="${args[--verbose]}"
+  vvv="${args[--vvv]}"
 
-  if [[ -n "$verbose" ]]
+  if [[ -n "$vvv" ]]
   then
-      log "🐛 --verbose is set"
+      log "🐛 --vvv is set"
       export PS4='\[\033[0;35m\]+ $(date "+%Y-%m-%d %H:%M:%S") [debug] \[\033[0m\]'
       set -x
 

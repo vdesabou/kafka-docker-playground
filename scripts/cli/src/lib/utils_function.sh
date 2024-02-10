@@ -3816,6 +3816,11 @@ function handle_ccloud_connect_rest_api () {
 
 function handle_onprem_connect_rest_api () {
   curl_request="$1"
+  if [[ -n "$verbose" ]]
+  then
+    log "🐞 curl command used"
+    echo "$curl_request"
+  fi
   eval "curl_output=\$($curl_request)"
   ret=$?
   if [ $ret -eq 0 ]
