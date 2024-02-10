@@ -276,7 +276,7 @@ do
   fi
 
   type=""
-  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+  tmp_dir=$(mktemp -d -t playground)
   trap 'rm -rf $tmp_dir' EXIT
   fifo_path="$tmp_dir/kafka_output_fifo"
   mkfifo "$fifo_path"

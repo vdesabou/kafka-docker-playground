@@ -41,7 +41,7 @@ else
     json_content=$json
 fi
 
-tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+tmp_dir=$(mktemp -d -t playground)
 trap 'rm -rf $tmp_dir' EXIT
 json_file=$tmp_dir/connector.json
 new_json_file=$tmp_dir/connector_new.json

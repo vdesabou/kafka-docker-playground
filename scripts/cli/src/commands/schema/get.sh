@@ -4,7 +4,7 @@ verbose="${args[--verbose]}"
 
 get_sr_url_and_security
 
-tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+tmp_dir=$(mktemp -d -t playground)
 trap 'rm -rf $tmp_dir' EXIT
 #log "tmp_dir is $tmp_dir"
 

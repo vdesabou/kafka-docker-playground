@@ -40,7 +40,7 @@ do
 
             if ( [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] ) && [[ ! -n "$no_clipboard" ]]
             then
-                tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+                tmp_dir=$(mktemp -d -t playground)
                 trap 'rm -rf $tmp_dir' EXIT
                 echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
                 cat "/tmp/config-$connector" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
@@ -76,7 +76,7 @@ do
 
             if ( [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] ) && [[ ! -n "$no_clipboard" ]]
             then
-                tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+                tmp_dir=$(mktemp -d -t playground)
                 trap 'rm -rf $tmp_dir' EXIT
                 echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
                 echo "$curl_output" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp

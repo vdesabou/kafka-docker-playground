@@ -23,7 +23,7 @@ eval "validate_config=(${args[--validate-config]})"
 eval "producer_property=(${args[--producer-property]})"
 
 
-tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+tmp_dir=$(mktemp -d -t playground)
 trap 'rm -rf $tmp_dir' EXIT
 
 # debug

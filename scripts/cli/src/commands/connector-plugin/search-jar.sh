@@ -18,7 +18,7 @@ else
     connector_tag="latest"
 fi
 
-tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+tmp_dir=$(mktemp -d -t playground)
 trap 'rm -rf $tmp_dir' EXIT
 
 get_connect_image

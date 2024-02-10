@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 
-tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+tmp_dir=$(mktemp -d -t playground)
 trap 'rm -rf $tmp_dir' EXIT
 export TMP_CREDENTIALS_FILE="$tmp_dir/credentials"
 

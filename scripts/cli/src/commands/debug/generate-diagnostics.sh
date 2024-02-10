@@ -1,5 +1,5 @@
 container="${args[--container]}"
-tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+tmp_dir=$(mktemp -d -t playground)
 trap 'rm -rf $tmp_dir' EXIT
 
 if [[ "$container" == "connect" ]] || [[ "$container" == "broker" ]]

@@ -126,7 +126,7 @@ fi
 
 repro_dir=$root_folder/$output_folder/$final_dir
 mkdir -p $repro_dir
-tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+tmp_dir=$(mktemp -d -t playground)
 trap 'rm -rf $tmp_dir' EXIT
 
 description_kebab_case="${description// /-}"
