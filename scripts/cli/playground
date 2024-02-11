@@ -6513,7 +6513,7 @@ then
   exit 1
 fi
 echo "$docker_command" > /tmp/tmp
-tmp_dir=$(mktemp -d -t playground)
+tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
 cat << EOF > $tmp_dir/docker-compose-remote-debugging.yml
 version: '3.5'
@@ -6949,7 +6949,7 @@ function maybe_create_image()
       CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then apt-get update && echo bind-utils openssl unzip findutils net-tools nc jq which iptables tree | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/* && touch /tmp/done; fi"
     fi
 
-    tmp_dir=$(mktemp -d -t playground)
+    tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
     trap 'rm -rf $tmp_dir' EXIT
 cat << EOF > $tmp_dir/Dockerfile
 FROM ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
@@ -10361,7 +10361,7 @@ function force_enable () {
 
   logwarn "💪 Forcing $flag ($env_variable env variable)"
   line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh$' $repro_test_file | cut -d ":" -f 1 | tail -n1)
-  tmp_dir=$(mktemp -d -t playground)
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
   echo "# remove or comment those lines if you don't need it anymore" > $tmp_dir/tmp_force_enable
   echo "logwarn \"💪 Forcing $flag ($env_variable env variable) as it was set when reproduction model was created\"" >> $tmp_dir/tmp_force_enable
@@ -12545,7 +12545,7 @@ playground_repro_bootstrap_command() {
 
   repro_dir=$root_folder/$output_folder/$final_dir
   mkdir -p $repro_dir
-  tmp_dir=$(mktemp -d -t playground)
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
 
   description_kebab_case="${description// /-}"
@@ -13610,7 +13610,7 @@ playground_schema_get_command() {
 
   get_sr_url_and_security
 
-  tmp_dir=$(mktemp -d -t playground)
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
   #log "tmp_dir is $tmp_dir"
 
@@ -13722,7 +13722,7 @@ playground_schema_register_command() {
 
   get_sr_url_and_security
 
-  tmp_dir=$(mktemp -d -t playground)
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
   #log "tmp_dir is $tmp_dir"
   schema_file=$tmp_dir/value_schema
@@ -14020,7 +14020,7 @@ playground_schema_delete_command() {
 # :command.function
 playground_debug_install_vscode_extension_command() {
   # src/commands/debug/install-vscode-extension.sh
-  tmp_dir=$(mktemp -d -t playground)
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
 
   extension_dir=$tmp_dir/extension
@@ -14123,7 +14123,7 @@ playground_debug_testssl_command() {
 playground_debug_generate_diagnostics_command() {
   # src/commands/debug/generate-diagnostics.sh
   container="${args[--container]}"
-  tmp_dir=$(mktemp -d -t playground)
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
 
   if [[ "$container" == "connect" ]] || [[ "$container" == "broker" ]]
@@ -15249,7 +15249,7 @@ playground_topic_consume_command() {
     fi
 
     type=""
-    tmp_dir=$(mktemp -d -t playground)
+    tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
     trap 'rm -rf $tmp_dir' EXIT
     fifo_path="$tmp_dir/kafka_output_fifo"
     mkfifo "$fifo_path"
@@ -15504,7 +15504,7 @@ playground_topic_produce_command() {
   eval "validate_config=(${args[--validate-config]})"
   eval "producer_property=(${args[--producer-property]})"
 
-  tmp_dir=$(mktemp -d -t playground)
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
 
   # debug
@@ -16760,7 +16760,7 @@ playground_connector_plugin_search_jar_command() {
       connector_tag="latest"
   fi
 
-  tmp_dir=$(mktemp -d -t playground)
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
 
   get_connect_image
@@ -17569,7 +17569,7 @@ playground_connector_show_lag_command() {
     echo -e "$ORANGE`date +"%H:%M:%S"` 🔸$@$NC"
   }
 
-  tmp_dir=$(mktemp -d -t playground)
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
   lag_output=$tmp_dir/lag_output
 
@@ -17777,7 +17777,7 @@ playground_connector_show_config_command() {
 
               if ( [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] ) && [[ ! -n "$no_clipboard" ]]
               then
-                  tmp_dir=$(mktemp -d -t playground)
+                  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
                   trap 'rm -rf $tmp_dir' EXIT
                   echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
                   cat "/tmp/config-$connector" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
@@ -17813,7 +17813,7 @@ playground_connector_show_config_command() {
 
               if ( [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] ) && [[ ! -n "$no_clipboard" ]]
               then
-                  tmp_dir=$(mktemp -d -t playground)
+                  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
                   trap 'rm -rf $tmp_dir' EXIT
                   echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
                   echo "$curl_output" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
@@ -17856,7 +17856,7 @@ playground_connector_show_config_parameters_command() {
       fi
   fi
 
-  tmp_dir=$(mktemp -d -t playground)
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
   json_file=$tmp_dir/connector.json
 
@@ -18128,7 +18128,7 @@ playground_connector_select_config_command() {
 
           if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
           then
-              tmp_dir=$(mktemp -d -t playground)
+              tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
               trap 'rm -rf $tmp_dir' EXIT
               echo "$res" > $tmp_dir/tmp
 
@@ -18145,7 +18145,7 @@ playground_connector_snippets_command() {
   converter=${args[--converter]}
   dlq=${args[--dlq]}
 
-  tmp_dir=$(mktemp -d -t playground)
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
 
   if [[ ! -n "$converter" ]] && [[ ! -n "$dlq" ]]
@@ -18472,7 +18472,7 @@ playground_connector_create_or_update_command() {
       json_content=$json
   fi
 
-  tmp_dir=$(mktemp -d -t playground)
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
   json_file=$tmp_dir/connector.json
   new_json_file=$tmp_dir/connector_new.json
@@ -18650,7 +18650,7 @@ playground_connector_update_command() {
       fi
   fi
 
-  tmp_dir=$(mktemp -d -t playground)
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
 
   items=($connector)

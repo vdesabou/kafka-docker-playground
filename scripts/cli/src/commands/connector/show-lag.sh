@@ -135,7 +135,7 @@ function log_same() {
   echo -e "$ORANGE`date +"%H:%M:%S"` 🔸$@$NC"
 }
 
-tmp_dir=$(mktemp -d -t playground)
+tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
 lag_output=$tmp_dir/lag_output
 

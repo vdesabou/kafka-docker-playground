@@ -1,4 +1,4 @@
-tmp_dir=$(mktemp -d -t playground)
+tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
 
 extension_dir=$tmp_dir/extension

@@ -1,7 +1,7 @@
 converter=${args[--converter]}
 dlq=${args[--dlq]}
 
-tmp_dir=$(mktemp -d -t playground)
+tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
 
 if [[ ! -n "$converter" ]] && [[ ! -n "$dlq" ]]
