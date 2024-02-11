@@ -914,5 +914,7 @@ function add_connector_config_based_on_environment () {
 
   echo "$json_content" > $tmp_dir/2.json
   log "✨ Following config was added to handle environment $environment:"
+  set +e
   diff <(jq --sort-keys . $tmp_dir/1.json) <(jq --sort-keys . $tmp_dir/2.json)
+  set -e
 }
