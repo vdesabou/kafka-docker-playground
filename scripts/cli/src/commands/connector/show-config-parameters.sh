@@ -68,7 +68,6 @@ do
             fi
         done
     fi
-    set +e
 
     mkdir -p $root_folder/.connector_config
     filename="$root_folder/.connector_config/config-$connector_class-$version.txt"
@@ -97,7 +96,6 @@ do
     fi
     if [ ! -f $filename ] || [ ! -f $json_filename ]
     then
-        set +e
         if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
         then
             get_ccloud_connect

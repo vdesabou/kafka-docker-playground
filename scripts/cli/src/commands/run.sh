@@ -253,6 +253,7 @@ function cleanup {
     playground connector versions
     playground open-docs --only-show-url
   fi
+  set -e
 }
 trap cleanup EXIT
 

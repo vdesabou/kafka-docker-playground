@@ -6726,11 +6726,13 @@ function verbose_begin () {
 }
 
 function verbose_end () {
+  ret="$?"
   # If set -x was initially active, re-enable it
   if [[ $was_x_set -eq 1 ]]
   then
     set -x
   fi
+  return $ret
 }
 
 function log() {
@@ -11267,6 +11269,7 @@ playground_run_command() {
       playground connector versions
       playground open-docs --only-show-url
     fi
+    set -e
   }
   trap cleanup EXIT
 
@@ -11881,6 +11884,7 @@ playground_run_ccloud_command() {
     then
       playground connector versions
     fi
+    set -e
   }
   trap cleanup EXIT
 
@@ -17900,7 +17904,6 @@ playground_connector_show_config_parameters_command() {
               fi
           done
       fi
-      set +e
 
       mkdir -p $root_folder/.connector_config
       filename="$root_folder/.connector_config/config-$connector_class-$version.txt"
@@ -17929,7 +17932,6 @@ playground_connector_show_config_parameters_command() {
       fi
       if [ ! -f $filename ] || [ ! -f $json_filename ]
       then
-          set +e
           if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
           then
               get_ccloud_connect
@@ -18589,8 +18591,6 @@ playground_connector_create_or_update_command() {
   else
       log "🔄 Updating $connector_type connector $connector"
   fi
-
-  set +e
 
   if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then

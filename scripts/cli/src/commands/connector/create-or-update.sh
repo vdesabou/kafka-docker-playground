@@ -157,8 +157,6 @@ else
     log "🔄 Updating $connector_type connector $connector"
 fi
 
-set +e
-
 if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
 then
     get_ccloud_connect

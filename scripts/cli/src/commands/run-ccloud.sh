@@ -295,6 +295,7 @@ function cleanup {
   then
     playground connector versions
   fi
+  set -e
 }
 trap cleanup EXIT
 
