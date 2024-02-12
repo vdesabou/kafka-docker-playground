@@ -54,7 +54,8 @@ Note: you can also export these values as environment variable
 Create a BigTable Instance and Database
 
 ```bash
-$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances create $INSTANCE --project $GCP_PROJECT --cluster $INSTANCE --cluster-zone=us-east1-c --display-name="playground-bigtable-instance" --instance-type=DEVELOPMENT
+$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances create $INSTANCE --project $GCP_PROJECT --cluster-config=id=$INSTANCE,zone=us-east1-c --display-name="playground-bigtable-instance"
+
 ```
 
 Sending messages to topic `stats`

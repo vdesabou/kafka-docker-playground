@@ -59,7 +59,7 @@ Y
 EOF
 set -e
 log "Create a BigTable Instance and Database"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances create $INSTANCE --project $GCP_PROJECT --cluster $INSTANCE --cluster-zone=us-east1-c --display-name="playground-bigtable-instance" --instance-type=DEVELOPMENT
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances create $INSTANCE --project $GCP_PROJECT --cluster-config=id=$INSTANCE,zone=us-east1-c --display-name="playground-bigtable-instance"
 
 log "Sending messages to topic stats"
 playground topic produce -t stats --nb-messages 3 --key "simple-key-%g" << 'EOF'
