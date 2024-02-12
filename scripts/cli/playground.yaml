@@ -1072,13 +1072,11 @@ subcommands:
           - -f
           argument: FILE
           description: | 
-            🔖 Example file to use as basis
+            🔖 Example file to use as basis, if not set, currently running example is used
             
             ❕ It must be absolute full path
             
             🎓 Tip: use <tab> completion to trigger fzf completion
-            
-            Required: ✓ Yes
             
         - names:
           - --description

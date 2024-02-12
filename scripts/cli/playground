@@ -2188,8 +2188,8 @@ playground_repro_bootstrap_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--file, -f FILE (required)")"
-    printf "    🔖 Example file to use as basis\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "  %s\n" "$(magenta "--file, -f FILE")"
+    printf "    🔖 Example file to use as basis, if not set, currently running example is\n    used\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -12446,6 +12446,21 @@ playground_repro_bootstrap_command() {
   enable_jmx_grafana="${args[--enable-jmx-grafana]}"
   enable_kcat="${args[--enable-kcat]}"
   enable_sql_datagen="${args[--enable-sql-datagen]}"
+
+  if [[ ! -n "$test_file" ]]
+  then
+    test_file=$(playground state get run.test_file)
+
+    if [ ! -f $test_file ]
+    then
+
+        logerror "❌ --file was not provided and file $test_file retrieved from $root_folder/playground.ini does not exist!"
+        exit 1
+    else
+      log "--file flag was not provided, use current example $test_file ?"
+      check_if_continue
+    fi
+  fi
 
   if [[ $test_file == *"@"* ]]
   then
@@ -22822,10 +22837,6 @@ playground_repro_bootstrap_parse_requirements() {
   done
 
   # :command.required_flags_filter
-  if [[ -z ${args['--file']+x} ]]; then
-    printf "missing required flag: --file, -f FILE\n" >&2
-    exit 1
-  fi
   if [[ -z ${args['--description']+x} ]]; then
     printf "missing required flag: --description, -d DESCRIPTION\n" >&2
     exit 1

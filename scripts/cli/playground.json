@@ -781,7 +781,7 @@
                 "-f"
               ],
               "argument": "FILE",
-              "description": "🔖 Example file to use as basis\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes\n"
+              "description": "🔖 Example file to use as basis, if not set, currently running example is used\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
             },
             {
               "names": [

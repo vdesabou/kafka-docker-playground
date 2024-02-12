@@ -855,13 +855,13 @@ commands:
 
     - long: --file
       short: -f
-      required: true
+      required: false
       validate: file_exists_with_trick
       arg: file
       completions:
         - $(playground get-examples-list-with-fzf --without-repro "$cur")
       help: |-
-        🔖 Example file to use as basis
+        🔖 Example file to use as basis, if not set, currently running example is used
         
         ❕ It must be absolute full path
 
