@@ -179,7 +179,7 @@ services:
                   cp /usr/share/java/kafka-connect-replicator/replicator-rest-extension-*.jar /etc/kafka-connect/jars/ && \
                   /etc/confluent/docker/run'"
         environment:
-            CUB_CLASSPATH: '/etc/confluent/docker/docker-utils.jar:/usr/share/java/cp-base-new/*:/usr/share/java/confluent-security/connect/*:/usr/share/java/kafka/*'
+            CUB_CLASSPATH: '/usr/share/java/kafka/*:/etc/confluent/docker/docker-utils.jar:/usr/share/java/cp-base-new/*:/usr/share/java/confluent-security/connect/*'
             CONNECT_BOOTSTRAP_SERVERS: broker:10091
 
             CONNECT_SECURITY_PROTOCOL: SASL_PLAINTEXT
