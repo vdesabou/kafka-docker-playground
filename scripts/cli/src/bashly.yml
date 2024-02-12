@@ -2552,22 +2552,20 @@ commands:
     - *connector
 
   - name: show-lag
-    help: 🐢 Show lag of sink connector
+    help: |
+      🐢 Show lag of sink connector
+
+      It will run until all lag becomes 0 (press ctrl-c to exit)
     flags:
     - *verbose
     - *connector
-    - &waitforzerolag
-      long: --wait-for-zero-lag
-      help: |- 
-        😴 Wait until lag becomes 0
-    - &waitforzerolaginterval
-      long: --wait-for-zero-lag-interval
-      arg: waitforzerolaginterval
+    - long: --interval
+      arg: interval
       validate: integer
       required: false
       default: "20"
       help: |-
-        Interval between lag checks when --wait-for-zero-lag is used (default is 20 seconds).
+        Interval between lag checks (default is 20 seconds).
 
   - name: show-config
     help:  |

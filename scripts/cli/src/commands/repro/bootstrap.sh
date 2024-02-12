@@ -1017,7 +1017,7 @@ echo "# 😴 use this command if you want to wait for a specific message to appe
 echo "# playground container logs --container connect --wait-for-log \"<text to search>\" --max-wait 600" >> $tmp_dir/tmp_file
 echo "" >> $tmp_dir/tmp_file
 echo "# 🐢 use this command if you want to wait for connector consumer lag to be zero" >> $tmp_dir/tmp_file
-echo "# playground connector show-lag --wait-for-zero-lag" >> $tmp_dir/tmp_file
+echo "# playground connector show-lag" >> $tmp_dir/tmp_file
 
 
 echo "exit 0" >> $tmp_dir/tmp_file

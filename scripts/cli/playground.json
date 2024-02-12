@@ -2245,7 +2245,7 @@
         },
         {
           "name": "show-lag",
-          "description": "🐢 Show lag of sink connector\n",
+          "description": "🐢 Show lag of sink connector\n  \n  It will run until all lag becomes 0 (press ctrl-c to exit)\n  \n",
           "usage": "playground connector show-lag [OPTIONS]",
           "options": [
             {
@@ -2266,17 +2266,10 @@
             },
             {
               "names": [
-                "--wait-for-zero-lag"
-              ],
-              "argument": "",
-              "description": "😴 Wait until lag becomes 0\n"
-            },
-            {
-              "names": [
-                "--wait-for-zero-lag-interval"
+                "--interval"
               ],
               "argument": 20,
-              "description": "Interval between lag checks when --wait-for-zero-lag is used (default is 20 seconds).\n\nDefault value: 20\n"
+              "description": "Interval between lag checks (default is 20 seconds).\n\nDefault value: 20\n"
             }
           ]
         },

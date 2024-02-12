@@ -1,7 +1,6 @@
 connector="${args[--connector]}"
-wait_for_zero_lag="${args[--wait-for-zero-lag]}"
 verbose="${args[--verbose]}"
-waitforzerolaginterval="${args[--wait-for-zero-lag-interval]}"
+interval="${args[--interval]}"
 
 connector_type=$(playground state get run.connector_type)
 
@@ -150,12 +149,6 @@ items=($connector)
 length=${#items[@]}
 if ((length > 1))
 then
-    if [[ -n "$wait_for_zero_lag" ]]
-    then
-      logerror "❌ --connector should be set when used with --wait-for-zero-lag"
-      exit 1
-    fi
-
     log "✨ --connector flag was not provided, applying command to all connectors"
 fi
 for connector in ${items[@]}
@@ -212,7 +205,7 @@ do
     then
       logwarn "🐢 consumer group for $connector_type connector ${connector}${maybe_id} is rebalancing"
       cat $lag_output
-      sleep $waitforzerolaginterval
+      sleep $interval
       continue
     fi
 
@@ -223,11 +216,7 @@ do
     then
       logwarn "🐢 consumer lag for $connector_type connector ${connector}${maybe_id} is not available"
       show_output
-      if [[ ! -n "$wait_for_zero_lag" ]]
-      then
-        stop=1
-      fi
-      sleep $waitforzerolaginterval
+      sleep $interval
     else
       total_lag=$(cat "$lag_output" | grep -v "PARTITION" | awk -F" " '{sum+=$6;} END{print sum;}')
 
@@ -272,21 +261,12 @@ do
             log "🐢 consumer lag for $connector_type connector ${connector}${maybe_id} is $total_lag"
           fi
           show_output
-          if [[ ! -n "$wait_for_zero_lag" ]]
-          then
-            stop=1
-          fi
           prev_lag=$total_lag
-          sleep $waitforzerolaginterval
+          sleep $interval
         else
-          if [[ ! -n "$wait_for_zero_lag" ]]
-          then
-            log "🏁 consumer lag for $connector_type connector ${connector}${maybe_id} is 0 !"
-            stop=1
-          else
-            ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
-            log "🏁 consumer lag for $connector_type connector ${connector}${maybe_id} is 0 ! $ELAPSED"
-          fi
+          ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
+          log "🏁 consumer lag for $connector_type connector ${connector}${maybe_id} is 0 ! $ELAPSED"
+          stop=1
           show_output
           break
         fi

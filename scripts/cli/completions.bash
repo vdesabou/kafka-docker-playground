@@ -605,7 +605,7 @@ _playground_completions() {
       ;;
 
     *'connector show-lag'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --verbose --wait-for-zero-lag --wait-for-zero-lag-interval -c -h -v")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --interval --verbose -c -h -v")" -- "$cur" )
       ;;
 
     *'container recreate'*)

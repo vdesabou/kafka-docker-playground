@@ -83,7 +83,7 @@ playground connector create-or-update --connector jms-sag-um-sink  << EOF
 }
 EOF
 
-playground connector show-lag --wait-for-zero-lag --connector jms-sag-um-sink
+playground connector show-lag --connector jms-sag-um-sink
 
 if [ ! -z "$GITHUB_RUN_NUMBER" ]
 then

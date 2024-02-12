@@ -4916,7 +4916,10 @@ playground_connector_delete_usage() {
 # :command.usage
 playground_connector_show_lag_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground connector show-lag - 🐢 Show lag of sink connector\n"
+    printf "playground connector show-lag\n"
+    echo
+
+    printf "  🐢 Show lag of sink connector\n  \n  It will run until all lag becomes 0 (press ctrl-c to exit)\n"
     echo
 
   else
@@ -4946,13 +4949,8 @@ playground_connector_show_lag_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--wait-for-zero-lag")"
-    printf "    😴 Wait until lag becomes 0\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--wait-for-zero-lag-interval WAITFORZEROLAGINTERVAL")"
-    printf "    Interval between lag checks when --wait-for-zero-lag is used (default is 20\n    seconds).\n"
+    printf "  %s\n" "$(magenta "--interval INTERVAL")"
+    printf "    Interval between lag checks (default is 20 seconds).\n"
     printf "    Default: 20\n"
     echo
 
@@ -13430,7 +13428,7 @@ playground_repro_bootstrap_command() {
   echo "# playground container logs --container connect --wait-for-log \"<text to search>\" --max-wait 600" >> $tmp_dir/tmp_file
   echo "" >> $tmp_dir/tmp_file
   echo "# 🐢 use this command if you want to wait for connector consumer lag to be zero" >> $tmp_dir/tmp_file
-  echo "# playground connector show-lag --wait-for-zero-lag" >> $tmp_dir/tmp_file
+  echo "# playground connector show-lag" >> $tmp_dir/tmp_file
 
   echo "exit 0" >> $tmp_dir/tmp_file
   echo "" >> $tmp_dir/tmp_file
@@ -17439,9 +17437,8 @@ playground_connector_delete_command() {
 playground_connector_show_lag_command() {
   # src/commands/connector/show-lag.sh
   connector="${args[--connector]}"
-  wait_for_zero_lag="${args[--wait-for-zero-lag]}"
   verbose="${args[--verbose]}"
-  waitforzerolaginterval="${args[--wait-for-zero-lag-interval]}"
+  interval="${args[--interval]}"
 
   connector_type=$(playground state get run.connector_type)
 
@@ -17590,12 +17587,6 @@ playground_connector_show_lag_command() {
   length=${#items[@]}
   if ((length > 1))
   then
-      if [[ -n "$wait_for_zero_lag" ]]
-      then
-        logerror "❌ --connector should be set when used with --wait-for-zero-lag"
-        exit 1
-      fi
-
       log "✨ --connector flag was not provided, applying command to all connectors"
   fi
   for connector in ${items[@]}
@@ -17654,7 +17645,7 @@ playground_connector_show_lag_command() {
       then
         logwarn "🐢 consumer group for $connector_type connector ${connector}${maybe_id} is rebalancing"
         cat $lag_output
-        sleep $waitforzerolaginterval
+        sleep $interval
         continue
       fi
 
@@ -17665,11 +17656,7 @@ playground_connector_show_lag_command() {
       then
         logwarn "🐢 consumer lag for $connector_type connector ${connector}${maybe_id} is not available"
         show_output
-        if [[ ! -n "$wait_for_zero_lag" ]]
-        then
-          stop=1
-        fi
-        sleep $waitforzerolaginterval
+        sleep $interval
       else
         total_lag=$(cat "$lag_output" | grep -v "PARTITION" | awk -F" " '{sum+=$6;} END{print sum;}')
 
@@ -17714,21 +17701,12 @@ playground_connector_show_lag_command() {
               log "🐢 consumer lag for $connector_type connector ${connector}${maybe_id} is $total_lag"
             fi
             show_output
-            if [[ ! -n "$wait_for_zero_lag" ]]
-            then
-              stop=1
-            fi
             prev_lag=$total_lag
-            sleep $waitforzerolaginterval
+            sleep $interval
           else
-            if [[ ! -n "$wait_for_zero_lag" ]]
-            then
-              log "🏁 consumer lag for $connector_type connector ${connector}${maybe_id} is 0 !"
-              stop=1
-            else
-              ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
-              log "🏁 consumer lag for $connector_type connector ${connector}${maybe_id} is 0 ! $ELAPSED"
-            fi
+            ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
+            log "🏁 consumer lag for $connector_type connector ${connector}${maybe_id} is 0 ! $ELAPSED"
+            stop=1
             show_output
             break
           fi
@@ -28133,29 +28111,21 @@ playground_connector_show_lag_parse_requirements() {
         ;;
 
       # :flag.case
-      --wait-for-zero-lag)
-
-        # :flag.case_no_arg
-        args['--wait-for-zero-lag']=1
-        shift
-        ;;
-
-      # :flag.case
-      --wait-for-zero-lag-interval)
+      --interval)
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
           # :flag.validations
           if [[ -n $(validate_integer "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--wait-for-zero-lag-interval WAITFORZEROLAGINTERVAL" "$(validate_integer "$2")" >&2
+            printf "validation error in %s:\n%s\n" "--interval INTERVAL" "$(validate_integer "$2")" >&2
             exit 1
           fi
 
-          args['--wait-for-zero-lag-interval']="$2"
+          args['--interval']="$2"
           shift
           shift
         else
-          printf "%s\n" "--wait-for-zero-lag-interval requires an argument: --wait-for-zero-lag-interval WAITFORZEROLAGINTERVAL" >&2
+          printf "%s\n" "--interval requires an argument: --interval INTERVAL" >&2
           exit 1
         fi
         ;;
@@ -28177,7 +28147,7 @@ playground_connector_show_lag_parse_requirements() {
   done
 
   # :command.default_assignments
-  [[ -n ${args['--wait-for-zero-lag-interval']:-} ]] || args['--wait-for-zero-lag-interval']="20"
+  [[ -n ${args['--interval']:-} ]] || args['--interval']="20"
 
 }
 
