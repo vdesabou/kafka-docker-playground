@@ -10,20 +10,27 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 log "Creating SNMP Source connector"
 playground connector create-or-update --connector snmp-source  << EOF
 {
-               "tasks.max": "1",
-                    "connector.class": "io.confluent.connect.snmp.SnmpTrapSourceConnector",
-                    "kafka.topic": "snmp-kafka-topic",
-                    "snmp.v3.enabled": "true",
-                    "snmp.batch.size": "50",
-                    "snmp.listen.address": "0.0.0.0",
-                    "snmp.listen.port": "10161",
-                    "auth.password":"myauthpassword",
-                    "privacy.password":"myprivacypassword",
-                    "security.name":"mysecurityname",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }
+     "tasks.max": "1",
+     "connector.class": "io.confluent.connect.snmp.SnmpTrapSourceConnector",
+     "kafka.topic": "snmp-kafka-topic",
+     "snmp.v3.enabled": "true",
+     "snmp.batch.size": "50",
+     "snmp.listen.address": "0.0.0.0",
+     "snmp.listen.port": "10161",
+     "auth.password":"myauthpassword",
+     "privacy.password":"myprivacypassword",
+     "security.name":"mysecurityname",
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1",
+
+     "_comment": "since 1.3.0",
+     "v3.security.context.users": "mysecurityname",
+     "v3.mysecurityname.auth.password": "myauthpassword",
+     "v3.mysecurityname.auth.protocol": "md5",
+     "v3.mysecurityname.privacy.password": "myprivacypassword",
+     "v3.mysecurityname.privacy.protocol": "des"
+}
 EOF
 
 
