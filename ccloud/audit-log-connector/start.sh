@@ -36,8 +36,6 @@ sed -e "s|:AUDIT_LOG_CLUSTER_BOOTSTRAP_SERVERS:|$AUDIT_LOG_CLUSTER_BOOTSTRAP_SER
 
 playground start-environment --environment ccloud --docker-compose-override-file "${PWD}/docker-compose.yml"
 
-OUTPUT_FILE="${CONNECT_CONTAINER_HOME_DIR}/data/ouput/file.json"
-
 log "Creating FileStream Sink connector reading confluent-audit-log-events from the audit log cluster"
 playground connector create-or-update --connector filestream-sink  << EOF
 {
