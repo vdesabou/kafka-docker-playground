@@ -101,7 +101,7 @@ CREATE TABLE customers (
   first_name VARCHAR(255) NOT NULL,
   last_name VARCHAR(255) NOT NULL,
   email VARCHAR(255) NOT NULL,
-  last_update DATETIME
+  last_update DATETIME2
 );
 INSERT INTO customers(first_name,last_name,email,last_update)
   VALUES ('Sally','Thomas','sally.thomas@acme.com',  @Date);
