@@ -141,7 +141,7 @@ services:
           - ../../environment/rbac-sasl-plain/scripts/helper:/tmp/helper
           - ../../environment/rbac-sasl-plain/scripts/security/client_without_interceptors.config:/etc/kafka/secrets/client_without_interceptors.config
         environment:
-            CUB_CLASSPATH: '/usr/share/java/schema-registry/*:/etc/confluent/docker/docker-utils.jar:/usr/share/java/cp-base-new/*'
+            CUB_CLASSPATH: '/usr/share/java/confluent-security/schema-registry/*:/usr/share/java/schema-registry/*:/etc/confluent/docker/docker-utils.jar:/usr/share/java/cp-base-new/*'
             SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:10091
             SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper:2181
             SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SASL_PLAINTEXT
