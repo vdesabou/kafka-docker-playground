@@ -17,6 +17,22 @@ then
   logerror "docker_command retrieved from $root_folder/playground.ini is empty !"
   exit 1
 fi
+
+get_environment_used
+if [[ "$environment" == "ccloud" ]]
+then
+    get_kafka_docker_playground_dir
+    DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
+
+    if [ -f $DELTA_CONFIGS_ENV ]
+    then
+        source $DELTA_CONFIGS_ENV
+    else
+        logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+        exit 1
+    fi
+fi
+
 echo "$docker_command" > /tmp/playground-command
 log "💫 Recreate container(s)"
 bash /tmp/playground-command
