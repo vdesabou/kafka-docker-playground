@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -f ${DIR}/hadoop-2.7.4.tar.gz ]
 then
      log "Getting hadoop-2.7.4.tar.gz"
-     wget https://archive.apache.org/dist/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz > /dev/null 2>&1
+     wget -q https://archive.apache.org/dist/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz > /dev/null 2>&1
 fi
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}

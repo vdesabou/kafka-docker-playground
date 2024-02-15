@@ -20,7 +20,7 @@ if [ ! -f ${DIR}/singlestore-jdbc-client-1.0.1.jar ]
 then
      # install deps
      log "Getting singlestore-jdbc-client-1.0.1.jar"
-     wget https://repo.maven.apache.org/maven2/com/singlestore/singlestore-jdbc-client/1.0.1/singlestore-jdbc-client-1.0.1.jar
+     wget -q https://repo.maven.apache.org/maven2/com/singlestore/singlestore-jdbc-client/1.0.1/singlestore-jdbc-client-1.0.1.jar
 fi
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}

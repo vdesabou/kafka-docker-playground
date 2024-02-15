@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 cd ../../connect/connect-http-sink/
 if [ ! -f jcl-over-slf4j-2.0.7.jar ]
 then
-     wget https://repo1.maven.org/maven2/org/slf4j/jcl-over-slf4j/2.0.7/jcl-over-slf4j-2.0.7.jar
+     wget -q https://repo1.maven.org/maven2/org/slf4j/jcl-over-slf4j/2.0.7/jcl-over-slf4j-2.0.7.jar
 fi
 cd -
 

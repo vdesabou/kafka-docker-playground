@@ -9,7 +9,7 @@ cd ../../connect/connect-databricks-delta-lake-sink
 if [ ! -f ${DIR}/SparkJDBC42.jar ]
 then
      log "Getting SparkJDBC42.jar"
-     wget https://databricks-bi-artifacts.s3.us-east-2.amazonaws.com/simbaspark-drivers/jdbc/2.6.22/SimbaSparkJDBC42-2.6.22.1040.zip
+     wget -q https://databricks-bi-artifacts.s3.us-east-2.amazonaws.com/simbaspark-drivers/jdbc/2.6.22/SimbaSparkJDBC42-2.6.22.1040.zip
      unzip SimbaSparkJDBC42-2.6.22.1040.zip
      rm -rf docs EULA.txt
      rm -f SimbaSparkJDBC42-2.6.22.1040.zip

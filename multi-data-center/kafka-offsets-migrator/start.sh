@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -f offset_translator.py ]
 then
      log "Downloading offset_translator.py"
-     wget https://raw.githubusercontent.com/bb01100100/kafka-offsets-migrator/master/offset_translator.py
+     wget -q https://raw.githubusercontent.com/bb01100100/kafka-offsets-migrator/master/offset_translator.py
 fi
 
 ${DIR}/../../environment/mdc-plaintext/start.sh "${PWD}/docker-compose.mdc-plaintext.yml"

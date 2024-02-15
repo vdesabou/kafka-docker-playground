@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 cd ../../connect/connect-jdbc-aws-athena-source
 if [ ! -f ${PWD}/AthenaJDBC42-2.1.1.1000.jar ]
 then
-     wget https://downloads.athena.us-east-1.amazonaws.com/drivers/JDBC/SimbaAthenaJDBC-2.1.1.1000/AthenaJDBC42-2.1.1.1000.jar
+     wget -q https://downloads.athena.us-east-1.amazonaws.com/drivers/JDBC/SimbaAthenaJDBC-2.1.1.1000/AthenaJDBC42-2.1.1.1000.jar
 fi
 cd -
 

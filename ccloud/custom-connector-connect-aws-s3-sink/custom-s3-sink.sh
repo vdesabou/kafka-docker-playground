@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -f confluentinc-kafka-connect-s3-10.5.7.zip ]
 then
     log "Downloading confluentinc-kafka-connect-s3-10.5.7.zip from confluent hub"
-    wget https://d1i4a15mxbxib1.cloudfront.net/api/plugins/confluentinc/kafka-connect-s3/versions/10.5.7/confluentinc-kafka-connect-s3-10.5.7.zip
+    wget -q https://d1i4a15mxbxib1.cloudfront.net/api/plugins/confluentinc/kafka-connect-s3/versions/10.5.7/confluentinc-kafka-connect-s3-10.5.7.zip
 fi
 
 plugin_name="pg_${USER}_s3_sink_10_5_7"

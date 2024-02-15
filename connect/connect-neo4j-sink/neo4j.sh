@@ -12,7 +12,7 @@ fi
 if [ ! -f ${DIR}/neo4j-streams-sink-tester-1.0.jar ]
 then
      log "Downloading neo4j-streams-sink-tester-1.0.jar"
-     wget https://github.com/conker84/neo4j-streams-sink-tester/releases/download/1/neo4j-streams-sink-tester-1.0.jar
+     wget -q https://github.com/conker84/neo4j-streams-sink-tester/releases/download/1/neo4j-streams-sink-tester-1.0.jar
 fi
 
 if [[ "$OSTYPE" == "darwin"* ]]

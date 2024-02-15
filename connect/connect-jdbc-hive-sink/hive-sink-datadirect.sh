@@ -16,7 +16,7 @@ fi
 if [ ! -f ${DIR}/presto.jar ]
 then
      log "Getting presto-cli-0.183-executable.jar"
-     wget https://repo1.maven.org/maven2/com/facebook/presto/presto-cli/0.183/presto-cli-0.183-executable.jar
+     wget -q https://repo1.maven.org/maven2/com/facebook/presto/presto-cli/0.183/presto-cli-0.183-executable.jar
      mv presto-cli-0.183-executable.jar presto.jar
      chmod +x presto.jar
 fi

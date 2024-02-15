@@ -8,7 +8,7 @@ if [ ! -f ${DIR}/vertica-jdbc.jar ]
 then
      # install deps
      log "Getting vertica-jdbc.jar from vertica-client-10.0.1-0.x86_64.tar.gz"
-     wget https://www.vertica.com/client_drivers/10.0.x/10.0.1-0/vertica-client-10.0.1-0.x86_64.tar.gz
+     wget -q https://www.vertica.com/client_drivers/10.0.x/10.0.1-0/vertica-client-10.0.1-0.x86_64.tar.gz
      tar xvfz ${DIR}/vertica-client-10.0.1-0.x86_64.tar.gz
      cp ${DIR}/opt/vertica/java/lib/vertica-jdbc.jar ${DIR}/
      rm -rf ${DIR}/opt

@@ -19,7 +19,7 @@ fi
 if [ ! -f ${DIR}/amps_client.jar ]
 then
      log "${DIR}/amps_client.jar missing, will get it from amps-java-client-5.3.0.1.tar.gz"
-     wget https://devnull.crankuptheamps.com/releases/amps/clients/java/5.3.0.1/amps-java-client-5.3.0.1.tar.gz
+     wget -q https://devnull.crankuptheamps.com/releases/amps/clients/java/5.3.0.1/amps-java-client-5.3.0.1.tar.gz
      tar xvfz amps-java-client-5.3.0.1.tar.gz
      cp ${DIR}/amps-java-client-5.3.0.1/dist/lib/amps_client.jar ${DIR}/
      rm -rf ${DIR}/amps-java-client-5.3.0.1

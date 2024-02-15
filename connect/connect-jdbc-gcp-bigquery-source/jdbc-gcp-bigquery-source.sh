@@ -14,7 +14,7 @@ if [ ! -f ${PWD}/GoogleBigQueryJDBC42/GoogleBigQueryJDBC42.jar ]
 then
     mkdir -p GoogleBigQueryJDBC42
     cd GoogleBigQueryJDBC42
-    wget https://storage.googleapis.com/simba-bq-release/jdbc/SimbaBigQueryJDBC42-1.3.2.1003.zip
+    wget -q https://storage.googleapis.com/simba-bq-release/jdbc/SimbaBigQueryJDBC42-1.3.2.1003.zip
     unzip SimbaBigQueryJDBC42-1.3.2.1003.zip
     cd -
 fi

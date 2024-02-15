@@ -24,7 +24,7 @@ then
      # newest versions do not work well with timestamp date, getting:
      # WARN JDBC type 2014 (TIMESTAMPIZ) not currently supported
      log "Downloading snowflake-jdbc-3.13.16.jar"
-     wget https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/3.13.16/snowflake-jdbc-3.13.16.jar
+     wget -q https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/3.13.16/snowflake-jdbc-3.13.16.jar
 fi
 cd -
 

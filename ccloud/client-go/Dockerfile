@@ -10,7 +10,7 @@ COPY confluent.repo /etc/yum.repos.d
 RUN dnf install librdkafka-devel -y
 
 # Install Go v1.14
-RUN wget https://dl.google.com/go/go1.14.linux-amd64.tar.gz && tar -xvf go1.14.linux-amd64.tar.gz && rm go1.14.linux-amd64.tar.gz
+RUN wget -q https://dl.google.com/go/go1.14.linux-amd64.tar.gz && tar -xvf go1.14.linux-amd64.tar.gz && rm go1.14.linux-amd64.tar.gz
 RUN mv go /usr/local
 ENV GOROOT=/usr/local/go
 ENV PATH="${GOROOT}/bin:${PATH}"

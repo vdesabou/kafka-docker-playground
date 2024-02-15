@@ -26,13 +26,13 @@ function wait_for_solace () {
 if [ ! -f ${DIR}/sol-jms-10.6.4.jar ]
 then
      log "Downloading sol-jms-10.6.4.jar"
-     wget https://repo1.maven.org/maven2/com/solacesystems/sol-jms/10.6.4/sol-jms-10.6.4.jar
+     wget -q https://repo1.maven.org/maven2/com/solacesystems/sol-jms/10.6.4/sol-jms-10.6.4.jar
 fi
 
 if [ ! -f ${DIR}/commons-lang-2.6.jar ]
 then
      log "Downloading commons-lang-2.6.jar"
-     wget https://repo1.maven.org/maven2/commons-lang/commons-lang/2.6/commons-lang-2.6.jar
+     wget -q https://repo1.maven.org/maven2/commons-lang/commons-lang/2.6/commons-lang-2.6.jar
 fi
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}

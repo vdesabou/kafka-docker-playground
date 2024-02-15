@@ -57,7 +57,7 @@ kubectl config set-context --current --namespace=confluent
 ```bash
 mkdir confluent-operator
 cd confluent-operator
-wget https://platform-ops-bin.s3-us-west-1.amazonaws.com/operator/confluent-operator-1.7.0.tar.gz
+wget -q https://platform-ops-bin.s3-us-west-1.amazonaws.com/operator/confluent-operator-1.7.0.tar.gz
 tar xvfz confluent-operator-1.7.0.tar.gz
 cd -
 ```

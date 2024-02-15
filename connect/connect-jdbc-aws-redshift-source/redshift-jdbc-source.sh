@@ -8,7 +8,7 @@ if [ ! -f ${PWD}/redshift-jdbc42-2.1.0.17/redshift-jdbc42-2.1.0.17.jar ]
 then
      mkdir -p redshift-jdbc42-2.1.0.17
      cd redshift-jdbc42-2.1.0.17
-     wget https://s3.amazonaws.com/redshift-downloads/drivers/jdbc/2.1.0.17/redshift-jdbc42-2.1.0.17.zip
+     wget -q https://s3.amazonaws.com/redshift-downloads/drivers/jdbc/2.1.0.17/redshift-jdbc42-2.1.0.17.zip
      unzip redshift-jdbc42-2.1.0.17.zip
      cd -
 fi

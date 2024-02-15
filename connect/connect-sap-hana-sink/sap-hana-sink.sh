@@ -38,7 +38,7 @@ fi
 if [ ! -f ${DIR}/ngdbc-2.12.9.jar ]
 then
      log "Downloading ngdbc-2.12.9.jar "
-     wget https://repo1.maven.org/maven2/com/sap/cloud/db/jdbc/ngdbc/2.12.9/ngdbc-2.12.9.jar
+     wget -q https://repo1.maven.org/maven2/com/sap/cloud/db/jdbc/ngdbc/2.12.9/ngdbc-2.12.9.jar
 fi
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}

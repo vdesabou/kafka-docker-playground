@@ -50,7 +50,7 @@ fi
 if [ ! -f jta-1.1.jar ]
 then
      # NoClassDefFoundError: javax/transaction/Synchronization
-     wget https://repo1.maven.org/maven2/javax/transaction/jta/1.1/jta-1.1.jar
+     wget -q https://repo1.maven.org/maven2/javax/transaction/jta/1.1/jta-1.1.jar
 fi
 
 if [[ "$OSTYPE" == "darwin"* ]]

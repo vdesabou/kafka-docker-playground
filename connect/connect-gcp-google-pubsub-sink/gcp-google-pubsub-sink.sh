@@ -12,7 +12,7 @@ fi
 
 if [ ! -f ${DIR}/pubsub-group-kafka-connector-1.0.0.jar ]
 then
-     wget https://repo1.maven.org/maven2/com/google/cloud/pubsub-group-kafka-connector/1.0.0/pubsub-group-kafka-connector-1.0.0.jar
+     wget -q https://repo1.maven.org/maven2/com/google/cloud/pubsub-group-kafka-connector/1.0.0/pubsub-group-kafka-connector-1.0.0.jar
 fi
 
 cd ../../connect/connect-gcp-google-pubsub-sink

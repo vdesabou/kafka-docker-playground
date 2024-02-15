@@ -8,7 +8,7 @@ cd ../../connect/connect-jdbc-mariadb-sink
 if [ ! -f ${PWD}/mariadb-java-client-3.2.0.jar ]
 then
      log "Downloading mariadb-java-client-3.2.0.jar"
-     wget https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/3.2.0/mariadb-java-client-3.2.0.jar
+     wget -q https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/3.2.0/mariadb-java-client-3.2.0.jar
 fi
 cd -
 

@@ -58,7 +58,7 @@ log "Download Confluent Operator confluent-operator-1.6.2.tar.gz in ${DIR}/confl
 rm -rf ${DIR}/confluent-operator
 mkdir ${DIR}/confluent-operator
 cd ${DIR}/confluent-operator
-wget https://platform-ops-bin.s3-us-west-1.amazonaws.com/operator/confluent-operator-1.6.2.tar.gz
+wget -q https://platform-ops-bin.s3-us-west-1.amazonaws.com/operator/confluent-operator-1.6.2.tar.gz
 tar xvfz confluent-operator-1.6.2.tar.gz
 cd -
 
