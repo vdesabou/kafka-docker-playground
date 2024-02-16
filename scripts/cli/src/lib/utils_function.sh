@@ -3781,7 +3781,7 @@ function generate_connector_versions () {
 }
 
 readonly CONNECTOR_TYPE_FULLY_MANAGED="🌤️🤖fully managed"
-readonly CONNECTOR_TYPE_CUSTOM="🌤️⚙️custom"
+readonly CONNECTOR_TYPE_CUSTOM="🌤️🛃custom"
 readonly CONNECTOR_TYPE_SELF_MANAGED="⛈️👷self managed"
 readonly CONNECTOR_TYPE_ONPREM="🌎onprem"
 
