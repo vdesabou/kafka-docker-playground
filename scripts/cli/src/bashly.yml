@@ -95,6 +95,20 @@ commands:
     required: false
   - long: --ccloud-only
     required: false
+  - long: --connector-only
+    required: false
+  - long: --repro-only
+    required: false
+  - long: --fully-managed-connector-only
+    required: false
+  - long: --ksql-only
+    required: false
+  - long: --schema-registry-only
+    required: false
+  - long: --rest-proxy-only
+    required: false
+  - long: --other-playgrounds-only
+    required: false
 
 - name: get-zip-or-jar-with-fzf
   help: Return some completion for zip or jar list
@@ -300,7 +314,7 @@ commands:
       This is only supported when example is a connector example
   - long: --file
     short: -f
-    required: true
+    required: false
     validate: file_exists_with_trick
     arg: file
     completions:
@@ -441,6 +455,81 @@ commands:
       🌪️ Enable SQL Datagen injection
 
       This only works for Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with JDBC and Debezium
+
+  - &cluster-cloud
+    long: --cluster-cloud
+    required: false
+    arg: cluster-cloud
+    allowed: [aws, gcp, azure]
+    help: |-
+      🌤 The cloud provider: aws, gcp or azure. Default is aws
+
+      🎓 Tip: you can also use CLUSTER_CLOUD environment variable
+  - &cluster-type
+    long: --cluster-type
+    required: false
+    arg: cluster-type
+    allowed: [basic, standard, dedicated]
+    help: |-
+      🔋 The cluster type: basic, standard or dedicated. Default is basic
+
+      🎓 Tip: you can also use CLUSTER_TYPE environment variable
+  - &cluster-region
+    long: --cluster-region
+    required: false
+    arg: cluster-region
+    completions:
+      - $(playground get-kafka-region-list "$cur")
+    help: |-
+      🗺 The Cloud region. 
+      
+      🎓 Tip: you can also use CLUSTER_REGION environment variable
+  - &cluster-environment
+    long: --cluster-environment
+    required: false
+    arg: cluster-environment
+    validate: not_empty
+    help: |-
+      🌐 The environment id where want your new cluster (example: env-xxxxx)
+
+      ℹ️ Optional, if not set, new environment will be created
+
+      🎓 Tip: you can also use ENVIRONMENT environment variable
+  - &cluster-name
+    long: --cluster-name
+    required: false
+    validate: not_empty
+    arg: cluster-name
+    help: |-
+      🎰 The cluster name. 
+      
+      ❣️ Only required if you want to use your own existing cluster
+
+      🎓 Tip: you can also use CLUSTER_NAME environment variable
+  - &cluster-creds
+    long: --cluster-creds
+    required: false
+    validate: not_empty
+    arg: cluster-creds
+    help: |-
+      🔒 The Kafka api key and secret to use, it should be separated with semi-colon (example: <API_KEY>:<API_KEY_SECRET>)
+
+      ❣️ Only required if you want to use your own existing cluster
+
+      🎓 Tip: you can also use CLUSTER_CREDS environment variable
+  - &cluster-schema-registry-creds
+    long: --cluster-schema-registry-creds
+    required: false
+    validate: not_empty
+    arg: cluster-schema-registry-creds
+    help: |-
+      🔒 The Schema Registry api key and secret to use, it should be separated with semi-colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)
+
+      ℹ️ Optional, if not set, new credentials will be created
+
+      ❣️ Only required if you want to use your own existing cluster
+      
+      🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable
   examples:
   - playground run -f zendesk-source<tab> --tag 7.2.1 --enable-control-center <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
   - playground run -f jdbc<tab> --connector-tag 10.6.0 --enable-jmx-grafana --open
@@ -515,7 +604,7 @@ commands:
     - sasl-ssl
     - ssl_kerberos
 
-    Note: when running an example with <playground run> or <playground run-ccloud>, it is already automatically done
+    Note: when running an example with <playground run>, it is already automatically done
   catch_all:
     label: arguments
     help: |-

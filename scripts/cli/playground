@@ -525,6 +525,41 @@ playground_get_examples_list_with_fzf_usage() {
     printf "\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-only")"
+    printf "\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--repro-only")"
+    printf "\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--fully-managed-connector-only")"
+    printf "\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--ksql-only")"
+    printf "\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--schema-registry-only")"
+    printf "\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--rest-proxy-only")"
+    printf "\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--other-playgrounds-only")"
+    printf "\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -1236,7 +1271,7 @@ playground_run_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--file, -f FILE (required)")"
+    printf "  %s\n" "$(magenta "--file, -f FILE")"
     printf "    🔖 Example file to run\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
@@ -1308,6 +1343,43 @@ playground_run_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-sql-datagen")"
     printf "    🌪️ Enable SQL Datagen injection\n    \n    This only works for Oracle, MySql, Postgres and Microsoft Sql Server source\n    connector examples with JDBC and Debezium\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-cloud CLUSTER-CLOUD")"
+    printf "    🌤 The cloud provider: aws, gcp or azure. Default is aws\n    \n    🎓 Tip: you can also use CLUSTER_CLOUD environment variable\n"
+    printf "    Allowed: aws, gcp, azure\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-type CLUSTER-TYPE")"
+    printf "    🔋 The cluster type: basic, standard or dedicated. Default is basic\n    \n    🎓 Tip: you can also use CLUSTER_TYPE environment variable\n"
+    printf "    Allowed: basic, standard, dedicated\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-region CLUSTER-REGION")"
+    printf "    🗺 The Cloud region. \n    \n    🎓 Tip: you can also use CLUSTER_REGION environment variable\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-environment CLUSTER-ENVIRONMENT")"
+    printf "    🌐 The environment id where want your new cluster (example: env-xxxxx)\n    \n    ℹ️ Optional, if not set, new environment will be created\n    \n    🎓 Tip: you can also use ENVIRONMENT environment variable\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-name CLUSTER-NAME")"
+    printf "    🎰 The cluster name. \n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use CLUSTER_NAME environment variable\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-creds CLUSTER-CREDS")"
+    printf "    🔒 The Kafka api key and secret to use, it should be separated with\n    semi-colon (example: <API_KEY>:<API_KEY_SECRET>)\n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use CLUSTER_CREDS environment variable\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-schema-registry-creds CLUSTER-SCHEMA-REGISTRY-CREDS")"
+    printf "    🔒 The Schema Registry api key and secret to use, it should be separated with\n    semi-colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n    \n    ℹ️ Optional, if not set, new credentials will be created\n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable\n"
     echo
 
     # :command.usage_fixed_flags
@@ -1486,7 +1558,7 @@ playground_start_environment_usage() {
     printf "playground start-environment\n"
     echo
 
-    printf "  🔐 Simply start an environment listed in http://tinyurl.com/y4ybbw32:\n  \n  - ccloud\n  - 2way-ssl\n  - kerberos\n  - kraft-external-plaintext\n  - kraft-plaintext\n  - ldap-authorizer-sasl-plain\n  - ldap-sasl-plain\n  - mdc-kerberos\n  - mdc-plaintext\n  - mdc-sasl-plain\n  - plaintext\n  - rbac-sasl-plain\n  - sasl-plain\n  - sasl-scram\n  - sasl-ssl\n  - ssl_kerberos\n  \n  Note: when running an example with <playground run> or <playground\n  run-ccloud>, it is already automatically done\n"
+    printf "  🔐 Simply start an environment listed in http://tinyurl.com/y4ybbw32:\n  \n  - ccloud\n  - 2way-ssl\n  - kerberos\n  - kraft-external-plaintext\n  - kraft-plaintext\n  - ldap-authorizer-sasl-plain\n  - ldap-sasl-plain\n  - mdc-kerberos\n  - mdc-plaintext\n  - mdc-sasl-plain\n  - plaintext\n  - rbac-sasl-plain\n  - sasl-plain\n  - sasl-scram\n  - sasl-ssl\n  - ssl_kerberos\n  \n  Note: when running an example with <playground run>, it is already\n  automatically done\n"
     echo
 
   else
@@ -5427,27 +5499,153 @@ function get_connect_url_and_security() {
   fi
 }
 
+function generate_get_examples_add_emoji () {
+  repro=""
+  if [[ $file_path == *"reproduction-models"* ]]
+  then
+    repro="👷‍♂️"
+  fi
+
+  if [[ $file_path == *"ccloud"* ]]
+  then
+    if [[ $file_path == *"fully-managed-connect"* ]]
+    then
+      echo "${repro}🌤️🤖 $file_path" >> $output_file
+    elif [[ $file_path == *"custom-connector"* ]]
+    then
+      echo "${repro}🌤️🛃 $file_path" >> $output_file
+    else
+      echo "${repro}🌤️ $file_path" >> $output_file
+    fi
+  elif [[ $file_path == *"connect"* ]]
+  then
+    echo "${repro}🔗🌎 $file_path" >> $output_file
+  elif [[ $file_path == *"ksql"* ]]
+  then
+    echo "${repro}🎏 $file_path" >> $output_file
+  elif [[ $file_path == *"schema-registry"* ]]
+  then
+    echo "${repro}📝 $file_path" >> $output_file
+  elif [[ $file_path == *"rest-proxy"* ]]
+  then
+    echo "${repro}😴 $file_path" >> $output_file
+  else
+    echo "${repro}👾 $file_path" >> $output_file
+  fi
+}
+
 function generate_fzf_find_files() {
   generate_get_examples_list_with_fzf_without_repro_sink_only
   generate_get_examples_list_with_fzf_without_repro
   generate_get_examples_list_with_fzf_ccloud_only
   generate_get_examples_list_with_fzf
+
+  generate_get_examples_list_with_fzf_connector_only
+  generate_get_examples_list_with_fzf_repro_only
+  generate_get_examples_list_with_fzf_ksql_only
+  generate_get_examples_list_with_fzf_fully_managed_connector_only
+  generate_get_examples_list_with_fzf_schema_registry_only
+  generate_get_examples_list_with_fzf_rest_proxy_only
+  generate_get_examples_list_with_fzf_other_playgrounds_only
+}
+
+function generate_get_examples_list_with_fzf_connector_only () {
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_connector_only"
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect/connect-*-*/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' ! -path '*/ccloud/*'  ! -path '*/post_start/*' ! -path '*/1*domain*/*' ! -path '*/kdc-server/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
+}
+
+function generate_get_examples_list_with_fzf_repro_only () {
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_repro_only"
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect-*-*/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' -path '*/reproduction-models/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
+}
+
+function generate_get_examples_list_with_fzf_ksql_only () {
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_ksql_only"
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/ksqldb/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
+}
+
+function generate_get_examples_list_with_fzf_fully_managed_connector_only () {
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_fully_managed_connector_only"
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/fully-managed-*/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' -path '*/ccloud/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
+}
+
+function generate_get_examples_list_with_fzf_schema_registry_only () {
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_schema_registry_only"
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/schema-registry/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' ! -path '*/ccloud/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
+}
+
+function generate_get_examples_list_with_fzf_rest_proxy_only () {
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_rest_proxy_only"
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/rest-proxy/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
+}
+
+function generate_get_examples_list_with_fzf_other_playgrounds_only () {
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_other_playgrounds_only"
+  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' ! -path '*/reproduction-models/*' ! -path '*/connect/*' ! -path '*/ksqldb/*' ! -path '*/schema-registry/*'  | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
 }
 
 function generate_get_examples_list_with_fzf_without_repro_sink_only () {
-  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' > $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro_sink_only
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_without_repro_sink_only"
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
 }
 
 function generate_get_examples_list_with_fzf_without_repro () {
-  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' > $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_without_repro"
+  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
 }
 
 function generate_get_examples_list_with_fzf_ccloud_only () {
-  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/ccloud*' ! -path '*/ora-*/*' ! -path '*/security/*' > $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only"
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/ccloud*' ! -path '*/ora-*/*' ! -path '*/security/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
 }
 
 function generate_get_examples_list_with_fzf () {
-  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ccloud/*' ! -path '*/ora-*/*' ! -path '*/security/*' > $root_folder/scripts/cli/get_examples_list_with_fzf
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf"
+  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ccloud/*' ! -path '*/ora-*/*' ! -path '*/security/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
 }
 
 function get_ccloud_connect() {
@@ -5553,6 +5751,7 @@ function get_fzf_version() {
 
 function get_examples_list_with_fzf() {
   cur="$1"
+  file="$2"
 
   fzf_version=$(get_fzf_version)
   if version_gt $fzf_version "0.38"
@@ -5571,99 +5770,12 @@ function get_examples_list_with_fzf() {
   then
     if [[ $(type -f bat 2>&1) =~ "not found" ]]
     then
-        res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
+        res=$(cat $file | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "1,-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat /{2..}');echo "$cur@$(echo $res | cut -d ' ' -f 2)"
     else
-      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
+      res=$(cat $file | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "1,-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 /{2..}');echo "$cur@$(echo $res | cut -d ' ' -f 2)"
     fi
   else
-    res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
-  fi
-}
-
-function get_examples_list_with_fzf_ccloud_only() {
-  cur="$1"
-
-  fzf_version=$(get_fzf_version)
-  if version_gt $fzf_version "0.38"
-  then
-    fzf_option_wrap="--preview-window=40%,wrap"
-    fzf_option_pointer="--pointer=👉"
-    fzf_option_rounded="--border=rounded"
-  else
-    fzf_options=""
-    fzf_option_pointer=""
-    fzf_option_rounded=""
-  fi
-
-  terminal_columns=$(tput cols)
-  if [[ $terminal_columns -gt 180 ]]
-  then
-    if [[ $(type -f bat 2>&1) =~ "not found" ]]
-    then
-      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="☁️" --header="select ccloud example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
-    else
-      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="☁️" --header="select ccloud example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
-    fi
-  else
-    res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="☁️" --header="select ccloud example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
-  fi
-}
-
-function get_examples_list_with_fzf_without_repro() {
-  cur="$1"
-
-  fzf_version=$(get_fzf_version)
-  if version_gt $fzf_version "0.38"
-  then
-    fzf_option_wrap="--preview-window=40%,wrap"
-    fzf_option_pointer="--pointer=👉"
-    fzf_option_rounded="--border=rounded"
-  else
-    fzf_options=""
-    fzf_option_pointer=""
-    fzf_option_rounded=""
-  fi
-
-  terminal_columns=$(tput cols)
-  if [[ $terminal_columns -gt 180 ]]
-  then
-    if [[ $(type -f bat 2>&1) =~ "not found" ]]
-    then
-      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
-    else
-      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
-    fi
-  else
-    res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
-  fi
-}
-
-function get_examples_list_with_fzf_without_repro_sink_only() {
-  cur="$1"
-
-  fzf_version=$(get_fzf_version)
-  if version_gt $fzf_version "0.38"
-  then
-    fzf_option_wrap="--preview-window=40%,wrap"
-    fzf_option_pointer="--pointer=👉"
-    fzf_option_rounded="--border=rounded"
-  else
-    fzf_options=""
-    fzf_option_pointer=""
-    fzf_option_rounded=""
-  fi
-
-  terminal_columns=$(tput cols)
-  if [[ $terminal_columns -gt 180 ]]
-  then
-    if [[ $(type -f bat 2>&1) =~ "not found" ]]
-    then
-      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro_sink_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select sink example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
-    else
-      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro_sink_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select sink example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
-    fi
-  else
-    res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro_sink_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select sink example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+    res=$(cat $file | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "1,-3,-2,-1" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$(echo $res | cut -d ' ' -f 2)"
   fi
 }
 
@@ -10424,7 +10536,7 @@ function generate_connector_versions () {
 }
 
 readonly CONNECTOR_TYPE_FULLY_MANAGED="🌤️🤖fully managed"
-readonly CONNECTOR_TYPE_CUSTOM="🌤️⚙️custom"
+readonly CONNECTOR_TYPE_CUSTOM="🌤️🛃custom"
 readonly CONNECTOR_TYPE_SELF_MANAGED="⛈️👷self managed"
 readonly CONNECTOR_TYPE_ONPREM="🌎onprem"
 
@@ -10760,6 +10872,15 @@ playground_get_examples_list_with_fzf_command() {
   without_repro="${args[--without-repro]}"
   sink_only="${args[--sink-only]}"
   ccloud_only="${args[--ccloud-only]}"
+
+  connector_only="${args[--connector-only]}"
+  repro_only="${args[--repro-only]}"
+  fully_managed_connector_only="${args[--fully-managed-connector-only]}"
+  ksql_only="${args[--ksql-only]}"
+  schema_registry_only="${args[--schema-registry-only]}"
+  rest_proxy_only="${args[--rest-proxy-only]}"
+  other_playgrounds_only="${args[--other-playgrounds-only]}"
+
   cur="${args[cur]}"
 
   if [[ -n "$without_repro" ]] && [[ -n "$sink_only" ]]
@@ -10768,7 +10889,7 @@ playground_get_examples_list_with_fzf_command() {
       then
           generate_get_examples_list_with_fzf_without_repro_sink_only
       fi
-      get_examples_list_with_fzf_without_repro_sink_only "$cur"
+      get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf_without_repro_sink_only"
       return
   fi
 
@@ -10778,7 +10899,7 @@ playground_get_examples_list_with_fzf_command() {
       then
           generate_get_examples_list_with_fzf_without_repro
       fi
-      get_examples_list_with_fzf_without_repro "$cur"
+      get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf_without_repro"
       return
   fi
 
@@ -10788,7 +10909,77 @@ playground_get_examples_list_with_fzf_command() {
       then
           generate_get_examples_list_with_fzf_ccloud_only
       fi
-      get_examples_list_with_fzf_ccloud_only "$cur"
+      get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only"
+      return
+  fi
+
+  if [[ -n "$connector_only" ]]
+  then
+      if [ ! -f $root_folder/scripts/cli/get_examples_list_with_fzf_connector_only ]
+      then
+          generate_get_examples_list_with_fzf_connector_only
+      fi
+      get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf_connector_only"
+      return
+  fi
+
+  if [[ -n "$repro_only" ]]
+  then
+      if [ ! -f $root_folder/scripts/cli/get_examples_list_with_fzf_repro_only ]
+      then
+          generate_get_examples_list_with_fzf_repro_only
+      fi
+      get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf_repro_only"
+      return
+  fi
+
+  if [[ -n "$fully_managed_connector_only" ]]
+  then
+      if [ ! -f $root_folder/scripts/cli/get_examples_list_with_fzf_fully_managed_connector_only ]
+      then
+          generate_get_examples_list_with_fzf_fully_managed_connector_only
+      fi
+      get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf_fully_managed_connector_only"
+      return
+  fi
+
+  if [[ -n "$ksql_only" ]]
+  then
+      if [ ! -f $root_folder/scripts/cli/get_examples_list_with_fzf_ksql_only ]
+      then
+          generate_get_examples_list_with_fzf_ksql_only
+      fi
+      get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf_ksql_only"
+      return
+  fi
+
+  if [[ -n "$schema_registry_only" ]]
+  then
+      if [ ! -f $root_folder/scripts/cli/get_examples_list_with_fzf_schema_registry_only ]
+      then
+          generate_get_examples_list_with_fzf_schema_registry_only
+      fi
+      get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf_schema_registry_only"
+      return
+  fi
+
+  if [[ -n "$rest_proxy_only" ]]
+  then
+      if [ ! -f $root_folder/scripts/cli/get_examples_list_with_fzf_rest_proxy_only ]
+      then
+          generate_get_examples_list_with_fzf_rest_proxy_only
+      fi
+      get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf_rest_proxy_only"
+      return
+  fi
+
+  if [[ -n "$other_playgrounds_only" ]]
+  then
+      if [ ! -f $root_folder/scripts/cli/get_examples_list_with_fzf_other_playgrounds_only ]
+      then
+          generate_get_examples_list_with_fzf_other_playgrounds_only
+      fi
+      get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf_other_playgrounds_only"
       return
   fi
 
@@ -10796,7 +10987,7 @@ playground_get_examples_list_with_fzf_command() {
   then
       generate_get_examples_list_with_fzf
   fi
-  get_examples_list_with_fzf "$cur"
+  get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf"
 }
 
 # :command.function
@@ -11035,10 +11226,56 @@ playground_run_command() {
   enable_kcat="${args[--enable-kcat]}"
   enable_sql_datagen="${args[--enable-sql-datagen]}"
 
-  if [ "$test_file" = "" ]
+  if [[ ! -n "$test_file" ]]
   then
-    logerror "ERROR: test_file is not provided as argument!"
-    exit 1
+    log "--file flag was not provided, please select it now"
+    fzf_version=$(get_fzf_version)
+    if version_gt $fzf_version "0.38"
+    then
+        fzf_option_wrap="--preview-window=40%,wrap"
+        fzf_option_pointer="--pointer=👉"
+        fzf_option_rounded="--border=rounded"
+    else
+        fzf_option_pointer=""
+        fzf_option_rounded=""
+    fi
+
+    options=("🔗 Connectors" "🌤️ Confluent Cloud" "🤖 Fully-Managed Connectors" "👷‍♂️ Reproduction Models" "🎏 KSQL" "📝 Schema Registry" "😴 REST Proxy" "👾 Other Playgrounds" "🌕 All")
+    res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="Select a category (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
+
+    case "${res}" in
+      "🔗 Connectors")
+        test_file=$(playground get-examples-list-with-fzf --connector-only)
+      ;;
+      "🌤️ Confluent Cloud")
+        test_file=$(playground get-examples-list-with-fzf --ccloud-only)
+      ;;
+      "🤖 Fully-Managed Connectors")
+        test_file=$(playground get-examples-list-with-fzf --fully-managed-connector-only)
+      ;;
+      "👷‍♂️ Reproduction Models")
+        test_file=$(playground get-examples-list-with-fzf --repro-only)
+      ;;
+      "🎏 KSQL")
+        test_file=$(playground get-examples-list-with-fzf --ksql-only)
+      ;;
+      "📝 Schema Registry")
+        test_file=$(playground get-examples-list-with-fzf --schema-registry-only)
+      ;;
+      "😴 REST Proxy")
+        test_file=$(playground get-examples-list-with-fzf --rest-proxy-only)
+      ;;
+      "👾 Other Playgrounds")
+        test_file=$(playground get-examples-list-with-fzf --other-playgrounds-only)
+      ;;
+      "🌕 All")
+        test_file=$(playground get-examples-list-with-fzf)
+      ;;
+      *)
+        logerror "❌ wrong choice: $res"
+        exit 1
+      ;;
+    esac
   fi
 
   if [[ $test_file == *"@"* ]]
@@ -19640,6 +19877,62 @@ playground_get_examples_list_with_fzf_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --connector-only)
+
+        # :flag.case_no_arg
+        args['--connector-only']=1
+        shift
+        ;;
+
+      # :flag.case
+      --repro-only)
+
+        # :flag.case_no_arg
+        args['--repro-only']=1
+        shift
+        ;;
+
+      # :flag.case
+      --fully-managed-connector-only)
+
+        # :flag.case_no_arg
+        args['--fully-managed-connector-only']=1
+        shift
+        ;;
+
+      # :flag.case
+      --ksql-only)
+
+        # :flag.case_no_arg
+        args['--ksql-only']=1
+        shift
+        ;;
+
+      # :flag.case
+      --schema-registry-only)
+
+        # :flag.case_no_arg
+        args['--schema-registry-only']=1
+        shift
+        ;;
+
+      # :flag.case
+      --rest-proxy-only)
+
+        # :flag.case_no_arg
+        args['--rest-proxy-only']=1
+        shift
+        ;;
+
+      # :flag.case
+      --other-playgrounds-only)
+
+        # :flag.case_no_arg
+        args['--other-playgrounds-only']=1
+        shift
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -20917,6 +21210,131 @@ playground_run_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster-cloud)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--cluster-cloud']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster-cloud requires an argument: --cluster-cloud CLUSTER-CLOUD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --cluster-type)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--cluster-type']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster-type requires an argument: --cluster-type CLUSTER-TYPE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --cluster-region)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--cluster-region']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster-region requires an argument: --cluster-region CLUSTER-REGION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --cluster-environment)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_not_empty "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--cluster-environment CLUSTER-ENVIRONMENT" "$(validate_not_empty "$2")" >&2
+            exit 1
+          fi
+
+          args['--cluster-environment']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster-environment requires an argument: --cluster-environment CLUSTER-ENVIRONMENT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --cluster-name)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_not_empty "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--cluster-name CLUSTER-NAME" "$(validate_not_empty "$2")" >&2
+            exit 1
+          fi
+
+          args['--cluster-name']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster-name requires an argument: --cluster-name CLUSTER-NAME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --cluster-creds)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_not_empty "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--cluster-creds CLUSTER-CREDS" "$(validate_not_empty "$2")" >&2
+            exit 1
+          fi
+
+          args['--cluster-creds']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster-creds requires an argument: --cluster-creds CLUSTER-CREDS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --cluster-schema-registry-creds)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_not_empty "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--cluster-schema-registry-creds CLUSTER-SCHEMA-REGISTRY-CREDS" "$(validate_not_empty "$2")" >&2
+            exit 1
+          fi
+
+          args['--cluster-schema-registry-creds']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster-schema-registry-creds requires an argument: --cluster-schema-registry-creds CLUSTER-SCHEMA-REGISTRY-CREDS" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         other_args+=("$@")
@@ -20939,18 +21357,20 @@ playground_run_parse_requirements() {
     esac
   done
 
-  # :command.required_flags_filter
-  if [[ -z ${args['--file']+x} ]]; then
-    printf "missing required flag: --file, -f FILE\n" >&2
-    exit 1
-  fi
-
   # :command.default_assignments
   [[ -n ${args['--environment']:-} ]] || args['--environment']="plaintext"
 
   # :command.whitelist_filter
   if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|plaintext|sasl-ssl|sasl-plain|2way-ssl|sasl-scram|kraft-external-plaintext|kraft-plaintext|kerberos|ssl_kerberos|ldap-authorizer-sasl-plain|ldap-sasl-plain|rbac-sasl-plain)$ ]]; then
     printf "%s\n" "--environment must be one of: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain" >&2
+    exit 1
+  fi
+  if [[ ${args['--cluster-cloud']:-} ]] && [[ ! ${args['--cluster-cloud']:-} =~ ^(aws|gcp|azure)$ ]]; then
+    printf "%s\n" "--cluster-cloud must be one of: aws, gcp, azure" >&2
+    exit 1
+  fi
+  if [[ ${args['--cluster-type']:-} ]] && [[ ! ${args['--cluster-type']:-} =~ ^(basic|standard|dedicated)$ ]]; then
+    printf "%s\n" "--cluster-type must be one of: basic, standard, dedicated" >&2
     exit 1
   fi
 

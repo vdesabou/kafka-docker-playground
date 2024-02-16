@@ -86,8 +86,6 @@ subcommands:
         
         🎓 Tip: use <tab> completion to trigger fzf completion
         
-        Required: ✓ Yes
-        
     - names:
       - --open
       - -o
@@ -222,6 +220,76 @@ subcommands:
         🌪️ Enable SQL Datagen injection
         
         This only works for Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with JDBC and Debezium
+        
+    - names:
+      - --cluster-cloud
+      argument: [aws, gcp, azure]
+      description: | 
+        🌤 The cloud provider: aws, gcp or azure. Default is aws
+        
+        🎓 Tip: you can also use CLUSTER_CLOUD environment variable
+        
+        Allowed values: aws, gcp, azure
+        
+    - names:
+      - --cluster-type
+      argument: [basic, standard, dedicated]
+      description: | 
+        🔋 The cluster type: basic, standard or dedicated. Default is basic
+        
+        🎓 Tip: you can also use CLUSTER_TYPE environment variable
+        
+        Allowed values: basic, standard, dedicated
+        
+    - names:
+      - --cluster-region
+      argument: CLUSTER-REGION
+      description: | 
+        🗺 The Cloud region. 
+        
+        🎓 Tip: you can also use CLUSTER_REGION environment variable
+        
+    - names:
+      - --cluster-environment
+      argument: CLUSTER-ENVIRONMENT
+      description: | 
+        🌐 The environment id where want your new cluster (example: env-xxxxx)
+        
+        ℹ️ Optional, if not set, new environment will be created
+        
+        🎓 Tip: you can also use ENVIRONMENT environment variable
+        
+    - names:
+      - --cluster-name
+      argument: CLUSTER-NAME
+      description: | 
+        🎰 The cluster name. 
+        
+        ❣️ Only required if you want to use your own existing cluster
+        
+        🎓 Tip: you can also use CLUSTER_NAME environment variable
+        
+    - names:
+      - --cluster-creds
+      argument: CLUSTER-CREDS
+      description: | 
+        🔒 The Kafka api key and secret to use, it should be separated with semi-colon (example: <API_KEY>:<API_KEY_SECRET>)
+        
+        ❣️ Only required if you want to use your own existing cluster
+        
+        🎓 Tip: you can also use CLUSTER_CREDS environment variable
+        
+    - names:
+      - --cluster-schema-registry-creds
+      argument: CLUSTER-SCHEMA-REGISTRY-CREDS
+      description: | 
+        🔒 The Schema Registry api key and secret to use, it should be separated with semi-colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)
+        
+        ℹ️ Optional, if not set, new credentials will be created
+        
+        ❣️ Only required if you want to use your own existing cluster
+        
+        🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable
         
     subcommands:
   - name: re-run
@@ -418,7 +486,7 @@ subcommands:
         - sasl-ssl
         - ssl_kerberos
         
-        Note: when running an example with <playground run> or <playground run-ccloud>, it is already automatically done
+        Note: when running an example with <playground run>, it is already automatically done
     usage: playground start-environment [OPTIONS] [ARGUMENTS...]
     options:
     - names:

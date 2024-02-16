@@ -63,7 +63,7 @@
             "-f"
           ],
           "argument": "FILE",
-          "description": "🔖 Example file to run\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes\n"
+          "description": "🔖 Example file to run\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
         },
         {
           "names": [
@@ -163,6 +163,63 @@
           ],
           "argument": "",
           "description": "🌪️ Enable SQL Datagen injection\n\nThis only works for Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with JDBC and Debezium\n"
+        },
+        {
+          "names": [
+            "--cluster-cloud"
+          ],
+          "argument": [
+            "aws",
+            "gcp",
+            "azure"
+          ],
+          "description": "🌤 The cloud provider: aws, gcp or azure. Default is aws\n\n🎓 Tip: you can also use CLUSTER_CLOUD environment variable\n\nAllowed values: aws, gcp, azure\n"
+        },
+        {
+          "names": [
+            "--cluster-type"
+          ],
+          "argument": [
+            "basic",
+            "standard",
+            "dedicated"
+          ],
+          "description": "🔋 The cluster type: basic, standard or dedicated. Default is basic\n\n🎓 Tip: you can also use CLUSTER_TYPE environment variable\n\nAllowed values: basic, standard, dedicated\n"
+        },
+        {
+          "names": [
+            "--cluster-region"
+          ],
+          "argument": "CLUSTER-REGION",
+          "description": "🗺 The Cloud region. \n\n🎓 Tip: you can also use CLUSTER_REGION environment variable\n"
+        },
+        {
+          "names": [
+            "--cluster-environment"
+          ],
+          "argument": "CLUSTER-ENVIRONMENT",
+          "description": "🌐 The environment id where want your new cluster (example: env-xxxxx)\n\nℹ️ Optional, if not set, new environment will be created\n\n🎓 Tip: you can also use ENVIRONMENT environment variable\n"
+        },
+        {
+          "names": [
+            "--cluster-name"
+          ],
+          "argument": "CLUSTER-NAME",
+          "description": "🎰 The cluster name. \n\n❣️ Only required if you want to use your own existing cluster\n\n🎓 Tip: you can also use CLUSTER_NAME environment variable\n"
+        },
+        {
+          "names": [
+            "--cluster-creds"
+          ],
+          "argument": "CLUSTER-CREDS",
+          "description": "🔒 The Kafka api key and secret to use, it should be separated with semi-colon (example: <API_KEY>:<API_KEY_SECRET>)\n\n❣️ Only required if you want to use your own existing cluster\n\n🎓 Tip: you can also use CLUSTER_CREDS environment variable\n"
+        },
+        {
+          "names": [
+            "--cluster-schema-registry-creds"
+          ],
+          "argument": "CLUSTER-SCHEMA-REGISTRY-CREDS",
+          "description": "🔒 The Schema Registry api key and secret to use, it should be separated with semi-colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n\nℹ️ Optional, if not set, new credentials will be created\n\n❣️ Only required if you want to use your own existing cluster\n\n🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable\n"
         }
       ],
       "subcommands": null
@@ -289,7 +346,7 @@
     },
     {
       "name": "start-environment",
-      "description": "🔐 Simply start an environment listed in http://tinyurl.com/y4ybbw32:\n\n- ccloud\n- 2way-ssl\n- kerberos\n- kraft-external-plaintext\n- kraft-plaintext\n- ldap-authorizer-sasl-plain\n- ldap-sasl-plain\n- mdc-kerberos\n- mdc-plaintext\n- mdc-sasl-plain\n- plaintext\n- rbac-sasl-plain\n- sasl-plain\n- sasl-scram\n- sasl-ssl\n- ssl_kerberos\n\nNote: when running an example with <playground run> or <playground run-ccloud>, it is already automatically done\n",
+      "description": "🔐 Simply start an environment listed in http://tinyurl.com/y4ybbw32:\n\n- ccloud\n- 2way-ssl\n- kerberos\n- kraft-external-plaintext\n- kraft-plaintext\n- ldap-authorizer-sasl-plain\n- ldap-sasl-plain\n- mdc-kerberos\n- mdc-plaintext\n- mdc-sasl-plain\n- plaintext\n- rbac-sasl-plain\n- sasl-plain\n- sasl-scram\n- sasl-ssl\n- ssl_kerberos\n\nNote: when running an example with <playground run>, it is already automatically done\n",
       "usage": "playground start-environment [OPTIONS] [ARGUMENTS...]",
       "options": [
         {

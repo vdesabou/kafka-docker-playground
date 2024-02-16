@@ -21,27 +21,154 @@ function get_connect_url_and_security() {
   fi
 }
 
+function generate_get_examples_add_emoji () {
+  repro=""
+  if [[ $file_path == *"reproduction-models"* ]]
+  then
+    repro="👷‍♂️"
+  fi
+
+  if [[ $file_path == *"ccloud"* ]]
+  then
+    if [[ $file_path == *"fully-managed-connect"* ]]
+    then
+      echo "${repro}🌤️🤖 $file_path" >> $output_file
+    elif [[ $file_path == *"custom-connector"* ]]
+    then
+      echo "${repro}🌤️🛃 $file_path" >> $output_file
+    else
+      echo "${repro}🌤️ $file_path" >> $output_file
+    fi
+  elif [[ $file_path == *"connect"* ]]
+  then
+    echo "${repro}🔗🌎 $file_path" >> $output_file
+  elif [[ $file_path == *"ksql"* ]]
+  then
+    echo "${repro}🎏 $file_path" >> $output_file
+  elif [[ $file_path == *"schema-registry"* ]]
+  then
+    echo "${repro}📝 $file_path" >> $output_file
+  elif [[ $file_path == *"rest-proxy"* ]]
+  then
+    echo "${repro}😴 $file_path" >> $output_file
+  else
+    echo "${repro}👾 $file_path" >> $output_file
+  fi
+}
+
 function generate_fzf_find_files() {
   generate_get_examples_list_with_fzf_without_repro_sink_only
   generate_get_examples_list_with_fzf_without_repro
   generate_get_examples_list_with_fzf_ccloud_only
   generate_get_examples_list_with_fzf
+
+  generate_get_examples_list_with_fzf_connector_only
+  generate_get_examples_list_with_fzf_repro_only
+  generate_get_examples_list_with_fzf_ksql_only
+  generate_get_examples_list_with_fzf_fully_managed_connector_only
+  generate_get_examples_list_with_fzf_schema_registry_only
+  generate_get_examples_list_with_fzf_rest_proxy_only
+  generate_get_examples_list_with_fzf_other_playgrounds_only
 }
 
+function generate_get_examples_list_with_fzf_connector_only () {
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_connector_only"
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect/connect-*-*/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' ! -path '*/ccloud/*'  ! -path '*/post_start/*' ! -path '*/1*domain*/*' ! -path '*/kdc-server/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
+}
+
+function generate_get_examples_list_with_fzf_repro_only () {
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_repro_only"
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect-*-*/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' -path '*/reproduction-models/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
+}
+
+function generate_get_examples_list_with_fzf_ksql_only () {
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_ksql_only"
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/ksqldb/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
+}
+
+function generate_get_examples_list_with_fzf_fully_managed_connector_only () {
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_fully_managed_connector_only"
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/fully-managed-*/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' -path '*/ccloud/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
+}
+
+function generate_get_examples_list_with_fzf_schema_registry_only () {
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_schema_registry_only"
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/schema-registry/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' ! -path '*/ccloud/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
+}
+
+function generate_get_examples_list_with_fzf_rest_proxy_only () {
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_rest_proxy_only"
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/rest-proxy/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
+}
+
+function generate_get_examples_list_with_fzf_other_playgrounds_only () {
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_other_playgrounds_only"
+  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' ! -path '*/reproduction-models/*' ! -path '*/connect/*' ! -path '*/ksqldb/*' ! -path '*/schema-registry/*'  | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
+}
+
+
 function generate_get_examples_list_with_fzf_without_repro_sink_only () {
-  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' > $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro_sink_only
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_without_repro_sink_only"
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
 }
 
 function generate_get_examples_list_with_fzf_without_repro () {
-  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' > $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_without_repro"
+  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
 }
 
 function generate_get_examples_list_with_fzf_ccloud_only () {
-  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/ccloud*' ! -path '*/ora-*/*' ! -path '*/security/*' > $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only"
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/ccloud*' ! -path '*/ora-*/*' ! -path '*/security/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
 }
 
 function generate_get_examples_list_with_fzf () {
-  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ccloud/*' ! -path '*/ora-*/*' ! -path '*/security/*' > $root_folder/scripts/cli/get_examples_list_with_fzf
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf"
+  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ccloud/*' ! -path '*/ora-*/*' ! -path '*/security/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
 }
 
 function get_ccloud_connect() {
@@ -149,6 +276,7 @@ function get_fzf_version() {
 
 function get_examples_list_with_fzf() {
   cur="$1"
+  file="$2"
 
   fzf_version=$(get_fzf_version)
   if version_gt $fzf_version "0.38"
@@ -167,99 +295,12 @@ function get_examples_list_with_fzf() {
   then
     if [[ $(type -f bat 2>&1) =~ "not found" ]]
     then
-        res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
+        res=$(cat $file | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "1,-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat /{2..}');echo "$cur@$(echo $res | cut -d ' ' -f 2)"
     else
-      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
+      res=$(cat $file | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "1,-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 /{2..}');echo "$cur@$(echo $res | cut -d ' ' -f 2)"
     fi
   else
-    res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
-  fi
-}
-
-function get_examples_list_with_fzf_ccloud_only() {
-  cur="$1"
-
-  fzf_version=$(get_fzf_version)
-  if version_gt $fzf_version "0.38"
-  then
-    fzf_option_wrap="--preview-window=40%,wrap"
-    fzf_option_pointer="--pointer=👉"
-    fzf_option_rounded="--border=rounded"
-  else
-    fzf_options=""
-    fzf_option_pointer=""
-    fzf_option_rounded=""
-  fi
-
-  terminal_columns=$(tput cols)
-  if [[ $terminal_columns -gt 180 ]]
-  then
-    if [[ $(type -f bat 2>&1) =~ "not found" ]]
-    then
-      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="☁️" --header="select ccloud example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
-    else
-      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="☁️" --header="select ccloud example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
-    fi
-  else
-    res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="☁️" --header="select ccloud example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
-  fi
-}
-
-function get_examples_list_with_fzf_without_repro() {
-  cur="$1"
-
-  fzf_version=$(get_fzf_version)
-  if version_gt $fzf_version "0.38"
-  then
-    fzf_option_wrap="--preview-window=40%,wrap"
-    fzf_option_pointer="--pointer=👉"
-    fzf_option_rounded="--border=rounded"
-  else
-    fzf_options=""
-    fzf_option_pointer=""
-    fzf_option_rounded=""
-  fi
-
-  terminal_columns=$(tput cols)
-  if [[ $terminal_columns -gt 180 ]]
-  then
-    if [[ $(type -f bat 2>&1) =~ "not found" ]]
-    then
-      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
-    else
-      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
-    fi
-  else
-    res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
-  fi
-}
-
-function get_examples_list_with_fzf_without_repro_sink_only() {
-  cur="$1"
-
-  fzf_version=$(get_fzf_version)
-  if version_gt $fzf_version "0.38"
-  then
-    fzf_option_wrap="--preview-window=40%,wrap"
-    fzf_option_pointer="--pointer=👉"
-    fzf_option_rounded="--border=rounded"
-  else
-    fzf_options=""
-    fzf_option_pointer=""
-    fzf_option_rounded=""
-  fi
-
-  terminal_columns=$(tput cols)
-  if [[ $terminal_columns -gt 180 ]]
-  then
-    if [[ $(type -f bat 2>&1) =~ "not found" ]]
-    then
-      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro_sink_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select sink example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
-    else
-      res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro_sink_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select sink example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
-    fi
-  else
-    res=$(cat $root_folder/scripts/cli/get_examples_list_with_fzf_without_repro_sink_only | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select sink example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+    res=$(cat $file | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="select example (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "1,-3,-2,-1" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$(echo $res | cut -d ' ' -f 2)"
   fi
 }
 

@@ -19,17 +19,63 @@ enable_jmx_grafana="${args[--enable-jmx-grafana]}"
 enable_kcat="${args[--enable-kcat]}"
 enable_sql_datagen="${args[--enable-sql-datagen]}"
 
-if [ "$test_file" = "" ]
+if [[ ! -n "$test_file" ]]
 then
-  logerror "ERROR: test_file is not provided as argument!"
-  exit 1
+  log "--file flag was not provided, please select it now"
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
+  then
+      fzf_option_wrap="--preview-window=40%,wrap"
+      fzf_option_pointer="--pointer=👉"
+      fzf_option_rounded="--border=rounded"
+  else
+      fzf_option_pointer=""
+      fzf_option_rounded=""
+  fi
+
+  options=("🔗 Connectors" "🌤️ Confluent Cloud" "🤖 Fully-Managed Connectors" "👷‍♂️ Reproduction Models" "🎏 KSQL" "📝 Schema Registry" "😴 REST Proxy" "👾 Other Playgrounds" "🌕 All")
+  res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="Select a category (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
+
+  case "${res}" in
+    "🔗 Connectors")
+      test_file=$(playground get-examples-list-with-fzf --connector-only)
+    ;;
+    "🌤️ Confluent Cloud")
+      test_file=$(playground get-examples-list-with-fzf --ccloud-only)
+    ;;
+    "🤖 Fully-Managed Connectors")
+      test_file=$(playground get-examples-list-with-fzf --fully-managed-connector-only)
+    ;;
+    "👷‍♂️ Reproduction Models")
+      test_file=$(playground get-examples-list-with-fzf --repro-only)
+    ;;
+    "🎏 KSQL")
+      test_file=$(playground get-examples-list-with-fzf --ksql-only)
+    ;;
+    "📝 Schema Registry")
+      test_file=$(playground get-examples-list-with-fzf --schema-registry-only)
+    ;;
+    "😴 REST Proxy")
+      test_file=$(playground get-examples-list-with-fzf --rest-proxy-only)
+    ;;
+    "👾 Other Playgrounds")
+      test_file=$(playground get-examples-list-with-fzf --other-playgrounds-only)
+    ;;
+    "🌕 All")
+      test_file=$(playground get-examples-list-with-fzf)
+    ;;
+    *)
+      logerror "❌ wrong choice: $res"
+      exit 1
+    ;;
+  esac
 fi
 
 if [[ $test_file == *"@"* ]]
 then
   test_file=$(echo "$test_file" | cut -d "@" -f 2)
 fi
-  
+
 if [ ! -f "$test_file" ]
 then
   logerror "ERROR: test_file $test_file does not exist!"
