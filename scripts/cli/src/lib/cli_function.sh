@@ -164,7 +164,7 @@ function generate_get_examples_list_with_fzf_ccloud_only () {
 
 function generate_get_examples_list_with_fzf () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf"
-  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ccloud/*' ! -path '*/ora-*/*' ! -path '*/security/*' | while read file_path
+  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' | while read file_path
   do
     generate_get_examples_add_emoji
   done

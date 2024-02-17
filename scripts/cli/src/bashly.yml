@@ -283,8 +283,28 @@ commands:
     required: false
   dependencies:
     fzf: visit https://github.com/junegunn/fzf#installation to install
+    confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
   help: |-
-    🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)
+    🕹️ Run any example
+
+    ⛅ When running Confluent Cloud (ccloud) example:
+
+      All you have to do is to be already logged in with confluent CLI.
+
+      By default, a new Confluent Cloud environment with a Cluster will be created.
+
+      You can configure the new cluster by setting:
+    
+      --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: `basic`, `standard` and `dedicated`, default `basic`)
+      --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: `aws`, `gcp` and `azure`, default `aws`)
+      --cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use `confluent kafka region list` to get the list, default `eu-west-2`)
+      --cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: `env-xxxxx`) 
+
+      In case you want to use your own existing cluster, you need to setup, in addition to previous ones:
+
+      --cluster-name (or CLUSTER_NAME environment variable): The cluster name
+      --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with semi-colon (example: `<API_KEY>:<API_KEY_SECRET>`)
+      --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with semi-colon (example: `<SR_API_KEY>:<SR_API_KEY_SECRET>`)
 
   flags:
   - &environment-run
@@ -384,7 +404,9 @@ commands:
     long: --enable-ksqldb
     required: false
     help: |-
-      🚀 Enable ksqlDB
+      🚀 Enable ksqlDB 
+      
+      ❗ not supported with ccloud examples
 
       By default, ksqldb-server and ksqldb-cli containers are not started for every test
   - &enable-rest-proxy
@@ -392,6 +414,8 @@ commands:
     required: false
     help: |-
       🧲 Enable Rest Proxy
+
+      ❗ not supported with ccloud examples
 
       By default, rest-proxy container is not started for every test
   - &enable-control-center
@@ -537,7 +561,7 @@ commands:
 - name: re-run
   group: Run
   help: |-
-    ⚡ Simply re-run last example you ran with <playground run> or <playground run-ccloud>
+    ⚡ Simply re-run last example you ran with <playground run>
   catch_all:
     label: arguments
     help: |-
@@ -659,143 +683,6 @@ commands:
   - playground start-environment
   - playground start-environment --environment rbac-sasl-plain
 
-- name: run-ccloud
-  group: Run
-  catch_all:
-    label: arguments
-    help: |-
-      Arguments to use by example script
-
-      Most of examples support to get required options either by using arguments or environment variables.
-      
-      Example with Zendesk:
-
-      playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
-    required: false
-  dependencies:
-    fzf: visit https://github.com/junegunn/fzf#installation to install
-    confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
-  help: |-
-    ⛅ Run any Confluent Cloud (ccloud) example
-
-    All you have to do is to be already logged in with confluent CLI.
-
-    By default, a new Confluent Cloud environment with a Cluster will be created.
-
-    You can configure the new cluster by setting:
-   
-    --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: `basic`, `standard` and `dedicated`, default `basic`)
-    --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: `aws`, `gcp` and `azure`, default `aws`)
-    --cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use `confluent kafka region list` to get the list, default `eu-west-2`)
-    --cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: `env-xxxxx`) 
-
-    In case you want to use your own existing cluster, you need to setup, in addition to previous ones:
-
-    --cluster-name (or CLUSTER_NAME environment variable): The cluster name
-    --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with semi-colon (example: `<API_KEY>:<API_KEY_SECRET>`)
-    --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with semi-colon (example: `<SR_API_KEY>:<SR_API_KEY_SECRET>`)
-    
-  flags:
-    - long: --file
-      short: -f
-      required: true
-      validate: file_exists_with_trick
-      arg: file
-      completions:
-        - $(playground get-examples-list-with-fzf --ccloud-only "$cur")
-      help: |-
-        🔖 Example file to run
-
-        ❕ It must be absolute full path
-
-        🎓 Tip: use <tab> completion to trigger fzf completion
-    - long: --open
-      short: -o
-      help: 📖 Opening example file with text editor set with playground config editor <editor> (default is code)
-    - *tag
-    - *connector-tag
-    - *connector-zip
-    - *connector-jar
-    - *enable-control-center
-    - *enable-conduktor
-    - *enable-kcat
-    - &cluster-cloud
-      long: --cluster-cloud
-      required: false
-      arg: cluster-cloud
-      allowed: [aws, gcp, azure]
-      help: |-
-        🌤 The cloud provider: aws, gcp or azure. Default is aws
-
-        🎓 Tip: you can also use CLUSTER_CLOUD environment variable
-    - &cluster-type
-      long: --cluster-type
-      required: false
-      arg: cluster-type
-      allowed: [basic, standard, dedicated]
-      help: |-
-        🔋 The cluster type: basic, standard or dedicated. Default is basic
-
-        🎓 Tip: you can also use CLUSTER_TYPE environment variable
-    - &cluster-region
-      long: --cluster-region
-      required: false
-      arg: cluster-region
-      completions:
-        - $(playground get-kafka-region-list "$cur")
-      help: |-
-        🗺 The Cloud region. 
-        
-        🎓 Tip: you can also use CLUSTER_REGION environment variable
-    - &cluster-environment
-      long: --cluster-environment
-      required: false
-      arg: cluster-environment
-      validate: not_empty
-      help: |-
-        🌐 The environment id where want your new cluster (example: env-xxxxx)
-
-        ℹ️ Optional, if not set, new environment will be created
-
-        🎓 Tip: you can also use ENVIRONMENT environment variable
-    - &cluster-name
-      long: --cluster-name
-      required: false
-      validate: not_empty
-      arg: cluster-name
-      help: |-
-        🎰 The cluster name. 
-        
-        ❣️ Only required if you want to use your own existing cluster
-
-        🎓 Tip: you can also use CLUSTER_NAME environment variable
-    - &cluster-creds
-      long: --cluster-creds
-      required: false
-      validate: not_empty
-      arg: cluster-creds
-      help: |-
-        🔒 The Kafka api key and secret to use, it should be separated with semi-colon (example: <API_KEY>:<API_KEY_SECRET>)
-
-        ❣️ Only required if you want to use your own existing cluster
-
-        🎓 Tip: you can also use CLUSTER_CREDS environment variable
-    - &cluster-schema-registry-creds
-      long: --cluster-schema-registry-creds
-      required: false
-      validate: not_empty
-      arg: cluster-schema-registry-creds
-      help: |-
-        🔒 The Schema Registry api key and secret to use, it should be separated with semi-colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)
-
-        ℹ️ Optional, if not set, new credentials will be created
-
-        ❣️ Only required if you want to use your own existing cluster
-        
-        🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable
-  examples:
-  - playground run-ccloud mqtt<tab> --cluster-cloud aws --cluster-region eu-west-3 --enable-control-center --connector-tag 1.2.3
-
 - name: switch-ccloud
   group: Run
   dependencies:
@@ -825,7 +712,7 @@ commands:
   dependencies:
     fzf: visit https://github.com/junegunn/fzf#installation to install
   help: |-
-    👐 When --file is not provided, simply open last example you ran with <playground run> or <playground run-ccloud>
+    👐 When --file is not provided, simply open last example you ran with <playground run>
 
     Otherwise, open any file from the playground using --file.
   flags:

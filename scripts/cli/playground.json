@@ -47,7 +47,7 @@
     },
     {
       "name": "run",
-      "description": "🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)\n",
+      "description": "🕹️ Run any example\n\n⛅ When running Confluent Cloud (ccloud) example:\n\n  All you have to do is to be already logged in with confluent CLI.\n\n  By default, a new Confluent Cloud environment with a Cluster will be created.\n\n  You can configure the new cluster by setting:\n\n  --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: `basic`, `standard` and `dedicated`, default `basic`)\n  --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: `aws`, `gcp` and `azure`, default `aws`)\n  --cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use `confluent kafka region list` to get the list, default `eu-west-2`)\n  --cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: `env-xxxxx`) \n\n  In case you want to use your own existing cluster, you need to setup, in addition to previous ones:\n\n  --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n  --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with semi-colon (example: `<API_KEY>:<API_KEY_SECRET>`)\n  --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with semi-colon (example: `<SR_API_KEY>:<SR_API_KEY_SECRET>`)\n",
       "usage": "playground run [OPTIONS] [ARGUMENTS...]",
       "options": [
         {
@@ -106,14 +106,14 @@
             "--enable-ksqldb"
           ],
           "argument": "",
-          "description": "🚀 Enable ksqlDB\n\nBy default, ksqldb-server and ksqldb-cli containers are not started for every test\n"
+          "description": "🚀 Enable ksqlDB \n\n❗ not supported with ccloud examples\n\nBy default, ksqldb-server and ksqldb-cli containers are not started for every test\n"
         },
         {
           "names": [
             "--enable-rest-proxy"
           ],
           "argument": "",
-          "description": "🧲 Enable Rest Proxy\n\nBy default, rest-proxy container is not started for every test\n"
+          "description": "🧲 Enable Rest Proxy\n\n❗ not supported with ccloud examples\n\nBy default, rest-proxy container is not started for every test\n"
         },
         {
           "names": [
@@ -226,7 +226,7 @@
     },
     {
       "name": "re-run",
-      "description": "⚡ Simply re-run last example you ran with <playground run> or <playground run-ccloud>\n",
+      "description": "⚡ Simply re-run last example you ran with <playground run>\n",
       "usage": "playground re-run [OPTIONS] [ARGUMENTS...]",
       "options": [
         {
@@ -276,14 +276,14 @@
             "--enable-ksqldb"
           ],
           "argument": "",
-          "description": "🚀 Enable ksqlDB\n\nBy default, ksqldb-server and ksqldb-cli containers are not started for every test\n"
+          "description": "🚀 Enable ksqlDB \n\n❗ not supported with ccloud examples\n\nBy default, ksqldb-server and ksqldb-cli containers are not started for every test\n"
         },
         {
           "names": [
             "--enable-rest-proxy"
           ],
           "argument": "",
-          "description": "🧲 Enable Rest Proxy\n\nBy default, rest-proxy container is not started for every test\n"
+          "description": "🧲 Enable Rest Proxy\n\n❗ not supported with ccloud examples\n\nBy default, rest-proxy container is not started for every test\n"
         },
         {
           "names": [
@@ -376,14 +376,14 @@
             "--enable-ksqldb"
           ],
           "argument": "",
-          "description": "🚀 Enable ksqlDB\n\nBy default, ksqldb-server and ksqldb-cli containers are not started for every test\n"
+          "description": "🚀 Enable ksqlDB \n\n❗ not supported with ccloud examples\n\nBy default, ksqldb-server and ksqldb-cli containers are not started for every test\n"
         },
         {
           "names": [
             "--enable-rest-proxy"
           ],
           "argument": "",
-          "description": "🧲 Enable Rest Proxy\n\nBy default, rest-proxy container is not started for every test\n"
+          "description": "🧲 Enable Rest Proxy\n\n❗ not supported with ccloud examples\n\nBy default, rest-proxy container is not started for every test\n"
         },
         {
           "names": [
@@ -426,136 +426,6 @@
           ],
           "argument": "",
           "description": "🐈‍⬛ Enable kcat\n\nYou can use it with:\n\n$ docker exec kcat kcat -b broker:9092 -L\n"
-        }
-      ],
-      "subcommands": null
-    },
-    {
-      "name": "run-ccloud",
-      "description": "⛅ Run any Confluent Cloud (ccloud) example\n\nAll you have to do is to be already logged in with confluent CLI.\n\nBy default, a new Confluent Cloud environment with a Cluster will be created.\n\nYou can configure the new cluster by setting:\n\n--cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: `basic`, `standard` and `dedicated`, default `basic`)\n--cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: `aws`, `gcp` and `azure`, default `aws`)\n--cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use `confluent kafka region list` to get the list, default `eu-west-2`)\n--cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: `env-xxxxx`) \n\nIn case you want to use your own existing cluster, you need to setup, in addition to previous ones:\n\n--cluster-name (or CLUSTER_NAME environment variable): The cluster name\n--cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with semi-colon (example: `<API_KEY>:<API_KEY_SECRET>`)\n--cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with semi-colon (example: `<SR_API_KEY>:<SR_API_KEY_SECRET>`)\n",
-      "usage": "playground run-ccloud [OPTIONS] [ARGUMENTS...]",
-      "options": [
-        {
-          "names": [
-            "--file",
-            "-f"
-          ],
-          "argument": "FILE",
-          "description": "🔖 Example file to run\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes\n"
-        },
-        {
-          "names": [
-            "--open",
-            "-o"
-          ],
-          "argument": "",
-          "description": "📖 Opening example file with text editor set with playground config editor <editor> (default is code)\n"
-        },
-        {
-          "names": [
-            "--tag"
-          ],
-          "argument": "TAG",
-          "description": "🎯 Confluent Platform (CP) version to use\n\nMust be greater or equal to 5.0.0\n"
-        },
-        {
-          "names": [
-            "--connector-tag"
-          ],
-          "argument": "CONNECTOR_TAG",
-          "description": "🔗 Connector version to use\n\nBy default, for each connector, the latest available version on Confluent Hub is used\n\n🎓 Tip: set to \" \" in order to select the version dynamically\n\nConflicts with: --connector-zip\n"
-        },
-        {
-          "names": [
-            "--connector-zip"
-          ],
-          "argument": "CONNECTOR_ZIP",
-          "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n\nConflicts with: --connector-tag\n"
-        },
-        {
-          "names": [
-            "--connector-jar"
-          ],
-          "argument": "CONNECTOR_JAR",
-          "description": "♨️ Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n"
-        },
-        {
-          "names": [
-            "--enable-control-center"
-          ],
-          "argument": "",
-          "description": "💠 Enable Control Center\n\nBy default, control-center container is not started for every test\n\nControl Center is reachable at http://127.0.0.1:9021\n"
-        },
-        {
-          "names": [
-            "--enable-conduktor"
-          ],
-          "argument": "",
-          "description": "🐺 Enable Conduktor Platform\n\nBy default, Conduktor Platform container is not started for every test\n\nConduktor is reachable at http://127.0.0.1:8080/console (admin/admin)\n"
-        },
-        {
-          "names": [
-            "--enable-kcat"
-          ],
-          "argument": "",
-          "description": "🐈‍⬛ Enable kcat\n\nYou can use it with:\n\n$ docker exec kcat kcat -b broker:9092 -L\n"
-        },
-        {
-          "names": [
-            "--cluster-cloud"
-          ],
-          "argument": [
-            "aws",
-            "gcp",
-            "azure"
-          ],
-          "description": "🌤 The cloud provider: aws, gcp or azure. Default is aws\n\n🎓 Tip: you can also use CLUSTER_CLOUD environment variable\n\nAllowed values: aws, gcp, azure\n"
-        },
-        {
-          "names": [
-            "--cluster-type"
-          ],
-          "argument": [
-            "basic",
-            "standard",
-            "dedicated"
-          ],
-          "description": "🔋 The cluster type: basic, standard or dedicated. Default is basic\n\n🎓 Tip: you can also use CLUSTER_TYPE environment variable\n\nAllowed values: basic, standard, dedicated\n"
-        },
-        {
-          "names": [
-            "--cluster-region"
-          ],
-          "argument": "CLUSTER-REGION",
-          "description": "🗺 The Cloud region. \n\n🎓 Tip: you can also use CLUSTER_REGION environment variable\n"
-        },
-        {
-          "names": [
-            "--cluster-environment"
-          ],
-          "argument": "CLUSTER-ENVIRONMENT",
-          "description": "🌐 The environment id where want your new cluster (example: env-xxxxx)\n\nℹ️ Optional, if not set, new environment will be created\n\n🎓 Tip: you can also use ENVIRONMENT environment variable\n"
-        },
-        {
-          "names": [
-            "--cluster-name"
-          ],
-          "argument": "CLUSTER-NAME",
-          "description": "🎰 The cluster name. \n\n❣️ Only required if you want to use your own existing cluster\n\n🎓 Tip: you can also use CLUSTER_NAME environment variable\n"
-        },
-        {
-          "names": [
-            "--cluster-creds"
-          ],
-          "argument": "CLUSTER-CREDS",
-          "description": "🔒 The Kafka api key and secret to use, it should be separated with semi-colon (example: <API_KEY>:<API_KEY_SECRET>)\n\n❣️ Only required if you want to use your own existing cluster\n\n🎓 Tip: you can also use CLUSTER_CREDS environment variable\n"
-        },
-        {
-          "names": [
-            "--cluster-schema-registry-creds"
-          ],
-          "argument": "CLUSTER-SCHEMA-REGISTRY-CREDS",
-          "description": "🔒 The Schema Registry api key and secret to use, it should be separated with semi-colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n\nℹ️ Optional, if not set, new credentials will be created\n\n❣️ Only required if you want to use your own existing cluster\n\n🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable\n"
         }
       ],
       "subcommands": null
@@ -612,7 +482,7 @@
     },
     {
       "name": "open",
-      "description": "👐 When --file is not provided, simply open last example you ran with <playground run> or <playground run-ccloud>\n\nOtherwise, open any file from the playground using --file.\n",
+      "description": "👐 When --file is not provided, simply open last example you ran with <playground run>\n\nOtherwise, open any file from the playground using --file.\n",
       "usage": "playground open [OPTIONS]",
       "options": [
         {
@@ -728,14 +598,14 @@
                 "--enable-ksqldb"
               ],
               "argument": "",
-              "description": "🚀 Enable ksqlDB\n\nBy default, ksqldb-server and ksqldb-cli containers are not started for every test\n"
+              "description": "🚀 Enable ksqlDB \n\n❗ not supported with ccloud examples\n\nBy default, ksqldb-server and ksqldb-cli containers are not started for every test\n"
             },
             {
               "names": [
                 "--enable-rest-proxy"
               ],
               "argument": "",
-              "description": "🧲 Enable Rest Proxy\n\nBy default, rest-proxy container is not started for every test\n"
+              "description": "🧲 Enable Rest Proxy\n\n❗ not supported with ccloud examples\n\nBy default, rest-proxy container is not started for every test\n"
             },
             {
               "names": [

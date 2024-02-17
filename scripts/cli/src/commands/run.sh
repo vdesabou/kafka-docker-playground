@@ -9,6 +9,7 @@ tag="${args[--tag]}"
 connector_tag="${args[--connector-tag]}"
 connector_zip="${args[--connector-zip]}"
 connector_jar="${args[--connector-jar]}"
+
 enable_ksqldb="${args[--enable-ksqldb]}"
 enable_rest_proxy="${args[--enable-rest-proxy]}"
 enable_c3="${args[--enable-control-center]}"
@@ -18,6 +19,14 @@ enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
 enable_jmx_grafana="${args[--enable-jmx-grafana]}"
 enable_kcat="${args[--enable-kcat]}"
 enable_sql_datagen="${args[--enable-sql-datagen]}"
+
+cluster_type="${args[--cluster-type]}"
+cluster_cloud="${args[--cluster-cloud]}"
+cluster_region="${args[--cluster-region]}"
+cluster_environment="${args[--cluster-environment]}"
+cluster_name="${args[--cluster-name]}"
+cluster_creds="${args[--cluster-creds]}"
+cluster_schema_registry_creds="${args[--cluster-schema-registry-creds]}"
 
 if [[ ! -n "$test_file" ]]
 then
@@ -33,7 +42,7 @@ then
       fzf_option_rounded=""
   fi
 
-  options=("🔗 Connectors" "🌤️ Confluent Cloud" "🤖 Fully-Managed Connectors" "👷‍♂️ Reproduction Models" "🎏 KSQL" "📝 Schema Registry" "😴 REST Proxy" "👾 Other Playgrounds" "🌕 All")
+  options=("🔗 Connectors" "🌤️ Confluent Cloud" "🤖 Fully-Managed Connectors" "👷‍♂️ Reproduction Models" "🎏 KSQL" "📝 Schema Registry" "🧲 REST Proxy" "👾 Other Playgrounds" "🌕 All")
   res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="Select a category (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
 
   case "${res}" in
@@ -55,7 +64,7 @@ then
     "📝 Schema Registry")
       test_file=$(playground get-examples-list-with-fzf --schema-registry-only)
     ;;
-    "😴 REST Proxy")
+    "🧲 REST Proxy")
       test_file=$(playground get-examples-list-with-fzf --rest-proxy-only)
     ;;
     "👾 Other Playgrounds")
@@ -178,12 +187,22 @@ fi
 
 if [[ -n "$enable_ksqldb" ]]
 then
+  if [[ $test_file == *"ccloud"* ]]
+  then
+    logwarn "❌ --enable-ksqldb is not supported with ccloud examples"
+    exit 1
+  fi
   flag_list="$flag_list --enable-ksqldb"
   export ENABLE_KSQLDB=true
 fi
 
 if [[ -n "$enable_rest_proxy" ]]
 then
+  if [[ $test_file == *"ccloud"* ]]
+  then
+    logwarn "❌ --enable-rest-proxy is not supported with ccloud examples"
+    exit 1
+  fi
   flag_list="$flag_list --enable-rest-proxy"
   export ENABLE_RESTPROXY=true
 fi
@@ -202,12 +221,22 @@ fi
 
 if [[ -n "$enable_multiple_brokers" ]]
 then
+  if [[ $test_file == *"ccloud"* ]]
+  then
+    logwarn "❌ --enable-multiple-broker is not supported with ccloud examples"
+    exit 1
+  fi
   flag_list="$flag_list --enable-multiple-broker"
   export ENABLE_KAFKA_NODES=true
 fi
 
 if [[ -n "$enable_multiple_connect_workers" ]]
 then
+  if [[ $test_file == *"ccloud"* ]]
+  then
+    logwarn "❌ --enable-multiple-connect-workers is not supported with ccloud examples"
+    exit 1
+  fi
   flag_list="$flag_list --enable-multiple-connect-workers"
   export ENABLE_CONNECT_NODES=true
 
@@ -222,6 +251,11 @@ fi
 
 if [[ -n "$enable_jmx_grafana" ]]
 then
+  if [[ $test_file == *"ccloud"* ]]
+  then
+    logwarn "❌ --enable-jmx-grafana"
+    exit 1
+  fi
   flag_list="$flag_list --enable-jmx-grafana"
   export ENABLE_JMX_GRAFANA=true
 fi
@@ -234,8 +268,118 @@ fi
 
 if [[ -n "$enable_sql_datagen" ]]
 then
+  if [[ $test_file == *"ccloud"* ]]
+  then
+    logwarn "❌ --enable-sql-datagen is not supported with ccloud examples"
+    exit 1
+  fi
   flag_list="$flag_list --enable-sql-datagen"
   export SQL_DATAGEN=true
+fi
+
+if [[ -n "$cluster_region" ]]
+then
+  if [[ $cluster_region == *"@"* ]]
+  then
+    cluster_region=$(echo "$cluster_region" | cut -d "@" -f 2)
+  fi
+  cluster_region=$(echo "$cluster_region" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
+fi
+
+if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_name" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
+then
+  if [ ! -z "$CLUSTER_TYPE" ]
+  then
+    log "🙈 ignoring environment variable CLUSTER_TYPE as one of the flags is set"
+    unset CLUSTER_TYPE
+  fi
+  if [ ! -z "$CLUSTER_CLOUD" ]
+  then
+    log "🙈 ignoring environment variable CLUSTER_CLOUD as one of the flags is set"
+    unset CLUSTER_CLOUD
+  fi
+  if [ ! -z "$CLUSTER_REGION" ]
+  then
+    log "🙈 ignoring environment variable CLUSTER_REGION as one of the flags is set"
+    unset CLUSTER_REGION
+  fi
+  if [ ! -z "$ENVIRONMENT" ]
+  then
+    log "🙈 ignoring environment variable ENVIRONMENT as one of the flags is set"
+    unset ENVIRONMENT
+  fi
+  if [ ! -z "$CLUSTER_NAME" ]
+  then
+    log "🙈 ignoring environment variable CLUSTER_NAME as one of the flags is set"
+    unset CLUSTER_NAME
+  fi
+  if [ ! -z "$CLUSTER_CREDS" ]
+  then
+    log "🙈 ignoring environment variable CLUSTER_CREDS as one of the flags is set"
+    unset CLUSTER_CREDS
+  fi 
+  if [ ! -z "$SCHEMA_REGISTRY_CREDS" ]
+  then
+    log "🙈 ignoring environment variable SCHEMA_REGISTRY_CREDS as one of the flags is set"
+    unset SCHEMA_REGISTRY_CREDS
+  fi 
+fi
+
+if [[ -n "$cluster_type" ]]
+then
+  flag_list="$flag_list --cluster-type $cluster_type"
+  export CLUSTER_TYPE=$cluster_type
+else
+  if [ -z "$CLUSTER_TYPE" ]
+  then
+    export CLUSTER_TYPE="basic"
+  fi
+fi
+
+if [[ -n "$cluster_cloud" ]]
+then
+  flag_list="$flag_list --cluster-cloud $cluster_cloud"
+  export CLUSTER_CLOUD=$cluster_cloud
+else
+  if [ -z "$CLUSTER_CLOUD" ]
+  then
+    export CLUSTER_CLOUD="aws"
+  fi
+fi
+
+if [[ -n "$cluster_region" ]]
+then
+  flag_list="$flag_list --cluster-region $cluster_region"
+  export CLUSTER_REGION=$cluster_region
+else
+  if [ -z "$CLUSTER_REGION" ]
+  then
+    export CLUSTER_REGION="eu-west-2"
+  fi
+fi
+
+if [[ -n "$cluster_environment" ]]
+then
+  flag_list="$flag_list --cluster-environment $cluster_environment"
+  export ENVIRONMENT=$cluster_environment
+fi
+
+if [[ -n "$cluster_name" ]]
+then
+  flag_list="$flag_list --cluster-name $cluster_name"
+  export CLUSTER_NAME=$cluster_name
+fi
+
+if [[ -n "$cluster_creds" ]]
+then
+  flag_list="$flag_list --cluster-creds $cluster_creds"
+  export CLUSTER_CREDS=$cluster_creds
+fi
+
+if [[ -n "$cluster_schema_registry_creds" ]]
+then
+  flag_list="$flag_list --cluster-schema-registry-creds $cluster_schema_registry_creds"
+  export SCHEMA_REGISTRY_CREDS=$cluster_schema_registry_creds
 fi
 
 if [[ -n "$open" ]]
@@ -261,10 +405,20 @@ fi
 
 if [ "$flag_list" != "" ]
 then
-  log "🚀 Running example with flags"
+  if [[ $test_file == *"ccloud"* ]]
+  then
+    log "🚀⛅ Running ccloud example with flags"
+  else
+    log "🚀 Running example with flags"
+  fi
   log "⛳ Flags used are $flag_list"
 else
-  log "🚀 Running example without any flags"
+  if [[ $test_file == *"ccloud"* ]]
+  then
+    log "🚀⛅ Running ccloud example without any flags"
+  else
+    log "🚀 Running example without any flags"
+  fi
 fi
 set +e
 playground container kill-all
