@@ -42,35 +42,45 @@ then
       fzf_option_rounded=""
   fi
 
-  options=("🔗 Connectors" "🌤️ Confluent Cloud" "🤖 Fully-Managed Connectors" "👷‍♂️ Reproduction Models" "🎏 KSQL" "📝 Schema Registry" "🧲 REST Proxy" "👾 Other Playgrounds" "🌕 All")
+  readonly MENU_CONNECTOR="🔗 Connectors"
+  readonly MENU_CCLOUD="🌤️ Confluent Cloud"
+  readonly MENU_FULLY_MANAGED_CONNECTOR="🤖 Fully-Managed Connectors"
+  readonly MENU_REPRO="👷‍♂️ Reproduction Models"
+  readonly MENU_KSQL="🎏 ksqlDB"
+  readonly MENU_SR="📝 Schema Registry"
+  readonly MENU_RP="🧲 REST Proxy"
+  readonly MENU_OTHER="👾 Other Playgrounds"
+  readonly MENU_ALL="🌕 All"
+
+  options=("$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_REPRO" "$MENU_KSQL" "$MENU_SR" "$MENU_RP" "$MENU_OTHER" "$MENU_ALL")
   res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="Select a category (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
 
   case "${res}" in
-    "🔗 Connectors")
+    "$MENU_CONNECTOR")
       test_file=$(playground get-examples-list-with-fzf --connector-only)
     ;;
-    "🌤️ Confluent Cloud")
+    "$MENU_CCLOUD")
       test_file=$(playground get-examples-list-with-fzf --ccloud-only)
     ;;
-    "🤖 Fully-Managed Connectors")
+    "$MENU_FULLY_MANAGED_CONNECTOR")
       test_file=$(playground get-examples-list-with-fzf --fully-managed-connector-only)
     ;;
-    "👷‍♂️ Reproduction Models")
+    "$MENU_REPRO")
       test_file=$(playground get-examples-list-with-fzf --repro-only)
     ;;
-    "🎏 KSQL")
+    "$MENU_KSQL")
       test_file=$(playground get-examples-list-with-fzf --ksql-only)
     ;;
-    "📝 Schema Registry")
+    "$MENU_SR")
       test_file=$(playground get-examples-list-with-fzf --schema-registry-only)
     ;;
-    "🧲 REST Proxy")
+    "$MENU_RP")
       test_file=$(playground get-examples-list-with-fzf --rest-proxy-only)
     ;;
-    "👾 Other Playgrounds")
+    "$MENU_OTHER")
       test_file=$(playground get-examples-list-with-fzf --other-playgrounds-only)
     ;;
-    "🌕 All")
+    "$MENU_ALL")
       test_file=$(playground get-examples-list-with-fzf)
     ;;
     *)
