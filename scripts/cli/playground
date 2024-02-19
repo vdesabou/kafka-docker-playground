@@ -11793,15 +11793,15 @@ playground_run_command() {
 
       readonly MENU_LETS_GO="🚀🚀🚀 I'm ready, let's go !!!" #0
 
-      readonly MENU_ENABLE_KSQLDB="🎏 Enable ksqlDB" #1
-      readonly MENU_ENABLE_C3="💠 Enable Control Center"
-      readonly MENU_ENABLE_CONDUKTOR="🐺 Enable Conduktor Platform"
-      readonly MENU_ENABLE_RP="🧲 Enable Rest Proxy" #4
-      readonly MENU_ENABLE_GRAFANA="📊 Enable Grafana, Prometheus and Pyroscope"
-      readonly MENU_ENABLE_BROKERS="3️⃣ Enabling multiple brokers"
-      readonly MENU_ENABLE_CONNECT_WORKERS="🥉 Enabling multiple connect workers"
-      readonly MENU_ENABLE_KCAT="🐈‍⬛ Enabling kcat"
-      readonly MENU_ENABLE_SQL_DATAGEN="🌪️ Enable SQL Datagen injection" #9
+      readonly MENU_ENABLE_KSQLDB="🎏 Enable ksqlDB (flag --enable-ksqldb)" #1
+      readonly MENU_ENABLE_C3="💠 Enable Control Center (flag --enable-control-center)"
+      readonly MENU_ENABLE_CONDUKTOR="🐺 Enable Conduktor Platform (flag --enable-conduktor)"
+      readonly MENU_ENABLE_RP="🧲 Enable Rest Proxy (flag --enable-rest-proxy)" #4
+      readonly MENU_ENABLE_GRAFANA="📊 Enable Grafana, Prometheus and Pyroscope (flag --enable-jmx-grafana)"
+      readonly MENU_ENABLE_BROKERS="3️⃣  Enabling multiple brokers (flag --enable-multiple-broker)"
+      readonly MENU_ENABLE_CONNECT_WORKERS="🥉 Enabling multiple connect workers (flag --enable-multiple-connect-workers)"
+      readonly MENU_ENABLE_KCAT="🐈 Enabling kcat (flag --enable-kcat)"
+      readonly MENU_ENABLE_SQL_DATAGEN="🌪️  Enable SQL Datagen injection (flag --enable-sql-datagen)" #9
 
       readonly MENU_DISABLE_KSQLDB="❌🎏 Disable ksqlDB" #10
       readonly MENU_DISABLE_C3="❌💠 Disable Control Center"
@@ -11813,19 +11813,19 @@ playground_run_command() {
       readonly MENU_DISABLE_KCAT="❌🐈‍⬛ Disabling kcat"
       readonly MENU_DISABLE_SQL_DATAGEN="❌🌪️ Disable SQL Datagen injection" #18
 
-      readonly MENU_ENVIRONMENT="🔐 The environment to start when running a connector example" #19
-      readonly MENU_TAG="🎯 Confluent Platform (CP) version to use"
-      readonly MENU_CONNECTOR_TAG="🔗 Connector version to use" #21
-      readonly MENU_CONNECTOR_ZIP="🤐 Connector zip to use"
-      readonly MENU_CONNECTOR_JAR="♨️ Connector jar to use"
+      readonly MENU_ENVIRONMENT="🔐 The environment to start (flag --environment)" #19
+      readonly MENU_TAG="🎯 Confluent Platform (CP) version to use (flag --tag)"
+      readonly MENU_CONNECTOR_TAG="🔗 Connector version to use (flag --connector-tag)" #21
+      readonly MENU_CONNECTOR_ZIP="🤐 Connector zip to use (flag --connector-zip)"
+      readonly MENU_CONNECTOR_JAR="☕ Connector jar to use (flag --connector-jar)"
 
-      readonly MENU_CLUSTER_TYPE="🔋 The cluster type" #24
-      readonly MENU_CLUSTER_REGION="🗺 The Cloud region"
-      readonly MENU_CLUSTER_ENVIRONMENT="🌐 The environment id where want your new cluster (example: env-xxxxx)"
+      readonly MENU_CLUSTER_TYPE="🔋 The cluster type (flag --cluster-type)" #24
+      readonly MENU_CLUSTER_REGION="🗺 The Cloud region (flag --cluster-region)"
+      readonly MENU_CLUSTER_ENVIRONMENT="🌐 The environment id where want your new cluster (example: env-xxxxx) (flag --cluster-environment)"
 
-      readonly MENU_CLUSTER_NAME="🎰 The cluster name" #27
-      readonly MENU_CLUSTER_CREDS="🔒 The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)"
-      readonly MENU_CLUSTER_SR_CREDS="🔒 The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)"
+      readonly MENU_CLUSTER_NAME="🎰 The cluster name (flag --cluster-name)" #27
+      readonly MENU_CLUSTER_CREDS="🔒 The Kafka api key and secret to use (flag --cluster-creds)"
+      readonly MENU_CLUSTER_SR_CREDS="🔒 The Schema Registry api key and secret to use (flag --cluster_sr_creds)"
 
       stop=0
       while [ $stop != 1 ]
