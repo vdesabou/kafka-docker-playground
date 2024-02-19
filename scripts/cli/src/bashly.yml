@@ -67,6 +67,14 @@ commands:
     required: false
     help: correspond to completion $cur
 
+- name: get-ccloud-cluster-list
+  help: Return some completion for ccloud cluster
+  private: true
+  args:
+  - name: cur
+    required: false
+    help: correspond to completion $cur
+
 - name: get-tag-list
   help: Return some completion for confluent platform tag
   private: true
@@ -532,7 +540,7 @@ commands:
       
       🎓 Tip: you can also use CLUSTER_REGION environment variable
       🎓 Tip: use <tab> completion to trigger fzf completion
-      
+
   - &cluster-environment
     long: --cluster-environment
     required: false
@@ -552,6 +560,8 @@ commands:
     long: --cluster-name
     required: false
     validate: not_empty
+    completions:
+      - $(playground get-ccloud-cluster-list "$cur")
     arg: cluster-name
     help: |-
       🎰 The cluster name. 
@@ -559,6 +569,7 @@ commands:
       ❣️ Only required if you want to use your own existing cluster
 
       🎓 Tip: you can also use CLUSTER_NAME environment variable
+      🎓 Tip: use <tab> completion to trigger fzf completion
   - &cluster-creds
     long: --cluster-creds
     required: false

@@ -205,7 +205,7 @@
             "--cluster-name"
           ],
           "argument": "CLUSTER-NAME",
-          "description": "🎰 The cluster name. \n\n❣️ Only required if you want to use your own existing cluster\n\n🎓 Tip: you can also use CLUSTER_NAME environment variable\n"
+          "description": "🎰 The cluster name. \n\n❣️ Only required if you want to use your own existing cluster\n\n🎓 Tip: you can also use CLUSTER_NAME environment variable\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
         },
         {
           "names": [
@@ -686,7 +686,7 @@
                 "--cluster-name"
               ],
               "argument": "CLUSTER-NAME",
-              "description": "🎰 The cluster name. \n\n❣️ Only required if you want to use your own existing cluster\n\n🎓 Tip: you can also use CLUSTER_NAME environment variable\n"
+              "description": "🎰 The cluster name. \n\n❣️ Only required if you want to use your own existing cluster\n\n🎓 Tip: you can also use CLUSTER_NAME environment variable\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
             },
             {
               "names": [

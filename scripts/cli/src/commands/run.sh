@@ -389,6 +389,14 @@ fi
 
 if [[ -n "$cluster_name" ]]
 then
+  if [[ $cluster_name == *"@"* ]]
+  then
+    cluster_name=$(echo "$cluster_name" | cut -d "@" -f 2)
+  fi
+  if [[ $cluster_name == *"/"* ]]
+  then
+    cluster_name=$(echo "$cluster_name" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
+  fi
   flag_list="$flag_list --cluster-name $cluster_name"
   export CLUSTER_NAME=$cluster_name
 fi
@@ -622,8 +630,7 @@ then
       flag_list="$flag_list --connector-jar=$connector_jar"
       export CONNECTOR_JAR=$connector_jar
     fi
-    
-    # readonly MENU_CLUSTER_NAME="🎰 The cluster name" #17
+
     # readonly MENU_CLUSTER_CREDS="🔒 The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)"
     # readonly MENU_CLUSTER_SR_CREDS="🔒 The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)"
 
@@ -647,7 +654,7 @@ then
       cluster_region=$(echo "$cluster_region" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
     fi
 
-    if [[ $res == *"$MENU_CLUSTER_REGION"* ]]
+    if [[ $res == *"$MENU_CLUSTER_ENVIRONMENT"* ]]
     then
       cluster_environment=$(playground get-ccloud-environment-list)
       
@@ -662,6 +669,23 @@ then
       flag_list="$flag_list --cluster-environment $cluster_environment"
       export ENVIRONMENT=$cluster_environment
     fi
+
+    if [[ $res == *"$MENU_CLUSTER_NAME"* ]]
+    then
+      cluster_name=$(playground get-ccloud-cluster-list)
+      
+      if [[ $cluster_name == *"@"* ]]
+      then
+        cluster_name=$(echo "$cluster_name" | cut -d "@" -f 2)
+      fi
+      if [[ $cluster_name == *"/"* ]]
+      then
+        cluster_name=$(echo "$cluster_name" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
+      fi
+      flag_list="$flag_list --cluster-name $cluster_name"
+      export CLUSTER_NAME=$cluster_name
+    fi
+
   fi # end of interactive_mode
 fi
 

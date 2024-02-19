@@ -447,6 +447,43 @@ playground_get_ccloud_environment_list_usage() {
 }
 
 # :command.usage
+playground_get_ccloud_cluster_list_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground get-ccloud-cluster-list - Return some completion for ccloud cluster\n"
+    echo
+
+  else
+    printf "playground get-ccloud-cluster-list - Return some completion for ccloud cluster\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground get-ccloud-cluster-list [CUR]\n"
+  printf "  playground get-ccloud-cluster-list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "CUR")"
+    printf "    correspond to completion $cur\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_get_tag_list_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground get-tag-list - Return some completion for confluent platform tag\n"
@@ -1474,7 +1511,7 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--cluster-name CLUSTER-NAME")"
-    printf "    🎰 The cluster name. \n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use CLUSTER_NAME environment variable\n"
+    printf "    🎰 The cluster name. \n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use CLUSTER_NAME environment variable\n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -2224,7 +2261,7 @@ playground_repro_bootstrap_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--cluster-name CLUSTER-NAME")"
-    printf "    🎰 The cluster name. \n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use CLUSTER_NAME environment variable\n"
+    printf "    🎰 The cluster name. \n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use CLUSTER_NAME environment variable\n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -5841,6 +5878,24 @@ function get_ccloud_environment_list_with_fzf() {
   fi
 
   res=$(confluent environment list | awk -F'|' '{print $2"/"$3}' | sed 's/[[:blank:]]//g' | grep -v "ID" | grep -v "\-\-\-" | grep -v '^/' | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🌐" --header="select ccloud environment (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+}
+
+function get_ccloud_cluster_list_with_fzf() {
+  cur="$1"
+
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
+  then
+    fzf_option_wrap="--preview-window=40%,wrap"
+    fzf_option_pointer="--pointer=👉"
+    fzf_option_rounded="--border=rounded"
+  else
+    fzf_options=""
+    fzf_option_pointer=""
+    fzf_option_rounded=""
+  fi
+
+  res=$(confluent kafka cluster list | awk -F'|' '{print $2"/"$3}' | sed 's/[[:blank:]]//g' | grep -v "ID" | grep -v "\-\-\-" | grep -v '^/' | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🌐" --header="select ccloud environment (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
 }
 
 function get_confluent_kafka_region_list_with_fzf() {
@@ -10882,6 +10937,14 @@ playground_get_ccloud_environment_list_command() {
 }
 
 # :command.function
+playground_get_ccloud_cluster_list_command() {
+  # src/commands/get-ccloud-cluster-list.sh
+  cur="${args[cur]}"
+
+  get_ccloud_cluster_list_with_fzf "$cur"
+}
+
+# :command.function
 playground_get_tag_list_command() {
   # src/commands/get-tag-list.sh
   cur="${args[cur]}"
@@ -11677,6 +11740,14 @@ playground_run_command() {
 
   if [[ -n "$cluster_name" ]]
   then
+    if [[ $cluster_name == *"@"* ]]
+    then
+      cluster_name=$(echo "$cluster_name" | cut -d "@" -f 2)
+    fi
+    if [[ $cluster_name == *"/"* ]]
+    then
+      cluster_name=$(echo "$cluster_name" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
+    fi
     flag_list="$flag_list --cluster-name $cluster_name"
     export CLUSTER_NAME=$cluster_name
   fi
@@ -11911,7 +11982,6 @@ playground_run_command() {
         export CONNECTOR_JAR=$connector_jar
       fi
 
-      # readonly MENU_CLUSTER_NAME="🎰 The cluster name" #17
       # readonly MENU_CLUSTER_CREDS="🔒 The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)"
       # readonly MENU_CLUSTER_SR_CREDS="🔒 The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)"
 
@@ -11935,7 +12005,7 @@ playground_run_command() {
         cluster_region=$(echo "$cluster_region" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
       fi
 
-      if [[ $res == *"$MENU_CLUSTER_REGION"* ]]
+      if [[ $res == *"$MENU_CLUSTER_ENVIRONMENT"* ]]
       then
         cluster_environment=$(playground get-ccloud-environment-list)
 
@@ -11950,6 +12020,23 @@ playground_run_command() {
         flag_list="$flag_list --cluster-environment $cluster_environment"
         export ENVIRONMENT=$cluster_environment
       fi
+
+      if [[ $res == *"$MENU_CLUSTER_NAME"* ]]
+      then
+        cluster_name=$(playground get-ccloud-cluster-list)
+
+        if [[ $cluster_name == *"@"* ]]
+        then
+          cluster_name=$(echo "$cluster_name" | cut -d "@" -f 2)
+        fi
+        if [[ $cluster_name == *"/"* ]]
+        then
+          cluster_name=$(echo "$cluster_name" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
+        fi
+        flag_list="$flag_list --cluster-name $cluster_name"
+        export CLUSTER_NAME=$cluster_name
+      fi
+
     fi # end of interactive_mode
   fi
 
@@ -19267,6 +19354,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    get-ccloud-cluster-list)
+      action="get-ccloud-cluster-list"
+      shift
+      playground_get_ccloud_cluster_list_parse_requirements "$@"
+      shift $#
+      ;;
+
     get-tag-list)
       action="get-tag-list"
       shift
@@ -19927,6 +20021,56 @@ playground_get_ccloud_environment_list_parse_requirements() {
 
   # :command.command_filter
   action="get-ccloud-environment-list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        if [[ -z ${args['cur']+x} ]]; then
+
+          args['cur']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_get_ccloud_cluster_list_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_get_ccloud_cluster_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="get-ccloud-cluster-list"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -29308,6 +29452,7 @@ run() {
     "generate-kafka-region-list") playground_generate_kafka_region_list_command ;;
     "get-connector-plugin") playground_get_connector_plugin_command ;;
     "get-ccloud-environment-list") playground_get_ccloud_environment_list_command ;;
+    "get-ccloud-cluster-list") playground_get_ccloud_cluster_list_command ;;
     "get-tag-list") playground_get_tag_list_command ;;
     "get-kafka-region-list") playground_get_kafka_region_list_command ;;
     "get-topic-list") playground_get_topic_list_command ;;

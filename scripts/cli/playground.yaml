@@ -295,6 +295,7 @@ subcommands:
         ❣️ Only required if you want to use your own existing cluster
         
         🎓 Tip: you can also use CLUSTER_NAME environment variable
+        🎓 Tip: use <tab> completion to trigger fzf completion
         
     - names:
       - --cluster-creds
@@ -974,6 +975,7 @@ subcommands:
             ❣️ Only required if you want to use your own existing cluster
             
             🎓 Tip: you can also use CLUSTER_NAME environment variable
+            🎓 Tip: use <tab> completion to trigger fzf completion
             
         - names:
           - --cluster-creds
