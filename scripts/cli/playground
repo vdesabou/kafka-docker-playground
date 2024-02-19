@@ -1246,7 +1246,7 @@ playground_run_usage() {
     printf "playground run\n"
     echo
 
-    printf "  🕹️ Run any example\n  \n  ⛅ When running Confluent Cloud (ccloud) example:\n  \n    All you have to do is to be already logged in with confluent CLI.\n  \n    By default, a new Confluent Cloud environment with a Cluster will be\n  created.\n  \n    You can configure the new cluster by setting:\n  \n    --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster\n  (possible values: \`basic\`, \`standard\` and \`dedicated\`, default \`basic\`)\n    --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider\n  (possible values: \`aws\`, \`gcp\` and \`azure\`, default \`aws\`)\n    --cluster-region (or CLUSTER_REGION environment variable): The Cloud region\n  (use \`confluent kafka region list\` to get the list, default \`eu-west-2\`)\n    --cluster-environment (or ENVIRONMENT environment variable) (optional): The\n  environment id where want your new cluster (example: \`env-xxxxx\`)\n  \n    In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n    --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n    --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key\n  and secret to use, it should be separated with semi-colon (example:\n  \`<API_KEY>:<API_KEY_SECRET>\`)\n    --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable) (optional, if not set, new one will be created): The Schema Registry\n  api key and secret to use, it should be separated with semi-colon (example:\n  \`<SR_API_KEY>:<SR_API_KEY_SECRET>\`)\n"
+    printf "  🕹️ Run any example\n  \n  ⛅ When running Confluent Cloud (ccloud) example:\n  \n    All you have to do is to be already logged in with confluent CLI.\n  \n    By default, a new Confluent Cloud environment with a Cluster will be\n  created.\n  \n    You can configure the new cluster by setting:\n  \n    --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster\n  (possible values: \`basic\`, \`standard\` and \`dedicated\`, default \`basic\`)\n    --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider\n  (possible values: \`aws\`, \`gcp\` and \`azure\`, default \`aws\`)\n    --cluster-region (or CLUSTER_REGION environment variable): The Cloud region\n  (use \`confluent kafka region list\` to get the list, default \`eu-west-2\`)\n    --cluster-environment (or ENVIRONMENT environment variable) (optional): The\n  environment id where want your new cluster (example: \`env-xxxxx\`)\n  \n    In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n    --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n    --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key\n  and secret to use, it should be separated with colon (example:\n  \`<API_KEY>:<API_KEY_SECRET>\`)\n    --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable) (optional, if not set, new one will be created): The Schema Registry\n  api key and secret to use, it should be separated with colon (example:\n  \`<SR_API_KEY>:<SR_API_KEY_SECRET>\`)\n"
     echo
 
   else
@@ -1376,12 +1376,12 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--cluster-creds CLUSTER-CREDS")"
-    printf "    🔒 The Kafka api key and secret to use, it should be separated with\n    semi-colon (example: <API_KEY>:<API_KEY_SECRET>)\n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use CLUSTER_CREDS environment variable\n"
+    printf "    🔒 The Kafka api key and secret to use, it should be separated with colon\n    (example: <API_KEY>:<API_KEY_SECRET>)\n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use CLUSTER_CREDS environment variable\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--cluster-schema-registry-creds CLUSTER-SCHEMA-REGISTRY-CREDS")"
-    printf "    🔒 The Schema Registry api key and secret to use, it should be separated with\n    semi-colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n    \n    ℹ️ Optional, if not set, new credentials will be created\n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable\n"
+    printf "    🔒 The Schema Registry api key and secret to use, it should be separated with\n    colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n    \n    ℹ️ Optional, if not set, new credentials will be created\n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable\n"
     echo
 
     # :command.usage_fixed_flags
@@ -2126,12 +2126,12 @@ playground_repro_bootstrap_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--cluster-creds CLUSTER-CREDS")"
-    printf "    🔒 The Kafka api key and secret to use, it should be separated with\n    semi-colon (example: <API_KEY>:<API_KEY_SECRET>)\n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use CLUSTER_CREDS environment variable\n"
+    printf "    🔒 The Kafka api key and secret to use, it should be separated with colon\n    (example: <API_KEY>:<API_KEY_SECRET>)\n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use CLUSTER_CREDS environment variable\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--cluster-schema-registry-creds CLUSTER-SCHEMA-REGISTRY-CREDS")"
-    printf "    🔒 The Schema Registry api key and secret to use, it should be separated with\n    semi-colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n    \n    ℹ️ Optional, if not set, new credentials will be created\n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable\n"
+    printf "    🔒 The Schema Registry api key and secret to use, it should be separated with\n    colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n    \n    ℹ️ Optional, if not set, new credentials will be created\n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable\n"
     echo
 
     # :flag.usage
@@ -5426,6 +5426,7 @@ function generate_fzf_find_files() {
 
 function generate_get_examples_list_with_fzf_connector_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_connector_only"
+  rm -f $output_file
   find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect/connect-*-*/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' ! -path '*/ccloud/*'  ! -path '*/post_start/*' ! -path '*/1*domain*/*' ! -path '*/kdc-server/*' | while read file_path
   do
     generate_get_examples_add_emoji
@@ -5435,6 +5436,7 @@ function generate_get_examples_list_with_fzf_connector_only () {
 
 function generate_get_examples_list_with_fzf_repro_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_repro_only"
+  rm -f $output_file
   find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect-*-*/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' -path '*/reproduction-models/*' | while read file_path
   do
     generate_get_examples_add_emoji
@@ -5444,6 +5446,7 @@ function generate_get_examples_list_with_fzf_repro_only () {
 
 function generate_get_examples_list_with_fzf_ksql_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_ksql_only"
+  rm -f $output_file
   find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/ksqldb/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' | while read file_path
   do
     generate_get_examples_add_emoji
@@ -5453,6 +5456,7 @@ function generate_get_examples_list_with_fzf_ksql_only () {
 
 function generate_get_examples_list_with_fzf_fully_managed_connector_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_fully_managed_connector_only"
+  rm -f $output_file
   find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/fully-managed-*/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' -path '*/ccloud/*' | while read file_path
   do
     generate_get_examples_add_emoji
@@ -5462,6 +5466,7 @@ function generate_get_examples_list_with_fzf_fully_managed_connector_only () {
 
 function generate_get_examples_list_with_fzf_schema_registry_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_schema_registry_only"
+  rm -f $output_file
   find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/schema-registry/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' ! -path '*/ccloud/*' | while read file_path
   do
     generate_get_examples_add_emoji
@@ -5471,6 +5476,7 @@ function generate_get_examples_list_with_fzf_schema_registry_only () {
 
 function generate_get_examples_list_with_fzf_rest_proxy_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_rest_proxy_only"
+  rm -f $output_file
   find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/rest-proxy/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' | while read file_path
   do
     generate_get_examples_add_emoji
@@ -5480,6 +5486,7 @@ function generate_get_examples_list_with_fzf_rest_proxy_only () {
 
 function generate_get_examples_list_with_fzf_other_playgrounds_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_other_playgrounds_only"
+  rm -f $output_file
   find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' ! -path '*/reproduction-models/*' ! -path '*/connect/*' ! -path '*/ksqldb/*' ! -path '*/schema-registry/*'  | while read file_path
   do
     generate_get_examples_add_emoji
@@ -5489,6 +5496,7 @@ function generate_get_examples_list_with_fzf_other_playgrounds_only () {
 
 function generate_get_examples_list_with_fzf_without_repro_sink_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_without_repro_sink_only"
+  rm -f $output_file
   find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' | while read file_path
   do
     generate_get_examples_add_emoji
@@ -5498,6 +5506,7 @@ function generate_get_examples_list_with_fzf_without_repro_sink_only () {
 
 function generate_get_examples_list_with_fzf_without_repro () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_without_repro"
+  rm -f $output_file
   find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' | while read file_path
   do
     generate_get_examples_add_emoji
@@ -5507,6 +5516,7 @@ function generate_get_examples_list_with_fzf_without_repro () {
 
 function generate_get_examples_list_with_fzf_ccloud_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only"
+  rm -f $output_file
   find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/ccloud*' ! -path '*/ora-*/*' ! -path '*/security/*' | while read file_path
   do
     generate_get_examples_add_emoji
@@ -5515,7 +5525,8 @@ function generate_get_examples_list_with_fzf_ccloud_only () {
 }
 
 function generate_get_examples_list_with_fzf () {
-  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf"
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_all"
+  rm -f $output_file
   find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' | while read file_path
   do
     generate_get_examples_add_emoji
@@ -10858,11 +10869,11 @@ playground_get_examples_list_with_fzf_command() {
       return
   fi
 
-  if [ ! -f $root_folder/scripts/cli/get_examples_list_with_fzf ]
+  if [ ! -f $root_folder/scripts/cli/get_examples_list_with_fzf_all ]
   then
       generate_get_examples_list_with_fzf
   fi
-  get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf"
+  get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf_all"
 }
 
 # :command.function
@@ -11109,10 +11120,11 @@ playground_run_command() {
   cluster_name="${args[--cluster-name]}"
   cluster_creds="${args[--cluster-creds]}"
   cluster_schema_registry_creds="${args[--cluster-schema-registry-creds]}"
+  interactive_mode=0
 
   if [[ ! -n "$test_file" ]]
   then
-    log "--file flag was not provided, please select it now"
+    interactive_mode=1
     fzf_version=$(get_fzf_version)
     if version_gt $fzf_version "0.38"
     then
@@ -11135,7 +11147,7 @@ playground_run_command() {
     readonly MENU_ALL="🌕 All"
 
     options=("$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_REPRO" "$MENU_KSQL" "$MENU_SR" "$MENU_RP" "$MENU_OTHER" "$MENU_ALL")
-    res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="Select a category (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
+    res=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🚀" --header="Select a category (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
 
     case "${res}" in
       "$MENU_CONNECTOR")
@@ -11495,6 +11507,195 @@ playground_run_command() {
             check_if_continue
         fi
     fi
+  fi
+
+  if [ "$flag_list" == "" ]
+  then
+    if [ $interactive_mode == 1 ]
+    then
+      readonly MENU_ENABLE_KSQLDB="🚀 Enable ksqlDB" #0
+      readonly MENU_ENABLE_C3="💠 Enable Control Center"
+      readonly MENU_ENABLE_CONDUKTOR="🐺 Enable Conduktor Platform"
+      readonly MENU_ENABLE_RP="🧲 Enable Rest Proxy" #3
+      readonly MENU_ENABLE_GRAFANA="📊 Enable Grafana, Prometheus and Pyroscope"
+      readonly MENU_ENABLE_BROKERS="3️⃣ Enabling multiple brokers"
+      readonly MENU_ENABLE_CONNECT_WORKERS="🥉 Enabling multiple connect workers"
+      readonly MENU_ENABLE_KCAT="🐈‍⬛ Enabling kcat"
+      readonly MENU_ENABLE_SQL_DATAGEN="🌪️ Enable SQL Datagen injection"
+
+      readonly MENU_ENVIRONMENT="🔐 The environment to start when running a connector example" #9
+      readonly MENU_TAG="🎯 Confluent Platform (CP) version to use"
+      readonly MENU_CONNECTOR_TAG="🔗 Connector version to use" #11
+      readonly MENU_CONNECTOR_ZIP="🤐 Connector zip to use"
+      readonly MENU_CONNECTOR_JAR="♨️ Connector jar to use"
+
+      readonly MENU_CLUSTER_TYPE="🔋 The cluster type" #14
+      readonly MENU_CLUSTER_REGION="🗺 The Cloud region"
+      readonly MENU_CLUSTER_ENVIRONMENT="🌐 The environment id where want your new cluster (example: env-xxxxx)"
+
+      readonly MENU_CLUSTER_NAME="🎰 The cluster name" #17
+      readonly MENU_CLUSTER_CREDS="🔒 The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)"
+      readonly MENU_CLUSTER_SR_CREDS="🔒 The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)"
+
+      options=("$MENU_ENABLE_KSQLDB" "$MENU_ENABLE_C3" "$MENU_ENABLE_CONDUKTOR" "$MENU_ENABLE_RP" "$MENU_ENABLE_GRAFANA" "$MENU_ENABLE_BROKERS" "$MENU_ENABLE_CONNECT_WORKERS" "$MENU_ENABLE_KCAT" "$MENU_ENABLE_SQL_DATAGEN" "$MENU_ENVIRONMENT" "$MENU_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_CLUSTER_TYPE" "$MENU_CLUSTER_REGION" "$MENU_CLUSTER_ENVIRONMENT" "$MENU_CLUSTER_NAME" "$MENU_CLUSTER_CREDS" "$MENU_CLUSTER_SR_CREDS")
+
+      connector_example=0
+      get_connector_paths
+      if [ "$connector_paths" != "" ]
+      then
+        connector_example=1
+      fi
+
+      if [[ $test_file == *"ccloud"* ]]
+      then
+        unset 'options[3]'
+        unset 'options[4]'
+        unset 'options[5]'
+        unset 'options[6]'
+      else
+        unset 'options[14]'
+        unset 'options[15]'
+        unset 'options[16]'
+        unset 'options[17]'
+        unset 'options[18]'
+        unset 'options[19]'
+      fi
+
+      if [ $connector_example == 0 ]
+      then
+        unset 'options[9]'
+        unset 'options[11]'
+        unset 'options[12]'
+        unset 'options[13]'
+      fi
+
+      res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🪄" --header="Select option(s) (use tab to select more than one, use ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
+
+      if [[ $res == *"$MENU_ENABLE_KSQLDB"* ]]
+      then
+        flag_list="$flag_list --enable-ksqldb"
+        export ENABLE_KSQLDB=true
+      fi
+
+      if [[ $res == *"$MENU_ENABLE_C3"* ]]
+      then
+        flag_list="$flag_list --enable-control-center"
+        export ENABLE_CONTROL_CENTER=true
+      fi
+
+      if [[ $res == *"$MENU_ENABLE_CONDUKTOR"* ]]
+      then
+        flag_list="$flag_list --enable-control-center"
+        export ENABLE_CONTROL_CENTER=true
+      fi
+
+      if [[ $res == *"$MENU_ENABLE_RP"* ]]
+      then
+        flag_list="$flag_list --enable-rest-proxy"
+        export ENABLE_RESTPROXY=true
+      fi
+
+      if [[ $res == *"$MENU_ENABLE_CONDUKTOR"* ]]
+      then
+        flag_list="$flag_list --enable-conduktor"
+        export ENABLE_CONDUKTOR=true
+      fi
+
+      if [[ $res == *"$MENU_ENABLE_BROKERS"* ]]
+      then
+        flag_list="$flag_list --enable-multiple-broker"
+        export ENABLE_KAFKA_NODES=true
+      fi
+
+      if [[ $res == *"$MENU_ENABLE_GRAFANA"* ]]
+      then
+        flag_list="$flag_list --enable-multiple-connect-workers"
+        export ENABLE_CONNECT_NODES=true
+
+        # determining the docker-compose file from from test_file
+        docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
+        docker_compose_file="${test_file_directory}/${docker_compose_file}"
+        cp $docker_compose_file /tmp/playground-backup-docker-compose.yml
+        yq -i '.services.connect2 = .services.connect' /tmp/playground-backup-docker-compose.yml
+        yq -i '.services.connect3 = .services.connect' /tmp/playground-backup-docker-compose.yml
+        cp /tmp/playground-backup-docker-compose.yml $docker_compose_file
+      fi
+
+      if [[ $res == *"$MENU_ENABLE_KCAT"* ]]
+      then
+        flag_list="$flag_list --enable-kcat"
+        export ENABLE_KCAT=true
+      fi
+
+      if [[ $res == *"$MENU_ENABLE_SQL_DATAGEN"* ]]
+      then
+        flag_list="$flag_list --enable-sql-datagen"
+        export SQL_DATAGEN=true
+      fi
+
+      if [[ $res == *"$MENU_ENVIRONMENT"* ]]
+      then
+        options=(plaintext ccloud 2way-ssl kerberos kraft-external-plaintext kraft-plaintext ldap-authorizer-sasl-plain ldap-sasl-plain rbac-sasl-plain sasl-plain sasl-scram sasl-ssl ssl_kerberos)
+        environment=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🔐" --header="select an environment" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
+
+        flag_list="$flag_list --environment=$environment"
+        export PLAYGROUND_ENVIRONMENT=$environment
+      fi
+
+      if [[ $res == *"$MENU_CONNECTOR_TAG"* ]]
+      then
+        connector_tags=""
+        for connector_path in ${connector_paths//,/ }
+        do
+          full_connector_name=$(basename "$connector_path")
+          owner=$(echo "$full_connector_name" | cut -d'-' -f1)
+          name=$(echo "$full_connector_name" | cut -d'-' -f2-)
+
+          if [ "$owner" == "java" ] || [ "$name" == "hub-components" ] || [ "$owner" == "filestream" ]
+          then
+            # happens when plugin is not coming from confluent hub
+            logwarn "skipping as plugin $owner/$name does not appear to be coming from confluent hub"
+            continue
+          fi
+
+          ret=$(choose_connector_tag "$owner/$name")
+          connector_tag=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
+
+          if [ -z "$connector_tags" ]; then
+            connector_tags="$connector_tag"
+          else
+            connector_tags="$connector_tags,$connector_tag"
+          fi
+        done
+
+        connector_tag="$connector_tags"
+      fi
+      flag_list="$flag_list --connector-tag=$connector_tag"
+      export CONNECTOR_TAG="$connector_tag"
+    fi
+
+    if [[ $res == *"$MENU_CONNECTOR_ZIP"* ]]
+    then
+      connector_zip=$(playground get-zip-or-jar-with-fzf --type zip)
+      if [[ $connector_zip == *"@"* ]]
+      then
+        connector_zip=$(echo "$connector_zip" | cut -d "@" -f 2)
+      fi
+      flag_list="$flag_list --connector-zip=$connector_zip"
+      export CONNECTOR_ZIP=$connector_zip
+    fi
+
+    if [[ $res == *"$MENU_CONNECTOR_JAR"* ]]
+    then
+      connector_jar=$(playground get-zip-or-jar-with-fzf --type jar)
+      if [[ $connector_jar == *"@"* ]]
+      then
+        connector_jar=$(echo "$connector_jar" | cut -d "@" -f 2)
+      fi
+      flag_list="$flag_list --connector-jar=$connector_jar"
+      export CONNECTOR_JAR=$connector_jar
+    fi
+
   fi
 
   if [ "$flag_list" != "" ]

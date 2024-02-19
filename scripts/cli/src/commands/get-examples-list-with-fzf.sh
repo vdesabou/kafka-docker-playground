@@ -112,8 +112,8 @@ then
     return
 fi
 
-if [ ! -f $root_folder/scripts/cli/get_examples_list_with_fzf ]
+if [ ! -f $root_folder/scripts/cli/get_examples_list_with_fzf_all ]
 then
     generate_get_examples_list_with_fzf
 fi
-get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf"
+get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf_all"
