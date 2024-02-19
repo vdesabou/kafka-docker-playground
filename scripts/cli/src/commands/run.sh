@@ -108,6 +108,12 @@ then
   exit 1
 fi
 
+if [[ $test_file == *"ccloud"* ]]
+then
+  verify_installed "confluent"
+  check_confluent_version 3.0.0 || exit 1
+fi
+
 test_file_directory="$(dirname "${test_file}")"
 filename=$(basename -- "$test_file")
 

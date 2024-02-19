@@ -11457,6 +11457,12 @@ playground_run_command() {
     exit 1
   fi
 
+  if [[ $test_file == *"ccloud"* ]]
+  then
+    verify_installed "confluent"
+    check_confluent_version 3.0.0 || exit 1
+  fi
+
   test_file_directory="$(dirname "${test_file}")"
   filename=$(basename -- "$test_file")
 
@@ -21682,14 +21688,6 @@ playground_run_parse_requirements() {
   else
     printf "missing dependency: fzf\n" >&2
     printf "%s\n" "visit https://github.com/junegunn/fzf#installation to install" >&2
-    exit 1
-  fi
-
-  if command -v confluent >/dev/null 2>&1; then
-    deps['confluent']="$(command -v confluent | head -n1)"
-  else
-    printf "missing dependency: confluent\n" >&2
-    printf "%s\n" "visit https://docs.confluent.io/confluent-cli/current/overview.html to install" >&2
     exit 1
   fi
 
