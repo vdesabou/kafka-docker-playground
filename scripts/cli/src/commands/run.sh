@@ -518,10 +518,10 @@ then
         export ENABLE_CONTROL_CENTER=true
       fi
 
-      if [[ $res == *"$MENU_ENABLE_CONDUKTOR"* ]]
+      if [[ $res == *"$MENU_ENABLE_GRAFANA"* ]]
       then
-        flag_list="$flag_list --enable-control-center"
-        export ENABLE_CONTROL_CENTER=true
+        flag_list="$flag_list --enable-jmx-grafana"
+        export ENABLE_JMX_GRAFANA=true
       fi
 
       if [[ $res == *"$MENU_ENABLE_RP"* ]]
@@ -542,7 +542,7 @@ then
         export ENABLE_KAFKA_NODES=true
       fi 
 
-      if [[ $res == *"$MENU_ENABLE_GRAFANA"* ]]
+      if [[ $res == *"$MENU_ENABLE_CONNECT_WORKERS"* ]]
       then
         flag_list="$flag_list --enable-multiple-connect-workers"
         export ENABLE_CONNECT_NODES=true
