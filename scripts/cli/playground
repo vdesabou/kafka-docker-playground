@@ -11672,30 +11672,30 @@ playground_run_command() {
       fi
       flag_list="$flag_list --connector-tag=$connector_tag"
       export CONNECTOR_TAG="$connector_tag"
-    fi
 
-    if [[ $res == *"$MENU_CONNECTOR_ZIP"* ]]
-    then
-      connector_zip=$(playground get-zip-or-jar-with-fzf --type zip)
-      if [[ $connector_zip == *"@"* ]]
+      if [[ $res == *"$MENU_CONNECTOR_ZIP"* ]]
       then
-        connector_zip=$(echo "$connector_zip" | cut -d "@" -f 2)
+        connector_zip=$(playground get-zip-or-jar-with-fzf --type zip)
+        if [[ $connector_zip == *"@"* ]]
+        then
+          connector_zip=$(echo "$connector_zip" | cut -d "@" -f 2)
+        fi
+        flag_list="$flag_list --connector-zip=$connector_zip"
+        export CONNECTOR_ZIP=$connector_zip
       fi
-      flag_list="$flag_list --connector-zip=$connector_zip"
-      export CONNECTOR_ZIP=$connector_zip
-    fi
 
-    if [[ $res == *"$MENU_CONNECTOR_JAR"* ]]
-    then
-      connector_jar=$(playground get-zip-or-jar-with-fzf --type jar)
-      if [[ $connector_jar == *"@"* ]]
+      if [[ $res == *"$MENU_CONNECTOR_JAR"* ]]
       then
-        connector_jar=$(echo "$connector_jar" | cut -d "@" -f 2)
+        connector_jar=$(playground get-zip-or-jar-with-fzf --type jar)
+        if [[ $connector_jar == *"@"* ]]
+        then
+          connector_jar=$(echo "$connector_jar" | cut -d "@" -f 2)
+        fi
+        flag_list="$flag_list --connector-jar=$connector_jar"
+        export CONNECTOR_JAR=$connector_jar
       fi
-      flag_list="$flag_list --connector-jar=$connector_jar"
-      export CONNECTOR_JAR=$connector_jar
-    fi
 
+    fi
   fi
 
   if [ "$flag_list" != "" ]
