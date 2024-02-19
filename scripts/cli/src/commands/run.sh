@@ -438,6 +438,8 @@ if [ "$flag_list" == "" ]
 then
   if [ $interactive_mode == 1 ]
   then
+    declare -a flag_list=()
+
     readonly MENU_LETS_GO="🚀🚀🚀 I'm ready, let's go !!!" #0
 
     readonly MENU_ENABLE_KSQLDB="🎏 Enable ksqlDB" #1
@@ -448,26 +450,36 @@ then
     readonly MENU_ENABLE_BROKERS="3️⃣ Enabling multiple brokers"
     readonly MENU_ENABLE_CONNECT_WORKERS="🥉 Enabling multiple connect workers"
     readonly MENU_ENABLE_KCAT="🐈‍⬛ Enabling kcat"
-    readonly MENU_ENABLE_SQL_DATAGEN="🌪️ Enable SQL Datagen injection"
+    readonly MENU_ENABLE_SQL_DATAGEN="🌪️ Enable SQL Datagen injection" #9
 
-    readonly MENU_ENVIRONMENT="🔐 The environment to start when running a connector example" #10
+    readonly MENU_DISABLE_KSQLDB="❌🎏 Disable ksqlDB" #10
+    readonly MENU_DISABLE_C3="❌💠 Disable Control Center"
+    readonly MENU_DISABLE_CONDUKTOR="❌🐺 Disable Conduktor Platform"
+    readonly MENU_DISABLE_RP="❌🧲 Disable Rest Proxy"
+    readonly MENU_DISABLE_GRAFANA="❌📊 Disable Grafana, Prometheus and Pyroscope"
+    readonly MENU_DISABLE_BROKERS="❌3️⃣ Disabling multiple brokers"
+    readonly MENU_DISABLE_CONNECT_WORKERS="❌🥉 Disabling multiple connect workers"
+    readonly MENU_DISABLE_KCAT="❌🐈‍⬛ Disabling kcat"
+    readonly MENU_DISABLE_SQL_DATAGEN="❌🌪️ Disable SQL Datagen injection" #18
+
+    readonly MENU_ENVIRONMENT="🔐 The environment to start when running a connector example" #19
     readonly MENU_TAG="🎯 Confluent Platform (CP) version to use"
-    readonly MENU_CONNECTOR_TAG="🔗 Connector version to use" #12
+    readonly MENU_CONNECTOR_TAG="🔗 Connector version to use" #21
     readonly MENU_CONNECTOR_ZIP="🤐 Connector zip to use"
     readonly MENU_CONNECTOR_JAR="♨️ Connector jar to use"
 
-    readonly MENU_CLUSTER_TYPE="🔋 The cluster type" #15
+    readonly MENU_CLUSTER_TYPE="🔋 The cluster type" #24
     readonly MENU_CLUSTER_REGION="🗺 The Cloud region"
     readonly MENU_CLUSTER_ENVIRONMENT="🌐 The environment id where want your new cluster (example: env-xxxxx)"
 
-    readonly MENU_CLUSTER_NAME="🎰 The cluster name" #18
+    readonly MENU_CLUSTER_NAME="🎰 The cluster name" #27
     readonly MENU_CLUSTER_CREDS="🔒 The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)"
     readonly MENU_CLUSTER_SR_CREDS="🔒 The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)"
 
     stop=0
     while [ $stop != 1 ]
     do
-      options=("$MENU_LETS_GO" "$MENU_ENABLE_KSQLDB" "$MENU_ENABLE_C3" "$MENU_ENABLE_CONDUKTOR" "$MENU_ENABLE_RP" "$MENU_ENABLE_GRAFANA" "$MENU_ENABLE_BROKERS" "$MENU_ENABLE_CONNECT_WORKERS" "$MENU_ENABLE_KCAT" "$MENU_ENABLE_SQL_DATAGEN" "$MENU_ENVIRONMENT" "$MENU_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_CLUSTER_TYPE" "$MENU_CLUSTER_REGION" "$MENU_CLUSTER_ENVIRONMENT" "$MENU_CLUSTER_NAME" "$MENU_CLUSTER_CREDS" "$MENU_CLUSTER_SR_CREDS")
+      options=("$MENU_LETS_GO" "$MENU_ENABLE_KSQLDB" "$MENU_ENABLE_C3" "$MENU_ENABLE_CONDUKTOR" "$MENU_ENABLE_RP" "$MENU_ENABLE_GRAFANA" "$MENU_ENABLE_BROKERS" "$MENU_ENABLE_CONNECT_WORKERS" "$MENU_ENABLE_KCAT" "$MENU_ENABLE_SQL_DATAGEN" "$MENU_DISABLE_KSQLDB" "$MENU_DISABLE_C3" "$MENU_DISABLE_CONDUKTOR" "$MENU_DISABLE_RP" "$MENU_DISABLE_GRAFANA" "$MENU_DISABLE_BROKERS" "$MENU_DISABLE_CONNECT_WORKERS" "$MENU_DISABLE_KCAT" "$MENU_DISABLE_SQL_DATAGEN" "$MENU_ENVIRONMENT" "$MENU_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_CLUSTER_TYPE" "$MENU_CLUSTER_REGION" "$MENU_CLUSTER_ENVIRONMENT" "$MENU_CLUSTER_NAME" "$MENU_CLUSTER_CREDS" "$MENU_CLUSTER_SR_CREDS")
 
       connector_example=0
       get_connector_paths
@@ -498,36 +510,104 @@ then
           unset 'options[2]'
           unset 'options[3]'
 
-          unset 'options[8]'
-          unset 'options[9]'
           unset 'options[10]'
           unset 'options[11]'
           unset 'options[12]'
-          unset 'options[13]'
-          unset 'options[14]'
+
+          unset 'options[8]'
+
+          unset 'options[17]'
+        
+          unset 'options[19]'
+          unset 'options[20]'
+          unset 'options[21]'
+          unset 'options[22]'
+          unset 'options[23]'
         fi
         unset 'options[4]'
         unset 'options[5]'
         unset 'options[6]'
         unset 'options[7]'
-      else
+
+        unset 'options[9]'
+        unset 'options[18]'
+        
+        unset 'options[13]'
+        unset 'options[14]'
         unset 'options[15]'
         unset 'options[16]'
-        unset 'options[17]'
-        unset 'options[18]'
-        unset 'options[19]'
-        unset 'options[20]'
+      else
+        unset 'options[24]'
+        unset 'options[25]'
+        unset 'options[26]'
+        unset 'options[27]'
+        unset 'options[28]'
+        unset 'options[29]'
       fi
 
       if [ $connector_example == 0 ]
       then
+        unset 'options[19]'
+        unset 'options[20]'
+        unset 'options[21]'
+        unset 'options[22]'
+      fi
+      if [ ! -z $ENABLE_KSQLDB ]
+      then
+        unset 'options[1]'
+      else
         unset 'options[10]'
+      fi
+      if [ ! -z $ENABLE_CONTROL_CENTER ]
+      then
+        unset 'options[2]'
+      else
+        unset 'options[11]'
+      fi
+      if [ ! -z $ENABLE_CONDUKTOR ]
+      then
+        unset 'options[3]'
+      else
         unset 'options[12]'
+      fi
+      if [ ! -z $ENABLE_RESTPROXY ]
+      then
+        unset 'options[4]'
+      else
         unset 'options[13]'
+      fi
+      if [ ! -z $ENABLE_JMX_GRAFANA ]
+      then
+        unset 'options[5]'
+      else
         unset 'options[14]'
       fi
-
-      res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🪄" --header="Select option(s) (use tab to select more than one, use ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"current flag list is:\n ${flag_list}\"")
+      if [ ! -z $ENABLE_KAFKA_NODES ]
+      then
+        unset 'options[6]'
+      else
+        unset 'options[15]'
+      fi
+      if [ ! -z $ENABLE_CONNECT_NODES ]
+      then
+        unset 'options[7]'
+      else
+        unset 'options[16]'
+      fi
+      if [ ! -z $ENABLE_KCAT ]
+      then
+        unset 'options[8]'
+      else
+        unset 'options[17]'
+      fi
+      if [ ! -z $SQL_DATAGEN ]
+      then
+        unset 'options[9]'
+      else
+        unset 'options[18]'
+      fi
+      IFS=' ' flag_string="${flag_list[*]}"
+      res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🪄" --header="Select option(s) (use tab to select more than one, use ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"current flag list is:\n $flag_string\"")
 
       if [[ $res == *"$MENU_LETS_GO"* ]]
       then
@@ -536,43 +616,73 @@ then
 
       if [[ $res == *"$MENU_ENABLE_KSQLDB"* ]]
       then
-        flag_list="$flag_list --enable-ksqldb"
+        flag_list+=("--enable-ksqldb")
         export ENABLE_KSQLDB=true
+      fi
+      if [[ $res == *"$MENU_DISABLE_KSQLDB"* ]]
+      then
+        flag_list=("${flag_list[@]/"--enable-ksqldb"}")
+        unset ENABLE_KSQLDB
       fi
 
       if [[ $res == *"$MENU_ENABLE_C3"* ]]
       then
-        flag_list="$flag_list --enable-control-center"
+        flag_list+=("--enable-control-center")
         export ENABLE_CONTROL_CENTER=true
       fi
-
-      if [[ $res == *"$MENU_ENABLE_GRAFANA"* ]]
+      if [[ $res == *"$MENU_DISABLE_C3"* ]]
       then
-        flag_list="$flag_list --enable-jmx-grafana"
-        export ENABLE_JMX_GRAFANA=true
+        flag_list=("${flag_list[@]/"--enable-control-center"}")
+        unset ENABLE_CONTROL_CENTER
       fi
 
       if [[ $res == *"$MENU_ENABLE_RP"* ]]
       then
-        flag_list="$flag_list --enable-rest-proxy"
+        flag_list+=("--enable-rest-proxy")
         export ENABLE_RESTPROXY=true
+      fi
+      if [[ $res == *"$MENU_DISABLE_RP"* ]]
+      then
+        flag_list=("${flag_list[@]/"--enable-rest-proxy"}")
+        unset ENABLE_RESTPROXY
       fi
 
       if [[ $res == *"$MENU_ENABLE_CONDUKTOR"* ]]
       then
-        flag_list="$flag_list --enable-conduktor"
+        flag_list+=("--enable-conduktor")
         export ENABLE_CONDUKTOR=true
       fi 
+      if [[ $res == *"$MENU_DISABLE_CONDUKTOR"* ]]
+      then
+        flag_list=("${flag_list[@]/"--enable-conduktor"}")
+        unset ENABLE_CONDUKTOR
+      fi
+
+      if [[ $res == *"$MENU_ENABLE_GRAFANA"* ]]
+      then
+        flag_list+=("--enable-jmx-grafana")
+        export ENABLE_JMX_GRAFANA=true
+      fi
+      if [[ $res == *"$MENU_DISABLE_GRAFANA"* ]]
+      then
+        flag_list=("${flag_list[@]/"--enable-jmx-grafana"}")
+        unset ENABLE_JMX_GRAFANA
+      fi
 
       if [[ $res == *"$MENU_ENABLE_BROKERS"* ]]
       then
-        flag_list="$flag_list --enable-multiple-broker"
+        flag_list+=("--enable-multiple-broker")
         export ENABLE_KAFKA_NODES=true
       fi 
+      if [[ $res == *"$MENU_DISABLE_BROKERS"* ]]
+      then
+        flag_list=("${flag_list[@]/"--enable-multiple-broker"}")
+        unset ENABLE_KAFKA_NODES
+      fi
 
       if [[ $res == *"$MENU_ENABLE_CONNECT_WORKERS"* ]]
       then
-        flag_list="$flag_list --enable-multiple-connect-workers"
+        flag_list+=("--enable-multiple-connect-workers")
         export ENABLE_CONNECT_NODES=true
 
         # determining the docker-compose file from from test_file
@@ -582,26 +692,43 @@ then
         yq -i '.services.connect2 = .services.connect' /tmp/playground-backup-docker-compose.yml
         yq -i '.services.connect3 = .services.connect' /tmp/playground-backup-docker-compose.yml
         cp /tmp/playground-backup-docker-compose.yml $docker_compose_file
-      fi 
+      fi
+
+      if [[ $res == *"$MENU_DISABLE_CONNECT_WORKERS"* ]]
+      then
+        flag_list=("${flag_list[@]/"--enable-multiple-connect-workers"}")
+        unset ENABLE_CONNECT_NODES
+        cp /tmp/playground-backup-docker-compose.yml $docker_compose_file
+      fi
 
       if [[ $res == *"$MENU_ENABLE_KCAT"* ]]
       then
-        flag_list="$flag_list --enable-kcat"
+        flag_list+=("--enable-kcat")
         export ENABLE_KCAT=true
       fi 
+      if [[ $res == *"$MENU_DISABLE_KCAT"* ]]
+      then
+        flag_list=("${flag_list[@]/"--enable-kcat"}")
+        unset ENABLE_KCAT
+      fi
 
       if [[ $res == *"$MENU_ENABLE_SQL_DATAGEN"* ]]
       then
-        flag_list="$flag_list --enable-sql-datagen"
+        flag_list+=("--enable-sql-datagen")
         export SQL_DATAGEN=true
-      fi 
+      fi
+      if [[ $res == *"$MENU_DISABLE_SQL_DATAGEN"* ]]
+      then
+        flag_list=("${flag_list[@]/"--enable-sql-datagen"}")
+        unset SQL_DATAGEN
+      fi
 
       if [[ $res == *"$MENU_ENVIRONMENT"* ]]
       then
         options=(plaintext ccloud 2way-ssl kerberos kraft-external-plaintext kraft-plaintext ldap-authorizer-sasl-plain ldap-sasl-plain rbac-sasl-plain sasl-plain sasl-scram sasl-ssl ssl_kerberos)
         environment=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🔐" --header="select an environment" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
         
-        flag_list="$flag_list --environment=$environment"
+        flag_list+=("--environment=$environment")
         export PLAYGROUND_ENVIRONMENT=$environment
       fi 
 
@@ -612,7 +739,7 @@ then
         then
           tag=$(echo "$tag" | cut -d "@" -f 2)
         fi
-        flag_list="--tag=$tag"
+        flag_list+=("--tag=$tag")
         export TAG=$tag
       fi
 
@@ -642,7 +769,7 @@ then
         done
 
         connector_tag="$connector_tags"
-        flag_list="$flag_list --connector-tag=$connector_tag"
+        flag_list+=("--connector-tag=$connector_tag")
         export CONNECTOR_TAG="$connector_tag"
       fi
 
@@ -653,7 +780,7 @@ then
         then
           connector_zip=$(echo "$connector_zip" | cut -d "@" -f 2)
         fi
-        flag_list="$flag_list --connector-zip=$connector_zip"
+        flag_list+=("--connector-zip=$connector_zip")
         export CONNECTOR_ZIP=$connector_zip
       fi
 
@@ -664,7 +791,7 @@ then
         then
           connector_jar=$(echo "$connector_jar" | cut -d "@" -f 2)
         fi
-        flag_list="$flag_list --connector-jar=$connector_jar"
+        flag_list+=("--connector-jar=$connector_jar")
         export CONNECTOR_JAR=$connector_jar
       fi
 
@@ -676,7 +803,7 @@ then
         options=(basic standard dedicated)
         cluster_type=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🔋" --header="select a cluster type" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
         
-        flag_list="$flag_list --cluster-type $cluster_type"
+        flag_list+=("--cluster-type $cluster_type")
         export CLUSTER_TYPE=$cluster_type
       fi
 
@@ -703,7 +830,7 @@ then
         then
           cluster_environment=$(echo "$cluster_environment" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
         fi
-        flag_list="$flag_list --cluster-environment $cluster_environment"
+        flag_list+=("--cluster-environment $cluster_environment")
         export ENVIRONMENT=$cluster_environment
       fi
 
@@ -719,10 +846,12 @@ then
         then
           cluster_name=$(echo "$cluster_name" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
         fi
-        flag_list="$flag_list --cluster-name $cluster_name"
+        flag_list+=("--cluster-name $cluster_name")
         export CLUSTER_NAME=$cluster_name
       fi
     done # end while loop stop
+    IFS=' ' flag_list="${flag_list[*]}"
+
   fi # end of interactive_mode
 fi
 
