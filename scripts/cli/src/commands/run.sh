@@ -492,6 +492,20 @@ then
 
       if [[ $test_file == *"ccloud"* ]]
       then
+        if [[ $test_file == *"fully-managed"* ]]
+        then
+          unset 'options[1]'
+          unset 'options[2]'
+          unset 'options[3]'
+
+          unset 'options[8]'
+          unset 'options[9]'
+          unset 'options[10]'
+          unset 'options[11]'
+          unset 'options[12]'
+          unset 'options[13]'
+          unset 'options[14]'
+        fi
         unset 'options[4]'
         unset 'options[5]'
         unset 'options[6]'
