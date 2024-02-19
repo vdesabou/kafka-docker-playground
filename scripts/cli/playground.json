@@ -47,7 +47,7 @@
     },
     {
       "name": "run",
-      "description": "🕹️ Run any example\n\n⛅ When running Confluent Cloud (ccloud) example:\n\n  All you have to do is to be already logged in with confluent CLI.\n\n  By default, a new Confluent Cloud environment with a Cluster will be created.\n\n  You can configure the new cluster by setting:\n\n  --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: `basic`, `standard` and `dedicated`, default `basic`)\n  --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: `aws`, `gcp` and `azure`, default `aws`)\n  --cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use `confluent kafka region list` to get the list, default `eu-west-2`)\n  --cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: `env-xxxxx`) \n\n  In case you want to use your own existing cluster, you need to setup, in addition to previous ones:\n\n  --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n  --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with colon (example: `<API_KEY>:<API_KEY_SECRET>`)\n  --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: `<SR_API_KEY>:<SR_API_KEY_SECRET>`)\n",
+      "description": "🕹️ Run any example\n\n⛅ When running Confluent Cloud (ccloud) example:\n\n  All you have to do is to be already logged in with confluent CLI.\n\n  By default, a new Confluent Cloud environment with a Cluster will be created.\n\n  You can configure the new cluster by setting:\n\n  --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: `basic`, `standard` and `dedicated`, default `basic`)\n  --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: `aws`, `gcp` and `azure`, default `aws`)\n  --cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use `confluent kafka region list` to get the list, default `eu-west-2`)\n  --cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: `txxxxx`) \n\n  In case you want to use your own existing cluster, you need to setup, in addition to previous ones:\n\n  --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n  --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with colon (example: `<API_KEY>:<API_KEY_SECRET>`)\n  --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: `<SR_API_KEY>:<SR_API_KEY_SECRET>`)\n",
       "usage": "playground run [OPTIONS] [ARGUMENTS...]",
       "options": [
         {
@@ -198,7 +198,7 @@
             "--cluster-environment"
           ],
           "argument": "CLUSTER-ENVIRONMENT",
-          "description": "🌐 The environment id where want your new cluster (example: env-xxxxx)\n\nℹ️ Optional, if not set, new environment will be created\n\n🎓 Tip: you can also use ENVIRONMENT environment variable\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+          "description": "🌐 The environment id where want your new cluster (example: txxxxx)\n\nℹ️ Optional, if not set, new environment will be created\n\n🎓 Tip: you can also use ENVIRONMENT environment variable\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
         },
         {
           "names": [
@@ -679,7 +679,7 @@
                 "--cluster-environment"
               ],
               "argument": "CLUSTER-ENVIRONMENT",
-              "description": "🌐 The environment id where want your new cluster (example: env-xxxxx)\n\nℹ️ Optional, if not set, new environment will be created\n\n🎓 Tip: you can also use ENVIRONMENT environment variable\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+              "description": "🌐 The environment id where want your new cluster (example: txxxxx)\n\nℹ️ Optional, if not set, new environment will be created\n\n🎓 Tip: you can also use ENVIRONMENT environment variable\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
             },
             {
               "names": [

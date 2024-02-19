@@ -1386,7 +1386,7 @@ playground_run_usage() {
     printf "playground run\n"
     echo
 
-    printf "  🕹️ Run any example\n  \n  ⛅ When running Confluent Cloud (ccloud) example:\n  \n    All you have to do is to be already logged in with confluent CLI.\n  \n    By default, a new Confluent Cloud environment with a Cluster will be\n  created.\n  \n    You can configure the new cluster by setting:\n  \n    --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster\n  (possible values: \`basic\`, \`standard\` and \`dedicated\`, default \`basic\`)\n    --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider\n  (possible values: \`aws\`, \`gcp\` and \`azure\`, default \`aws\`)\n    --cluster-region (or CLUSTER_REGION environment variable): The Cloud region\n  (use \`confluent kafka region list\` to get the list, default \`eu-west-2\`)\n    --cluster-environment (or ENVIRONMENT environment variable) (optional): The\n  environment id where want your new cluster (example: \`env-xxxxx\`)\n  \n    In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n    --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n    --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key\n  and secret to use, it should be separated with colon (example:\n  \`<API_KEY>:<API_KEY_SECRET>\`)\n    --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable) (optional, if not set, new one will be created): The Schema Registry\n  api key and secret to use, it should be separated with colon (example:\n  \`<SR_API_KEY>:<SR_API_KEY_SECRET>\`)\n"
+    printf "  🕹️ Run any example\n  \n  ⛅ When running Confluent Cloud (ccloud) example:\n  \n    All you have to do is to be already logged in with confluent CLI.\n  \n    By default, a new Confluent Cloud environment with a Cluster will be\n  created.\n  \n    You can configure the new cluster by setting:\n  \n    --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster\n  (possible values: \`basic\`, \`standard\` and \`dedicated\`, default \`basic\`)\n    --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider\n  (possible values: \`aws\`, \`gcp\` and \`azure\`, default \`aws\`)\n    --cluster-region (or CLUSTER_REGION environment variable): The Cloud region\n  (use \`confluent kafka region list\` to get the list, default \`eu-west-2\`)\n    --cluster-environment (or ENVIRONMENT environment variable) (optional): The\n  environment id where want your new cluster (example: \`txxxxx\`)\n  \n    In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n    --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n    --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key\n  and secret to use, it should be separated with colon (example:\n  \`<API_KEY>:<API_KEY_SECRET>\`)\n    --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable) (optional, if not set, new one will be created): The Schema Registry\n  api key and secret to use, it should be separated with colon (example:\n  \`<SR_API_KEY>:<SR_API_KEY_SECRET>\`)\n"
     echo
 
   else
@@ -1506,7 +1506,7 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--cluster-environment CLUSTER-ENVIRONMENT")"
-    printf "    🌐 The environment id where want your new cluster (example: env-xxxxx)\n    \n    ℹ️ Optional, if not set, new environment will be created\n    \n    🎓 Tip: you can also use ENVIRONMENT environment variable\n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🌐 The environment id where want your new cluster (example: txxxxx)\n    \n    ℹ️ Optional, if not set, new environment will be created\n    \n    🎓 Tip: you can also use ENVIRONMENT environment variable\n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -2256,7 +2256,7 @@ playground_repro_bootstrap_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--cluster-environment CLUSTER-ENVIRONMENT")"
-    printf "    🌐 The environment id where want your new cluster (example: env-xxxxx)\n    \n    ℹ️ Optional, if not set, new environment will be created\n    \n    🎓 Tip: you can also use ENVIRONMENT environment variable\n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🌐 The environment id where want your new cluster (example: txxxxx)\n    \n    ℹ️ Optional, if not set, new environment will be created\n    \n    🎓 Tip: you can also use ENVIRONMENT environment variable\n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -11821,7 +11821,7 @@ playground_run_command() {
 
       readonly MENU_CLUSTER_TYPE="🔋 The cluster type (flag --cluster-type)" #24
       readonly MENU_CLUSTER_REGION="🗺 The Cloud region (flag --cluster-region)"
-      readonly MENU_CLUSTER_ENVIRONMENT="🌐 The environment id where want your new cluster (example: env-xxxxx) (flag --cluster-environment)"
+      readonly MENU_CLUSTER_ENVIRONMENT="🌐 The environment id where want your new cluster (example: txxxxx) (flag --cluster-environment)"
 
       readonly MENU_CLUSTER_NAME="🎰 The cluster name (flag --cluster-name)" #27
       readonly MENU_CLUSTER_CREDS="🔒 The Kafka api key and secret to use (flag --cluster-creds)"

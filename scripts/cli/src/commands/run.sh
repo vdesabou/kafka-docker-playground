@@ -470,7 +470,7 @@ then
 
     readonly MENU_CLUSTER_TYPE="🔋 The cluster type (flag --cluster-type)" #24
     readonly MENU_CLUSTER_REGION="🗺 The Cloud region (flag --cluster-region)"
-    readonly MENU_CLUSTER_ENVIRONMENT="🌐 The environment id where want your new cluster (example: env-xxxxx) (flag --cluster-environment)"
+    readonly MENU_CLUSTER_ENVIRONMENT="🌐 The environment id where want your new cluster (example: txxxxx) (flag --cluster-environment)"
 
     readonly MENU_CLUSTER_NAME="🎰 The cluster name (flag --cluster-name)" #27
     readonly MENU_CLUSTER_CREDS="🔒 The Kafka api key and secret to use (flag --cluster-creds)"

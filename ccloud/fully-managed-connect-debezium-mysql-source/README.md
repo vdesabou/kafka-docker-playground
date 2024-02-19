@@ -48,11 +48,11 @@ You can configure the cluster by setting environment variables:
 * `CLUSTER_CLOUD`: The Cloud provider (possible values: `aws`, `gcp` and `azure`, default `aws`)
 * `CLUSTER_REGION`: The Cloud region (use `confluent kafka region list` to get the list, default `eu-west-2`)
 * `CLUSTER_TYPE`: The type of cluster (possible values: `basic`, `standard` and `dedicated`, default `basic`)
-* `ENVIRONMENT` (optional): The environment id where want your new cluster (example: `env-xxxxx`) 
+* `ENVIRONMENT` (optional): The environment id where want your new cluster (example: `txxxxx`) 
 
 In case you want to use your own existing cluster, you need to setup these environment variables:
 
-* `ENVIRONMENT`: The environment id where your cluster is located (example: `env-xxxxx`) 
+* `ENVIRONMENT`: The environment id where your cluster is located (example: `txxxxx`) 
 * `CLUSTER_NAME`: The cluster name
 * `CLUSTER_CLOUD`: The Cloud provider (possible values: `aws`, `gcp` and `azure`)
 * `CLUSTER_REGION`: The Cloud region (example `us-east-2`)
