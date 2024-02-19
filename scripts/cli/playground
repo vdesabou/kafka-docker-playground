@@ -11840,6 +11840,31 @@ playground_run_command() {
         export CONNECTOR_JAR=$connector_jar
       fi
 
+      # readonly MENU_CLUSTER_ENVIRONMENT="🌐 The environment id where want your new cluster (example: env-xxxxx)"
+
+      # readonly MENU_CLUSTER_NAME="🎰 The cluster name" #17
+      # readonly MENU_CLUSTER_CREDS="🔒 The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)"
+      # readonly MENU_CLUSTER_SR_CREDS="🔒 The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)"
+
+      if [[ $res == *"$MENU_CLUSTER_TYPE"* ]]
+      then
+        options=(basic standard dedicated)
+        cluster_type=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🔋" --header="select a cluster type" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
+
+        flag_list="$flag_list --cluster-type $cluster_type"
+        export CLUSTER_TYPE=$cluster_type
+      fi
+
+      if [[ $res == *"$MENU_CLUSTER_REGION"* ]]
+      then
+        cluster_region=$(playground get-kafka-region-list)
+
+        if [[ $cluster_region == *"@"* ]]
+        then
+          cluster_region=$(echo "$cluster_region" | cut -d "@" -f 2)
+        fi
+        cluster_region=$(echo "$cluster_region" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
+      fi
     fi # end of interactive_mode
   fi
 
