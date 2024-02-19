@@ -84,7 +84,7 @@ function generate_get_examples_list_with_fzf_connector_only () {
 function generate_get_examples_list_with_fzf_repro_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_repro_only"
   rm -f $output_file
-  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect-*-*/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' -path '*/reproduction-models/*' | while read file_path
+  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' -path '*/reproduction-models/*' | while read file_path
   do
     generate_get_examples_add_emoji
   done
