@@ -59,6 +59,14 @@ commands:
     required: false
     help: correspond to completion $cur
 
+- name: get-ccloud-environment-list
+  help: Return some completion for ccloud environment
+  private: true
+  args:
+  - name: cur
+    required: false
+    help: correspond to completion $cur
+
 - name: get-tag-list
   help: Return some completion for confluent platform tag
   private: true
@@ -523,17 +531,23 @@ commands:
       🗺 The Cloud region. 
       
       🎓 Tip: you can also use CLUSTER_REGION environment variable
+      🎓 Tip: use <tab> completion to trigger fzf completion
+      
   - &cluster-environment
     long: --cluster-environment
     required: false
     arg: cluster-environment
     validate: not_empty
+    completions:
+      - $(playground get-ccloud-environment-list "$cur")
     help: |-
       🌐 The environment id where want your new cluster (example: env-xxxxx)
 
       ℹ️ Optional, if not set, new environment will be created
 
       🎓 Tip: you can also use ENVIRONMENT environment variable
+      🎓 Tip: use <tab> completion to trigger fzf completion
+
   - &cluster-name
     long: --cluster-name
     required: false

@@ -273,6 +273,7 @@ subcommands:
         🗺 The Cloud region. 
         
         🎓 Tip: you can also use CLUSTER_REGION environment variable
+        🎓 Tip: use <tab> completion to trigger fzf completion
         
     - names:
       - --cluster-environment
@@ -283,6 +284,7 @@ subcommands:
         ℹ️ Optional, if not set, new environment will be created
         
         🎓 Tip: you can also use ENVIRONMENT environment variable
+        🎓 Tip: use <tab> completion to trigger fzf completion
         
     - names:
       - --cluster-name
@@ -950,6 +952,7 @@ subcommands:
             🗺 The Cloud region. 
             
             🎓 Tip: you can also use CLUSTER_REGION environment variable
+            🎓 Tip: use <tab> completion to trigger fzf completion
             
         - names:
           - --cluster-environment
@@ -960,6 +963,7 @@ subcommands:
             ℹ️ Optional, if not set, new environment will be created
             
             🎓 Tip: you can also use ENVIRONMENT environment variable
+            🎓 Tip: use <tab> completion to trigger fzf completion
             
         - names:
           - --cluster-name

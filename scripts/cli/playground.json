@@ -191,14 +191,14 @@
             "--cluster-region"
           ],
           "argument": "CLUSTER-REGION",
-          "description": "🗺 The Cloud region. \n\n🎓 Tip: you can also use CLUSTER_REGION environment variable\n"
+          "description": "🗺 The Cloud region. \n\n🎓 Tip: you can also use CLUSTER_REGION environment variable\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
         },
         {
           "names": [
             "--cluster-environment"
           ],
           "argument": "CLUSTER-ENVIRONMENT",
-          "description": "🌐 The environment id where want your new cluster (example: env-xxxxx)\n\nℹ️ Optional, if not set, new environment will be created\n\n🎓 Tip: you can also use ENVIRONMENT environment variable\n"
+          "description": "🌐 The environment id where want your new cluster (example: env-xxxxx)\n\nℹ️ Optional, if not set, new environment will be created\n\n🎓 Tip: you can also use ENVIRONMENT environment variable\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
         },
         {
           "names": [
@@ -672,14 +672,14 @@
                 "--cluster-region"
               ],
               "argument": "CLUSTER-REGION",
-              "description": "🗺 The Cloud region. \n\n🎓 Tip: you can also use CLUSTER_REGION environment variable\n"
+              "description": "🗺 The Cloud region. \n\n🎓 Tip: you can also use CLUSTER_REGION environment variable\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
             },
             {
               "names": [
                 "--cluster-environment"
               ],
               "argument": "CLUSTER-ENVIRONMENT",
-              "description": "🌐 The environment id where want your new cluster (example: env-xxxxx)\n\nℹ️ Optional, if not set, new environment will be created\n\n🎓 Tip: you can also use ENVIRONMENT environment variable\n"
+              "description": "🌐 The environment id where want your new cluster (example: env-xxxxx)\n\nℹ️ Optional, if not set, new environment will be created\n\n🎓 Tip: you can also use ENVIRONMENT environment variable\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
             },
             {
               "names": [

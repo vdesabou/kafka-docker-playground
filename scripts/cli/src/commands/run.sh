@@ -375,6 +375,14 @@ fi
 
 if [[ -n "$cluster_environment" ]]
 then
+  if [[ $cluster_environment == *"@"* ]]
+  then
+    cluster_environment=$(echo "$cluster_environment" | cut -d "@" -f 2)
+  fi
+  if [[ $cluster_environment == *"/"* ]]
+  then
+    cluster_environment=$(echo "$cluster_environment" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
+  fi
   flag_list="$flag_list --cluster-environment $cluster_environment"
   export ENVIRONMENT=$cluster_environment
 fi
@@ -614,9 +622,7 @@ then
       flag_list="$flag_list --connector-jar=$connector_jar"
       export CONNECTOR_JAR=$connector_jar
     fi
-
-    # readonly MENU_CLUSTER_ENVIRONMENT="🌐 The environment id where want your new cluster (example: env-xxxxx)"
-
+    
     # readonly MENU_CLUSTER_NAME="🎰 The cluster name" #17
     # readonly MENU_CLUSTER_CREDS="🔒 The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)"
     # readonly MENU_CLUSTER_SR_CREDS="🔒 The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)"
@@ -639,6 +645,22 @@ then
         cluster_region=$(echo "$cluster_region" | cut -d "@" -f 2)
       fi
       cluster_region=$(echo "$cluster_region" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
+    fi
+
+    if [[ $res == *"$MENU_CLUSTER_REGION"* ]]
+    then
+      cluster_environment=$(playground get-ccloud-environment-list)
+      
+      if [[ $cluster_environment == *"@"* ]]
+      then
+        cluster_environment=$(echo "$cluster_environment" | cut -d "@" -f 2)
+      fi
+      if [[ $cluster_environment == *"/"* ]]
+      then
+        cluster_environment=$(echo "$cluster_environment" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
+      fi
+      flag_list="$flag_list --cluster-environment $cluster_environment"
+      export ENVIRONMENT=$cluster_environment
     fi
   fi # end of interactive_mode
 fi
