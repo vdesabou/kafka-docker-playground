@@ -286,6 +286,35 @@ playground_generate_fzf_find_files_usage() {
 }
 
 # :command.usage
+playground_generate_tag_list_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground generate-tag-list - generate the confluent platform tag list\n"
+    echo
+
+  else
+    printf "playground generate-tag-list - generate the confluent platform tag list\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground generate-tag-list\n"
+  printf "  playground generate-tag-list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_generate_connector_plugin_list_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground generate-connector-plugin-list - generate the confluent hub plugin list\n"
@@ -358,6 +387,43 @@ playground_get_connector_plugin_usage() {
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground get-connector-plugin [CUR]\n"
   printf "  playground get-connector-plugin --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "CUR")"
+    printf "    correspond to completion $cur\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_get_tag_list_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground get-tag-list - Return some completion for confluent platform tag\n"
+    echo
+
+  else
+    printf "playground get-tag-list - Return some completion for confluent platform tag\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground get-tag-list [CUR]\n"
+  printf "  playground get-tag-list --help | -h\n"
   echo
 
   # :command.long_usage
@@ -1284,7 +1350,7 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--tag TAG")"
-    printf "    🎯 Confluent Platform (CP) version to use\n    \n    Must be greater or equal to 5.0.0\n"
+    printf "    🎯 Confluent Platform (CP) version to use\n    \n    Must be greater or equal to 5.3.0\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -1441,7 +1507,7 @@ playground_re_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--tag TAG")"
-    printf "    🎯 Confluent Platform (CP) version to use\n    \n    Must be greater or equal to 5.0.0\n"
+    printf "    🎯 Confluent Platform (CP) version to use\n    \n    Must be greater or equal to 5.3.0\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -1593,7 +1659,7 @@ playground_start_environment_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--tag TAG")"
-    printf "    🎯 Confluent Platform (CP) version to use\n    \n    Must be greater or equal to 5.0.0\n"
+    printf "    🎯 Confluent Platform (CP) version to use\n    \n    Must be greater or equal to 5.3.0\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -1742,7 +1808,7 @@ playground_update_version_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--tag TAG")"
-    printf "    🎯 Confluent Platform (CP) version to use\n    \n    Must be greater or equal to 5.0.0\n"
+    printf "    🎯 Confluent Platform (CP) version to use\n    \n    Must be greater or equal to 5.3.0\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -2040,7 +2106,7 @@ playground_repro_bootstrap_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--tag TAG")"
-    printf "    🎯 Confluent Platform (CP) version to use\n    \n    Must be greater or equal to 5.0.0\n"
+    printf "    🎯 Confluent Platform (CP) version to use\n    \n    Must be greater or equal to 5.3.0\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -5738,6 +5804,24 @@ function get_confluent_kafka_region_list_with_fzf() {
   fi
 
   res=$(cat $root_folder/scripts/cli/confluent-kafka-region-list.txt | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🌍" --header="select region (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+}
+
+function get_tag_list_with_fzf() {
+  cur="$1"
+
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
+  then
+    fzf_option_wrap="--preview-window=40%,wrap"
+    fzf_option_pointer="--pointer=👉"
+    fzf_option_rounded="--border=rounded"
+  else
+    fzf_options=""
+    fzf_option_pointer=""
+    fzf_option_rounded=""
+  fi
+
+  res=$(tac $root_folder/scripts/cli/tag-list.txt | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🎯" --header="select confluent platform version (--tag) (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
 }
 
 function get_any_files_with_fzf() {
@@ -10672,6 +10756,44 @@ playground_generate_fzf_find_files_command() {
 }
 
 # :command.function
+playground_generate_tag_list_command() {
+  # src/commands/generate-tag-list.sh
+  function listAllTags() {
+
+      local repo=${1}
+
+      local page_size=${2:-100}
+
+      [ -z "${repo}" ] && echo "Usage: listTags <repoName> [page_size]" 1>&2 && return 1
+
+      local base_url="https://registry.hub.docker.com/v2/repositories/${repo}/tags"
+      local page=1
+
+      local res=$(curl "${base_url}?page_size=${page_size}&page=${page}" 2>/dev/null)
+
+      local tags=$(echo ${res} | jq --raw-output '.results[].name')
+
+      local all_tags="${tags}"
+
+      local tag_count=$(echo ${res} | jq '.count')
+
+      ((page_count=(${tag_count}+${page_size}-1)/${page_size}))  # ceil(tag_count / page_size)
+
+      for page in $(seq 2 $page_count); do
+
+          tags=$(curl "${base_url}?page_size=${page_size}&page=${page}" 2>/dev/null | jq --raw-output '.results[].name')
+
+          all_tags="${all_tags}${tags}"
+
+      done
+      echo "${all_tags}" | sort
+
+  }
+
+  listAllTags "confluentinc/cp-server-connect-base" | grep -v "ubi8" | grep -v "arm64" | grep -v "amd64" | grep -v "latest" | grep -v "deb8" > $root_folder/scripts/cli/tag-list.txt
+}
+
+# :command.function
 playground_generate_connector_plugin_list_command() {
   # src/commands/generate-connector-plugin-list.sh
   curl -s -S 'https://api.hub.confluent.io/api/plugins?per_page=100000' | jq '. | sort_by(.release_date) | reverse | .' > /tmp/allmanis.json
@@ -10694,6 +10816,14 @@ playground_get_connector_plugin_command() {
   cur="${args[cur]}"
 
   get_plugin_list "$cur"
+}
+
+# :command.function
+playground_get_tag_list_command() {
+  # src/commands/get-tag-list.sh
+  cur="${args[cur]}"
+
+  get_tag_list_with_fzf "$cur"
 }
 
 # :command.function
@@ -11207,6 +11337,10 @@ playground_run_command() {
   flag_list=""
   if [[ -n "$tag" ]]
   then
+    if [[ $tag == *"@"* ]]
+    then
+      tag=$(echo "$tag" | cut -d "@" -f 2)
+    fi
     flag_list="--tag=$tag"
     export TAG=$tag
   fi
@@ -11642,6 +11776,17 @@ playground_run_command() {
         export PLAYGROUND_ENVIRONMENT=$environment
       fi
 
+      if [[ $res == *"$MENU_TAG"* ]]
+      then
+        tag=$(playground get-tag-list)
+        if [[ $tag == *"@"* ]]
+        then
+          tag=$(echo "$tag" | cut -d "@" -f 2)
+        fi
+        flag_list="--tag=$tag"
+        export TAG=$tag
+      fi
+
       if [[ $res == *"$MENU_CONNECTOR_TAG"* ]]
       then
         connector_tags=""
@@ -11695,7 +11840,7 @@ playground_run_command() {
         export CONNECTOR_JAR=$connector_jar
       fi
 
-    fi
+    fi # end of interactive_mode
   fi
 
   if [ "$flag_list" != "" ]
@@ -11761,8 +11906,9 @@ playground_run_command() {
   let ELAPSED_TOTAL+=$SECONDS
   set +e
   # keep those lists up to date
+  playground generate-tag-list > /dev/null 2>&1 &
   playground generate-connector-plugin-list > /dev/null 2>&1 &
-  playground generate-kafka-region-list  > /dev/null 2>&1 &
+  playground generate-kafka-region-list > /dev/null 2>&1 &
   set -e
   if [ $ret -eq 0 ]
   then
@@ -11800,6 +11946,10 @@ playground_re_run_command() {
   flag_list=""
   if [[ -n "$tag" ]]
   then
+    if [[ $tag == *"@"* ]]
+    then
+      tag=$(echo "$tag" | cut -d "@" -f 2)
+    fi
     flag_list="--tag=$tag"
   fi
 
@@ -11988,6 +12138,10 @@ playground_start_environment_command() {
   flag_list=""
   if [[ -n "$tag" ]]
   then
+    if [[ $tag == *"@"* ]]
+    then
+      tag=$(echo "$tag" | cut -d "@" -f 2)
+    fi
     flag_list="--tag=$tag"
     export TAG=$tag
   fi
@@ -12147,6 +12301,10 @@ playground_update_version_command() {
   flag_list=""
   if [[ -n "$tag" ]]
   then
+    if [[ $tag == *"@"* ]]
+    then
+      tag=$(echo "$tag" | cut -d "@" -f 2)
+    fi
     current_tag=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
 
     if [ "$current_tag" == "" ]
@@ -13656,6 +13814,10 @@ playground_repro_bootstrap_command() {
   flag_list=""
   if [[ -n "$tag" ]]
   then
+    if [[ $tag == *"@"* ]]
+    then
+      tag=$(echo "$tag" | cut -d "@" -f 2)
+    fi
     flag_list="--tag=$tag"
   fi
 
@@ -18960,6 +19122,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    generate-tag-list)
+      action="generate-tag-list"
+      shift
+      playground_generate_tag_list_parse_requirements "$@"
+      shift $#
+      ;;
+
     generate-connector-plugin-list)
       action="generate-connector-plugin-list"
       shift
@@ -18978,6 +19147,13 @@ parse_requirements() {
       action="get-connector-plugin"
       shift
       playground_get_connector_plugin_parse_requirements "$@"
+      shift $#
+      ;;
+
+    get-tag-list)
+      action="get-tag-list"
+      shift
+      playground_get_tag_list_parse_requirements "$@"
       shift $#
       ;;
 
@@ -19424,6 +19600,50 @@ playground_generate_fzf_find_files_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_generate_tag_list_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_generate_tag_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="generate-tag-list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
 playground_generate_connector_plugin_list_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
@@ -19540,6 +19760,56 @@ playground_get_connector_plugin_parse_requirements() {
 
   # :command.command_filter
   action="get-connector-plugin"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        if [[ -z ${args['cur']+x} ]]; then
+
+          args['cur']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_get_tag_list_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_get_tag_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="get-tag-list"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -28866,9 +29136,11 @@ run() {
     "status") playground_status_command ;;
     "get-connector-list") playground_get_connector_list_command ;;
     "generate-fzf-find-files") playground_generate_fzf_find_files_command ;;
+    "generate-tag-list") playground_generate_tag_list_command ;;
     "generate-connector-plugin-list") playground_generate_connector_plugin_list_command ;;
     "generate-kafka-region-list") playground_generate_kafka_region_list_command ;;
     "get-connector-plugin") playground_get_connector_plugin_command ;;
+    "get-tag-list") playground_get_tag_list_command ;;
     "get-kafka-region-list") playground_get_kafka_region_list_command ;;
     "get-topic-list") playground_get_topic_list_command ;;
     "get-subject-list") playground_get_subject_list_command ;;

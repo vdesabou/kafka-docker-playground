@@ -37,6 +37,10 @@ commands:
   help: force call to generate_fzf_find_files
   private: true
 
+- name: generate-tag-list
+  help: generate the confluent platform tag list
+  private: true
+
 - name: generate-connector-plugin-list
   help: generate the confluent hub plugin list
   private: true
@@ -49,6 +53,14 @@ commands:
     
 - name: get-connector-plugin
   help: Return some completion for connector plugin
+  private: true
+  args:
+  - name: cur
+    required: false
+    help: correspond to completion $cur
+
+- name: get-tag-list
+  help: Return some completion for confluent platform tag
   private: true
   args:
   - name: cur
@@ -352,11 +364,14 @@ commands:
     long: --tag
     arg: tag
     required: false
-    # fixthis validate: minimal_cp_version "4"
+    completions:
+      - $(playground get-tag-list "$cur")
     help: |-
       🎯 Confluent Platform (CP) version to use
 
-      Must be greater or equal to 5.0.0
+      Must be greater or equal to 5.3.0
+
+      🎓 Tip: use <tab> completion to trigger fzf completion
   - &connector-tag
     long: --connector-tag
     arg: connector_tag

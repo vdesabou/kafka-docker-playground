@@ -114,6 +114,10 @@ filename=$(basename -- "$test_file")
 flag_list=""
 if [[ -n "$tag" ]]
 then
+  if [[ $tag == *"@"* ]]
+  then
+    tag=$(echo "$tag" | cut -d "@" -f 2)
+  fi
   flag_list="--tag=$tag"
   export TAG=$tag
 fi
@@ -547,6 +551,17 @@ then
       export PLAYGROUND_ENVIRONMENT=$environment
     fi 
 
+    if [[ $res == *"$MENU_TAG"* ]]
+    then
+      tag=$(playground get-tag-list)
+      if [[ $tag == *"@"* ]]
+      then
+        tag=$(echo "$tag" | cut -d "@" -f 2)
+      fi
+      flag_list="--tag=$tag"
+      export TAG=$tag
+    fi
+
     if [[ $res == *"$MENU_CONNECTOR_TAG"* ]]
     then
       connector_tags=""
@@ -600,7 +615,7 @@ then
       export CONNECTOR_JAR=$connector_jar
     fi
 
-  fi
+  fi # end of interactive_mode
 fi
 
 if [ "$flag_list" != "" ]
@@ -666,8 +681,9 @@ ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 let ELAPSED_TOTAL+=$SECONDS
 set +e
 # keep those lists up to date
+playground generate-tag-list > /dev/null 2>&1 &
 playground generate-connector-plugin-list > /dev/null 2>&1 &
-playground generate-kafka-region-list  > /dev/null 2>&1 &
+playground generate-kafka-region-list > /dev/null 2>&1 &
 set -e
 if [ $ret -eq 0 ]
 then

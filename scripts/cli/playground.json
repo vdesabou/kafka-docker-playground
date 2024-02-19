@@ -78,7 +78,7 @@
             "--tag"
           ],
           "argument": "TAG",
-          "description": "🎯 Confluent Platform (CP) version to use\n\nMust be greater or equal to 5.0.0\n"
+          "description": "🎯 Confluent Platform (CP) version to use\n\nMust be greater or equal to 5.3.0\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
         },
         {
           "names": [
@@ -248,7 +248,7 @@
             "--tag"
           ],
           "argument": "TAG",
-          "description": "🎯 Confluent Platform (CP) version to use\n\nMust be greater or equal to 5.0.0\n"
+          "description": "🎯 Confluent Platform (CP) version to use\n\nMust be greater or equal to 5.3.0\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
         },
         {
           "names": [
@@ -369,7 +369,7 @@
             "--tag"
           ],
           "argument": "TAG",
-          "description": "🎯 Confluent Platform (CP) version to use\n\nMust be greater or equal to 5.0.0\n"
+          "description": "🎯 Confluent Platform (CP) version to use\n\nMust be greater or equal to 5.3.0\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
         },
         {
           "names": [
@@ -454,7 +454,7 @@
             "--tag"
           ],
           "argument": "TAG",
-          "description": "🎯 Confluent Platform (CP) version to use\n\nMust be greater or equal to 5.0.0\n"
+          "description": "🎯 Confluent Platform (CP) version to use\n\nMust be greater or equal to 5.3.0\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
         },
         {
           "names": [
@@ -570,7 +570,7 @@
                 "--tag"
               ],
               "argument": "TAG",
-              "description": "🎯 Confluent Platform (CP) version to use\n\nMust be greater or equal to 5.0.0\n"
+              "description": "🎯 Confluent Platform (CP) version to use\n\nMust be greater or equal to 5.3.0\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
             },
             {
               "names": [

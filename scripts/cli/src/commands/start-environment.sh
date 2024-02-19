@@ -23,6 +23,10 @@ test_file_directory="$(dirname "${test_file}")"
 flag_list=""
 if [[ -n "$tag" ]]
 then
+  if [[ $tag == *"@"* ]]
+  then
+    tag=$(echo "$tag" | cut -d "@" -f 2)
+  fi
   flag_list="--tag=$tag"
   export TAG=$tag
 fi

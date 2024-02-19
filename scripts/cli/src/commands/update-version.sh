@@ -11,6 +11,10 @@ tag_changed=0
 flag_list=""
 if [[ -n "$tag" ]]
 then
+  if [[ $tag == *"@"* ]]
+  then
+    tag=$(echo "$tag" | cut -d "@" -f 2)
+  fi
   current_tag=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
 
   if [ "$current_tag" == "" ]

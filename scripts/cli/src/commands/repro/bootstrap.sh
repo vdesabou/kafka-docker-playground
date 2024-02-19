@@ -1098,6 +1098,10 @@ fi
 flag_list=""
 if [[ -n "$tag" ]]
 then
+  if [[ $tag == *"@"* ]]
+  then
+    tag=$(echo "$tag" | cut -d "@" -f 2)
+  fi
   flag_list="--tag=$tag"
 fi
 
