@@ -6,6 +6,16 @@ source ${DIR}/../../scripts/utils.sh
 
 logwarn "⚠️ This example and associated custom code is not supported, use at your own risks !"
 
+if version_gt $CONNECTOR_TAG "1.9.9"
+then
+    logwarn "WARN: connector version >= 2.0.0 do not support this custom credentials provider as it was build with AWS JDK 1.x"
+    # 08:54:15 🔥 Command failed with error code 400
+    # 08:54:15 🔥 Connector configuration is invalid and contains the following 1 error(s):
+    # Invalid value class com.github.vdesabou.AwsAssumeRoleCredentialsProvider for configuration sqs.credentials.provider.class: Class must extend: interface software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
+    # You can also find the above list of errors at the endpoint `/connector-plugins/{connectorType}/config/validate`
+    exit 111
+fi
+
 AWS_STS_ROLE_ARN=${AWS_STS_ROLE_ARN:-$1}
 
 if [ -z "$AWS_STS_ROLE_ARN" ]
@@ -128,12 +138,6 @@ playground connector create-or-update --connector sqs-source  << EOF
     "errors.log.include.messages": "true"
 }
 EOF
-
-# FIXTHIS failing with
-# 08:54:15 🔥 Command failed with error code 400
-# 08:54:15 🔥 Connector configuration is invalid and contains the following 1 error(s):
-# Invalid value class com.github.vdesabou.AwsAssumeRoleCredentialsProvider for configuration sqs.credentials.provider.class: Class must extend: interface software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
-# You can also find the above list of errors at the endpoint `/connector-plugins/{connectorType}/config/validate`
 
 log "Verify we have received the data in test-sqs-source topic"
 playground topic consume --topic test-sqs-source --min-expected-messages 2 --timeout 60
