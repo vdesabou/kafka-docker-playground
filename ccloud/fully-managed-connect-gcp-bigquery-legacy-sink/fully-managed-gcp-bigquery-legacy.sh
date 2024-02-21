@@ -83,7 +83,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",
      "topics": "bqtopic",
-     "keyfile" : $GCP_KEYFILE_CONTENT,
+     "keyfile" : "$GCP_KEYFILE_CONTENT",
      "project" : "$GCP_PROJECT",
      "datasets" : "$DATASET",
      "input.data.format" : "AVRO",
