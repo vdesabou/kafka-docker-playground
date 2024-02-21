@@ -396,48 +396,50 @@ then
   if [ $interactive_mode == 1 ]
   then
     declare -a flag_list=()
+    MAX_LENGTH=50
+    readonly MENU_LETS_GO="🚀 Run the example !" #0
 
-    readonly MENU_LETS_GO="🚀🚀🚀 I'm ready, let's go !!!" #0
-
-    readonly MENU_ENABLE_KSQLDB="🎏 Enable ksqlDB (flag --enable-ksqldb)" #1
-    readonly MENU_ENABLE_C3="💠 Enable Control Center (flag --enable-control-center)"
-    readonly MENU_ENABLE_CONDUKTOR="🐺 Enable Conduktor Platform (flag --enable-conduktor)"
-    readonly MENU_ENABLE_RP="🧲 Enable Rest Proxy (flag --enable-rest-proxy)" #4
-    readonly MENU_ENABLE_GRAFANA="📊 Enable Grafana, Prometheus and Pyroscope (flag --enable-jmx-grafana)"
-    readonly MENU_ENABLE_BROKERS="3️⃣  Enabling multiple brokers (flag --enable-multiple-broker)"
-    readonly MENU_ENABLE_CONNECT_WORKERS="🥉 Enabling multiple connect workers (flag --enable-multiple-connect-workers)"
-    readonly MENU_ENABLE_KCAT="🐈 Enabling kcat (flag --enable-kcat)"
-    readonly MENU_ENABLE_SQL_DATAGEN="🌪️  Enable SQL Datagen injection (flag --enable-sql-datagen)" #9
+    readonly MENU_ENABLE_KSQLDB="🎏 Enable ksqlDB $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_ENABLE_KSQLDB})) ' ') --enable-ksqldb"
+    readonly MENU_ENABLE_C3="💠 Enable Control Center $(printf '%*s' $((${MAX_LENGTH}-24-${#MENU_ENABLE_C3})) ' ') --enable-control-center"
+    readonly MENU_ENABLE_CONDUKTOR="🐺 Enable Conduktor Platform $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_ENABLE_CONDUKTOR})) ' ') --enable-conduktor"
+    readonly MENU_ENABLE_RP="🧲 Enable Rest Proxy $(printf '%*s' $((${MAX_LENGTH}-20-${#MENU_ENABLE_RP})) ' ') --enable-rest-proxy" #4
+    readonly MENU_ENABLE_GRAFANA="📊 Enable Grafana $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_ENABLE_GRAFANA})) ' ') --enable-jmx-grafana"
+    readonly MENU_ENABLE_BROKERS="3️⃣  Enabling multiple brokers $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_ENABLE_BROKERS})) ' ') --enable-multiple-broker"
+    readonly MENU_ENABLE_CONNECT_WORKERS="🥉 Enabling multiple connect workers $(printf '%*s' $((${MAX_LENGTH}-36-${#MENU_ENABLE_CONNECT_WORKERS})) ' ') --enable-multiple-connect-workers"
+    readonly MENU_ENABLE_KCAT="🐈 Enabling kcat $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_ENABLE_KCAT})) ' ') --enable-kcat"
+    readonly MENU_ENABLE_SQL_DATAGEN="🌪️  Enable SQL Datagen injection $(printf '%*s' $((${MAX_LENGTH}-33-${#MENU_ENABLE_SQL_DATAGEN})) ' ') --enable-sql-datagen" #9
 
     readonly MENU_DISABLE_KSQLDB="❌🎏 Disable ksqlDB" #10
     readonly MENU_DISABLE_C3="❌💠 Disable Control Center"
     readonly MENU_DISABLE_CONDUKTOR="❌🐺 Disable Conduktor Platform"
     readonly MENU_DISABLE_RP="❌🧲 Disable Rest Proxy"
-    readonly MENU_DISABLE_GRAFANA="❌📊 Disable Grafana, Prometheus and Pyroscope"
+    readonly MENU_DISABLE_GRAFANA="❌📊 Disable Grafana"
     readonly MENU_DISABLE_BROKERS="❌3️⃣ Disabling multiple brokers"
     readonly MENU_DISABLE_CONNECT_WORKERS="❌🥉 Disabling multiple connect workers"
-    readonly MENU_DISABLE_KCAT="❌🐈‍⬛ Disabling kcat"
+    readonly MENU_DISABLE_KCAT="❌🐈 Disabling kcat"
     readonly MENU_DISABLE_SQL_DATAGEN="❌🌪️ Disable SQL Datagen injection" #18
 
-    readonly MENU_ENVIRONMENT="🔐 The environment to start (flag --environment)" #19
-    readonly MENU_TAG="🎯 Confluent Platform (CP) version to use (flag --tag)"
-    readonly MENU_CONNECTOR_TAG="🔗 Connector version to use (flag --connector-tag)" #21
-    readonly MENU_CONNECTOR_ZIP="🤐 Connector zip to use (flag --connector-zip)"
-    readonly MENU_CONNECTOR_JAR="☕ Connector jar to use (flag --connector-jar)"
+    readonly MENU_ENVIRONMENT="🔐 Environment $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_ENVIRONMENT})) ' ') --environment" #19
+    readonly MENU_TAG="🎯 CP version $(printf '%*s' $((${MAX_LENGTH}-12-${#MENU_TAG})) ' ') --tag"
+    readonly MENU_CONNECTOR_TAG="🔗 Connector version $(printf '%*s' $((${MAX_LENGTH}-19-${#MENU_CONNECTOR_TAG})) ' ') --connector-tag" #21
+    readonly MENU_CONNECTOR_ZIP="🤐 Connector zip $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CONNECTOR_ZIP})) ' ') --connector-zip"
+    readonly MENU_CONNECTOR_JAR="☕ Connector jar $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CONNECTOR_JAR})) ' ') --connector-jar"
 
-    readonly MENU_CLUSTER_TYPE="🔋 The cluster type (flag --cluster-type)" #24
-    readonly MENU_CLUSTER_CLOUD="🌤 The cloud provider (flag --cluster-cloud)"
-    readonly MENU_CLUSTER_REGION="🗺 The Cloud region (flag --cluster-region)"
-    readonly MENU_CLUSTER_ENVIRONMENT="🌐 The environment id where want your new cluster (example: txxxxx) (flag --cluster-environment)"
+    readonly MENU_CLUSTER_TYPE="🔋 Cluster type $(printf '%*s' $((${MAX_LENGTH}-14-${#MENU_CLUSTER_TYPE})) ' ') --cluster-type" #24
+    readonly MENU_CLUSTER_CLOUD="🌤  Cloud provider $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CLUSTER_CLOUD})) ' ') --cluster-cloud"
+    readonly MENU_CLUSTER_REGION="🗺  Cloud region $(printf '%*s' $((${MAX_LENGTH}-14-${#MENU_CLUSTER_REGION})) ' ') --cluster-region"
+    readonly MENU_CLUSTER_ENVIRONMENT="🌐 Environment id $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CLUSTER_ENVIRONMENT})) ' ') --cluster-environment"
 
-    readonly MENU_CLUSTER_NAME="🎰 The cluster name (flag --cluster-name)" #27
-    readonly MENU_CLUSTER_CREDS="🔒 The Kafka api key and secret to use (flag --cluster-creds)"
-    readonly MENU_CLUSTER_SR_CREDS="🔰 The Schema Registry api key and secret to use (flag --cluster_sr_creds)"
+    readonly MENU_CLUSTER_NAME="🎰 Cluster name $(printf '%*s' $((${MAX_LENGTH}-14-${#MENU_CLUSTER_NAME})) ' ') --cluster-name" #27
+    readonly MENU_CLUSTER_CREDS="🔒 Kafka api key & secret $(printf '%*s' $((${MAX_LENGTH}-24-${#MENU_CLUSTER_CREDS})) ' ') --cluster-creds"
+    readonly MENU_CLUSTER_SR_CREDS="🔰 Schema registry api key & secret $(printf '%*s' $((${MAX_LENGTH}-34-${#MENU_CLUSTER_SR_CREDS})) ' ') --cluster_sr_creds"
+
+    readonly MENU_GO_BACK="🔙 Go back !"
 
     stop=0
     while [ $stop != 1 ]
     do
-      options=("$MENU_LETS_GO" "$MENU_ENABLE_KSQLDB" "$MENU_ENABLE_C3" "$MENU_ENABLE_CONDUKTOR" "$MENU_ENABLE_RP" "$MENU_ENABLE_GRAFANA" "$MENU_ENABLE_BROKERS" "$MENU_ENABLE_CONNECT_WORKERS" "$MENU_ENABLE_KCAT" "$MENU_ENABLE_SQL_DATAGEN" "$MENU_DISABLE_KSQLDB" "$MENU_DISABLE_C3" "$MENU_DISABLE_CONDUKTOR" "$MENU_DISABLE_RP" "$MENU_DISABLE_GRAFANA" "$MENU_DISABLE_BROKERS" "$MENU_DISABLE_CONNECT_WORKERS" "$MENU_DISABLE_KCAT" "$MENU_DISABLE_SQL_DATAGEN" "$MENU_ENVIRONMENT" "$MENU_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_CLUSTER_TYPE" "$MENU_CLUSTER_CLOUD" "$MENU_CLUSTER_REGION" "$MENU_CLUSTER_ENVIRONMENT" "$MENU_CLUSTER_NAME" "$MENU_CLUSTER_CREDS" "$MENU_CLUSTER_SR_CREDS")
+      options=("$MENU_LETS_GO" "$MENU_ENABLE_KSQLDB" "$MENU_ENABLE_C3" "$MENU_ENABLE_CONDUKTOR" "$MENU_ENABLE_RP" "$MENU_ENABLE_GRAFANA" "$MENU_ENABLE_BROKERS" "$MENU_ENABLE_CONNECT_WORKERS" "$MENU_ENABLE_KCAT" "$MENU_ENABLE_SQL_DATAGEN" "$MENU_DISABLE_KSQLDB" "$MENU_DISABLE_C3" "$MENU_DISABLE_CONDUKTOR" "$MENU_DISABLE_RP" "$MENU_DISABLE_GRAFANA" "$MENU_DISABLE_BROKERS" "$MENU_DISABLE_CONNECT_WORKERS" "$MENU_DISABLE_KCAT" "$MENU_DISABLE_SQL_DATAGEN" "$MENU_ENVIRONMENT" "$MENU_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_CLUSTER_TYPE" "$MENU_CLUSTER_CLOUD" "$MENU_CLUSTER_REGION" "$MENU_CLUSTER_ENVIRONMENT" "$MENU_CLUSTER_NAME" "$MENU_CLUSTER_CREDS" "$MENU_CLUSTER_SR_CREDS" "$MENU_GO_BACK")
 
       connector_example=0
       get_connector_paths
@@ -578,11 +580,17 @@ then
         unset 'options[18]'
       fi
       IFS=' ' flag_string="${flag_list[*]}"
-      res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🪄" --header="Select option(s) (use tab to select more than one, use ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"current flag list is:\n $flag_string\"")
+      res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🪄" --header="Select option(s) (use tab to select more than one)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"current flag list is:\n $flag_string\"")
 
       if [[ $res == *"$MENU_LETS_GO"* ]]
       then
         stop=1
+      fi
+
+      if [[ $res == *"$MENU_GO_BACK"* ]]
+      then
+        stop=1
+        playground run
       fi
 
       if [[ $res == *"$MENU_ENABLE_KSQLDB"* ]]
