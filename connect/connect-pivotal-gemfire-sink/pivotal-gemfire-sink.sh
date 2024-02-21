@@ -52,17 +52,17 @@ EOF
 log "Creating Pivotal Gemfire sink connector"
 playground connector create-or-update --connector pivotal-gemfire-sink  << EOF
 {
-               "connector.class": "io.confluent.connect.pivotal.gemfire.PivotalGemfireSinkConnector",
-               "tasks.max": "1",
-               "topics": "input_topic",
-               "gemfire.locator.host":"pivotal-gemfire",
-               "gemfire.locator.port":"10334",
-               "gemfire.username":"",
-               "gemfire.password":"",
-               "gemfire.region":"exampleRegion",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+  "connector.class": "io.confluent.connect.pivotal.gemfire.PivotalGemfireSinkConnector",
+  "tasks.max": "1",
+  "topics": "input_topic",
+  "gemfire.locator.host":"pivotal-gemfire",
+  "gemfire.locator.port":"10334",
+  "gemfire.username":"",
+  "gemfire.password":"",
+  "gemfire.region":"exampleRegion",
+  "confluent.topic.bootstrap.servers": "broker:9092",
+  "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 5
