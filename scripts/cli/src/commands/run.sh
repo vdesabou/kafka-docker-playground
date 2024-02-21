@@ -396,7 +396,15 @@ then
   if [ $interactive_mode == 1 ]
   then
     declare -a flag_list=()
-    MAX_LENGTH=50
+    terminal_columns=$(tput cols)
+    if [[ $terminal_columns -gt 180 ]]
+    then
+      MAX_LENGTH=$((${terminal_columns}-120))
+      fzf_option_wrap="--preview-window=30%,wrap"
+    else
+      MAX_LENGTH=$((${terminal_columns}-75))
+      fzf_option_wrap="--preview-window=20%,wrap"
+    fi
     readonly MENU_LETS_GO="🚀 Run the example !" #0
 
     readonly MENU_ENABLE_KSQLDB="🎏 Enable ksqlDB $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_ENABLE_KSQLDB})) ' ') --enable-ksqldb"
@@ -419,22 +427,24 @@ then
     readonly MENU_DISABLE_KCAT="❌🐈 Disabling kcat"
     readonly MENU_DISABLE_SQL_DATAGEN="❌🌪️ Disable SQL Datagen injection" #18
 
-    readonly MENU_ENVIRONMENT="🔐 Environment $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_ENVIRONMENT})) ' ') --environment" #19
-    readonly MENU_TAG="🎯 CP version $(printf '%*s' $((${MAX_LENGTH}-12-${#MENU_TAG})) ' ') --tag"
-    readonly MENU_CONNECTOR_TAG="🔗 Connector version $(printf '%*s' $((${MAX_LENGTH}-19-${#MENU_CONNECTOR_TAG})) ' ') --connector-tag" #21
-    readonly MENU_CONNECTOR_ZIP="🤐 Connector zip $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CONNECTOR_ZIP})) ' ') --connector-zip"
-    readonly MENU_CONNECTOR_JAR="☕ Connector jar $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CONNECTOR_JAR})) ' ') --connector-jar"
+    readonly MENU_ENVIRONMENT="🔐 Environment $(printf '%*s' $((${MAX_LENGTH}-14-${#MENU_ENVIRONMENT})) ' ') --environment" #19
+    readonly MENU_TAG="🎯 CP version $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_TAG})) ' ') --tag"
+    readonly MENU_CONNECTOR_TAG="🔗 Connector version $(printf '%*s' $((${MAX_LENGTH}-20-${#MENU_CONNECTOR_TAG})) ' ') --connector-tag" #21
+    readonly MENU_CONNECTOR_ZIP="🤐 Connector zip $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CONNECTOR_ZIP})) ' ') --connector-zip"
+    readonly MENU_CONNECTOR_JAR="☕ Connector jar $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CONNECTOR_JAR})) ' ') --connector-jar"
 
-    readonly MENU_CLUSTER_TYPE="🔋 Cluster type $(printf '%*s' $((${MAX_LENGTH}-14-${#MENU_CLUSTER_TYPE})) ' ') --cluster-type" #24
-    readonly MENU_CLUSTER_CLOUD="🌤  Cloud provider $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CLUSTER_CLOUD})) ' ') --cluster-cloud"
-    readonly MENU_CLUSTER_REGION="🗺  Cloud region $(printf '%*s' $((${MAX_LENGTH}-14-${#MENU_CLUSTER_REGION})) ' ') --cluster-region"
-    readonly MENU_CLUSTER_ENVIRONMENT="🌐 Environment id $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CLUSTER_ENVIRONMENT})) ' ') --cluster-environment"
+    readonly MENU_CLUSTER_TYPE="🔋 Cluster type $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CLUSTER_TYPE})) ' ') --cluster-type" #24
+    readonly MENU_CLUSTER_CLOUD="🌤  Cloud provider $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_CLUSTER_CLOUD})) ' ') --cluster-cloud"
+    readonly MENU_CLUSTER_REGION="🗺  Cloud region $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CLUSTER_REGION})) ' ') --cluster-region"
+    readonly MENU_CLUSTER_ENVIRONMENT="🌐 Environment id $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_CLUSTER_ENVIRONMENT})) ' ') --cluster-environment"
 
-    readonly MENU_CLUSTER_NAME="🎰 Cluster name $(printf '%*s' $((${MAX_LENGTH}-14-${#MENU_CLUSTER_NAME})) ' ') --cluster-name" #27
-    readonly MENU_CLUSTER_CREDS="🔒 Kafka api key & secret $(printf '%*s' $((${MAX_LENGTH}-24-${#MENU_CLUSTER_CREDS})) ' ') --cluster-creds"
-    readonly MENU_CLUSTER_SR_CREDS="🔰 Schema registry api key & secret $(printf '%*s' $((${MAX_LENGTH}-34-${#MENU_CLUSTER_SR_CREDS})) ' ') --cluster_sr_creds"
+    readonly MENU_CLUSTER_NAME="🎰 Cluster name $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CLUSTER_NAME})) ' ') --cluster-name" #27
+    readonly MENU_CLUSTER_CREDS="🔒 Kafka api key & secret $(printf '%*s' $((${MAX_LENGTH}-25-${#MENU_CLUSTER_CREDS})) ' ') --cluster-creds"
+    readonly MENU_CLUSTER_SR_CREDS="🔰 Schema registry api key & secret $(printf '%*s' $((${MAX_LENGTH}-35-${#MENU_CLUSTER_SR_CREDS})) ' ') --cluster_sr_creds"
 
     readonly MENU_GO_BACK="🔙 Go back !"
+
+    fzf_option_wrap="--preview-window=20%,wrap"
 
     stop=0
     while [ $stop != 1 ]

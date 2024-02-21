@@ -1043,7 +1043,7 @@ function display_interactive_menu_categories () {
   readonly MENU_REPRO="🛠  Reproduction models"
   readonly MENU_KSQL="🎏 ksqlDB"
   readonly MENU_SR="🔰 Schema registry"
-  readonly MENU_RP="🧲 REST proxy"
+  readonly MENU_RP="🧲 Rest proxy"
   readonly MENU_OTHER="👾 Other playgrounds"
   readonly MENU_ALL="🌕 All"
 
