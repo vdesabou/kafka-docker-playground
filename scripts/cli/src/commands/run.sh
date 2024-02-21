@@ -32,63 +32,7 @@ interactive_mode=0
 if [[ ! -n "$test_file" ]]
 then
   interactive_mode=1
-  fzf_version=$(get_fzf_version)
-  if version_gt $fzf_version "0.38"
-  then
-      fzf_option_wrap="--preview-window=40%,wrap"
-      fzf_option_pointer="--pointer=👉"
-      fzf_option_rounded="--border=rounded"
-  else
-      fzf_option_pointer=""
-      fzf_option_rounded=""
-  fi
-
-  readonly MENU_CONNECTOR="🔗 Connectors"
-  readonly MENU_CCLOUD="🌤️ Confluent Cloud"
-  readonly MENU_FULLY_MANAGED_CONNECTOR="🤖 Fully-Managed Connectors"
-  readonly MENU_REPRO="👷‍♂️ Reproduction Models"
-  readonly MENU_KSQL="🎏 ksqlDB"
-  readonly MENU_SR="📝 Schema Registry"
-  readonly MENU_RP="🧲 REST Proxy"
-  readonly MENU_OTHER="👾 Other Playgrounds"
-  readonly MENU_ALL="🌕 All"
-
-  options=("$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_REPRO" "$MENU_KSQL" "$MENU_SR" "$MENU_RP" "$MENU_OTHER" "$MENU_ALL")
-  res=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🚀" --header="Select a category (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
-
-  case "${res}" in
-    "$MENU_CONNECTOR")
-      test_file=$(playground get-examples-list-with-fzf --connector-only)
-    ;;
-    "$MENU_CCLOUD")
-      test_file=$(playground get-examples-list-with-fzf --ccloud-only)
-    ;;
-    "$MENU_FULLY_MANAGED_CONNECTOR")
-      test_file=$(playground get-examples-list-with-fzf --fully-managed-connector-only)
-    ;;
-    "$MENU_REPRO")
-      test_file=$(playground get-examples-list-with-fzf --repro-only)
-    ;;
-    "$MENU_KSQL")
-      test_file=$(playground get-examples-list-with-fzf --ksql-only)
-    ;;
-    "$MENU_SR")
-      test_file=$(playground get-examples-list-with-fzf --schema-registry-only)
-    ;;
-    "$MENU_RP")
-      test_file=$(playground get-examples-list-with-fzf --rest-proxy-only)
-    ;;
-    "$MENU_OTHER")
-      test_file=$(playground get-examples-list-with-fzf --other-playgrounds-only)
-    ;;
-    "$MENU_ALL")
-      test_file=$(playground get-examples-list-with-fzf)
-    ;;
-    *)
-      logerror "❌ wrong choice: $res"
-      exit 1
-    ;;
-  esac
+  display_interactive_menu_categories
 fi
 
 if [[ $test_file == *"@"* ]]
@@ -488,7 +432,7 @@ then
 
     readonly MENU_CLUSTER_NAME="🎰 The cluster name (flag --cluster-name)" #27
     readonly MENU_CLUSTER_CREDS="🔒 The Kafka api key and secret to use (flag --cluster-creds)"
-    readonly MENU_CLUSTER_SR_CREDS="🔒 The Schema Registry api key and secret to use (flag --cluster_sr_creds)"
+    readonly MENU_CLUSTER_SR_CREDS="🔰 The Schema Registry api key and secret to use (flag --cluster_sr_creds)"
 
     stop=0
     while [ $stop != 1 ]
