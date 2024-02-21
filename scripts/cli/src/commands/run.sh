@@ -298,15 +298,6 @@ then
   export SQL_DATAGEN=true
 fi
 
-if [[ -n "$cluster_region" ]]
-then
-  if [[ $cluster_region == *"@"* ]]
-  then
-    cluster_region=$(echo "$cluster_region" | cut -d "@" -f 2)
-  fi
-  cluster_region=$(echo "$cluster_region" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
-fi
-
 if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_name" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
 then
   if [ ! -z "$CLUSTER_TYPE" ]
@@ -350,7 +341,8 @@ if [[ -n "$cluster_type" ]]
 then
   flag_list="$flag_list --cluster-type $cluster_type"
   export CLUSTER_TYPE=$cluster_type
-else
+elif [ $interactive_mode == 0 ]
+then
   if [ -z "$CLUSTER_TYPE" ]
   then
     export CLUSTER_TYPE="basic"
@@ -361,7 +353,8 @@ if [[ -n "$cluster_cloud" ]]
 then
   flag_list="$flag_list --cluster-cloud $cluster_cloud"
   export CLUSTER_CLOUD=$cluster_cloud
-else
+elif [ $interactive_mode == 0 ]
+then
   if [ -z "$CLUSTER_CLOUD" ]
   then
     export CLUSTER_CLOUD="aws"
@@ -372,7 +365,8 @@ if [[ -n "$cluster_region" ]]
 then
   flag_list="$flag_list --cluster-region $cluster_region"
   export CLUSTER_REGION=$cluster_region
-else
+elif [ $interactive_mode == 0 ]
+then
   if [ -z "$CLUSTER_REGION" ]
   then
     case "${CLUSTER_CLOUD}" in
@@ -882,6 +876,20 @@ then
     done # end while loop stop
     IFS=' ' flag_list="${flag_list[*]}"
 
+    if [ -z "$CLUSTER_REGION" ]
+    then
+      case "${CLUSTER_CLOUD}" in
+        aws)
+          export CLUSTER_REGION="eu-west-2"
+        ;;
+        azure)
+          export CLUSTER_REGION="westeurope"
+        ;;
+        gcp)
+          export CLUSTER_REGION="europe-west2"
+        ;;
+      esac
+    fi
   fi # end of interactive_mode
 fi
 
