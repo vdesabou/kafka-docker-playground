@@ -99,7 +99,7 @@
             "--connector-jar"
           ],
           "argument": "CONNECTOR_JAR",
-          "description": "♨️ Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n"
+          "description": "🤎 Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n"
         },
         {
           "names": [
@@ -269,7 +269,7 @@
             "--connector-jar"
           ],
           "argument": "CONNECTOR_JAR",
-          "description": "♨️ Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n"
+          "description": "🤎 Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n"
         },
         {
           "names": [
@@ -475,7 +475,7 @@
             "--connector-jar"
           ],
           "argument": "CONNECTOR_JAR",
-          "description": "♨️ Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n"
+          "description": "🤎 Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n"
         }
       ],
       "subcommands": null
@@ -591,7 +591,7 @@
                 "--connector-jar"
               ],
               "argument": "CONNECTOR_JAR",
-              "description": "♨️ Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n"
+              "description": "🤎 Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n"
             },
             {
               "names": [
@@ -724,7 +724,7 @@
                 "-p"
               ],
               "argument": "none",
-              "description": "♨️ Java producer type to use\n\nOne of avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key\n\n🎓 Tip: Most of times, it's much simpler to use 'playground topic produce'. Use java producer only if you have very specific requirements such as specifying record timestamp or to do perf testing (even though CLI is also good for that)\n\n🎓 Tip: 'with-key' will also produce key with selected converter, otherwise LongConverter is used\n\nDefault value: none\n\nAllowed values: none, avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key\n\nConflicts with: --pipeline\n"
+              "description": "🤎 Java producer type to use\n\nOne of avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key\n\n🎓 Tip: Most of times, it's much simpler to use 'playground topic produce'. Use java producer only if you have very specific requirements such as specifying record timestamp or to do perf testing (even though CLI is also good for that)\n\n🎓 Tip: 'with-key' will also produce key with selected converter, otherwise LongConverter is used\n\nDefault value: none\n\nAllowed values: none, avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key\n\nConflicts with: --pipeline\n"
             },
             {
               "names": [

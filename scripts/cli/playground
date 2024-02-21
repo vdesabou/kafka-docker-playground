@@ -1439,7 +1439,7 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
-    printf "    ♨️ Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
+    printf "    🤎 Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
     echo
 
     # :flag.usage
@@ -1596,7 +1596,7 @@ playground_re_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
-    printf "    ♨️ Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
+    printf "    🤎 Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
     echo
 
     # :flag.usage
@@ -1897,7 +1897,7 @@ playground_update_version_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
-    printf "    ♨️ Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
+    printf "    🤎 Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
     echo
 
     # :command.usage_fixed_flags
@@ -2195,7 +2195,7 @@ playground_repro_bootstrap_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
-    printf "    ♨️ Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
+    printf "    🤎 Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
     echo
 
     # :flag.usage
@@ -11862,7 +11862,7 @@ playground_run_command() {
       readonly MENU_TAG="🎯 CP version $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_TAG})) ' ') --tag"
       readonly MENU_CONNECTOR_TAG="🔗 Connector version $(printf '%*s' $((${MAX_LENGTH}-20-${#MENU_CONNECTOR_TAG})) ' ') --connector-tag" #21
       readonly MENU_CONNECTOR_ZIP="🤐 Connector zip $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CONNECTOR_ZIP})) ' ') --connector-zip"
-      readonly MENU_CONNECTOR_JAR="☕ Connector jar $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CONNECTOR_JAR})) ' ') --connector-jar"
+      readonly MENU_CONNECTOR_JAR="🤎 Connector jar $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CONNECTOR_JAR})) ' ') --connector-jar"
 
       readonly MENU_CLUSTER_TYPE="🔋 Cluster type $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CLUSTER_TYPE})) ' ') --cluster-type" #24
       readonly MENU_CLUSTER_CLOUD="🌤  Cloud provider $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_CLUSTER_CLOUD})) ' ') --cluster-cloud"
@@ -11953,6 +11953,7 @@ playground_run_command() {
           unset 'options[20]'
           unset 'options[21]'
           unset 'options[22]'
+          unset 'options[23]'
         fi
 
         sql_datagen=0
@@ -17794,7 +17795,7 @@ playground_connector_plugin_search_jar_command() {
   log "🔌 Downloading connector plugin $connector_plugin:$connector_tag"
   docker run -u0 -i --rm -v $tmp_dir:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "confluent-hub install --no-prompt $connector_plugin:$connector_tag && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" | grep "Downloading"
 
-  log "♨️ Listing jar files"
+  log "🤎 Listing jar files"
   cd $tmp_dir/*/lib
   ls -1 | sort
 

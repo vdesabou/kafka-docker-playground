@@ -423,7 +423,7 @@ commands:
     completions:
       - $(playground get-zip-or-jar-with-fzf --type jar "$cur")
     help: |-
-      ♨️ Connector jar to use
+      🤎 Connector jar to use
 
       ❕ It must be absolute full path
 
@@ -905,7 +905,7 @@ commands:
         - json-schema
         - json-schema-with-key
       help: |-
-        ♨️ Java producer type to use
+        🤎 Java producer type to use
         
         One of avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key
 

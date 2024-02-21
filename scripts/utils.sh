@@ -223,7 +223,7 @@ then
           fi
           set -e
 
-          log "♨️ Listing jar files"
+          log "🤎 Listing jar files"
           cd ${DIR_UTILS}/../confluent-hub/$owner-$name/lib > /dev/null 2>&1
           ls -1 | sort
           cd - > /dev/null 2>&1
@@ -433,7 +433,7 @@ else
               grep "Download" /tmp/result.log
             fi
             set -e
-            log "♨️ Listing jar files"
+            log "🤎 Listing jar files"
             cd ${DIR_UTILS}/../confluent-hub/$owner-$name/lib > /dev/null 2>&1
             ls -1 | sort
             cd - > /dev/null 2>&1

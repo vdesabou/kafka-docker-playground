@@ -151,7 +151,7 @@ subcommands:
       - --connector-jar
       argument: CONNECTOR_JAR
       description: | 
-        ♨️ Connector jar to use
+        🤎 Connector jar to use
         
         ❕ It must be absolute full path
         
@@ -397,7 +397,7 @@ subcommands:
       - --connector-jar
       argument: CONNECTOR_JAR
       description: | 
-        ♨️ Connector jar to use
+        🤎 Connector jar to use
         
         ❕ It must be absolute full path
         
@@ -710,7 +710,7 @@ subcommands:
       - --connector-jar
       argument: CONNECTOR_JAR
       description: | 
-        ♨️ Connector jar to use
+        🤎 Connector jar to use
         
         ❕ It must be absolute full path
         
@@ -841,7 +841,7 @@ subcommands:
           - --connector-jar
           argument: CONNECTOR_JAR
           description: | 
-            ♨️ Connector jar to use
+            🤎 Connector jar to use
             
             ❕ It must be absolute full path
             
@@ -1024,7 +1024,7 @@ subcommands:
           - -p
           argument: none
           description: | 
-            ♨️ Java producer type to use
+            🤎 Java producer type to use
             
             One of avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key
             
