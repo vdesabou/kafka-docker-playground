@@ -1084,3 +1084,16 @@ function display_interactive_menu_categories () {
     ;;
   esac
 }
+
+function maybe_remove_flag () {
+  flag="$1"
+  for ((i=0; i<${#flag_list[@]}; i++))
+  do
+    if [[ ${flag_list[i]} == ${flag}=* ]]
+    then
+        unset "flag_list[i]"
+    fi
+  done
+
+  flag_string="${flag_list[*]}"
+}

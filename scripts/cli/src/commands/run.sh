@@ -407,7 +407,7 @@ then
     readonly MENU_CONNECTOR_JAR="🤎 Connector jar $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CONNECTOR_JAR})) ' ') --connector-jar"
     readonly MENU_ENVIRONMENT="🔐 Environment $(printf '%*s' $((${MAX_LENGTH}-14-${#MENU_ENVIRONMENT})) ' ') --environment" 
 
-    readonly MENU_SEPARATOR_VERSIONS="-----------------versions--------------------" #6
+    readonly MENU_SEPARATOR_VERSIONS="---------------------versions---------------------" #6
 
     readonly MENU_ENABLE_KSQLDB="🎏 Enable ksqlDB $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_ENABLE_KSQLDB})) ' ') --enable-ksqldb" #7
     readonly MENU_ENABLE_C3="💠 Enable Control Center $(printf '%*s' $((${MAX_LENGTH}-24-${#MENU_ENABLE_C3})) ' ') --enable-control-center"
@@ -429,7 +429,7 @@ then
     readonly MENU_DISABLE_KCAT="❌🐈 Disabling kcat"
     readonly MENU_DISABLE_SQL_DATAGEN="❌🌪️ Disable SQL Datagen injection" #24
 
-    readonly MENU_SEPARATOR_FEATURES="-----------------features--------------------"
+    readonly MENU_SEPARATOR_FEATURES="--------------------options-----------------------"
 
     readonly MENU_CLUSTER_TYPE="🔋 Cluster type $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CLUSTER_TYPE})) ' ') --cluster-type" #26
     readonly MENU_CLUSTER_CLOUD="🌤  Cloud provider $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_CLUSTER_CLOUD})) ' ') --cluster-cloud"
@@ -440,7 +440,7 @@ then
     readonly MENU_CLUSTER_CREDS="🔒 Kafka api key & secret $(printf '%*s' $((${MAX_LENGTH}-25-${#MENU_CLUSTER_CREDS})) ' ') --cluster-creds"
     readonly MENU_CLUSTER_SR_CREDS="🔰 Schema registry api key & secret $(printf '%*s' $((${MAX_LENGTH}-35-${#MENU_CLUSTER_SR_CREDS})) ' ') --cluster_sr_creds"
 
-    readonly MENU_SEPARATOR_CLOUD="-----------------cloud--------------------" #33
+    readonly MENU_SEPARATOR_CLOUD="-----------------confluent cloud------------------" #33
 
     readonly MENU_GO_BACK="🔙 Go back !"
 
@@ -575,8 +575,10 @@ then
       else
         unset 'options[24]'
       fi
-      IFS=' ' flag_string="${flag_list[*]}"
-      res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🪄" --header="Select option(s) for $example (use tab to select more than one)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"current flag list is:\n $flag_string\"")
+      oldifs=$IFS
+      IFS=$'\n' flag_string="${flag_list[*]}"
+      IFS=$oldifs
+      res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🪄" --header="Select option(s) for $example (use tab to select more than one)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"⛳ flag list:\n$flag_string\"")
 
       if [[ $res == *"$MENU_LETS_GO"* ]]
       then
@@ -700,6 +702,8 @@ then
 
       if [[ $res == *"$MENU_ENVIRONMENT"* ]]
       then
+        maybe_remove_flag "--environment"
+
         options=(plaintext ccloud 2way-ssl kerberos kraft-external-plaintext kraft-plaintext ldap-authorizer-sasl-plain ldap-sasl-plain rbac-sasl-plain sasl-plain sasl-scram sasl-ssl ssl_kerberos)
         environment=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔐" --header="select an environment" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
         
@@ -709,6 +713,8 @@ then
 
       if [[ $res == *"$MENU_TAG"* ]]
       then
+        maybe_remove_flag "--tag"
+
         tag=$(playground get-tag-list)
         if [[ $tag == *"@"* ]]
         then
@@ -720,6 +726,8 @@ then
 
       if [[ $res == *"$MENU_CONNECTOR_TAG"* ]]
       then
+        maybe_remove_flag "--connector-zip"
+        maybe_remove_flag "--connector-tag"
         connector_tags=""
         for connector_path in ${connector_paths//,/ }
         do
@@ -750,6 +758,9 @@ then
 
       if [[ $res == *"$MENU_CONNECTOR_ZIP"* ]]
       then
+        maybe_remove_flag "--connector-zip"
+        maybe_remove_flag "--connector-tag"
+        maybe_remove_flag "--connector-jar"
         connector_zip=$(playground get-zip-or-jar-with-fzf --type zip)
         if [[ $connector_zip == *"@"* ]]
         then
@@ -761,6 +772,8 @@ then
 
       if [[ $res == *"$MENU_CONNECTOR_JAR"* ]]
       then
+        maybe_remove_flag "--connector-zip"
+        maybe_remove_flag "--connector-jar"
         connector_jar=$(playground get-zip-or-jar-with-fzf --type jar)
         if [[ $connector_jar == *"@"* ]]
         then
@@ -772,6 +785,7 @@ then
 
       if [[ $res == *"$MENU_CLUSTER_TYPE"* ]]
       then
+        maybe_remove_flag "--cluster-type"
         options=(basic standard dedicated)
         cluster_type=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔋" --header="select a cluster type" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
         
@@ -780,6 +794,7 @@ then
 
       if [[ $res == *"$MENU_CLUSTER_CLOUD"* ]]
       then
+        maybe_remove_flag "--cluster-cloud"
         options=(aws gcp azure)
         cluster_cloud=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔋" --header="select a cluster type" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
         
@@ -788,6 +803,7 @@ then
 
       if [[ $res == *"$MENU_CLUSTER_REGION"* ]]
       then
+        maybe_remove_flag "--cluster-region"
         cluster_region=$(playground get-kafka-region-list $cluster_cloud)
         
         if [[ $cluster_region == *"@"* ]]
@@ -801,6 +817,7 @@ then
 
       if [[ $res == *"$MENU_CLUSTER_ENVIRONMENT"* ]]
       then
+        maybe_remove_flag "--cluster-environment"
         cluster_environment=$(playground get-ccloud-environment-list)
         
         if [[ $cluster_environment == *"@"* ]]
@@ -816,6 +833,7 @@ then
 
       if [[ $res == *"$MENU_CLUSTER_NAME"* ]]
       then
+        maybe_remove_flag "--cluster-name"
         cluster_name=$(playground get-ccloud-cluster-list)
         
         if [[ $cluster_name == *"@"* ]]
@@ -831,6 +849,7 @@ then
 
       if [[ $res == *"$MENU_CLUSTER_CREDS"* ]]
       then
+        maybe_remove_flag "--cluster-creds"
         set +e
         cluster_creds=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔐" --header="Enter the Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query)
         set -e
@@ -839,6 +858,7 @@ then
 
       if [[ $res == *"$MENU_CLUSTER_SR_CREDS"* ]]
       then
+        maybe_remove_flag "--cluster-schema-registry-creds"
         set +e
         cluster_schema_registry_creds=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔐" --header="Enter the Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query)
         set -e
