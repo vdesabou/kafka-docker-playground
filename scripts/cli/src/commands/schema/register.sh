@@ -1,5 +1,6 @@
 subject="${args[--subject]}"
 schema="${args[--schema]}"
+id="${args[--id]}"
 verbose="${args[--verbose]}"
 
 get_sr_url_and_security
@@ -49,6 +50,88 @@ json="{\"schemaType\":\"$schema_type\"}"
 
 content=$(cat $schema_file | tr -d '\n' | tr -s ' ')
 json_new=$(echo $json | jq --arg content "$content" '. + { "schema": $content }')
+
+
+if [[ -n "$id" ]]
+then
+    function set_back_read_write {
+        set +e
+        curl $sr_security --request PUT -s "${sr_url}/mode/${subject}" --header 'Content-Type: application/json' --data '{"mode": "READWRITE"}' > /dev/null 2>&1
+        set -e
+    }
+    trap set_back_read_write EXIT
+
+    log "Deleting 🫵 id ${id} for subject 🔰 ${subject} permanently"
+    playground schema delete --subject "${subject}" --id ${id} --permanent > /dev/null 2>&1
+
+    log "Setting mode to IMPORT"
+    curl_output=$(curl $sr_security --request PUT -s "${sr_url}/mode/${subject}" --header 'Content-Type: application/json' --data '{"mode": "IMPORT"}' | jq .)
+    ret=$?
+    if [ $ret -eq 0 ]
+    then
+        if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true 
+        then
+            error_code=$(echo "$curl_output" | jq -r .error_code)
+            if [ "$error_code" != "40403" ] && [ "$error_code" != "40401" ]
+            then
+                message=$(echo "$curl_output" | jq -r .message)
+                logerror "Command failed with error code $error_code"
+                logerror "$message"
+                exit 1
+            fi
+        fi
+    else
+        logerror "❌ curl request failed with error code $ret!"
+        exit 1
+    fi
+    echo "$curl_output"
+
+    log "⏺️☢️ Registering schema to subject ${subject} with id $id"
+    json_new_force_id=$(echo $json_new | jq --arg id "$id" '. + { "id": $id }')
+    curl_output=$(curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions" --header 'Content-Type: application/vnd.schemaregistry.v1+json' --data "$json_new_force_id" | jq .)
+    ret=$?
+    if [ $ret -eq 0 ]
+    then
+        if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true 
+        then
+            error_code=$(echo "$curl_output" | jq -r .error_code)
+            if [ "$error_code" != "40403" ] && [ "$error_code" != "40401" ]
+            then
+                message=$(echo "$curl_output" | jq -r .message)
+                logerror "Command failed with error code $error_code"
+                logerror "$message"
+                exit 1
+            fi
+        fi
+    else
+        logerror "❌ curl request failed with error code $ret!"
+        exit 1
+    fi
+    echo "$curl_output"
+
+    log "Setting mode to READWRITE"
+    curl_output=$(curl $sr_security --request PUT -s "${sr_url}/mode/${subject}" --header 'Content-Type: application/json' --data '{"mode": "READWRITE"}' | jq .)
+    ret=$?
+    if [ $ret -eq 0 ]
+    then
+        if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true 
+        then
+            error_code=$(echo "$curl_output" | jq -r .error_code)
+            if [ "$error_code" != "40403" ] && [ "$error_code" != "40401" ]
+            then
+                message=$(echo "$curl_output" | jq -r .message)
+                logerror "Command failed with error code $error_code"
+                logerror "$message"
+                exit 1
+            fi
+        fi
+    else
+        logerror "❌ curl request failed with error code $ret!"
+        exit 1
+    fi
+    echo "$curl_output"
+    exit 0
+fi
 
 # check if schema already exists
 # https://docs.confluent.io/platform/current/schema-registry/develop/api.html#post--subjects-(string-%20subject)

@@ -1035,6 +1035,14 @@ commands:
           * Set your own schema (avro, json-schema, protobuf) with stdin (see example section). 
 
           * Use completion to select predefined schemas (or use your own schema file) 🎓 Tip: use <tab> completion to trigger fzf completion
+      - long: --id
+        required: false
+        validate: integer
+        arg: id
+        help: |-
+          ☢️ Force schema id
+
+          ❗it will replace any schema which already exists at given id
 
     examples: |
       playground schema register --subject test-protobuf << 'EOF'
@@ -1171,8 +1179,20 @@ commands:
       required: false
       validate: integer
       arg: version
+      conflicts:
+        - "--id"
       help: |-
         🔢 Schema version of the provided subject to delete
+
+        Can only be used when --subject is provided
+    - long: --id
+      required: false
+      validate: integer
+      arg: id
+      conflicts:
+        - "--version"
+      help: |-
+        🫵 Schema id
 
         Can only be used when --subject is provided
     - long: --permanent

@@ -834,6 +834,13 @@
               ],
               "argument": "SCHEMA",
               "description": "🔥 You can either:\n\n* Set your own schema (avro, json-schema, protobuf) with stdin (see example section). \n\n* Use completion to select predefined schemas (or use your own schema file) 🎓 Tip: use <tab> completion to trigger fzf completion\n\nDefault value: -\n"
+            },
+            {
+              "names": [
+                "--id"
+              ],
+              "argument": "ID",
+              "description": "☢️ Force schema id\n\n❗it will replace any schema which already exists at given id\n"
             }
           ]
         },
@@ -968,7 +975,14 @@
                 "--version"
               ],
               "argument": "VERSION",
-              "description": "🔢 Schema version of the provided subject to delete\n\nCan only be used when --subject is provided\n"
+              "description": "🔢 Schema version of the provided subject to delete\n\nCan only be used when --subject is provided\n\nConflicts with: --id\n"
+            },
+            {
+              "names": [
+                "--id"
+              ],
+              "argument": "ID",
+              "description": "🫵 Schema id\n\nCan only be used when --subject is provided\n\nConflicts with: --version\n"
             },
             {
               "names": [

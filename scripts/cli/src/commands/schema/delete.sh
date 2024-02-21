@@ -1,5 +1,6 @@
 subject="${args[--subject]}"
 version="${args[--version]}"
+id="${args[--id]}"
 permanent="${args[--permanent]}"
 verbose="${args[--verbose]}"
 
@@ -10,6 +11,15 @@ then
     if [[ ! -n "$subject" ]]
     then
         logerror "❌ --version is set without --subject being set"
+        exit 1
+    fi
+fi
+
+if [[ -n "$id" ]]
+then
+    if [[ ! -n "$subject" ]]
+    then
+        logerror "❌ --id is set without --subject being set"
         exit 1
     fi
 fi
@@ -37,23 +47,44 @@ then
             curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}/versions/${version}?permanent=true" | jq .
         fi
     else
-        logwarn "--version is not set, deleting all versions !"
-        log "🧟 Soft deleting subject 🔰 ${subject}"
-        if [[ -n "$verbose" ]]
+        if [[ -n "$version" ]]
         then
-            log "🐞 curl command used"
-            echo "curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}""
-        fi
-        curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}" | jq .
-        if [[ -n "$permanent" ]]
-        then
-            log "💀 Hard deleting  subject 🔰 ${subject}"
+            log "🧟 Soft deleting 🫵 id ${id} for subject 🔰 ${subject}"
             if [[ -n "$verbose" ]]
             then
                 log "🐞 curl command used"
-                echo "curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}?permanent=true""
+                echo "curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}/versions/${id}""
             fi
-            curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}?permanent=true" | jq .
+            curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}/versions/${id}" | jq .
+            if [[ -n "$permanent" ]]
+            then
+                log "💀 Hard deleting 🫵 id ${id} for subject 🔰 ${subject}"
+                if [[ -n "$verbose" ]]
+                then
+                    log "🐞 curl command used"
+                    echo "curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}/versions/${id}?permanent=true""
+                fi
+                curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}/versions/${id}?permanent=true" | jq .
+            fi
+        else
+            logwarn "--version is not set, deleting all versions !"
+            log "🧟 Soft deleting subject 🔰 ${subject}"
+            if [[ -n "$verbose" ]]
+            then
+                log "🐞 curl command used"
+                echo "curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}""
+            fi
+            curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}" | jq .
+            if [[ -n "$permanent" ]]
+            then
+                log "💀 Hard deleting subject 🔰 ${subject}"
+                if [[ -n "$verbose" ]]
+                then
+                    log "🐞 curl command used"
+                    echo "curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}?permanent=true""
+                fi
+                curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}?permanent=true" | jq .
+            fi
         fi
     fi
 fi

@@ -1151,6 +1151,14 @@ subcommands:
             
             Default value: -
             
+        - names:
+          - --id
+          argument: ID
+          description: | 
+            ☢️ Force schema id
+            
+            ❗it will replace any schema which already exists at given id
+            
       - name: get-compatibility
         description: | 
           🛡️ Get subject-level compatibility
@@ -1273,6 +1281,18 @@ subcommands:
             🔢 Schema version of the provided subject to delete
             
             Can only be used when --subject is provided
+            
+            Conflicts with: --id
+            
+        - names:
+          - --id
+          argument: ID
+          description: | 
+            🫵 Schema id
+            
+            Can only be used when --subject is provided
+            
+            Conflicts with: --version
             
         - names:
           - --permanent
