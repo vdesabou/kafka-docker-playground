@@ -2705,7 +2705,13 @@ function ccloud::create_ccloud_stack() {
   if [[ -z "$ENVIRONMENT" ]];
   then
     # Environment is not received so it will be created
+    MAX_LENGTH=64
     ENVIRONMENT_NAME=${ENVIRONMENT_NAME:-"pg-${USER}-$SERVICE_ACCOUNT_ID-$EXAMPLE"}
+    if [ ${#ENVIRONMENT_NAME} -gt $MAX_LENGTH ]
+    then
+      ENVIRONMENT_NAME=$(echo $ENVIRONMENT_NAME | cut -c 1-$MAX_LENGTH)
+    fi
+
     ENVIRONMENT=$(ccloud::create_and_use_environment $ENVIRONMENT_NAME)
     (($? != 0)) && { echo "$ENVIRONMENT"; exit 1; }
   else
