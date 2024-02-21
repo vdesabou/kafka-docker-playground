@@ -55,7 +55,6 @@ fi
 if [[ $test_file == *"ccloud"* ]]
 then
   verify_installed "confluent"
-  check_confluent_version 3.0.0 || exit 1
 fi
 
 test_file_directory="$(dirname "${test_file}")"
@@ -439,7 +438,8 @@ then
 
     readonly MENU_GO_BACK="🔙 Go back !"
 
-    fzf_option_wrap="--preview-window=20%,wrap"
+    last_two_folders=$(basename $(dirname $(dirname $test_file)))/$(basename $(dirname $test_file))
+    example="$last_two_folders/$filename"
 
     stop=0
     while [ $stop != 1 ]
@@ -568,7 +568,7 @@ then
         unset 'options[23]'
       fi
       IFS=' ' flag_string="${flag_list[*]}"
-      res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🪄" --header="Select option(s) (use tab to select more than one)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"current flag list is:\n $flag_string\"")
+      res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🪄" --header="Select option(s) for $example (use tab to select more than one)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"current flag list is:\n $flag_string\"")
 
       if [[ $res == *"$MENU_LETS_GO"* ]]
       then
