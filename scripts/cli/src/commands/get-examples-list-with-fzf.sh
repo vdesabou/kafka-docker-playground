@@ -4,6 +4,7 @@ ccloud_only="${args[--ccloud-only]}"
 
 connector_only="${args[--connector-only]}"
 repro_only="${args[--repro-only]}"
+environment_only="${args[--environment-only]}"
 fully_managed_connector_only="${args[--fully-managed-connector-only]}"
 ksql_only="${args[--ksql-only]}"
 schema_registry_only="${args[--schema-registry-only]}"
@@ -59,6 +60,16 @@ then
         generate_get_examples_list_with_fzf_repro_only
     fi
     get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf_repro_only"
+    return
+fi
+
+if [[ -n "$environment_only" ]]
+then
+    if [ ! -f $root_folder/scripts/cli/get_examples_list_with_fzf_environment_only ]
+    then
+        generate_get_examples_list_with_fzf_environment_only
+    fi
+    get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf_environment_only"
     return
 fi
 

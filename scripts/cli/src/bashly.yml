@@ -127,6 +127,8 @@ commands:
     required: false
   - long: --repro-only
     required: false
+  - long: --environment-only
+    required: false
   - long: --fully-managed-connector-only
     required: false
   - long: --ksql-only

@@ -442,7 +442,7 @@ then
 
     readonly MENU_SEPARATOR_CLOUD="-----------------confluent cloud------------------" #33
 
-    readonly MENU_GO_BACK="🔙 Go back !"
+    readonly MENU_GO_BACK="🔙 Go back"
 
 
     last_two_folders=$(basename $(dirname $(dirname $test_file)))/$(basename $(dirname $test_file))
@@ -578,7 +578,7 @@ then
       oldifs=$IFS
       IFS=$'\n' flag_string="${flag_list[*]}"
       IFS=$oldifs
-      res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🕹️" --header="Select option(s) for $example (use tab to select more than one)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"⛳ flag list:\n$flag_string\"")
+      res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🕹️" --header="select option(s) for $example (use tab to select more than one)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"⛳ flag list:\n$flag_string\"")
 
       if [[ $res == *"$MENU_LETS_GO"* ]]
       then

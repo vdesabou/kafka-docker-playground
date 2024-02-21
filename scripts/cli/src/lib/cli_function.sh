@@ -36,6 +36,9 @@ function generate_get_examples_add_emoji () {
     elif [[ $file_path == *"custom-connector"* ]]
     then
       echo "${repro}🌤️🛃 $file_path" >> $output_file
+    elif [[ $file_path == *"environment"* ]]
+    then
+      echo "${repro}🌤️🔐 $file_path" >> $output_file
     else
       echo "${repro}🌤️ $file_path" >> $output_file
     fi
@@ -51,6 +54,9 @@ function generate_get_examples_add_emoji () {
   elif [[ $file_path == *"rest-proxy"* ]]
   then
     echo "${repro}😴 $file_path" >> $output_file
+  elif [[ $file_path == *"environment"* ]]
+  then
+    echo "${repro}🔐 $file_path" >> $output_file
   else
     echo "${repro}👾 $file_path" >> $output_file
   fi
@@ -64,6 +70,7 @@ function generate_fzf_find_files() {
 
   generate_get_examples_list_with_fzf_connector_only
   generate_get_examples_list_with_fzf_repro_only
+  generate_get_examples_list_with_fzf_environemnt_only
   generate_get_examples_list_with_fzf_ksql_only
   generate_get_examples_list_with_fzf_fully_managed_connector_only
   generate_get_examples_list_with_fzf_schema_registry_only
@@ -85,6 +92,16 @@ function generate_get_examples_list_with_fzf_repro_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_repro_only"
   rm -f $output_file
   find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' -path '*/reproduction-models/*' | while read file_path
+  do
+    generate_get_examples_add_emoji
+  done
+  sort -o $output_file $output_file
+}
+
+function generate_get_examples_list_with_fzf_environemnt_only () {
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_environment_only"
+  rm -f $output_file
+  find $root_folder -name \*.sh ! -name 'update_run.sh' ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' -path '*/environment/*' | while read file_path
   do
     generate_get_examples_add_emoji
   done
@@ -1041,14 +1058,15 @@ function display_interactive_menu_categories () {
   readonly MENU_CCLOUD="🌤️  Confluent cloud"
   readonly MENU_FULLY_MANAGED_CONNECTOR="🤖 Fully-Managed connectors"
   readonly MENU_REPRO="🛠  Reproduction models"
+  readonly MENU_OTHER="👾 Other playgrounds"
+  readonly MENU_ENVIRONMENTS="🔐 Environments"
+  readonly MENU_ALL="🌕 All"
   readonly MENU_KSQL="🎏 ksqlDB"
   readonly MENU_SR="🔰 Schema registry"
   readonly MENU_RP="🧲 Rest proxy"
-  readonly MENU_OTHER="👾 Other playgrounds"
-  readonly MENU_ALL="🌕 All"
 
-  options=("$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_REPRO" "$MENU_KSQL" "$MENU_SR" "$MENU_RP" "$MENU_OTHER" "$MENU_ALL")
-  res=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🚀" --header="Select a category (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
+  options=("$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_REPRO" "$MENU_OTHER" "$MENU_ENVIRONMENTS" "$MENU_ALL" "$MENU_KSQL" "$MENU_SR" "$MENU_RP")
+  res=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🚀" --header="select a category (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
 
   case "${res}" in
     "$MENU_CONNECTOR")
@@ -1062,6 +1080,9 @@ function display_interactive_menu_categories () {
     ;;
     "$MENU_REPRO")
       test_file=$(playground get-examples-list-with-fzf --repro-only)
+    ;;
+    "$MENU_ENVIRONMENTS")
+      test_file=$(playground get-examples-list-with-fzf --environment-only)
     ;;
     "$MENU_KSQL")
       test_file=$(playground get-examples-list-with-fzf --ksql-only)
