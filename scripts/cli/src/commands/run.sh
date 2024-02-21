@@ -396,7 +396,7 @@ then
       MAX_LENGTH=$((${terminal_columns}-120))
       fzf_option_wrap="--preview-window=30%,wrap"
     else
-      MAX_LENGTH=$((${terminal_columns}-75))
+      MAX_LENGTH=$((${terminal_columns}-65))
       fzf_option_wrap="--preview-window=20%,wrap"
     fi
     readonly MENU_LETS_GO="🚀 Run the example !" #0
@@ -474,7 +474,7 @@ then
         done
       fi
 
-      if [[ $test_file == *"ccloud"* ]]
+      if [[ $test_file == *"ccloud"* ]] || [ "$PLAYGROUND_ENVIRONMENT" == "ccloud" ]
       then
         if [[ $test_file == *"fully-managed"* ]]
         then
