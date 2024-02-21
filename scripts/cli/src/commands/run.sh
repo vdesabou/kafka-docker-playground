@@ -567,6 +567,18 @@ then
         unset 'options[21]'
         unset 'options[22]'
       fi
+
+      sql_datagen=0
+      if [[ $test_file == *"connect-debezium-sqlserver"* ]] || [[ $test_file == *"connect-debezium-mysql"* ]] || [[ $test_file == *"connect-debezium-postgresql"* ]] || [[ $test_file == *"connect-debezium-oracle"* ]] || [[ $test_file == *"connect-cdc-oracle"* ]] || [[ $test_file == *"connect-jdbc-sqlserver"* ]] || [[ $test_file == *"connect-jdbc-mysql"* ]] || [[ $test_file == *"connect-jdbc-postgresql"* ]] || [[ $test_file == *"connect-jdbc-oracle"* ]] 
+      then
+        sql_datagen=1
+      fi
+
+      if [ $sql_datagen == 0 ]
+      then
+        unset 'options[9]'
+      fi
+
       if [ ! -z $ENABLE_KSQLDB ]
       then
         unset 'options[1]'
