@@ -314,6 +314,8 @@ commands:
   help: |-
     🕹️ Run any example
 
+    🪄 to start in interactive mode, just run playground run
+
     ⛅ When running Confluent Cloud (ccloud) example:
 
       All you have to do is to be already logged in with confluent CLI.
