@@ -300,6 +300,7 @@ fi
 
 if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_name" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
 then
+  playground state set ccloud.suggest_use_previous_example_ccloud "0"
   if [ ! -z "$CLUSTER_TYPE" ]
   then
     log "🙈 ignoring environment variable CLUSTER_TYPE as one of the flags is set"
@@ -334,7 +335,9 @@ then
   then
     log "🙈 ignoring environment variable SCHEMA_REGISTRY_CREDS as one of the flags is set"
     unset SCHEMA_REGISTRY_CREDS
-  fi 
+  fi
+else
+  playground state set ccloud.suggest_use_previous_example_ccloud "1"
 fi
 
 if [[ -n "$cluster_type" ]]
@@ -816,7 +819,6 @@ then
         cluster_type=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🔋" --header="select a cluster type" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
         
         flag_list+=("--cluster-type $cluster_type")
-        export CLUSTER_TYPE=$cluster_type
       fi
 
       if [[ $res == *"$MENU_CLUSTER_CLOUD"* ]]
@@ -825,7 +827,6 @@ then
         cluster_cloud=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🔋" --header="select a cluster type" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
         
         flag_list+=("--cluster-cloud $cluster_cloud")
-        export CLUSTER_CLOUD=$cluster_cloud
       fi
 
       if [[ $res == *"$MENU_CLUSTER_REGION"* ]]
@@ -839,7 +840,6 @@ then
         cluster_region=$(echo "$cluster_region" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
 
         flag_list+=("--cluster-region $cluster_region")
-        export CLUSTER_REGION=$cluster_region
       fi
 
       if [[ $res == *"$MENU_CLUSTER_ENVIRONMENT"* ]]
@@ -855,7 +855,6 @@ then
           cluster_environment=$(echo "$cluster_environment" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
         fi
         flag_list+=("--cluster-environment $cluster_environment")
-        export ENVIRONMENT=$cluster_environment
       fi
 
       if [[ $res == *"$MENU_CLUSTER_NAME"* ]]
@@ -871,24 +870,109 @@ then
           cluster_name=$(echo "$cluster_name" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
         fi
         flag_list+=("--cluster-name $cluster_name")
-        export CLUSTER_NAME=$cluster_name
       fi
     done # end while loop stop
     IFS=' ' flag_list="${flag_list[*]}"
 
-    if [ -z "$CLUSTER_REGION" ]
+    if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_name" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
     then
-      case "${CLUSTER_CLOUD}" in
-        aws)
-          export CLUSTER_REGION="eu-west-2"
-        ;;
-        azure)
-          export CLUSTER_REGION="westeurope"
-        ;;
-        gcp)
-          export CLUSTER_REGION="europe-west2"
-        ;;
-      esac
+      playground state set ccloud.suggest_use_previous_example_ccloud "0"
+
+      if [ ! -z "$CLUSTER_TYPE" ]
+      then
+        log "🙈 ignoring environment variable CLUSTER_TYPE as one of the flags is set"
+        unset CLUSTER_TYPE
+      fi
+      if [ ! -z "$CLUSTER_CLOUD" ]
+      then
+        log "🙈 ignoring environment variable CLUSTER_CLOUD as one of the flags is set"
+        unset CLUSTER_CLOUD
+      fi
+      if [ ! -z "$CLUSTER_REGION" ]
+      then
+        log "🙈 ignoring environment variable CLUSTER_REGION as one of the flags is set"
+        unset CLUSTER_REGION
+      fi
+      if [ ! -z "$ENVIRONMENT" ]
+      then
+        log "🙈 ignoring environment variable ENVIRONMENT as one of the flags is set"
+        unset ENVIRONMENT
+      fi
+      if [ ! -z "$CLUSTER_NAME" ]
+      then
+        log "🙈 ignoring environment variable CLUSTER_NAME as one of the flags is set"
+        unset CLUSTER_NAME
+      fi
+      if [ ! -z "$CLUSTER_CREDS" ]
+      then
+        log "🙈 ignoring environment variable CLUSTER_CREDS as one of the flags is set"
+        unset CLUSTER_CREDS
+      fi 
+      if [ ! -z "$SCHEMA_REGISTRY_CREDS" ]
+      then
+        log "🙈 ignoring environment variable SCHEMA_REGISTRY_CREDS as one of the flags is set"
+        unset SCHEMA_REGISTRY_CREDS
+      fi
+
+      if [[ -n "$cluster_type" ]]
+      then
+        export CLUSTER_TYPE=$cluster_type
+      fi
+
+      # default
+      if [ -z "$CLUSTER_TYPE" ]
+      then
+        export CLUSTER_TYPE="basic"
+      fi
+
+      if [[ -n "$cluster_cloud" ]]
+      then
+        export CLUSTER_CLOUD=$cluster_cloud
+      fi
+
+      # default
+      if [ -z "$CLUSTER_CLOUD" ]
+      then
+        export CLUSTER_CLOUD="aws"
+      fi
+
+      if [[ -n "$cluster_region" ]]
+      then
+        export CLUSTER_REGION=$cluster_region
+      fi
+
+      # default
+      if [ -z "$CLUSTER_REGION" ]
+      then
+        case "${CLUSTER_CLOUD}" in
+          aws)
+            export CLUSTER_REGION="eu-west-2"
+          ;;
+          azure)
+            export CLUSTER_REGION="westeurope"
+          ;;
+          gcp)
+            export CLUSTER_REGION="europe-west2"
+          ;;
+        esac
+      fi
+
+      if [[ -n "$cluster_type" ]]
+      then
+        export CLUSTER_TYPE=$cluster_type
+      fi
+
+      if [[ -n "$cluster_environment" ]]
+      then
+        export ENVIRONMENT=$cluster_environment
+      fi
+
+      if [[ -n "$cluster_name" ]]
+      then
+        export CLUSTER_NAME=$cluster_name
+      fi
+    else
+      playground state set ccloud.suggest_use_previous_example_ccloud "1"
     fi
   fi # end of interactive_mode
 fi
