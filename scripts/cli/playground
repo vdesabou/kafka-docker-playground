@@ -13283,19 +13283,20 @@ playground_repro_bootstrap_command() {
     fi
     readonly MENU_LETS_GO="🏭 Create the reproduction model !" #0
 
-    MENU_DESCRIPTION="💭 Description $(printf '%*s' $((${MAX_LENGTH}-14-${#MENU_DESCRIPTION})) ' ') --description" #1
-    readonly MENU_DESCRIPTION_MISSING="❌💭 Description must be set !"
     MENU_PIPELINE="🔖 Create pipeline $(printf '%*s' $((${MAX_LENGTH}-18-${#MENU_PIPELINE})) ' ') --pipeline"
     MENU_ENABLE_CUSTOM_SMT="🔧 Add custom SMT $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_ENABLE_CUSTOM_SMT})) ' ') --custom-smt"
 
-    readonly MENU_DISABLE_CUSTOM_SMT="❌🔧 Disable custom SMT" #5
+    readonly MENU_DISABLE_CUSTOM_SMT="❌🔧 Disable custom SMT" #3
     readonly MENU_GO_BACK="🔙 Go back"
+
+    last_two_folders=$(basename $(dirname $(dirname $test_file)))/$(basename $(dirname $test_file))
+    example="$last_two_folders/$filename"
 
     stop=0
     description=""
     while [ $stop != 1 ]
     do
-      options=("$MENU_LETS_GO" "$MENU_DESCRIPTION_MISSING" "$MENU_DESCRIPTION" "$MENU_PIPELINE" "$MENU_ENABLE_CUSTOM_SMT" "$MENU_DISABLE_CUSTOM_SMT" "$MENU_GO_BACK")
+      options=("$MENU_LETS_GO" "$MENU_PIPELINE" "$MENU_ENABLE_CUSTOM_SMT" "$MENU_DISABLE_CUSTOM_SMT" "$MENU_GO_BACK")
 
       connector_example=0
       get_connector_paths
@@ -13319,35 +13320,36 @@ playground_repro_bootstrap_command() {
 
       if [ $connector_example == 0 ]
       then
-        for((i=3;i<6;i++)); do
+        for((i=1;i<4;i++)); do
           unset "options[$i]"
         done
       else
         if [[ $test_file == *"sink"* ]]
-
         then
-          unset 'options[3]'
+          unset 'options[1]'
         fi
       fi
 
       if [ ! -z $CUSTOM_SMT ]
       then
-        unset 'options[4]'
+        unset 'options[2]'
       else
-        unset 'options[5]'
+        unset 'options[3]'
       fi
 
       if [ "$description" == "" ]
       then
-        unset 'options[0]'
-      else
-        unset 'options[2]'
+        maybe_remove_flag "--description"
+        set +e
+        description=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="💭 " --header="enter a description for this repro model" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query)
+        set -e
+        flag_list="$flag_list --description $description"
       fi
 
       oldifs=$IFS
       IFS=$'\n' flag_string="${flag_list[*]}"
       IFS=$oldifs
-      res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🛠" --header="select option(s) for $example (use tab to select more than one)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"🚀 number of examples ran so far: $(get_cli_metric nb_runs)\n\n⛳ flag list:\n$flag_string\"")
+      res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🛠 " --header="select option(s) for $example (use tab to select more than one)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"👷 Number of repro models created so far: $(get_cli_metric nb_reproduction_models)\n\n🛠️  Number of repro models available: $(get_cli_metric nb_existing_reproduction_models)\n\n⛳ flag list:\n$flag_string\"")
 
       if [[ $res == *"$MENU_LETS_GO"* ]]
       then
@@ -13380,17 +13382,9 @@ playground_repro_bootstrap_command() {
         fi
         flag_list+=("--pipeline=$sink_file")
       fi
-
-      if [[ $res == *"$MENU_DESCRIPTION"* ]]
-      then
-        maybe_remove_flag "--description"
-        set +e
-        description=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🗯️" --header="enter a description for this repro model" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query)
-        set -e
-        flag_list="$flag_list --description $description"
-      fi
     done # end while loop stop
     playground repro bootstrap --file $test_file $flag_string
+    exit 0
   fi
 
   if [[ $test_file == *"@"* ]]
