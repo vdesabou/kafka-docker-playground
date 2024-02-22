@@ -597,7 +597,14 @@ commands:
       ❣️ Only required if you want to use your own existing cluster
       
       🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable
+
+  - long: --force-interactive-repro
+    required: false
+    private: true
+    help: |-
+      Force interactive mode
   examples:
+  - playground run
   - playground run -f zendesk-source<tab> --tag 7.2.1 --enable-control-center <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
   - playground run -f jdbc<tab> --connector-tag 10.6.0 --enable-jmx-grafana --open
 
@@ -839,26 +846,6 @@ commands:
         playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
       required: false
     flags:
-    - *tag
-    - *connector-tag
-    - *connector-zip
-    - *connector-jar
-    - *enable-ksqldb
-    - *enable-rest-proxy
-    - *enable-control-center
-    - *enable-conduktor
-    - *enable-multiple-brokers
-    - *enable-multiple-connect-workers
-    - *enable-jmx-grafana
-    - *enable-kcat
-    - *enable-sql-datagen
-    - *cluster-type
-    - *cluster-region
-    - *cluster-environment
-    - *cluster-name
-    - *cluster-creds
-    - *cluster-schema-registry-creds
-
     - long: --file
       short: -f
       required: false
@@ -875,7 +862,7 @@ commands:
 
     - long: --description
       short: -d
-      required: true
+      required: false
       validate: not_empty
       arg: description
       help: |-
@@ -931,7 +918,7 @@ commands:
 
     - long: --custom-smt
       help: |-
-        ⚙️ Add a custom SMT (which is a no-op)
+        🔧 Add a custom SMT (which is a no-op)
 
     - long: --pipeline
       required: false
@@ -949,6 +936,7 @@ commands:
         🎓 Tip: use <tab> completion to trigger fzf completion
 
     examples:
+    - playground repro bootstrap (interactive mode)
     - playground repro bootstrap -f hdfs2<tab> -d "simple test"
     - playground repro bootstrap -f /full/path/hdfs2-sink.sh -d "testing with avro producer" --producer avro --producer-schema-value myschema<tab>
     - playground repro bootstrap -f hdfs2<tab> -d "testing with 2 protobuf producers" --producer protobuf --nb-producers 2

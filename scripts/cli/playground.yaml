@@ -321,6 +321,12 @@ subcommands:
         
         🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable
         
+    - names:
+      - --force-interactive-repro
+      argument: ""
+      description: | 
+        Force interactive mode
+        
     subcommands:
   - name: re-run
     description: | 
@@ -652,203 +658,6 @@ subcommands:
         usage: playground repro bootstrap [OPTIONS] [ARGUMENTS...]
         options:
         - names:
-          - --tag
-          argument: TAG
-          description: | 
-            🎯 Confluent Platform (CP) version to use
-            
-            Must be greater or equal to 5.3.0
-            
-            🎓 Tip: use <tab> completion to trigger fzf completion
-            
-        - names:
-          - --connector-tag
-          argument: CONNECTOR_TAG
-          description: | 
-            🔗 Connector version to use
-            
-            By default, for each connector, the latest available version on Confluent Hub is used
-            
-            🎓 Tip: set to " " in order to select the version dynamically
-            
-            Conflicts with: --connector-zip
-            
-        - names:
-          - --connector-zip
-          argument: CONNECTOR_ZIP
-          description: | 
-            🤐 Connector zip to use
-            
-            ❕ It must be absolute full path
-            
-            🎓 Tip: use <tab> completion to trigger fzf completion 
-                    use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
-            
-            Conflicts with: --connector-tag
-            
-        - names:
-          - --connector-jar
-          argument: CONNECTOR_JAR
-          description: | 
-            🤎 Connector jar to use
-            
-            ❕ It must be absolute full path
-            
-            🎓 Tip: use <tab> completion to trigger fzf completion 
-                    use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
-            
-        - names:
-          - --enable-ksqldb
-          argument: ""
-          description: | 
-            🚀 Enable ksqlDB 
-            
-            ❗ not supported with ccloud examples
-            
-            By default, ksqldb-server and ksqldb-cli containers are not started for every test
-            
-        - names:
-          - --enable-rest-proxy
-          argument: ""
-          description: | 
-            🧲 Enable Rest Proxy
-            
-            ❗ not supported with ccloud examples
-            
-            By default, rest-proxy container is not started for every test
-            
-        - names:
-          - --enable-control-center
-          argument: ""
-          description: | 
-            💠 Enable Control Center
-            
-            By default, control-center container is not started for every test
-            
-            Control Center is reachable at http://127.0.0.1:9021
-            
-        - names:
-          - --enable-conduktor
-          argument: ""
-          description: | 
-            🐺 Enable Conduktor Platform
-            
-            By default, Conduktor Platform container is not started for every test
-            
-            Conduktor is reachable at http://127.0.0.1:8080/console (admin/admin)
-            
-        - names:
-          - --enable-multiple-brokers
-          argument: ""
-          description: | 
-            3️⃣ Enable multiple brokers
-            
-            By default, there is only one broker node enabled
-            
-        - names:
-          - --enable-multiple-connect-workers
-          argument: ""
-          description: | 
-            🥉 Enable multiple connect node
-            
-            By default, there is only one connect node enabled
-            
-            It only works when plaintext environment is used
-            
-        - names:
-          - --enable-jmx-grafana
-          argument: ""
-          description: | 
-            Enable Grafana, Prometheus and Pyroscope
-            
-            📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/password)
-            
-            🛡️ Prometheus is reachable at http://127.0.0.1:9090
-            
-            📛 Pyroscope is reachable at http://127.0.0.1:4040
-            
-        - names:
-          - --enable-kcat
-          argument: ""
-          description: | 
-            🐈‍⬛ Enable kcat
-            
-            You can use it with:
-            
-            $ docker exec kcat kcat -b broker:9092 -L
-            
-        - names:
-          - --enable-sql-datagen
-          argument: ""
-          description: | 
-            🌪️ Enable SQL Datagen injection
-            
-            This only works for Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with JDBC and Debezium
-            
-        - names:
-          - --cluster-type
-          argument: [basic, standard, dedicated]
-          description: | 
-            🔋 The cluster type: basic, standard or dedicated. Default is basic
-            
-            🎓 Tip: you can also use CLUSTER_TYPE environment variable
-            
-            Allowed values: basic, standard, dedicated
-            
-        - names:
-          - --cluster-region
-          argument: CLUSTER-REGION
-          description: | 
-            🗺 The Cloud region. 
-            
-            🎓 Tip: you can also use CLUSTER_REGION environment variable
-            🎓 Tip: use <tab> completion to trigger fzf completion
-            
-        - names:
-          - --cluster-environment
-          argument: CLUSTER-ENVIRONMENT
-          description: | 
-            🌐 The environment id where want your new cluster (example: txxxxx)
-            
-            ℹ️ Optional, if not set, new environment will be created
-            
-            🎓 Tip: you can also use ENVIRONMENT environment variable
-            🎓 Tip: use <tab> completion to trigger fzf completion
-            
-        - names:
-          - --cluster-name
-          argument: CLUSTER-NAME
-          description: | 
-            🎰 The cluster name. 
-            
-            ❣️ Only required if you want to use your own existing cluster
-            
-            🎓 Tip: you can also use CLUSTER_NAME environment variable
-            🎓 Tip: use <tab> completion to trigger fzf completion
-            
-        - names:
-          - --cluster-creds
-          argument: CLUSTER-CREDS
-          description: | 
-            🔒 The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)
-            
-            ❣️ Only required if you want to use your own existing cluster
-            
-            🎓 Tip: you can also use CLUSTER_CREDS environment variable
-            
-        - names:
-          - --cluster-schema-registry-creds
-          argument: CLUSTER-SCHEMA-REGISTRY-CREDS
-          description: | 
-            🔒 The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)
-            
-            ℹ️ Optional, if not set, new credentials will be created
-            
-            ❣️ Only required if you want to use your own existing cluster
-            
-            🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable
-            
-        - names:
           - --file
           - -f
           argument: FILE
@@ -865,8 +674,6 @@ subcommands:
           argument: DESCRIPTION
           description: | 
             💭 Description for the reproduction model
-            
-            Required: ✓ Yes
             
         - names:
           - --producer
@@ -916,7 +723,7 @@ subcommands:
           - --custom-smt
           argument: ""
           description: | 
-            ⚙️ Add a custom SMT (which is a no-op)
+            🔧 Add a custom SMT (which is a no-op)
             
         - names:
           - --pipeline

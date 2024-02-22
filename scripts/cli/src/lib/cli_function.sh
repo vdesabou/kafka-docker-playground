@@ -91,7 +91,7 @@ function generate_get_examples_list_with_fzf_connector_only () {
 function generate_get_examples_list_with_fzf_repro_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_repro_only"
   rm -f $output_file
-  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' -path '*/reproduction-models/*' | while read file_path
+  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/1*domain*/*'  ! -path '*/security/*' -path '*/reproduction-models/*' | while read file_path
   do
     generate_get_examples_add_emoji
   done
@@ -151,7 +151,7 @@ function generate_get_examples_list_with_fzf_rest_proxy_only () {
 function generate_get_examples_list_with_fzf_other_playgrounds_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_other_playgrounds_only"
   rm -f $output_file
-  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' ! -path '*/reproduction-models/*' ! -path '*/connect/*' ! -path '*/ksqldb/*' ! -path '*/schema-registry/*'  | while read file_path
+  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/1*domain*/*'  ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' ! -path '*/reproduction-models/*' ! -path '*/connect/*' ! -path '*/ksqldb/*' ! -path '*/schema-registry/*'  | while read file_path
   do
     generate_get_examples_add_emoji
   done
@@ -162,7 +162,7 @@ function generate_get_examples_list_with_fzf_other_playgrounds_only () {
 function generate_get_examples_list_with_fzf_without_repro_sink_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_without_repro_sink_only"
   rm -f $output_file
-  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' | while read file_path
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/1*domain*/*' ! -path '*/ora-*/*'  ! -path '*/other/*' ! -path '*/ccloud/*'  ! -path '*/academy/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' | while read file_path
   do
     generate_get_examples_add_emoji
   done
@@ -172,7 +172,7 @@ function generate_get_examples_list_with_fzf_without_repro_sink_only () {
 function generate_get_examples_list_with_fzf_without_repro () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_without_repro"
   rm -f $output_file
-  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' | while read file_path
+  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/1*domain*/*'  ! -path '*/security/*' ! -path '*/reproduction-models/*' | while read file_path
   do
     generate_get_examples_add_emoji
   done
@@ -192,7 +192,7 @@ function generate_get_examples_list_with_fzf_ccloud_only () {
 function generate_get_examples_list_with_fzf () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_all"
   rm -f $output_file
-  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' | while read file_path
+  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/1*domain*/*' ! -path '*/ora-*/*' ! -path '*/security/*' | while read file_path
   do
     generate_get_examples_add_emoji
   done
@@ -1053,4 +1053,76 @@ function maybe_remove_flag () {
   done
 
   flag_string="${flag_list[*]}"
+}
+
+function display_interactive_menu_categories () {
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
+  then
+      fzf_option_wrap="--preview-window=40%,wrap"
+      fzf_option_pointer="--pointer=👉"
+      fzf_option_rounded="--border=rounded"
+  else
+      fzf_option_pointer=""
+      fzf_option_rounded=""
+  fi
+
+  terminal_columns=$(tput cols)
+  if [[ $terminal_columns -gt 180 ]]
+  then
+    MAX_LENGTH=$((${terminal_columns}-120))
+  else
+    MAX_LENGTH=$((${terminal_columns}-65))
+  fi
+
+  MENU_CONNECTOR="🔗 Connectors $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_CONNECTOR})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_connector_only | awk '{print $1}') examples"
+  MENU_CCLOUD="🌤️  Confluent cloud $(printf '%*s' $((${MAX_LENGTH}-18-${#MENU_CCLOUD})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only | awk '{print $1}') examples"
+  MENU_FULLY_MANAGED_CONNECTOR="🤖 Fully-Managed connectors $(printf '%*s' $((${MAX_LENGTH}-27-${#MENU_FULLY_MANAGED_CONNECTOR})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_fully_managed_connector_only | awk '{print $1}') examples"
+  MENU_REPRO="🛠  Reproduction models $(printf '%*s' $((${MAX_LENGTH}-22-${#MENU_REPRO})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_repro_only | awk '{print $1}') examples"
+  MENU_OTHER="👾 Other playgrounds $(printf '%*s' $((${MAX_LENGTH}-20-${#MENU_OTHER})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_other_playgrounds_only | awk '{print $1}') examples"
+  MENU_ENVIRONMENTS="🔐 Environments $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_ENVIRONMENTS})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_environment_only | awk '{print $1}') examples"
+  MENU_ALL="🎲 All $(printf '%*s' $((${MAX_LENGTH}-6-${#MENU_ALL})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_all | awk '{print $1}') examples"
+  MENU_KSQL="🎏 ksqlDB $(printf '%*s' $((${MAX_LENGTH}-9-${#MENU_KSQL})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_ksql_only | awk '{print $1}') examples"
+  MENU_SR="🔰 Schema registry $(printf '%*s' $((${MAX_LENGTH}-18-${#MENU_SR})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_schema_registry_only | awk '{print $1}') examples"
+  MENU_RP="🧲 Rest proxy $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_RP})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_rest_proxy_only | awk '{print $1}') examples"
+
+  options=("$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_REPRO" "$MENU_OTHER" "$MENU_ENVIRONMENTS" "$MENU_ALL" "$MENU_KSQL" "$MENU_SR" "$MENU_RP")
+  res=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🚀" --header="select a category (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_pointer)
+
+  case "${res}" in
+    "$MENU_CONNECTOR")
+      test_file=$(playground get-examples-list-with-fzf --connector-only)
+    ;;
+    "$MENU_CCLOUD")
+      test_file=$(playground get-examples-list-with-fzf --ccloud-only)
+    ;;
+    "$MENU_FULLY_MANAGED_CONNECTOR")
+      test_file=$(playground get-examples-list-with-fzf --fully-managed-connector-only)
+    ;;
+    "$MENU_REPRO")
+      test_file=$(playground get-examples-list-with-fzf --repro-only)
+    ;;
+    "$MENU_ENVIRONMENTS")
+      test_file=$(playground get-examples-list-with-fzf --environment-only)
+    ;;
+    "$MENU_KSQL")
+      test_file=$(playground get-examples-list-with-fzf --ksql-only)
+    ;;
+    "$MENU_SR")
+      test_file=$(playground get-examples-list-with-fzf --schema-registry-only)
+    ;;
+    "$MENU_RP")
+      test_file=$(playground get-examples-list-with-fzf --rest-proxy-only)
+    ;;
+    "$MENU_OTHER")
+      test_file=$(playground get-examples-list-with-fzf --other-playgrounds-only)
+    ;;
+    "$MENU_ALL")
+      test_file=$(playground get-examples-list-with-fzf)
+    ;;
+    *)
+      logerror "❌ wrong choice: $res"
+      exit 1
+    ;;
+  esac
 }

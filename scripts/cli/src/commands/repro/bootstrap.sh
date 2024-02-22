@@ -10,32 +10,148 @@ eval "pipeline_array=(${args[--pipeline]})"
 schema_file_key="${args[--producer-schema-key]}"
 schema_file_value="${args[--producer-schema-value]}"
 
-tag="${args[--tag]}"
-connector_tag="${args[--connector-tag]}"
-connector_zip="${args[--connector-zip]}"
-connector_jar="${args[--connector-jar]}"
-enable_ksqldb="${args[--enable-ksqldb]}"
-enable_rest_proxy="${args[--enable-rest-proxy]}"
-enable_c3="${args[--enable-control-center]}"
-enable_conduktor="${args[--enable-conduktor]}"
-enable_multiple_brokers="${args[--enable-multiple-brokers]}"
-enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
-enable_jmx_grafana="${args[--enable-jmx-grafana]}"
-enable_kcat="${args[--enable-kcat]}"
-enable_sql_datagen="${args[--enable-sql-datagen]}"
+interactive_mode=0
 
 if [[ ! -n "$test_file" ]]
 then
-  test_file=$(playground state get run.test_file)
+  interactive_mode=1
+  display_interactive_menu_categories
 
-  if [ ! -f $test_file ]
-  then 
-      logerror "❌ --file was not provided and file $test_file retrieved from $root_folder/playground.ini does not exist!"
-      exit 1
-  else
-    log "--file flag was not provided, use current example $test_file ?"
-    check_if_continue
+  if [[ $test_file == *"@"* ]]
+  then
+    test_file=$(echo "$test_file" | cut -d "@" -f 2)
   fi
+
+  # test_file=$(playground state get run.test_file)
+
+  # if [ ! -f $test_file ]
+  # then 
+  #     logerror "❌ --file was not provided and file $test_file retrieved from $root_folder/playground.ini does not exist!"
+  #     exit 1
+  # else
+  #   log "--file flag was not provided, use current example $test_file ?"
+  #   check_if_continue
+  # fi
+
+  declare -a flag_list=()
+  terminal_columns=$(tput cols)
+  if [[ $terminal_columns -gt 180 ]]
+  then
+    MAX_LENGTH=$((${terminal_columns}-120))
+    fzf_option_wrap="--preview-window=30%,wrap"
+  else
+    MAX_LENGTH=$((${terminal_columns}-65))
+    fzf_option_wrap="--preview-window=20%,wrap"
+  fi
+  readonly MENU_LETS_GO="🏭 Create the reproduction model !" #0
+
+  MENU_DESCRIPTION="💭 Description $(printf '%*s' $((${MAX_LENGTH}-14-${#MENU_DESCRIPTION})) ' ') --description" #1
+  readonly MENU_DESCRIPTION_MISSING="❌💭 Description must be set !"
+  MENU_PIPELINE="🔖 Create pipeline $(printf '%*s' $((${MAX_LENGTH}-18-${#MENU_PIPELINE})) ' ') --pipeline"
+  MENU_ENABLE_CUSTOM_SMT="🔧 Add custom SMT $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_ENABLE_CUSTOM_SMT})) ' ') --custom-smt"
+
+  readonly MENU_DISABLE_CUSTOM_SMT="❌🔧 Disable custom SMT" #5
+  readonly MENU_GO_BACK="🔙 Go back"
+
+  stop=0
+  description=""
+  while [ $stop != 1 ]
+  do
+    options=("$MENU_LETS_GO" "$MENU_DESCRIPTION_MISSING" "$MENU_DESCRIPTION" "$MENU_PIPELINE" "$MENU_ENABLE_CUSTOM_SMT" "$MENU_DISABLE_CUSTOM_SMT" "$MENU_GO_BACK")
+
+    connector_example=0
+    get_connector_paths
+    if [ "$connector_paths" != "" ]
+    then
+      for connector_path in ${connector_paths//,/ }
+      do
+        full_connector_name=$(basename "$connector_path")
+        owner=$(echo "$full_connector_name" | cut -d'-' -f1)
+        name=$(echo "$full_connector_name" | cut -d'-' -f2-)
+
+        if [ "$owner" == "java" ] || [ "$name" == "hub-components" ] || [ "$owner" == "filestream" ]
+        then
+          # happens when plugin is not coming from confluent hub
+          continue
+        else
+          connector_example=1
+        fi
+      done
+    fi
+
+    if [ $connector_example == 0 ]
+    then
+      for((i=3;i<6;i++)); do
+        unset "options[$i]"
+      done
+    else
+      if [[ $test_file == *"sink"* ]] 
+      then
+        unset 'options[3]'
+      fi
+    fi
+
+    if [ ! -z $CUSTOM_SMT ]
+    then
+      unset 'options[4]'
+    else
+      unset 'options[5]'
+    fi
+
+    if [ "$description" == "" ]
+    then
+      unset 'options[0]'
+    else
+      unset 'options[2]'
+    fi
+
+    oldifs=$IFS
+    IFS=$'\n' flag_string="${flag_list[*]}"
+    IFS=$oldifs
+    res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🛠" --header="select option(s) for $example (use tab to select more than one)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"🚀 number of examples ran so far: $(get_cli_metric nb_runs)\n\n⛳ flag list:\n$flag_string\"")
+
+    if [[ $res == *"$MENU_LETS_GO"* ]]
+    then
+      stop=1
+    fi
+
+    if [[ $res == *"$MENU_GO_BACK"* ]]
+    then
+      stop=1
+      playground repro bootstrap
+    fi
+
+    if [[ $res == *"$MENU_ENABLE_CUSTOM_SMT"* ]]
+    then
+      flag_list+=("--custom-smt")
+      export CUSTOM_SMT=true
+    fi
+    if [[ $res == *"$MENU_DISABLE_CUSTOM_SMT"* ]]
+    then
+      flag_list=("${flag_list[@]/"--custom-smt"}")
+      unset CUSTOM_SMT
+    fi
+
+    if [[ $res == *"$MENU_PIPELINE"* ]]
+    then
+      sink_file=$(playground get-examples-list-with-fzf --without-repro --sink-only )
+      if [[ $sink_file == *"@"* ]]
+      then
+        sink_file=$(echo "$sink_file" | cut -d "@" -f 2)
+      fi
+      flag_list+=("--pipeline=$sink_file")
+    fi
+
+    if [[ $res == *"$MENU_DESCRIPTION"* ]]
+    then
+      maybe_remove_flag "--description"
+      set +e
+      description=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🗯️" --header="enter a description for this repro model" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query)
+      set -e
+      flag_list="$flag_list --description $description"
+    fi
+  done # end while loop stop
+  playground repro bootstrap --file $test_file $flag_string
 fi
 
 if [[ $test_file == *"@"* ]]
@@ -45,19 +161,13 @@ fi
 
 if [[ "$test_file" != *".sh" ]]
 then
-  logerror "test_file $test_file is not a .sh file!"
+  logerror "❌ test_file $test_file is not a .sh file!"
   exit 1
 fi
 
 if [[ "$(dirname $test_file)" != /* ]]
 then
-  logerror "do not use relative path for test file!"
-  exit 1
-fi
-
-if [ "$description" = "" ]
-then
-  logerror "description is not provided as argument!"
+  logerror "❌ do not use relative path for test file!"
   exit 1
 fi
 
@@ -70,13 +180,13 @@ if [[ -n "$schema_file_key" ]]
 then
   if [ "$producer" == "none" ]
   then
-    logerror "--producer-schema-key is set but not --producer"
+    logerror "❌ --producer-schema-key is set but not --producer"
     exit 1
   fi
 
   if [[ "$producer" != *"with-key" ]]
   then
-    logerror "--producer-schema-key is set but --producer is not set with <with-key>"
+    logerror "❌ --producer-schema-key is set but --producer is not set with <with-key>"
     exit 1
   fi
 fi
@@ -85,7 +195,7 @@ if [[ -n "$schema_file_value" ]]
 then
   if [ "$producer" == "none" ]
   then
-    logerror "--producer-schema-value is set but not --producer"
+    logerror "❌ --producer-schema-value is set but not --producer"
     exit 1
   fi
 fi
@@ -722,13 +832,12 @@ then
 
   if [ "$connector_paths" == "" ]
   then
-      logwarn "❌ skipping as it is not an example with connector, but --connector-tag is set"
+      logwarn "❌ skipping as it is not an example with connector, but --custom-smt is set"
       exit 1
   else
     ###
     #  Loop on all connectors in CONNECT_PLUGIN_PATH and install custom SMT jar in lib folder
     ###
-    my_array_connector_tag=($(echo $CONNECTOR_TAG | tr "," "\n"))
     for connector_path in ${connector_paths//,/ }
     do
       echo "log \"📂 Copying custom jar to connector folder $connector_path/lib/\"" >> $tmp_dir/build_custom_docker_cp_smt
@@ -1010,11 +1119,7 @@ for sink_file in "${pipeline_array[@]}"; do
   fi
 done
 
-
-
 cat $repro_test_file > $tmp_dir/tmp_file
-
-
 echo "" >> $tmp_dir/tmp_file
 
 echo "#################################################################################################" >> $tmp_dir/tmp_file
@@ -1037,7 +1142,6 @@ echo "# playground connector show-lag" >> $tmp_dir/tmp_file
 echo "exit 0" >> $tmp_dir/tmp_file
 echo "" >> $tmp_dir/tmp_file
 echo "" >> $tmp_dir/tmp_file
-# echo ": '" >> $tmp_dir/tmp_file
 
 echo "#################################################################################################" >> $tmp_dir/tmp_file
 echo "# 🚀 below is a list of snippets that can help you to build your example !" >> $tmp_dir/tmp_file
@@ -1049,7 +1153,6 @@ then
   cat $root_folder/scripts/cli/snippets/sink.sh | grep -v "#!/bin/bash" >> $tmp_dir/tmp_file
 fi
 
-# echo "'" >> $tmp_dir/tmp_file
 mv $tmp_dir/tmp_file $repro_test_file
 
 chmod u+x $repro_test_file
@@ -1093,90 +1196,6 @@ else
     fi
 fi
 
-# run command specifics:
-
-flag_list=""
-if [[ -n "$tag" ]]
-then
-  if [[ $tag == *"@"* ]]
-  then
-    tag=$(echo "$tag" | cut -d "@" -f 2)
-  fi
-  flag_list="--tag=$tag"
-fi
-
-if [[ -n "$connector_tag" ]]
-then
-  flag_list="$flag_list --connector-tag=$connector_tag"
-fi
-
-if [[ -n "$connector_zip" ]]
-then
-  if [[ $connector_zip == *"@"* ]]
-  then
-    connector_zip=$(echo "$connector_zip" | cut -d "@" -f 2)
-  fi
-  flag_list="$flag_list --connector-zip=$connector_zip"
-fi
-
-if [[ -n "$connector_jar" ]]
-then
-  if [[ $connector_jar == *"@"* ]]
-  then
-    connector_jar=$(echo "$connector_jar" | cut -d "@" -f 2)
-  fi
-  flag_list="$flag_list --connector-jar=$connector_jar"
-fi
-
-if [[ -n "$enable_ksqldb" ]]
-then
-  force_enable --enable-ksqldb ENABLE_KSQLDB
-fi
-
-if [[ -n "$enable_rest_proxy" ]]
-then
-  force_enable --enable-rest-proxy ENABLE_RESTPROXY
-fi
-
-if [[ -n "$enable_c3" ]]
-then
-  force_enable --enable-control-center ENABLE_CONTROL_CENTER
-fi
-
-if [[ -n "$enable_conduktor" ]]
-then
-  force_enable --enable-conduktor ENABLE_CONDUKTOR
-fi
-
-if [[ -n "$enable_multiple_brokers" ]]
-then
-  force_enable --enable-multiple-broker ENABLE_KAFKA_NODES
-fi
-
-if [[ -n "$enable_multiple_connect_workers" ]]
-then
-  force_enable --enable-multiple-connect-workers ENABLE_CONNECT_NODES
-  cp $docker_compose_test_file /tmp/playground-backup-docker-compose.yml
-  yq -i '.services.connect2 = .services.connect' /tmp/playground-backup-docker-compose.yml
-  yq -i '.services.connect3 = .services.connect' /tmp/playground-backup-docker-compose.yml
-  cp /tmp/playground-backup-docker-compose.yml $docker_compose_test_file
-fi
-
-if [[ -n "$enable_jmx_grafana" ]]
-then
-  force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
-fi
-
-if [[ -n "$enable_kcat" ]]
-then
-  force_enable --enable-kcat ENABLE_KCAT
-fi
-
-if [[ -n "$enable_sql_datagen" ]]
-then
-  force_enable --enable-sql-datagen SQL_DATAGEN
-fi
-
 increment_cli_metric nb_reproduction_models
 log "👷 Number of repro models created so far: $(get_cli_metric nb_reproduction_models)"
 
@@ -1188,4 +1207,4 @@ playground generate-fzf-find-files &
 playground open-docs --only-show-url
 log "🕹️  Ready? Run it now?"
 check_if_continue
-playground run -f $repro_dir/$repro_test_filename $flag_list ${other_args[*]}
+playground run -f $repro_dir/$repro_test_filename $flag_list --force-interactive-repro ${other_args[*]}
