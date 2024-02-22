@@ -650,6 +650,7 @@ commands:
     fzf: visit https://github.com/junegunn/fzf#installation to install
 
 - name: start-environment
+  private: true
   group: Run
   help: |-
     🔐 Simply start an environment listed in http://tinyurl.com/y4ybbw32:
@@ -672,11 +673,6 @@ commands:
     - ssl_kerberos
 
     Note: when running an example with <playground run>, it is already automatically done
-  catch_all:
-    label: arguments
-    help: |-
-      Arguments to use by example script
-    required: false
   flags:
     - &environment
       long: --environment
@@ -713,15 +709,6 @@ commands:
         🔖 docker-compose override file
 
         ❕ It must be absolute full path
-    - *tag
-    - *enable-ksqldb
-    - *enable-rest-proxy
-    - *enable-control-center
-    - *enable-conduktor
-    - *enable-multiple-brokers
-    - *enable-multiple-connect-workers
-    - *enable-jmx-grafana
-    - *enable-kcat
   examples:
   - playground start-environment
   - playground start-environment --environment rbac-sasl-plain

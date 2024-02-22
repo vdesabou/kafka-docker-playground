@@ -45,7 +45,6 @@ playground_usage() {
   printf "  %s   🕹️ Run any example\n" "$(green "run")                             "
   printf "  %s   ⚡ Simply re-run last example you ran with <playground run>\n" "$(green "re-run")                          "
   printf "  %s   🏰 Get an history of the examples which were run with run command and run it again\n" "$(green "history")                         "
-  printf "  %s   🔐 Simply start an environment listed in http://tinyurl.com/y4ybbw32:\n" "$(green "start-environment")               "
   printf "  %s   🌩️  Switch to ccloud environment.\n" "$(green "switch-ccloud")                   "
   printf "  %s   💺  Switch back from previous environment before switch-ccloud was called.\n" "$(green "switch-back")                     "
   printf "  %s   ✨ Update current confluent platform or connector(s) with new version(s)\n" "$(green "update-version")                  "
@@ -1715,7 +1714,7 @@ playground_start_environment_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground start-environment [OPTIONS] [ARGUMENTS...]\n"
+  printf "  playground start-environment [OPTIONS]\n"
   printf "  playground start-environment --help | -h\n"
   echo
 
@@ -1736,61 +1735,9 @@ playground_start_environment_usage() {
     printf "    🔖 docker-compose override file\n    \n    ❕ It must be absolute full path\n"
     echo
 
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--tag TAG")"
-    printf "    🎯 Confluent Platform (CP) version to use\n    \n    Must be greater or equal to 5.3.0\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-ksqldb")"
-    printf "    🚀 Enable ksqlDB \n    \n    ❗ not supported with ccloud examples\n    \n    By default, ksqldb-server and ksqldb-cli containers are not started for\n    every test\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-rest-proxy")"
-    printf "    🧲 Enable Rest Proxy\n    \n    ❗ not supported with ccloud examples\n    \n    By default, rest-proxy container is not started for every test\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-control-center")"
-    printf "    💠 Enable Control Center\n    \n    By default, control-center container is not started for every test\n    \n    Control Center is reachable at http://127.0.0.1:9021\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-conduktor")"
-    printf "    🐺 Enable Conduktor Platform\n    \n    By default, Conduktor Platform container is not started for every test\n    \n    Conduktor is reachable at http://127.0.0.1:8080/console (admin/admin)\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-multiple-brokers")"
-    printf "    3️⃣ Enable multiple brokers\n    \n    By default, there is only one broker node enabled\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-multiple-connect-workers")"
-    printf "    🥉 Enable multiple connect node\n    \n    By default, there is only one connect node enabled\n    \n    It only works when plaintext environment is used\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-jmx-grafana")"
-    printf "    Enable Grafana, Prometheus and Pyroscope\n    \n    📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is\n    admin/password)\n    \n    🛡️ Prometheus is reachable at http://127.0.0.1:9090\n    \n    📛 Pyroscope is reachable at http://127.0.0.1:4040\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-kcat")"
-    printf "    🐈‍⬛ Enable kcat\n    \n    You can use it with:\n    \n    $ docker exec kcat kcat -b broker:9092 -L\n"
-    echo
-
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
-    echo
-
-    # :command.usage_args
-    printf "%s\n" "$(bold "== Arguments ==")"
-
-    echo "  ARGUMENTS..."
-    printf "    Arguments to use by example script\n"
     echo
 
     # :command.usage_examples
@@ -22781,101 +22728,16 @@ playground_start_environment_parse_requirements() {
         fi
         ;;
 
-      # :flag.case
-      --tag)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-
-          args['--tag']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--tag requires an argument: --tag TAG" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
-      --enable-ksqldb)
-
-        # :flag.case_no_arg
-        args['--enable-ksqldb']=1
-        shift
-        ;;
-
-      # :flag.case
-      --enable-rest-proxy)
-
-        # :flag.case_no_arg
-        args['--enable-rest-proxy']=1
-        shift
-        ;;
-
-      # :flag.case
-      --enable-control-center)
-
-        # :flag.case_no_arg
-        args['--enable-control-center']=1
-        shift
-        ;;
-
-      # :flag.case
-      --enable-conduktor)
-
-        # :flag.case_no_arg
-        args['--enable-conduktor']=1
-        shift
-        ;;
-
-      # :flag.case
-      --enable-multiple-brokers)
-
-        # :flag.case_no_arg
-        args['--enable-multiple-brokers']=1
-        shift
-        ;;
-
-      # :flag.case
-      --enable-multiple-connect-workers)
-
-        # :flag.case_no_arg
-        args['--enable-multiple-connect-workers']=1
-        shift
-        ;;
-
-      # :flag.case
-      --enable-jmx-grafana)
-
-        # :flag.case_no_arg
-        args['--enable-jmx-grafana']=1
-        shift
-        ;;
-
-      # :flag.case
-      --enable-kcat)
-
-        # :flag.case_no_arg
-        args['--enable-kcat']=1
-        shift
-        ;;
-
-      --)
-        shift
-        other_args+=("$@")
-        break
-        ;;
-
       -?*)
-        other_args+=("$1")
-        shift
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
         ;;
 
       *)
         # :command.parse_requirements_case
-        # :command.parse_requirements_case_catch_all
-        other_args+=("$1")
-        shift
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
 
         ;;
 
