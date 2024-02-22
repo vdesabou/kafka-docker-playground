@@ -6460,8 +6460,7 @@ function display_interactive_menu_categories () {
 
   if [ ! -f $root_folder/scripts/cli/get_examples_list_with_fzf_fully_managed_connector_only ]
   then
-    # should happen only very first time
-    generate_fzf_find_files
+    playground generate-fzf-find-files
   fi
 
   terminal_columns=$(tput cols)
