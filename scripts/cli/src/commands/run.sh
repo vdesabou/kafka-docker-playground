@@ -32,7 +32,75 @@ interactive_mode=0
 if [[ ! -n "$test_file" ]]
 then
   interactive_mode=1
-  display_interactive_menu_categories
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
+  then
+      fzf_option_wrap="--preview-window=40%,wrap"
+      fzf_option_pointer="--pointer=👉"
+      fzf_option_rounded="--border=rounded"
+  else
+      fzf_option_pointer=""
+      fzf_option_rounded=""
+  fi
+
+  terminal_columns=$(tput cols)
+  if [[ $terminal_columns -gt 180 ]]
+  then
+    MAX_LENGTH=$((${terminal_columns}-120))
+  else
+    MAX_LENGTH=$((${terminal_columns}-65))
+  fi
+
+  MENU_CONNECTOR="🔗 Connectors $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_CONNECTOR})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_connector_only | awk '{print $1}') examples"
+  MENU_CCLOUD="🌤️  Confluent cloud $(printf '%*s' $((${MAX_LENGTH}-18-${#MENU_CCLOUD})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only | awk '{print $1}') examples"
+  MENU_FULLY_MANAGED_CONNECTOR="🤖 Fully-Managed connectors $(printf '%*s' $((${MAX_LENGTH}-27-${#MENU_FULLY_MANAGED_CONNECTOR})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_fully_managed_connector_only | awk '{print $1}') examples"
+  MENU_REPRO="🛠  Reproduction models $(printf '%*s' $((${MAX_LENGTH}-22-${#MENU_REPRO})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_repro_only | awk '{print $1}') examples"
+  MENU_OTHER="👾 Other playgrounds $(printf '%*s' $((${MAX_LENGTH}-20-${#MENU_OTHER})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_other_playgrounds_only | awk '{print $1}') examples"
+  MENU_ENVIRONMENTS="🔐 Environments $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_ENVIRONMENTS})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_environment_only | awk '{print $1}') examples"
+  MENU_ALL="🎲 All $(printf '%*s' $((${MAX_LENGTH}-6-${#MENU_ALL})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_all | awk '{print $1}') examples"
+  MENU_KSQL="🎏 ksqlDB $(printf '%*s' $((${MAX_LENGTH}-9-${#MENU_KSQL})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_ksql_only | awk '{print $1}') examples"
+  MENU_SR="🔰 Schema registry $(printf '%*s' $((${MAX_LENGTH}-18-${#MENU_SR})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_schema_registry_only | awk '{print $1}') examples"
+  MENU_RP="🧲 Rest proxy $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_RP})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_rest_proxy_only | awk '{print $1}') examples"
+
+  options=("$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_REPRO" "$MENU_OTHER" "$MENU_ENVIRONMENTS" "$MENU_ALL" "$MENU_KSQL" "$MENU_SR" "$MENU_RP")
+  res=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🚀" --header="select a category (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_pointer)
+
+  case "${res}" in
+    "$MENU_CONNECTOR")
+      test_file=$(playground get-examples-list-with-fzf --connector-only)
+    ;;
+    "$MENU_CCLOUD")
+      test_file=$(playground get-examples-list-with-fzf --ccloud-only)
+    ;;
+    "$MENU_FULLY_MANAGED_CONNECTOR")
+      test_file=$(playground get-examples-list-with-fzf --fully-managed-connector-only)
+    ;;
+    "$MENU_REPRO")
+      test_file=$(playground get-examples-list-with-fzf --repro-only)
+    ;;
+    "$MENU_ENVIRONMENTS")
+      test_file=$(playground get-examples-list-with-fzf --environment-only)
+    ;;
+    "$MENU_KSQL")
+      test_file=$(playground get-examples-list-with-fzf --ksql-only)
+    ;;
+    "$MENU_SR")
+      test_file=$(playground get-examples-list-with-fzf --schema-registry-only)
+    ;;
+    "$MENU_RP")
+      test_file=$(playground get-examples-list-with-fzf --rest-proxy-only)
+    ;;
+    "$MENU_OTHER")
+      test_file=$(playground get-examples-list-with-fzf --other-playgrounds-only)
+    ;;
+    "$MENU_ALL")
+      test_file=$(playground get-examples-list-with-fzf)
+    ;;
+    *)
+      logerror "❌ wrong choice: $res"
+      exit 1
+    ;;
+  esac
 fi
 
 if [[ $test_file == *"@"* ]]
@@ -401,23 +469,23 @@ then
     fi
     readonly MENU_LETS_GO="🚀 Run the example !" #0
 
-    readonly MENU_TAG="🎯 CP version $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_TAG})) ' ') --tag" #1
-    readonly MENU_CONNECTOR_TAG="🔗 Connector version $(printf '%*s' $((${MAX_LENGTH}-20-${#MENU_CONNECTOR_TAG})) ' ') --connector-tag"
-    readonly MENU_CONNECTOR_ZIP="🤐 Connector zip $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CONNECTOR_ZIP})) ' ') --connector-zip"
-    readonly MENU_CONNECTOR_JAR="🤎 Connector jar $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CONNECTOR_JAR})) ' ') --connector-jar"
-    readonly MENU_ENVIRONMENT="🔐 Environment $(printf '%*s' $((${MAX_LENGTH}-14-${#MENU_ENVIRONMENT})) ' ') --environment" 
+    MENU_TAG="🎯 CP version $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_TAG})) ' ') --tag" #1
+    MENU_CONNECTOR_TAG="🔗 Connector version $(printf '%*s' $((${MAX_LENGTH}-20-${#MENU_CONNECTOR_TAG})) ' ') --connector-tag"
+    MENU_CONNECTOR_ZIP="🤐 Connector zip $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CONNECTOR_ZIP})) ' ') --connector-zip"
+    MENU_CONNECTOR_JAR="🤎 Connector jar $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CONNECTOR_JAR})) ' ') --connector-jar"
+    MENU_ENVIRONMENT="🔐 Environment $(printf '%*s' $((${MAX_LENGTH}-14-${#MENU_ENVIRONMENT})) ' ') --environment" 
 
     readonly MENU_SEPARATOR_VERSIONS="---------------------versions---------------------" #6
 
-    readonly MENU_ENABLE_KSQLDB="🎏 Enable ksqlDB $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_ENABLE_KSQLDB})) ' ') --enable-ksqldb" #7
-    readonly MENU_ENABLE_C3="💠 Enable Control Center $(printf '%*s' $((${MAX_LENGTH}-24-${#MENU_ENABLE_C3})) ' ') --enable-control-center"
-    readonly MENU_ENABLE_CONDUKTOR="🐺 Enable Conduktor Platform $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_ENABLE_CONDUKTOR})) ' ') --enable-conduktor"
-    readonly MENU_ENABLE_RP="🧲 Enable Rest Proxy $(printf '%*s' $((${MAX_LENGTH}-20-${#MENU_ENABLE_RP})) ' ') --enable-rest-proxy" 
-    readonly MENU_ENABLE_GRAFANA="📊 Enable Grafana $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_ENABLE_GRAFANA})) ' ') --enable-jmx-grafana"
-    readonly MENU_ENABLE_BROKERS="3️⃣  Enabling multiple brokers $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_ENABLE_BROKERS})) ' ') --enable-multiple-broker"
-    readonly MENU_ENABLE_CONNECT_WORKERS="🥉 Enabling multiple connect workers $(printf '%*s' $((${MAX_LENGTH}-36-${#MENU_ENABLE_CONNECT_WORKERS})) ' ') --enable-multiple-connect-workers"
-    readonly MENU_ENABLE_KCAT="🐈 Enabling kcat $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_ENABLE_KCAT})) ' ') --enable-kcat"
-    readonly MENU_ENABLE_SQL_DATAGEN="🌪️  Enable SQL Datagen injection $(printf '%*s' $((${MAX_LENGTH}-33-${#MENU_ENABLE_SQL_DATAGEN})) ' ') --enable-sql-datagen" #15
+    MENU_ENABLE_KSQLDB="🎏 Enable ksqlDB $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_ENABLE_KSQLDB})) ' ') --enable-ksqldb" #7
+    MENU_ENABLE_C3="💠 Enable Control Center $(printf '%*s' $((${MAX_LENGTH}-24-${#MENU_ENABLE_C3})) ' ') --enable-control-center"
+    MENU_ENABLE_CONDUKTOR="🐺 Enable Conduktor Platform $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_ENABLE_CONDUKTOR})) ' ') --enable-conduktor"
+    MENU_ENABLE_RP="🧲 Enable Rest Proxy $(printf '%*s' $((${MAX_LENGTH}-20-${#MENU_ENABLE_RP})) ' ') --enable-rest-proxy" 
+    MENU_ENABLE_GRAFANA="📊 Enable Grafana $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_ENABLE_GRAFANA})) ' ') --enable-jmx-grafana"
+    MENU_ENABLE_BROKERS="3️⃣  Enabling multiple brokers $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_ENABLE_BROKERS})) ' ') --enable-multiple-broker"
+    MENU_ENABLE_CONNECT_WORKERS="🥉 Enabling multiple connect workers $(printf '%*s' $((${MAX_LENGTH}-36-${#MENU_ENABLE_CONNECT_WORKERS})) ' ') --enable-multiple-connect-workers"
+    MENU_ENABLE_KCAT="🐈 Enabling kcat $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_ENABLE_KCAT})) ' ') --enable-kcat"
+    MENU_ENABLE_SQL_DATAGEN="🌪️  Enable SQL Datagen injection $(printf '%*s' $((${MAX_LENGTH}-33-${#MENU_ENABLE_SQL_DATAGEN})) ' ') --enable-sql-datagen" #15
 
     readonly MENU_DISABLE_KSQLDB="❌🎏 Disable ksqlDB" #16
     readonly MENU_DISABLE_C3="❌💠 Disable Control Center"
@@ -431,14 +499,14 @@ then
 
     readonly MENU_SEPARATOR_FEATURES="--------------------options-----------------------"
 
-    readonly MENU_CLUSTER_TYPE="🔋 Cluster type $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CLUSTER_TYPE})) ' ') --cluster-type" #26
-    readonly MENU_CLUSTER_CLOUD="🌤  Cloud provider $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_CLUSTER_CLOUD})) ' ') --cluster-cloud"
-    readonly MENU_CLUSTER_REGION="🗺  Cloud region $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CLUSTER_REGION})) ' ') --cluster-region"
-    readonly MENU_CLUSTER_ENVIRONMENT="🌐 Environment id $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_CLUSTER_ENVIRONMENT})) ' ') --cluster-environment"
+    MENU_CLUSTER_TYPE="🔋 Cluster type $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CLUSTER_TYPE})) ' ') --cluster-type" #26
+    MENU_CLUSTER_CLOUD="🌤  Cloud provider $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_CLUSTER_CLOUD})) ' ') --cluster-cloud"
+    MENU_CLUSTER_REGION="🗺  Cloud region $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CLUSTER_REGION})) ' ') --cluster-region"
+    MENU_CLUSTER_ENVIRONMENT="🌐 Environment id $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_CLUSTER_ENVIRONMENT})) ' ') --cluster-environment"
 
-    readonly MENU_CLUSTER_NAME="🎰 Cluster name $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CLUSTER_NAME})) ' ') --cluster-name"
-    readonly MENU_CLUSTER_CREDS="🔒 Kafka api key & secret $(printf '%*s' $((${MAX_LENGTH}-25-${#MENU_CLUSTER_CREDS})) ' ') --cluster-creds"
-    readonly MENU_CLUSTER_SR_CREDS="🔰 Schema registry api key & secret $(printf '%*s' $((${MAX_LENGTH}-35-${#MENU_CLUSTER_SR_CREDS})) ' ') --cluster_sr_creds"
+    MENU_CLUSTER_NAME="🎰 Cluster name $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CLUSTER_NAME})) ' ') --cluster-name"
+    MENU_CLUSTER_CREDS="🔒 Kafka api key & secret $(printf '%*s' $((${MAX_LENGTH}-25-${#MENU_CLUSTER_CREDS})) ' ') --cluster-creds"
+    MENU_CLUSTER_SR_CREDS="🔰 Schema registry api key & secret $(printf '%*s' $((${MAX_LENGTH}-35-${#MENU_CLUSTER_SR_CREDS})) ' ') --cluster_sr_creds"
 
     readonly MENU_SEPARATOR_CLOUD="-----------------confluent cloud------------------" #33
 
