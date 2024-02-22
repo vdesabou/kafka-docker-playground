@@ -589,6 +589,18 @@ then
         unset 'options[15]'
       fi
 
+      if [ ! -z $PLAYGROUND_ENVIRONMENT ] && [ "$PLAYGROUND_ENVIRONMENT" != "plaintext" ]
+      then
+        # --enable-multiple-connect-workers only for plaintext
+        unset 'options[13]'
+
+        flag_list=("${flag_list[@]/"--enable-multiple-connect-workers"}")
+        unset ENABLE_CONNECT_NODES
+        set +e
+        cp /tmp/playground-backup-docker-compose.yml $docker_compose_file > /dev/null 2>&1
+        set -e
+      fi
+
       if [ ! -z $ENABLE_KSQLDB ]
       then
         unset 'options[7]'
@@ -646,7 +658,7 @@ then
       oldifs=$IFS
       IFS=$'\n' flag_string="${flag_list[*]}"
       IFS=$oldifs
-      res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🚀" --header="select option(s) for $example (use tab to select more than one)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"⛳ flag list:\n$flag_string\"")
+      res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🚀" --header="select option(s) for $example (use tab to select more than one)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"🚀 number of examples ran so far: $(get_cli_metric nb_runs)\n\n⛳ flag list:\n$flag_string\"")
 
       if [[ $res == *"$MENU_LETS_GO"* ]]
       then
