@@ -1542,7 +1542,7 @@ playground_run_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground run\n"
+    printf "  playground run (interactive mode)\n"
     printf "  playground run -f zendesk-source<tab> --tag 7.2.1 --enable-control-center\n  <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>\n"
     printf "  playground run -f jdbc<tab> --connector-tag 10.6.0 --enable-jmx-grafana --open\n"
     echo
@@ -6456,6 +6456,12 @@ function display_interactive_menu_categories () {
   else
       fzf_option_pointer=""
       fzf_option_rounded=""
+  fi
+
+  if [ ! -f $root_folder/scripts/cli/get_examples_list_with_fzf_fully_managed_connector_only ]
+  then
+    # should happen only very first time
+    generate_fzf_find_files
   fi
 
   terminal_columns=$(tput cols)
