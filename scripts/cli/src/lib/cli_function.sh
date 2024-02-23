@@ -1102,10 +1102,17 @@ function display_interactive_menu_categories () {
     MAX_LENGTH=$((${terminal_columns}-65))
   fi
 
+  if [ -f $root_folder/scripts/cli/get_examples_list_with_fzf_repro_only ]
+  then
+    nb_repro=$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_repro_only | awk '{print $1}')
+  else
+    nb_repro=0
+  fi
+
   MENU_CONNECTOR="🔗 Connectors $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_CONNECTOR})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_connector_only | awk '{print $1}') examples"
   MENU_CCLOUD="🌤️  Confluent cloud $(printf '%*s' $((${MAX_LENGTH}-18-${#MENU_CCLOUD})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only | awk '{print $1}') examples"
   MENU_FULLY_MANAGED_CONNECTOR="🤖 Fully-Managed connectors $(printf '%*s' $((${MAX_LENGTH}-27-${#MENU_FULLY_MANAGED_CONNECTOR})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_fully_managed_connector_only | awk '{print $1}') examples"
-  MENU_REPRO="🛠  Reproduction models $(printf '%*s' $((${MAX_LENGTH}-22-${#MENU_REPRO})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_repro_only | awk '{print $1}') examples"
+  MENU_REPRO="🛠  Reproduction models $(printf '%*s' $((${MAX_LENGTH}-22-${#MENU_REPRO})) ' ') $nb_repro examples"
   MENU_OTHER="👾 Other playgrounds $(printf '%*s' $((${MAX_LENGTH}-20-${#MENU_OTHER})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_other_playgrounds_only | awk '{print $1}') examples"
   MENU_ENVIRONMENTS="🔐 Environments $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_ENVIRONMENTS})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_environment_only | awk '{print $1}') examples"
   MENU_ALL="🎲 All $(printf '%*s' $((${MAX_LENGTH}-6-${#MENU_ALL})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_all | awk '{print $1}') examples"
