@@ -84,7 +84,7 @@ function generate_get_examples_list_with_fzf_connector_only () {
   find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect/connect-*-*/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' ! -path '*/ccloud/*'  ! -path '*/post_start/*' ! -path '*/1*domain*/*' ! -path '*/kdc-server/*' | while read file_path
   do
     generate_get_examples_add_emoji
-  done
+  done | sort -s -o $output_file
   sort -o $output_file $output_file
 }
 
@@ -94,7 +94,7 @@ function generate_get_examples_list_with_fzf_repro_only () {
   find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/1*domain*/*'  ! -path '*/security/*' -path '*/reproduction-models/*' | while read file_path
   do
     generate_get_examples_add_emoji
-  done
+  done | sort -s -o $output_file
   sort -o $output_file $output_file
 }
 
@@ -104,7 +104,7 @@ function generate_get_examples_list_with_fzf_environemnt_only () {
   find $root_folder -name \*.sh ! -name 'update_run.sh' ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' -path '*/environment/*' | while read file_path
   do
     generate_get_examples_add_emoji
-  done
+  done | sort -s -o $output_file
   sort -o $output_file $output_file
 }
 
@@ -114,7 +114,7 @@ function generate_get_examples_list_with_fzf_ksql_only () {
   find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/ksqldb/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' | while read file_path
   do
     generate_get_examples_add_emoji
-  done
+  done | sort -s -o $output_file
   sort -o $output_file $output_file
 }
 
@@ -124,7 +124,7 @@ function generate_get_examples_list_with_fzf_fully_managed_connector_only () {
   find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/fully-managed-*/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' -path '*/ccloud/*' | while read file_path
   do
     generate_get_examples_add_emoji
-  done
+  done | sort -s -o $output_file
   sort -o $output_file $output_file
 }
 
@@ -134,7 +134,7 @@ function generate_get_examples_list_with_fzf_schema_registry_only () {
   find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/schema-registry/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' ! -path '*/ccloud/*' | while read file_path
   do
     generate_get_examples_add_emoji
-  done
+  done | sort -s -o $output_file
   sort -o $output_file $output_file
 }
 
@@ -144,7 +144,7 @@ function generate_get_examples_list_with_fzf_rest_proxy_only () {
   find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/rest-proxy/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' | while read file_path
   do
     generate_get_examples_add_emoji
-  done
+  done | sort -s -o $output_file
   sort -o $output_file $output_file
 }
 
@@ -154,7 +154,7 @@ function generate_get_examples_list_with_fzf_other_playgrounds_only () {
   find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/1*domain*/*'  ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' ! -path '*/reproduction-models/*' ! -path '*/connect/*' ! -path '*/ksqldb/*' ! -path '*/schema-registry/*'  | while read file_path
   do
     generate_get_examples_add_emoji
-  done
+  done | sort -s -o $output_file
   sort -o $output_file $output_file
 }
 
@@ -165,7 +165,7 @@ function generate_get_examples_list_with_fzf_without_repro_sink_only () {
   find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/1*domain*/*' ! -path '*/ora-*/*'  ! -path '*/other/*' ! -path '*/ccloud/*'  ! -path '*/academy/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' | while read file_path
   do
     generate_get_examples_add_emoji
-  done
+  done | sort -s -o $output_file
   sort -o $output_file $output_file
 }
 
@@ -175,7 +175,7 @@ function generate_get_examples_list_with_fzf_without_repro () {
   find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/1*domain*/*'  ! -path '*/security/*' ! -path '*/reproduction-models/*' | while read file_path
   do
     generate_get_examples_add_emoji
-  done
+  done | sort -s -o $output_file
   sort -o $output_file $output_file
 }
 
@@ -185,7 +185,7 @@ function generate_get_examples_list_with_fzf_ccloud_only () {
   find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/ccloud*' ! -path '*/ora-*/*' ! -path '*/security/*' | while read file_path
   do
     generate_get_examples_add_emoji
-  done
+  done | sort -s -o $output_file
   sort -o $output_file $output_file
 }
 
@@ -195,7 +195,7 @@ function generate_get_examples_list_with_fzf () {
   find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/1*domain*/*' ! -path '*/ora-*/*' ! -path '*/security/*' | while read file_path
   do
     generate_get_examples_add_emoji
-  done
+  done | sort -s -o $output_file
   sort -o $output_file $output_file
 }
 
