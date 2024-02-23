@@ -31,7 +31,7 @@ then
   #   check_if_continue
   # fi
 
-  declare -a flag_list=()
+  declare -a array_flag_list=()
   terminal_columns=$(tput cols)
   if [[ $terminal_columns -gt 180 ]]
   then
@@ -115,11 +115,11 @@ then
       set +e
       description=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="💭 " --header="enter a description for this repro model" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query)
       set -e
-      flag_list="$flag_list --description $description"
+      array_flag_list+=("--description=$description")
     fi
 
     oldifs=$IFS
-    IFS=$'\n' flag_string="${flag_list[*]}"
+    IFS=$'\n' flag_string="${array_flag_list[*]}"
     IFS=$oldifs
     res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🛠 " --header="select option(s) for $example (use tab to select more than one)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"👷 Number of repro models created so far: $(get_cli_metric nb_reproduction_models)\n\n🛠️  Number of repro models available: $(get_cli_metric nb_existing_reproduction_models)\n\n⛳ flag list:\n$flag_string\"")
 
@@ -136,12 +136,12 @@ then
 
     if [[ $res == *"$MENU_ENABLE_CUSTOM_SMT"* ]]
     then
-      flag_list+=("--custom-smt")
+      array_flag_list+=("--custom-smt")
       export CUSTOM_SMT=true
     fi
     if [[ $res == *"$MENU_DISABLE_CUSTOM_SMT"* ]]
     then
-      flag_list=("${flag_list[@]/"--custom-smt"}")
+      array_flag_list=("${array_flag_list[@]/"--custom-smt"}")
       unset CUSTOM_SMT
     fi
 
@@ -152,10 +152,10 @@ then
       then
         sink_file=$(echo "$sink_file" | cut -d "@" -f 2)
       fi
-      flag_list+=("--pipeline=$sink_file")
+      array_flag_list+=("--pipeline=$sink_file")
     fi
   done # end while loop stop
-  playground repro bootstrap --file $test_file $flag_string
+  playground repro bootstrap --file $test_file "${array_flag_list[*]}"
   exit 0
 fi
 
