@@ -898,6 +898,80 @@ then
     done # end while loop stop
     IFS=' ' flag_list="${flag_list[*]}"
 
+    # for env_variable in ENABLE_KSQLDB ENABLE_RESTPROXY ENABLE_CONTROL_CENTER ENABLE_CONDUKTOR ENABLE_KAFKA_NODES ENABLE_CONNECT_NODES ENABLE_JMX_GRAFANA ENABLE_KCAT SQL_DATAGEN
+    # do
+    if [ ! -z "$ENABLE_KSQLDB" ]
+    then
+      if [[ -n "$force_interactive_repro" ]]
+      then
+        force_enable --enable-ksqldb ENABLE_KSQLDB
+      fi
+    fi
+
+    if [ ! -z "$ENABLE_RESTPROXY" ]
+    then
+      if [[ -n "$force_interactive_repro" ]]
+      then
+        force_enable --enable-rest-proxy ENABLE_RESTPROXY
+      fi
+    fi
+
+    if [ ! -z "$ENABLE_CONTROL_CENTER" ]
+    then
+      if [[ -n "$force_interactive_repro" ]]
+      then
+        force_enable --enable-control-center ENABLE_CONTROL_CENTER
+      fi
+    fi
+
+    if [ ! -z "$ENABLE_CONDUKTOR" ]
+    then
+      if [[ -n "$force_interactive_repro" ]]
+      then
+        force_enable --enable-conduktor ENABLE_CONDUKTOR
+      fi
+    fi
+
+    if [ ! -z "$ENABLE_KAFKA_NODES" ]
+    then
+      if [[ -n "$force_interactive_repro" ]]
+      then
+        force_enable --enable-multiple-broker ENABLE_KAFKA_NODES
+      fi
+    fi
+
+    if [ ! -z "$ENABLE_CONNECT_NODES" ]
+    then
+      if [[ -n "$force_interactive_repro" ]]
+      then
+        force_enable --enable-multiple-connect-workers ENABLE_CONNECT_NODES
+      fi
+    fi
+
+    if [ ! -z "$ENABLE_JMX_GRAFANA" ]
+    then
+      if [[ -n "$force_interactive_repro" ]]
+      then
+        force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
+      fi
+    fi
+
+    if [ ! -z "$ENABLE_KCAT" ]
+    then
+      if [[ -n "$force_interactive_repro" ]]
+      then
+        force_enable --enable-kcat ENABLE_KCAT
+      fi
+    fi
+
+    if [ ! -z "$SQL_DATAGEN" ]
+    then
+      if [[ -n "$force_interactive_repro" ]]
+      then
+        force_enable --enable-sql-datagen SQL_DATAGEN
+      fi
+    fi
+
     if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_name" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
     then
       playground state set ccloud.suggest_use_previous_example_ccloud "0"
@@ -937,17 +1011,6 @@ then
         log "🙈 ignoring environment variable SCHEMA_REGISTRY_CREDS as one of the flags is set"
         unset SCHEMA_REGISTRY_CREDS
       fi
-
-      for env_variable in ENABLE_KSQLDB ENABLE_RESTPROXY ENABLE_CONTROL_CENTER ENABLE_CONDUKTOR ENABLE_KAFKA_NODES ENABLE_CONNECT_NODES ENABLE_JMX_GRAFANA ENABLE_KCAT SQL_DATAGEN
-      do
-        if [ ! -z "$env_variable" ]
-        then
-          if [[ -n "$force_interactive_repro" ]]
-          then
-            force_enable --enable-ksqldb $env_variable
-          fi
-        fi
-      done
 
       if [[ -n "$cluster_type" ]]
       then
