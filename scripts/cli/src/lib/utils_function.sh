@@ -589,6 +589,9 @@ EOF
 
     if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
     then
+      AWS_ACCESS_KEY_ID=$(echo "$AWS_ACCESS_KEY_ID"| sed 's/[[:blank:]]//g')
+      AWS_SECRET_ACCESS_KEY=$(echo "$AWS_SECRET_ACCESS_KEY"| sed 's/[[:blank:]]//g')
+      AWS_SESSION_TOKEN=$(echo "$AWS_SESSION_TOKEN"| sed 's/[[:blank:]]//g')
       # log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
       if [ -f $tmp_dir/config ]
       then
