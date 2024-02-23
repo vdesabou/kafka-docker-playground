@@ -115,6 +115,10 @@ then
       set +e
       description=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="💭 " --header="enter a description for this repro model" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query)
       set -e
+      if [ "$description" == "" ]
+      then
+        continue
+      fi
       array_flag_list+=("--description=$description")
     fi
 
