@@ -1078,6 +1078,8 @@ function maybe_remove_flag () {
 }
 
 function display_interactive_menu_categories () {
+  repro=$1
+
   fzf_version=$(get_fzf_version)
   if version_gt $fzf_version "0.38"
   then
@@ -1121,6 +1123,12 @@ function display_interactive_menu_categories () {
   MENU_RP="🧲 Rest proxy $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_RP})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_rest_proxy_only | awk '{print $1}') examples"
 
   options=("$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_REPRO" "$MENU_OTHER" "$MENU_ENVIRONMENTS" "$MENU_ALL" "$MENU_KSQL" "$MENU_SR" "$MENU_RP")
+
+  if [ "$repro" == 1 ]
+  then
+    unset 'options[3]'
+  fi
+
   res=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🚀" --header="select a category (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_pointer)
 
   case "${res}" in

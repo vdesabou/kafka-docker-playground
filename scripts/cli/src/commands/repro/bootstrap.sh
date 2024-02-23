@@ -12,7 +12,7 @@ schema_file_value="${args[--producer-schema-value]}"
 
 if [[ ! -n "$test_file" ]]
 then
-  display_interactive_menu_categories
+  display_interactive_menu_categories 1
 
   if [[ $test_file == *"@"* ]]
   then
