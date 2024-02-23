@@ -314,9 +314,10 @@ commands:
   dependencies:
     fzf: visit https://github.com/junegunn/fzf#installation to install
   help: |-
-    🕹️ Run any example
+    🕹️ Run any example ! just run <playground run> !
 
-    🪄 to start in interactive mode, just run playground run
+    🔥 HIGHLY RECOMMENDED: start in interactive mode by simple running <playground run> !
+
 
     ⛅ When running Confluent Cloud (ccloud) example:
 
@@ -831,7 +832,9 @@ commands:
 
   - name: bootstrap
     help: |-
-      🛠  Bootstrap reproduction model
+      🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !
+
+      🔥 HIGHLY RECOMMENDED: start in interactive mode by simple running <playground repro bootstrap> !
       
       👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%f0%9f%9b%a0-bootstrap-reproduction-model
     catch_all:
@@ -895,8 +898,7 @@ commands:
       private: true
       short: -n
       arg: nb-producers
-      validate: integer
-      default: ""
+      required: false
       help: |-
         2️⃣ Number of java producers to generate
 

@@ -45,9 +45,10 @@ subcommands:
         options: []
   - name: run
     description: | 
-        🕹️ Run any example
+        🕹️ Run any example ! just run <playground run> !
         
-        🪄 to start in interactive mode, just run playground run
+        🔥 HIGHLY RECOMMENDED: start in interactive mode by simple running <playground run> !
+        
         
         ⛅ When running Confluent Cloud (ccloud) example:
         
@@ -652,7 +653,9 @@ subcommands:
             
       - name: bootstrap
         description: | 
-          🛠  Bootstrap reproduction model
+          🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !
+            
+            🔥 HIGHLY RECOMMENDED: start in interactive mode by simple running <playground repro bootstrap> !
             
             👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%f0%9f%9b%a0-bootstrap-reproduction-model
         usage: playground repro bootstrap [OPTIONS] [ARGUMENTS...]
@@ -697,11 +700,9 @@ subcommands:
         - names:
           - --nb-producers
           - -n
-          argument: 
+          argument: NB-PRODUCERS
           description: | 
             2️⃣ Number of java producers to generate
-            
-            Default value: 
             
         - names:
           - --producer-schema-key
