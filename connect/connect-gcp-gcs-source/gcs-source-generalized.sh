@@ -67,22 +67,22 @@ docker run -i -v ${PWD}:/tmp/ --volumes-from gcloud-config google/cloud-sdk:late
 log "Creating Generalized GCS Source connector"
 playground connector create-or-update --connector gcs-source  << EOF
 {
-               "connector.class": "io.confluent.connect.gcs.GcsSourceConnector",
-               "gcs.bucket.name" : "$GCS_BUCKET_NAME",
-               "gcs.credentials.path" : "/tmp/keyfile.json",
-               "format.class": "io.confluent.connect.gcs.format.json.JsonFormat",
-               "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-               "value.converter.schemas.enable": "false",
-               "mode": "GENERIC",
-               "topics.dir": "quickstart",
-               "topic.regex.list": "quick-start-topic:.*",
-               "tasks.max" : "1",
-               "confluent.topic.bootstrap.servers" : "broker:9092",
-               "confluent.topic.replication.factor" : "1",
-               "errors.tolerance": "all",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
-          }
+    "connector.class": "io.confluent.connect.gcs.GcsSourceConnector",
+    "gcs.bucket.name" : "$GCS_BUCKET_NAME",
+    "gcs.credentials.path" : "/tmp/keyfile.json",
+    "format.class": "io.confluent.connect.gcs.format.json.JsonFormat",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "mode": "GENERIC",
+    "topics.dir": "quickstart",
+    "topic.regex.list": "quick-start-topic:.*",
+    "tasks.max" : "1",
+    "confluent.topic.bootstrap.servers" : "broker:9092",
+    "confluent.topic.replication.factor" : "1",
+    "errors.tolerance": "all",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
+}
 EOF
 
 sleep 10
