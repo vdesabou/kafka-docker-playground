@@ -626,72 +626,86 @@ then
       then
         array_flag_list+=("--enable-ksqldb")
         export ENABLE_KSQLDB=true
+        interactive_enable_ksqldb="true"
       fi
       if [[ $res == *"$MENU_DISABLE_KSQLDB"* ]]
       then
         array_flag_list=("${array_flag_list[@]/"--enable-ksqldb"}")
         unset ENABLE_KSQLDB
+        interactive_enable_ksqldb=""
       fi
 
       if [[ $res == *"$MENU_ENABLE_C3"* ]]
       then
         array_flag_list+=("--enable-control-center")
         export ENABLE_CONTROL_CENTER=true
+        interactive_enable_c3="true"
       fi
       if [[ $res == *"$MENU_DISABLE_C3"* ]]
       then
         array_flag_list=("${array_flag_list[@]/"--enable-control-center"}")
         unset ENABLE_CONTROL_CENTER
+        interactive_enable_c3=""
       fi
 
       if [[ $res == *"$MENU_ENABLE_RP"* ]]
       then
         array_flag_list+=("--enable-rest-proxy")
         export ENABLE_RESTPROXY=true
+        interactive_enable_rp="true"
       fi
       if [[ $res == *"$MENU_DISABLE_RP"* ]]
       then
         array_flag_list=("${array_flag_list[@]/"--enable-rest-proxy"}")
         unset ENABLE_RESTPROXY
+        interactive_enable_rp=""
       fi
 
       if [[ $res == *"$MENU_ENABLE_CONDUKTOR"* ]]
       then
         array_flag_list+=("--enable-conduktor")
         export ENABLE_CONDUKTOR=true
+        interactive_enable_conduktor="true"
       fi 
       if [[ $res == *"$MENU_DISABLE_CONDUKTOR"* ]]
       then
         array_flag_list=("${array_flag_list[@]/"--enable-conduktor"}")
         unset ENABLE_CONDUKTOR
+        interactive_enable_conduktor=""
       fi
 
       if [[ $res == *"$MENU_ENABLE_GRAFANA"* ]]
       then
         array_flag_list+=("--enable-jmx-grafana")
         export ENABLE_JMX_GRAFANA=true
+        interactive_enable_grafana="true"
+
       fi
       if [[ $res == *"$MENU_DISABLE_GRAFANA"* ]]
       then
         array_flag_list=("${array_flag_list[@]/"--enable-jmx-grafana"}")
         unset ENABLE_JMX_GRAFANA
+        interactive_enable_grafana=""
       fi
 
       if [[ $res == *"$MENU_ENABLE_BROKERS"* ]]
       then
         array_flag_list+=("--enable-multiple-broker")
         export ENABLE_KAFKA_NODES=true
+        interactive_enable_broker="true"
       fi 
       if [[ $res == *"$MENU_DISABLE_BROKERS"* ]]
       then
         array_flag_list=("${array_flag_list[@]/"--enable-multiple-broker"}")
         unset ENABLE_KAFKA_NODES
+        interactive_enable_broker=""
       fi
 
       if [[ $res == *"$MENU_ENABLE_CONNECT_WORKERS"* ]]
       then
         array_flag_list+=("--enable-multiple-connect-workers")
         export ENABLE_CONNECT_NODES=true
+        interactive_enable_connect="true"
 
         # determining the docker-compose file from from test_file
         docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
@@ -706,6 +720,7 @@ then
       then
         array_flag_list=("${array_flag_list[@]/"--enable-multiple-connect-workers"}")
         unset ENABLE_CONNECT_NODES
+        interactive_enable_connect=""
         cp /tmp/playground-backup-docker-compose.yml $docker_compose_file
       fi
 
@@ -713,22 +728,26 @@ then
       then
         array_flag_list+=("--enable-kcat")
         export ENABLE_KCAT=true
+        interactive_enable_kcat="true"
       fi 
       if [[ $res == *"$MENU_DISABLE_KCAT"* ]]
       then
         array_flag_list=("${array_flag_list[@]/"--enable-kcat"}")
         unset ENABLE_KCAT
+        interactive_enable_kcat=""
       fi
 
       if [[ $res == *"$MENU_ENABLE_SQL_DATAGEN"* ]]
       then
         array_flag_list+=("--enable-sql-datagen")
         export SQL_DATAGEN=true
+        interactive_enable_sql="true"
       fi
       if [[ $res == *"$MENU_DISABLE_SQL_DATAGEN"* ]]
       then
         array_flag_list=("${array_flag_list[@]/"--enable-sql-datagen"}")
         unset SQL_DATAGEN
+        interactive_enable_sql=""
       fi
 
       if [[ $res == *"$MENU_ENVIRONMENT"* ]]
@@ -898,9 +917,7 @@ then
     done # end while loop stop
     IFS=' ' flag_list="${array_flag_list[*]}"
 
-    # for env_variable in ENABLE_KSQLDB ENABLE_RESTPROXY ENABLE_CONTROL_CENTER ENABLE_CONDUKTOR ENABLE_KAFKA_NODES ENABLE_CONNECT_NODES ENABLE_JMX_GRAFANA ENABLE_KCAT SQL_DATAGEN
-    # do
-    if [ ! -z "$ENABLE_KSQLDB" ]
+    if [ "$interactive_enable_ksqldb" == "true" ]
     then
       if [[ -n "$force_interactive_repro" ]]
       then
@@ -908,7 +925,7 @@ then
       fi
     fi
 
-    if [ ! -z "$ENABLE_RESTPROXY" ]
+    if [ "$interactive_enable_rp" == "true" ]
     then
       if [[ -n "$force_interactive_repro" ]]
       then
@@ -916,7 +933,7 @@ then
       fi
     fi
 
-    if [ ! -z "$ENABLE_CONTROL_CENTER" ]
+    if [ "$interactive_enable_c3" == "true" ]
     then
       if [[ -n "$force_interactive_repro" ]]
       then
@@ -924,7 +941,7 @@ then
       fi
     fi
 
-    if [ ! -z "$ENABLE_CONDUKTOR" ]
+    if [ "$interactive_enable_conduktor" == "true" ]
     then
       if [[ -n "$force_interactive_repro" ]]
       then
@@ -932,7 +949,7 @@ then
       fi
     fi
 
-    if [ ! -z "$ENABLE_KAFKA_NODES" ]
+    if [ "$interactive_enable_broker" == "true" ]
     then
       if [[ -n "$force_interactive_repro" ]]
       then
@@ -940,7 +957,7 @@ then
       fi
     fi
 
-    if [ ! -z "$ENABLE_CONNECT_NODES" ]
+    if [ "$interactive_enable_connect" == "true" ]
     then
       if [[ -n "$force_interactive_repro" ]]
       then
@@ -948,7 +965,7 @@ then
       fi
     fi
 
-    if [ ! -z "$ENABLE_JMX_GRAFANA" ]
+    if [ "$interactive_enable_grafana" == "true" ]
     then
       if [[ -n "$force_interactive_repro" ]]
       then
@@ -956,7 +973,7 @@ then
       fi
     fi
 
-    if [ ! -z "$ENABLE_KCAT" ]
+    if [ "$interactive_enable_kcat" == "true" ]
     then
       if [[ -n "$force_interactive_repro" ]]
       then
@@ -964,7 +981,7 @@ then
       fi
     fi
 
-    if [ ! -z "$SQL_DATAGEN" ]
+    if [ "$interactive_enable_sql" == "true" ]
     then
       if [[ -n "$force_interactive_repro" ]]
       then

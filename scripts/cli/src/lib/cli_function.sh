@@ -1111,7 +1111,6 @@ function display_interactive_menu_categories () {
     nb_repro=0
   fi
 
-  MENU_CURRENT_EXAMPLE="🕹️  Current example"
   MENU_CONNECTOR="🔗 Connectors $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_CONNECTOR})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_connector_only | awk '{print $1}') examples"
   MENU_CCLOUD="🌤️  Confluent cloud $(printf '%*s' $((${MAX_LENGTH}-18-${#MENU_CCLOUD})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only | awk '{print $1}') examples"
   MENU_FULLY_MANAGED_CONNECTOR="🤖 Fully-Managed connectors $(printf '%*s' $((${MAX_LENGTH}-27-${#MENU_FULLY_MANAGED_CONNECTOR})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_fully_managed_connector_only | awk '{print $1}') examples"
@@ -1125,7 +1124,27 @@ function display_interactive_menu_categories () {
 
   if [ "$repro" == 1 ]
   then
-    options=("$MENU_CURRENT_EXAMPLE" "$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_OTHER" "$MENU_ENVIRONMENTS" "$MENU_ALL" "$MENU_KSQL" "$MENU_SR" "$MENU_RP")
+    propose_current_example=0
+    current_file=$(playground state get run.test_file)
+    if [ -f "$current_file" ]
+    then
+      last_two_folders=$(basename $(dirname $(dirname $current_file)))/$(basename $(dirname $current_file))
+      filename=$(basename $current_file)
+      current_file="$last_two_folders/$filename"
+
+      if [[ $current_file != *"reproduction-models"* ]]
+      then
+        propose_current_example=1
+      fi
+    fi
+
+    if [ $propose_current_example -eq 1 ]
+    then
+      MENU_CURRENT_EXAMPLE="🕹️  Current example $(printf '%*s' $((${MAX_LENGTH}-18-${#MENU_CURRENT_EXAMPLE})) ' ') $current_file"
+      options=("$MENU_CURRENT_EXAMPLE" "$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_OTHER" "$MENU_ENVIRONMENTS" "$MENU_ALL" "$MENU_KSQL" "$MENU_SR" "$MENU_RP")
+    else
+      options=("$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_OTHER" "$MENU_ENVIRONMENTS" "$MENU_ALL" "$MENU_KSQL" "$MENU_SR" "$MENU_RP")
+    fi
   else
     options=("$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_REPRO" "$MENU_OTHER" "$MENU_ENVIRONMENTS" "$MENU_ALL" "$MENU_KSQL" "$MENU_SR" "$MENU_RP")
   fi
