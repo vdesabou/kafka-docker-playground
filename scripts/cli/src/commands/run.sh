@@ -401,10 +401,22 @@ then
     if [[ $terminal_columns -gt 180 ]]
     then
       MAX_LENGTH=$((${terminal_columns}-120))
-      fzf_option_wrap="--preview-window=30%,wrap"
+      fzf_version=$(get_fzf_version)
+      if version_gt $fzf_version "0.38"
+      then
+        fzf_option_wrap="--preview-window=30%,wrap"
+      else
+        fzf_option_wrap=""
+      fi
     else
       MAX_LENGTH=$((${terminal_columns}-65))
-      fzf_option_wrap="--preview-window=20%,wrap"
+      fzf_version=$(get_fzf_version)
+      if version_gt $fzf_version "0.38"
+      then
+        fzf_option_wrap="--preview-window=20%,wrap"
+      else
+        fzf_option_wrap=""
+      fi
     fi
     readonly MENU_LETS_GO="🚀 Run the example !" #0
 
@@ -925,6 +937,17 @@ then
         log "🙈 ignoring environment variable SCHEMA_REGISTRY_CREDS as one of the flags is set"
         unset SCHEMA_REGISTRY_CREDS
       fi
+
+      for env_variable in ENABLE_KSQLDB ENABLE_RESTPROXY ENABLE_CONTROL_CENTER ENABLE_CONDUKTOR ENABLE_KAFKA_NODES ENABLE_CONNECT_NODES ENABLE_JMX_GRAFANA ENABLE_KCAT SQL_DATAGEN
+      do
+        if [ ! -z "$env_variable" ]
+        then
+          if [[ -n "$force_interactive_repro" ]]
+          then
+            force_enable --enable-ksqldb $env_variable
+          fi
+        fi
+      done
 
       if [[ -n "$cluster_type" ]]
       then

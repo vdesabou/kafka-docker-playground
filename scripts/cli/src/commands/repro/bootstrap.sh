@@ -10,11 +10,8 @@ eval "pipeline_array=(${args[--pipeline]})"
 schema_file_key="${args[--producer-schema-key]}"
 schema_file_value="${args[--producer-schema-value]}"
 
-interactive_mode=0
-
 if [[ ! -n "$test_file" ]]
 then
-  interactive_mode=1
   display_interactive_menu_categories
 
   if [[ $test_file == *"@"* ]]
@@ -39,10 +36,22 @@ then
   if [[ $terminal_columns -gt 180 ]]
   then
     MAX_LENGTH=$((${terminal_columns}-120))
-    fzf_option_wrap="--preview-window=30%,wrap"
+    fzf_version=$(get_fzf_version)
+    if version_gt $fzf_version "0.38"
+    then
+      fzf_option_wrap="--preview-window=30%,wrap"
+    else
+      fzf_option_wrap=""
+    fi
   else
     MAX_LENGTH=$((${terminal_columns}-65))
-    fzf_option_wrap="--preview-window=20%,wrap"
+    fzf_version=$(get_fzf_version)
+    if version_gt $fzf_version "0.38"
+    then
+      fzf_option_wrap="--preview-window=20%,wrap"
+    else
+      fzf_option_wrap=""
+    fi
   fi
   readonly MENU_LETS_GO="🏭 Create the reproduction model !" #0
 
@@ -1203,4 +1212,4 @@ playground generate-fzf-find-files &
 playground open-docs --only-show-url
 log "🕹️  Ready? Run it now?"
 check_if_continue
-playground run -f $repro_dir/$repro_test_filename $flag_list --force-interactive-repro ${other_args[*]}
+playground run -f $repro_dir/$repro_test_filename --force-interactive-repro $flag_list ${other_args[*]}

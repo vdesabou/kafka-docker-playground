@@ -3730,15 +3730,15 @@ function force_enable () {
   env_variable=$2
 
   logwarn "💪 Forcing $flag ($env_variable env variable)"
-  line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh$' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+  line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh$' $test_file | cut -d ":" -f 1 | tail -n1)
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
   echo "# remove or comment those lines if you don't need it anymore" > $tmp_dir/tmp_force_enable
   echo "logwarn \"💪 Forcing $flag ($env_variable env variable) as it was set when reproduction model was created\"" >> $tmp_dir/tmp_force_enable
   echo "export $env_variable=true" >> $tmp_dir/tmp_force_enable
-  cp $repro_test_file $tmp_dir/tmp_file
+  cp $test_file $tmp_dir/tmp_file
 
-  { head -n $(($line_final_source+1)) $tmp_dir/tmp_file; cat $tmp_dir/tmp_force_enable; tail -n  +$(($line_final_source+1)) $tmp_dir/tmp_file; } > $repro_test_file
+  { head -n $(($line_final_source+1)) $tmp_dir/tmp_file; cat $tmp_dir/tmp_force_enable; tail -n  +$(($line_final_source+1)) $tmp_dir/tmp_file; } > $test_file
 }
 
 function load_env_variables () {

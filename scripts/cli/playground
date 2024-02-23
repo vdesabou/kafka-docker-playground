@@ -10540,15 +10540,15 @@ function force_enable () {
   env_variable=$2
 
   logwarn "💪 Forcing $flag ($env_variable env variable)"
-  line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh$' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+  line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh$' $test_file | cut -d ":" -f 1 | tail -n1)
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
   echo "# remove or comment those lines if you don't need it anymore" > $tmp_dir/tmp_force_enable
   echo "logwarn \"💪 Forcing $flag ($env_variable env variable) as it was set when reproduction model was created\"" >> $tmp_dir/tmp_force_enable
   echo "export $env_variable=true" >> $tmp_dir/tmp_force_enable
-  cp $repro_test_file $tmp_dir/tmp_file
+  cp $test_file $tmp_dir/tmp_file
 
-  { head -n $(($line_final_source+1)) $tmp_dir/tmp_file; cat $tmp_dir/tmp_force_enable; tail -n  +$(($line_final_source+1)) $tmp_dir/tmp_file; } > $repro_test_file
+  { head -n $(($line_final_source+1)) $tmp_dir/tmp_file; cat $tmp_dir/tmp_force_enable; tail -n  +$(($line_final_source+1)) $tmp_dir/tmp_file; } > $test_file
 }
 
 function load_env_variables () {
@@ -11748,10 +11748,22 @@ playground_run_command() {
       if [[ $terminal_columns -gt 180 ]]
       then
         MAX_LENGTH=$((${terminal_columns}-120))
-        fzf_option_wrap="--preview-window=30%,wrap"
+        fzf_version=$(get_fzf_version)
+        if version_gt $fzf_version "0.38"
+        then
+          fzf_option_wrap="--preview-window=30%,wrap"
+        else
+          fzf_option_wrap=""
+        fi
       else
         MAX_LENGTH=$((${terminal_columns}-65))
-        fzf_option_wrap="--preview-window=20%,wrap"
+        fzf_version=$(get_fzf_version)
+        if version_gt $fzf_version "0.38"
+        then
+          fzf_option_wrap="--preview-window=20%,wrap"
+        else
+          fzf_option_wrap=""
+        fi
       fi
       readonly MENU_LETS_GO="🚀 Run the example !" #0
 
@@ -12277,6 +12289,17 @@ playground_run_command() {
           log "🙈 ignoring environment variable SCHEMA_REGISTRY_CREDS as one of the flags is set"
           unset SCHEMA_REGISTRY_CREDS
         fi
+
+        for env_variable in ENABLE_KSQLDB ENABLE_RESTPROXY ENABLE_CONTROL_CENTER ENABLE_CONDUKTOR ENABLE_KAFKA_NODES ENABLE_CONNECT_NODES ENABLE_JMX_GRAFANA ENABLE_KCAT SQL_DATAGEN
+        do
+          if [ ! -z "$env_variable" ]
+          then
+            if [[ -n "$force_interactive_repro" ]]
+            then
+              force_enable --enable-ksqldb $env_variable
+            fi
+          fi
+        done
 
         if [[ -n "$cluster_type" ]]
         then
@@ -13246,11 +13269,8 @@ playground_repro_bootstrap_command() {
   schema_file_key="${args[--producer-schema-key]}"
   schema_file_value="${args[--producer-schema-value]}"
 
-  interactive_mode=0
-
   if [[ ! -n "$test_file" ]]
   then
-    interactive_mode=1
     display_interactive_menu_categories
 
     if [[ $test_file == *"@"* ]]
@@ -13275,10 +13295,22 @@ playground_repro_bootstrap_command() {
     if [[ $terminal_columns -gt 180 ]]
     then
       MAX_LENGTH=$((${terminal_columns}-120))
-      fzf_option_wrap="--preview-window=30%,wrap"
+      fzf_version=$(get_fzf_version)
+      if version_gt $fzf_version "0.38"
+      then
+        fzf_option_wrap="--preview-window=30%,wrap"
+      else
+        fzf_option_wrap=""
+      fi
     else
       MAX_LENGTH=$((${terminal_columns}-65))
-      fzf_option_wrap="--preview-window=20%,wrap"
+      fzf_version=$(get_fzf_version)
+      if version_gt $fzf_version "0.38"
+      then
+        fzf_option_wrap="--preview-window=20%,wrap"
+      else
+        fzf_option_wrap=""
+      fi
     fi
     readonly MENU_LETS_GO="🏭 Create the reproduction model !" #0
 
@@ -14429,7 +14461,7 @@ playground_repro_bootstrap_command() {
   playground open-docs --only-show-url
   log "🕹️  Ready? Run it now?"
   check_if_continue
-  playground run -f $repro_dir/$repro_test_filename $flag_list --force-interactive-repro ${other_args[*]}
+  playground run -f $repro_dir/$repro_test_filename --force-interactive-repro $flag_list ${other_args[*]}
 }
 
 # :command.function
