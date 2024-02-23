@@ -19,18 +19,6 @@ then
     test_file=$(echo "$test_file" | cut -d "@" -f 2)
   fi
 
-  # test_file=$(playground state get run.test_file)
-
-  # if [ ! -f $test_file ]
-  # then
-
-  #     logerror "❌ --file was not provided and file $test_file retrieved from $root_folder/playground.ini does not exist!"
-  #     exit 1
-  # else
-  #   log "--file flag was not provided, use current example $test_file ?"
-  #   check_if_continue
-  # fi
-
   declare -a array_flag_list=()
   terminal_columns=$(tput cols)
   if [[ $terminal_columns -gt 180 ]]
