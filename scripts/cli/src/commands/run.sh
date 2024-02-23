@@ -405,8 +405,12 @@ then
       if version_gt $fzf_version "0.38"
       then
         fzf_option_wrap="--preview-window=30%,wrap"
+        fzf_option_pointer="--pointer=👉"
+        fzf_option_rounded="--border=rounded"
       else
         fzf_option_wrap=""
+        fzf_option_pointer=""
+        fzf_option_rounded=""
       fi
     else
       MAX_LENGTH=$((${terminal_columns}-65))
@@ -414,8 +418,12 @@ then
       if version_gt $fzf_version "0.38"
       then
         fzf_option_wrap="--preview-window=20%,wrap"
+        fzf_option_pointer="--pointer=👉"
+        fzf_option_rounded="--border=rounded"
       else
         fzf_option_wrap=""
+        fzf_option_pointer=""
+        fzf_option_rounded=""
       fi
     fi
     readonly MENU_LETS_GO="🚀 Run the example !" #0

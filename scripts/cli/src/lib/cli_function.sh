@@ -335,7 +335,7 @@ function get_examples_list_with_fzf() {
     fzf_option_pointer="--pointer=👉"
     fzf_option_rounded="--border=rounded"
   else
-    fzf_options=""
+    fzf_option_wrap=""
     fzf_option_pointer=""
     fzf_option_rounded=""
   fi
@@ -365,7 +365,7 @@ function get_zip_or_jar_with_fzf() {
     fzf_option_pointer="--pointer=👉"
     fzf_option_rounded="--border=rounded"
   else
-    fzf_options=""
+    fzf_option_wrap=""
     fzf_option_pointer=""
     fzf_option_rounded=""
   fi
@@ -393,7 +393,7 @@ function get_playground_repro_export_with_fzf() {
     fzf_option_pointer="--pointer=👉"
     fzf_option_rounded="--border=rounded"
   else
-    fzf_options=""
+    fzf_option_wrap=""
     fzf_option_pointer=""
     fzf_option_rounded=""
   fi
@@ -421,7 +421,7 @@ function get_ccloud_environment_list_with_fzf() {
     fzf_option_pointer="--pointer=👉"
     fzf_option_rounded="--border=rounded"
   else
-    fzf_options=""
+    fzf_option_wrap=""
     fzf_option_pointer=""
     fzf_option_rounded=""
   fi
@@ -439,7 +439,7 @@ function get_ccloud_cluster_list_with_fzf() {
     fzf_option_pointer="--pointer=👉"
     fzf_option_rounded="--border=rounded"
   else
-    fzf_options=""
+    fzf_option_wrap=""
     fzf_option_pointer=""
     fzf_option_rounded=""
   fi
@@ -457,7 +457,7 @@ function get_confluent_kafka_region_list_with_fzf() {
     fzf_option_pointer="--pointer=👉"
     fzf_option_rounded="--border=rounded"
   else
-    fzf_options=""
+    fzf_option_wrap=""
     fzf_option_pointer=""
     fzf_option_rounded=""
   fi
@@ -475,7 +475,7 @@ function get_tag_list_with_fzf() {
     fzf_option_pointer="--pointer=👉"
     fzf_option_rounded="--border=rounded"
   else
-    fzf_options=""
+    fzf_option_wrap=""
     fzf_option_pointer=""
     fzf_option_rounded=""
   fi
@@ -493,7 +493,7 @@ function get_any_files_with_fzf() {
     fzf_option_pointer="--pointer=👉"
     fzf_option_rounded="--border=rounded"
   else
-    fzf_options=""
+    fzf_option_wrap=""
     fzf_option_pointer=""
     fzf_option_rounded=""
   fi
@@ -516,7 +516,7 @@ function get_predefined_schemas_with_fzf() {
     fzf_option_pointer="--pointer=👉"
     fzf_option_rounded="--border=rounded"
   else
-    fzf_options=""
+    fzf_option_wrap=""
     fzf_option_pointer=""
     fzf_option_rounded=""
   fi
@@ -538,7 +538,7 @@ function get_plugin_list() {
     fzf_option_pointer="--pointer=👉"
     fzf_option_rounded="--border=rounded"
   else
-    fzf_options=""
+    fzf_option_wrap=""
     fzf_option_pointer=""
     fzf_option_rounded=""
   fi
@@ -573,7 +573,7 @@ function choose_connector_tag() {
     fzf_option_pointer="--pointer=👉"
     fzf_option_rounded="--border=rounded"
   else
-    fzf_options=""
+    fzf_option_wrap=""
     fzf_option_pointer=""
     fzf_option_rounded=""
   fi
