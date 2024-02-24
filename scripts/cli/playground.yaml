@@ -2388,6 +2388,12 @@ subcommands:
             Package name
             
         - names:
+          - --wait-for-zero-lag
+          argument: ""
+          description: | 
+            😴 Wait until lag becomes 0
+            
+        - names:
           - --validate
           argument: ""
           description: | 

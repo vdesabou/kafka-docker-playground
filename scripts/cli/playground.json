@@ -2224,6 +2224,13 @@
             },
             {
               "names": [
+                "--wait-for-zero-lag"
+              ],
+              "argument": "",
+              "description": "😴 Wait until lag becomes 0\n"
+            },
+            {
+              "names": [
                 "--validate"
               ],
               "argument": "",

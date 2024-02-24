@@ -3,6 +3,7 @@ json=${args[json]}
 level=${args[--level]}
 package=${args[--package]}
 validate=${args[--validate]}
+wait_for_zero_lag=${args[--wait-for-zero-lag]}
 verbose="${args[--verbose]}"
 
 connector_type=$(playground state get run.connector_type)
@@ -188,6 +189,7 @@ then
     echo "$json_content" > "/tmp/config-$connector"
     playground connector show-config --connector "$connector"
 fi
+
 playground connector show-config-parameters --connector "$connector" --only-show-json
 log "🥁 Waiting a few seconds to get new status"
 sleep 5
@@ -198,3 +200,23 @@ then
     playground connector open-docs --only-show-url
 fi
 set -e
+
+if [[ -n "$wait_for_zero_lag" ]]
+then
+    maybe_id=""
+    if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+    then
+        handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status\" --header \"authorization: Basic $authorization\""
+        connectorId=$(get_ccloud_connector_lcc $connector)
+        maybe_id=" ($connectorId)"
+    else
+        handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\""
+    fi
+
+    type=$(echo "$curl_output" | jq -r '.type')
+    if [ "$type" != "sink" ]
+    then
+        logwarn "⏭️ --wait-for-zero-lag is set but $connector_type connector ${connector}${maybe_id} is not a sink"
+    fi
+    playground connector show-lag --connector $connector
+fi

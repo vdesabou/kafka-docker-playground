@@ -5227,6 +5227,11 @@ playground_connector_create_or_update_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--wait-for-zero-lag")"
+    printf "    😴 Wait until lag becomes 0\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--validate")"
     printf "    ✅ Validate config using PUT /connector-plugins/(string:name)/config/validate\n    (https://docs.confluent.io/platform/current/connect/references/restapi.html#put--connector-plugins-(string-name)-config-validate)\n"
     echo
@@ -11811,6 +11816,21 @@ playground_run_command() {
   then
     if [ $interactive_mode == 1 ]
     then
+      # editor=$(playground config get editor)
+      # if [ "$editor" != "" ]
+      # then
+      #   log "📖 Opening ${test_file} using configured editor $editor"
+      #   $editor ${test_file}
+      # else
+      #     if [[ $(type code 2>&1) =~ "not found" ]]
+      #     then
+      #         logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
+      #         exit 1
+      #     else
+      #         log "📖 Opening ${test_file} with code (default) - you can change editor by using playground config editor <editor>"
+      #         code ${test_file}
+      #     fi
+      # fi
       declare -a array_flag_list=()
       terminal_columns=$(tput cols)
       if [[ $terminal_columns -gt 180 ]]
@@ -18770,6 +18790,14 @@ playground_connector_show_lag_command() {
 
     fi
 
+    playground connector status --connector $connector  > $tmp_dir/result.log  2>&1
+    line=$(sed -n '3p' $tmp_dir/result.log)
+    if [ "$line" != "✅ RUNNING" ]
+    then
+        logerror "❌ $connector_type connector ${connector}${maybe_id} is not in ✅ RUNNING state"
+        exit 1
+    fi
+
     if [[ -n "$verbose" ]]
     then
         log "🐞 CLI command used"
@@ -19575,6 +19603,7 @@ playground_connector_create_or_update_command() {
   level=${args[--level]}
   package=${args[--package]}
   validate=${args[--validate]}
+  wait_for_zero_lag=${args[--wait-for-zero-lag]}
   verbose="${args[--verbose]}"
 
   connector_type=$(playground state get run.connector_type)
@@ -19762,6 +19791,7 @@ playground_connector_create_or_update_command() {
       echo "$json_content" > "/tmp/config-$connector"
       playground connector show-config --connector "$connector"
   fi
+
   playground connector show-config-parameters --connector "$connector" --only-show-json
   log "🥁 Waiting a few seconds to get new status"
   sleep 5
@@ -19772,6 +19802,26 @@ playground_connector_create_or_update_command() {
       playground connector open-docs --only-show-url
   fi
   set -e
+
+  if [[ -n "$wait_for_zero_lag" ]]
+  then
+      maybe_id=""
+      if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+      then
+          handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status\" --header \"authorization: Basic $authorization\""
+          connectorId=$(get_ccloud_connector_lcc $connector)
+          maybe_id=" ($connectorId)"
+      else
+          handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\""
+      fi
+
+      type=$(echo "$curl_output" | jq -r '.type')
+      if [ "$type" != "sink" ]
+      then
+          logwarn "⏭️ --wait-for-zero-lag is set but $connector_type connector ${connector}${maybe_id} is not a sink"
+      fi
+      playground connector show-lag --connector $connector
+  fi
 }
 
 # :command.function
@@ -29528,6 +29578,14 @@ playground_connector_create_or_update_parse_requirements() {
           printf "%s\n" "--package requires an argument: --package, -p PACKAGE" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --wait-for-zero-lag)
+
+        # :flag.case_no_arg
+        args['--wait-for-zero-lag']=1
+        shift
         ;;
 
       # :flag.case

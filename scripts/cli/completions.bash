@@ -269,7 +269,7 @@ _playground_completions() {
       ;;
 
     *'connector create-or-update'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --level --package --validate --verbose -c -h -l -p -v")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--connector --help --level --package --validate --verbose --wait-for-zero-lag -c -h -l -p -v")" -- "$cur" )
       ;;
 
     *'topic get-number-records'*'-t')

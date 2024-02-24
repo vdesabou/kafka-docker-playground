@@ -172,6 +172,14 @@ do
     continue 
   fi
 
+  playground connector status --connector $connector  > $tmp_dir/result.log  2>&1
+  line=$(sed -n '3p' $tmp_dir/result.log)
+  if [ "$line" != "✅ RUNNING" ]
+  then
+      logerror "❌ $connector_type connector ${connector}${maybe_id} is not in ✅ RUNNING state"
+      exit 1
+  fi
+
   if [[ -n "$verbose" ]]
   then
       log "🐞 CLI command used"
