@@ -444,6 +444,9 @@ do
           echo "$readable_date,$timestamp_ms,$timestamp_source" >> $latency_csv
         fi
       fi
+    elif [[ $line =~ "Unable to find FetchSessionHandler" ]]
+    then
+      continue
     elif [[ $line =~ "Processed a total of" ]]
     then
       continue
