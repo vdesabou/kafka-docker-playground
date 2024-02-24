@@ -1554,13 +1554,13 @@ subcommands:
             
         - names:
           - --min-expected-messages
-          argument: 
+          argument: 0
           description: | 
             Minimum expected number of messages to be present in topic, returns an error if this is not the case
             
             Note: --topic should be specified in this case.
             
-            Default value: 
+            Default value: 0
             
         - names:
           - --grep
@@ -1723,13 +1723,13 @@ subcommands:
             
         - names:
           - --nb-partitions
-          argument: 
+          argument: 1
           description: | 
             🔢 Number of partitions for the topic. (default is 1)
             
             ❌ Important: If topic is existing, it will be re-created before producing to topic.
             
-            Default value: 
+            Default value: 1
             
         - names:
           - --compression-codec
@@ -1875,11 +1875,11 @@ subcommands:
             
         - names:
           - --nb-partitions
-          argument: 
+          argument: 1
           description: | 
             Number of partitions for the topic. (default is 1)
             
-            Default value: 
+            Default value: 1
             
       - name: delete
         description: | 

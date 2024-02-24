@@ -67,7 +67,7 @@ fi
 
 if [[ -n "$timeout" ]] && [ "$timeout" != "60" ]
 then
-  if [[ ! -n "$min_expected_messages" ]]
+  if [[ ! -n "$min_expected_messages" ]] || [ "$min_expected_messages" == "0" ]
   then
     logerror "❌ --timeout was provided without specifying --min-expected-messages"
     exit 1
@@ -76,7 +76,7 @@ fi
 
 if [[ ! -n "$topic" ]]
 then
-    if [[ -n "$min_expected_messages" ]]
+    if [[ -n "$min_expected_messages" ]] && [ "$min_expected_messages" != "0" ]
     then
       logerror "--min-expected-messages was provided without specifying --topic"
       exit 1
@@ -117,7 +117,7 @@ do
   value_subject=""
   if [ ! -n "$tail" ]
   then
-    if [[ -n "$min_expected_messages" ]]
+    if [[ -n "$min_expected_messages" ]] && [ "$min_expected_messages" != "0" ]
     then 
       start_time=$(date +%s)
 

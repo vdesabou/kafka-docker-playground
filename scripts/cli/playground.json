@@ -1391,8 +1391,8 @@
               "names": [
                 "--min-expected-messages"
               ],
-              "argument": null,
-              "description": "Minimum expected number of messages to be present in topic, returns an error if this is not the case\n\nNote: --topic should be specified in this case.\n\nDefault value: \n"
+              "argument": 0,
+              "description": "Minimum expected number of messages to be present in topic, returns an error if this is not the case\n\nNote: --topic should be specified in this case.\n\nDefault value: 0\n"
             },
             {
               "names": [
@@ -1513,8 +1513,8 @@
               "names": [
                 "--nb-partitions"
               ],
-              "argument": null,
-              "description": "🔢 Number of partitions for the topic. (default is 1)\n\n❌ Important: If topic is existing, it will be re-created before producing to topic.\n\nDefault value: \n"
+              "argument": 1,
+              "description": "🔢 Number of partitions for the topic. (default is 1)\n\n❌ Important: If topic is existing, it will be re-created before producing to topic.\n\nDefault value: 1\n"
             },
             {
               "names": [
@@ -1670,8 +1670,8 @@
               "names": [
                 "--nb-partitions"
               ],
-              "argument": null,
-              "description": "Number of partitions for the topic. (default is 1)\n\nDefault value: \n"
+              "argument": 1,
+              "description": "Number of partitions for the topic. (default is 1)\n\nDefault value: 1\n"
             }
           ]
         },

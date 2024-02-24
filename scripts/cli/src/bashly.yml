@@ -1667,7 +1667,7 @@ commands:
         arg: min-expected-messages
         validate: integer
         required: false
-        default: ""
+        default: "0"
         help: |-
           Minimum expected number of messages to be present in topic, returns an error if this is not the case
 
@@ -1829,7 +1829,7 @@ commands:
         arg: nb-partitions
         validate: integer
         required: false
-        default: ""
+        default: "1"
         help: |-
           🔢 Number of partitions for the topic. (default is 1)
           
@@ -2392,7 +2392,7 @@ commands:
         arg: nb-partitions
         validate: integer
         required: false
-        default: ""
+        default: "1"
         help: |-
           Number of partitions for the topic. (default is 1)
       catch_all:

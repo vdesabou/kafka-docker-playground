@@ -626,16 +626,16 @@ then
     log "✨ topic $topic does not exist, it will be created.."
     if [[ "$environment" == "ccloud" ]]
     then
-        if [ "$nb_partitions" != "" ]
+        if [ "$nb_partitions" != "1" ]
         then
             log "⛅ creating topic in confluent cloud with $nb_partitions partitions"
             playground topic create --topic $topic --nb-partitions $nb_partitions
         else
             log "⛅ creating topic in confluent cloud"
-            playground topic create --topic $topic
+            playground topic create --topic $topic --nb-partitions 1
         fi
     else
-        if [ "$nb_partitions" != "" ]
+        if [ "$nb_partitions" != "1" ]
         then
             log "--nb-partitions is set, creating topic with $nb_partitions partitions"
             playground topic create --topic $topic --nb-partitions $nb_partitions
@@ -645,7 +645,7 @@ then
     fi
 else
     nb=$(playground topic get-number-records -t $topic | tail -1)
-    if [ "$nb_partitions" != "" ]
+    if [ "$nb_partitions" != "1" ]
     then
         if [ $nb == 0 ]
         then
@@ -653,7 +653,7 @@ else
             playground topic delete --topic $topic
             playground topic create --topic $topic --nb-partitions $nb_partitions
         else
-            logerror "--nb-partitions is set, but topic is not empty, delete it first and retry:"
+            logerror "--nb-partitions is set, but topic is not empty, delete it first and retry"
             echo "playground topic delete --topic $topic"
             exit 0
         fi
