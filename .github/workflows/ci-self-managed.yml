@@ -75,6 +75,11 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
+      - name: "Install confluent CLI"
+        run: |
+            curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
+            export PATH=$PATH:/usr/local/bin
+            
       - name: Build and Test
         run: bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
         env:

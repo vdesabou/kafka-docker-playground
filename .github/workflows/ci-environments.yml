@@ -89,6 +89,11 @@ jobs:
 
           df -h
 
+      - name: "Install confluent CLI"
+        run: |
+            curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
+            export PATH=$PATH:/usr/local/bin
+
       - name: Decrypt secrets.tar
         run: |
           ./.github/scripts/decrypt_secret.sh
@@ -255,6 +260,11 @@ jobs:
 
           df -h
 
+      - name: "Install confluent CLI"
+        run: |
+            curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
+            export PATH=$PATH:/usr/local/bin
+            
       - name: Decrypt secrets.tar
         run: |
           ./.github/scripts/decrypt_secret.sh
