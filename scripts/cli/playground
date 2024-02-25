@@ -11964,6 +11964,7 @@ playground_run_command() {
             if [ ! -z "$CLUSTER_NAME" ]
             then
               unset CLUSTER_NAME
+              cluster_name=""
             fi
             if [ ! -z "$CLUSTER_CREDS" ]
             then
@@ -11975,11 +11976,11 @@ playground_run_command() {
               unset SCHEMA_REGISTRY_CREDS
             fi
           fi
+          RED='\033[0;31m'
+          YELLOW='\033[0;33m'
+          NC='\033[0m' # No Color
           if [ ! -z "$CLUSTER_NAME" ] || [[ -n "$cluster_name" ]]
           then
-            RED='\033[0;31m'
-            YELLOW='\033[0;33m'
-            NC='\033[0m' # No Color
             if [ ! -z "$CLUSTER_NAME" ]
             then
               cluster_name=$CLUSTER_NAME
@@ -12010,7 +12011,7 @@ playground_run_command() {
               ccloud_preview="${ccloud_preview}🌤 ${YELLOW}cluster-cloud=$CLUSTER_CLOUD${NC}\n"
             fi
 
-            if [ -z $CLUSTER_CLOUD ]
+            if [ -z $CLUSTER_REGION ]
 
             then
               ccloud_preview="${ccloud_preview}❌ 🗺${RED}cluster-region is missing!${NC}\n"
@@ -12034,6 +12035,55 @@ playground_run_command() {
               ccloud_preview="${ccloud_preview}🔒 ${YELLOW}cluster-schema-registry-creds is missing, new credentials will be created${NC}\n"
             else
               ccloud_preview="${ccloud_preview}🔒 ${YELLOW}cluster-schema-registry-creds are set${NC}\n"
+            fi
+          else # CLUSTER_NAME is set
+            #
+            # CLUSTER_NAME is not set
+            #
+            ccloud_preview="🌱 ${YELLOW}cluster-name is not set, a new ccloud cluster will be created...${NC}\n"
+
+            if [ -z $ENVIRONMENT ] && [[ ! -n "$cluster_environment" ]]
+            then
+              ccloud_preview="${ccloud_preview}🌐 ${YELLOW}environment is missing, new environment will be created${NC}\n"
+            else
+              if [ ! -z "$ENVIRONMENT" ]
+              then
+                cluster_environment=$ENVIRONMENT
+              fi
+              ccloud_preview="${ccloud_preview}🌐 ${YELLOW}cluster_environment=$cluster_environment${NC}\n"
+            fi
+
+            if [ -z $CLUSTER_TYPE ] && [[ ! -n "$cluster_type" ]]
+            then
+              ccloud_preview="${ccloud_preview}🔋 ${YELLOW}cluster-type is missing, basic will be used${NC}\n"
+            else
+              if [ ! -z "$CLUSTER_TYPE" ]
+              then
+                cluster_type=$CLUSTER_TYPE
+              fi
+              ccloud_preview="${ccloud_preview}🔋 ${YELLOW}cluster-type=$cluster_type${NC}\n"
+            fi
+
+            if [ -z $CLUSTER_CLOUD ] && [[ ! -n "$cluster_cloud" ]]
+            then
+              ccloud_preview="${ccloud_preview}🌤 ${YELLOW}cluster-cloud is missing, aws will be used${NC}\n"
+            else
+              if [ ! -z "$CLUSTER_CLOUD" ]
+              then
+                cluster_cloud=$CLUSTER_CLOUD
+              fi
+              ccloud_preview="${ccloud_preview}🌤 ${YELLOW}cluster-cloud=$cluster_cloud${NC}\n"
+            fi
+
+            if [ -z $CLUSTER_REGION ] && [[ ! -n "$cluster_region" ]]
+            then
+              ccloud_preview="${ccloud_preview}🗺 ${YELLOW}cluster-region is missing, default region for provider will be used${NC}\n"
+            else
+              if [ ! -z "$CLUSTER_REGION" ]
+              then
+                cluster_region=$CLUSTER_REGION
+              fi
+              ccloud_preview="${ccloud_preview}🗺 ${YELLOW}cluster-region=$cluster_region${NC}\n"
             fi
           fi
         else # end of ccloud
