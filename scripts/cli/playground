@@ -11943,52 +11943,87 @@ playground_run_command() {
           unset 'options[24]'
           unset 'options[25]'
 
-          if [ ! -z "$CLUSTER_NAME" ]
+          if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_name" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
+          then
+            if [ ! -z "$CLUSTER_TYPE" ]
+            then
+              unset CLUSTER_TYPE
+            fi
+            if [ ! -z "$CLUSTER_CLOUD" ]
+            then
+              unset CLUSTER_CLOUD
+            fi
+            if [ ! -z "$CLUSTER_REGION" ]
+            then
+              unset CLUSTER_REGION
+            fi
+            if [ ! -z "$ENVIRONMENT" ]
+            then
+              unset ENVIRONMENT
+            fi
+            if [ ! -z "$CLUSTER_NAME" ]
+            then
+              unset CLUSTER_NAME
+            fi
+            if [ ! -z "$CLUSTER_CREDS" ]
+            then
+              unset CLUSTER_CREDS
+            fi
+
+            if [ ! -z "$SCHEMA_REGISTRY_CREDS" ]
+            then
+              unset SCHEMA_REGISTRY_CREDS
+            fi
+          fi
+          if [ ! -z "$CLUSTER_NAME" ] || [[ -n "$cluster_name" ]]
           then
             RED='\033[0;31m'
             YELLOW='\033[0;33m'
             NC='\033[0m' # No Color
-
+            if [ ! -z "$CLUSTER_NAME" ]
+            then
+              cluster_name=$CLUSTER_NAME
+            fi
             #
             # CLUSTER_NAME is set
             #
-            ccloud_preview="🌱${YELLOW}CLUSTER_NAME is set, your existing Confluent Cloud cluster will be used...${NC}\n"
-            ccloud_preview="${ccloud_preview}🎰${YELLOW}cluster-name=$CLUSTER_NAME${NC}\n"
+            ccloud_preview="🌱 ${YELLOW}cluster-name is set, your existing ccloud cluster will be used...${NC}\n"
+            ccloud_preview="${ccloud_preview}🎰 ${YELLOW}cluster-name=$cluster_name${NC}\n"
 
             if [ -z $ENVIRONMENT ]
 
             then
-              ccloud_preview="${ccloud_preview}❌🌐${RED}environment is missing!${NC}\n"
+              ccloud_preview="${ccloud_preview}❌ 🌐${RED}environment is missing!${NC}\n"
               unset 'options[0]'
               has_error=1
             else
-              ccloud_preview="${ccloud_preview}🌐${YELLOW}environment=$ENVIRONMENT${NC}\n"
+              ccloud_preview="${ccloud_preview}🌐 ${YELLOW}environment=$ENVIRONMENT${NC}\n"
             fi
 
             if [ -z $CLUSTER_CLOUD ]
 
             then
-              ccloud_preview="${ccloud_preview}❌🌤${RED}cluster-cloud is missing!${NC}\n"
+              ccloud_preview="${ccloud_preview}❌  🌤${RED}cluster-cloud is missing!${NC}\n"
               unset 'options[0]'
               has_error=1
             else
-              ccloud_preview="${ccloud_preview}🌤${YELLOW}cluster-cloud=$CLUSTER_CLOUD${NC}\n"
+              ccloud_preview="${ccloud_preview}🌤 ${YELLOW}cluster-cloud=$CLUSTER_CLOUD${NC}\n"
             fi
 
             if [ -z $CLUSTER_CLOUD ]
 
             then
-              ccloud_preview="${ccloud_preview}❌🗺${RED}cluster-region is missing!${NC}\n"
+              ccloud_preview="${ccloud_preview}❌ 🗺${RED}cluster-region is missing!${NC}\n"
               unset 'options[0]'
               has_error=1
             else
-              ccloud_preview="${ccloud_preview}🗺${YELLOW}cluster-region=$CLUSTER_REGION${NC}\n"
+              ccloud_preview="${ccloud_preview}🗺  ${YELLOW}cluster-region=$CLUSTER_REGION${NC}\n"
             fi
 
             if [ -z $CLUSTER_CREDS ]
 
             then
-              ccloud_preview="${ccloud_preview}❌🔒${RED}cluster-creds is missing!${NC}\n"
+              ccloud_preview="${ccloud_preview}❌ 🔒${RED}cluster-creds is missing!${NC}\n"
               unset 'options[0]'
               has_error=1
             fi
@@ -11996,9 +12031,9 @@ playground_run_command() {
             if [ -z $SCHEMA_REGISTRY_CREDS ]
 
             then
-              ccloud_preview="${ccloud_preview}🗺${YELLOW}cluster-schema-registry-creds is missing, new credentials will be created${NC}\n"
+              ccloud_preview="${ccloud_preview}🔒 ${YELLOW}cluster-schema-registry-creds is missing, new credentials will be created${NC}\n"
             else
-              ccloud_preview="${ccloud_preview}🗺${YELLOW}cluster-schema-registry-creds are set${NC}\n"
+              ccloud_preview="${ccloud_preview}🔒 ${YELLOW}cluster-schema-registry-creds are set${NC}\n"
             fi
           fi
         else # end of ccloud
@@ -12109,7 +12144,7 @@ playground_run_command() {
           unset 'options[27]'
         fi
 
-        preview="${ccloud_preview}🚀 number of examples ran so far: $(get_cli_metric nb_runs)\n\n⛳ flag list:\n$flag_string"
+        preview="${ccloud_preview}\n🚀 number of examples ran so far: $(get_cli_metric nb_runs)\n\n⛳ flag list:\n$flag_string"
 
         oldifs=$IFS
         IFS=$'\n' flag_string="${array_flag_list[*]}"
@@ -12365,7 +12400,6 @@ playground_run_command() {
           maybe_remove_flag "--cluster-type"
           options=(basic standard dedicated)
           cluster_type=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔋" --header="select a cluster type" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
-          export CLUSTER_TYPE="$cluster_type"
           array_flag_list+=("--cluster-type $cluster_type")
         fi
 
@@ -12374,7 +12408,6 @@ playground_run_command() {
           maybe_remove_flag "--cluster-cloud"
           options=(aws gcp azure)
           cluster_cloud=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔋" --header="select a cluster type" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
-          export CLUSTER_CLOUD="$cluster_cloud"
           array_flag_list+=("--cluster-cloud $cluster_cloud")
         fi
 
@@ -12388,7 +12421,6 @@ playground_run_command() {
             cluster_region=$(echo "$cluster_region" | cut -d "@" -f 2)
           fi
           cluster_region=$(echo "$cluster_region" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
-          export CLUSTER_REGION="$cluster_region"
           array_flag_list+=("--cluster-region $cluster_region")
         fi
 
@@ -12405,7 +12437,6 @@ playground_run_command() {
           then
             cluster_environment=$(echo "$cluster_environment" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
           fi
-          export CLUSTER_ENVIRONMENT="$cluster_environment"
           array_flag_list+=("--cluster-environment $cluster_environment")
         fi
 
@@ -12422,7 +12453,6 @@ playground_run_command() {
           then
             cluster_name=$(echo "$cluster_name" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
           fi
-          export CLUSTER_NAME="$cluster_name"
           array_flag_list+=("--cluster-name $cluster_name")
         fi
 
@@ -12432,7 +12462,6 @@ playground_run_command() {
           set +e
           cluster_creds=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔐" --header="Enter the Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap --pointer ' ' --print-query)
           set -e
-          export CLUSTER_CREDS="$cluster_creds"
           array_flag_list+=("--cluster-creds $cluster_creds")
         fi
 
@@ -12442,7 +12471,6 @@ playground_run_command() {
           set +e
           cluster_schema_registry_creds=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔐" --header="Enter the Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap --pointer ' ' --print-query)
           set -e
-          export SCHEMA_REGISTRY_CREDS="$cluster_schema_registry_creds"
           array_flag_list+=("--cluster-schema-registry-creds $cluster_schema_registry_creds")
         fi
       done # end while loop stop
@@ -12523,43 +12551,6 @@ playground_run_command() {
       if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_name" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
       then
         playground state set ccloud.suggest_use_previous_example_ccloud "0"
-
-        if [ ! -z "$CLUSTER_TYPE" ]
-        then
-          log "🙈 ignoring environment variable CLUSTER_TYPE as one of the flags is set"
-          unset CLUSTER_TYPE
-        fi
-        if [ ! -z "$CLUSTER_CLOUD" ]
-        then
-          log "🙈 ignoring environment variable CLUSTER_CLOUD as one of the flags is set"
-          unset CLUSTER_CLOUD
-        fi
-        if [ ! -z "$CLUSTER_REGION" ]
-        then
-          log "🙈 ignoring environment variable CLUSTER_REGION as one of the flags is set"
-          unset CLUSTER_REGION
-        fi
-        if [ ! -z "$ENVIRONMENT" ]
-        then
-          log "🙈 ignoring environment variable ENVIRONMENT as one of the flags is set"
-          unset ENVIRONMENT
-        fi
-        if [ ! -z "$CLUSTER_NAME" ]
-        then
-          log "🙈 ignoring environment variable CLUSTER_NAME as one of the flags is set"
-          unset CLUSTER_NAME
-        fi
-        if [ ! -z "$CLUSTER_CREDS" ]
-        then
-          log "🙈 ignoring environment variable CLUSTER_CREDS as one of the flags is set"
-          unset CLUSTER_CREDS
-        fi
-
-        if [ ! -z "$SCHEMA_REGISTRY_CREDS" ]
-        then
-          log "🙈 ignoring environment variable SCHEMA_REGISTRY_CREDS as one of the flags is set"
-          unset SCHEMA_REGISTRY_CREDS
-        fi
 
         if [[ -n "$cluster_type" ]]
         then
