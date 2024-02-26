@@ -827,7 +827,7 @@ then
 
         if [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
         then
-          missing_env="${missing_env}🔑 ${GREEN}AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}${NC}\n"
+          missing_env="${missing_env}🔑 ${GREEN}AWS_SECRET_ACCESS_KEY is set${NC}\n"
         fi
       fi
 
