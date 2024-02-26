@@ -12225,6 +12225,8 @@ playground_run_command() {
 
         missing_env=""
         declare -a missing_env_list=()
+
+        # generic check
         for mandatory_environment_variable in $(grep "Export it as environment variable or pass it as argument" $test_file | cut -d "\"" -f2 | cut -d " " -f 1)
         do
           if [ ! -v $mandatory_environment_variable ]
@@ -12239,17 +12241,51 @@ playground_run_command() {
           fi
         done
 
+        if [[ $test_file == *"aws"* ]]
+        then
+          if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
+          then
+            if [ -z "$AWS_ACCESS_KEY_ID" ]
+            then
+              missing_env="${missing_env}❌ ${RED}AWS_ACCESS_KEY_ID is missing!${NC}\n"
+              unset 'options[0]'
+              has_error=1
+              missing_env_list+=("AWS_ACCESS_KEY_ID")
+            fi
+
+            if [ -z "$AWS_SECRET_ACCESS_KEY" ]
+            then
+              missing_env="${missing_env}❌ ${RED}AWS_SECRET_ACCESS_KEY is missing!${NC}\n"
+              unset 'options[0]'
+              has_error=1
+              missing_env_list+=("AWS_SECRET_ACCESS_KEY")
+            else
+              missing_env="${missing_env}🔑 ${GREEN}AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}${NC}\n"
+            fi
+          fi
+
+          if [ ! -z "$AWS_ACCESS_KEY_ID" ]
+          then
+            missing_env="${missing_env}🔑 ${GREEN}AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}${NC}\n"
+          fi
+
+          if [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
+          then
+            missing_env="${missing_env}🔑 ${GREEN}AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}${NC}\n"
+          fi
+        fi
+
         if [ ${#missing_env_list[@]} -gt 0 ]
         then
           oldifs=$IFS
-          IFS=$',' missing_env_list="${missing_env_list[*]}"
+          IFS=$',' missing_env_list_string="${missing_env_list[*]}"
           IFS=$oldifs
 
           if [ ${#missing_env_list[@]} -eq 1 ]
           then
-            MENU_PROBLEM="❌ ${missing_env_list} is missing! Click here to fix it"
+            MENU_PROBLEM="❌ ${missing_env_list_string} is missing! Click here to fix it"
           else
-            MENU_PROBLEM="❌ ${missing_env_list} are missing! Click here to fix it"
+            MENU_PROBLEM="❌ ${missing_env_list_string} are missing! Click here to fix it"
           fi
 
           options[1]="$MENU_PROBLEM"
@@ -12274,7 +12310,7 @@ playground_run_command() {
 
         if [[ $res == *"$MENU_PROBLEM"* ]]
         then
-          for mandatory_environment_variable in $(grep "Export it as environment variable or pass it as argument" $test_file | cut -d "\"" -f2 | cut -d " " -f 1)
+          for mandatory_environment_variable in ${missing_env_list[*]}
           do
             if [ ! -v $mandatory_environment_variable ]
             then
