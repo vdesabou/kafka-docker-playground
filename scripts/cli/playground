@@ -1715,7 +1715,7 @@ playground_start_environment_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground start-environment [OPTIONS]\n"
+  printf "  playground start-environment [OPTIONS] [ARGUMENTS...]\n"
   printf "  playground start-environment --help | -h\n"
   echo
 
@@ -1739,6 +1739,13 @@ playground_start_environment_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    echo "  ARGUMENTS..."
+    printf "    Arguments to use by example script\n"
     echo
 
     # :command.usage_examples
@@ -23026,16 +23033,22 @@ playground_start_environment_parse_requirements() {
         fi
         ;;
 
+      --)
+        shift
+        other_args+=("$@")
+        break
+        ;;
+
       -?*)
-        printf "invalid option: %s\n" "$key" >&2
-        exit 1
+        other_args+=("$1")
+        shift
         ;;
 
       *)
         # :command.parse_requirements_case
-        # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
+        # :command.parse_requirements_case_catch_all
+        other_args+=("$1")
+        shift
 
         ;;
 
