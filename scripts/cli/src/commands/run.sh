@@ -426,8 +426,14 @@ then
         fzf_option_rounded=""
       fi
     fi
+    readonly  RED='\033[0;31m'
+    readonly  YELLOW='\033[0;33m'
+    readonly  CYAN='\033[0;36m'
+    readonly  GREEN='\033[0;32m'
+    readonly  NC='\033[0m' # No Color
+
     readonly MENU_LETS_GO="🚀 Run the example !" #0
-    readonly MENU_PROBLEM="❌ The example cannot be executed, check error(s) 👉" #1
+    MENU_PROBLEM="❌ The example cannot be executed, check error(s) 👉" #1
     readonly MENU_OPEN_FILE="📖 Open the file in text editor"
     # readonly MENU_SEPARATOR="--------------------------------------------------" #3
 
@@ -554,10 +560,6 @@ then
             unset SCHEMA_REGISTRY_CREDS
           fi
         fi
-        RED='\033[0;31m'
-        YELLOW='\033[0;33m'
-        CYAN='\033[0;36m'
-        NC='\033[0m' # No Color
         if [ ! -z "$CLUSTER_NAME" ] || [[ -n "$cluster_name" ]]
         then
           if [ ! -z "$CLUSTER_NAME" ]
@@ -707,11 +709,6 @@ then
         set -e
       fi
 
-      if [ $has_error == 0 ]
-      then
-        unset 'options[1]'
-      fi
-
       if [ ! -z $ENABLE_KSQLDB ]
       then
         unset 'options[10]'
@@ -767,16 +764,69 @@ then
         unset 'options[27]'
       fi
 
+      missing_env=""
+      declare -a missing_env_list=()
+      for mandatory_environment_variable in $(grep "Export it as environment variable or pass it as argument" $test_file | cut -d "\"" -f2 | cut -d " " -f 1)
+      do
+        if [ ! -v $mandatory_environment_variable ]
+        then
+          missing_env="${missing_env}❌ ${RED}${mandatory_environment_variable} is missing!${NC}\n"
+          unset 'options[0]'
+          has_error=1
+
+          missing_env_list+=("$mandatory_environment_variable")
+        else
+          missing_env="${missing_env}🔑 ${GREEN}${mandatory_environment_variable}=${!mandatory_environment_variable}${NC}\n"
+        fi
+      done
+
+      if [ ${#missing_env_list[@]} -gt 0 ]
+      then
+        oldifs=$IFS
+        IFS=$',' missing_env_list="${missing_env_list[*]}"
+        IFS=$oldifs
+
+        if [ ${#missing_env_list[@]} -eq 1 ]
+        then
+          MENU_PROBLEM="❌ ${missing_env_list} is missing! Click here to fix it"
+        else
+          MENU_PROBLEM="❌ ${missing_env_list} are missing! Click here to fix it"
+        fi
+
+        options[1]="$MENU_PROBLEM"
+      fi
+
+
+      if [ $has_error == 0 ]
+      then
+        unset 'options[1]'
+      fi
+
       oldifs=$IFS
       IFS=$'\n' flag_string="${array_flag_list[*]}"
       IFS=$oldifs
 
-      preview="${ccloud_preview}\n🚀 number of examples ran so far: $(get_cli_metric nb_runs)\n\n⛳ flag list:\n$flag_string"
+      preview="${ccloud_preview}\n${missing_env}\n🚀 number of examples ran so far: $(get_cli_metric nb_runs)\n\n⛳ flag list:\n$flag_string"
       res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🚀" --header="select option(s) for $example (use tab to select more than one)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"$preview\"")
 
       if [[ $res == *"$MENU_LETS_GO"* ]]
       then
         stop=1
+      fi
+
+      if [[ $res == *"$MENU_PROBLEM"* ]]
+      then
+        for mandatory_environment_variable in $(grep "Export it as environment variable or pass it as argument" $test_file | cut -d "\"" -f2 | cut -d " " -f 1)
+        do
+          if [ ! -v $mandatory_environment_variable ]
+          then
+            set +e
+            mandatory_environment_variable_value=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔐" --header="Enter the value for environment variable $mandatory_environment_variable" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap --pointer ' ' --print-query)
+            set -e
+
+            export $mandatory_environment_variable="$mandatory_environment_variable_value"
+          fi
+        done
       fi
 
       if [[ $res == *"$MENU_OPEN_FILE"* ]]
