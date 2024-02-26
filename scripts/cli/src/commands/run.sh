@@ -426,11 +426,11 @@ then
         fzf_option_rounded=""
       fi
     fi
-    readonly  RED='\033[0;31m'
-    readonly  YELLOW='\033[0;33m'
-    readonly  CYAN='\033[0;36m'
-    readonly  GREEN='\033[0;32m'
-    readonly  NC='\033[0m' # No Color
+    RED='\033[0;31m'
+    YELLOW='\033[0;33m'
+    CYAN='\033[0;36m'
+    GREEN='\033[0;32m'
+    NC='\033[0m' # No Color
 
     readonly MENU_LETS_GO="🚀 Run the example !" #0
     MENU_PROBLEM="❌ The example cannot be executed, check error(s) 👉" #1
