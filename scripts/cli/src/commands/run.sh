@@ -786,6 +786,13 @@ then
       then
         if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
         then
+          if [ ! -f "$HOME/.aws/credentials" ]
+          then
+            missing_env="${missing_env}❌ ${RED}$HOME/.aws/credentials is missing!${NC}\n"
+            unset 'options[0]'
+            has_error=1
+          fi
+
           if [ -z "$AWS_ACCESS_KEY_ID" ]
           then
             missing_env="${missing_env}❌ ${RED}AWS_ACCESS_KEY_ID is missing!${NC}\n"
@@ -800,9 +807,12 @@ then
             unset 'options[0]'
             has_error=1
             missing_env_list+=("AWS_SECRET_ACCESS_KEY")
-          else
-            missing_env="${missing_env}🔑 ${GREEN}AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}${NC}\n"
           fi
+        fi
+
+        if [ -f "$HOME/.aws/credentials" ]
+        then
+          missing_env="${missing_env}🔑 ${GREEN}$HOME/.aws/credentials is present${NC}\n"
         fi
 
         if [ ! -z "$AWS_ACCESS_KEY_ID" ]
@@ -813,6 +823,37 @@ then
         if [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
         then
           missing_env="${missing_env}🔑 ${GREEN}AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}${NC}\n"
+        fi
+      fi
+
+      if [[ $test_file == *"gcp"* ]]
+      then
+        if [ ! -f "$test_file_directory/keyfile.json" ] && [ -z "$GCP_KEYFILE_CONTENT" ]
+        then
+          if [ ! -f "$test_file_directory/keyfile.json" ]
+          then
+            missing_env="${missing_env}❌ ${RED}$test_file_directory/keyfile.json is missing!${NC}\n"
+            unset 'options[0]'
+            has_error=1
+          fi
+
+          if [ -z "$GCP_KEYFILE_CONTENT" ]
+          then
+            missing_env="${missing_env}❌ ${RED}GCP_KEYFILE_CONTENT is missing!${NC}\n"
+            unset 'options[0]'
+            has_error=1
+            missing_env_list+=("GCP_KEYFILE_CONTENT")
+          fi
+        fi
+
+        if [ -f "$test_file_directory/keyfile.json" ]
+        then
+          missing_env="${missing_env}🔑 ${GREEN}$test_file_directory/keyfile.json is present${NC}\n"
+        fi
+
+        if [ ! -z "$GCP_KEYFILE_CONTENT" ]
+        then
+          missing_env="${missing_env}🔑 ${GREEN}GCP_KEYFILE_CONTENT is set${NC}\n"
         fi
       fi
 
