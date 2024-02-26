@@ -25,6 +25,9 @@ rm -f ${DIR}/secrets/secret.txt
 rm -f ${DIR}/secrets/CONFLUENT_SECURITY_MASTER_KEY
 
 log "Generate master key"
+set +e
+confluent logout
+set -e
 confluent secret master-key generate --local-secrets-file ${DIR}/secrets/secret.txt --passphrase @${DIR}/secrets/passphrase.txt > /tmp/result.log 2>&1
 cat /tmp/result.log
 export CONFLUENT_SECURITY_MASTER_KEY=$(grep "Master Key" /tmp/result.log | cut -d"|" -f 3 | sed "s/ //g" | tail -1 | tr -d "\n")
