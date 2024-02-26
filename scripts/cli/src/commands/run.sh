@@ -474,7 +474,7 @@ then
 
     MENU_CLUSTER_NAME="🎰 Cluster name $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CLUSTER_NAME})) ' ') --cluster-name"
     MENU_CLUSTER_CREDS="🔒 Kafka api key & secret $(printf '%*s' $((${MAX_LENGTH}-25-${#MENU_CLUSTER_CREDS})) ' ') --cluster-creds"
-    MENU_CLUSTER_SR_CREDS="🔰 Schema registry api key & secret $(printf '%*s' $((${MAX_LENGTH}-35-${#MENU_CLUSTER_SR_CREDS})) ' ') --cluster_sr_creds"
+    MENU_CLUSTER_SR_CREDS="🔰 Schema registry api key & secret $(printf '%*s' $((${MAX_LENGTH}-35-${#MENU_CLUSTER_SR_CREDS})) ' ') --cluster-schema-registry-creds"
 
     readonly MENU_SEPARATOR_CLOUD="-----------------confluent cloud------------------" #35
 
@@ -642,7 +642,7 @@ then
 
           if [ -z $CLUSTER_CLOUD ] && [[ ! -n "$cluster_cloud" ]]
           then
-            ccloud_preview="${ccloud_preview}🌤 ${CYAN}cluster-cloud is missing, aws will be used${NC}\n"
+            ccloud_preview="${ccloud_preview}🌤  ${CYAN}cluster-cloud is missing, aws will be used${NC}\n"
           else
             if [ ! -z "$CLUSTER_CLOUD" ]
             then
@@ -659,7 +659,7 @@ then
             then
               cluster_region=$CLUSTER_REGION
             fi
-            ccloud_preview="${ccloud_preview}🗺 ${YELLOW}cluster-region=$cluster_region${NC}\n"
+            ccloud_preview="${ccloud_preview}🗺  ${YELLOW}cluster-region=$cluster_region${NC}\n"
           fi
         fi
       else # end of ccloud
