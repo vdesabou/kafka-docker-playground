@@ -81,9 +81,11 @@ function generate_fzf_find_files() {
 function generate_get_examples_list_with_fzf_connector_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_connector_only"
   rm -f $output_file
-  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect/connect-*-*/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' ! -path '*/ccloud/*'  ! -path '*/post_start/*' ! -path '*/1*domain*/*' ! -path '*/kdc-server/*' | while read file_path
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect/connect-*-*/*' ! -path '*/scripts/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' ! -path '*/ccloud/*'  | while read file_path
   do
-    generate_get_examples_add_emoji
+    if grep -q "scripts/utils.sh" "$file_path"; then
+      generate_get_examples_add_emoji
+    fi
   done
   sort -o $output_file $output_file
 }
@@ -91,9 +93,11 @@ function generate_get_examples_list_with_fzf_connector_only () {
 function generate_get_examples_list_with_fzf_repro_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_repro_only"
   rm -f $output_file
-  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/1*domain*/*'  ! -path '*/security/*' -path '*/reproduction-models/*' | while read file_path
+  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*'  ! -path '*/security/*' -path '*/reproduction-models/*' | while read file_path
   do
-    generate_get_examples_add_emoji
+    if grep -q "scripts/utils.sh" "$file_path"; then
+      generate_get_examples_add_emoji
+    fi
   done
   if [ -s "$output_file" ]; then
     sort -o $output_file $output_file
@@ -103,9 +107,11 @@ function generate_get_examples_list_with_fzf_repro_only () {
 function generate_get_examples_list_with_fzf_environemnt_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_environment_only"
   rm -f $output_file
-  find $root_folder -name \*.sh ! -name 'update_run.sh' ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' -path '*/environment/*' | while read file_path
+  find $root_folder -name \*.sh ! -name 'update_run.sh' ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/security/*' -path '*/environment/*' | while read file_path
   do
-    generate_get_examples_add_emoji
+    if grep -q "scripts/utils.sh" "$file_path"; then
+      generate_get_examples_add_emoji
+    fi
   done
   if [ -s "$output_file" ]; then
     sort -o $output_file $output_file
@@ -115,9 +121,11 @@ function generate_get_examples_list_with_fzf_environemnt_only () {
 function generate_get_examples_list_with_fzf_ksql_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_ksql_only"
   rm -f $output_file
-  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/ksqldb/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' | while read file_path
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/ksqldb/*' ! -path '*/scripts/*' ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' | while read file_path
   do
-    generate_get_examples_add_emoji
+    if grep -q "scripts/utils.sh" "$file_path"; then
+      generate_get_examples_add_emoji
+    fi
   done
   if [ -s "$output_file" ]; then
     sort -o $output_file $output_file
@@ -127,9 +135,11 @@ function generate_get_examples_list_with_fzf_ksql_only () {
 function generate_get_examples_list_with_fzf_fully_managed_connector_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_fully_managed_connector_only"
   rm -f $output_file
-  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/fully-managed-*/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' -path '*/ccloud/*' | while read file_path
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/fully-managed-*/*' ! -path '*/scripts/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' -path '*/ccloud/*' | while read file_path
   do
-    generate_get_examples_add_emoji
+    if grep -q "scripts/utils.sh" "$file_path"; then
+      generate_get_examples_add_emoji
+    fi
   done
   if [ -s "$output_file" ]; then
     sort -o $output_file $output_file
@@ -139,9 +149,11 @@ function generate_get_examples_list_with_fzf_fully_managed_connector_only () {
 function generate_get_examples_list_with_fzf_schema_registry_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_schema_registry_only"
   rm -f $output_file
-  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/schema-registry/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' ! -path '*/ccloud/*' | while read file_path
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/schema-registry/*' ! -path '*/scripts/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' ! -path '*/ccloud/*' | while read file_path
   do
-    generate_get_examples_add_emoji
+    if grep -q "scripts/utils.sh" "$file_path"; then
+      generate_get_examples_add_emoji
+    fi
   done
   if [ -s "$output_file" ]; then
     sort -o $output_file $output_file
@@ -151,9 +163,11 @@ function generate_get_examples_list_with_fzf_schema_registry_only () {
 function generate_get_examples_list_with_fzf_rest_proxy_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_rest_proxy_only"
   rm -f $output_file
-  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/rest-proxy/*' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' | while read file_path
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/rest-proxy/*' ! -path '*/scripts/*' ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' | while read file_path
   do
-    generate_get_examples_add_emoji
+    if grep -q "scripts/utils.sh" "$file_path"; then
+      generate_get_examples_add_emoji
+    fi
   done
   if [ -s "$output_file" ]; then
     sort -o $output_file $output_file
@@ -163,9 +177,11 @@ function generate_get_examples_list_with_fzf_rest_proxy_only () {
 function generate_get_examples_list_with_fzf_other_playgrounds_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_other_playgrounds_only"
   rm -f $output_file
-  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/1*domain*/*'  ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' ! -path '*/reproduction-models/*' ! -path '*/connect/*' ! -path '*/ksqldb/*' ! -path '*/schema-registry/*'  | while read file_path
+  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*'  ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' ! -path '*/reproduction-models/*' ! -path '*/connect/*' ! -path '*/ksqldb/*' ! -path '*/schema-registry/*'  | while read file_path
   do
-    generate_get_examples_add_emoji
+    if grep -q "scripts/utils.sh" "$file_path"; then
+      generate_get_examples_add_emoji
+    fi
   done
   if [ -s "$output_file" ]; then
     sort -o $output_file $output_file
@@ -176,9 +192,11 @@ function generate_get_examples_list_with_fzf_other_playgrounds_only () {
 function generate_get_examples_list_with_fzf_without_repro_sink_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_without_repro_sink_only"
   rm -f $output_file
-  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/1*domain*/*' ! -path '*/ora-*/*'  ! -path '*/other/*' ! -path '*/ccloud/*'  ! -path '*/academy/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' | while read file_path
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*'  ! -path '*/other/*' ! -path '*/ccloud/*'  ! -path '*/academy/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' | while read file_path
   do
-    generate_get_examples_add_emoji
+    if grep -q "scripts/utils.sh" "$file_path"; then
+      generate_get_examples_add_emoji
+    fi
   done
   if [ -s "$output_file" ]; then
     sort -o $output_file $output_file
@@ -188,9 +206,11 @@ function generate_get_examples_list_with_fzf_without_repro_sink_only () {
 function generate_get_examples_list_with_fzf_without_repro () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_without_repro"
   rm -f $output_file
-  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/ora-*/*' ! -path '*/1*domain*/*'  ! -path '*/security/*' ! -path '*/reproduction-models/*' | while read file_path
+  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*'  ! -path '*/security/*' ! -path '*/reproduction-models/*' | while read file_path
   do
-    generate_get_examples_add_emoji
+    if grep -q "scripts/utils.sh" "$file_path"; then
+      generate_get_examples_add_emoji
+    fi
   done
   if [ -s "$output_file" ]; then
     sort -o $output_file $output_file
@@ -200,9 +220,11 @@ function generate_get_examples_list_with_fzf_without_repro () {
 function generate_get_examples_list_with_fzf_ccloud_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only"
   rm -f $output_file
-  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/ccloud*' ! -path '*/ora-*/*' ! -path '*/security/*' | while read file_path
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/ccloud*' ! -path '*/security/*' | while read file_path
   do
-    generate_get_examples_add_emoji
+    if grep -q "scripts/utils.sh" "$file_path"; then
+      generate_get_examples_add_emoji
+    fi
   done
   if [ -s "$output_file" ]; then
     sort -o $output_file $output_file
@@ -212,9 +234,11 @@ function generate_get_examples_list_with_fzf_ccloud_only () {
 function generate_get_examples_list_with_fzf () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_all"
   rm -f $output_file
-  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/1*domain*/*' ! -path '*/ora-*/*' ! -path '*/security/*' | while read file_path
+  find $root_folder -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/security/*' | while read file_path
   do
-    generate_get_examples_add_emoji
+    if grep -q "scripts/utils.sh" "$file_path"; then
+      generate_get_examples_add_emoji
+    fi
   done
   if [ -s "$output_file" ]; then
     sort -o $output_file $output_file
