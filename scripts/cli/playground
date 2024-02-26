@@ -12237,7 +12237,12 @@ playground_run_command() {
 
             missing_env_list+=("$mandatory_environment_variable")
           else
-            missing_env="${missing_env}🔑 ${GREEN}${mandatory_environment_variable}=${!mandatory_environment_variable}${NC}\n"
+            if [[ $mandatory_environment_variable == *"PASSWORD"* ]] || [[ $mandatory_environment_variable == *"SECRET"* ]] || [[ $mandatory_environment_variable == *"TOKEN"* ]] || [[ $mandatory_environment_variable == *"KEY"* ]]
+            then
+              missing_env="${missing_env}🔑 ${GREEN}${mandatory_environment_variable} is set${NC}\n"
+            else
+              missing_env="${missing_env}🔑 ${GREEN}${mandatory_environment_variable}=${!mandatory_environment_variable}${NC}\n"
+            fi
           fi
         done
 
