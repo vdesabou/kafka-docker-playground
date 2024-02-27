@@ -407,7 +407,6 @@ then
         fzf_option_wrap="--preview-window=30%,wrap"
         fzf_option_pointer="--pointer=👉"
         fzf_option_empty_pointer="--pointer=' '"
-
         fzf_option_rounded="--border=rounded"
       else
         fzf_option_wrap=""
@@ -422,10 +421,12 @@ then
       then
         fzf_option_wrap="--preview-window=20%,wrap"
         fzf_option_pointer="--pointer=👉"
+        fzf_option_empty_pointer="--pointer=' '"
         fzf_option_rounded="--border=rounded"
       else
         fzf_option_wrap=""
         fzf_option_pointer=""
+        fzf_option_empty_pointer=""
         fzf_option_rounded=""
       fi
     fi

@@ -28,8 +28,14 @@ then
     if version_gt $fzf_version "0.38"
     then
       fzf_option_wrap="--preview-window=30%,wrap"
+      fzf_option_pointer="--pointer=👉"
+      fzf_option_empty_pointer="--pointer=' '"
+      fzf_option_rounded="--border=rounded"
     else
       fzf_option_wrap=""
+      fzf_option_pointer=""
+      fzf_option_empty_pointer=""
+      fzf_option_rounded=""
     fi
   else
     MAX_LENGTH=$((${terminal_columns}-65))
@@ -37,8 +43,14 @@ then
     if version_gt $fzf_version "0.38"
     then
       fzf_option_wrap="--preview-window=20%,wrap"
+      fzf_option_pointer="--pointer=👉"
+      fzf_option_empty_pointer="--pointer=' '"
+      fzf_option_rounded="--border=rounded"
     else
       fzf_option_wrap=""
+      fzf_option_pointer=""
+      fzf_option_empty_pointer=""
+      fzf_option_rounded=""
     fi
   fi
   readonly MENU_LETS_GO="🏭 Create the reproduction model !" #0
@@ -101,7 +113,7 @@ then
     then
       maybe_remove_flag "--description"
       set +e
-      description=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="💭 " --header="enter a description for this repro model (it cannot be empty !)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap --pointer ' ' --print-query)
+      description=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="💭 " --header="enter a description for this repro model (it cannot be empty !)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_empty_pointer --print-query)
       set -e
       if [ "$description" == "" ]
       then
