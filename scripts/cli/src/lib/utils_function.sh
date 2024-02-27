@@ -1700,7 +1700,7 @@ function bootstrap_ccloud_environment () {
         unset SCHEMA_REGISTRY_CREDS
       fi
     fi
-    log "🔋  CLUSTER_TYPE is set with $CLUSTER_TYPE"
+    log "🔋 CLUSTER_TYPE is set with $CLUSTER_TYPE"
     log "🌤  CLUSTER_CLOUD is set with $CLUSTER_CLOUD"
     log "🗺  CLUSTER_REGION is set with $CLUSTER_REGION"
 
