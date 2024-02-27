@@ -5489,7 +5489,15 @@ function generate_get_examples_add_emoji () {
     fi
   elif [[ $file_path == *"connect"* ]]
   then
-    echo "${repro}🔗🌎 $file_path" >> $output_file
+    if [[ $file_path == *"sink"* ]]
+    then
+      echo "${repro}🔗🌎🔹 $file_path" >> $output_file
+    elif [[ $file_path == *"source"* ]]
+    then
+      echo "${repro}🔗🌎🔻 $file_path" >> $output_file
+    else
+      echo "${repro}🔗🌎 $file_path" >> $output_file
+    fi
   elif [[ $file_path == *"ksql"* ]]
   then
     echo "${repro}🎏 $file_path" >> $output_file
