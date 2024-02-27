@@ -792,6 +792,39 @@ commands:
     help: |-
       🌐 Only show url
 
+- name: cleanup-cloud-resources
+  group: Run
+  dependencies:
+    confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+  environment_variables:
+  - name: AZ_USER 
+    help: Azure user
+  - name: AZ_PASS 
+    help: Azure password
+  - name: GCP_PROJECT 
+    help: GCP project
+  - name: AWS_ACCESS_KEY_ID 
+    help: AWS access key id
+  - name: AWS_SECRET_ACCESS_KEY 
+    help: AWS secret access key
+  - name: GCP_KEYFILE_CONTENT 
+    help: GCP keyfile (generated with "cat keyfile.json | jq -aRs .")
+  help: |-
+    🧹 Cleanup cloud resources that were created by running examples from the playground
+
+    ❗it will remove all resources created by the playground, including topics, connectors, clusters, buckets, redshift cluster, etc...
+  flags:
+  - long: --force
+    help: |-
+      ☢️ do not ask for confirmation
+
+      ❗use with caution
+  - long: --user
+    private: true
+    arg: user
+    help: |-
+      ☢️ force user
+
 - name: repro
   expose: always
   group: Repro

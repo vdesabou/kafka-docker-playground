@@ -447,6 +447,28 @@
       "subcommands": null
     },
     {
+      "name": "cleanup-cloud-resources",
+      "description": "🧹 Cleanup cloud resources that were created by running examples from the playground\n\n❗it will remove all resources created by the playground, including topics, connectors, clusters, buckets, redshift cluster, etc...\n",
+      "usage": "playground cleanup-cloud-resources [OPTIONS]",
+      "options": [
+        {
+          "names": [
+            "--force"
+          ],
+          "argument": "",
+          "description": "☢️ do not ask for confirmation\n\n❗use with caution\n"
+        },
+        {
+          "names": [
+            "--user"
+          ],
+          "argument": "USER",
+          "description": "☢️ force user\n"
+        }
+      ],
+      "subcommands": null
+    },
+    {
       "name": "repro",
       "description": "👷‍♂️ Reproduction model commands\n",
       "usage": "playground repro COMMAND",

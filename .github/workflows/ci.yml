@@ -29,7 +29,7 @@ jobs:
 
       - name: Cleanup resources
         run: |
-          ./scripts/cleanup-resources.sh
+          ./scripts/cli/playground cleanup-cloud-resources --force
         env:
           AZ_USER: ${{ secrets.AZ_USER}}
           AZ_PASS: ${{ secrets.AZ_PASS}}
@@ -456,7 +456,7 @@ jobs:
 
       - name: Cleanup resources
         run: |
-          ./scripts/cleanup-resources.sh "--no-wait"
+          ./scripts/cli/playground cleanup-cloud-resources --force
         env:
           AZ_USER: ${{ secrets.AZ_USER}}
           AZ_PASS: ${{ secrets.AZ_PASS}}

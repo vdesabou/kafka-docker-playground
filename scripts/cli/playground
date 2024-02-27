@@ -52,6 +52,7 @@ playground_usage() {
   printf "  %s   🛑 Stop currently running example\n" "$(green "stop")                            "
   printf "  %s   🧨 Remove all docker images (including docker volumes)\n" "$(green "remove-all-docker-images")        "
   printf "  %s   🧑‍🎓 Open Confluent documentation of currently running example\n" "$(green "open-docs")                       "
+  printf "  %s   🧹 Cleanup cloud resources that were created by running examples from the playground\n" "$(green "cleanup-cloud-resources")         "
   echo
   printf "%s\n" "$(bold "Repro commands:")"
   printf "  %s   👷‍♂️ Reproduction model commands\n" "$(green "repro")                           "
@@ -1994,6 +1995,77 @@ playground_open_docs_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_cleanup_cloud_resources_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground cleanup-cloud-resources\n"
+    echo
+
+    printf "  🧹 Cleanup cloud resources that were created by running examples from the\n  playground\n  \n  ❗it will remove all resources created by the playground, including topics,\n  connectors, clusters, buckets, redshift cluster, etc...\n"
+    echo
+
+  else
+    printf "playground cleanup-cloud-resources - 🧹 Cleanup cloud resources that were created by running examples from the playground\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground cleanup-cloud-resources [OPTIONS]\n"
+  printf "  playground cleanup-cloud-resources --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--force")"
+    printf "    ☢️ do not ask for confirmation\n    \n    ❗use with caution\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_environment_variables
+    printf "%s\n" "$(bold "Environment Variables:")"
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "AZ_USER")"
+    printf "    Azure user\n"
+    echo
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "AZ_PASS")"
+    printf "    Azure password\n"
+    echo
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "GCP_PROJECT")"
+    printf "    GCP project\n"
+    echo
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "AWS_ACCESS_KEY_ID")"
+    printf "    AWS access key id\n"
+    echo
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "AWS_SECRET_ACCESS_KEY")"
+    printf "    AWS secret access key\n"
+    echo
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "GCP_KEYFILE_CONTENT")"
+    printf "    GCP keyfile (generated with \"cat keyfile.json | jq -aRs .\")\n"
     echo
 
   fi
@@ -7312,6 +7384,23 @@ function check_if_continue()
     n|N ) exit 1;;
     * ) logerror "invalid response <$choice>!";exit 1;;
     esac
+}
+
+function check_if_skip() {
+
+  if [[ -n "$force" ]] || [ ! -z "$GITHUB_RUN_NUMBER" ]
+  then
+    eval "$1"
+  else
+    read -p "Do you want to skip this command? (y/n) " reply
+
+    if [[ $reply != 'y' ]]
+    then
+      eval "$1"
+    else
+      log "Skipping command..."
+    fi
+  fi
 }
 
 function create_topic()
@@ -13559,6 +13648,219 @@ playground_open_docs_command() {
       logerror "Could not find documentation link in README file $readme_file"
       exit 1
   fi
+}
+
+# :command.function
+playground_cleanup_cloud_resources_command() {
+  # src/commands/cleanup-cloud-resources.sh
+  user="${args[--user]}"
+  force="${args[--force]}"
+
+  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
+
+  if [[ ! -n "$user" ]]
+  then
+      user="${USER}"
+  fi
+
+  if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
+  then
+      az logout
+      az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
+  fi
+
+  log "Cleanup Azure Resource groups"
+  for group in $(az group list --query '[].name' --output tsv)
+  do
+    if [[ $group = pg${user}* ]]
+    then
+      if [ ! -z "$GITHUB_RUN_NUMBER" ]
+      then
+        job=$(echo $GITHUB_RUN_NUMBER | cut -d "." -f 1)
+        if [[ $group = pg$user$job* ]]
+        then
+          log "Skipping current github actions $job"
+          continue
+        fi
+      fi
+      log "Deleting Azure resource group $group"
+      check_if_skip "az group delete --name $group --yes --no-wait"
+    fi
+  done
+
+  log "Cleanup GCP GCS buckets"
+  GCP_KEYFILE="$tmp_dir/keyfile.json"
+  echo -e "$GCP_KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${GCP_KEYFILE}
+  set +e
+  docker rm -f gcloud-config-cleanup-resources > /dev/null 2>&1
+  set -e
+  docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud auth activate-service-account --project ${GCP_PROJECT} --key-file /tmp/keyfile.json
+
+  for bucket in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gsutil ls)
+  do
+      if [[ $bucket = *kafkadockerplaygroundbucket${user}* ]]
+      then
+          log "Removing GCS bucket $bucket"
+          check_if_skip "docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gsutil -m rm -r $bucket"
+      fi
+  done
+
+  log "Cleanup GCP BQ datasets"
+  for dataset in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" ls)
+  do
+      if [[ $dataset = *pg${user}* ]]
+      then
+          log "Remove GCP BQ dataset $dataset"
+          check_if_skip "docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id \"$GCP_PROJECT\" rm -r -f -d \"$dataset\""
+      fi
+  done
+
+  if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
+  then
+       logerror "ERROR: either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
+       exit 1
+  else
+      if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
+      then
+          log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
+          export AWS_ACCESS_KEY_ID
+          export AWS_SECRET_ACCESS_KEY
+      else
+          if [ -f $HOME/.aws/credentials ]
+          then
+              logwarn "💭 AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
+              export AWS_ACCESS_KEY_ID=$( grep "^aws_access_key_id" $HOME/.aws/credentials | head -1 | awk -F'=' '{print $2;}' )
+              export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/credentials | head -1 | awk -F'=' '{print $2;}' )
+
+          fi
+      fi
+      if [ -z "$AWS_REGION" ]
+      then
+          AWS_REGION=$(aws configure get region | tr '\r' '\n')
+          if [ "$AWS_REGION" == "" ]
+          then
+              logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+              exit 1
+          fi
+      fi
+  fi
+
+  # log "Cleanup AWS S3 buckets"
+  # for bucket in $(aws s3api list-buckets --region $AWS_REGION | jq .Buckets[].Name -r)
+  # do
+  #     if [[ $bucket = *pgbucket${user}* ]]
+  #     then
+  #         set +e
+  #         log "Removing AWS bucket $bucket"
+  #         if [[ ! -n "$force" ]]
+  #         then
+  #             check_if_continue
+  #         fi
+  #         aws s3 rb s3://$bucket --force --region $AWS_REGION
+  #         set -e
+  #     fi
+  # done
+
+  log "Cleanup AWS Kinesis streams"
+  for stream in $(aws kinesis list-streams --region $AWS_REGION | jq '.StreamNames[]' -r)
+  do
+      if [[ $stream = *pg${user}* ]]
+      then
+          log "Removing AWS Kinesis stream $stream"
+          check_if_skip "aws kinesis delete-stream --stream-name $stream --region $AWS_REGION"
+      fi
+  done
+
+  log "Cleanup AWS Redshift clusters"
+  for cluster in $(aws redshift describe-clusters --region $AWS_REGION | jq '.Clusters[].ClusterIdentifier' -r)
+  do
+      if [[ $cluster = pg${user}redshift* ]]
+      then
+          set +e
+          log "Delete AWS Redshift $cluster"
+          check_if_skip "aws redshift delete-cluster --cluster-identifier $cluster --skip-final-cluster-snapshot --region $AWS_REGION"
+          sleep 60
+          log "Delete AWS security group sg$cluster"
+          check_if_skip "aws ec2 delete-security-group --group-name sg$cluster --region $AWS_REGION"
+          set -e
+      fi
+  done
+
+  set +e
+
+  bootstrap_ccloud_environment
+
+  # for row in $(confluent api-key list --output json | jq -r '.[] | @base64'); do
+  #     _jq() {
+  #     echo ${row} | base64 --decode | jq -r ${1}
+  #     }
+
+  #     key=$(echo $(_jq '.key'))
+  #     resource_type=$(echo $(_jq '.resource_type'))
+
+  #     if [[ $resource_type = cloud ]] && [[ "$key" != "$CLOUD_API_KEY" ]]
+  #     then
+  #       log "deleting cloud api key $key"
+  #       confluent api-key delete $key --force
+  #     fi
+  # done
+
+  for row in $(confluent connect cluster list --output json | jq -r '.[] | @base64'); do
+      _jq() {
+      echo ${row} | base64 --decode | jq -r ${1}
+      }
+
+      id=$(echo $(_jq '.id'))
+      name=$(echo $(_jq '.name'))
+
+      log "deleting connector $id ($name)"
+      check_if_skip "confluent connect cluster delete $id --force"
+  done
+
+  for row in $(confluent environment list --output json | jq -r '.[] | @base64'); do
+      _jq() {
+      echo ${row} | base64 --decode | jq -r ${1}
+      }
+
+      id=$(echo $(_jq '.id'))
+      name=$(echo $(_jq '.name'))
+
+      if [[ $name = pg-${user}-sa-* ]]
+      then
+          log "deleting environment $id ($name)"
+          check_if_skip "confluent environment delete $id --force"
+      fi
+  done
+
+  for topic in $(confluent kafka topic list | awk '{if(NR>2) print $1}')
+  do
+      log "delete topic $topic"
+      check_if_skip "confluent kafka topic delete \"$topic\" --force"
+  done
+
+  for subject in $(curl -u "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$SCHEMA_REGISTRY_URL/subjects" | jq -r '.[]')
+  do
+      log "permanently delete subject $subject"
+      check_if_skip "curl --request DELETE -u \"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" \"$SCHEMA_REGISTRY_URL/subjects/$subject\" && curl --request DELETE -u \"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" \"$SCHEMA_REGISTRY_URL/subjects/$subject?permanent=true\""
+  done
+
+  for row in $(confluent iam service-account list --output json | jq -r '.[] | @base64'); do
+      _jq() {
+      echo ${row} | base64 --decode | jq -r ${1}
+      }
+
+      description=$(echo $(_jq '.description'))
+      id=$(echo $(_jq '.id'))
+      name=$(echo $(_jq '.name'))
+
+      log "deleting service-account $id ($description)"
+      check_if_skip "confluent iam service-account delete $id --force"
+  done
+
+  # always exit with success
+  exit 0
+
 }
 
 # :command.function
@@ -20482,6 +20784,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    cleanup-cloud-resources)
+      action="cleanup-cloud-resources"
+      shift
+      playground_cleanup_cloud_resources_parse_requirements "$@"
+      shift $#
+      ;;
+
     repro)
       action="repro"
       shift
@@ -23615,6 +23924,89 @@ playground_open_docs_parse_requirements() {
         # :flag.case_no_arg
         args['--only-show-url']=1
         shift
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_cleanup_cloud_resources_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_cleanup_cloud_resources_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.environment_variables_filter
+
+  env_var_names+=("AZ_USER")
+  env_var_names+=("AZ_PASS")
+  env_var_names+=("GCP_PROJECT")
+  env_var_names+=("AWS_ACCESS_KEY_ID")
+  env_var_names+=("AWS_SECRET_ACCESS_KEY")
+  env_var_names+=("GCP_KEYFILE_CONTENT")
+
+  # :command.dependencies_filter
+  if command -v confluent >/dev/null 2>&1; then
+    deps['confluent']="$(command -v confluent | head -n1)"
+  else
+    printf "missing dependency: confluent\n" >&2
+    printf "%s\n" "visit https://docs.confluent.io/confluent-cli/current/overview.html to install" >&2
+    exit 1
+  fi
+
+  # :command.command_filter
+  action="cleanup-cloud-resources"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --force)
+
+        # :flag.case_no_arg
+        args['--force']=1
+        shift
+        ;;
+
+      # :flag.case
+      --user)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--user']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--user requires an argument: --user USER" >&2
+          exit 1
+        fi
         ;;
 
       -?*)
@@ -30074,6 +30466,7 @@ run() {
     "stop") playground_stop_command ;;
     "remove-all-docker-images") playground_remove_all_docker_images_command ;;
     "open-docs") playground_open_docs_command ;;
+    "cleanup-cloud-resources") playground_cleanup_cloud_resources_command ;;
     "repro") playground_repro_command ;;
     "repro export") playground_repro_export_command ;;
     "repro import") playground_repro_import_command ;;

@@ -334,6 +334,23 @@ function check_if_continue()
     esac
 }
 
+function check_if_skip() {
+
+  if [[ -n "$force" ]] || [ ! -z "$GITHUB_RUN_NUMBER" ]
+  then
+    eval "$1"
+  else
+    read -p "Do you want to skip this command? (y/n) " reply
+
+    if [[ $reply != 'y' ]]
+    then
+      eval "$1"
+    else
+      log "Skipping command..."
+    fi
+  fi
+}
+
 function create_topic()
 {
   local topic="$1"

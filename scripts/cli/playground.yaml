@@ -617,6 +617,28 @@ subcommands:
         🌐 Only show url
         
     subcommands:
+  - name: cleanup-cloud-resources
+    description: | 
+        🧹 Cleanup cloud resources that were created by running examples from the playground
+        
+        ❗it will remove all resources created by the playground, including topics, connectors, clusters, buckets, redshift cluster, etc...
+    usage: playground cleanup-cloud-resources [OPTIONS]
+    options:
+    - names:
+      - --force
+      argument: ""
+      description: | 
+        ☢️ do not ask for confirmation
+        
+        ❗use with caution
+        
+    - names:
+      - --user
+      argument: USER
+      description: | 
+        ☢️ force user
+        
+    subcommands:
   - name: repro
     description: | 
         👷‍♂️ Reproduction model commands
