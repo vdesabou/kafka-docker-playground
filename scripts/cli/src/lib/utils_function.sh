@@ -1684,9 +1684,21 @@ function bootstrap_ccloud_environment () {
       fi
     fi
 
+    if [ ! -z "$CLUSTER_CREDS" ]
+    then
+      # make sure it is unset
+      unset CLUSTER_CREDS
+    fi
+
     if [ ! -z $ENVIRONMENT ]
     then
       log "🌐 ENVIRONMENT is set with $ENVIRONMENT and will be used"
+    else
+      if [ ! -z "$SCHEMA_REGISTRY_CREDS" ]
+      then
+        # make sure it is unset
+        unset SCHEMA_REGISTRY_CREDS
+      fi
     fi
     log "🔋  CLUSTER_TYPE is set with $CLUSTER_TYPE"
     log "🌤  CLUSTER_CLOUD is set with $CLUSTER_CLOUD"
