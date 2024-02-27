@@ -173,10 +173,15 @@ do
   fi
 
   playground connector status --connector $connector  > $tmp_dir/result.log  2>&1
-  line=$(sed -n '3p' $tmp_dir/result.log)
-  if [ "$line" != "✅ RUNNING" ]
+  if [ $(grep -c "✅" $tmp_dir/result.log) -ne 1 ]
   then
-      logerror "❌ $connector_type connector ${connector}${maybe_id} is not in ✅ RUNNING state"
+      logerror "❌ $connector_type connector ${connector}${maybe_id} instance is not in ✅ RUNNING state"
+      exit 1
+  fi
+
+  if [ $(grep -c "🟢" $tmp_dir/result.log) -lt 1 ]
+  then
+      logerror "❌ $connector_type connector ${connector}${maybe_id} does not have 🟢 task in RUNNING state"
       exit 1
   fi
 
