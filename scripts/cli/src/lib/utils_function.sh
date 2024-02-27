@@ -3887,10 +3887,14 @@ function handle_ccloud_connect_rest_api () {
           code=$(echo "$curl_output" | jq -r .error_code)
           message=$(echo "$curl_output" | jq -r .message)
         fi
-        logerror "Command failed with error code $code"
-        logerror "$message"
-        exit 1
+      elif echo "$curl_output" | jq 'has("errors")' 2> /dev/null | grep -q true
+      then
+        code=$(echo "$curl_output" | jq -r '.errors[0].status')
+        message=$(echo "$curl_output" | jq -r '.errors[0].detail')
       fi
+      logerror "Command failed with error code $code"
+      logerror "$message"
+      exit 1
   else
     logerror "❌ curl request failed with error code $ret!"
     exit 1

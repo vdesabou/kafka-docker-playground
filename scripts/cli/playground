@@ -8737,9 +8737,21 @@ function bootstrap_ccloud_environment () {
       fi
     fi
 
+    if [ ! -z "$CLUSTER_CREDS" ]
+    then
+      # make sure it is unset
+      unset CLUSTER_CREDS
+    fi
+
     if [ ! -z $ENVIRONMENT ]
     then
       log "🌐 ENVIRONMENT is set with $ENVIRONMENT and will be used"
+    else
+      if [ ! -z "$SCHEMA_REGISTRY_CREDS" ]
+      then
+        # make sure it is unset
+        unset SCHEMA_REGISTRY_CREDS
+      fi
     fi
     log "🔋  CLUSTER_TYPE is set with $CLUSTER_TYPE"
     log "🌤  CLUSTER_CLOUD is set with $CLUSTER_CLOUD"
@@ -10859,10 +10871,14 @@ function handle_ccloud_connect_rest_api () {
           code=$(echo "$curl_output" | jq -r .error_code)
           message=$(echo "$curl_output" | jq -r .message)
         fi
-        logerror "Command failed with error code $code"
-        logerror "$message"
-        exit 1
+      elif echo "$curl_output" | jq 'has("errors")' 2> /dev/null | grep -q true
+      then
+        code=$(echo "$curl_output" | jq -r '.errors[0].status')
+        message=$(echo "$curl_output" | jq -r '.errors[0].detail')
       fi
+      logerror "Command failed with error code $code"
+      logerror "$message"
+      exit 1
   else
     logerror "❌ curl request failed with error code $ret!"
     exit 1
