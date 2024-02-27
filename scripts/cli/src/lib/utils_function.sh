@@ -342,7 +342,7 @@ function check_if_skip() {
   else
     read -p "Do you want to skip this command? (y/n) " reply
 
-    if [[ $reply != 'y' ]]
+    if [[ $reply != 'y' ]] 
     then
       eval "$1"
     else
@@ -1678,6 +1678,10 @@ function bootstrap_ccloud_environment () {
       logwarn "CLUSTER_CLOUD and/or CLUSTER_REGION are not set, the cluster will be created 🌤 AWS provider and 🗺 eu-west-2 region"
       export CLUSTER_CLOUD=aws
       export CLUSTER_REGION=eu-west-2
+      if [ -z "$CLUSTER_TYPE" ]
+      then
+        export CLUSTER_TYPE=basic
+      fi
     fi
 
     if [ ! -z $ENVIRONMENT ]
