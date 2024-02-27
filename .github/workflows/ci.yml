@@ -27,6 +27,11 @@ jobs:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
 
+      - name: "Install confluent CLI"
+        run: |
+            curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
+            export PATH=$PATH:/usr/local/bin
+
       - name: Cleanup resources
         run: |
           ./scripts/cli/playground cleanup-cloud-resources --force
@@ -454,6 +459,11 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
+      - name: "Install confluent CLI"
+        run: |
+            curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
+            export PATH=$PATH:/usr/local/bin
+            
       - name: Cleanup resources
         run: |
           ./scripts/cli/playground cleanup-cloud-resources --force
