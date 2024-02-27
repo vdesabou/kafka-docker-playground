@@ -73,7 +73,16 @@ then
 fi
 
 is_create=1
+set +e
 connectors=$(playground get-connector-list)
+ret=$?
+if [ $ret -ne 0 ]
+then
+    logerror "❌ Failed to get list of connectors"
+    playground get-connector-list
+    exit 1
+fi
+set -e
 items=($connectors)
 for con in ${items[@]}
 do
