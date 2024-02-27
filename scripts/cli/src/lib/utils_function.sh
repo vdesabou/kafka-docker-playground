@@ -514,13 +514,13 @@ function set_profiles() {
     log "🥉 Multiple Connect nodes mode is enabled, connect2 and connect 3 containers will be started"
     profile_connect_nodes_command="--profile connect_nodes"
     export CONNECT_NODES_PROFILES="connect_nodes"
-    playground state set flags.CONNECT_NODES_PROFILES 1
+    playground state set flags.ENABLE_CONNECT_NODES 1
   else
     if [ ! -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
     then
       log "🥉 Multiple connect nodes mode is enabled, connect2 and connect 3 containers will be started"
       profile_connect_nodes_command="--profile connect_nodes"
-      playground state set flags.CONNECT_NODES_PROFILES 1
+      playground state set flags.ENABLE_CONNECT_NODES 1
     else
       logerror "🛑 Could not find connect2 and connect3 in ${DOCKER_COMPOSE_FILE_OVERRIDE}. Update the yaml files to contain the connect2 && connect3 in ${DOCKER_COMPOSE_FILE_OVERRIDE}"
       exit 1
@@ -3778,7 +3778,7 @@ function force_enable () {
 }
 
 function load_env_variables () {
-  for item in {ENABLE_CONTROL_CENTER,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,SQL_DATAGEN,ENABLE_KAFKA_NODES,CONNECT_NODES_PROFILES,CONNECT_NODES_PROFILES}
+  for item in {ENABLE_CONTROL_CENTER,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,SQL_DATAGEN,ENABLE_KAFKA_NODES,ENABLE_CONNECT_NODES}
   do
     i=$(playground state get "flags.${item}")
     if [ "$i" != "" ]
