@@ -11635,8 +11635,18 @@ playground_run_command() {
     verify_installed "confluent"
   fi
 
+  playground state set run.test_file "$test_file"
   test_file_directory="$(dirname "${test_file}")"
   filename=$(basename -- "$test_file")
+
+  docs_available=1
+  set +e
+  playground open-docs --only-show-url > /dev/null 2>&1
+  if [ $? -eq 1 ]
+  then
+    docs_available=0
+  fi
+  set -e
 
   flag_list=""
   if [[ -n "$tag" ]]
@@ -12011,17 +12021,25 @@ playground_run_command() {
       readonly MENU_LETS_GO="🚀 Run the example !" #0
       MENU_PROBLEM="❌ The example cannot be executed, check error(s) 👉" #1
       readonly MENU_OPEN_FILE="📖 Open the file in text editor"
-      # readonly MENU_SEPARATOR="--------------------------------------------------" #3
+      set +e
+      if [[ $(type -f open 2>&1) =~ "not found" ]]
+      then
+        MENU_OPEN_DOCS="🌐 Show link to the docs"
+      else
+        MENU_OPEN_DOCS="🌐 Open the docs in browser"
+      fi
+      set -e
+      # readonly MENU_SEPARATOR="--------------------------------------------------" #4
 
-      MENU_TAG="🎯 CP version $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_TAG})) ' ') --tag" #4
+      MENU_TAG="🎯 CP version $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_TAG})) ' ') --tag" #5
       MENU_CONNECTOR_TAG="🔗 Connector version $(printf '%*s' $((${MAX_LENGTH}-20-${#MENU_CONNECTOR_TAG})) ' ') --connector-tag"
       MENU_CONNECTOR_ZIP="🤐 Connector zip $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CONNECTOR_ZIP})) ' ') --connector-zip"
       MENU_CONNECTOR_JAR="🤎 Connector jar $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CONNECTOR_JAR})) ' ') --connector-jar"
       MENU_ENVIRONMENT="🔐 Environment $(printf '%*s' $((${MAX_LENGTH}-14-${#MENU_ENVIRONMENT})) ' ') --environment"
 
-      readonly MENU_SEPARATOR="--------------------------------------------------" #9
+      readonly MENU_SEPARATOR="--------------------------------------------------" #10
 
-      MENU_ENABLE_KSQLDB="🎏 Enable ksqlDB $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_ENABLE_KSQLDB})) ' ') --enable-ksqldb" #10
+      MENU_ENABLE_KSQLDB="🎏 Enable ksqlDB $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_ENABLE_KSQLDB})) ' ') --enable-ksqldb" #11
       MENU_ENABLE_C3="💠 Enable Control Center $(printf '%*s' $((${MAX_LENGTH}-24-${#MENU_ENABLE_C3})) ' ') --enable-control-center"
       MENU_ENABLE_CONDUKTOR="🐺 Enable Conduktor Platform $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_ENABLE_CONDUKTOR})) ' ') --enable-conduktor"
       MENU_ENABLE_RP="🧲 Enable Rest Proxy $(printf '%*s' $((${MAX_LENGTH}-20-${#MENU_ENABLE_RP})) ' ') --enable-rest-proxy"
@@ -12030,9 +12048,9 @@ playground_run_command() {
       MENU_ENABLE_BROKERS="3️⃣  Enabling multiple brokers $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_ENABLE_BROKERS})) ' ') --enable-multiple-broker"
       MENU_ENABLE_CONNECT_WORKERS="🥉 Enabling multiple connect workers $(printf '%*s' $((${MAX_LENGTH}-36-${#MENU_ENABLE_CONNECT_WORKERS})) ' ') --enable-multiple-connect-workers"
       MENU_ENABLE_KCAT="🐈 Enabling kcat $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_ENABLE_KCAT})) ' ') --enable-kcat"
-      MENU_ENABLE_SQL_DATAGEN="🌪️  Enable SQL Datagen injection $(printf '%*s' $((${MAX_LENGTH}-33-${#MENU_ENABLE_SQL_DATAGEN})) ' ') --enable-sql-datagen" #18
+      MENU_ENABLE_SQL_DATAGEN="🌪️  Enable SQL Datagen injection $(printf '%*s' $((${MAX_LENGTH}-33-${#MENU_ENABLE_SQL_DATAGEN})) ' ') --enable-sql-datagen" #19
 
-      readonly MENU_DISABLE_KSQLDB="❌🎏 Disable ksqlDB" #19
+      readonly MENU_DISABLE_KSQLDB="❌🎏 Disable ksqlDB" #20
       readonly MENU_DISABLE_C3="❌💠 Disable Control Center"
       readonly MENU_DISABLE_CONDUKTOR="❌🐺 Disable Conduktor Platform"
       readonly MENU_DISABLE_RP="❌🧲 Disable Rest Proxy"
@@ -12040,11 +12058,11 @@ playground_run_command() {
       readonly MENU_DISABLE_BROKERS="❌3️⃣ Disabling multiple brokers"
       readonly MENU_DISABLE_CONNECT_WORKERS="❌🥉 Disabling multiple connect workers"
       readonly MENU_DISABLE_KCAT="❌🐈 Disabling kcat"
-      readonly MENU_DISABLE_SQL_DATAGEN="❌🌪️ Disable SQL Datagen injection" #26
+      readonly MENU_DISABLE_SQL_DATAGEN="❌🌪️ Disable SQL Datagen injection" #27
 
       readonly MENU_SEPARATOR_FEATURES="--------------------options-----------------------"
 
-      MENU_CLUSTER_TYPE="🔋 Cluster type $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CLUSTER_TYPE})) ' ') --cluster-type" #28
+      MENU_CLUSTER_TYPE="🔋 Cluster type $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CLUSTER_TYPE})) ' ') --cluster-type" #29
       MENU_CLUSTER_CLOUD="🌤  Cloud provider $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_CLUSTER_CLOUD})) ' ') --cluster-cloud"
       MENU_CLUSTER_REGION="🗺  Cloud region $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CLUSTER_REGION})) ' ') --cluster-region"
       MENU_CLUSTER_ENVIRONMENT="🌐 Environment id $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_CLUSTER_ENVIRONMENT})) ' ') --cluster-environment"
@@ -12053,7 +12071,7 @@ playground_run_command() {
       MENU_CLUSTER_CREDS="🔒 Kafka api key & secret $(printf '%*s' $((${MAX_LENGTH}-25-${#MENU_CLUSTER_CREDS})) ' ') --cluster-creds"
       MENU_CLUSTER_SR_CREDS="🔰 Schema registry api key & secret $(printf '%*s' $((${MAX_LENGTH}-35-${#MENU_CLUSTER_SR_CREDS})) ' ') --cluster-schema-registry-creds"
 
-      readonly MENU_SEPARATOR_CLOUD="-----------------confluent cloud------------------" #35
+      readonly MENU_SEPARATOR_CLOUD="-----------------confluent cloud------------------" #36
 
       readonly MENU_GO_BACK="🔙 Go back"
 
@@ -12064,7 +12082,7 @@ playground_run_command() {
       while [ $stop != 1 ]
       do
         has_error=0
-        options=("$MENU_LETS_GO" "$MENU_PROBLEM" "$MENU_OPEN_FILE" "$MENU_SEPARATOR" "$MENU_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_ENVIRONMENT" "$MENU_SEPARATOR" "$MENU_ENABLE_KSQLDB" "$MENU_ENABLE_C3" "$MENU_ENABLE_CONDUKTOR" "$MENU_ENABLE_RP" "$MENU_ENABLE_GRAFANA" "$MENU_ENABLE_BROKERS" "$MENU_ENABLE_CONNECT_WORKERS" "$MENU_ENABLE_KCAT" "$MENU_ENABLE_SQL_DATAGEN" "$MENU_DISABLE_KSQLDB" "$MENU_DISABLE_C3" "$MENU_DISABLE_CONDUKTOR" "$MENU_DISABLE_RP" "$MENU_DISABLE_GRAFANA" "$MENU_DISABLE_BROKERS" "$MENU_DISABLE_CONNECT_WORKERS" "$MENU_DISABLE_KCAT" "$MENU_DISABLE_SQL_DATAGEN" "$MENU_SEPARATOR_FEATURES" "$MENU_CLUSTER_TYPE" "$MENU_CLUSTER_CLOUD" "$MENU_CLUSTER_REGION" "$MENU_CLUSTER_ENVIRONMENT" "$MENU_CLUSTER_NAME" "$MENU_CLUSTER_CREDS" "$MENU_CLUSTER_SR_CREDS" "$MENU_SEPARATOR_CLOUD" "$MENU_GO_BACK")
+        options=("$MENU_LETS_GO" "$MENU_PROBLEM" "$MENU_OPEN_FILE" "$MENU_OPEN_DOCS" "$MENU_SEPARATOR" "$MENU_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_ENVIRONMENT" "$MENU_SEPARATOR" "$MENU_ENABLE_KSQLDB" "$MENU_ENABLE_C3" "$MENU_ENABLE_CONDUKTOR" "$MENU_ENABLE_RP" "$MENU_ENABLE_GRAFANA" "$MENU_ENABLE_BROKERS" "$MENU_ENABLE_CONNECT_WORKERS" "$MENU_ENABLE_KCAT" "$MENU_ENABLE_SQL_DATAGEN" "$MENU_DISABLE_KSQLDB" "$MENU_DISABLE_C3" "$MENU_DISABLE_CONDUKTOR" "$MENU_DISABLE_RP" "$MENU_DISABLE_GRAFANA" "$MENU_DISABLE_BROKERS" "$MENU_DISABLE_CONNECT_WORKERS" "$MENU_DISABLE_KCAT" "$MENU_DISABLE_SQL_DATAGEN" "$MENU_SEPARATOR_FEATURES" "$MENU_CLUSTER_TYPE" "$MENU_CLUSTER_CLOUD" "$MENU_CLUSTER_REGION" "$MENU_CLUSTER_ENVIRONMENT" "$MENU_CLUSTER_NAME" "$MENU_CLUSTER_CREDS" "$MENU_CLUSTER_SR_CREDS" "$MENU_SEPARATOR_CLOUD" "$MENU_GO_BACK")
 
         connector_example=0
         get_connector_paths
@@ -12091,19 +12109,19 @@ playground_run_command() {
         then
           if [[ $test_file == *"fully-managed"* ]]
           then
-            for((i=4;i<29;i++)); do
+            for((i=5;i<30;i++)); do
               unset "options[$i]"
             done
           fi
-          unset 'options[13]'
           unset 'options[14]'
           unset 'options[15]'
           unset 'options[16]'
+          unset 'options[17]'
 
-          unset 'options[22]'
           unset 'options[23]'
           unset 'options[24]'
           unset 'options[25]'
+          unset 'options[26]'
 
           if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_name" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
           then
@@ -12246,7 +12264,6 @@ playground_run_command() {
             fi
           fi
         else # end of ccloud
-          unset 'options[29]'
           unset 'options[30]'
           unset 'options[31]'
           unset 'options[32]'
@@ -12254,19 +12271,25 @@ playground_run_command() {
           unset 'options[34]'
           unset 'options[35]'
           unset 'options[36]'
+          unset 'options[37]'
 
-          unset 'options[38]'
           unset 'options[39]'
           unset 'options[40]'
           unset 'options[41]'
+          unset 'options[42]'
         fi
 
         if [ $connector_example == 0 ]
         then
-          unset 'options[5]'
           unset 'options[6]'
           unset 'options[7]'
           unset 'options[8]'
+          unset 'options[9]'
+        fi
+
+        if [ $docs_available == 0 ]
+        then
+          unset 'options[3]'
         fi
 
         sql_datagen=0
@@ -12278,13 +12301,13 @@ playground_run_command() {
 
         if [ $sql_datagen == 0 ]
         then
-          unset 'options[18]'
+          unset 'options[19]'
         fi
 
         if [ ! -z $PLAYGROUND_ENVIRONMENT ] && [ "$PLAYGROUND_ENVIRONMENT" != "plaintext" ]
         then
           # --enable-multiple-connect-workers only for plaintext
-          unset 'options[16]'
+          unset 'options[17]'
 
           array_flag_list=("${array_flag_list[@]/"--enable-multiple-connect-workers"}")
           unset ENABLE_CONNECT_NODES
@@ -12295,57 +12318,57 @@ playground_run_command() {
 
         if [ ! -z $ENABLE_KSQLDB ]
         then
-          unset 'options[10]'
-        else
-          unset 'options[19]'
-        fi
-        if [ ! -z $ENABLE_CONTROL_CENTER ]
-        then
           unset 'options[11]'
         else
           unset 'options[20]'
         fi
-        if [ ! -z $ENABLE_CONDUKTOR ]
+        if [ ! -z $ENABLE_CONTROL_CENTER ]
         then
           unset 'options[12]'
         else
           unset 'options[21]'
         fi
-        if [ ! -z $ENABLE_RESTPROXY ]
+        if [ ! -z $ENABLE_CONDUKTOR ]
         then
           unset 'options[13]'
         else
           unset 'options[22]'
         fi
-        if [ ! -z $ENABLE_JMX_GRAFANA ]
+        if [ ! -z $ENABLE_RESTPROXY ]
         then
           unset 'options[14]'
         else
           unset 'options[23]'
         fi
-        if [ ! -z $ENABLE_KAFKA_NODES ]
+        if [ ! -z $ENABLE_JMX_GRAFANA ]
         then
           unset 'options[15]'
         else
           unset 'options[24]'
         fi
-        if [ ! -z $ENABLE_CONNECT_NODES ]
+        if [ ! -z $ENABLE_KAFKA_NODES ]
         then
           unset 'options[16]'
         else
           unset 'options[25]'
         fi
-        if [ ! -z $ENABLE_KCAT ]
+        if [ ! -z $ENABLE_CONNECT_NODES ]
         then
           unset 'options[17]'
         else
           unset 'options[26]'
         fi
-        if [ ! -z $SQL_DATAGEN ]
+        if [ ! -z $ENABLE_KCAT ]
         then
           unset 'options[18]'
         else
           unset 'options[27]'
+        fi
+        if [ ! -z $SQL_DATAGEN ]
+        then
+          unset 'options[19]'
+        else
+          unset 'options[28]'
         fi
 
         missing_env=""
@@ -12471,7 +12494,7 @@ playground_run_command() {
         IFS=$'\n' flag_string="${array_flag_list[*]}"
         IFS=$oldifs
 
-        preview="${ccloud_preview}\n${missing_env}\n🚀 number of examples ran so far: $(get_cli_metric nb_runs)\n\n⛳ flag list:\n$flag_string"
+        preview="${ccloud_preview}\n${missing_env}\n🚀 number of examples ran so far: $(get_cli_metric nb_runs)\n\n⛳ flag list:\n$flag_string\n"
         res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🚀" --header="select option(s) for $example (use tab to select more than one)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"$preview\"")
 
         if [[ $res == *"$MENU_LETS_GO"* ]]
@@ -12510,6 +12533,16 @@ playground_run_command() {
                   log "📖 Opening ${test_file} with code (default) - you can change editor by using playground config editor <editor>"
                   code ${test_file}
               fi
+          fi
+        fi
+
+        if [[ $res == *"$MENU_OPEN_DOCS"* ]]
+        then
+          if [[ $(type -f open 2>&1) =~ "not found" ]]
+          then
+            playground open-docs --only-show-url
+          else
+            playground open-docs
           fi
         fi
 
@@ -13007,11 +13040,14 @@ playground_run_command() {
     sleep 3
     set +e
     playground connector status
+
+    playground open-docs --only-show-url
+
     connector_type=$(playground state get run.connector_type)
     if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
     then
       playground connector versions
-      playground open-docs --only-show-url
+      playground connector open-docs --only-show-url
     fi
     set -e
   }
