@@ -12078,32 +12078,39 @@ playground_run_command() {
       last_two_folders=$(basename $(dirname $(dirname $test_file)))/$(basename $(dirname $test_file))
       example="$last_two_folders/$filename"
 
+      connector_example=0
+      get_connector_paths
+      if [ "$connector_paths" != "" ]
+      then
+        connector_tags=""
+        for connector_path in ${connector_paths//,/ }
+        do
+          full_connector_name=$(basename "$connector_path")
+          owner=$(echo "$full_connector_name" | cut -d'-' -f1)
+          name=$(echo "$full_connector_name" | cut -d'-' -f2-)
+
+          if [ "$owner" == "java" ] || [ "$name" == "hub-components" ] || [ "$owner" == "filestream" ]
+          then
+            # happens when plugin is not coming from confluent hub
+            continue
+          else
+            connector_example=1
+          fi
+        done
+      fi
+
+      sql_datagen=0
+      if [[ $test_file == *"connect-debezium-sqlserver"* ]] || [[ $test_file == *"connect-debezium-mysql"* ]] || [[ $test_file == *"connect-debezium-postgresql"* ]] || [[ $test_file == *"connect-debezium-oracle"* ]] || [[ $test_file == *"connect-cdc-oracle"* ]] || [[ $test_file == *"connect-jdbc-sqlserver"* ]] || [[ $test_file == *"connect-jdbc-mysql"* ]] || [[ $test_file == *"connect-jdbc-postgresql"* ]] || [[ $test_file == *"connect-jdbc-oracle"* ]]
+
+      then
+        sql_datagen=1
+      fi
+
       stop=0
       while [ $stop != 1 ]
       do
         has_error=0
         options=("$MENU_LETS_GO" "$MENU_PROBLEM" "$MENU_OPEN_FILE" "$MENU_OPEN_DOCS" "$MENU_SEPARATOR" "$MENU_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_ENVIRONMENT" "$MENU_SEPARATOR" "$MENU_ENABLE_KSQLDB" "$MENU_ENABLE_C3" "$MENU_ENABLE_CONDUKTOR" "$MENU_ENABLE_RP" "$MENU_ENABLE_GRAFANA" "$MENU_ENABLE_BROKERS" "$MENU_ENABLE_CONNECT_WORKERS" "$MENU_ENABLE_KCAT" "$MENU_ENABLE_SQL_DATAGEN" "$MENU_DISABLE_KSQLDB" "$MENU_DISABLE_C3" "$MENU_DISABLE_CONDUKTOR" "$MENU_DISABLE_RP" "$MENU_DISABLE_GRAFANA" "$MENU_DISABLE_BROKERS" "$MENU_DISABLE_CONNECT_WORKERS" "$MENU_DISABLE_KCAT" "$MENU_DISABLE_SQL_DATAGEN" "$MENU_SEPARATOR_FEATURES" "$MENU_CLUSTER_TYPE" "$MENU_CLUSTER_CLOUD" "$MENU_CLUSTER_REGION" "$MENU_CLUSTER_ENVIRONMENT" "$MENU_CLUSTER_NAME" "$MENU_CLUSTER_CREDS" "$MENU_CLUSTER_SR_CREDS" "$MENU_SEPARATOR_CLOUD" "$MENU_GO_BACK")
-
-        connector_example=0
-        get_connector_paths
-        if [ "$connector_paths" != "" ]
-        then
-          connector_tags=""
-          for connector_path in ${connector_paths//,/ }
-          do
-            full_connector_name=$(basename "$connector_path")
-            owner=$(echo "$full_connector_name" | cut -d'-' -f1)
-            name=$(echo "$full_connector_name" | cut -d'-' -f2-)
-
-            if [ "$owner" == "java" ] || [ "$name" == "hub-components" ] || [ "$owner" == "filestream" ]
-            then
-              # happens when plugin is not coming from confluent hub
-              continue
-            else
-              connector_example=1
-            fi
-          done
-        fi
 
         if [[ $test_file == *"ccloud"* ]] || [ "$PLAYGROUND_ENVIRONMENT" == "ccloud" ]
         then
@@ -12290,13 +12297,6 @@ playground_run_command() {
         if [ $docs_available == 0 ]
         then
           unset 'options[3]'
-        fi
-
-        sql_datagen=0
-        if [[ $test_file == *"connect-debezium-sqlserver"* ]] || [[ $test_file == *"connect-debezium-mysql"* ]] || [[ $test_file == *"connect-debezium-postgresql"* ]] || [[ $test_file == *"connect-debezium-oracle"* ]] || [[ $test_file == *"connect-cdc-oracle"* ]] || [[ $test_file == *"connect-jdbc-sqlserver"* ]] || [[ $test_file == *"connect-jdbc-mysql"* ]] || [[ $test_file == *"connect-jdbc-postgresql"* ]] || [[ $test_file == *"connect-jdbc-oracle"* ]]
-
-        then
-          sql_datagen=1
         fi
 
         if [ $sql_datagen == 0 ]
