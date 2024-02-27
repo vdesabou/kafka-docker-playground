@@ -60,6 +60,7 @@ else
 
     else
         doc_links="${doc_links#|}"
+        doc_links=$(echo "${doc_links}" | tr -d '${}')
         playground state set run.connector_docs_links "$doc_links"
     fi
 fi
