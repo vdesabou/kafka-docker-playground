@@ -85,7 +85,7 @@ fi
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.assuming-iam-role-with-custom-awscredentialsprovider.yml"
 
-KINESIS_STREAM_NAME=kafka_docker_playground$TAG
+KINESIS_STREAM_NAME=pg${USER}${TAG}
 KINESIS_STREAM_NAME=${KINESIS_STREAM_NAME//[-.]/}
 
 set +e
