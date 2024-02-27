@@ -109,6 +109,7 @@ CREATE USER $PLAYGROUND_USER
  RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY";
 USE ROLE SECURITYADMIN;
 GRANT ROLE $PLAYGROUND_CONNECTOR_ROLE TO USER $PLAYGROUND_USER;
+GRANT ROLE $PLAYGROUND_CONNECTOR_ROLE TO ACCOUNTADMIN;
 EOF
 
 log "Creating test_table topic in Confluent Cloud (auto.create.topics.enable=false)"
@@ -145,7 +146,7 @@ playground connector delete --connector $connector_name
 set -e
 
 log "Creating fully managed connector"
-playground connector create-or-update --connector $connector_name << EOF
+playground -v connector create-or-update --connector $connector_name << EOF
 {
      "connector.class": "SnowflakeSink",
      "name": "SnowflakeSink",
