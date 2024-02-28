@@ -27,11 +27,12 @@ cluster_environment="${args[--cluster-environment]}"
 cluster_name="${args[--cluster-name]}"
 cluster_creds="${args[--cluster-creds]}"
 cluster_schema_registry_creds="${args[--cluster-schema-registry-creds]}"
+force_interactive_re_run="${args[--force-interactive-re-run]}"
 force_interactive_repro="${args[--force-interactive-repro]}"
 
 interactive_mode=0
 
-if [[ -n "$force_interactive_repro" ]]
+if [[ -n "$force_interactive_repro" ]] || [[ -n "$force_interactive_re_run" ]]
 then
   interactive_mode=1
 fi
@@ -407,6 +408,13 @@ then
   if [ $interactive_mode == 1 ]
   then
     declare -a array_flag_list=()
+    if [ $force_interactive_re_run == 1 ]
+    then
+      encoded_array="$(playground state get run.array_flag_list_base64)"
+
+      eval "$(echo "$encoded_array" | base64 --decode)"
+    fi
+
     terminal_columns=$(tput cols)
     if [[ $terminal_columns -gt 180 ]]
     then
@@ -730,10 +738,13 @@ then
         unset 'options[17]'
 
         array_flag_list=("${array_flag_list[@]/"--enable-multiple-connect-workers"}")
-        unset ENABLE_CONNECT_NODES
-        set +e
-        cp /tmp/playground-backup-docker-compose.yml $docker_compose_file > /dev/null 2>&1
-        set -e
+        if [ ! -z $ENABLE_CONNECT_NODES ]
+        then
+          unset ENABLE_CONNECT_NODES
+          set +e
+          mv /tmp/playground-backup-docker-compose.yml $docker_compose_file > /dev/null 2>&1
+          set -e
+        fi
       fi
 
       if [ ! -z $ENABLE_KSQLDB ]
@@ -1072,7 +1083,7 @@ then
         array_flag_list=("${array_flag_list[@]/"--enable-multiple-connect-workers"}")
         unset ENABLE_CONNECT_NODES
         interactive_enable_connect=""
-        cp /tmp/playground-backup-docker-compose.yml $docker_compose_file
+        mv /tmp/playground-backup-docker-compose.yml $docker_compose_file
       fi
 
       if [[ $res == *"$MENU_ENABLE_KCAT"* ]]
@@ -1265,6 +1276,10 @@ then
     done # end while loop stop
     IFS=' ' flag_list="${array_flag_list[*]}"
 
+    array_declaration=$(declare -p array_flag_list)
+    encoded_array=$(echo "$array_declaration" | base64)
+    playground state set run.array_flag_list_base64 "$encoded_array"
+
     if [ "$interactive_enable_ksqldb" == "true" ]
     then
       if [[ -n "$force_interactive_repro" ]]
@@ -1436,7 +1451,6 @@ playground container kill-all
 set -e
 playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
 playground state set run.test_file "$test_file"
-playground state set run.run_command "playground run -f $test_file $flag_list ${other_args[*]}"
 echo "" >> "$root_folder/playground-run-history"
 echo "playground run -f $test_file $flag_list ${other_args[*]}" >> "$root_folder/playground-run-history"
 
@@ -1451,7 +1465,7 @@ cd $test_file_directory
 function cleanup {
   if [[ -n "$enable_multiple_connect_workers" ]]
   then
-    cp /tmp/playground-backup-docker-compose.yml $docker_compose_file
+    mv /tmp/playground-backup-docker-compose.yml $docker_compose_file
   fi
   rm /tmp/playground-run-command-used
   echo ""

@@ -599,6 +599,11 @@ commands:
       
       🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable
 
+  - long: --force-interactive-re-run
+    required: false
+    private: true
+    help: |-
+      Force interactive mode
   - long: --force-interactive-repro
     required: false
     private: true
@@ -613,42 +618,10 @@ commands:
   group: Run
   help: |-
     ⚡ Simply re-run last example you ran with <playground run>
-  catch_all:
-    label: arguments
-    help: |-
-      Arguments to use by example script
-
-      Most of examples support to get required options either by using arguments or environment variables.
-      
-      Example with Zendesk:
-
-      playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
-    required: false
   dependencies:
     fzf: visit https://github.com/junegunn/fzf#installation to install
-  flags:
-    - long: --clear
-      required: false
-      help: |- 
-        🧼 Clear any previous flags
-    - *environment-run
-    - *tag
-    - *connector-tag
-    - *connector-zip
-    - *connector-jar
-    - *enable-ksqldb
-    - *enable-rest-proxy
-    - *enable-control-center
-    - *enable-conduktor
-    - *enable-multiple-brokers
-    - *enable-multiple-connect-workers
-    - *enable-jmx-grafana
-    - *enable-kcat
-    - *enable-sql-datagen
   examples:
-  - playground re-run
-  - playground re-run --tag 6.2.1
-
+  - playground re-run (interactive mode)
 
 - name: history
   group: Run

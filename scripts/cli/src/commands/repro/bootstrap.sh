@@ -1187,7 +1187,6 @@ fi
 
 playground state set run.test_file "$repro_dir/$repro_test_filename"
 playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
-playground state set run.run_command "playground run -f $repro_dir/$repro_test_filename"
 
 editor=$(playground config get editor)
 if [ "$editor" != "" ]

@@ -223,6 +223,13 @@
         },
         {
           "names": [
+            "--force-interactive-re-run"
+          ],
+          "argument": "",
+          "description": "Force interactive mode\n"
+        },
+        {
+          "names": [
             "--force-interactive-repro"
           ],
           "argument": "",
@@ -234,114 +241,8 @@
     {
       "name": "re-run",
       "description": "⚡ Simply re-run last example you ran with <playground run>\n",
-      "usage": "playground re-run [OPTIONS] [ARGUMENTS...]",
-      "options": [
-        {
-          "names": [
-            "--clear"
-          ],
-          "argument": "",
-          "description": "🧼 Clear any previous flags\n"
-        },
-        {
-          "names": [
-            "--environment"
-          ],
-          "argument": "plaintext",
-          "description": "🔐 The environment to start when running a connector example \n\n- plaintext\n- ccloud\n- 2way-ssl\n- kerberos\n- kraft-external-plaintext\n- kraft-plaintext\n- ldap-authorizer-sasl-plain\n- ldap-sasl-plain\n- rbac-sasl-plain\n- sasl-plain\n- sasl-scram\n- sasl-ssl\n- ssl_kerberos\n\nDefault is plaintext.\nThis is only supported when example is a connector example\n\nDefault value: plaintext\n\nAllowed values: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain\n"
-        },
-        {
-          "names": [
-            "--tag"
-          ],
-          "argument": "TAG",
-          "description": "🎯 Confluent Platform (CP) version to use\n\nMust be greater or equal to 5.3.0\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
-        },
-        {
-          "names": [
-            "--connector-tag"
-          ],
-          "argument": "CONNECTOR_TAG",
-          "description": "🔗 Connector version to use\n\nBy default, for each connector, the latest available version on Confluent Hub is used\n\n🎓 Tip: set to \" \" in order to select the version dynamically\n\nConflicts with: --connector-zip\n"
-        },
-        {
-          "names": [
-            "--connector-zip"
-          ],
-          "argument": "CONNECTOR_ZIP",
-          "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n\nConflicts with: --connector-tag\n"
-        },
-        {
-          "names": [
-            "--connector-jar"
-          ],
-          "argument": "CONNECTOR_JAR",
-          "description": "🤎 Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n"
-        },
-        {
-          "names": [
-            "--enable-ksqldb"
-          ],
-          "argument": "",
-          "description": "🚀 Enable ksqlDB \n\n❗ not supported with ccloud examples\n\nBy default, ksqldb-server and ksqldb-cli containers are not started for every test\n"
-        },
-        {
-          "names": [
-            "--enable-rest-proxy"
-          ],
-          "argument": "",
-          "description": "🧲 Enable Rest Proxy\n\n❗ not supported with ccloud examples\n\nBy default, rest-proxy container is not started for every test\n"
-        },
-        {
-          "names": [
-            "--enable-control-center"
-          ],
-          "argument": "",
-          "description": "💠 Enable Control Center\n\nBy default, control-center container is not started for every test\n\nControl Center is reachable at http://127.0.0.1:9021\n"
-        },
-        {
-          "names": [
-            "--enable-conduktor"
-          ],
-          "argument": "",
-          "description": "🐺 Enable Conduktor Platform\n\nBy default, Conduktor Platform container is not started for every test\n\nConduktor is reachable at http://127.0.0.1:8080/console (admin/admin)\n"
-        },
-        {
-          "names": [
-            "--enable-multiple-brokers"
-          ],
-          "argument": "",
-          "description": "3️⃣ Enable multiple brokers\n\nBy default, there is only one broker node enabled\n"
-        },
-        {
-          "names": [
-            "--enable-multiple-connect-workers"
-          ],
-          "argument": "",
-          "description": "🥉 Enable multiple connect node\n\nBy default, there is only one connect node enabled\n\nIt only works when plaintext environment is used\n"
-        },
-        {
-          "names": [
-            "--enable-jmx-grafana"
-          ],
-          "argument": "",
-          "description": "Enable Grafana, Prometheus and Pyroscope\n\n📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/password)\n\n🛡️ Prometheus is reachable at http://127.0.0.1:9090\n\n📛 Pyroscope is reachable at http://127.0.0.1:4040\n"
-        },
-        {
-          "names": [
-            "--enable-kcat"
-          ],
-          "argument": "",
-          "description": "🐈‍⬛ Enable kcat\n\nYou can use it with:\n\n$ docker exec kcat kcat -b broker:9092 -L\n"
-        },
-        {
-          "names": [
-            "--enable-sql-datagen"
-          ],
-          "argument": "",
-          "description": "🌪️ Enable SQL Datagen injection\n\nThis only works for Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with JDBC and Debezium\n"
-        }
-      ],
+      "usage": "playground re-run",
+      "options": [],
       "subcommands": null
     },
     {

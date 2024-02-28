@@ -1564,7 +1564,7 @@ playground_re_run_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground re-run [OPTIONS] [ARGUMENTS...]\n"
+  printf "  playground re-run\n"
   printf "  playground re-run --help | -h\n"
   echo
 
@@ -1572,100 +1572,14 @@ playground_re_run_usage() {
   if [[ -n $long_usage ]]; then
     printf "%s\n" "$(bold "== Options ==")"
 
-    # :command.usage_flags
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--clear")"
-    printf "    🧼 Clear any previous flags\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--environment ENVIRONMENT")"
-    printf "    🔐 The environment to start when running a connector example \n    \n    - plaintext\n    - ccloud\n    - 2way-ssl\n    - kerberos\n    - kraft-external-plaintext\n    - kraft-plaintext\n    - ldap-authorizer-sasl-plain\n    - ldap-sasl-plain\n    - rbac-sasl-plain\n    - sasl-plain\n    - sasl-scram\n    - sasl-ssl\n    - ssl_kerberos\n    \n    Default is plaintext.\n    This is only supported when example is a connector example\n"
-    printf "    Allowed: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain\n"
-    printf "    Default: plaintext\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--tag TAG")"
-    printf "    🎯 Confluent Platform (CP) version to use\n    \n    Must be greater or equal to 5.3.0\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG")"
-    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
-    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
-    printf "    🤎 Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-ksqldb")"
-    printf "    🚀 Enable ksqlDB \n    \n    ❗ not supported with ccloud examples\n    \n    By default, ksqldb-server and ksqldb-cli containers are not started for\n    every test\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-rest-proxy")"
-    printf "    🧲 Enable Rest Proxy\n    \n    ❗ not supported with ccloud examples\n    \n    By default, rest-proxy container is not started for every test\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-control-center")"
-    printf "    💠 Enable Control Center\n    \n    By default, control-center container is not started for every test\n    \n    Control Center is reachable at http://127.0.0.1:9021\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-conduktor")"
-    printf "    🐺 Enable Conduktor Platform\n    \n    By default, Conduktor Platform container is not started for every test\n    \n    Conduktor is reachable at http://127.0.0.1:8080/console (admin/admin)\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-multiple-brokers")"
-    printf "    3️⃣ Enable multiple brokers\n    \n    By default, there is only one broker node enabled\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-multiple-connect-workers")"
-    printf "    🥉 Enable multiple connect node\n    \n    By default, there is only one connect node enabled\n    \n    It only works when plaintext environment is used\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-jmx-grafana")"
-    printf "    Enable Grafana, Prometheus and Pyroscope\n    \n    📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is\n    admin/password)\n    \n    🛡️ Prometheus is reachable at http://127.0.0.1:9090\n    \n    📛 Pyroscope is reachable at http://127.0.0.1:4040\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-kcat")"
-    printf "    🐈‍⬛ Enable kcat\n    \n    You can use it with:\n    \n    $ docker exec kcat kcat -b broker:9092 -L\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-sql-datagen")"
-    printf "    🌪️ Enable SQL Datagen injection\n    \n    This only works for Oracle, MySql, Postgres and Microsoft Sql Server source\n    connector examples with JDBC and Debezium\n"
-    echo
-
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
     echo
 
-    # :command.usage_args
-    printf "%s\n" "$(bold "== Arguments ==")"
-
-    echo "  ARGUMENTS..."
-    printf "    Arguments to use by example script\n    \n    Most of examples support to get required options either by using arguments\n    or environment variables.\n    \n    Example with Zendesk:\n    \n    playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME>\n    <ZENDESK_PASSWORD>\n"
-    echo
-
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground re-run\n"
-    printf "  playground re-run --tag 6.2.1\n"
+    printf "  playground re-run (interactive mode)\n"
     echo
 
   fi
@@ -7575,13 +7489,13 @@ function set_profiles() {
     log "🥉 Multiple Connect nodes mode is enabled, connect2 and connect 3 containers will be started"
     profile_connect_nodes_command="--profile connect_nodes"
     export CONNECT_NODES_PROFILES="connect_nodes"
-    playground state set flags.CONNECT_NODES_PROFILES 1
+    playground state set flags.ENABLE_CONNECT_NODES 1
   else
     if [ ! -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
     then
       log "🥉 Multiple connect nodes mode is enabled, connect2 and connect 3 containers will be started"
       profile_connect_nodes_command="--profile connect_nodes"
-      playground state set flags.CONNECT_NODES_PROFILES 1
+      playground state set flags.ENABLE_CONNECT_NODES 1
     else
       logerror "🛑 Could not find connect2 and connect3 in ${DOCKER_COMPOSE_FILE_OVERRIDE}. Update the yaml files to contain the connect2 && connect3 in ${DOCKER_COMPOSE_FILE_OVERRIDE}"
       exit 1
@@ -10770,7 +10684,7 @@ function force_enable () {
 }
 
 function load_env_variables () {
-  for item in {ENABLE_CONTROL_CENTER,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,SQL_DATAGEN,ENABLE_KAFKA_NODES,CONNECT_NODES_PROFILES,CONNECT_NODES_PROFILES}
+  for item in {ENABLE_CONTROL_CENTER,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,SQL_DATAGEN,ENABLE_KAFKA_NODES,ENABLE_CONNECT_NODES}
   do
     i=$(playground state get "flags.${item}")
     if [ "$i" != "" ]
@@ -11598,11 +11512,12 @@ playground_run_command() {
   cluster_name="${args[--cluster-name]}"
   cluster_creds="${args[--cluster-creds]}"
   cluster_schema_registry_creds="${args[--cluster-schema-registry-creds]}"
+  force_interactive_re_run="${args[--force-interactive-re-run]}"
   force_interactive_repro="${args[--force-interactive-repro]}"
 
   interactive_mode=0
 
-  if [[ -n "$force_interactive_repro" ]]
+  if [[ -n "$force_interactive_repro" ]] || [[ -n "$force_interactive_re_run" ]]
   then
     interactive_mode=1
   fi
@@ -11979,6 +11894,13 @@ playground_run_command() {
     if [ $interactive_mode == 1 ]
     then
       declare -a array_flag_list=()
+      if [ $force_interactive_re_run == 1 ]
+      then
+        encoded_array="$(playground state get run.array_flag_list_base64)"
+
+        eval "$(echo "$encoded_array" | base64 --decode)"
+      fi
+
       terminal_columns=$(tput cols)
       if [[ $terminal_columns -gt 180 ]]
       then
@@ -12310,10 +12232,13 @@ playground_run_command() {
           unset 'options[17]'
 
           array_flag_list=("${array_flag_list[@]/"--enable-multiple-connect-workers"}")
-          unset ENABLE_CONNECT_NODES
-          set +e
-          cp /tmp/playground-backup-docker-compose.yml $docker_compose_file > /dev/null 2>&1
-          set -e
+          if [ ! -z $ENABLE_CONNECT_NODES ]
+          then
+            unset ENABLE_CONNECT_NODES
+            set +e
+            mv /tmp/playground-backup-docker-compose.yml $docker_compose_file > /dev/null 2>&1
+            set -e
+          fi
         fi
 
         if [ ! -z $ENABLE_KSQLDB ]
@@ -12653,7 +12578,7 @@ playground_run_command() {
           array_flag_list=("${array_flag_list[@]/"--enable-multiple-connect-workers"}")
           unset ENABLE_CONNECT_NODES
           interactive_enable_connect=""
-          cp /tmp/playground-backup-docker-compose.yml $docker_compose_file
+          mv /tmp/playground-backup-docker-compose.yml $docker_compose_file
         fi
 
         if [[ $res == *"$MENU_ENABLE_KCAT"* ]]
@@ -12847,6 +12772,10 @@ playground_run_command() {
       done # end while loop stop
       IFS=' ' flag_list="${array_flag_list[*]}"
 
+      array_declaration=$(declare -p array_flag_list)
+      encoded_array=$(echo "$array_declaration" | base64)
+      playground state set run.array_flag_list_base64 "$encoded_array"
+
       if [ "$interactive_enable_ksqldb" == "true" ]
       then
         if [[ -n "$force_interactive_repro" ]]
@@ -13018,7 +12947,6 @@ playground_run_command() {
   set -e
   playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
   playground state set run.test_file "$test_file"
-  playground state set run.run_command "playground run -f $test_file $flag_list ${other_args[*]}"
   echo "" >> "$root_folder/playground-run-history"
   echo "playground run -f $test_file $flag_list ${other_args[*]}" >> "$root_folder/playground-run-history"
 
@@ -13033,7 +12961,7 @@ playground_run_command() {
   function cleanup {
     if [[ -n "$enable_multiple_connect_workers" ]]
     then
-      cp /tmp/playground-backup-docker-compose.yml $docker_compose_file
+      mv /tmp/playground-backup-docker-compose.yml $docker_compose_file
     fi
     rm /tmp/playground-run-command-used
     echo ""
@@ -13083,148 +13011,21 @@ playground_run_command() {
 # :command.function
 playground_re_run_command() {
   # src/commands/re-run.sh
-  tag="${args[--tag]}"
-  environment="${args[--environment]}"
-  connector_tag="${args[--connector-tag]}"
-  connector_zip="${args[--connector-zip]}"
-  connector_jar="${args[--connector-jar]}"
-  enable_ksqldb="${args[--enable-ksqldb]}"
-  enable_rest_proxy="${args[--enable-rest-proxy]}"
-  enable_c3="${args[--enable-control-center]}"
-  enable_conduktor="${args[--enable-conduktor]}"
-  enable_multiple_brokers="${args[--enable-multiple-brokers]}"
-  enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
-  enable_jmx_grafana="${args[--enable-jmx-grafana]}"
-  enable_kcat="${args[--enable-kcat]}"
-  enable_sql_datagen="${args[--enable-sql-datagen]}"
-  clear="${args[--clear]}"
+  test_file=$(playground state get run.test_file)
 
-  flag_list=""
-  if [[ -n "$tag" ]]
+  if [ ! -f $test_file ]
   then
-    if [[ $tag == *"@"* ]]
-    then
-      tag=$(echo "$tag" | cut -d "@" -f 2)
-    fi
-    flag_list="--tag=$tag"
+    logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
+    exit 1
   fi
 
-  if [[ -n "$environment" ]]
-  then
-    if [ "$environment" != "plaintext" ]
-    then
-      flag_list="$flag_list --environment=$environment"
-    fi
-  fi
+  # if [[ $test_file == *"ccloud"* ]]
+  # then
+  #   load_ccloud_env_variables #> /dev/null 2>&1
+  # fi
 
-  if [[ -n "$connector_tag" ]]
-  then
-    flag_list="$flag_list --connector-tag=$connector_tag"
-  fi
-
-  if [[ -n "$connector_zip" ]]
-  then
-    if [[ $connector_zip == *"@"* ]]
-    then
-      connector_zip=$(echo "$connector_zip" | cut -d "@" -f 2)
-    fi
-    flag_list="$flag_list --connector-zip=$connector_zip"
-  fi
-
-  if [[ -n "$connector_jar" ]]
-  then
-    if [[ $connector_jar == *"@"* ]]
-    then
-      connector_jar=$(echo "$connector_jar" | cut -d "@" -f 2)
-    fi
-    flag_list="$flag_list --connector-jar=$connector_jar"
-  fi
-
-  if [[ -n "$enable_ksqldb" ]]
-  then
-    flag_list="$flag_list --enable-ksqldb"
-  fi
-
-  if [[ -n "$enable_rest_proxy" ]]
-  then
-    flag_list="$flag_list --enable-rest-proxy"
-  fi
-
-  if [[ -n "$enable_c3" ]]
-  then
-    flag_list="$flag_list --enable-control-center"
-  fi
-
-  if [[ -n "$enable_conduktor" ]]
-  then
-    flag_list="$flag_list --enable-conduktor"
-  fi
-
-  if [[ -n "$enable_multiple_brokers" ]]
-  then
-    flag_list="$flag_list --enable-multiple-brokers"
-  fi
-
-  if [[ -n "$enable_multiple_connect_workers" ]]
-  then
-    flag_list="$flag_list --enable-multiple-connect-workers"
-  fi
-
-  if [[ -n "$enable_jmx_grafana" ]]
-  then
-    flag_list="$flag_list --enable-jmx-grafana"
-  fi
-
-  if [[ -n "$enable_kcat" ]]
-  then
-    flag_list="$flag_list --enable-kcat"
-  fi
-
-  if [[ -n "$enable_sql_datagen" ]]
-  then
-    flag_list="$flag_list --enable-sql-datagen"
-  fi
-
-  if [ "$flag_list" != "" ]
-  then
-    test_file=$(playground state get run.test_file)
-
-    if [ ! -f $test_file ]
-    then
-
-        logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
-        exit 1
-    fi
-
-    log "🚀 Running example again with new flags"
-    playground run -f $test_file $flag_list ${other_args[*]}
-  else
-    if [[ -n "$clear" ]]
-    then
-      test_file=$(playground state get run.test_file)
-
-      if [ ! -f $test_file ]
-      then
-
-          logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
-          exit 1
-      fi
-
-      log "🧼 Running example again with no flags"
-      playground run -f $test_file ${other_args[*]}
-    else
-      log "🚀 Running example again with same flags as before"
-      run_command=$(playground state get run.run_command)
-      if [ "$run_command" == "" ]
-      then
-        logerror "run_command retrieved from $root_folder/playground.ini is empty !"
-        exit 1
-      fi
-      echo "$run_command"
-      echo "$run_command" > /tmp/playground-run
-      bash /tmp/playground-run
-    fi
-  fi
+  # load_env_variables #> /dev/null 2>&1
+  playground run -f "$test_file" --force-interactive-re-run
 }
 
 # :command.function
@@ -15274,7 +15075,6 @@ playground_repro_bootstrap_command() {
 
   playground state set run.test_file "$repro_dir/$repro_test_filename"
   playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
-  playground state set run.run_command "playground run -f $repro_dir/$repro_test_filename"
 
   editor=$(playground config get editor)
   if [ "$editor" != "" ]
@@ -23135,6 +22935,14 @@ playground_run_parse_requirements() {
         ;;
 
       # :flag.case
+      --force-interactive-re-run)
+
+        # :flag.case_no_arg
+        args['--force-interactive-re-run']=1
+        shift
+        ;;
+
+      # :flag.case
       --force-interactive-repro)
 
         # :flag.case_no_arg
@@ -23260,209 +23068,22 @@ playground_re_run_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
-      # :flag.case
-      --clear)
-
-        # :flag.case_no_arg
-        args['--clear']=1
-        shift
-        ;;
-
-      # :flag.case
-      --environment)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          args['--environment']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--environment requires an argument: --environment ENVIRONMENT" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
-      --tag)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          args['--tag']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--tag requires an argument: --tag TAG" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
-      --connector-tag)
-        # :flag.conflicts
-        if [[ -n "${args['--connector-zip']:-}" ]]; then
-          printf "conflicting options: %s cannot be used with %s\n" "$key" "--connector-zip" >&2
-          exit 1
-        fi
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          args['--connector-tag']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--connector-tag requires an argument: --connector-tag CONNECTOR_TAG" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
-      --connector-zip)
-        # :flag.conflicts
-        if [[ -n "${args['--connector-tag']:-}" ]]; then
-          printf "conflicting options: %s cannot be used with %s\n" "$key" "--connector-tag" >&2
-          exit 1
-        fi
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          args['--connector-zip']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--connector-zip requires an argument: --connector-zip CONNECTOR_ZIP" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
-      --connector-jar)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          args['--connector-jar']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--connector-jar requires an argument: --connector-jar CONNECTOR_JAR" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
-      --enable-ksqldb)
-
-        # :flag.case_no_arg
-        args['--enable-ksqldb']=1
-        shift
-        ;;
-
-      # :flag.case
-      --enable-rest-proxy)
-
-        # :flag.case_no_arg
-        args['--enable-rest-proxy']=1
-        shift
-        ;;
-
-      # :flag.case
-      --enable-control-center)
-
-        # :flag.case_no_arg
-        args['--enable-control-center']=1
-        shift
-        ;;
-
-      # :flag.case
-      --enable-conduktor)
-
-        # :flag.case_no_arg
-        args['--enable-conduktor']=1
-        shift
-        ;;
-
-      # :flag.case
-      --enable-multiple-brokers)
-
-        # :flag.case_no_arg
-        args['--enable-multiple-brokers']=1
-        shift
-        ;;
-
-      # :flag.case
-      --enable-multiple-connect-workers)
-
-        # :flag.case_no_arg
-        args['--enable-multiple-connect-workers']=1
-        shift
-        ;;
-
-      # :flag.case
-      --enable-jmx-grafana)
-
-        # :flag.case_no_arg
-        args['--enable-jmx-grafana']=1
-        shift
-        ;;
-
-      # :flag.case
-      --enable-kcat)
-
-        # :flag.case_no_arg
-        args['--enable-kcat']=1
-        shift
-        ;;
-
-      # :flag.case
-      --enable-sql-datagen)
-
-        # :flag.case_no_arg
-        args['--enable-sql-datagen']=1
-        shift
-        ;;
-
-      --)
-        shift
-        other_args+=("$@")
-        break
-        ;;
 
       -?*)
-        other_args+=("$1")
-        shift
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
         ;;
 
       *)
         # :command.parse_requirements_case
-        # :command.parse_requirements_case_catch_all
-        other_args+=("$1")
-        shift
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
 
         ;;
 
     esac
   done
-
-  # :command.default_assignments
-  [[ -n ${args['--environment']:-} ]] || args['--environment']="plaintext"
-
-  # :command.validations
-  # :flag.validations
-  if [[ -v args['--connector-zip'] && -n $(validate_file_exists_with_trick "${args['--connector-zip']:-}") ]]; then
-    printf "validation error in %s:\n%s\n" "--connector-zip CONNECTOR_ZIP" "$(validate_file_exists_with_trick "${args['--connector-zip']:-}")" >&2
-    exit 1
-  fi
-
-  # :flag.validations
-  if [[ -v args['--connector-jar'] && -n $(validate_file_exists_with_trick "${args['--connector-jar']:-}") ]]; then
-    printf "validation error in %s:\n%s\n" "--connector-jar CONNECTOR_JAR" "$(validate_file_exists_with_trick "${args['--connector-jar']:-}")" >&2
-    exit 1
-  fi
-
-  # :command.whitelist_filter
-  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|plaintext|sasl-ssl|sasl-plain|2way-ssl|sasl-scram|kraft-external-plaintext|kraft-plaintext|kerberos|ssl_kerberos|ldap-authorizer-sasl-plain|ldap-sasl-plain|rbac-sasl-plain)$ ]]; then
-    printf "%s\n" "--environment must be one of: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain" >&2
-    exit 1
-  fi
 
 }
 
