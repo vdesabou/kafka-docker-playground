@@ -1391,7 +1391,7 @@ playground_run_usage() {
     printf "playground run\n"
     echo
 
-    printf "  🕹️ Run any example !\n  \n  🔥 It start an interactive mode where you'll be fully guided !\n  \n  \n  ⛅ When running Confluent Cloud (ccloud) example:\n  \n    All you have to do is to be already logged in with confluent CLI.\n  \n    By default, a new Confluent Cloud environment with a Cluster will be\n  created.\n  \n    You can configure the new cluster by setting:\n  \n    --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster\n  (possible values: basic, standard and dedicated, default basic)\n    --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider\n  (possible values: aws, gcp and azure, default aws)\n    --cluster-region (or CLUSTER_REGION environment variable): The Cloud region\n  (use confluent kafka region list to get the list, default eu-west-2 for aws,\n  westeuropefor azure and europe-west2 for gcp)\n    --cluster-environment (or ENVIRONMENT environment variable) (optional): The\n  environment id where want your new cluster (example: txxxxx)\n  \n    In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n    --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n    --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key\n  and secret to use, it should be separated with colon (example:\n  <API_KEY>:<API_KEY_SECRET>)\n    --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable) (optional, if not set, new one will be created): The Schema Registry\n  api key and secret to use, it should be separated with colon (example:\n  <SR_API_KEY>:<SR_API_KEY_SECRET>)\n"
+    printf "  🕹️ Run any example !\n  \n  🔥 It start an interactive mode where you'll be fully guided !\n  \n  \n  ⛅ When running Confluent Cloud (ccloud) example:\n  \n    All you have to do is to be already logged in with confluent CLI.\n  \n    By default, a new Confluent Cloud environment with a Cluster will be\n  created.\n  \n    You can configure the new cluster by setting:\n  \n    --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster\n  (possible values: basic, standard and dedicated, default basic)\n    --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider\n  (possible values: aws, gcp and azure, default aws)\n    --cluster-region (or CLUSTER_REGION environment variable): The Cloud region\n  (use confluent kafka region list to get the list, default eu-west-2 for aws,\n  westeurope for azure and europe-west2 for gcp)\n    --cluster-environment (or ENVIRONMENT environment variable) (optional): The\n  environment id where want your new cluster (example: txxxxx)\n  \n    In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n    --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n    --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key\n  and secret to use, it should be separated with colon (example:\n  <API_KEY>:<API_KEY_SECRET>)\n    --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable) (optional, if not set, new one will be created): The Schema Registry\n  api key and secret to use, it should be separated with colon (example:\n  <SR_API_KEY>:<SR_API_KEY_SECRET>)\n"
     echo
 
   else
@@ -1624,6 +1624,27 @@ playground_update_version_usage() {
   # :command.long_usage
   if [[ -n $long_usage ]]; then
     printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--tag TAG")"
+    printf "    🎯 Confluent Platform (CP) version to use\n    \n    Must be greater or equal to 5.3.0\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG")"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
+    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
+    printf "    🤎 Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
