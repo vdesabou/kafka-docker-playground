@@ -2592,25 +2592,32 @@ commands:
 
   - name: offsets
     help: |
-      💈 Handle (only source for now) connector offsets (only available if CP > 7.6)
+      💈 Handle source and sink connectors offsets
 
-      Implementation of "KIP-875: First-class offsets support in Kafka Connect"
+        * for source (KIP-875: First-class offsets support in Kafka Connect): it only available if CP > 7.6
+        * for sink: 
     commands:
     - name: get
       help: |
-        💈 Get current offsets for connector
+        🏹 Get current offsets for source and sink connectors
+
+        ⚠️ Not available for ccloud source connectors
       flags:
       - *verbose
       - *connector
     - name: reset
       help: |
-        💈 Reset offsets for connector
+        🆕 Reset offsets for source and sink connectors
+
+        ⚠️ Not available for ccloud connectors
       flags:
       - *verbose
       - *connector
     - name: alter
       help: |
-        💈 Alter offsets for connector
+        ⛏️ Alter offsets for source and sink connectors
+
+        ⚠️ Not available for ccloud connectors
       flags:
       - *verbose
       - *connector

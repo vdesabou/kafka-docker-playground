@@ -122,7 +122,7 @@ playground_usage() {
   printf "%s\n" "$(bold "Connector commands:")"
   printf "  %s   🔗 Connector commands\n" "$(green "connector")                       "
   printf "  %s   🧩 Show status of all connectors\n" "$(green "connector status")                "
-  printf "  %s   💈 Handle (only source for now) connector offsets (only available if CP > 7.6)\n" "$(green "connector offsets")               "
+  printf "  %s   💈 Handle source and sink connectors offsets\n" "$(green "connector offsets")               "
   printf "  %s   🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n" "$(green "connector plugins")               "
   printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")                 "
   printf "  %s   🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n" "$(green "connector versions")              "
@@ -4374,7 +4374,7 @@ playground_connector_usage() {
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   🧩 Show status of all connectors\n" "$(green "status")                "
-  printf "  %s   💈 Handle (only source for now) connector offsets (only available if CP > 7.6)\n" "$(green "offsets")               "
+  printf "  %s   💈 Handle source and sink connectors offsets\n" "$(green "offsets")               "
   printf "  %s   🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n" "$(green "plugins")               "
   printf "  %s   ⏸️  Pause connector\n" "$(green "pause")                 "
   printf "  %s   🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n" "$(green "versions")              "
@@ -4460,11 +4460,11 @@ playground_connector_offsets_usage() {
     printf "playground connector offsets\n"
     echo
 
-    printf "  💈 Handle (only source for now) connector offsets (only available if CP > 7.6)\n  \n  Implementation of \"KIP-875: First-class offsets support in Kafka Connect\"\n"
+    printf "  💈 Handle source and sink connectors offsets\n  \n    * for source (KIP-875: First-class offsets support in Kafka Connect): it\n  only available if CP > 7.6\n    * for sink:\n"
     echo
 
   else
-    printf "playground connector offsets - 💈 Handle (only source for now) connector offsets (only available if CP > 7.6)\n"
+    printf "playground connector offsets - 💈 Handle source and sink connectors offsets\n"
     echo
 
   fi
@@ -4475,9 +4475,9 @@ playground_connector_offsets_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   💈 Get current offsets for connector\n" "$(green "get")  "
-  printf "  %s   💈 Reset offsets for connector\n" "$(green "reset")"
-  printf "  %s   💈 Alter offsets for connector\n" "$(green "alter")"
+  printf "  %s   🏹 Get current offsets for source and sink connectors\n" "$(green "get")  "
+  printf "  %s   🆕 Reset offsets for source and sink connectors\n" "$(green "reset")"
+  printf "  %s   ⛏️ Alter offsets for source and sink connectors\n" "$(green "alter")"
   echo
 
   # :command.long_usage
@@ -4498,11 +4498,11 @@ playground_connector_offsets_get_usage() {
     printf "playground connector offsets get\n"
     echo
 
-    printf "  💈 Get current offsets for connector\n"
+    printf "  🏹 Get current offsets for source and sink connectors\n  \n  ⚠️ Not available for ccloud source connectors\n"
     echo
 
   else
-    printf "playground connector offsets get - 💈 Get current offsets for connector\n"
+    printf "playground connector offsets get - 🏹 Get current offsets for source and sink connectors\n"
     echo
 
   fi
@@ -4541,11 +4541,11 @@ playground_connector_offsets_reset_usage() {
     printf "playground connector offsets reset\n"
     echo
 
-    printf "  💈 Reset offsets for connector\n"
+    printf "  🆕 Reset offsets for source and sink connectors\n  \n  ⚠️ Not available for ccloud connectors\n"
     echo
 
   else
-    printf "playground connector offsets reset - 💈 Reset offsets for connector\n"
+    printf "playground connector offsets reset - 🆕 Reset offsets for source and sink connectors\n"
     echo
 
   fi
@@ -4584,11 +4584,11 @@ playground_connector_offsets_alter_usage() {
     printf "playground connector offsets alter\n"
     echo
 
-    printf "  💈 Alter offsets for connector\n"
+    printf "  ⛏️ Alter offsets for source and sink connectors\n  \n  ⚠️ Not available for ccloud connectors\n"
     echo
 
   else
-    printf "playground connector offsets alter - 💈 Alter offsets for connector\n"
+    printf "playground connector offsets alter - ⛏️ Alter offsets for source and sink connectors\n"
     echo
 
   fi
@@ -18756,12 +18756,6 @@ playground_connector_offsets_get_command() {
 
   connector_type=$(playground state get run.connector_type)
 
-  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
-  then
-      log "connector offsets get command is not available with $connector_type connector"
-      exit 0
-  fi
-
   if [[ ! -n "$connector" ]]
   then
       connector=$(playground get-connector-list)
@@ -18772,16 +18766,26 @@ playground_connector_offsets_get_command() {
       fi
   fi
 
-  tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
-  if [ $? != 0 ] || [ "$tag" == "" ]
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then
-      logerror "❌ could not find current CP version from docker ps"
-      exit 1
-  fi
+    get_ccloud_connect
+    get_kafka_docker_playground_dir
+    DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
 
-  if ! version_gt $tag "7.5.99"; then
-      logerror "❌ stop connector is available since CP 7.5 only"
-      exit 1
+    if [ -f $DELTA_CONFIGS_ENV ]
+    then
+        source $DELTA_CONFIGS_ENV
+    else
+        logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+        exit 1
+    fi
+    if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
+    then
+        logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
+        exit 1
+    fi
+  else
+    get_security_broker "--command-config"
   fi
 
   items=($connector)
@@ -18795,7 +18799,6 @@ playground_connector_offsets_get_command() {
       maybe_id=""
       if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
       then
-          # should not happen but keeping it just in case
           get_ccloud_connect
           handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status\" --header \"authorization: Basic $authorization\""
           connectorId=$(get_ccloud_connector_lcc $connector)
@@ -18804,20 +18807,59 @@ playground_connector_offsets_get_command() {
           get_connect_url_and_security
           handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\""
       fi
-
+      log "🏹 Getting offsets for $connector_type $type connector $connector"
       type=$(echo "$curl_output" | jq -r '.type')
-      if [ "$type" != "source" ]
+      if [ "$type" == "source" ]
       then
-          logwarn "⏭️ Skipping $type $connector_type connector ${connector}${maybe_id}, it must be a source to show the offsets"
-          continue
+          # SOURCE CONNECTOR
+          if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+          then
+              logwarn "command is not available with $connector_type $type connector"
+              continue
+          fi
 
+          tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+          if [ $? != 0 ] || [ "$tag" == "" ]
+          then
+              logerror "❌ could not find current CP version from docker ps"
+              continue
+          fi
+
+          if ! version_gt $tag "7.5.99"; then
+              logerror "❌ command is available since CP 7.6 only"
+              continue
+          fi
+
+          get_connect_url_and_security
+          handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\""
+
+          echo "$curl_output" | jq .
+      else
+          # SINK CONNECTOR
+
+          if [[ -n "$verbose" ]]
+          then
+              log "🐞 CLI command used"
+              echo "kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security"
+          fi
+          get_environment_used
+          if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [[ "$environment" == "ccloud" ]]
+          then
+              get_ccloud_connect
+              get_connect_image
+
+              if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+
+              then
+                  consumer_group="connect-$connectorId"
+              else
+                  consumer_group="connect-$connector"
+              fi
+              docker run --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group $consumer_group --describe | grep -v PARTITION | sed '/^$/d'
+          else
+              docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d'
+          fi
       fi
-
-      log "📏 Getting offsets for $connector_type connector $connector"
-      get_connect_url_and_security
-      handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\""
-
-      echo "$curl_output" | jq .
   done
 }
 
@@ -18829,12 +18871,6 @@ playground_connector_offsets_reset_command() {
 
   connector_type=$(playground state get run.connector_type)
 
-  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
-  then
-      log "connector offsets reset command is not available with $connector_type connector"
-      exit 0
-  fi
-
   if [[ ! -n "$connector" ]]
   then
       connector=$(playground get-connector-list)
@@ -18845,16 +18881,26 @@ playground_connector_offsets_reset_command() {
       fi
   fi
 
-  tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
-  if [ $? != 0 ] || [ "$tag" == "" ]
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then
-      logerror "❌ could not find current CP version from docker ps"
-      exit 1
-  fi
+    get_ccloud_connect
+    get_kafka_docker_playground_dir
+    DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
 
-  if ! version_gt $tag "7.5.99"; then
-      logerror "❌ stop connector is available since CP 7.5 only"
-      exit 1
+    if [ -f $DELTA_CONFIGS_ENV ]
+    then
+        source $DELTA_CONFIGS_ENV
+    else
+        logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+        exit 1
+    fi
+    if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
+    then
+        logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
+        exit 1
+    fi
+  else
+    get_security_broker "--command-config"
   fi
 
   items=($connector)
@@ -18868,7 +18914,6 @@ playground_connector_offsets_reset_command() {
       maybe_id=""
       if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
       then
-          # should not happen but keeping it just in case
           get_ccloud_connect
           handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status\" --header \"authorization: Basic $authorization\""
           connectorId=$(get_ccloud_connector_lcc $connector)
@@ -18877,24 +18922,55 @@ playground_connector_offsets_reset_command() {
           get_connect_url_and_security
           handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\""
       fi
-
+      log "🆕 Resetting offsets for $connector_type connector $connector"
       type=$(echo "$curl_output" | jq -r '.type')
-      if [ "$type" != "source" ]
+      if [ "$type" == "source" ]
       then
-          logwarn "⏭️ Skipping $type $connector_type connector ${connector}${maybe_id}, it must be a source to show the offsets"
-          continue
+          # SOURCE CONNECTOR
+          if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+          then
+              logwarn "command is not available with $connector_type $type connector"
+              continue
+          fi
 
+          tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+          if [ $? != 0 ] || [ "$tag" == "" ]
+          then
+              logerror "❌ could not find current CP version from docker ps"
+              continue
+          fi
+
+          if ! version_gt $tag "7.5.99"; then
+              logerror "❌ command is available since CP 7.6 only"
+              continue
+          fi
+          playground connector stop --connector $connector
+
+          get_connect_url_and_security
+          handle_onprem_connect_rest_api "curl $security -s -X DELETE \"$connect_url/connectors/$connector/offsets\""
+
+          echo "$curl_output" | jq .
+
+          playground connector resume --connector $connector
+      else
+          # FIXTHIS, replace with delete/create
+          tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+          if [ $? != 0 ] || [ "$tag" == "" ]
+          then
+              logerror "❌ could not find current CP version from docker ps"
+              continue
+          fi
+
+          if ! version_gt $tag "7.4.99"; then
+              logerror "❌ command is available since CP 7.5 only"
+              continue
+          fi
+
+          playground connector stop --connector $connector
+
+          docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --to-earliest --reset-offsets --all-topics --execute
+          playground connector resume --connector $connector
       fi
-
-      playground connector stop --connector $connector
-
-      log "📏 Resetting offsets for $connector_type connector $connector"
-      get_connect_url_and_security
-      handle_onprem_connect_rest_api "curl $security -s -X DELETE \"$connect_url/connectors/$connector/offsets\""
-
-      echo "$curl_output" | jq .
-
-      playground connector resume --connector $connector
   done
 }
 
@@ -18906,12 +18982,6 @@ playground_connector_offsets_alter_command() {
 
   connector_type=$(playground state get run.connector_type)
 
-  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
-  then
-      log "connector offsets alter command is not available with $connector_type connector"
-      exit 0
-  fi
-
   if [[ ! -n "$connector" ]]
   then
       connector=$(playground get-connector-list)
@@ -18922,16 +18992,26 @@ playground_connector_offsets_alter_command() {
       fi
   fi
 
-  tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
-  if [ $? != 0 ] || [ "$tag" == "" ]
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then
-      logerror "❌ could not find current CP version from docker ps"
-      exit 1
-  fi
+    get_ccloud_connect
+    get_kafka_docker_playground_dir
+    DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
 
-  if ! version_gt $tag "7.5.99"; then
-      logerror "❌ stop connector is available since CP 7.5 only"
-      exit 1
+    if [ -f $DELTA_CONFIGS_ENV ]
+    then
+        source $DELTA_CONFIGS_ENV
+    else
+        logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+        exit 1
+    fi
+    if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
+    then
+        logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
+        exit 1
+    fi
+  else
+    get_security_broker "--command-config"
   fi
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
@@ -18948,7 +19028,6 @@ playground_connector_offsets_alter_command() {
       maybe_id=""
       if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
       then
-          # should not happen but keeping it just in case
           get_ccloud_connect
           handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status\" --header \"authorization: Basic $authorization\""
           connectorId=$(get_ccloud_connector_lcc $connector)
@@ -18959,51 +19038,130 @@ playground_connector_offsets_alter_command() {
       fi
 
       type=$(echo "$curl_output" | jq -r '.type')
-      if [ "$type" != "source" ]
+      log "⛏️ Altering offsets for $connector_type connector $connector"
+
+      if [ "$type" == "source" ]
       then
-          logwarn "⏭️ Skipping $type $connector_type connector ${connector}${maybe_id}, it must be a source to show the offsets"
-          continue
-
-      fi
-
-      get_connect_url_and_security
-      handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\""
-
-      file=$tmp_dir/offsets-$connector.json
-      echo "$curl_output" | jq . > $file
-
-      editor=$(playground config get editor)
-      if [ "$editor" != "" ]
-      then
-          log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-          if [ "$editor" = "code" ]
+          # SOURCE CONNECTOR
+          if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
           then
-              code --wait $file
-          else
-              $editor $file
+              logwarn "command is not available with $connector_type $type connector"
+              continue
           fi
-      else
-          if [[ $(type code 2>&1) =~ "not found" ]]
+
+          tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+          if [ $? != 0 ] || [ "$tag" == "" ]
           then
-              logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
-              exit 1
-          else
+              logerror "❌ could not find current CP version from docker ps"
+              continue
+          fi
+
+          if ! version_gt $tag "7.5.99"; then
+              logerror "❌ command is available since CP 7.6 only"
+              continue
+          fi
+
+          get_connect_url_and_security
+          handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\""
+
+          file=$tmp_dir/offsets-$connector.json
+          echo "$curl_output" | jq . > $file
+
+          editor=$(playground config get editor)
+          if [ "$editor" != "" ]
+          then
               log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-              code --wait $file
+              if [ "$editor" = "code" ]
+              then
+                  code --wait $file
+              else
+                  $editor $file
+              fi
+          else
+              if [[ $(type code 2>&1) =~ "not found" ]]
+              then
+                  logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
+                  exit 1
+              else
+                  log "✨ Update the connector offsets as per your needs, save and close the file to continue"
+                  code --wait $file
+              fi
+          fi
+
+          playground connector stop --connector $connector
+
+          get_connect_url_and_security
+          handle_onprem_connect_rest_api "curl $security -s -X PATCH -H \"Content-Type: application/json\" --data @$file \"$connect_url/connectors/$connector/offsets\""
+
+          echo "$curl_output" | jq .
+
+          playground connector resume --connector $connector
+
+          playground connector source-offsets get --connector $connector
+      else
+          # SINK CONNECTOR
+          # if [[ -n "$verbose" ]]
+          # then
+          #     log "🐞 CLI command used"
+          #     echo "kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security"
+          # fi
+          get_environment_used
+          if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [[ "$environment" == "ccloud" ]]
+          then
+              logwarn "command is not available with $connector_type $type connector"
+              continue
+          else
+              file=$tmp_dir/offsets-$connector.csv
+
+              # FIXTHIS, replace with delete/create
+              tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+              if [ $? != 0 ] || [ "$tag" == "" ]
+              then
+                  logerror "❌ could not find current CP version from docker ps"
+                  continue
+              fi
+
+              if ! version_gt $tag "7.4.99"; then
+                  logerror "❌ command is available since CP 7.5 only"
+                  continue
+              fi
+
+              playground connector stop --connector $connector
+
+              echo "topic,partition,current-offset" > $file
+              docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --export --reset-offsets --to-current --all-topics --dry-run >> $file
+
+              editor=$(playground config get editor)
+              if [ "$editor" != "" ]
+              then
+                  log "✨ Update the connector offsets as per your needs, save and close the file to continue"
+                  if [ "$editor" = "code" ]
+                  then
+                      code --wait $file
+                  else
+                      $editor $file
+                  fi
+              else
+                  if [[ $(type code 2>&1) =~ "not found" ]]
+                  then
+                      logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
+                      exit 1
+                  else
+                      log "✨ Update the connector offsets as per your needs, save and close the file to continue"
+                      code --wait $file
+                  fi
+              fi
+
+              # remove any empty lines and header
+              grep -v '^$' "$file" > $tmp_dir/tmp && mv $tmp_dir/tmp "$file"
+              grep -v 'current-offset' "$file" > $tmp_dir/tmp && mv $tmp_dir/tmp "$file"
+
+              docker cp $file $container:/tmp/offsets.csv > /dev/null 2>&1
+              docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --reset-offsets --from-file /tmp/offsets.csv --execute
+
+              playground connector resume --connector $connector
           fi
       fi
-
-      playground connector stop --connector $connector
-
-      log "🛠️ Altering offsets for $connector_type connector $connector"
-      get_connect_url_and_security
-      handle_onprem_connect_rest_api "curl $security -s -X PATCH -H \"Content-Type: application/json\" --data @$file \"$connect_url/connectors/$connector/offsets\""
-
-      echo "$curl_output" | jq .
-
-      playground connector resume --connector $connector
-
-      playground connector source-offsets get --connector $connector
   done
 }
 
