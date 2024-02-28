@@ -1889,7 +1889,7 @@ subcommands:
             
       - name: offsets
         description: | 
-          Handle (only source for now) source connector offsets (only available if CP > 7.6)
+          💈 Handle (only source for now) connector offsets (only available if CP > 7.6)
             
             Implementation of "KIP-875: First-class offsets support in Kafka Connect"
             
@@ -2284,7 +2284,7 @@ subcommands:
             
   - name: offsets
     description: | 
-        Handle (only source for now) source connector offsets (only available if CP > 7.6)
+        💈 Handle (only source for now) connector offsets (only available if CP > 7.6)
         
         Implementation of "KIP-875: First-class offsets support in Kafka Connect"
         
@@ -2293,7 +2293,8 @@ subcommands:
     subcommands:
       - name: get
         description: | 
-          fixthis
+          💈 Get current offsets for connector
+            
         usage: playground connector offsets get [OPTIONS]
         options:
         - names:
@@ -2314,7 +2315,8 @@ subcommands:
             
       - name: reset
         description: | 
-          fixthis
+          💈 Reset offsets for connector
+            
         usage: playground connector offsets reset [OPTIONS]
         options:
         - names:
@@ -2335,7 +2337,8 @@ subcommands:
             
       - name: alter
         description: | 
-          fixthis
+          💈 Alter offsets for connector
+            
         usage: playground connector offsets alter [OPTIONS]
         options:
         - names:

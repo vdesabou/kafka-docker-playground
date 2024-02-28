@@ -1750,7 +1750,7 @@
         },
         {
           "name": "offsets",
-          "description": "Handle (only source for now) source connector offsets (only available if CP > 7.6)\n  \n  Implementation of \"KIP-875: First-class offsets support in Kafka Connect\"\n  \n",
+          "description": "💈 Handle (only source for now) connector offsets (only available if CP > 7.6)\n  \n  Implementation of \"KIP-875: First-class offsets support in Kafka Connect\"\n  \n",
           "usage": "playground connector offsets COMMAND",
           "options": []
         },
@@ -2186,13 +2186,13 @@
     },
     {
       "name": "offsets",
-      "description": "Handle (only source for now) source connector offsets (only available if CP > 7.6)\n\nImplementation of \"KIP-875: First-class offsets support in Kafka Connect\"\n",
+      "description": "💈 Handle (only source for now) connector offsets (only available if CP > 7.6)\n\nImplementation of \"KIP-875: First-class offsets support in Kafka Connect\"\n",
       "usage": "playground connector offsets COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "get",
-          "description": "fixthis\n",
+          "description": "💈 Get current offsets for connector\n  \n",
           "usage": "playground connector offsets get [OPTIONS]",
           "options": [
             {
@@ -2215,7 +2215,7 @@
         },
         {
           "name": "reset",
-          "description": "fixthis\n",
+          "description": "💈 Reset offsets for connector\n  \n",
           "usage": "playground connector offsets reset [OPTIONS]",
           "options": [
             {
@@ -2238,7 +2238,7 @@
         },
         {
           "name": "alter",
-          "description": "fixthis\n",
+          "description": "💈 Alter offsets for connector\n  \n",
           "usage": "playground connector offsets alter [OPTIONS]",
           "options": [
             {

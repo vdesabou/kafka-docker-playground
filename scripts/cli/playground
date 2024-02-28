@@ -122,7 +122,7 @@ playground_usage() {
   printf "%s\n" "$(bold "Connector commands:")"
   printf "  %s   🔗 Connector commands\n" "$(green "connector")                       "
   printf "  %s   🧩 Show status of all connectors\n" "$(green "connector status")                "
-  printf "  %s   Handle (only source for now) source connector offsets (only available if CP > 7.6)\n" "$(green "connector offsets")               "
+  printf "  %s   💈 Handle (only source for now) connector offsets (only available if CP > 7.6)\n" "$(green "connector offsets")               "
   printf "  %s   🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n" "$(green "connector plugins")               "
   printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")                 "
   printf "  %s   🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n" "$(green "connector versions")              "
@@ -4374,7 +4374,7 @@ playground_connector_usage() {
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   🧩 Show status of all connectors\n" "$(green "status")                "
-  printf "  %s   Handle (only source for now) source connector offsets (only available if CP > 7.6)\n" "$(green "offsets")               "
+  printf "  %s   💈 Handle (only source for now) connector offsets (only available if CP > 7.6)\n" "$(green "offsets")               "
   printf "  %s   🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n" "$(green "plugins")               "
   printf "  %s   ⏸️  Pause connector\n" "$(green "pause")                 "
   printf "  %s   🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n" "$(green "versions")              "
@@ -4460,11 +4460,11 @@ playground_connector_offsets_usage() {
     printf "playground connector offsets\n"
     echo
 
-    printf "  Handle (only source for now) source connector offsets (only available if CP >\n  7.6)\n  \n  Implementation of \"KIP-875: First-class offsets support in Kafka Connect\"\n"
+    printf "  💈 Handle (only source for now) connector offsets (only available if CP > 7.6)\n  \n  Implementation of \"KIP-875: First-class offsets support in Kafka Connect\"\n"
     echo
 
   else
-    printf "playground connector offsets - Handle (only source for now) source connector offsets (only available if CP > 7.6)\n"
+    printf "playground connector offsets - 💈 Handle (only source for now) connector offsets (only available if CP > 7.6)\n"
     echo
 
   fi
@@ -4475,9 +4475,9 @@ playground_connector_offsets_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   fixthis\n" "$(green "get")  "
-  printf "  %s   fixthis\n" "$(green "reset")"
-  printf "  %s   fixthis\n" "$(green "alter")"
+  printf "  %s   💈 Get current offsets for connector\n" "$(green "get")  "
+  printf "  %s   💈 Reset offsets for connector\n" "$(green "reset")"
+  printf "  %s   💈 Alter offsets for connector\n" "$(green "alter")"
   echo
 
   # :command.long_usage
@@ -4495,11 +4495,14 @@ playground_connector_offsets_usage() {
 # :command.usage
 playground_connector_offsets_get_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground connector offsets get - fixthis\n"
+    printf "playground connector offsets get\n"
+    echo
+
+    printf "  💈 Get current offsets for connector\n"
     echo
 
   else
-    printf "playground connector offsets get - fixthis\n"
+    printf "playground connector offsets get - 💈 Get current offsets for connector\n"
     echo
 
   fi
@@ -4535,11 +4538,14 @@ playground_connector_offsets_get_usage() {
 # :command.usage
 playground_connector_offsets_reset_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground connector offsets reset - fixthis\n"
+    printf "playground connector offsets reset\n"
+    echo
+
+    printf "  💈 Reset offsets for connector\n"
     echo
 
   else
-    printf "playground connector offsets reset - fixthis\n"
+    printf "playground connector offsets reset - 💈 Reset offsets for connector\n"
     echo
 
   fi
@@ -4575,11 +4581,14 @@ playground_connector_offsets_reset_usage() {
 # :command.usage
 playground_connector_offsets_alter_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground connector offsets alter - fixthis\n"
+    printf "playground connector offsets alter\n"
+    echo
+
+    printf "  💈 Alter offsets for connector\n"
     echo
 
   else
-    printf "playground connector offsets alter - fixthis\n"
+    printf "playground connector offsets alter - 💈 Alter offsets for connector\n"
     echo
 
   fi

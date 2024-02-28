@@ -2592,22 +2592,25 @@ commands:
 
   - name: offsets
     help: |
-      Handle (only source for now) source connector offsets (only available if CP > 7.6)
+      💈 Handle (only source for now) connector offsets (only available if CP > 7.6)
 
       Implementation of "KIP-875: First-class offsets support in Kafka Connect"
     commands:
     - name: get
-      help: fixthis
+      help: |
+        💈 Get current offsets for connector
       flags:
       - *verbose
       - *connector
     - name: reset
-      help: fixthis
+      help: |
+        💈 Reset offsets for connector
       flags:
       - *verbose
       - *connector
     - name: alter
-      help: fixthis
+      help: |
+        💈 Alter offsets for connector
       flags:
       - *verbose
       - *connector
