@@ -1887,6 +1887,14 @@ subcommands:
             
             🎓 Tip: If not specified, the command will apply to all connectors
             
+      - name: offsets
+        description: | 
+          Handle (only source for now) source connector offsets (only available if CP > 7.6)
+            
+            Implementation of "KIP-875: First-class offsets support in Kafka Connect"
+            
+        usage: playground connector offsets COMMAND
+        options: []
       - name: plugins
         description: | 
           🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag
@@ -2265,6 +2273,78 @@ subcommands:
           🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.
         usage: playground connector update [OPTIONS]
         options:
+        - names:
+          - --connector
+          - -c
+          argument: CONNECTOR
+          description: | 
+            🔗 Connector name
+            
+            🎓 Tip: If not specified, the command will apply to all connectors
+            
+  - name: offsets
+    description: | 
+        Handle (only source for now) source connector offsets (only available if CP > 7.6)
+        
+        Implementation of "KIP-875: First-class offsets support in Kafka Connect"
+        
+    usage: playground connector offsets COMMAND
+    options: []
+    subcommands:
+      - name: get
+        description: | 
+          fixthis
+        usage: playground connector offsets get [OPTIONS]
+        options:
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
+          - --connector
+          - -c
+          argument: CONNECTOR
+          description: | 
+            🔗 Connector name
+            
+            🎓 Tip: If not specified, the command will apply to all connectors
+            
+      - name: reset
+        description: | 
+          fixthis
+        usage: playground connector offsets reset [OPTIONS]
+        options:
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
+          - --connector
+          - -c
+          argument: CONNECTOR
+          description: | 
+            🔗 Connector name
+            
+            🎓 Tip: If not specified, the command will apply to all connectors
+            
+      - name: alter
+        description: | 
+          fixthis
+        usage: playground connector offsets alter [OPTIONS]
+        options:
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
         - names:
           - --connector
           - -c
