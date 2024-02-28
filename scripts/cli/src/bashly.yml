@@ -913,7 +913,7 @@ commands:
         
         Example with Zendesk:
 
-        playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
+        just use <playground run> command and search for zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME> .sh in this folder
       required: false
     flags:
     - long: --file

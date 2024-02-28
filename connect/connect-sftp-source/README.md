@@ -14,49 +14,49 @@ Quickly test [SFTP Source](https://docs.confluent.io/current/connect/kafka-conne
 * With CSV (no schema)
 
 ```bash
-$ playground run -f sftp-source-csv<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for sftp-source-csv.sh in this folder
 ```
 
 * With CSV (with schema)
 
 ```bash
-$ playground run -f sftp-source-csv-with-schema<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for sftp-source-csv-with-schema.sh in this folder
 ```
 
 * With TSV
 
 ```bash
-$ playground run -f sftp-source-tsv<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for sftp-source-tsv.sh in this folder
 ```
 
 * With JSON (no schema)
 
 ```bash
-$ playground run -f sftp-source-json<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for sftp-source-json.sh in this folder
 ```
 
 * With JSON (with schema)
 
 ```bash
-$ playground run -f sftp-source-json-with-schema<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for sftp-source-json-with-schema.sh in this folder
 ```
 
 * With Kerberos:
 
 ```bash
-$ playground run -f sftp-source-kerberos<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for sftp-source-kerberos.sh in this folder
 ```
 
 * With SSH key
 
 ```bash
-$ playground run -f sftp-source-ssh-key<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for sftp-source-ssh-key.sh in this folder
 ```
 
 * With SSH PEM file
 
 ```bash
-$ playground run -f sftp-source-ssh-pem-file<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for sftp-source-ssh-pem-file.sh in this folder
 ```
 
 

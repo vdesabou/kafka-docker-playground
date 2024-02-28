@@ -38,13 +38,13 @@ Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment v
 For [Backup and Restore GCS Source](https://docs.confluent.io/kafka-connect-gcs-source/current/backup-and-restore/overview.html):
 
 ```bash
-$ playground run -f gcs-source-backup-and-restore<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <GCP_PROJECT>
+$ just use <playground run> command and search for gcs-source-backup-and-restore<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> .sh in this folder
 ```
 
 For [Generalized GCS Source](https://docs.confluent.io/kafka-connect-gcs-source/current/generalized/overview.html) (it requires version 2.1.0 at minimum):
 
 ```bash
-$ playground run -f gcs-source-generalized<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <GCP_PROJECT>
+$ just use <playground run> command and search for gcs-source-generalized<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> .sh in this folder
 ```
 
 Note: you can also export these values as environment variable

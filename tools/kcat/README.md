@@ -8,7 +8,7 @@ Quickly test [edenhill/kcat](https://github.com/edenhill/kcat)
 Simply run:
 
 ```
-$ playground run -f start<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for start.sh in this folder
 ```
 
 ## Details of what the script is doing

@@ -11,19 +11,19 @@ Quickly test [JDBC Sink](https://docs.confluent.io/current/connect/kafka-connect
 Without SSL:
 
 ```
-$ playground run -f mysql-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for mysql-sink.sh in this folder
 ```
 
 with SSL encryption:
 
 ```
-$ playground run -f mysql-sink-ssl<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for mysql-sink-ssl.sh in this folder
 ```
 
 with SSL encryption + Mutual TLS authentication:
 
 ```
-$ playground run -f mysql-sink-mtls<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for mysql-sink-mtls.sh in this folder
 ```
 
 ## Details of what the script is doing

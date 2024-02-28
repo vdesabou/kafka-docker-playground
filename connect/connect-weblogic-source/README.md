@@ -15,13 +15,13 @@ Using Oracle WebLogic Server (Developer Tier, version `12.2.1.3`) Docker [image]
 Simply run:
 
 ```
-$ playground run -f weblogic-queue<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for weblogic-queue.sh in this folder
 ```
 
 or
 
 ```
-$ playground run -f weblogic-topic<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for weblogic-topic.sh in this folder
 ```
 
 N.B: Weblogic console is reachable at [http://127.0.0.1:7001/console](http://127.0.0.1:7001/console]) (`weblogic`/`welcome1`)

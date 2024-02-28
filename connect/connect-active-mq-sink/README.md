@@ -16,13 +16,13 @@ Using ActiveMQ Docker [image](https://hub.docker.com/r/rmohr/activemq/)
 Simply run:
 
 ```
-$ playground run -f active-mq-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for active-mq-sink.sh in this folder
 ```
 
 with SSL encryption + Mutual TLS authentication:
 
 ```
-$ playground run -f active-mq-sink-mtls<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for active-mq-sink-mtls.sh in this folder
 ```
 
 

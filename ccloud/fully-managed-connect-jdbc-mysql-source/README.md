@@ -14,13 +14,13 @@ Quickly test [Fully Managed MySQL Source](https://docs.confluent.io/cloud/curren
 Without SSL:
 
 ```
-$ playground run -f fully-managed-mysql<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for fully-managed-mysql.sh in this folder
 ```
 
 with SSL encryption:
 
 ```
-$ playground run -f fully-managed-mysql-ssl<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for fully-managed-mysql-ssl.sh in this folder
 ```
 
 

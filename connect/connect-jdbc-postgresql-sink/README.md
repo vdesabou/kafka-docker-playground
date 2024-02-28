@@ -16,19 +16,19 @@ Simply run:
 Without SSL:
 
 ```
-$ playground run -f postgres-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for postgres-sink.sh in this folder
 ```
 
 with SSL encryption:
 
 ```
-$ playground run -f postgres-sink-ssl<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for postgres-sink-ssl.sh in this folder
 ```
 
 with SSL encryption + Mutual TLS authentication:
 
 ```
-$ playground run -f postgres-sink-mtls<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for postgres-sink-mtls.sh in this folder
 ```
 
 ## Details of what the script is doing

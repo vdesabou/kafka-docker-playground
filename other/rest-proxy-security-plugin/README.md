@@ -10,19 +10,19 @@ Quickly test [Principal Propagation](https://docs.confluent.io/current/confluent
 Simply run:
 
 ```
-$ playground run -f start-sasl-ssl<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for start-sasl-ssl.sh in this folder
 ```
 
 or
 
 ```
-$ playground run -f start-2way-ssl<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for start-2way-ssl.sh in this folder
 ```
 
 or
 
 ```
-$ playground run -f start-sasl-plain-with-basic-auth<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for start-sasl-plain-with-basic-auth.sh in this folder
 ```
 
 ## With SASL

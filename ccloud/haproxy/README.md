@@ -15,7 +15,7 @@ Using iptables, communication between `client`and Confluent Cloud bootstrap serv
 Simply run:
 
 ```
-$ playground run -f start<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <PKC_ENDPOINT> <CLOUD_KEY> <CLOUD_SECRET> optional: [<PKAC_ENDPOINT>] [<SCHEMA_REGISTRY_ENDPOINT>] [<SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO>]
+$ just use <playground run> command and search for start<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <PKC_ENDPOINT> <CLOUD_KEY> <CLOUD_SECRET> optional: [<PKAC_ENDPOINT>] [<SCHEMA_REGISTRY_ENDPOINT>] [.sh in this folder
 
 ```
 
@@ -30,7 +30,7 @@ $ export CLOUD_SECRET=xxxx
 $ export PKAC_ENDPOINT=pkac-xxxxx.eu-west-2.aws.confluent.cloud
 $ export SCHEMA_REGISTRY_ENDPOINT=psrc-xxxxx.eu-central-1.aws.confluent.cloud
 $ export SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="<SR API KEY>:<SR API SECRET>"
-$ playground run -f start<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for start.sh in this folder
 ```
 
 ## Details of what the script is doing

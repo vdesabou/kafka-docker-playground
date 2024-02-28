@@ -9,13 +9,13 @@ Quickly test [Cluster Linking](https://docs.confluent.io/platform/current/multi-
 Simply run:
 
 ```
-$ playground run -f start-plaintext<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for start-plaintext.sh in this folder
 ```
 
 or with SASL_PLAINTEXT and ACLs:
 
 ```
-$ playground run -f start-sasl-plain-acl<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for start-sasl-plain-acl.sh in this folder
 ```
 ## Details of what the script is doing
 

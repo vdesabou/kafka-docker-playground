@@ -18,13 +18,13 @@ Quickly test [JDBC Sink](https://docs.confluent.io/current/connect/kafka-connect
 Simply run:
 
 ```
-$ playground run -f hive-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> (not working)
+$ just use <playground run> command and search for hive-sink.sh in this folder
 ```
 
 or
 
 ```
-$ playground run -f hive-sink-datadirect<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> (working, but with license)
+$ just use <playground run> command and search for hive-sink-datadirect.sh in this folder
 ```
 
 

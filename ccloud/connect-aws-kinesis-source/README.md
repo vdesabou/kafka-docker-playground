@@ -41,7 +41,7 @@ You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` an
 Simply run:
 
 ```
-$ playground run -f kinesis<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for kinesis.sh in this folder
 ```
 
 ## Details of what the script is doing

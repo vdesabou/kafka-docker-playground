@@ -10,13 +10,13 @@ Quickly test [fail.on.production.error](https://docs.ksqldb.io/en/latest/referen
 Simply run:
 
 ```
-$ playground run -f start-auth-error<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for start-auth-error.sh in this folder
 ```
 
 or 
 
 ```
-$ playground run -f start-maxmessage-error<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for start-maxmessage-error.sh in this folder
 ```
 
 ## start-auth-error.sh

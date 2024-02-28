@@ -23,25 +23,25 @@ Note: The first time you'll run the script, it will build (using this [project](
 Without SSL:
 
 ```
-$ playground run -f oracle21-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for oracle21-sink.sh in this folder
 ```
 
 with SSL encryption:
 
 ```
-$ playground run -f oracle21-sink-ssl<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for oracle21-sink-ssl.sh in this folder
 ```
 
 with SSL encryption + Mutual TLS (case #3 in this [document](https://www.oracle.com/technetwork/database/enterprise-edition/wp-oracle-jdbc-thin-ssl-130128.pdf)):
 
 ```
-$ playground run -f oracle21-sink-mtls<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for oracle21-sink-mtls.sh in this folder
 ```
 
 with SSL encryption + Mutual TLS + DB authentication (case #4 in this [document](https://www.oracle.com/technetwork/database/enterprise-edition/wp-oracle-jdbc-thin-ssl-130128.pdf):
 
 ```
-$ playground run -f oracle21-sink-mtls-db-auth<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for oracle21-sink-mtls-db-auth.sh in this folder
 ```
 
 N.B: this is the [best resource](https://www.oracle.com/technetwork/topics/wp-oracle-jdbc-thin-ssl-130128.pdf) I found for Oracle DB and SSL.

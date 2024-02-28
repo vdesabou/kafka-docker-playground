@@ -20,13 +20,13 @@ You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` an
 Simply run:
 
 ```bash
-$ playground run -f lambda<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for lambda.sh in this folder
 ```
 
 If you want to assume IAM roles:
 
 ```
-$ playground run -f lambda-sink-with-assuming-iam-role<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
+$ just use <playground run> command and search for lambda-sink-with-assuming-iam-role.sh in this folder
 ```
 
 ## Details of what the script is doing

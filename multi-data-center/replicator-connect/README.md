@@ -12,17 +12,17 @@ We want on each region to have a way to see **all** sales in **all** regions.
 With no security in place (PLAINTEXT):
 
 ```
-$ playground run -f connect-plaintext<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for connect-plaintext.sh in this folder
 ```
 
 With no SSL encryption, SASL/PLAIN authentication:
 
 ```
-$ playground run -f connect-sasl-plain<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for connect-sasl-plain.sh in this folder
 ```
 
 With no SSL encryption, Kerberos GSSAPI authentication:
 
 ```
-$ playground run -f connect-kerberos<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for connect-kerberos.sh in this folder
 ```

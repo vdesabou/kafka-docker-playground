@@ -2024,7 +2024,7 @@ playground_repro_bootstrap_usage() {
     printf "%s\n" "$(bold "== Arguments ==")"
 
     echo "  ARGUMENTS..."
-    printf "    Arguments to use by example script\n    \n    Most of examples support to get required options either by using arguments\n    or environment variables.\n    \n    Example with Zendesk:\n    \n    playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME>\n    <ZENDESK_PASSWORD>\n"
+    printf "    Arguments to use by example script\n    \n    Most of examples support to get required options either by using arguments\n    or environment variables.\n    \n    Example with Zendesk:\n    \n    just use <playground run> command and search for zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME>\n    .sh in this folder
     echo
 
     # :command.usage_examples

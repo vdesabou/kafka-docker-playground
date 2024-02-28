@@ -14,7 +14,7 @@ Quickly test [Splunk Sink](https://docs.confluent.io/kafka-connect-splunk-sink/c
 Simply run:
 
 ```
-$ playground run -f splunk-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for splunk-sink.sh in this folder
 ```
 
 Splunk UI is available at [127.0.0.1:8000](http://127.0.0.1:8000) `admin/password`

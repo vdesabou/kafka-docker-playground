@@ -46,7 +46,7 @@ sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule require
 2. Simply run:
 
 ```
-$ playground run -f start<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <2.2 or 3.1> (Core .NET version, default is 2.1)
+$ just use <playground run> command and search for start<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> .sh in this folder
 ```
 
 ## Details of what the script is doing

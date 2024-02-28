@@ -10,31 +10,31 @@ Quickly test [File Pulse Source](https://github.com/streamthoughts/kafka-connect
 Simply run:
 
 ```
-$ playground run -f csv<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for csv.sh in this folder
 ```
 
 or
 
 ```
-$ playground run -f xml<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for xml.sh in this folder
 ```
 
 or
 
 ```
-$ playground run -f json<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for json.sh in this folder
 ```
 
 With AWS S3:
 
 ```
-$ playground run -f s3-csv<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for s3-csv.sh in this folder
 ```
 
 or
 
 ```
-$ playground run -f s3-json<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for s3-json.sh in this folder
 ```
 
 ## Details of what the script is doing

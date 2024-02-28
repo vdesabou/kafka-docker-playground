@@ -34,28 +34,28 @@ curl -X PUT -H "Content-Type: application/json" --data '{"message":"Hello, World
 ### No Authentication
 
 ```bash
-$ playground run -f http_no_auth<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for http_no_auth.sh in this folder
 ```
 
 ### Basic Authentication
 
 ```bash
-$ playground run -f http_basic_auth<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for http_basic_auth.sh in this folder
 ```
 
 ### Oauth2 Authentication
 
 ```bash
-$ playground run -f http_oauth2_auth<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for http_oauth2_auth.sh in this folder
 ```
 
 ### SSL + Basic Authentication
 
 ```bash
-$ playground run -f http_ssl_basic_auth<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for http_ssl_basic_auth.sh in this folder
 ```
 ### SSL Authentication (mutual TLS)
 
 ```bash
-$ playground run -f http_mtls_auth<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for http_mtls_auth.sh in this folder
 ```

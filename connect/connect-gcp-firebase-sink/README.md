@@ -54,7 +54,7 @@ Click on `Enable`:
 Simply run:
 
 ```bash
-$ playground run -f gcp-firebase-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <GCP_PROJECT>
+$ just use <playground run> command and search for gcp-firebase-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> .sh in this folder
 ```
 
 ### Verify data has been pushed to Firebase

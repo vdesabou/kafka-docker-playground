@@ -44,7 +44,7 @@ Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment v
 Simply run:
 
 ```bash
-$ playground run -f gcp-bigtable<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <GCP_PROJECT> <INSTANCE>
+$ just use <playground run> command and search for gcp-bigtable<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <GCP_PROJECT> .sh in this folder
 ```
 
 Note: you can also export these values as environment variable

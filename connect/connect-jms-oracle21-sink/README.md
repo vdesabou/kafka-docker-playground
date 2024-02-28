@@ -19,7 +19,7 @@ Note: The first time you'll run the script, it will build (using this [project](
 ## How to run
 
 ```
-$ playground run -f jms-oracle21-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for jms-oracle21-sink.sh in this folder
 ```
 
 ## Details of what the script is doing

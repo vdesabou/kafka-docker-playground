@@ -13,5 +13,5 @@ Using ActiveMQ Docker [image](https://hub.docker.com/r/rmohr/activemq/)
 Simply run:
 
 ```
-$ playground run -f lenses-active-mq-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for lenses-active-mq-source.sh in this folder
 ```

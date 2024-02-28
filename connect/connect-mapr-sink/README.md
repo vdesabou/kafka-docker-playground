@@ -26,7 +26,7 @@ export TAG=6.0.0-1-ubi8
 Simply run:
 
 ```
-$ playground run -f mapr-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <HPE_MAPR_EMAIL> <HPE_MAPR_TOKEN>
+$ just use <playground run> command and search for mapr-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <HPE_MAPR_EMAIL> .sh in this folder
 ```
 
 Note: you can also export these values as environment variable

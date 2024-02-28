@@ -14,7 +14,7 @@ Quickly test [Couchbase Sink](https://docs.couchbase.com/kafka-connector/3.4/ind
 Simply run:
 
 ```
-$ playground run -f couchbase-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for couchbase-sink.sh in this folder
 ```
 
 Couchbase UI is available at [127.0.0.1:8091](http://127.0.0.1:8091) `Administrator/password`

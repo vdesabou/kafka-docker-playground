@@ -35,7 +35,7 @@ https://of77992.eu-west-2.aws.snowflakecomputing.com
 Simply run:
 
 ```bash
-$ playground run -f snowflake-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <SNOWFLAKE_ACCOUNT_NAME> <SNOWFLAKE_USERNAME> <SNOWFLAKE_PASSWORD>
+$ just use <playground run> command and search for snowflake-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <SNOWFLAKE_ACCOUNT_NAME> <SNOWFLAKE_USERNAME> .sh in this folder
 ```
 
 Note: you can also export these values as environment variable

@@ -13,25 +13,25 @@ Quickly test [SFTP Sink](https://docs.confluent.io/current/connect/kafka-connect
 Simply run:
 
 ```bash
-$ playground run -f sftp-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for sftp-sink.sh in this folder
 ```
 
 or with Kerberos
 
 ```bash
-$ playground run -f sftp-sink-kerberos<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for sftp-sink-kerberos.sh in this folder
 ```
 
 or with SSH key
 
 ```bash
-$ playground run -f sftp-sink-ssh-key<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for sftp-sink-ssh-key.sh in this folder
 ```
 
 or with SSH PEM file
 
 ```bash
-$ playground run -f sftp-sink-ssh-pem-file<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for sftp-sink-ssh-pem-file.sh in this folder
 ```
 
 ## Details of what the script is doing

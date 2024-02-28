@@ -37,13 +37,13 @@ The end goal is the following:
 Simply run:
 
 ```
-$ playground run -f start-with-group-based-search<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for start-with-group-based-search.sh in this folder
 ```
 
 or
 
 ```
-$ playground run -f start-with-user-based-search<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for start-with-user-based-search.sh in this folder
 ```
 
 ## Details of what the script is doing

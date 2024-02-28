@@ -11,11 +11,11 @@ Quickly test [HBase Sink](https://docs.confluent.io/current/connect/kafka-connec
 Simply run:
 
 ```
-$ playground run -f hbase-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for hbase-sink.sh in this folder
 ```
 
 or with kerberos
 
 ```
-$ playground run -f hbase-sink-kerberos<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for hbase-sink-kerberos.sh in this folder
 ```

@@ -23,7 +23,7 @@ In your Zendesk account, create a token (if you're only an agent you need to ask
 Simply run:
 
 ```
-$ playground run -f zendesk-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
+$ just use <playground run> command and search for zendesk-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <ZENDESK_URL> <ZENDESK_USERNAME> .sh in this folder
 ```
 
 Note: you can also export these values as environment variable

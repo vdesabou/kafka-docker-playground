@@ -14,17 +14,17 @@ Quickly test [JDBC SQL Server](https://docs.confluent.io/current/connect/kafka-c
 Without SSL:
 
 ```
-$ playground run -f sqlserver-jtds<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> (with [JTDS](http://jtds.sourceforge.net) driver)
+$ just use <playground run> command and search for sqlserver-jtds.sh in this folder
 
-$ playground run -f sqlserver-microsoft<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> (with [Microsoft](https://docs.microsoft.com/en-us/sql/connect/jdbc/microsoft-jdbc-driver-for-sql-server) driver)
+$ just use <playground run> command and search for sqlserver-microsoft.sh in this folder
 ```
 
 with SSL encryption:
 
 ```
-$ playground run -f sqlserver-jtds-ssl<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> (with [JTDS](http://jtds.sourceforge.net) driver)
+$ just use <playground run> command and search for sqlserver-jtds-ssl.sh in this folder
 
-$ playground run -f sqlserver-microsoft-ssl<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> (with [Microsoft](https://docs.microsoft.com/en-us/sql/connect/jdbc/microsoft-jdbc-driver-for-sql-server) driver)
+$ just use <playground run> command and search for sqlserver-microsoft-ssl.sh in this folder
 ```
 
 ## Details of what the script is doing

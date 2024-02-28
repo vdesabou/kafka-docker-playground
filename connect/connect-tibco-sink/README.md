@@ -17,7 +17,7 @@ N.B: if you're a Confluent employee, please check this [link](https://confluent.
 Simply run:
 
 ```
-$ playground run -f tibco-ems-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for tibco-ems-sink.sh in this folder
 ```
 
 ## Details of what the script is doing

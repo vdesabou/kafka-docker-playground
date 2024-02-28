@@ -10,13 +10,13 @@ Quickly test [JDBC IBM DB2](https://docs.confluent.io/current/connect/kafka-conn
 Simply run:
 
 ```
-$ playground run -f ibmdb2-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for ibmdb2-source.sh in this folder
 ```
 
 with SSL Encryption:
 
 ```
-$ playground run -f ibmdb2-source-ssl<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for ibmdb2-source-ssl.sh in this folder
 ```
 
 N.B: IBM DB2 Console is reachable at [https://localhost:9443/ibmmq/console/login.html (admin/passw0rd)](https://localhost:9443/ibmmq/console/login.html])

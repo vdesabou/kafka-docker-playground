@@ -39,43 +39,43 @@ You can increase thoughtput with `maxPoolSize`.
 Without SSL:
 
 ```
-$ playground run -f cdc-oracle12-cdb-table<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for cdc-oracle12-cdb-table.sh in this folder
 ```
 
 or
 
 ```
-$ playground run -f cdc-oracle12-pdb-table<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for cdc-oracle12-pdb-table.sh in this folder
 ```
 
 with SSL encryption:
 
 ```
-$ playground run -f cdc-oracle12-cdb-table-ssl<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for cdc-oracle12-cdb-table-ssl.sh in this folder
 ```
 
 or
 
 ```
-$ playground run -f cdc-oracle12-pdb-table-ssl<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for cdc-oracle12-pdb-table-ssl.sh in this folder
 ```
 
 with SSL encryption + Mutual TLS (case #3 in this [document](https://www.oracle.com/technetwork/database/enterprise-edition/wp-oracle-jdbc-thin-ssl-130128.pdf)):
 
 ```
-$ playground run -f cdc-oracle12-cdb-table-mtls<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for cdc-oracle12-cdb-table-mtls.sh in this folder
 ```
 
 or
 
 ```
-$ playground run -f cdc-oracle12-pdb-table-mtls<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for cdc-oracle12-pdb-table-mtls.sh in this folder
 ```
 
 with SSL encryption + Mutual TLS + DB authentication (case #4 in this [document](https://www.oracle.com/technetwork/database/enterprise-edition/wp-oracle-jdbc-thin-ssl-130128.pdf):
 
 ```
-$ playground run -f cdc-oracle12-cdb-table-mtls-db-auth<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
+$ just use <playground run> command and search for cdc-oracle12-cdb-table-mtls-db-auth.sh in this folder
 ```
 
 N.B: `./cdc-oracle12-pdb-table-mtls-db-auth.sh` does not work, see [Oracle CDC: mTLS with DB authentication cannot work with PDB](https://github.com/vdesabou/kafka-docker-playground/issues/833)
