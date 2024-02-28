@@ -13015,16 +13015,10 @@ playground_re_run_command() {
 
   if [ ! -f $test_file ]
   then
-    logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
+    logerror "❌ file $test_file retrieved from $root_folder/playground.ini does not exist!"
     exit 1
   fi
 
-  # if [[ $test_file == *"ccloud"* ]]
-  # then
-  #   load_ccloud_env_variables #> /dev/null 2>&1
-  # fi
-
-  # load_env_variables #> /dev/null 2>&1
   playground run -f "$test_file" --force-interactive-re-run
 }
 
