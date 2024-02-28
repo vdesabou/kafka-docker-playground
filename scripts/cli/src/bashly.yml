@@ -300,23 +300,12 @@ commands:
 
 - name: run
   group: Run
-  catch_all:
-    label: arguments
-    help: |-
-      Arguments to use by example script
-
-      Most of examples support to get required options either by using arguments or environment variables.
-      
-      Example with Zendesk:
-
-      playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
-    required: false
   dependencies:
     fzf: visit https://github.com/junegunn/fzf#installation to install
   help: |-
-    🕹️ Run any example ! just run <playground run> !
+    🕹️ Run any example !
 
-    🔥 HIGHLY RECOMMENDED: start in interactive mode by simple running <playground run> !
+    🔥 It start an interactive mode where you'll be fully guided !
 
 
     ⛅ When running Confluent Cloud (ccloud) example:
@@ -327,20 +316,21 @@ commands:
 
       You can configure the new cluster by setting:
     
-      --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: `basic`, `standard` and `dedicated`, default `basic`)
-      --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: `aws`, `gcp` and `azure`, default `aws`)
-      --cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use `confluent kafka region list` to get the list, default `eu-west-2` for aws, `westeurope`for azure and `europe-west2` for gcp)
-      --cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: `txxxxx`) 
+      --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: basic, standard and dedicated, default basic)
+      --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: aws, gcp and azure, default aws)
+      --cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use confluent kafka region list to get the list, default eu-west-2 for aws, westeuropefor azure and europe-west2 for gcp)
+      --cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: txxxxx) 
 
       In case you want to use your own existing cluster, you need to setup, in addition to previous ones:
 
       --cluster-name (or CLUSTER_NAME environment variable): The cluster name
-      --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with colon (example: `<API_KEY>:<API_KEY_SECRET>`)
-      --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: `<SR_API_KEY>:<SR_API_KEY_SECRET>`)
+      --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)
+      --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)
 
   flags:
   - &environment-run
     long: --environment
+    private: true
     required: false
     default: "plaintext"
     arg: environment
@@ -367,6 +357,7 @@ commands:
   - long: --file
     short: -f
     required: false
+    private: true
     validate: file_exists_with_trick
     arg: file
     completions:
@@ -378,10 +369,12 @@ commands:
 
       🎓 Tip: use <tab> completion to trigger fzf completion
   - long: --open
+    private: true
     short: -o
     help: 📖 Opening example file with text editor set with playground config editor <editor> (default is code)
   - &tag
     long: --tag
+    private: true
     arg: tag
     required: false
     completions:
@@ -395,6 +388,7 @@ commands:
   - &connector-tag
     long: --connector-tag
     arg: connector_tag
+    private: true
     required: false
     help: |- 
       🔗 Connector version to use
@@ -407,6 +401,7 @@ commands:
   - &connector-zip
     long: --connector-zip
     arg: connector_zip
+    private: true
     required: false
     validate: file_exists_with_trick
     completions:
@@ -423,6 +418,7 @@ commands:
   - &connector-jar
     long: --connector-jar
     arg: connector_jar
+    private: true
     required: false
     validate: file_exists_with_trick
     completions:
@@ -438,6 +434,7 @@ commands:
   - &enable-ksqldb
     long: --enable-ksqldb
     required: false
+    private: true
     help: |-
       🚀 Enable ksqlDB 
       
@@ -447,6 +444,7 @@ commands:
   - &enable-rest-proxy
     long: --enable-rest-proxy
     required: false
+    private: true
     help: |-
       🧲 Enable Rest Proxy
 
@@ -456,6 +454,7 @@ commands:
   - &enable-control-center
     long: --enable-control-center
     required: false
+    private: true
     help: |-
       💠 Enable Control Center
 
@@ -465,6 +464,7 @@ commands:
   - &enable-conduktor
     long: --enable-conduktor
     required: false
+    private: true
     help: |- 
       🐺 Enable Conduktor Platform
 
@@ -474,6 +474,7 @@ commands:
   - &enable-multiple-brokers
     long: --enable-multiple-brokers
     required: false
+    private: true
     help: |- 
       3️⃣ Enable multiple brokers
 
@@ -481,6 +482,7 @@ commands:
   - &enable-multiple-connect-workers
     long: --enable-multiple-connect-workers
     required: false
+    private: true
     help: |-
       🥉 Enable multiple connect node
 
@@ -490,6 +492,7 @@ commands:
   - &enable-jmx-grafana
     long: --enable-jmx-grafana
     required: false
+    private: true
     help: |-
       Enable Grafana, Prometheus and Pyroscope
 
@@ -501,6 +504,7 @@ commands:
   - &enable-kcat
     long: --enable-kcat
     required: false
+    private: true
     help: |-
       🐈‍⬛ Enable kcat
 
@@ -510,6 +514,7 @@ commands:
   - &enable-sql-datagen
     long: --enable-sql-datagen
     required: false
+    private: true
     help: |-
       🌪️ Enable SQL Datagen injection
 
@@ -518,6 +523,7 @@ commands:
   - &cluster-cloud
     long: --cluster-cloud
     required: false
+    private: true
     arg: cluster-cloud
     allowed: [aws, gcp, azure]
     help: |-
@@ -527,6 +533,7 @@ commands:
   - &cluster-type
     long: --cluster-type
     required: false
+    private: true
     arg: cluster-type
     allowed: [basic, standard, dedicated]
     help: |-
@@ -536,6 +543,7 @@ commands:
   - &cluster-region
     long: --cluster-region
     required: false
+    private: true
     arg: cluster-region
     completions:
       - $(playground get-kafka-region-list "$cur")
@@ -548,6 +556,7 @@ commands:
   - &cluster-environment
     long: --cluster-environment
     required: false
+    private: true
     arg: cluster-environment
     validate: not_empty
     completions:
@@ -563,6 +572,7 @@ commands:
   - &cluster-name
     long: --cluster-name
     required: false
+    private: true
     validate: not_empty
     completions:
       - $(playground get-ccloud-cluster-list "$cur")
@@ -577,6 +587,7 @@ commands:
   - &cluster-creds
     long: --cluster-creds
     required: false
+    private: true
     validate: not_empty
     arg: cluster-creds
     help: |-
@@ -588,6 +599,7 @@ commands:
   - &cluster-schema-registry-creds
     long: --cluster-schema-registry-creds
     required: false
+    private: true
     validate: not_empty
     arg: cluster-schema-registry-creds
     help: |-
@@ -611,8 +623,6 @@ commands:
       Force interactive mode
   examples:
   - playground run (interactive mode)
-  - playground run -f zendesk-source<tab> --tag 7.2.1 --enable-control-center <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
-  - playground run -f jdbc<tab> --connector-tag 10.6.0 --enable-jmx-grafana --open
 
 - name: re-run
   group: Run

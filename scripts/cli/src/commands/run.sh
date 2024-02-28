@@ -1445,7 +1445,7 @@ set -e
 playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
 playground state set run.test_file "$test_file"
 echo "" >> "$root_folder/playground-run-history"
-echo "playground run -f $test_file $flag_list ${other_args[*]}" >> "$root_folder/playground-run-history"
+echo "playground run -f $test_file $flag_list" >> "$root_folder/playground-run-history"
 
 increment_cli_metric nb_runs
 log "🚀 Number of examples ran so far: $(get_cli_metric nb_runs)"
@@ -1481,7 +1481,7 @@ trap cleanup EXIT
 playground generate-fzf-find-files &
 generate_connector_versions > /dev/null 2>&1 &
 touch /tmp/playground-run-command-used
-bash $filename ${other_args[*]}
+bash $filename
 ret=$?
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 let ELAPSED_TOTAL+=$SECONDS
