@@ -27,11 +27,7 @@ Check out [kafka-docker-playground.io](https://kafka-docker-playground.io/) to l
 
 ## 🍿 See CLI in action
 
-
-
-https://github.com/vdesabou/kafka-docker-playground/assets/4061923/c1f0c50a-93e0-4da8-bdc8-187735fcafc2
-
-
+[![asciicast](https://asciinema.org/a/643687.svg)](https://asciinema.org/a/643687)
 
 ## 🏁 Getting Started
 
