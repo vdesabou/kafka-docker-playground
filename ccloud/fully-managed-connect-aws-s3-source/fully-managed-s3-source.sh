@@ -69,7 +69,7 @@ set -e
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
-     "connector.class": "S3_SINK",
+     "connector.class": "S3Source",
      "name": "$connector_name",
      "kafka.auth.mode": "KAFKA_API_KEY",
      "kafka.api.key": "$CLOUD_KEY",
