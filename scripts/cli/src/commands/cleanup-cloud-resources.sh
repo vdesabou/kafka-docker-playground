@@ -1,6 +1,7 @@
 user="${args[--user]}"
 force="${args[--force]}"
 
+set +e
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
 
@@ -37,9 +38,7 @@ done
 log "Cleanup GCP GCS buckets"
 GCP_KEYFILE="$tmp_dir/keyfile.json"
 echo -e "$GCP_KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${GCP_KEYFILE}
-set +e
 docker rm -f gcloud-config-cleanup-resources > /dev/null 2>&1
-set -e
 docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud auth activate-service-account --project ${GCP_PROJECT} --key-file /tmp/keyfile.json
 
 for bucket in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gsutil ls)
@@ -95,14 +94,12 @@ fi
 # do
 #     if [[ $bucket = *pgbucket${user}* ]]
 #     then
-#         set +e
 #         log "Removing AWS bucket $bucket"
 #         if [[ ! -n "$force" ]]
 #         then
 #             check_if_continue
 #         fi
 #         aws s3 rb s3://$bucket --force --region $AWS_REGION
-#         set -e
 #     fi
 # done
 
@@ -121,17 +118,13 @@ for cluster in $(aws redshift describe-clusters --region $AWS_REGION | jq '.Clus
 do
     if [[ $cluster = pg${user}redshift* ]]
     then
-        set +e
         log "Delete AWS Redshift $cluster"
         check_if_skip "aws redshift delete-cluster --cluster-identifier $cluster --skip-final-cluster-snapshot --region $AWS_REGION"
         sleep 60
         log "Delete AWS security group sg$cluster"
         check_if_skip "aws ec2 delete-security-group --group-name sg$cluster --region $AWS_REGION"
-        set -e
     fi
 done
-
-set +e 
 
 bootstrap_ccloud_environment
 
