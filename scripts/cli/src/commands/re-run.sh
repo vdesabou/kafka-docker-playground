@@ -6,4 +6,10 @@ then
   exit 1
 fi
 
-playground run -f "$test_file" --force-interactive-re-run
+declare -a array_flag_list=()
+encoded_array="$(playground state get run.array_flag_list_base64)"
+eval "$(echo "$encoded_array" | base64 --decode)"
+IFS=' ' flag_list="${array_flag_list[*]}"
+
+log "re-run with playground run -f \"$test_file\" $flag_list --force-interactive-re-run "
+playground run -f "$test_file" $flag_list --force-interactive-re-run
