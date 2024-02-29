@@ -40,8 +40,14 @@ then
     if [[ ! -n "$tombstone" ]]
     then
         # stdin
-        value_content=$(cat "$value")
-        echo "$value_content" > $value_schema_file
+        if [ -t 0 ]
+        then
+            logerror "❌ stdin is empty you probably forgot to set --value !"
+            exit 1
+        else
+            value_content=$(cat "$value")
+            echo "$value_content" > $value_schema_file
+        fi
     fi
 else
     if [[ $value == @* ]]
