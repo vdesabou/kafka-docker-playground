@@ -1631,6 +1631,12 @@ playground_update_version_usage() {
     printf "    Show this help\n"
     echo
 
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground update-version (interactive mode)\n"
+    printf "  playground update-version --tag 6.2.0 --connector-tag=2.5.12,10.5.7\n"
+    echo
+
   fi
 }
 
