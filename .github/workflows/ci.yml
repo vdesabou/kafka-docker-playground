@@ -36,6 +36,7 @@ jobs:
         run: |
           cd ./scripts/cli
           ./playground cleanup-cloud-resources --force
+          ./playground cleanup-cloud-resources --force --user vsaboulin
         env:
           AZ_USER: ${{ secrets.AZ_USER}}
           AZ_PASS: ${{ secrets.AZ_PASS}}
@@ -469,6 +470,7 @@ jobs:
         run: |
           cd ./scripts/cli
           ./playground cleanup-cloud-resources --force
+          ./playground cleanup-cloud-resources --force --user vsaboulin
         env:
           AZ_USER: ${{ secrets.AZ_USER}}
           AZ_PASS: ${{ secrets.AZ_PASS}}
