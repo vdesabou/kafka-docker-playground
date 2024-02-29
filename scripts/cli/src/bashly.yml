@@ -728,56 +728,10 @@ commands:
   help: |-
     ✨ Update current confluent platform or connector(s) with new version(s)
   flags:
-  - long: --tag
-    arg: tag
-    required: false
-    completions:
-      - $(playground get-tag-list "$cur")
-    help: |-
-      🎯 Confluent Platform (CP) version to use
-
-      Must be greater or equal to 5.3.0
-
-      🎓 Tip: use <tab> completion to trigger fzf completion
-  - long: --connector-tag
-    arg: connector_tag
-    required: false
-    help: |- 
-      🔗 Connector version to use
-
-      By default, for each connector, the latest available version on Confluent Hub is used
-
-      🎓 Tip: set to " " in order to select the version dynamically
-
-    conflicts: [--connector-zip]
-  - long: --connector-zip
-    arg: connector_zip
-    required: false
-    validate: file_exists_with_trick
-    completions:
-      - $(playground get-zip-or-jar-with-fzf --type zip "$cur")
-    conflicts: [--connector-tag]
-    help: |- 
-      🤐 Connector zip to use
-
-      ❕ It must be absolute full path
-
-      🎓 Tip: use <tab> completion to trigger fzf completion 
-              use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
-
-  - long: --connector-jar
-    arg: connector_jar
-    required: false
-    validate: file_exists_with_trick
-    completions:
-      - $(playground get-zip-or-jar-with-fzf --type jar "$cur")
-    help: |-
-      🤎 Connector jar to use
-
-      ❕ It must be absolute full path
-
-      🎓 Tip: use <tab> completion to trigger fzf completion 
-              use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
+  - *tag
+  - *connector-tag
+  - *connector-zip
+  - *connector-jar
 
 - name: open
   group: Run
