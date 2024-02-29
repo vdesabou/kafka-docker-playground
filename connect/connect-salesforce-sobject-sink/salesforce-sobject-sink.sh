@@ -657,7 +657,8 @@ playground connector create-or-update --connector salesforce-sobject-sink  << EO
      "reporter.result.topic.replication.factor": 1,
      "confluent.license": "",
      "confluent.topic.bootstrap.servers": "broker:9092",
-     "confluent.topic.replication.factor": "1"
+     "confluent.topic.replication.factor": "1",
+     "request.max.retries.time.ms": "10000"
 }
 EOF
 
