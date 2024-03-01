@@ -4445,7 +4445,7 @@ playground_connector_offsets_usage() {
     printf "playground connector offsets\n"
     echo
 
-    printf "  💈 Handle source and sink connectors offsets\n  \n    * for source (KIP-875: First-class offsets support in Kafka Connect): it\n  only available if CP > 7.6\n    * for sink:\n"
+    printf "  💈 Handle source and sink connectors offsets\n  \n    Note: First-class offsets (KIP-875) is only available if CP > 7.6\n"
     echo
 
   else

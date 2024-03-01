@@ -1750,7 +1750,7 @@
         },
         {
           "name": "offsets",
-          "description": "💈 Handle source and sink connectors offsets\n  \n    * for source (KIP-875: First-class offsets support in Kafka Connect): it only available if CP > 7.6\n    * for sink: \n  \n",
+          "description": "💈 Handle source and sink connectors offsets\n  \n    Note: First-class offsets (KIP-875) is only available if CP > 7.6\n  \n",
           "usage": "playground connector offsets COMMAND",
           "options": []
         },
@@ -2186,7 +2186,7 @@
     },
     {
       "name": "offsets",
-      "description": "💈 Handle source and sink connectors offsets\n\n  * for source (KIP-875: First-class offsets support in Kafka Connect): it only available if CP > 7.6\n  * for sink: \n",
+      "description": "💈 Handle source and sink connectors offsets\n\n  Note: First-class offsets (KIP-875) is only available if CP > 7.6\n",
       "usage": "playground connector offsets COMMAND",
       "options": [],
       "subcommands": [
