@@ -49,7 +49,7 @@ function handle_first_class_offset() {
 
     if ! version_gt $tag "7.5.99"; then
         logerror "❌ command is available since CP 7.6 only"
-        return 1
+        return
     fi
     playground connector stop --connector $connector
 
@@ -114,23 +114,22 @@ do
         else
             docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d'
 
-            # FIXTHIS, replace with delete/create
-            tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
-            if [ $? != 0 ] || [ "$tag" == "" ]
+            if version_gt $tag "7.4.99"
             then
-                logerror "❌ could not find current CP version from docker ps"
-                continue
+                playground connector stop --connector $connector
+            else
+                playground connector show-config --connector $connector | grep -v "ℹ️" > "$tmp_dir/create-$connector-config.sh"
+                playground connector delete --connector $connector
             fi
-
-            if ! version_gt $tag "7.4.99"; then
-                logerror "❌ command is available since CP 7.5 only"
-                continue
-            fi
-
-            playground connector stop --connector $connector
 
             docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --to-earliest --reset-offsets --all-topics --execute
-            playground connector resume --connector $connector
+
+            if version_gt $tag "7.4.99"
+            then
+                playground connector resume --connector $connector
+            else
+                exec "$tmp_dir/create-$connector-config.sh"
+            fi
         fi
     fi
 done

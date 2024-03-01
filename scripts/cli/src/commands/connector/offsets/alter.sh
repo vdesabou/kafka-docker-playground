@@ -48,7 +48,7 @@ fi
 function handle_first_class_offset() {
     if ! version_gt $tag "7.5.99"; then
         logerror "❌ command is available since CP 7.6 only"
-        return 1
+        return
     fi
 
     get_connect_url_and_security
@@ -162,20 +162,13 @@ do
             else
                 file=$tmp_dir/offsets-$connector.csv
 
-                # FIXTHIS, replace with delete/create
-                tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
-                if [ $? != 0 ] || [ "$tag" == "" ]
+                if version_gt $tag "7.4.99"
                 then
-                    logerror "❌ could not find current CP version from docker ps"
-                    continue
+                    playground connector stop --connector $connector
+                else
+                    playground connector show-config --connector $connector | grep -v "ℹ️" > "$tmp_dir/create-$connector-config.sh"
+                    playground connector delete --connector $connector
                 fi
-
-                if ! version_gt $tag "7.4.99"; then
-                    logerror "❌ command is available since CP 7.5 only"
-                    continue
-                fi
-
-                playground connector stop --connector $connector
 
                 echo "topic,partition,current-offset" > $file
                 docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --export --reset-offsets --to-current --all-topics --dry-run >> $file
@@ -208,7 +201,12 @@ do
                 docker cp $file $container:/tmp/offsets.csv > /dev/null 2>&1
                 docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --reset-offsets --from-file /tmp/offsets.csv --execute
 
-                playground connector resume --connector $connector
+                if version_gt $tag "7.4.99"
+                then
+                    playground connector resume --connector $connector
+                else
+                    exec "$tmp_dir/create-$connector-config.sh"
+                fi
             fi
         fi
     fi

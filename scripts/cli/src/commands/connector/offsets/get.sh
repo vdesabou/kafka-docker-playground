@@ -47,10 +47,10 @@ fi
 
 function handle_first_class_offset() {
     
-    if ! version_gt $tag "7.5.99"
+    if ! version_gt $tag "7.4.99"
     then
-        logerror "❌ command is available since CP 7.6 only"
-        return 1
+        logerror "❌ command is available since CP 7.5 only"
+        return
     fi
 
     get_connect_url_and_security
