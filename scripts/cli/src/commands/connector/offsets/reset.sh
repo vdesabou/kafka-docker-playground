@@ -60,6 +60,10 @@ function handle_first_class_offset() {
 
     playground connector resume --connector $connector
 }
+
+tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+trap 'rm -rf $tmp_dir' EXIT
+
 items=($connector)
 length=${#items[@]}
 if ((length > 1))
@@ -97,6 +101,7 @@ do
         then
             continue
         fi
+        playground connector offsets get --connector $connector
     else
         if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
         then
@@ -111,8 +116,9 @@ do
             then
                 continue
             fi
+            playground connector offsets get --connector $connector
         else
-            docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d'
+            docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION
 
             if version_gt $tag "7.4.99"
             then
@@ -128,8 +134,9 @@ do
             then
                 playground connector resume --connector $connector
             else
-                exec "$tmp_dir/create-$connector-config.sh"
+                bash "$tmp_dir/create-$connector-config.sh"
             fi
+            playground connector offsets get --connector $connector
         fi
     fi
 done

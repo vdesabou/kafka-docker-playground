@@ -19149,7 +19149,8 @@ playground_connector_offsets_get_command() {
               else
                   consumer_group="connect-$connector"
               fi
-              docker run --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group $consumer_group --describe | grep -v PARTITION | sed '/^$/d'
+              docker run --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group $consumer_group --describe
+
           else
               if version_gt $tag "7.5.99"
               then
@@ -19159,7 +19160,8 @@ playground_connector_offsets_get_command() {
                       continue
                   fi
               else
-                  docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d'
+                  docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security
+
               fi
           fi
       fi
@@ -19232,6 +19234,10 @@ playground_connector_offsets_reset_command() {
 
       playground connector resume --connector $connector
   }
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
+
   items=($connector)
   length=${#items[@]}
   if ((length > 1))
@@ -19267,6 +19273,7 @@ playground_connector_offsets_reset_command() {
           then
               continue
           fi
+          playground connector offsets get --connector $connector
       else
           if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
           then
@@ -19281,8 +19288,9 @@ playground_connector_offsets_reset_command() {
               then
                   continue
               fi
+              playground connector offsets get --connector $connector
           else
-              docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d'
+              docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION
 
               if version_gt $tag "7.4.99"
               then
@@ -19298,8 +19306,9 @@ playground_connector_offsets_reset_command() {
               then
                   playground connector resume --connector $connector
               else
-                  exec "$tmp_dir/create-$connector-config.sh"
+                  bash "$tmp_dir/create-$connector-config.sh"
               fi
+              playground connector offsets get --connector $connector
           fi
       fi
   done
@@ -19441,6 +19450,7 @@ playground_connector_offsets_alter_command() {
           then
               continue
           fi
+          playground connector offsets get --connector $connector
       else
           # SINK CONNECTOR
           if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
@@ -19455,6 +19465,7 @@ playground_connector_offsets_alter_command() {
               then
                   continue
               fi
+              playground connector offsets get --connector $connector
           else
               # if [[ -n "$verbose" ]]
               # then
@@ -19512,9 +19523,10 @@ playground_connector_offsets_alter_command() {
                   then
                       playground connector resume --connector $connector
                   else
-                      exec "$tmp_dir/create-$connector-config.sh"
+                      bash "$tmp_dir/create-$connector-config.sh"
                   fi
               fi
+              playground connector offsets get --connector $connector
           fi
       fi
   done

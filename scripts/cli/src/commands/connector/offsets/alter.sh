@@ -132,6 +132,7 @@ do
         then
             continue
         fi
+        playground connector offsets get --connector $connector
     else
         ##
         # SINK CONNECTOR
@@ -148,6 +149,7 @@ do
             then
                 continue
             fi
+            playground connector offsets get --connector $connector
         else
             # if [[ -n "$verbose" ]]
             # then
@@ -205,9 +207,10 @@ do
                 then
                     playground connector resume --connector $connector
                 else
-                    exec "$tmp_dir/create-$connector-config.sh"
+                    bash "$tmp_dir/create-$connector-config.sh"
                 fi
             fi
+            playground connector offsets get --connector $connector
         fi
     fi
 done
