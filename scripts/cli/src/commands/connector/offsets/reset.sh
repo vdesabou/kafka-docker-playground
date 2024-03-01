@@ -35,6 +35,31 @@ else
   get_security_broker "--command-config"
 fi
 
+if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] 
+then
+    tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+    if [ $? != 0 ] || [ "$tag" == "" ]
+    then
+        logerror "❌ could not find current CP version from docker ps"
+        exit 1
+    fi
+fi
+
+function handle_first_class_offset() {
+
+    if ! version_gt $tag "7.5.99"; then
+        logerror "❌ command is available since CP 7.6 only"
+        return 1
+    fi
+    playground connector stop --connector $connector
+
+    get_connect_url_and_security
+    handle_onprem_connect_rest_api "curl $security -s -X DELETE \"$connect_url/connectors/$connector/offsets\""
+
+    echo "$curl_output" | jq .
+
+    playground connector resume --connector $connector
+}
 items=($connector)
 length=${#items[@]}
 if ((length > 1))
@@ -67,42 +92,45 @@ do
             continue
         fi
 
-        tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
-        if [ $? != 0 ] || [ "$tag" == "" ]
+        handle_first_class_offset
+        if [ $? != 0 ]
         then
-            logerror "❌ could not find current CP version from docker ps"
             continue
         fi
-
-        if ! version_gt $tag "7.5.99"; then
-            logerror "❌ command is available since CP 7.6 only"
-            continue
-        fi
-        playground connector stop --connector $connector
-
-        get_connect_url_and_security
-        handle_onprem_connect_rest_api "curl $security -s -X DELETE \"$connect_url/connectors/$connector/offsets\""
-
-        echo "$curl_output" | jq .
-
-        playground connector resume --connector $connector
     else
-        # FIXTHIS, replace with delete/create
-        tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
-        if [ $? != 0 ] || [ "$tag" == "" ]
+        if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
         then
-            logerror "❌ could not find current CP version from docker ps"
+            logwarn "command is not available with $connector_type $type connector"
             continue
         fi
 
-        if ! version_gt $tag "7.4.99"; then
-            logerror "❌ command is available since CP 7.5 only"
-            continue
+        if version_gt $tag "7.5.99"
+        then
+            handle_first_class_offset
+            if [ $? != 0 ]
+            then
+                continue
+            fi
+        else
+            docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d'
+
+            # FIXTHIS, replace with delete/create
+            tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+            if [ $? != 0 ] || [ "$tag" == "" ]
+            then
+                logerror "❌ could not find current CP version from docker ps"
+                continue
+            fi
+
+            if ! version_gt $tag "7.4.99"; then
+                logerror "❌ command is available since CP 7.5 only"
+                continue
+            fi
+
+            playground connector stop --connector $connector
+
+            docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --to-earliest --reset-offsets --all-topics --execute
+            playground connector resume --connector $connector
         fi
-
-        playground connector stop --connector $connector
-
-        docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --to-earliest --reset-offsets --all-topics --execute
-        playground connector resume --connector $connector
     fi
 done

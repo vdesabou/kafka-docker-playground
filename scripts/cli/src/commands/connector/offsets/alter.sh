@@ -35,6 +35,61 @@ else
   get_security_broker "--command-config"
 fi
 
+if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] 
+then
+    tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+    if [ $? != 0 ] || [ "$tag" == "" ]
+    then
+        logerror "❌ could not find current CP version from docker ps"
+        exit 1
+    fi
+fi
+
+function handle_first_class_offset() {
+    if ! version_gt $tag "7.5.99"; then
+        logerror "❌ command is available since CP 7.6 only"
+        return 1
+    fi
+
+    get_connect_url_and_security
+    handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\""
+
+    file=$tmp_dir/offsets-$connector.json
+    echo "$curl_output" | jq . > $file
+
+    editor=$(playground config get editor)
+    if [ "$editor" != "" ]
+    then
+        log "✨ Update the connector offsets as per your needs, save and close the file to continue"
+        if [ "$editor" = "code" ]
+        then
+            code --wait $file
+        else
+            $editor $file
+        fi
+    else
+        if [[ $(type code 2>&1) =~ "not found" ]]
+        then
+            logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
+            exit 1
+        else
+            log "✨ Update the connector offsets as per your needs, save and close the file to continue"
+            code --wait $file
+        fi
+    fi
+
+    playground connector stop --connector $connector
+
+    get_connect_url_and_security
+    handle_onprem_connect_rest_api "curl $security -s -X PATCH -H \"Content-Type: application/json\" --data @$file \"$connect_url/connectors/$connector/offsets\""
+
+    echo "$curl_output" | jq .
+
+    playground connector resume --connector $connector
+
+    playground connector offsets get --connector $connector
+}
+
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
 
@@ -72,119 +127,89 @@ do
             continue
         fi
 
-        tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
-        if [ $? != 0 ] || [ "$tag" == "" ]
+        handle_first_class_offset
+        if [ $? != 0 ]
         then
-            logerror "❌ could not find current CP version from docker ps"
             continue
         fi
-
-        if ! version_gt $tag "7.5.99"; then
-            logerror "❌ command is available since CP 7.6 only"
-            continue
-        fi
-
-        get_connect_url_and_security
-        handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\""
-
-        file=$tmp_dir/offsets-$connector.json
-        echo "$curl_output" | jq . > $file
-
-        editor=$(playground config get editor)
-        if [ "$editor" != "" ]
-        then
-            log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-            if [ "$editor" = "code" ]
-            then
-                code --wait $file
-            else
-                $editor $file
-            fi
-        else
-            if [[ $(type code 2>&1) =~ "not found" ]]
-            then
-                logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
-                exit 1
-            else
-                log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-                code --wait $file
-            fi
-        fi
-
-        playground connector stop --connector $connector
-
-        get_connect_url_and_security
-        handle_onprem_connect_rest_api "curl $security -s -X PATCH -H \"Content-Type: application/json\" --data @$file \"$connect_url/connectors/$connector/offsets\""
-
-        echo "$curl_output" | jq .
-
-        playground connector resume --connector $connector
-
-        playground connector source-offsets get --connector $connector
     else
         ##
         # SINK CONNECTOR
         ##
-        # if [[ -n "$verbose" ]]
-        # then
-        #     log "🐞 CLI command used"
-        #     echo "kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security"
-        # fi
-        get_environment_used
-        if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [[ "$environment" == "ccloud" ]]
+        if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
         then
             logwarn "command is not available with $connector_type $type connector"
             continue
+        fi
+        if version_gt $tag "7.5.99"
+        then
+            handle_first_class_offset
+            if [ $? != 0 ]
+            then
+                continue
+            fi
         else
-            file=$tmp_dir/offsets-$connector.csv
-
-            # FIXTHIS, replace with delete/create
-            tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
-            if [ $? != 0 ] || [ "$tag" == "" ]
+            # if [[ -n "$verbose" ]]
+            # then
+            #     log "🐞 CLI command used"
+            #     echo "kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security"
+            # fi
+            get_environment_used
+            if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [[ "$environment" == "ccloud" ]]
             then
-                logerror "❌ could not find current CP version from docker ps"
+                logwarn "command is not available with $connector_type $type connector"
                 continue
-            fi
-
-            if ! version_gt $tag "7.4.99"; then
-                logerror "❌ command is available since CP 7.5 only"
-                continue
-            fi
-
-            playground connector stop --connector $connector
-
-            echo "topic,partition,current-offset" > $file
-            docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --export --reset-offsets --to-current --all-topics --dry-run >> $file
-
-            editor=$(playground config get editor)
-            if [ "$editor" != "" ]
-            then
-                log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-                if [ "$editor" = "code" ]
-                then
-                    code --wait $file
-                else
-                    $editor $file
-                fi
             else
-                if [[ $(type code 2>&1) =~ "not found" ]]
+                file=$tmp_dir/offsets-$connector.csv
+
+                # FIXTHIS, replace with delete/create
+                tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+                if [ $? != 0 ] || [ "$tag" == "" ]
                 then
-                    logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
-                    exit 1
-                else
-                    log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-                    code --wait $file
+                    logerror "❌ could not find current CP version from docker ps"
+                    continue
                 fi
+
+                if ! version_gt $tag "7.4.99"; then
+                    logerror "❌ command is available since CP 7.5 only"
+                    continue
+                fi
+
+                playground connector stop --connector $connector
+
+                echo "topic,partition,current-offset" > $file
+                docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --export --reset-offsets --to-current --all-topics --dry-run >> $file
+
+                editor=$(playground config get editor)
+                if [ "$editor" != "" ]
+                then
+                    log "✨ Update the connector offsets as per your needs, save and close the file to continue"
+                    if [ "$editor" = "code" ]
+                    then
+                        code --wait $file
+                    else
+                        $editor $file
+                    fi
+                else
+                    if [[ $(type code 2>&1) =~ "not found" ]]
+                    then
+                        logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
+                        exit 1
+                    else
+                        log "✨ Update the connector offsets as per your needs, save and close the file to continue"
+                        code --wait $file
+                    fi
+                fi
+
+                # remove any empty lines and header
+                grep -v '^$' "$file" > $tmp_dir/tmp && mv $tmp_dir/tmp "$file"
+                grep -v 'current-offset' "$file" > $tmp_dir/tmp && mv $tmp_dir/tmp "$file"
+
+                docker cp $file $container:/tmp/offsets.csv > /dev/null 2>&1
+                docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --reset-offsets --from-file /tmp/offsets.csv --execute
+
+                playground connector resume --connector $connector
             fi
-
-            # remove any empty lines and header
-            grep -v '^$' "$file" > $tmp_dir/tmp && mv $tmp_dir/tmp "$file"
-            grep -v 'current-offset' "$file" > $tmp_dir/tmp && mv $tmp_dir/tmp "$file"
-
-            docker cp $file $container:/tmp/offsets.csv > /dev/null 2>&1
-            docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --reset-offsets --from-file /tmp/offsets.csv --execute
-
-            playground connector resume --connector $connector
         fi
     fi
 done

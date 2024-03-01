@@ -35,6 +35,29 @@ else
   get_security_broker "--command-config"
 fi
 
+if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] 
+then
+    tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+    if [ $? != 0 ] || [ "$tag" == "" ]
+    then
+        logerror "❌ could not find current CP version from docker ps"
+        exit 1
+    fi
+fi
+
+function handle_first_class_offset() {
+    
+    if ! version_gt $tag "7.5.99"
+    then
+        logerror "❌ command is available since CP 7.6 only"
+        return 1
+    fi
+
+    get_connect_url_and_security
+    handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\""
+
+    echo "$curl_output" | jq .
+}
 items=($connector)
 length=${#items[@]}
 if ((length > 1))
@@ -67,22 +90,11 @@ do
             continue
         fi
 
-        tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
-        if [ $? != 0 ] || [ "$tag" == "" ]
+        handle_first_class_offset
+        if [ $? != 0 ]
         then
-            logerror "❌ could not find current CP version from docker ps"
             continue
         fi
-
-        if ! version_gt $tag "7.5.99"; then
-            logerror "❌ command is available since CP 7.6 only"
-            continue
-        fi
-
-        get_connect_url_and_security
-        handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\""
-
-        echo "$curl_output" | jq .
     else
         ##
         # SINK CONNECTOR
@@ -106,7 +118,16 @@ do
             fi
             docker run --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group $consumer_group --describe | grep -v PARTITION | sed '/^$/d'
         else
-            docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d'
+            if version_gt $tag "7.5.99"
+            then
+                handle_first_class_offset
+                if [ $? != 0 ]
+                then
+                    continue
+                fi
+            else
+                docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d'
+            fi
         fi
     fi
 done
