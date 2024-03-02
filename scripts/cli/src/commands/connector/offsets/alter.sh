@@ -86,8 +86,6 @@ function handle_first_class_offset() {
     echo "$curl_output" | jq .
 
     playground connector resume --connector $connector
-
-    playground connector offsets get --connector $connector
 }
 
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
