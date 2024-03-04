@@ -519,7 +519,7 @@ subcommands:
             🔥 HIGHLY RECOMMENDED: start in interactive mode by simple running <playground repro bootstrap> !
             
             👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%f0%9f%9b%a0-bootstrap-reproduction-model
-        usage: playground repro bootstrap [OPTIONS] [ARGUMENTS...]
+        usage: playground repro bootstrap [OPTIONS]
         options:
         - names:
           - --file

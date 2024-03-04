@@ -861,17 +861,6 @@ commands:
       🔥 HIGHLY RECOMMENDED: start in interactive mode by simple running <playground repro bootstrap> !
       
       👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%f0%9f%9b%a0-bootstrap-reproduction-model
-    catch_all:
-      label: arguments
-      help: |-
-        Arguments to use by example script
-
-        Most of examples support to get required options either by using arguments or environment variables.
-        
-        Example with Zendesk:
-
-        just use <playground run> command and search for zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME> .sh in this folder
-      required: false
     flags:
     - long: --file
       short: -f

@@ -407,7 +407,7 @@
         {
           "name": "bootstrap",
           "description": "🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n  \n  🔥 HIGHLY RECOMMENDED: start in interactive mode by simple running <playground repro bootstrap> !\n  \n  👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%f0%9f%9b%a0-bootstrap-reproduction-model\n",
-          "usage": "playground repro bootstrap [OPTIONS] [ARGUMENTS...]",
+          "usage": "playground repro bootstrap [OPTIONS]",
           "options": [
             {
               "names": [

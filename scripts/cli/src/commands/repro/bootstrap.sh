@@ -159,9 +159,7 @@ then
       array_flag_list+=("--pipeline=$sink_file")
     fi
   done # end while loop stop
-
-  IFS=' ' flag_list="${array_flag_list[*]}"
-  playground repro bootstrap --file $test_file $flag_list
+  playground repro bootstrap --file "$test_file" "${array_flag_list[*]}"
   exit 0
 fi
 
@@ -1307,4 +1305,4 @@ playground generate-fzf-find-files &
 playground open-docs --only-show-url
 log "🕹️  Ready? Run it now?"
 check_if_continue
-playground run -f $repro_dir/$repro_test_filename --force-interactive-repro $flag_list ${other_args[*]}
+playground run -f $repro_dir/$repro_test_filename --force-interactive-repro $flag_list
