@@ -159,7 +159,9 @@ then
       array_flag_list+=("--pipeline=$sink_file")
     fi
   done # end while loop stop
-  playground repro bootstrap --file $test_file "${array_flag_list[*]}"
+
+  IFS=' ' flag_list="${array_flag_list[*]}"
+  playground repro bootstrap --file $test_file $flag_list
   exit 0
 fi
 
@@ -639,12 +641,68 @@ then
     # update docker compose with producer container
     if [[ "$dir1" = *connect ]]
     then
-      get_producer_heredoc
+        cat << EOF >> $tmp_dir/producer
+
+  $producer_hostname:
+    build:
+      context: ../../$output_folder/$final_dir/$producer_hostname/
+    hostname: producer
+    container_name: $producer_hostname
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "$topic_name"
+      REPLICATION_FACTOR: 1
+      NUMBER_OF_PARTITIONS: 1
+      NB_MESSAGES: 10 # -1 for MAX_VALUE
+      MESSAGE_BACKOFF: 100 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-$producer_hostname"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      JAVA_OPTS: \${GRAFANA_AGENT_PRODUCER}
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
+      - ../../$output_folder/$final_dir/$producer_hostname/target/producer-1.0.0-jar-with-dependencies.jar:/producer-1.0.0-jar-with-dependencies.jar
+
+
+EOF
     fi
 
     if [[ "$dir1" = *ccloud ]]
     then
-      get_producer_ccloud_heredoc
+        cat << EOF >> $tmp_dir/producer
+
+  $producer_hostname:
+    build:
+      context: ../../$output_folder/$final_dir/$producer_hostname/
+    hostname: producer
+    container_name: $producer_hostname
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: \$BOOTSTRAP_SERVERS
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "https"
+      KAFKA_SASL_MECHANISM: "PLAIN"
+      KAFKA_SASL_JAAS_CONFIG: \$SASL_JAAS_CONFIG
+      KAFKA_SECURITY_PROTOCOL: "SASL_SSL"
+      TOPIC: "$topic_name"
+      REPLICATION_FACTOR: 3
+      NUMBER_OF_PARTITIONS: 1
+      NB_MESSAGES: 10 # -1 for MAX_VALUE
+      MESSAGE_BACKOFF: 100 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-$producer_hostname"
+      KAFKA_SCHEMA_REGISTRY_URL: \$SCHEMA_REGISTRY_URL
+      KAFKA_BASIC_AUTH_CREDENTIALS_SOURCE: \$BASIC_AUTH_CREDENTIALS_SOURCE
+      KAFKA_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: \$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO
+      JAVA_OPTS: \${GRAFANA_AGENT_PRODUCER}
+      EXTRA_ARGS: 
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
+      - ../../$output_folder/$final_dir/$producer_hostname/target/producer-1.0.0-jar-with-dependencies.jar:/producer-1.0.0-jar-with-dependencies.jar
+
+EOF
     fi
   done
 
@@ -675,7 +733,22 @@ then
     list="$list $producer_hostname"
 
   done
-  get_producer_build_heredoc
+    cat << EOF > $tmp_dir/build_producer
+for component in $list
+do
+    set +e
+    log "🏗 Building jar for \${component}"
+    docker run -i --rm -e KAFKA_CLIENT_TAG=\$KAFKA_CLIENT_TAG -e TAG=\$TAG_BASE -v "\${DIR}/\${component}":/usr/src/mymaven -v "\$HOME/.m2":/root/.m2 -v "\$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "\${DIR}/\${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=\$TAG -Dkafka.client.tag=\$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
+    if [ \$? != 0 ]
+    then
+        logerror "ERROR: failed to build java component $component"
+        tail -500 /tmp/result.log
+        exit 1
+    fi
+    set -e
+done
+
+EOF
   # log "✨ Adding command to build jar for $producer_hostname to $repro_test_file"
   cp $repro_test_file $tmp_dir/tmp_file
   line=$(grep -n 'playground start-environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
@@ -708,7 +781,9 @@ then
   set -e
   if [ $kafka_cli_producer_error = 1 ]
   then
-    get_producer_fixthis_heredoc
+    cat << EOF >> $tmp_dir/java_producer
+# 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
+EOF
   fi
 
   for((i=1;i<=$nb_producers;i++)); do
@@ -725,7 +800,9 @@ then
   done
   if [ $kafka_cli_producer_error = 1 ]
   then
-    get_producer_fixthis_heredoc
+    cat << EOF >> $tmp_dir/java_producer
+# 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
+EOF
   fi
   # log "✨ Adding command to run producer to $repro_test_file"
   cp $repro_test_file $tmp_dir/tmp_file
@@ -830,15 +907,30 @@ then
   custom_smt_name=${custom_smt_name:0:18}
   mkdir -p $repro_dir/$custom_smt_name/
   cp -Ra ../../other/custom-smt/MyCustomSMT/* $repro_dir/$custom_smt_name/
+    cat << EOF > $tmp_dir/build_custom_smt
+for component in $custom_smt_name
+do
+    set +e
+    log "🏗 Building jar for \${component}"
+    docker run -i --rm -e KAFKA_CLIENT_TAG=\$KAFKA_CLIENT_TAG -e TAG=\$TAG_BASE -v "\${DIR}/\${component}":/usr/src/mymaven -v "\$HOME/.m2":/root/.m2 -v "\$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "\${DIR}/\${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=\$TAG -Dkafka.client.tag=\$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
+    if [ \$? != 0 ]
+    then
+        logerror "ERROR: failed to build java component $component"
+        tail -500 /tmp/result.log
+        exit 1
+    fi
+    set -e
+done
 
-  get_custom_smt_build_heredoc
+EOF
+
   # log "✨ Adding command to build jar for $custom_smt_name to $repro_test_file"
   cp $repro_test_file $tmp_dir/tmp_file
   line=$(grep -n 'playground start-environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
   
   { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/build_custom_smt; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
 
-
+  get_connector_paths
   if [ "$connector_paths" == "" ]
   then
       logwarn "❌ skipping as it is not an example with connector, but --custom-smt is set"
