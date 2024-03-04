@@ -13,7 +13,7 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: myuser
       MONGO_INITDB_ROOT_PASSWORD: mypassword
-    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "myuser","--tlsMode", "requireTLS","--tlsCertificateKeyFile", "/tmp/mongo.pem", "--tlsCertificateKeyFilePassword", "confluent", "--setParameter", "tlsUseSystemCA=true"]
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "myuser","--tlsMode", "requireTLS","--tlsCertificateKeyFile", "/tmp/mongo.pem", "--tlsCertificateKeyFilePassword", "confluent", "--setParameter", "tlsUseSystemCA=true", "--tlsAllowInvalidCertificates"]
     # "--tlsAllowInvalidCertificates", "--tlsAllowConnectionsWithoutCertificates", "--tlsAllowInvalidHostnames"
 
   connect:
