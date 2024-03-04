@@ -223,6 +223,17 @@ then
     logwarn "❌ --enable-multiple-connect-workers is not supported with ccloud examples"
     exit 1
   fi
+  if [[ $test_file == *"environment"* ]] && [[ $test_file != *"plaintext"* ]]
+  then
+    logwarn "❌ --enable-multiple-connect-workers is only supported with plaintext environment"
+    exit 1
+  fi
+
+  if [ ! -z $PLAYGROUND_ENVIRONMENT ] && [ "$PLAYGROUND_ENVIRONMENT" != "plaintext" ]
+  then
+    logwarn "❌ --enable-multiple-connect-workers is only supported with plaintext environment"
+    exit 1
+  fi
   array_flag_list+=("--enable-multiple-connect-workers")
   export ENABLE_CONNECT_NODES=true
 
@@ -725,8 +736,8 @@ then
     then
       unset 'options[19]'
     fi
-
-    if [ ! -z $PLAYGROUND_ENVIRONMENT ] && [ "$PLAYGROUND_ENVIRONMENT" != "plaintext" ]
+  
+    if ([ ! -z $PLAYGROUND_ENVIRONMENT ] && [ "$PLAYGROUND_ENVIRONMENT" != "plaintext" ]) || ([[ $test_file == *"environment"* ]] && [[ $test_file != *"plaintext"* ]])
     then
       # --enable-multiple-connect-workers only for plaintext
       unset 'options[17]'
