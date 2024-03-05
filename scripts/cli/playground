@@ -5462,7 +5462,7 @@ function generate_fzf_find_files() {
 function generate_get_examples_list_with_fzf_connector_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_connector_only"
   rm -f $output_file
-  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect/connect-*-*/*' ! -path '*/scripts/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' ! -path '*/ccloud/*'  | while read file_path
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/connect/connect-*/*' ! -path '*/scripts/*' ! -path '*/security/*' ! -path '*/reproduction-models/*' ! -path '*/ccloud/*'  | while read file_path
   do
     if grep -q "scripts/utils.sh" "$file_path"; then
       generate_get_examples_add_emoji
