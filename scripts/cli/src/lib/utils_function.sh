@@ -3728,7 +3728,13 @@ function check_arm64_support() {
   if [ `uname -m` = "arm64" ]
   then
     test=$(echo "$DOCKER_COMPOSE_FILE" | awk -F"/" '{ print $(NF-2)"/"$(NF-1) }')
+    base_folder=$(echo $test | cut -d "/" -f 1)
     base_test=$(echo $test | cut -d "/" -f 2)
+    if [ "$base_folder" == "reproduction-models" ]
+    then
+      base_test=${base_test#*-}
+    fi
+    
     grep "${base_test}" ${DIR}/../../scripts/arm64-support-none.txt > /dev/null
     if [ $? = 0 ]
     then
