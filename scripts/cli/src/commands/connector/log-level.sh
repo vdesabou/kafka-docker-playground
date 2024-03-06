@@ -37,6 +37,16 @@ do
 
     tmp=$(echo "$curl_output" | jq -r '.config."connector.class"')
     package="${tmp%.*}"
+
+    type=$(echo "$curl_output" | jq -r '.type')
+    if [ "$type" == "sink" ]
+    then
+        log "🔗 also setting org.apache.kafka.connect.runtime.WorkerSinkTask to $level"
+        playground debug log-level set -p "org.apache.kafka.connect.runtime.WorkerSinkTask" -l $level
+    else
+        log "🔗 also setting org.apache.kafka.connect.runtime.WorkerSourceTask to $level"
+        playground debug log-level set -p "org.apache.kafka.connect.runtime.WorkerSourceTask" -l $level
+    fi
     # log "🧬 Set log level for connector $connector to $level"
     playground debug log-level set -p "$package" -l "$level"
 done
