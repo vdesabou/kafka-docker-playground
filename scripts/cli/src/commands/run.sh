@@ -1178,6 +1178,7 @@ then
       maybe_remove_flag "--connector-zip"
       maybe_remove_flag "--connector-tag"
       maybe_remove_flag "--connector-jar"
+      cd $test_file_directory
       connector_zip=$(playground get-zip-or-jar-with-fzf --type zip)
       if [[ $connector_zip == *"@"* ]]
       then
@@ -1191,6 +1192,7 @@ then
     then
       maybe_remove_flag "--connector-zip"
       maybe_remove_flag "--connector-jar"
+      cd $test_file_directory
       connector_jar=$(playground get-zip-or-jar-with-fzf --type jar)
       if [[ $connector_jar == *"@"* ]]
       then
