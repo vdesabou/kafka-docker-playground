@@ -37,7 +37,7 @@ elif grep -q "\"type\"\s*:\s*\"object\"" $schema_file
 then
     log "🔮 schema was identified as json schema"
     schema_type=JSON
-elif grep -q "\"type\"\s*:\s*\"record\"" $schema_file
+elif grep -q "\"type\"\s*:\s*\"record\"" $schema_file || grep -q "\"references\"\s*:" $schema_file
 then
     log "🔮 schema was identified as avro"
     schema_type=AVRO
@@ -46,11 +46,15 @@ else
     exit 1
 fi
 
-json="{\"schemaType\":\"$schema_type\"}"
-
-content=$(cat $schema_file | tr -d '\n' | tr -s ' ')
-json_new=$(echo $json | jq --arg content "$content" '. + { "schema": $content }')
-
+if grep -q "\"references\"\s*:" $schema_file
+then
+    log "🔮 schema was identified as avro with references, sending as is"
+    json_new=$(cat $schema_file | tr -d '\n' | tr -s ' ')
+else
+    json="{\"schemaType\":\"$schema_type\"}"
+    content=$(cat $schema_file | tr -d '\n' | tr -s ' ')
+    json_new=$(echo $json | jq --arg content "$content" '. + { "schema": $content }')
+fi
 
 if [[ -n "$id" ]]
 then
