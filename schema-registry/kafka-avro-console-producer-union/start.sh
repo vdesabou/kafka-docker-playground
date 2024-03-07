@@ -78,9 +78,8 @@ playground schema register --subject product << 'EOF'
 }
 EOF
 
-log "Register the Avro schema for AllTypes"
-
-playground schema register --subject alltypes-value << 'EOF'
+log "Register the Avro schema for avro-alltypes-value"
+playground schema register --subject avro-alltypes-value << 'EOF'
 {
   "schema":"[\"io.confluent.examples.avro.Customer\",\"io.confluent.examples.avro.Product\"]",
   "schemaType":"AVRO",
@@ -99,8 +98,8 @@ playground schema register --subject alltypes-value << 'EOF'
 }
 EOF
 
-log "Produce records to alltypes topic"
-playground topic produce --topic alltypes --forced-value '{ "io.confluent.examples.avro.Product": { "product_id": 1, "product_name" : "rice", "product_price" : 100.00 } }' --value-schema-id 3 << 'EOF'
+log "Produce records to avro-alltypes topic"
+playground topic produce --topic avro-alltypes --forced-value '{ "io.confluent.examples.avro.Product": { "product_id": 1, "product_name" : "rice", "product_price" : 100.00 } }' --value-schema-id 3 << 'EOF'
 {
   "fields": [
     {
@@ -122,7 +121,7 @@ playground topic produce --topic alltypes --forced-value '{ "io.confluent.exampl
 }
 EOF
 
-playground topic produce --topic alltypes --forced-value '{ "io.confluent.examples.avro.Customer": { "customer_id": 100, "customer_name": "acme", "customer_email": "acme@google.com", "customer_address": "1 Main St" } }' --value-schema-id 3 << 'EOF'
+playground topic produce --topic avro-alltypes --forced-value '{ "io.confluent.examples.avro.Customer": { "customer_id": 100, "customer_name": "acme", "customer_email": "acme@google.com", "customer_address": "1 Main St" } }' --value-schema-id 3 << 'EOF'
 {
   "fields": [
     {
@@ -149,4 +148,4 @@ playground topic produce --topic alltypes --forced-value '{ "io.confluent.exampl
 EOF
 
 log "Consuming records from this topic"
-playground topic consume --topic alltypes
+playground topic consume --topic avro-alltypes
