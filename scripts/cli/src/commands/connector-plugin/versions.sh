@@ -59,6 +59,12 @@ then
             exit 1
         fi
 
+        if [ "$curl_output" == "[]" ]
+        then
+            logwarn "❌ could not get versions for connector plugin $connector_plugin"
+            exit 0
+        fi
+
         if [[ "$(uname)" == "Darwin" ]]; then
             # macOS
             current_date=$(date -j -f "%Y-%m-%d" "$(date "+%Y-%m-%d")" "+%s")
