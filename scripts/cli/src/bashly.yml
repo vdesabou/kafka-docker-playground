@@ -1984,6 +1984,15 @@ commands:
 
           📢 If size is > 1Mb, --producer-property max.request.size and topic max.message.bytes will be automatically set to support the record size.
 
+      - long: --value-schema-id
+        arg: value-schema-id
+        validate: integer
+        required: false
+        help: |-
+          🔰 Do not auto register schema and specify schema id to use. 
+
+          It sets --property value.schema.id=x --property auto.register=false --property use.latest.version=true
+
       examples: |
 
         playground topic produce --tombstone --topic a-topic --key mykey

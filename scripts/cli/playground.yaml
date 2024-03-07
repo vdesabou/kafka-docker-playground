@@ -1713,6 +1713,14 @@ subcommands:
             
             Default value: 0
             
+        - names:
+          - --value-schema-id
+          argument: VALUE-SCHEMA-ID
+          description: | 
+            🔰 Do not auto register schema and specify schema id to use. 
+            
+            It sets --property value.schema.id=x --property auto.register=false --property use.latest.version=true
+            
       - name: create
         description: | 
           🆕 Create topic

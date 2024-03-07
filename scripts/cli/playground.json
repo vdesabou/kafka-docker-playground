@@ -1565,6 +1565,13 @@
               ],
               "argument": 0,
               "description": "🏋️ Record size in bytes, eg. 1048576 for 1MB\n\n📢 If size is > 1Mb, --producer-property max.request.size and topic max.message.bytes will be automatically set to support the record size.\n\nDefault value: 0\n"
+            },
+            {
+              "names": [
+                "--value-schema-id"
+              ],
+              "argument": "VALUE-SCHEMA-ID",
+              "description": "🔰 Do not auto register schema and specify schema id to use. \n\nIt sets --property value.schema.id=x --property auto.register=false --property use.latest.version=true\n"
             }
           ]
         },
