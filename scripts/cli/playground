@@ -4025,6 +4025,11 @@ playground_topic_produce_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--no-null")"
+    printf "    🪹 Never generate null fields even for optional fields\n    \n    N.B: only work with avro\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--validate-config VALIDATE-CONFIG (repeatable)")"
     printf "    🔩 Converter configuration parameters to use \n    \n    See docs:\n    https://docs.confluent.io/platform/current/schema-registry/connect.html#using-kconnect-long-with-sr\n    \n    🎓 Tip: you can pass multiple parameters by specifying --validate-config\n    multiple times\n"
     printf "    Allowed: scrub.invalid.names=true, enhanced.avro.schema.support=true, connect.meta.data=false, object.additional.properties=false, use.optional.for.nonrequired=true, ignore.default.for.nullables=true, generalized.sum.type.support=true, enhanced.protobuf.schema.support=true, generate.index.for.unions=false, int.for.enums=true, optional.for.nullables=true, generate.struct.for.nulls=true, wrapper.for.nullables=true, wrapper.for.raw.primitives=false\n"
@@ -5161,7 +5166,7 @@ playground_connector_log_level_usage() {
     printf "playground connector log-level\n"
     echo
 
-    printf "  🧬 Set connect log level\n  \n  🎓 Tip: it will also set\n  io.confluent.kafka.schemaregistry.client.rest.RestService (to see schema\n  registry rest requests) and\n  org.apache.kafka.connect.runtime.TransformationChain (to see records before\n  and after SMTs)\n"
+    printf "  🧬 Set connect log level\n  \n  🎓 Tip: it will also set\n  io.confluent.kafka.schemaregistry.client.rest.RestService (to see schema\n  registry rest requests) and\n  org.apache.kafka.connect.runtime.TransformationChain (to see records before\n  and after SMTs)\n          it will also set org.apache.kafka.connect.runtime.WorkerSinkTask for\n  sink and org.apache.kafka.connect.runtime.WorkerSourceTask for source\n  connectors.\n"
     echo
 
   else
@@ -17480,6 +17485,7 @@ playground_topic_produce_command() {
   sleep_time_between_batch="${args[--sleep-time-between-batch]}"
   compression_codec="${args[--compression-codec]}"
   value_schema_id="${args[--value-schema-id]}"
+  no_null="${args[--no-null]}"
   # Convert the space delimited string to an array
   eval "validate_config=(${args[--validate-config]})"
   eval "producer_property=(${args[--producer-property]})"
@@ -17526,7 +17532,6 @@ playground_topic_produce_command() {
   fi
 
   get_environment_used
-
   get_sr_url_and_security
 
   bootstrap_server="broker:9092"
@@ -17763,8 +17768,14 @@ playground_topic_produce_command() {
                   cat $tmp_dir/result.log | grep "Payload: " | sed 's/  Payload: //' > $tmp_dir/out.json
               ;;
               avro)
+                  if [[ -n "$no_null" ]]
+                  then
+                      no_null="true"
+                  else
+                      no_null="false"
+                  fi
                   schema_file_name="$(basename "${schema_file}")"
-                  docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/$schema_file_name --count $nb_messages_to_generate
+                  docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/$schema_file_name --count $nb_messages_to_generate --no-null "$no_null"
                   docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
               ;;
               json-schema)
@@ -28873,6 +28884,14 @@ playground_topic_produce_parse_requirements() {
 
         # :flag.case_no_arg
         args['--validate']=1
+        shift
+        ;;
+
+      # :flag.case
+      --no-null)
+
+        # :flag.case_no_arg
+        args['--no-null']=1
         shift
         ;;
 

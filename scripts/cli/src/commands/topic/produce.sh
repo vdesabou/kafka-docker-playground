@@ -19,6 +19,7 @@ max_nb_messages_per_batch="${args[--max-nb-messages-per-batch]}"
 sleep_time_between_batch="${args[--sleep-time-between-batch]}"
 compression_codec="${args[--compression-codec]}"
 value_schema_id="${args[--value-schema-id]}"
+no_null="${args[--no-null]}"
 # Convert the space delimited string to an array
 eval "validate_config=(${args[--validate-config]})"
 eval "producer_property=(${args[--producer-property]})"
@@ -299,8 +300,14 @@ function generate_data() {
                 cat $tmp_dir/result.log | grep "Payload: " | sed 's/  Payload: //' > $tmp_dir/out.json
             ;;
             avro)
+                if [[ -n "$no_null" ]]
+                then
+                    no_null="true"
+                else
+                    no_null="false"
+                fi
                 schema_file_name="$(basename "${schema_file}")"
-                docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/$schema_file_name --count $nb_messages_to_generate
+                docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/$schema_file_name --count $nb_messages_to_generate --no-null "$no_null"
                 docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
             ;;
             json-schema)

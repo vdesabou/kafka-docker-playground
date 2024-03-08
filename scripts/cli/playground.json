@@ -1539,6 +1539,13 @@
             },
             {
               "names": [
+                "--no-null"
+              ],
+              "argument": "",
+              "description": "🪹 Never generate null fields even for optional fields\n\nN.B: only work with avro\n"
+            },
+            {
+              "names": [
                 "--validate-config"
               ],
               "argument": [
@@ -2097,7 +2104,7 @@
         },
         {
           "name": "log-level",
-          "description": "🧬 Set connect log level\n  \n  🎓 Tip: it will also set io.confluent.kafka.schemaregistry.client.rest.RestService (to see schema registry rest requests) and org.apache.kafka.connect.runtime.TransformationChain (to see records before and after SMTs)\n",
+          "description": "🧬 Set connect log level\n  \n  🎓 Tip: it will also set io.confluent.kafka.schemaregistry.client.rest.RestService (to see schema registry rest requests) and org.apache.kafka.connect.runtime.TransformationChain (to see records before and after SMTs)\n          it will also set org.apache.kafka.connect.runtime.WorkerSinkTask for sink and org.apache.kafka.connect.runtime.WorkerSourceTask for source connectors.\n",
           "usage": "playground connector log-level [OPTIONS]",
           "options": [
             {

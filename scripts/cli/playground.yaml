@@ -1688,6 +1688,14 @@ subcommands:
             ☑️ Validate schema according to connect sink converter used
             
         - names:
+          - --no-null
+          argument: ""
+          description: | 
+            🪹 Never generate null fields even for optional fields
+            
+            N.B: only work with avro
+            
+        - names:
           - --validate-config
           argument: [scrub.invalid.names=true, enhanced.avro.schema.support=true, connect.meta.data=false, object.additional.properties=false, use.optional.for.nonrequired=true, ignore.default.for.nullables=true, generalized.sum.type.support=true, enhanced.protobuf.schema.support=true, generate.index.for.unions=false, int.for.enums=true, optional.for.nullables=true, generate.struct.for.nulls=true, wrapper.for.nullables=true, wrapper.for.raw.primitives=false]
           description: | 
@@ -2215,6 +2223,7 @@ subcommands:
           🧬 Set connect log level
             
             🎓 Tip: it will also set io.confluent.kafka.schemaregistry.client.rest.RestService (to see schema registry rest requests) and org.apache.kafka.connect.runtime.TransformationChain (to see records before and after SMTs)
+                    it will also set org.apache.kafka.connect.runtime.WorkerSinkTask for sink and org.apache.kafka.connect.runtime.WorkerSourceTask for source connectors.
         usage: playground connector log-level [OPTIONS]
         options:
         - names:

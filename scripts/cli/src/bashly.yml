@@ -1950,6 +1950,13 @@ commands:
         help: |-
           ☑️ Validate schema according to connect sink converter used
 
+      - long: --no-null
+        required: false
+        help: |-
+          🪹 Never generate null fields even for optional fields
+
+          N.B: only work with avro
+
       - long: --validate-config
         arg: validate-config
         help: |-
