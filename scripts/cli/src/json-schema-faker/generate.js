@@ -16,3 +16,5 @@ for (let i = 0; i < iterations; i++) {
   console.log(minifiedData);
 }
 // https://github.com/json-schema-faker/json-schema-faker/tree/master/docs
+
+// https://github.com/json-schema-faker/json-schema-faker/blob/master/docs/USAGE.md
