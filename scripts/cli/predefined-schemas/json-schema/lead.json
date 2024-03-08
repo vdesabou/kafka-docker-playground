@@ -1,0 +1,837 @@
+{
+  "properties": {
+    "Address": {
+      "connect.index": 17,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "properties": {
+            "City": {
+              "connect.index": 6,
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "Country": {
+              "connect.index": 4,
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "CountryCode": {
+              "connect.index": 8,
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "GeocodeAccuracy": {
+              "connect.index": 0,
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "Latitude": {
+              "connect.index": 5,
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "connect.type": "float64",
+                  "type": "number"
+                }
+              ]
+            },
+            "Longitude": {
+              "connect.index": 7,
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "connect.type": "float64",
+                  "type": "number"
+                }
+              ]
+            },
+            "PostalCode": {
+              "connect.index": 3,
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "State": {
+              "connect.index": 1,
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "description": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "StateCode": {
+              "connect.index": 9,
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "Street": {
+              "connect.index": 2,
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "title": "io.confluent.salesforce.Address",
+          "type": "object"
+        }
+      ]
+    },
+    "AnnualRevenue": {
+      "connect.index": 29,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "City": {
+      "connect.index": 10,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "CleanStatus": {
+      "connect.index": 48,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Company": {
+      "connect.index": 8,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "CompanyDunsNumber": {
+      "connect.index": 49,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "ConvertedAccountId": {
+      "connect.index": 34,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "ConvertedContactId": {
+      "connect.index": 35,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "ConvertedDate": {
+      "connect.index": 33,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "connect.type": "int32",
+          "connect.version": 1,
+          "title": "org.apache.kafka.connect.data.Date",
+          "type": "integer"
+        }
+      ]
+    },
+    "ConvertedOpportunityId": {
+      "connect.index": 36,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Country": {
+      "connect.index": 13,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "CreatedById": {
+      "connect.index": 39,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "CreatedDate": {
+      "connect.index": 38,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "connect.type": "int64",
+          "connect.version": 1,
+          "title": "org.apache.kafka.connect.data.Timestamp",
+          "type": "integer"
+        }
+      ]
+    },
+    "CurrentGenerators__c": {
+      "connect.index": 58,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "CustomId__c": {
+      "connect.index": 60,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "DandbCompanyId": {
+      "connect.index": 50,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Description": {
+      "connect.index": 24,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Email": {
+      "connect.index": 21,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "EmailBouncedDate": {
+      "connect.index": 52,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "connect.type": "int64",
+          "connect.version": 1,
+          "title": "org.apache.kafka.connect.data.Timestamp",
+          "type": "integer"
+        }
+      ]
+    },
+    "EmailBouncedReason": {
+      "connect.index": 51,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Fax": {
+      "connect.index": 20,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "FirstName": {
+      "connect.index": 4,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "GeocodeAccuracy": {
+      "connect.index": 16,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Id": {
+      "connect.index": 0,
+      "description": "Unique identifier for the object.",
+      "type": "string"
+    },
+    "IndividualId": {
+      "connect.index": 53,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Industry": {
+      "connect.index": 27,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "IsConverted": {
+      "connect.index": 32,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    },
+    "IsDeleted": {
+      "connect.index": 1,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    },
+    "IsPriorityRecord": {
+      "connect.index": 54,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    },
+    "IsUnreadByOwner": {
+      "connect.index": 37,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    },
+    "Jigsaw": {
+      "connect.index": 46,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "JigsawContactId": {
+      "connect.index": 47,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "LastActivityDate": {
+      "connect.index": 43,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "connect.type": "int32",
+          "connect.version": 1,
+          "title": "org.apache.kafka.connect.data.Date",
+          "type": "integer"
+        }
+      ]
+    },
+    "LastModifiedById": {
+      "connect.index": 41,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "LastModifiedDate": {
+      "connect.index": 40,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "connect.type": "int64",
+          "connect.version": 1,
+          "title": "org.apache.kafka.connect.data.Timestamp",
+          "type": "integer"
+        }
+      ]
+    },
+    "LastName": {
+      "connect.index": 3,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "LastReferencedDate": {
+      "connect.index": 45,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "connect.type": "int64",
+          "connect.version": 1,
+          "title": "org.apache.kafka.connect.data.Timestamp",
+          "type": "integer"
+        }
+      ]
+    },
+    "LastViewedDate": {
+      "connect.index": 44,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "connect.type": "int64",
+          "connect.version": 1,
+          "title": "org.apache.kafka.connect.data.Timestamp",
+          "type": "integer"
+        }
+      ]
+    },
+    "Latitude": {
+      "connect.index": 14,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "connect.type": "float64",
+          "type": "number"
+        }
+      ]
+    },
+    "LeadSource": {
+      "connect.index": 25,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Longitude": {
+      "connect.index": 15,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "connect.type": "float64",
+          "type": "number"
+        }
+      ]
+    },
+    "MasterRecordId": {
+      "connect.index": 2,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "MobilePhone": {
+      "connect.index": 19,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Name": {
+      "connect.index": 6,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "NumberOfEmployees": {
+      "connect.index": 30,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "connect.type": "int32",
+          "type": "integer"
+        }
+      ]
+    },
+    "NumberofLocations__c": {
+      "connect.index": 59,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "connect.type": "float64",
+          "type": "number"
+        }
+      ]
+    },
+    "OwnerId": {
+      "connect.index": 31,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Phone": {
+      "connect.index": 18,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "PhotoUrl": {
+      "connect.index": 23,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "PostalCode": {
+      "connect.index": 12,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Primary__c": {
+      "connect.index": 57,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "ProductInterest__c": {
+      "connect.index": 56,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Rating": {
+      "connect.index": 28,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "SICCode__c": {
+      "connect.index": 55,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Salutation": {
+      "connect.index": 5,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "State": {
+      "connect.index": 11,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Status": {
+      "connect.index": 26,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Street": {
+      "connect.index": 9,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "SystemModstamp": {
+      "connect.index": 42,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "connect.type": "int64",
+          "connect.version": 1,
+          "title": "org.apache.kafka.connect.data.Timestamp",
+          "type": "integer"
+        }
+      ]
+    },
+    "Title": {
+      "connect.index": 7,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Website": {
+      "connect.index": 22,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "_EventType": {
+      "connect.index": 62,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "_ObjectType": {
+      "connect.index": 61,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    }
+  },
+  "title": "io.confluent.salesforce.Lead",
+  "type": "object"
+}
