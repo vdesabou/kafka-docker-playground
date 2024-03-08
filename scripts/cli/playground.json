@@ -496,7 +496,14 @@
                 "--subject"
               ],
               "argument": "SUBJECT",
-              "description": "📛 Subject name\n"
+              "description": "📛 Subject name\n\nConflicts with: id\n"
+            },
+            {
+              "names": [
+                "--id"
+              ],
+              "argument": "ID",
+              "description": "💯 Schema id\n\nConflicts with: subject, deleted\n"
             },
             {
               "names": [
@@ -511,7 +518,7 @@
                 "--deleted"
               ],
               "argument": "",
-              "description": "🧟 Include soft deleted subjects\n"
+              "description": "🧟 Include soft deleted subjects\n\nConflicts with: id\n"
             }
           ]
         },

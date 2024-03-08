@@ -624,6 +624,16 @@ subcommands:
           description: | 
             📛 Subject name
             
+            Conflicts with: id
+            
+        - names:
+          - --id
+          argument: ID
+          description: | 
+            💯 Schema id
+            
+            Conflicts with: subject, deleted
+            
         - names:
           - --verbose
           - -v
@@ -636,6 +646,8 @@ subcommands:
           argument: ""
           description: | 
             🧟 Include soft deleted subjects
+            
+            Conflicts with: id
             
       - name: register
         description: | 

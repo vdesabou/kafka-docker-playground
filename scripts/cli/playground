@@ -2115,6 +2115,11 @@ playground_schema_get_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--id ID")"
+    printf "    💯 Schema id\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
     echo
@@ -15374,6 +15379,7 @@ playground_get_docker_compose_command() {
 playground_schema_get_command() {
   # src/commands/schema/get.sh
   subject="${args[--subject]}"
+  id="${args[--id]}"
   deleted="${args[--deleted]}"
   verbose="${args[--verbose]}"
 
@@ -15382,6 +15388,37 @@ playground_schema_get_command() {
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
   #log "tmp_dir is $tmp_dir"
+
+  if [[ -n "$id" ]]
+  then
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 curl command used"
+          echo "curl $sr_security -s "${sr_url}/schemas/ids/${id}""
+      fi
+
+      curl_output=$(curl $sr_security -s "${sr_url}/schemas/ids/${id}")
+      ret=$?
+      if [ $ret -eq 0 ]
+      then
+          if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
+
+          then
+              error_code=$(echo "$curl_output" | jq -r .error_code)
+              message=$(echo "$curl_output" | jq -r .message)
+              logerror "❌ Command failed with error code $error_code"
+              logerror "$message"
+              exit 1
+          else
+              versions=$(curl $sr_security -s "${sr_url}/schemas/ids/${id}")
+          fi
+      else
+          logerror "❌ curl request failed with error code $ret!"
+          exit 1
+      fi
+      echo "$curl_output" | jq .
+      exit 0
+  fi
 
   if [[ ! -n "$subject" ]]
   then
@@ -15516,7 +15553,10 @@ playground_schema_register_command() {
       fi
   fi
 
-  if grep -q "proto3" $schema_file
+  if grep -q "\"references\"\s*:" $schema_file
+  then
+      :
+  elif grep -q "proto3" $schema_file
   then
       log "🔮 schema was identified as protobuf"
       schema_type=PROTOBUF
@@ -15524,7 +15564,7 @@ playground_schema_register_command() {
   then
       log "🔮 schema was identified as json schema"
       schema_type=JSON
-  elif grep -q "\"type\"\s*:\s*\"record\"" $schema_file || grep -q "\"references\"\s*:" $schema_file
+  elif grep -q "\"type\"\s*:\s*\"record\"" $schema_file
   then
       log "🔮 schema was identified as avro"
       schema_type=AVRO
@@ -15535,7 +15575,7 @@ playground_schema_register_command() {
 
   if grep -q "\"references\"\s*:" $schema_file
   then
-      log "🔮 schema was identified as avro with references, sending as is"
+      log "🔮 schema was identified with references, sending as is"
       json_new=$(cat $schema_file | tr -d '\n' | tr -s ' ')
   else
       json="{\"schemaType\":\"$schema_type\"}"
@@ -25133,6 +25173,11 @@ playground_schema_get_parse_requirements() {
     case "$key" in
       # :flag.case
       --subject)
+        # :flag.conflicts
+        if [[ -n "${args['id']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "id" >&2
+          exit 1
+        fi
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
@@ -25141,6 +25186,27 @@ playground_schema_get_parse_requirements() {
           shift
         else
           printf "%s\n" "--subject requires an argument: --subject SUBJECT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --id)
+        # :flag.conflicts
+        for conflict in subject deleted; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--id']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--id requires an argument: --id ID" >&2
           exit 1
         fi
         ;;
@@ -25155,6 +25221,11 @@ playground_schema_get_parse_requirements() {
 
       # :flag.case
       --deleted)
+        # :flag.conflicts
+        if [[ -n "${args['id']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "id" >&2
+          exit 1
+        fi
 
         # :flag.case_no_arg
         args['--deleted']=1
@@ -25176,6 +25247,13 @@ playground_schema_get_parse_requirements() {
 
     esac
   done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--id'] && -n $(validate_integer "${args['--id']:-}") ]]; then
+    printf "validation error in %s:\n%s\n" "--id ID" "$(validate_integer "${args['--id']:-}")" >&2
+    exit 1
+  fi
 
   # :command.user_filter
   filter_error=$(filter_not_mdc_environment)

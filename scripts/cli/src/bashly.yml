@@ -982,10 +982,23 @@ commands:
         long: --subject
         required: false
         arg: subject
+        conflicts:
+          - "id"
         completions:
           - $(playground get-subject-list)
         help: |-
           📛 Subject name
+
+      - long: --id
+        required: false
+        validate: integer
+        arg: id
+        conflicts:
+          - "subject"
+          - "deleted"
+        help: |-
+           💯 Schema id
+
       - &verbose
         long: --verbose
         short: -v
@@ -993,6 +1006,8 @@ commands:
 
       - long: --deleted
         required: false
+        conflicts:
+          - "id"
         help: |-
           🧟 Include soft deleted subjects
     examples:

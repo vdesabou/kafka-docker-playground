@@ -1,4 +1,5 @@
 subject="${args[--subject]}"
+id="${args[--id]}"
 deleted="${args[--deleted]}"
 verbose="${args[--verbose]}"
 
@@ -7,6 +8,36 @@ get_sr_url_and_security
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
 #log "tmp_dir is $tmp_dir"
+
+if [[ -n "$id" ]]
+then
+    if [[ -n "$verbose" ]]
+    then
+        log "🐞 curl command used"
+        echo "curl $sr_security -s "${sr_url}/schemas/ids/${id}""
+    fi
+
+    curl_output=$(curl $sr_security -s "${sr_url}/schemas/ids/${id}")
+    ret=$?
+    if [ $ret -eq 0 ]
+    then
+        if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true 
+        then
+            error_code=$(echo "$curl_output" | jq -r .error_code)
+            message=$(echo "$curl_output" | jq -r .message)
+            logerror "❌ Command failed with error code $error_code"
+            logerror "$message"
+            exit 1
+        else
+            versions=$(curl $sr_security -s "${sr_url}/schemas/ids/${id}")
+        fi
+    else
+        logerror "❌ curl request failed with error code $ret!"
+        exit 1
+    fi
+    echo "$curl_output" | jq .
+    exit 0
+fi
 
 if [[ ! -n "$subject" ]]
 then
