@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "json-schema-faker": "^0.5.3",
-    "jsonminify": "^0.4.2"
+    "jsonminify": "^0.4.2",
+    "@faker-js/faker": "^8.4.1"
   }
 }

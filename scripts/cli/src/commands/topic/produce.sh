@@ -283,6 +283,12 @@ function generate_data() {
         log "☢️ --forced-key is set"
         echo "$forced_key" > $tmp_dir/out.json
     else
+        if [[ -n "$no_null" ]]
+        then
+            no_null="true"
+        else
+            no_null="false"
+        fi
         case "${schema_type}" in
             json|sql)
                 # https://github.com/MaterializeInc/datagen
@@ -300,19 +306,13 @@ function generate_data() {
                 cat $tmp_dir/result.log | grep "Payload: " | sed 's/  Payload: //' > $tmp_dir/out.json
             ;;
             avro)
-                if [[ -n "$no_null" ]]
-                then
-                    no_null="true"
-                else
-                    no_null="false"
-                fi
                 schema_file_name="$(basename "${schema_file}")"
                 docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/$schema_file_name --count $nb_messages_to_generate --no-null "$no_null"
                 docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
             ;;
             json-schema)
                 schema_file_name="$(basename "${schema_file}")"
-                docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate -e SCHEMA=/tmp/$schema_file_name vdesabou/json-schema-faker > $tmp_dir/out.json
+                docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate -e SCHEMA=/tmp/$schema_file_name -e NO_NULL="$no_null" vdesabou/json-schema-faker > $tmp_dir/out.json
             ;;
             protobuf)
                 # https://github.com/JasonkayZK/mock-protobuf.js

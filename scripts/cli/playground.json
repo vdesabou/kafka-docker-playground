@@ -1542,7 +1542,7 @@
                 "--no-null"
               ],
               "argument": "",
-              "description": "🪹 Never generate null fields even for optional fields\n\nN.B: only work with avro\n"
+              "description": "🪹 Never generate null fields even for optional fields\n\nN.B: only work with avro and json-schema\n"
             },
             {
               "names": [
