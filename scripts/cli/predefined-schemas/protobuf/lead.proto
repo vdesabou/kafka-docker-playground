@@ -1,0 +1,84 @@
+syntax = "proto3";
+package io.confluent.salesforce;
+
+import "google/type/date.proto";
+import "google/protobuf/timestamp.proto";
+
+message Lead {
+  string Id = 1;
+  bool IsDeleted = 2;
+  string MasterRecordId = 3;
+  string LastName = 4;
+  string FirstName = 5;
+  string Salutation = 6;
+  string Name = 7;
+  string Title = 8;
+  string Company = 9;
+  string Street = 10;
+  string City = 11;
+  string State = 12;
+  string PostalCode = 13;
+  string Country = 14;
+  double Latitude = 15;
+  double Longitude = 16;
+  string GeocodeAccuracy = 17;
+  AddressMessage Address = 18;
+  string Phone = 19;
+  string MobilePhone = 20;
+  string Fax = 21;
+  string Email = 22;
+  string Website = 23;
+  string PhotoUrl = 24;
+  string Description = 25;
+  string LeadSource = 26;
+  string Status = 27;
+  string Industry = 28;
+  string Rating = 29;
+  string AnnualRevenue = 30;
+  int32 NumberOfEmployees = 31;
+  string OwnerId = 32;
+  bool IsConverted = 33;
+  google.type.Date ConvertedDate = 34;
+  string ConvertedAccountId = 35;
+  string ConvertedContactId = 36;
+  string ConvertedOpportunityId = 37;
+  bool IsUnreadByOwner = 38;
+  google.protobuf.Timestamp CreatedDate = 39;
+  string CreatedById = 40;
+  google.protobuf.Timestamp LastModifiedDate = 41;
+  string LastModifiedById = 42;
+  google.protobuf.Timestamp SystemModstamp = 43;
+  google.type.Date LastActivityDate = 44;
+  google.protobuf.Timestamp LastViewedDate = 45;
+  google.protobuf.Timestamp LastReferencedDate = 46;
+  string Jigsaw = 47;
+  string JigsawContactId = 48;
+  string CleanStatus = 49;
+  string CompanyDunsNumber = 50;
+  string DandbCompanyId = 51;
+  string EmailBouncedReason = 52;
+  google.protobuf.Timestamp EmailBouncedDate = 53;
+  string IndividualId = 54;
+  bool IsPriorityRecord = 55;
+  string SICCode__c = 56;
+  string ProductInterest__c = 57;
+  string Primary__c = 58;
+  string CurrentGenerators__c = 59;
+  double NumberofLocations__c = 60;
+  string CustomId__c = 61;
+  string _ObjectType = 62;
+  string _EventType = 63;
+
+  message AddressMessage {
+    string GeocodeAccuracy = 1;
+    string State = 2;
+    string Street = 3;
+    string PostalCode = 4;
+    string Country = 5;
+    double Latitude = 6;
+    string City = 7;
+    double Longitude = 8;
+    string CountryCode = 9;
+    string StateCode = 10;
+  }
+}

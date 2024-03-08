@@ -15,7 +15,8 @@
                   "type": "null"
                 },
                 {
-                  "type": "string"
+                  "type": "string",
+                  "faker": "name.findName"
                 }
               ]
             },
