@@ -129,3 +129,53 @@ EOF
 log "Consuming records from this topic"
 playground topic consume --topic avro-alltypes
 
+
+# simpler
+playground topic produce --topic avro-alltypes2 << 'EOF'
+[ 
+  {
+  "fields": [
+    {
+      "name": "customer_id",
+      "type": "int"
+    },
+    {
+      "name": "customer_name",
+      "type": "string"
+    },
+    {
+      "name": "customer_email",
+      "type": "string"
+    },
+    {
+      "name": "customer_address",
+      "type": "string"
+    }
+  ],
+  "name": "Customer",
+  "namespace": "io.confluent.examples.avro",
+  "type": "record"
+  },
+  {
+    "fields": [
+      {
+        "name": "product_id",
+        "type": "int"
+      },
+      {
+        "name": "product_name",
+        "type": "string"
+      },
+      {
+        "name": "product_price",
+        "type": "double"
+      }
+    ],
+    "name": "Product",
+    "namespace": "io.confluent.examples.avro",
+    "type": "record"
+  }
+]
+EOF
+log "Consuming records from this topic"
+playground topic consume --topic avro-alltypes2
