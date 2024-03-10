@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/customer.schema.json",
+  "title": "Customer",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "firstName": {
+      "type": "string"
+    },
+    "lastName": {
+      "type": "string"
+    },
+    "address": {
+      "$ref": "address.schema.json"
+    }
+  },
+  "required": [
+    "firstName",
+    "lastName",
+    "address"
+  ]
+}

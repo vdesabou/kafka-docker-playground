@@ -23,7 +23,7 @@ no_null="${args[--no-null]}"
 # Convert the space delimited string to an array
 eval "validate_config=(${args[--validate-config]})"
 eval "producer_property=(${args[--producer-property]})"
-
+eval "references=(${args[--references]})"
 
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
@@ -34,8 +34,31 @@ then
     log "🐞 debug mode is on"
     trap 'code $tmp_dir' EXIT
 fi
+
+ref_schema_file=$tmp_dir/ref_schema
 key_schema_file=$tmp_dir/key_schema
 value_schema_file=$tmp_dir/value_schema
+
+for ref in "${references[@]}"
+do
+    log "ref is $ref"
+
+    if [[ $ref == @* ]]
+    then
+        # this is a schema file
+        argument_schema_file=$(echo "$ref" | cut -d "@" -f 2)
+        cp $argument_schema_file $ref_schema_file
+    elif [ -f "$ref" ]
+    then
+        cp $ref $ref_schema_file
+    else
+        echo "$ref" > "$ref_schema_file"
+    fi
+
+    identify_schema "$ref_schema_file" "ref"
+    ref_schema_type=$schema_type
+
+done
 
 if [ "$value" = "-" ]
 then

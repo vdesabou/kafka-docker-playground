@@ -1957,6 +1957,25 @@ commands:
 
           N.B: only work with avro and json-schema
 
+      - long: --reference
+        arg: reference
+        help: |-
+          🖇️ Schema reference
+          
+          See docs: https://docs.confluent.io/platform/7.6/schema-registry/fundamentals/serdes-develop/index.html#schema-references
+
+          🎓 Tip: you can pass multiple references by specifying --reference multiple times
+
+          🔥 You can either:
+          
+          * Set your own schema (avro, json-schema, protobuf) within single quotes (see examples) 
+          
+          * Use completion to select predefined schemas (or use your own schema file) 🎓 Tip: use <tab> completion to trigger fzf completion
+        required: false
+        repeatable: true
+        completions:
+          - $(playground get-predefined-schemas "$cur")
+
       - long: --validate-config
         arg: validate-config
         help: |-
