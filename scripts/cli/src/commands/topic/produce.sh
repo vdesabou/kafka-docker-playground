@@ -190,10 +190,10 @@ function identify_schema() {
     fi
 }
 
+ref_array_schema_file=$tmp_dir/ref_array_schema
   if [ ${#references[@]} -ne 0 ]
   then
     declare -a array_ref_name=()
-    ref_array_schema_file=$tmp_dir/ref_array_schema
     i=0
     list_file=""
     for ref in "${references[@]}"
