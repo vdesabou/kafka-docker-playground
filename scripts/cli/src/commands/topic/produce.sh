@@ -194,6 +194,8 @@ function identify_schema() {
   then
     declare -a array_ref_name=()
     ref_array_schema_file=$tmp_dir/ref_array_schema
+    i=0
+    list_file=""
     for ref in "${references[@]}"
     do
         log "🖇️ ref is $ref"
@@ -210,7 +212,8 @@ function identify_schema() {
             echo "$ref" > "$ref_schema_file"
         fi
 
-        jq -s '.' $ref_schema_file $ref_array_schema_file > $ref_array_schema_file
+        cp $ref_schema_file $tmp_dir/schema_ref_$i
+        list_file="$list_file $tmp_dir/schema_ref_$i"
 
         identify_schema "$ref_schema_file" "ref"
         ref_schema_type=$schema_type
@@ -221,7 +224,10 @@ function identify_schema() {
         playground schema register --subject "$ref_name" < "$ref_schema_file"
 
         array_ref_name+=("$ref_name")
+        ((i=i+1))
     done
+
+    jq -s '.' $list_file > $ref_array_schema_file
 
     json_new_file=$tmp_dir/json_new_file
     json="{\"schemaType\":\"JSON\"}"
@@ -232,12 +238,19 @@ function identify_schema() {
     curl_tmp_ref_schema=$tmp_dir/curl_tmp_ref_schema
     curl_ref_array_schema_file=$tmp_dir/curl_ref_array_schema
 
+    i=0
+    list_file=""
     for ref_name in "${array_ref_name[@]}"
     do
         reference="{\"name\":\"$ref_name\",\"subject\":\"$ref_name\",\"version\":1}"
         echo "$reference" > $curl_tmp_ref_schema
-        jq -s '.' $curl_ref_array_schema_file $curl_tmp_ref_schema > $curl_ref_array_schema_file
+        cp $curl_tmp_ref_schema $tmp_dir/ref_$i
+        list_file="$list_file $tmp_dir/ref_$i"
+        ((i=i+1))
     done
+
+    jq -s '.' $list_file > $curl_ref_array_schema_file
+
     references=$(cat $curl_ref_array_schema_file | tr -d '\n' | tr -s ' ')
 
     register_ref_array_schema=$tmp_dir/register_ref_array_schema
