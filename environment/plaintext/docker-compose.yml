@@ -554,7 +554,7 @@ services:
       - alertmanager
 
   grafana:
-    image: grafana/grafana:8.1.3
+    image: grafana/grafana:8.5.27
     hostname: grafana
     container_name: grafana
     profiles:
