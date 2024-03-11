@@ -202,13 +202,14 @@ then
 
           if [ "$first_loop" = true ]
           then
-              if [[ "$OSTYPE" == "darwin"* ]]
-              then
-                rm -rf ${DIR_UTILS}/../confluent-hub
-              else
-                log "Using sudo to remove ${DIR_UTILS}/../confluent-hub"
-                sudo rm -rf ${DIR_UTILS}/../confluent-hub
-              fi
+            if [[ "$OSTYPE" == "darwin"* ]]
+            then
+              rm -rf ${DIR_UTILS}/../confluent-hub
+            else
+              log "Using sudo to remove ${DIR_UTILS}/../confluent-hub"
+              sudo rm -rf ${DIR_UTILS}/../confluent-hub
+            fi
+            mkdir -p ${DIR_UTILS}/../confluent-hub
           fi
           log "🎱 Installing connector $owner/$name:$CONNECTOR_VERSION"
           set +e
@@ -341,6 +342,7 @@ else
           log "Using sudo to remove ${DIR_UTILS}/../confluent-hub"
           sudo rm -rf ${DIR_UTILS}/../confluent-hub
         fi
+        mkdir -p ${DIR_UTILS}/../confluent-hub
 
         for connector_path in ${connector_paths//,/ }
         do
