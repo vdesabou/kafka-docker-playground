@@ -127,7 +127,7 @@ services:
       - alertmanager
 
   grafana:
-    image: grafana/grafana:7.4.1
+    image: grafana/grafana:8.5.27
     hostname: grafana
     container_name: grafana
     environment:
