@@ -13,11 +13,15 @@
     },
     "address": {
       "$ref": "address.schema.json"
+    },
+    "email": {
+      "$ref": "email.schema.json"
     }
   },
   "required": [
     "firstName",
     "lastName",
-    "address"
+    "address",
+    "email"
   ]
 }
