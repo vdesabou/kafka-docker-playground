@@ -14,7 +14,7 @@ log "Register the Json Schema schema for address-json"
 playground schema register --subject address-json << 'EOF'
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/address.schema.json",
+  "$id": "address.schema.json",
   "title": "Address",
   "type": "object",
   "additionalProperties": false,
@@ -51,7 +51,7 @@ log "Register the Json Schema schema for json-schema-alltypes-value"
 playground schema register --subject json-schema-alltypes-value << 'EOF'
 {
   "schemaType": "JSON",
-  "schema": "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"$id\":\"http://example.com/customer.schema.json\",\"title\":\"Customer\",\"type\":\"object\",\"additionalProperties\":false,\"properties\":{\"firstName\":{\"type\":\"string\"},\"lastName\":{\"type\":\"string\"},\"address\":{\"$ref\":\"address.schema.json\"}},\"required\":[\"firstName\",\"lastName\",\"address\"]}",
+  "schema": "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"$id\":\"customer.schema.json\",\"title\":\"Customer\",\"type\":\"object\",\"additionalProperties\":false,\"properties\":{\"firstName\":{\"type\":\"string\"},\"lastName\":{\"type\":\"string\"},\"address\":{\"$ref\":\"address.schema.json\"}},\"required\":[\"firstName\",\"lastName\",\"address\"]}",
   "references": [
     {
       "name": "address.schema.json",
@@ -66,7 +66,7 @@ log "Produce records to json-schema-alltypes topic"
 playground topic produce --topic json-schema-alltypes --forced-value '{"firstName":"dolor","lastName":"tempor occaecat in","address":{"street":"id","street2":"anim esse commodo sint","city":"aute aliqua in tempor","postalCode":"in consectetur laborum","countryCode":"deserunt ex"}}' --value-schema-id 3 << 'EOF'
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/address.schema.json",
+  "$id": "address.schema.json",
   "title": "Address",
   "type": "object",
   "additionalProperties": false,
