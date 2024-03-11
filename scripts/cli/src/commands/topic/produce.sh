@@ -23,7 +23,7 @@ no_null="${args[--no-null]}"
 # Convert the space delimited string to an array
 eval "validate_config=(${args[--validate-config]})"
 eval "producer_property=(${args[--producer-property]})"
-eval "references=(${args[--references]})"
+eval "references=(${args[--reference]})"
 
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
@@ -38,27 +38,6 @@ fi
 ref_schema_file=$tmp_dir/ref_schema
 key_schema_file=$tmp_dir/key_schema
 value_schema_file=$tmp_dir/value_schema
-
-for ref in "${references[@]}"
-do
-    log "ref is $ref"
-
-    if [[ $ref == @* ]]
-    then
-        # this is a schema file
-        argument_schema_file=$(echo "$ref" | cut -d "@" -f 2)
-        cp $argument_schema_file $ref_schema_file
-    elif [ -f "$ref" ]
-    then
-        cp $ref $ref_schema_file
-    else
-        echo "$ref" > "$ref_schema_file"
-    fi
-
-    identify_schema "$ref_schema_file" "ref"
-    ref_schema_type=$schema_type
-
-done
 
 if [ "$value" = "-" ]
 then
@@ -211,6 +190,75 @@ function identify_schema() {
     fi
 }
 
+  if [ ${#references[@]} -ne 0 ]
+  then
+    declare -a array_ref_name=()
+    ref_array_schema_file=$tmp_dir/ref_array_schema
+    for ref in "${references[@]}"
+    do
+        log "🖇️ ref is $ref"
+
+        if [[ $ref == @* ]]
+        then
+            # this is a schema file
+            argument_schema_file=$(echo "$ref" | cut -d "@" -f 2)
+            cp $argument_schema_file $ref_schema_file
+        elif [ -f "$ref" ]
+        then
+            cp $ref $ref_schema_file
+        else
+            echo "$ref" > "$ref_schema_file"
+        fi
+
+        jq -s '.' $ref_schema_file $ref_array_schema_file > $ref_array_schema_file
+
+        identify_schema "$ref_schema_file" "ref"
+        ref_schema_type=$schema_type
+
+        ref_name=$(cat $ref_schema_file | jq -r '.["$id"]')
+
+        log "🔖 registering schema reference with subject $ref_name"
+        playground schema register --subject "$ref_name" < "$ref_schema_file"
+
+        array_ref_name+=("$ref_name")
+    done
+
+    json_new_file=$tmp_dir/json_new_file
+    json="{\"schemaType\":\"JSON\"}"
+    content=$(cat $value_schema_file | tr -d '\n' | tr -s ' ')
+    json_new=$(echo $json | jq --arg content "$content" '. + { "schema": $content }')
+    echo "$json_new" > $json_new_file
+    references=""
+    curl_tmp_ref_schema=$tmp_dir/curl_tmp_ref_schema
+    curl_ref_array_schema_file=$tmp_dir/curl_ref_array_schema
+
+    for ref_name in "${array_ref_name[@]}"
+    do
+        reference="{\"name\":\"$ref_name\",\"subject\":\"$ref_name\",\"version\":1}"
+        echo "$reference" > $curl_tmp_ref_schema
+        jq -s '.' $curl_ref_array_schema_file $curl_tmp_ref_schema > $curl_ref_array_schema_file
+    done
+    references=$(cat $curl_ref_array_schema_file | tr -d '\n' | tr -s ' ')
+
+    register_ref_array_schema=$tmp_dir/register_ref_array_schema
+
+    jq --argjson addition "$(cat $curl_ref_array_schema_file)" '. + {references: $addition}' $json_new_file > $register_ref_array_schema
+
+    log "🔖 registering schema with subject $topic-value and reference"
+    playground schema register --subject "${topic}-value" < $register_ref_array_schema
+
+    value_schema_id=$(playground schema get --subject "${topic}-value" | grep "subject" | cut -d "(" -f 2 | cut -d " " -f 2 | cut -d ")" -f 1)
+
+    if [[ "$value_schema_id" =~ ^-?[0-9]+$ ]]
+    then
+        :
+    else
+        logerror "❌ value schema id $value_schema_id is not valid"
+        exit 1
+    fi
+    
+fi
+
 if [[ -n "$key" ]]
 then
     if [[ $key == @* ]]
@@ -334,8 +382,15 @@ function generate_data() {
                 docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
             ;;
             json-schema)
+                # https://github.com/json-schema-faker/json-schema-faker/tree/master/docs
                 schema_file_name="$(basename "${schema_file}")"
-                docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate -e SCHEMA=/tmp/$schema_file_name -e NO_NULL="$no_null" vdesabou/json-schema-faker > $tmp_dir/out.json
+                if [ -f $ref_array_schema_file ]
+                then
+                    ref_array_schema_file_name="$(basename "${ref_array_schema_file}")"
+                    docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate -e SCHEMA=/tmp/$schema_file_name -e REFS=/tmp/$ref_array_schema_file_name -e NO_NULL="$no_null" vdesabou/json-schema-faker > $tmp_dir/out.json
+                else
+                    docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate -e SCHEMA=/tmp/$schema_file_name -e NO_NULL="$no_null" vdesabou/json-schema-faker > $tmp_dir/out.json
+                fi
             ;;
             protobuf)
                 # https://github.com/JasonkayZK/mock-protobuf.js

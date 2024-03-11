@@ -1696,6 +1696,24 @@ subcommands:
             N.B: only work with avro and json-schema
             
         - names:
+          - --reference
+          argument: REFERENCE
+          description: | 
+            🖇️ Schema reference
+            
+            See docs: https://docs.confluent.io/platform/7.6/schema-registry/fundamentals/serdes-develop/index.html#schema-references
+            
+            🎓 Tip: you can pass multiple references by specifying --reference multiple times
+            
+            🔥 You can either:
+            
+            * Set your own schema (avro, json-schema, protobuf) within single quotes (see examples) 
+            
+            * Use completion to select predefined schemas (or use your own schema file) 🎓 Tip: use <tab> completion to trigger fzf completion
+            
+            Repeatable: ✓ Yes
+            
+        - names:
           - --validate-config
           argument: [scrub.invalid.names=true, enhanced.avro.schema.support=true, connect.meta.data=false, object.additional.properties=false, use.optional.for.nonrequired=true, ignore.default.for.nullables=true, generalized.sum.type.support=true, enhanced.protobuf.schema.support=true, generate.index.for.unions=false, int.for.enums=true, optional.for.nullables=true, generate.struct.for.nulls=true, wrapper.for.nullables=true, wrapper.for.raw.primitives=false]
           description: | 

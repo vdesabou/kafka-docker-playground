@@ -1546,6 +1546,13 @@
             },
             {
               "names": [
+                "--reference"
+              ],
+              "argument": "REFERENCE",
+              "description": "🖇️ Schema reference\n\nSee docs: https://docs.confluent.io/platform/7.6/schema-registry/fundamentals/serdes-develop/index.html#schema-references\n\n🎓 Tip: you can pass multiple references by specifying --reference multiple times\n\n🔥 You can either:\n\n* Set your own schema (avro, json-schema, protobuf) within single quotes (see examples) \n\n* Use completion to select predefined schemas (or use your own schema file) 🎓 Tip: use <tab> completion to trigger fzf completion\n\nRepeatable: ✓ Yes\n"
+            },
+            {
+              "names": [
                 "--validate-config"
               ],
               "argument": [

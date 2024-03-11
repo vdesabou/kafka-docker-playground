@@ -7,11 +7,23 @@ if(process.env.NO_NULL == "true") {
   jsf.option('omitNulls', 'true');
 }
 const iterations = JSON.parse(process.env.NB_MESSAGES);
+
+const refs_name = process.env.REFS;
+let refs;
+if (refs_name) {
+  refs = JSON.parse(fs.readFileSync(refs_name, 'utf8'));
+}
+
 const schema_name = process.env.SCHEMA;
 const schema = JSON.parse(fs.readFileSync(schema_name, 'utf8'));
 
 for (let i = 0; i < iterations; i++) {
-  const data = jsf.generate(schema);
+  let data;
+  if (refs_name) {
+    data = jsf.generate(schema, refs);
+  } else {
+    data = jsf.generate(schema);
+  }
   const minifiedData = jsonminify(JSON.stringify(data));
   console.log(minifiedData);
 }
