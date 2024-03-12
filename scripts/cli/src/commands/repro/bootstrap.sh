@@ -159,7 +159,7 @@ then
       array_flag_list+=("--pipeline=$sink_file")
     fi
   done # end while loop stop
-  playground repro bootstrap --file "$test_file" "${array_flag_list[*]}"
+  playground repro bootstrap --file "$test_file" ${array_flag_list[*]}
   exit 0
 fi
 

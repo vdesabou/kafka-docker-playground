@@ -4030,11 +4030,6 @@ playground_topic_produce_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--reference REFERENCE (repeatable)")"
-    printf "    🖇️ Schema reference\n    \n    See docs:\n    https://docs.confluent.io/platform/7.6/schema-registry/fundamentals/serdes-develop/index.html#schema-references\n    \n    🎓 Tip: you can pass multiple references by specifying --reference multiple\n    times\n    \n    🔥 You can either:\n    \n    * Set your own schema (avro, json-schema, protobuf) within single quotes\n    (see examples)\n    \n    * Use completion to select predefined schemas (or use your own schema file)\n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
-    echo
-
-    # :flag.usage
     printf "  %s\n" "$(magenta "--validate-config VALIDATE-CONFIG (repeatable)")"
     printf "    🔩 Converter configuration parameters to use \n    \n    See docs:\n    https://docs.confluent.io/platform/current/schema-registry/connect.html#using-kconnect-long-with-sr\n    \n    🎓 Tip: you can pass multiple parameters by specifying --validate-config\n    multiple times\n"
     printf "    Allowed: scrub.invalid.names=true, enhanced.avro.schema.support=true, connect.meta.data=false, object.additional.properties=false, use.optional.for.nonrequired=true, ignore.default.for.nullables=true, generalized.sum.type.support=true, enhanced.protobuf.schema.support=true, generate.index.for.unions=false, int.for.enums=true, optional.for.nullables=true, generate.struct.for.nulls=true, wrapper.for.nullables=true, wrapper.for.raw.primitives=false\n"
@@ -14223,7 +14218,7 @@ playground_repro_bootstrap_command() {
         array_flag_list+=("--pipeline=$sink_file")
       fi
     done # end while loop stop
-    playground repro bootstrap --file "$test_file" "${array_flag_list[*]}"
+    playground repro bootstrap --file "$test_file" ${array_flag_list[*]}
     exit 0
   fi
 

@@ -1959,6 +1959,7 @@ commands:
 
       - long: --reference
         arg: reference
+        private: true
         help: |-
           🖇️ Schema reference
           
