@@ -21,6 +21,15 @@ function verbose_end () {
 }
 
 function log() {
+  if [ ! -z $PG_LOG_LEVEL ]
+  then
+    case "${PG_LOG_LEVEL}" in
+      WARN|ERROR)
+        return
+      ;;
+    esac
+  fi
+
   verbose_begin
   YELLOW='\033[0;33m'
   NC='\033[0m' # No Color
@@ -37,6 +46,14 @@ function logerror() {
 }
 
 function logwarn() {
+  if [ ! -z $PG_LOG_LEVEL ]
+  then
+    case "${PG_LOG_LEVEL}" in
+      INFO)
+        return
+      ;;
+    esac
+  fi
   verbose_begin
   PURPLE='\033[0;35m'
   NC='\033[0m' # No Color

@@ -17,6 +17,16 @@ flags:
 
     ❗ it can print sensitive information ❗
 
+- long: --output-level
+  short: -o
+  arg: level
+  allowed: [INFO, WARN, ERROR]
+  required: false
+  help: |-
+    ❕Log level used by all commands
+
+    Default is INFO (all INFO, WARN and ERROR will be printed in command output)
+
 commands:
 
 - name: help
