@@ -960,13 +960,11 @@ commands:
 
         🎓 Tip: use <tab> completion to trigger fzf completion
 
+    - long: --flag-list-base64
+      private: true
+
     examples:
     - playground repro bootstrap (interactive mode)
-    - playground repro bootstrap -f hdfs2<tab> -d "simple test"
-    - playground repro bootstrap -f /full/path/hdfs2-sink.sh -d "testing with avro producer" --producer avro --producer-schema-value myschema<tab>
-    - playground repro bootstrap -f hdfs2<tab> -d "testing with 2 protobuf producers" --producer protobuf --nb-producers 2
-    - playground repro bootstrap -f hdfs2<tab> -d "testing custom smt" --custom-smt
-    - playground repro bootstrap -f debeziumpostgres<tab> -d "create pipeline" --pipeline jdbcsink<tab>
 
 - name: get-docker-compose
   group: Kafka

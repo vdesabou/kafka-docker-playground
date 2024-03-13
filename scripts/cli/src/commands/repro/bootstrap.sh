@@ -5,6 +5,18 @@ description="${args[--description]}"
 producer="${args[--producer]}"
 nb_producers="${args[--nb-producers]}"
 add_custom_smt="${args[--custom-smt]}"
+flag_list_base64="${args[--flag-list-base64]}"
+
+if [[ -n "$flag_list_base64" ]]
+then
+  declare -a array_flag_list=()
+  encoded_array="$(playground state get run.repro_array_flag_list_base64)"
+  eval "$(echo "$encoded_array" | base64 --decode)"
+  IFS=' ' flag_list="${array_flag_list[*]}"
+  playground state del run.repro_array_flag_list_base64
+  playground repro bootstrap --file "$test_file" $flag_list
+  exit 0
+fi
 eval "pipeline_array=(${args[--pipeline]})"
 
 schema_file_key="${args[--producer-schema-key]}"
@@ -159,7 +171,13 @@ then
       array_flag_list+=("--pipeline=$sink_file")
     fi
   done # end while loop stop
-  playground repro bootstrap --file "$test_file" "${array_flag_list[*]}"
+
+  IFS=' ' flag_list="${array_flag_list[*]}"
+  array_declaration=$(declare -p array_flag_list)
+  encoded_array=$(echo "$array_declaration" | base64)
+  playground state set run.repro_array_flag_list_base64 "$encoded_array"
+
+  playground repro bootstrap --file "$test_file" --flag-list-base64
   exit 0
 fi
 
