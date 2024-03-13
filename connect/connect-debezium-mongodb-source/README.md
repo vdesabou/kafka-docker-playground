@@ -72,7 +72,10 @@ $ curl -X PUT \
      --data '{
                "connector.class" : "io.debezium.connector.mongodb.MongoDbConnector",
                "tasks.max" : "1",
-               "mongodb.hosts" : "debezium/mongodb:27017",
+                   "_comment": "old version before 2.4.x",
+    "mongodb.hosts": "debezium/mongodb:27017",
+    "_comment": "new version since 2.4.x",
+    "mongodb.connection.string": "mongodb://mongodb:27017",
 
                "_comment": "old version before 2.x",
                "mongodb.name": "dbserver1",
