@@ -133,7 +133,6 @@ log "Show content of customer table:"
 docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from customers'"
 
 log "Adding customers table to the connector"
-
 playground connector create-or-update --connector debezium-mysql-source  << EOF
 {
   "connector.class": "io.debezium.connector.mysql.MySqlConnector",
@@ -159,6 +158,10 @@ playground connector create-or-update --connector debezium-mysql-source  << EOF
   "read.only": "true",
   "signal.kafka.topic": "dbz-signals",
   "signal.kafka.bootstrap.servers": "broker:9092",
+
+  "_comment": "new version since 2.4.x",
+  "signal.enabled.channels": "kafka",
+
   "transforms": "RemoveDots",
   "transforms.RemoveDots.type": "org.apache.kafka.connect.transforms.RegexRouter",
   "transforms.RemoveDots.regex": "(.*)\\\\.(.*)\\\\.(.*)",
@@ -173,15 +176,15 @@ INSERT INTO customers (
   email,
   last_modified
 ) VALUES (
-  'Roger',
-  'roger@apache.org',
+  'Andy',
+  'andy@apache.org',
   NOW()
 );
 EOF
 
 set +e
 log "Verifying topic server1_mydb_customers : there will be only the new record"
-playground topic consume --topic server1_mydb_customers --min-expected-messages 3 --timeout 60
+playground topic consume --topic server1_mydb_customers --min-expected-messages 1 --timeout 60
 set -e
 
 log "Send Signal to the topic to start incremental snapshot"
