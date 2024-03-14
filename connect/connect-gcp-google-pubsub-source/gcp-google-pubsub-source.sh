@@ -10,6 +10,8 @@ then
      exit 1
 fi
 
+cd ../../connect/connect-gcp-google-pubsub-source
+
 if [ ! -f ${DIR}/pubsub-group-kafka-connector-1.2.0.jar ]
 then
      wget -q https://repo1.maven.org/maven2/com/google/cloud/pubsub-group-kafka-connector/1.2.0/pubsub-group-kafka-connector-1.2.0.jar
@@ -20,7 +22,6 @@ then
      wget -q https://repo1.maven.org/maven2/io/grpc/grpc-netty/1.54.0/grpc-netty-1.54.0.jar
 fi
 
-cd ../../connect/connect-gcp-google-pubsub-source
 GCP_KEYFILE="${PWD}/keyfile.json"
 if [ ! -f ${GCP_KEYFILE} ] && [ -z "$GCP_KEYFILE_CONTENT" ]
 then
