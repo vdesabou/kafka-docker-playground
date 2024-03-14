@@ -601,12 +601,6 @@ subcommands:
             
             Conflicts with: --producer
             
-        - names:
-          - --flag-list-base64
-          argument: ""
-          description: | 
-            
-            
   - name: get-docker-compose
     description: | 
         🐋 Get docker-compose

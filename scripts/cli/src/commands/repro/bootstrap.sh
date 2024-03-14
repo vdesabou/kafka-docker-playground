@@ -5,18 +5,7 @@ description="${args[--description]}"
 producer="${args[--producer]}"
 nb_producers="${args[--nb-producers]}"
 add_custom_smt="${args[--custom-smt]}"
-flag_list_base64="${args[--flag-list-base64]}"
 
-if [[ -n "$flag_list_base64" ]]
-then
-  declare -a array_flag_list=()
-  encoded_array="$(playground state get run.repro_array_flag_list_base64)"
-  eval "$(echo "$encoded_array" | base64 --decode)"
-  IFS=' ' flag_list="${array_flag_list[*]}"
-  playground state del run.repro_array_flag_list_base64
-  playground repro bootstrap --file "$test_file" $flag_list
-  exit 0
-fi
 eval "pipeline_array=(${args[--pipeline]})"
 
 schema_file_key="${args[--producer-schema-key]}"
@@ -67,7 +56,6 @@ then
   fi
   readonly MENU_LETS_GO="🏭 Create the reproduction model !" #0
 
-  MENU_PIPELINE="🔖 Create pipeline $(printf '%*s' $((${MAX_LENGTH}-18-${#MENU_PIPELINE})) ' ') --pipeline"
   MENU_ENABLE_CUSTOM_SMT="🔧 Add custom SMT $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_ENABLE_CUSTOM_SMT})) ' ') --custom-smt"
 
   readonly MENU_DISABLE_CUSTOM_SMT="❌🔧 Disable custom SMT" #3
@@ -80,6 +68,14 @@ then
   description=""
   while [ $stop != 1 ]
   do
+    length=${#pipeline_array[@]}
+    if ((length > 0))
+    then
+      MENU_PIPELINE="🔖 Add another sink to pipeline $(printf '%*s' $((${MAX_LENGTH}-32-${#MENU_PIPELINE})) ' ') --pipeline"
+    else
+      MENU_PIPELINE="🔖 Create pipeline with sink $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_PIPELINE})) ' ') --pipeline"
+    fi
+
     options=("$MENU_LETS_GO" "$MENU_PIPELINE" "$MENU_ENABLE_CUSTOM_SMT" "$MENU_DISABLE_CUSTOM_SMT" "$MENU_GO_BACK")
 
     connector_example=0
@@ -154,11 +150,13 @@ then
     then
       array_flag_list+=("--custom-smt")
       export CUSTOM_SMT=true
+      add_custom_smt="true"
     fi
     if [[ $res == *"$MENU_DISABLE_CUSTOM_SMT"* ]]
     then
       array_flag_list=("${array_flag_list[@]/"--custom-smt"}")
       unset CUSTOM_SMT
+      add_custom_smt=""
     fi
 
     if [[ $res == *"$MENU_PIPELINE"* ]]
@@ -169,16 +167,9 @@ then
         sink_file=$(echo "$sink_file" | cut -d "@" -f 2)
       fi
       array_flag_list+=("--pipeline=$sink_file")
+      pipeline_array+=("$sink_file")
     fi
   done # end while loop stop
-
-  IFS=' ' flag_list="${array_flag_list[*]}"
-  array_declaration=$(declare -p array_flag_list)
-  encoded_array=$(echo "$array_declaration" | base64)
-  playground state set run.repro_array_flag_list_base64 "$encoded_array"
-
-  playground repro bootstrap --file "$test_file" --flag-list-base64
-  exit 0
 fi
 
 if [[ $test_file == *"@"* ]]

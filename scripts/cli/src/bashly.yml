@@ -960,9 +960,6 @@ commands:
 
         🎓 Tip: use <tab> completion to trigger fzf completion
 
-    - long: --flag-list-base64
-      private: true
-
     examples:
     - playground repro bootstrap (interactive mode)
 
