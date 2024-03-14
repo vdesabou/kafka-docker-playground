@@ -3,7 +3,8 @@ version: '3.5'
 services:
 
   mongodb:
-    image: mongo:latest
+    # https://jira.mongodb.org/browse/SERVER-72839
+    image: mongo:7.0.5
     hostname: mongodb
     container_name: mongodb
     ports:
@@ -13,8 +14,7 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: myuser
       MONGO_INITDB_ROOT_PASSWORD: mypassword
-    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "myuser","--tlsMode", "requireTLS","--tlsCertificateKeyFile", "/tmp/mongo.pem", "--tlsCertificateKeyFilePassword", "confluent", "--setParameter", "tlsUseSystemCA=true", "--tlsAllowInvalidCertificates"]
-    # "--tlsAllowInvalidCertificates", "--tlsAllowConnectionsWithoutCertificates", "--tlsAllowInvalidHostnames"
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "myuser","--tlsMode", "requireTLS","--tlsCertificateKeyFile", "/tmp/mongo.pem", "--tlsCertificateKeyFilePassword", "confluent"]
 
   connect:
     depends_on:
