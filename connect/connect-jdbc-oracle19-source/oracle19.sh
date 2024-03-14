@@ -8,6 +8,7 @@ create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "../../connect/connect
 
 if [ ! -z "$SQL_DATAGEN" ]
 then
+     cd ../../connect/connect-jdbc-oracle19-source
      log "🌪️ SQL_DATAGEN is set"
      for component in oracle-datagen
      do
@@ -22,6 +23,7 @@ then
      fi
      set -e
      done
+     cd -
 else
      log "🛑 SQL_DATAGEN is not set"
 fi

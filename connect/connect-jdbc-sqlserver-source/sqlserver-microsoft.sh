@@ -16,6 +16,7 @@ cd -
 
 if [ ! -z "$SQL_DATAGEN" ]
 then
+     cd ../../connect/connect-jdbc-sqlserver-source
      log "🌪️ SQL_DATAGEN is set"
      for component in sqlserver-datagen
      do
@@ -30,6 +31,7 @@ then
      fi
      set -e
      done
+     cd -
 else
      log "🛑 SQL_DATAGEN is not set"
 fi

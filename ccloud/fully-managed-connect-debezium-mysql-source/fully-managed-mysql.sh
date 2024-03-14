@@ -4,6 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+cd ../../ccloud/fully-managed-connect-debezium-mysql-source
 if [ ! -z "$SQL_DATAGEN" ]
 then
      log "🌪️ SQL_DATAGEN is set"
@@ -23,6 +24,7 @@ then
 else
      log "🛑 SQL_DATAGEN is not set"
 fi
+cd -
 
 NGROK_AUTH_TOKEN=${NGROK_AUTH_TOKEN:-$1}
 

@@ -8,6 +8,7 @@ create_or_get_oracle_image "linuxx64_12201_database.zip" "../../connect/connect-
 
 if [ ! -z "$SQL_DATAGEN" ]
 then
+     cd ../../connect/connect-jdbc-oracle12-source
      log "🌪️ SQL_DATAGEN is set"
      for component in oracle-datagen
      do
@@ -22,6 +23,7 @@ then
      fi
      set -e
      done
+     cd -
 else
      log "🛑 SQL_DATAGEN is not set"
 fi

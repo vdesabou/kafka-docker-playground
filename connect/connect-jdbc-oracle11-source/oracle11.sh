@@ -6,6 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 if [ ! -z "$SQL_DATAGEN" ]
 then
+     cd ../../connect/connect-jdbc-oracle11-source
      log "🌪️ SQL_DATAGEN is set"
      for component in oracle-datagen
      do
@@ -20,6 +21,7 @@ then
      fi
      set -e
      done
+     cd -
 else
      log "🛑 SQL_DATAGEN is not set"
 fi

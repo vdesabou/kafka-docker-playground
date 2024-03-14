@@ -10,6 +10,7 @@ then
     exit 111
 fi
 
+cd ../../ccloud/connect-debezium-sqlserver-source
 if [ ! -z "$SQL_DATAGEN" ]
 then
      log "🌪️ SQL_DATAGEN is set"
@@ -29,7 +30,7 @@ then
 else
      log "🛑 SQL_DATAGEN is not set"
 fi
-
+cd -
 #############
 playground start-environment --environment ccloud --docker-compose-override-file "${PWD}/docker-compose.yml"
 

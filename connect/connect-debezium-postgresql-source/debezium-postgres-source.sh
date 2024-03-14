@@ -12,6 +12,7 @@ fi
 
 if [ ! -z "$SQL_DATAGEN" ]
 then
+     cd ../../connect/connect-debezium-postgresql-source
      log "🌪️ SQL_DATAGEN is set"
      for component in postgres-datagen
      do
@@ -26,6 +27,7 @@ then
      fi
      set -e
      done
+     cd -
 else
      log "🛑 SQL_DATAGEN is not set"
 fi
