@@ -22,21 +22,21 @@ EOF
 log "Creating RabbitMQ Sink connector"
 playground connector create-or-update --connector rabbitmq-sink  << EOF
 {
-               "connector.class" : "io.confluent.connect.rabbitmq.sink.RabbitMQSinkConnector",
-               "tasks.max" : "1",
-               "topics": "rabbitmq-messages",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
-               "rabbitmq.queue" : "myqueue",
-               "rabbitmq.host" : "rabbitmq",
-               "rabbitmq.username" : "myuser",
-               "rabbitmq.password" : "mypassword",
-               "rabbitmq.exchange": "exchange1",
-               "rabbitmq.routing.key": "rkey1",
-               "rabbitmq.delivery.mode": "PERSISTENT",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+     "connector.class" : "io.confluent.connect.rabbitmq.sink.RabbitMQSinkConnector",
+     "tasks.max" : "1",
+     "topics": "rabbitmq-messages",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
+     "rabbitmq.queue" : "myqueue",
+     "rabbitmq.host" : "rabbitmq",
+     "rabbitmq.username" : "myuser",
+     "rabbitmq.password" : "mypassword",
+     "rabbitmq.exchange": "exchange1",
+     "rabbitmq.routing.key": "rkey1",
+     "rabbitmq.delivery.mode": "PERSISTENT",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 
