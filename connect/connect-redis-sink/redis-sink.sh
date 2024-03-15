@@ -16,13 +16,13 @@ EOF
 log "Creating Redis sink connector"
 playground connector create-or-update --connector redis-sink  << EOF
 {
-               "connector.class": "com.github.jcustenborder.kafka.connect.redis.RedisSinkConnector",
-                    "redis.hosts": "redis:6379",
-                    "tasks.max": "1",
-                    "key.converter":"org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter":"org.apache.kafka.connect.storage.StringConverter",
-                    "topics": "users"
-          }
+     "connector.class": "com.github.jcustenborder.kafka.connect.redis.RedisSinkConnector",
+     "redis.hosts": "redis:6379",
+     "tasks.max": "1",
+     "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+     "value.converter":"org.apache.kafka.connect.storage.StringConverter",
+     "topics": "users"
+}
 EOF
 
 sleep 10
