@@ -430,6 +430,32 @@ function check_bash_version() {
   fi
 }
 
+function check_playground_version() {
+  set +e
+  X=3
+  git fetch
+  latest_commit_date=$(git log -1 --format=%cd --date=short)
+  remote_commit_date=$(git log -1 --format=%cd --date=short origin/master)
+
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    latest_commit_date_seconds=$(date -j -f "%Y-%m-%d" "$latest_commit_date" +%s)
+    remote_commit_date_seconds=$(date -j -f "%Y-%m-%d" "$remote_commit_date" +%s)
+  else
+    latest_commit_date_seconds=$(date -d "$latest_commit_date" +%s)
+    remote_commit_date_seconds=$(date -d "$remote_commit_date" +%s)
+  fi
+
+  difference=$(( (remote_commit_date_seconds - latest_commit_date_seconds) / (60*60*24) ))
+
+  if [ $difference -gt $X ]
+  then
+      logwarn "🥶 The current repo version is older than $X days ($difference days), please refresh your version using git pull !"
+      check_if_continue
+  fi
+  set -e
+}
+
 function set_profiles() {
   # https://docs.docker.com/compose/profiles/
   profile_control_center_command=""

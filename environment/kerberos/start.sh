@@ -9,7 +9,7 @@ verify_docker_and_memory
 
 check_docker_compose_version
 check_bash_version
-set_profiles
+check_playground_versionset_profiles
 
 # Starting kerberos,
 # Avoiding starting up all services at the begining to generate the keytab first

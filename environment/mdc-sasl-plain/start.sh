@@ -9,7 +9,7 @@ verify_docker_and_memory
 
 check_docker_compose_version
 check_bash_version
-
+check_playground_version
 # https://docs.docker.com/compose/profiles/
 profile_control_center_command=""
 if [ -z "$ENABLE_CONTROL_CENTER" ]

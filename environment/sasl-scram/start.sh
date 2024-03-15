@@ -9,7 +9,7 @@ verify_docker_and_memory
 
 check_docker_compose_version
 check_bash_version
-set_profiles
+check_playground_versionset_profiles
 
 ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
