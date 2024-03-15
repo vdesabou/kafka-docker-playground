@@ -5258,6 +5258,11 @@ playground_connector_create_or_update_usage() {
     printf "    ✅ Validate config using PUT /connector-plugins/(string:name)/config/validate\n    (https://docs.confluent.io/platform/current/connect/references/restapi.html#put--connector-plugins-(string-name)-config-validate)\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--skip-automatic-connector-config")"
+    printf "    🤖 If example is run (playground run) with --environment flag, automatic\n    configuration to adapt to the environment is added.\n    \n    This flag allows to skip this automatic configuration.\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -21062,6 +21067,7 @@ playground_connector_create_or_update_command() {
   package=${args[--package]}
   validate=${args[--validate]}
   wait_for_zero_lag=${args[--wait-for-zero-lag]}
+  skip_automatic_connector_config=${args[--skip-automatic-connector-config]}
   verbose="${args[--verbose]}"
 
   connector_type=$(playground state get run.connector_type)
@@ -21162,7 +21168,12 @@ playground_connector_create_or_update_command() {
           handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate"
       else
           get_connect_url_and_security
-          add_connector_config_based_on_environment "$environment" "$json_content"
+          if [[ -n "$skip_automatic_connector_config" ]]
+          then
+              log "🤖 --skip-automatic-connector-config is set"
+          else
+              add_connector_config_based_on_environment "$environment" "$json_content"
+          fi
           # add mandatory name field
           new_json_content=$(echo $json_content | jq ". + {\"name\": \"$connector\"}")
 
@@ -21233,7 +21244,12 @@ playground_connector_create_or_update_command() {
       handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config"
   else
       get_connect_url_and_security
-      add_connector_config_based_on_environment "$environment" "$json_content"
+      if [[ -n "$skip_automatic_connector_config" ]]
+      then
+          log "🤖 --skip-automatic-connector-config is set"
+      else
+          add_connector_config_based_on_environment "$environment" "$json_content"
+      fi
       echo "$json_content" > $new_json_file
       handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$new_json_file $connect_url/connectors/$connector/config"
   fi
@@ -31352,6 +31368,14 @@ playground_connector_create_or_update_parse_requirements() {
 
         # :flag.case_no_arg
         args['--validate']=1
+        shift
+        ;;
+
+      # :flag.case
+      --skip-automatic-connector-config)
+
+        # :flag.case_no_arg
+        args['--skip-automatic-connector-config']=1
         shift
         ;;
 

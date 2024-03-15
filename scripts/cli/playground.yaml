@@ -2315,6 +2315,14 @@ subcommands:
           description: | 
             ✅ Validate config using PUT /connector-plugins/(string:name)/config/validate (https://docs.confluent.io/platform/current/connect/references/restapi.html#put--connector-plugins-(string-name)-config-validate)
             
+        - names:
+          - --skip-automatic-connector-config
+          argument: ""
+          description: | 
+            🤖 If example is run (playground run) with --environment flag, automatic configuration to adapt to the environment is added. 
+            
+            This flag allows to skip this automatic configuration.
+            
       - name: update
         description: | 
           🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.

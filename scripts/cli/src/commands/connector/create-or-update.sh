@@ -4,6 +4,7 @@ level=${args[--level]}
 package=${args[--package]}
 validate=${args[--validate]}
 wait_for_zero_lag=${args[--wait-for-zero-lag]}
+skip_automatic_connector_config=${args[--skip-automatic-connector-config]}
 verbose="${args[--verbose]}"
 
 connector_type=$(playground state get run.connector_type)
@@ -104,7 +105,12 @@ then
         handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate"
     else
         get_connect_url_and_security
-        add_connector_config_based_on_environment "$environment" "$json_content"
+        if [[ -n "$skip_automatic_connector_config" ]]
+        then
+            log "🤖 --skip-automatic-connector-config is set"
+        else
+            add_connector_config_based_on_environment "$environment" "$json_content"
+        fi
         # add mandatory name field
         new_json_content=$(echo $json_content | jq ". + {\"name\": \"$connector\"}")
 
@@ -173,7 +179,12 @@ then
     handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config"
 else
     get_connect_url_and_security
-    add_connector_config_based_on_environment "$environment" "$json_content"
+    if [[ -n "$skip_automatic_connector_config" ]]
+    then
+        log "🤖 --skip-automatic-connector-config is set"
+    else
+        add_connector_config_based_on_environment "$environment" "$json_content"
+    fi
     echo "$json_content" > $new_json_file
     handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$new_json_file $connect_url/connectors/$connector/config"
 fi
