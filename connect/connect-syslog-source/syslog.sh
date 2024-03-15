@@ -10,14 +10,14 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 log "Creating Syslog Source connector"
 playground connector create-or-update --connector syslog-source  << EOF
 {
-               "tasks.max": "1",
-                    "connector.class": "io.confluent.connect.syslog.SyslogSourceConnector",
-                    "syslog.port": "5454",
-                    "syslog.listener": "TCP",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }
+     "tasks.max": "1",
+     "connector.class": "io.confluent.connect.syslog.SyslogSourceConnector",
+     "syslog.port": "5454",
+     "syslog.listener": "TCP",
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 

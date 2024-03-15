@@ -14,16 +14,16 @@ docker cp example.crt.pem connect:/
 log "Creating Syslog Source connector"
 playground connector create-or-update --connector syslog-source  << EOF
 {
-               "tasks.max": "1",
-                    "connector.class": "io.confluent.connect.syslog.SyslogSourceConnector",
-                    "syslog.port": "5454",
-                    "syslog.listener": "TCPSSL",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1",
-                    "syslog.ssl.key.path": "/example.key.pem",
-                    "syslog.ssl.cert.chain.path": "/example.crt.pem"
-          }
+     "tasks.max": "1",
+     "connector.class": "io.confluent.connect.syslog.SyslogSourceConnector",
+     "syslog.port": "5454",
+     "syslog.listener": "TCPSSL",
+     "confluent.license": "",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1",
+     "syslog.ssl.key.path": "/example.key.pem",
+     "syslog.ssl.cert.chain.path": "/example.crt.pem"
+}
 EOF
 
 
