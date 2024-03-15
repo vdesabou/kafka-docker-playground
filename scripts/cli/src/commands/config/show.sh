@@ -2,7 +2,7 @@
 if [ ! -f "$root_folder/playground_config.ini" ]
 then
     logerror "$root_folder/playground_config.ini does not exist !"
-    logerror "Make sure to always use the CLI to run exampls"
+    logerror "Make sure to always use the CLI to run examples"
     exit 1
 fi
 ini_load $root_folder/playground_config.ini
