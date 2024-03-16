@@ -1,0 +1,14 @@
+{
+  "name": "Docker",
+  "dockerFile": "Dockerfile",
+  "runArgs": [ "--privileged" ],
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash",
+    "go.gopath": "~/go"
+  },
+  "extensions": [
+    "golang.go",
+  ],
+"postCreateCommand": "dockerd-entrypoint.sh --experimental &",
+"remoteUser": "rootless"
+}
