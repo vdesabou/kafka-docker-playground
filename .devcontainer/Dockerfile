@@ -1,4 +1,4 @@
-FROM docker:19.03.1-dind-rootless
+FROM docker:19.03.12-dind-rootless@sha256:7606255ca83a7f516fae1b78299b79774f1f798ba9fc792a7231e7b0967ddb05
 # Go into root
 USER root
 # Install your dependencies, this can be changed
