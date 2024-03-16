@@ -1,4 +1,4 @@
-FROM docker:24.0.9-dind-rootless
+FROM docker:19.03.1-dind-rootless
 # Go into root
 USER root
 # Install your dependencies, this can be changed
