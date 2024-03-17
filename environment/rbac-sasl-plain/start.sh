@@ -14,7 +14,8 @@ verify_docker_and_memory
 
 check_docker_compose_version
 check_bash_version
-check_playground_versionset_profiles
+check_playground_version
+set_profiles
 
 mkdir -p ${DIR}/scripts/security/ldap_certs
 cd ${DIR}/scripts/security/ldap_certs
