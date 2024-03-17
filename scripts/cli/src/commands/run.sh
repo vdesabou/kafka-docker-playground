@@ -459,7 +459,13 @@ then
   GREEN='\033[0;32m'
   NC='\033[0m' # No Color
 
-  readonly MENU_LETS_GO="🚀 Run the example !" #0
+  if [[ -n "$force_interactive_repro" ]]
+  then
+    MENU_LETS_GO="🚀 Run the reproduction model !" #0
+  else
+    MENU_LETS_GO="🚀 Run the example !" #0
+  fi
+  
   MENU_PROBLEM="❌ The example cannot be executed, check error(s) 👉" #1
   readonly MENU_OPEN_FILE="📖 Open the file in text editor"
   set +e

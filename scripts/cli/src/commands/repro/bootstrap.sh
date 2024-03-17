@@ -1312,6 +1312,4 @@ log "🛠️ Number of repro models available: $(get_cli_metric nb_existing_repr
 
 playground generate-fzf-find-files &
 playground open-docs --only-show-url
-log "🕹️  Ready? Run it now?"
-check_if_continue
 playground run -f $repro_dir/$repro_test_filename --force-interactive-repro $flag_list

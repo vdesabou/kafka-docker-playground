@@ -11866,7 +11866,13 @@ playground_run_command() {
     GREEN='\033[0;32m'
     NC='\033[0m' # No Color
 
-    readonly MENU_LETS_GO="🚀 Run the example !" #0
+    if [[ -n "$force_interactive_repro" ]]
+    then
+      MENU_LETS_GO="🚀 Run the reproduction model !" #0
+    else
+      MENU_LETS_GO="🚀 Run the example !" #0
+    fi
+
     MENU_PROBLEM="❌ The example cannot be executed, check error(s) 👉" #1
     readonly MENU_OPEN_FILE="📖 Open the file in text editor"
     set +e
@@ -15411,8 +15417,6 @@ EOF
 
   playground generate-fzf-find-files &
   playground open-docs --only-show-url
-  log "🕹️  Ready? Run it now?"
-  check_if_continue
   playground run -f $repro_dir/$repro_test_filename --force-interactive-repro $flag_list
 }
 
