@@ -1,9 +1,21 @@
 {
-  "name": "pg",
+  "name": "kafka-docker-playground",
   "settings": {
-    "terminal.integrated.shell.linux": "/bin/bash"
+    "terminal.integrated.defaultProfile.linux": "zsh",
+    "terminal.integrated.profiles.linux": {
+      "bash": {
+        "path": "bash",
+        "icon": "terminal-bash"
+      },
+      "zsh": {
+        "path": "zsh"
+      }
+    }
   },
   "features": {
-      "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+      "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+      "ghcr.io/mikaello/devcontainer-features/modern-shell-utils:1": {},
+      "ghcr.io/devcontainers-contrib/features/fzf:1": {},
+      "ghcr.io/devcontainers-contrib/features/starship:1": {}
   }
 }
