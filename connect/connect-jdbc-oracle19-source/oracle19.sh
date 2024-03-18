@@ -115,22 +115,22 @@ EOF
 log "Creating Oracle source connector"
 playground connector create-or-update --connector oracle-source  << EOF
 {
-               "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
-               "tasks.max":"1",
-               "connection.user": "C##MYUSER",
-               "connection.password": "mypassword",
-               "connection.url": "jdbc:oracle:thin:@oracle:1521/ORCLCDB",
-               "numeric.mapping":"best_fit",
-               "mode":"timestamp",
-               "poll.interval.ms":"1000",
-               "validate.non.null":"false",
-               "schema.pattern": "C##MYUSER",
-               "table.whitelist":"CUSTOMERS",
-               "timestamp.column.name":"UPDATE_TS",
-               "topic.prefix":"oracle-",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
-          }
+     "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
+     "tasks.max":"1",
+     "connection.user": "C##MYUSER",
+     "connection.password": "mypassword",
+     "connection.url": "jdbc:oracle:thin:@oracle:1521/ORCLCDB",
+     "numeric.mapping":"best_fit",
+     "mode":"timestamp",
+     "poll.interval.ms":"1000",
+     "validate.non.null":"false",
+     "schema.pattern": "C##MYUSER",
+     "table.whitelist":"CUSTOMERS",
+     "timestamp.column.name":"UPDATE_TS",
+     "topic.prefix":"oracle-",
+     "errors.log.enable": "true",
+     "errors.log.include.messages": "true"
+}
 EOF
 
 
