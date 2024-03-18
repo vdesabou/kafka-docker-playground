@@ -25,6 +25,11 @@
       "ghcr.io/devcontainers/features/docker-in-docker:2": {},
       "ghcr.io/mikaello/devcontainer-features/modern-shell-utils:1": {},
       "ghcr.io/devcontainers-contrib/features/fzf:1": {},
-      "ghcr.io/devcontainers-contrib/features/starship:1": {}
+      "ghcr.io/devcontainers-contrib/features/starship:1": {},
+      "ghcr.io/devcontainers/features/java:1": {
+          "version": "none",
+          "installGradle": "false",
+          "installMaven": "true"
+      }
   }
 }
