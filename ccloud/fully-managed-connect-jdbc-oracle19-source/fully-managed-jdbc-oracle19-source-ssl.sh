@@ -212,13 +212,14 @@ playground connector create-or-update --connector $connector_name << EOF
      "topic.prefix":"oracle-",
 
      "ssl.mode": "verify-ca",
-     "ssl.truststorefile": "$PWD/security/truststore.jks",
+     "ssl.truststorefile": "$PWD/ssl/truststore.jks",
      "ssl.truststorepassword": "welcome123",
-
      "tasks.max" : "1"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 300
+
+#      "ssl.server.cert.dn": "CN=server,C=US", not needed as we use verify-ca
 
 sleep 5
 
