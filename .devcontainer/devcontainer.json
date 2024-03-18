@@ -1,5 +1,8 @@
 {
   "name": "kafka-docker-playground",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
   "settings": {
     "terminal.integrated.defaultProfile.linux": "zsh",
     "terminal.integrated.profiles.linux": {
@@ -12,6 +15,12 @@
       }
     }
   },
+  "remoteUser": "devpod",
+  "remoteEnv": {
+    "PATH": "${containerEnv:PATH}:/workspaces/kafka-docker-playground/scripts/cli",
+    "C3_PORT": "9023"
+  },
+  "forwardPorts": [9023],
   "features": {
       "ghcr.io/devcontainers/features/docker-in-docker:2": {},
       "ghcr.io/mikaello/devcontainer-features/modern-shell-utils:1": {},
