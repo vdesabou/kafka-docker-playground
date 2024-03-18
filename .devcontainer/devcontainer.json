@@ -15,7 +15,7 @@
       }
     }
   },
-  "remoteUser": "${localEnv:USER}",
+  "remoteUser": "vsaboulin",
   "remoteEnv": {
     "PATH": "${containerEnv:PATH}:/workspaces/kafka-docker-playground/scripts/cli",
     "C3_PORT": "9023"

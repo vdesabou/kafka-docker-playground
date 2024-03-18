@@ -1,4 +1,4 @@
-ARG USERNAME=$USER
+ARG USERNAME=vsaboulin
 FROM mcr.microsoft.com/devcontainers/java:11
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
