@@ -40,7 +40,7 @@ fi
 
 export AWS_REGION=$(aws configure get region | tr '\r' '\n')
 
-AWS_BUCKET_TIERED_STORAGE=aws-playground-tiered-storage$TAG
+AWS_BUCKET_TIERED_STORAGE=pg-bucket-${USER}
 AWS_BUCKET_TIERED_STORAGE=${AWS_BUCKET_TIERED_STORAGE//[-.]/}
 export AWS_BUCKET_TIERED_STORAGE
 
