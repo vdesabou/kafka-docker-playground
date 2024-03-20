@@ -123,6 +123,8 @@ log "Deleting fully managed connector $connector_name, it might fail..."
 playground connector delete --connector $connector_name
 set -e
 
+base64_truststore=$(cat $PWD/security/truststore.jks | base64)
+
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
@@ -144,7 +146,7 @@ playground connector create-or-update --connector $connector_name << EOF
   "topic.prefix":"mysql-",
   "tasks.max": "1",
   "ssl.mode": "verify-ca",
-  "ssl.truststorefile": "$PWD/security/truststore.jks",
+  "ssl.truststorefile": "data:text/plain;base64,$base64_truststore",
   "ssl.truststorepassword": "mypassword"
 }
 EOF
