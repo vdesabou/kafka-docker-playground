@@ -2,9 +2,9 @@
 if [ ! -f "$root_folder/playground_config.ini" ]
 then
     # set defaults
-    playground config editor code > /dev/null 2>&1
-    playground config clipboard true > /dev/null 2>&1
-    playground config folder_zip_or_jar ~ > /dev/null 2>&1
+    playground config set editor code > /dev/null 2>&1
+    playground config set clipboard true > /dev/null 2>&1
+    playground config set folder_zip_or_jar ~ > /dev/null 2>&1
 fi
 ini_load $root_folder/playground_config.ini
 
