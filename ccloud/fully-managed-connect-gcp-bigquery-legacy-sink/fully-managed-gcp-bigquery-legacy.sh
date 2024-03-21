@@ -68,7 +68,7 @@ playground topic produce -t bqtopic --nb-messages 10 --forced-value '{"f1":"valu
 }
 EOF
 
-connector_name="BigQuerySink"
+connector_name="BigQuerySink_$USER"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
 playground connector delete --connector $connector_name
@@ -77,22 +77,22 @@ set -e
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
-     "connector.class": "BigQuerySink",
-     "name": "BigQuerySink",
-     "kafka.auth.mode": "KAFKA_API_KEY",
-     "kafka.api.key": "$CLOUD_KEY",
-     "kafka.api.secret": "$CLOUD_SECRET",
-     "topics": "bqtopic",
-     "keyfile" : "$GCP_KEYFILE_CONTENT",
-     "project" : "$GCP_PROJECT",
-     "datasets" : "$DATASET",
-     "input.data.format" : "AVRO",
-     "auto.create.tables" : "true",
-     "sanitize.topics" : "true",
-     "auto.update.schemas" : "true",
-     "sanitize.field.names" : "true",
-     "allow.schema.unionization" :"true",
-     "tasks.max" : "1"
+  "connector.class": "BigQuerySink",
+  "name": "$connector_name",
+  "kafka.auth.mode": "KAFKA_API_KEY",
+  "kafka.api.key": "$CLOUD_KEY",
+  "kafka.api.secret": "$CLOUD_SECRET",
+  "topics": "bqtopic",
+  "keyfile" : "$GCP_KEYFILE_CONTENT",
+  "project" : "$GCP_PROJECT",
+  "datasets" : "$DATASET",
+  "input.data.format" : "AVRO",
+  "auto.create.tables" : "true",
+  "sanitize.topics" : "true",
+  "auto.update.schemas" : "true",
+  "sanitize.field.names" : "true",
+  "allow.schema.unionization" :"true",
+  "tasks.max" : "1"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 300

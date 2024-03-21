@@ -48,7 +48,7 @@ NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
 log "Send message to RabbitMQ in myqueue"
 docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"
 
-connector_name="RabbitMQSource"
+connector_name="RabbitMQSource_$USER"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
 playground connector delete --connector $connector_name
@@ -58,7 +58,7 @@ log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
      "connector.class": "RabbitMQSource",
-     "name": "RabbitMQSource",
+     "name": "$connector_name",
      "kafka.auth.mode": "KAFKA_API_KEY",
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",

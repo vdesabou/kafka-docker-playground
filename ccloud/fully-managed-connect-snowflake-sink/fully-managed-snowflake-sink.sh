@@ -143,7 +143,7 @@ playground topic produce -t test_table --nb-messages 3 << 'EOF'
 }
 EOF
 
-connector_name="SnowflakeSink"
+connector_name="SnowflakeSink_$USER"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
 playground connector delete --connector $connector_name
@@ -152,21 +152,21 @@ set -e
 log "Creating fully managed connector"
 playground -v connector create-or-update --connector $connector_name << EOF
 {
-     "connector.class": "SnowflakeSink",
-     "name": "SnowflakeSink",
-     "kafka.auth.mode": "KAFKA_API_KEY",
-     "kafka.api.key": "$CLOUD_KEY",
-     "kafka.api.secret": "$CLOUD_SECRET",
-     "input.data.format": "AVRO",
-     "topics": "test_table",
-     "snowflake.url.name": "$SNOWFLAKE_URL",
-     "snowflake.user.name": "$PLAYGROUND_USER",
-     
-     "snowflake.private.key":"$RSA_PRIVATE_KEY",
-     "snowflake.private.key.passphrase": "confluent",
-     "snowflake.database.name": "$PLAYGROUND_DB",
-     "snowflake.schema.name":"PUBLIC",
-     "tasks.max" : "1"
+  "connector.class": "SnowflakeSink",
+  "name": "$connector_name",
+  "kafka.auth.mode": "KAFKA_API_KEY",
+  "kafka.api.key": "$CLOUD_KEY",
+  "kafka.api.secret": "$CLOUD_SECRET",
+  "input.data.format": "AVRO",
+  "topics": "test_table",
+  "snowflake.url.name": "$SNOWFLAKE_URL",
+  "snowflake.user.name": "$PLAYGROUND_USER",
+  
+  "snowflake.private.key":"$RSA_PRIVATE_KEY",
+  "snowflake.private.key.passphrase": "confluent",
+  "snowflake.database.name": "$PLAYGROUND_DB",
+  "snowflake.schema.name":"PUBLIC",
+  "tasks.max" : "1"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 300

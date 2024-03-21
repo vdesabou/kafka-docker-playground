@@ -60,7 +60,7 @@ set -e
 log "Copy generalized.quickstart.json to bucket $AWS_BUCKET_NAME/quickstart"
 aws s3 cp generalized.quickstart.json s3://$AWS_BUCKET_NAME/quickstart/generalized.quickstart.json
 
-connector_name="S3Source"
+connector_name="S3Source_$USER"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
 playground connector delete --connector $connector_name

@@ -134,7 +134,7 @@ playground topic produce -t s3_topic --nb-messages 10 --forced-value '{"f1":"val
 }
 EOF
 
-connector_name="S3_SINK_CUSTOM"
+connector_name="S3_SINK_CUSTOM_$USER"
 set +e
 log "Deleting confluent cloud custom connector $connector_name, it might fail..."
 playground connector delete --connector $connector_name

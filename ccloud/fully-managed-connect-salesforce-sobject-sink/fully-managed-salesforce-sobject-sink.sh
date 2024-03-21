@@ -116,7 +116,7 @@ log "Create $PUSH_TOPICS_NAME"
 docker exec sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" -f \"/tmp/MyLeadPushTopics.apex\""
 
 log "Creating Salesforce PushTopics Source connector"
-connector_name="SalesforcePushTopicSource"
+connector_name="SalesforcePushTopicSource_$USER"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
 playground connector delete --connector $connector_name
@@ -126,7 +126,7 @@ log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
      "connector.class": "SalesforcePushTopicSource",
-     "name": "SalesforcePushTopicSource",
+     "name": "$connector_name",
      "kafka.auth.mode": "KAFKA_API_KEY",
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",
@@ -157,7 +157,7 @@ log "Verify we have received the data in sfdc-pushtopic-leads topic"
 playground topic consume --topic sfdc-pushtopic-leads --min-expected-messages 1 --timeout 60
 
 log "Creating Salesforce SObject Sink connector"
-connector_name="SalesforceSObjectSink"
+connector_name="SalesforceSObjectSink_$USER"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
 playground connector delete --connector $connector_name

@@ -65,7 +65,7 @@ set +e
 aws s3 rm s3://$DATABRICKS_AWS_BUCKET_NAME --recursive --region $DATABRICKS_AWS_BUCKET_REGION
 set -e
 
-connector_name="DatagenSource"
+connector_name="DatagenSource_$USER"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
 playground connector delete --connector $connector_name
@@ -88,7 +88,7 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 300
 
-connector_name="DatabricksDeltaLakeSink"
+connector_name="DatabricksDeltaLakeSink_$USER"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
 playground connector delete --connector $connector_name
@@ -99,7 +99,7 @@ playground connector create-or-update --connector $connector_name << EOF
 {
      "topics": "pageviews",
      "input.data.format": "AVRO",
-     "connector.class": "DatabricksDeltaLakeSink",
+     "name": "$connector_name",
      "name": "DatabricksDeltaLakeSink",
      "kafka.auth.mode": "KAFKA_API_KEY",
      "kafka.api.key": "$CLOUD_KEY",

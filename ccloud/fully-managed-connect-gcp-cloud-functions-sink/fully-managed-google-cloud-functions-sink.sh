@@ -51,7 +51,7 @@ playground topic produce -t functions-messages --nb-messages 10 --forced-value '
 }
 EOF
 
-connector_name="GoogleCloudFunctionsSink"
+connector_name="GoogleCloudFunctionsSink_$USER"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
 playground connector delete --connector $connector_name
@@ -60,17 +60,17 @@ set -e
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
-     "connector.class": "GoogleCloudFunctionsSink",
-     "name": "GoogleCloudFunctionsSink",
-     "kafka.auth.mode": "KAFKA_API_KEY",
-     "kafka.api.key": "$CLOUD_KEY",
-     "kafka.api.secret": "$CLOUD_SECRET",
-     "topics": "functions-messages",
-     "function.name": "$FUNCTION",
-     "project.id": "$GCP_PROJECT",
-     "input.data.format" : "AVRO",
-     "gcf.credentials.json" : $GCP_KEYFILE_CONTENT,
-     "tasks.max" : "1"
+  "connector.class": "GoogleCloudFunctionsSink",
+  "name": "$connector_name",
+  "kafka.auth.mode": "KAFKA_API_KEY",
+  "kafka.api.key": "$CLOUD_KEY",
+  "kafka.api.secret": "$CLOUD_SECRET",
+  "topics": "functions-messages",
+  "function.name": "$FUNCTION",
+  "project.id": "$GCP_PROJECT",
+  "input.data.format" : "AVRO",
+  "gcf.credentials.json" : $GCP_KEYFILE_CONTENT,
+  "tasks.max" : "1"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 300

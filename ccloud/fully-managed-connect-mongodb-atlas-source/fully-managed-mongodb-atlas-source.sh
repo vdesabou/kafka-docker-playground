@@ -13,7 +13,7 @@ log "Creating MongoDB source connector"
 playground connector create-or-update --connector mongodb-source2 << EOF
 {
      "connector.class" : "MongoDbAtlasSource",
-     "name": "mongodb-source2",
+     "name": "$connector_name",
      "kafka.auth.mode": "KAFKA_API_KEY",
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",

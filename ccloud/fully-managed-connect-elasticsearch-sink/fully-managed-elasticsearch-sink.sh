@@ -48,7 +48,7 @@ NGROK_URL=$(curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0]
 NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
 NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
 
-connector_name="ElasticsearchSink"
+connector_name="ElasticsearchSink_$USER"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
 playground connector delete --connector $connector_name
@@ -57,16 +57,16 @@ set -e
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
-     "connector.class": "ElasticsearchSink",
-     "name": "ElasticsearchSink",
-     "kafka.auth.mode": "KAFKA_API_KEY",
-     "kafka.api.key": "$CLOUD_KEY",
-     "kafka.api.secret": "$CLOUD_SECRET",
-     "input.data.format": "AVRO",
-     "topics": "test-elasticsearch-sink",
-     "key.ignore": "true",
-     "connection.url": "http://$NGROK_HOSTNAME:$NGROK_PORT",
-     "tasks.max" : "1"
+  "connector.class": "ElasticsearchSink",
+  "name": "$connector_name",
+  "kafka.auth.mode": "KAFKA_API_KEY",
+  "kafka.api.key": "$CLOUD_KEY",
+  "kafka.api.secret": "$CLOUD_SECRET",
+  "input.data.format": "AVRO",
+  "topics": "test-elasticsearch-sink",
+  "key.ignore": "true",
+  "connection.url": "http://$NGROK_HOSTNAME:$NGROK_PORT",
+  "tasks.max" : "1"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 300

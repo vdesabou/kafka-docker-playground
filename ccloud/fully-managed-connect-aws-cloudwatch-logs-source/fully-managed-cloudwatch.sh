@@ -75,7 +75,7 @@ do
      aws logs put-log-events --log-group $LOG_GROUP --log-stream $LOG_STREAM --log-events timestamp=`date +%s000`,message="This is a log #${i}" --sequence-token ${token}
 done
 
-connector_name="CloudWatchLogsSource"
+connector_name="CloudWatchLogsSource_$USER"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
 playground connector delete --connector $connector_name
@@ -85,7 +85,7 @@ log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
     "connector.class": "CloudWatchLogsSource",
-    "name": "CloudWatchLogsSource",
+    "name": "$connector_name",
     "kafka.auth.mode": "KAFKA_API_KEY",
     "kafka.api.key": "$CLOUD_KEY",
     "kafka.api.secret": "$CLOUD_SECRET",

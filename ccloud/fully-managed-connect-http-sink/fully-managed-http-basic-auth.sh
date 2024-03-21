@@ -59,7 +59,7 @@ playground topic produce -t http-topic --nb-messages 10 --forced-value '{"f1":"v
 }
 EOF
 
-connector_name="HttpSink"
+connector_name="HttpSink_$USER"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
 playground connector delete --connector $connector_name
@@ -68,20 +68,20 @@ set -e
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
-     "connector.class": "HttpSink",
-     "name": "HttpSink",
-     "kafka.auth.mode": "KAFKA_API_KEY",
-     "kafka.api.key": "$CLOUD_KEY",
-     "kafka.api.secret": "$CLOUD_SECRET",
-     "topics": "http-topic",
-     "input.data.format": "AVRO",
-     "http.api.url": "http://$NGROK_HOSTNAME:$NGROK_PORT/api/messages",
-     "tasks.max" : "1",
-     "auth.type": "BASIC",
-     "connection.user": "admin",
-     "connection.password": "password",
-     "request.body.format" : "json",
-     "headers": "Content-Type: application/json"
+  "connector.class": "HttpSink",
+  "name": "$connector_name",
+  "kafka.auth.mode": "KAFKA_API_KEY",
+  "kafka.api.key": "$CLOUD_KEY",
+  "kafka.api.secret": "$CLOUD_SECRET",
+  "topics": "http-topic",
+  "input.data.format": "AVRO",
+  "http.api.url": "http://$NGROK_HOSTNAME:$NGROK_PORT/api/messages",
+  "tasks.max" : "1",
+  "auth.type": "BASIC",
+  "connection.user": "admin",
+  "connection.password": "password",
+  "request.body.format" : "json",
+  "headers": "Content-Type: application/json"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 300

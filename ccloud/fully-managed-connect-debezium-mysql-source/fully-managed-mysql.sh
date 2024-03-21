@@ -114,7 +114,7 @@ INSERT INTO team (
 );
 EOF
 
-connector_name="MySqlCdcSource"
+connector_name="MySqlCdcSource_$USER"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
 playground connector delete --connector $connector_name
@@ -124,7 +124,7 @@ log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
     "connector.class": "MySqlCdcSource",
-    "name": "MySqlCdcSource",
+    "name": "$connector_name",
     "kafka.auth.mode": "KAFKA_API_KEY",
     "kafka.api.key": "$CLOUD_KEY",
     "kafka.api.secret": "$CLOUD_SECRET",

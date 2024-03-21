@@ -56,7 +56,7 @@ docker compose up -d
 
 sleep 5
 
-connector_name="SalesforcePlatformEventSource"
+connector_name="SalesforcePlatformEventSource_$USER"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
 playground connector delete --connector $connector_name
@@ -66,7 +66,7 @@ log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
      "connector.class": "SalesforcePlatformEventSource",
-     "name": "SalesforcePlatformEventSource",
+     "name": "$connector_name",
      "kafka.auth.mode": "KAFKA_API_KEY",
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",
