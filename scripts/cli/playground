@@ -11301,6 +11301,7 @@ playground_update_readme_command() {
 
   set +e
   tmp_dir="/tmp/update-readme"
+  mkdir -p "$tmp_dir"
   trap 'rm -rf $tmp_dir' EXIT
 
   cd ${root_folder}
