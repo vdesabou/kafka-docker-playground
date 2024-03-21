@@ -151,8 +151,11 @@ for row in $(confluent connect cluster list --output json | jq -r '.[] | @base64
     id=$(echo $(_jq '.id'))
     name=$(echo $(_jq '.name'))
 
-    log "deleting connector $id ($name)"
-    check_if_skip "confluent connect cluster delete $id --force"
+    if [[ $name = *_${user}* ]]
+    then
+        log "deleting connector $id ($name)"
+        check_if_skip "confluent connect cluster delete $id --force"
+    fi
 done
 
 for row in $(confluent environment list --output json | jq -r '.[] | @base64'); do
