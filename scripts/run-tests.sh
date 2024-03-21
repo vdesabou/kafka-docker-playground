@@ -75,7 +75,7 @@ do
         fi
 
         # check for scripts containing "fully-managed-connect"
-        if [[ "$script" == *"fully-managed-connect"* ]] && [ "$tag" != "$latest_tag" ]
+        if [[ "$script" == *"fully-managed"* ]] && [ "$tag" != "$latest_tag" ]
         then
             log "####################################################"
             log "⏭ skipping fully managed connector test $script in dir $dir" as $tag is not latest $latest_tag
