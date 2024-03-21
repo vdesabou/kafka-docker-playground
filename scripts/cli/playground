@@ -7534,8 +7534,8 @@ function aws() {
 
     if [ ! -f $HOME/.aws/config ]
     then
-      tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-cat << EOF > $tmp_dir/config
+      aws_tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+cat << EOF > $aws_tmp_dir/config
 [default]
 region = $AWS_REGION
 EOF
@@ -7547,10 +7547,10 @@ EOF
       AWS_SECRET_ACCESS_KEY=$(echo "$AWS_SECRET_ACCESS_KEY"| sed 's/[[:blank:]]//g')
       AWS_SESSION_TOKEN=$(echo "$AWS_SESSION_TOKEN"| sed 's/[[:blank:]]//g')
       # log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
-      if [ -f $tmp_dir/config ]
+      if [ -f $aws_tmp_dir/config ]
       then
-        docker run --rm -iv $tmp_dir/config:/root/.aws/config -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
-        rm -rf $tmp_dir
+        docker run --rm -iv $aws_tmp_dir/config:/root/.aws/config -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
+        rm -rf $aws_tmp_dir
       else
         docker run --rm -iv $HOME/.aws/config:/root/.aws/config -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
       fi
