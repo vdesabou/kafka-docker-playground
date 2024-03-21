@@ -2,7 +2,7 @@ user="${args[--user]}"
 force="${args[--force]}"
 
 set +e
-tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
 
 if [[ ! -n "$user" ]]

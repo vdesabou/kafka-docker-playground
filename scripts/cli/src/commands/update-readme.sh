@@ -1,7 +1,7 @@
 tags="${args[--tags]}"
 
 set +e
-tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
 
 cd ${root_folder}
@@ -17,12 +17,6 @@ gh_msg_file_intro=$tmp_dir/gh_intro.txt
 
 cp $content_template_file $content_file
 cp $badges_template_file $badges_file
-
-for image_version in $tags
-do
-  # take last image
-  latest_version=$image_version
-done
 
 curl -s https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o $tmp_dir/README.txt
 
