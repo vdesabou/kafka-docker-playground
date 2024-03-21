@@ -1,6 +1,6 @@
 # 🐳 kafka-docker-playground
 
-✨ Fully automated Apache Kafka® and Confluent Docker based examples
+✨ Fully automated Apache Kafka® and Confluent® Docker based examples
 
 👷‍♂️ Easily build examples or reproduction models
 
