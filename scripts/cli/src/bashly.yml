@@ -187,6 +187,19 @@ commands:
     required: false
     help: correspond to completion $cur
 
+- name: update-readme
+  private: true
+  environment_variables:
+  - name: GH_TOKEN 
+    help: GH_TOKEN
+  flags:
+    - long: --tags
+      required: false
+      validate: not_empty
+      arg: tags
+      help: |-
+        💯 list of tags
+
 - name: bashly-reload
   private: true
   dependencies:

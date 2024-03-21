@@ -1,50 +1,40 @@
-#!/bin/bash
+tags="${args[--tags]}"
 
-IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-source ${DIR}/../scripts/utils.sh
+set +e
+tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+trap 'rm -rf $tmp_dir' EXIT
 
-if [ -z "$GH_TOKEN" ]
-then
-  logerror "ERROR: GH_TOKEN is not set. Export it as environment variable"
-  exit 1
-fi
+cd ${root_folder}
 
-image_versions="$1"
-
-if [ "$image_versions" = "" ]
-then
-  logerror "ERROR: List of CP versions is not provided as argument!"
-  exit 1
-fi
 content_template_file=./docs/content-template.md
 content_file=./docs/content.md
-content_tmp_file=/tmp/content.md
+content_tmp_file=$tmp_dir/content.md
 badges_template_file=./docs/badges-template.md
 badges_file=./docs/badges.md
-badges_tmp_file=/tmp/badges.md
-gh_msg_file=/tmp/gh.txt
-gh_msg_file_intro=/tmp/gh_intro.txt
+badges_tmp_file=$tmp_dir/badges.md
+gh_msg_file=$tmp_dir/gh.txt
+gh_msg_file_intro=$tmp_dir/gh_intro.txt
 
 cp $content_template_file $content_file
 cp $badges_template_file $badges_file
 
-for image_version in $image_versions
+for image_version in $tags
 do
   # take last image
   latest_version=$image_version
 done
 
-curl -s https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o /tmp/README.txt
+curl -s https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o $tmp_dir/README.txt
 
+ci_folder="$tmp_dir/ci"
 log "Getting ci result files"
-if [ ! -d ci ]
+if [ ! -d "$ci_folder" ]
 then
-  mkdir -p ci
-  aws s3 cp --only-show-errors s3://kafka-docker-playground/ci/ ci/ --recursive --no-progress --region us-east-1
+    mkdir -p "$ci_folder"
+    aws s3 cp --only-show-errors s3://kafka-docker-playground/ci/ "${ci_folder}/" --recursive --no-progress --region us-east-1
 fi
 
-test_list=$(grep "🚀 " ${DIR}/../.github/workflows/ci.yml | cut -d '"' -f 2 | tr '\n' ' ')
+test_list=$(grep "🚀 " ${root_folder}/.github/workflows/ci.yml | cut -d '"' -f 2 | tr '\n' ' ')
 declare -a TEST_FAILED
 declare -a TEST_SUCCESS
 nb_total_tests=0
@@ -83,7 +73,7 @@ do
     fi
 
     # check for ignored scripts in scripts/tests-ignored.txt
-    grep "$script_name" ${DIR}/tests-ignored.txt > /dev/null
+    grep "$script_name" ${root_folder}/scripts/tests-ignored.txt > /dev/null
     if [ $? = 0 ]
     then
       log "####################################################"
@@ -116,7 +106,7 @@ do
 
     log "## 📄 ${script_name}"
 
-    for image_version in $image_versions
+    for image_version in $tags
     do
       let "nb_tests++"
       let "nb_total_tests++"
@@ -135,12 +125,12 @@ do
             # see https://github.com/vdesabou/kafka-docker-playground/issues/221
             version=${image_version}
           else
-            version=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
-            release_date=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 6 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+            version=$(grep "$connector_path " $tmp_dir/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+            release_date=$(grep "$connector_path " $tmp_dir/README.txt | cut -d "|" -f 6 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
           fi
         else
-          version=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
-          release_date=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 6 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+          version=$(grep "$connector_path " $tmp_dir/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+          release_date=$(grep "$connector_path " $tmp_dir/README.txt | cut -d "|" -f 6 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
         fi
       fi
       if [ "$release_date" = "null" ]
@@ -148,7 +138,7 @@ do
         release_date=""
       fi
       testdir=$(echo "$test" | sed 's/\//-/g')
-      ci_file="ci/${image_version}-${testdir}-${version}-${script_name}"
+      ci_file="${ci_folder}/${image_version}-${testdir}-${version}-${script_name}"
 
       if [ -f ${ci_file} ]
       then
@@ -156,18 +146,18 @@ do
         status=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 3)
         gh_run_id=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 4)
         
-        if [ ! -f /tmp/${gh_run_id}_1.json ]
+        if [ ! -f $tmp_dir/${gh_run_id}_1.json ]
         then
           for i in {1..20}; do
             curl -s -u vdesabou:$GH_TOKEN -H "Accept: application/vnd.github.v3+json" \
-            -o "/tmp/${gh_run_id}_${i}.json" \
+            -o "$tmp_dir/${gh_run_id}_${i}.json" \
             "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=${i}"
           done
         fi
         
         v=$(echo $image_version | sed -e 's/\./[.]/g')
         for i in {1..20}; do
-          html_url=$(cat "/tmp/${gh_run_id}_${i}.json" | jq ".jobs |= map(select(.name | test(\"${v}.*${test}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url' | sed -e 's/^"//' -e 's/"$//')
+          html_url=$(cat "$tmp_dir/${gh_run_id}_${i}.json" | jq ".jobs |= map(select(.name | test(\"${v}.*${test}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url' | sed -e 's/^"//' -e 's/"$//')
           if [ "$html_url" != "" ] && [ "$html_url" != "null" ]; then 
               break
           fi
@@ -282,7 +272,7 @@ do
   ci_nb_fail=0
   ci_nb_skipped=0
   nb_image_versions=0
-  for image_version in $image_versions
+  for image_version in $tags
   do
     let "nb_image_versions++"
     image_version_no_dot=$(echo ${image_version} | sed 's/\.//g')
@@ -318,11 +308,11 @@ do
 
   if [ "$connector_path" != "" ]
   then
-    version=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
-    license=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 4 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
-    owner=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 5 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
-    release_date=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 6 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
-    documentation_url=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 7 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//' | sed 's/.*(\(.*\))/\1/')
+    version=$(grep "$connector_path " $tmp_dir/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+    license=$(grep "$connector_path " $tmp_dir/README.txt | cut -d "|" -f 4 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+    owner=$(grep "$connector_path " $tmp_dir/README.txt | cut -d "|" -f 5 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+    release_date=$(grep "$connector_path " $tmp_dir/README.txt | cut -d "|" -f 6 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+    documentation_url=$(grep "$connector_path " $tmp_dir/README.txt | cut -d "|" -f 7 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//' | sed 's/.*(\(.*\))/\1/')
     if [ "$release_date" = "null" ]
     then
       release_date="unknown"
@@ -358,13 +348,13 @@ do
 
     # M1 Mac arm64 support
     arm64=""
-    grep "${test}" ${DIR}/arm64-support-with-emulation.txt > /dev/null
+    grep "${test}" ${root_folder}/scripts/arm64-support-with-emulation.txt > /dev/null
     if [ $? = 0 ]
     then
         arm64="![arm64](https://img.shields.io/badge/arm64-emulation%20required-orange)"
     fi
 
-    grep "${test}" ${DIR}/arm64-support-none.txt > /dev/null
+    grep "${test}" ${root_folder}/scripts/arm64-support-none.txt > /dev/null
     if [ $? = 0 ]
     then
         arm64="![arm64](https://img.shields.io/badge/arm64-not%20working-red)"
@@ -382,13 +372,13 @@ do
     cp $content_tmp_file $content_file
   else
     arm64=""
-    grep "${test}" ${DIR}/arm64-support-with-emulation.txt > /dev/null
+    grep "${test}" ${root_folder}/scripts/arm64-support-with-emulation.txt > /dev/null
     if [ $? = 0 ]
     then
         arm64="![arm64](https://img.shields.io/badge/arm64-emulation%20required-orange)"
     fi
 
-    grep "${test}" ${DIR}/arm64-support-none.txt > /dev/null
+    grep "${test}" ${root_folder}/scripts/arm64-support-none.txt > /dev/null
     if [ $? = 0 ]
     then
         arm64="![arm64](https://img.shields.io/badge/arm64-not%20working-red)"
@@ -407,7 +397,7 @@ do
 done #end test_list
 
 cp_version_tested=""
-for image_version in $image_versions
+for image_version in $tags
 do
   cp_version_tested="$cp_version_tested%20$image_version"
 done
