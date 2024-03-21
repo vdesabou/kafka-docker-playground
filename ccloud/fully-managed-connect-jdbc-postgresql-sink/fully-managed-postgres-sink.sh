@@ -59,21 +59,21 @@ set -e
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
-     "connector.class": "PostgresSink",
-     "name": "$connector_name",
-     "kafka.auth.mode": "KAFKA_API_KEY",
-     "kafka.api.key": "$CLOUD_KEY",
-     "kafka.api.secret": "$CLOUD_SECRET",
-     "input.data.format": "AVRO",
-     "connection.host": "$NGROK_HOSTNAME",
-     "connection.port": "$NGROK_PORT",
-     "connection.user": "myuser",
-     "connection.password": "mypassword",
-     "db.name": "postgres",
-     "topics": "orders",
-     "db.timezone": "UTC",
-     "auto.create": "true",
-     "tasks.max": "1"
+  "connector.class": "PostgresSink",
+  "name": "$connector_name",
+  "kafka.auth.mode": "KAFKA_API_KEY",
+  "kafka.api.key": "$CLOUD_KEY",
+  "kafka.api.secret": "$CLOUD_SECRET",
+  "input.data.format": "AVRO",
+  "connection.host": "$NGROK_HOSTNAME",
+  "connection.port": "$NGROK_PORT",
+  "connection.user": "myuser",
+  "connection.password": "mypassword",
+  "db.name": "postgres",
+  "topics": "orders",
+  "db.timezone": "UTC",
+  "auto.create": "true",
+  "tasks.max": "1"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 300

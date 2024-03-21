@@ -113,3 +113,8 @@ playground topic consume --topic $TOPIC --min-expected-messages 10 --timeout 60
 # Struct{logGroupName=myloggroup731,logStreamName=mylogstream731,timestamp=1675092856000} "This is a log #7"
 # Struct{logGroupName=myloggroup731,logStreamName=mylogstream731,timestamp=1675092858000} "This is a log #8"
 # Struct{logGroupName=myloggroup731,logStreamName=mylogstream731,timestamp=1675092861000} "This is a log #9"
+
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name

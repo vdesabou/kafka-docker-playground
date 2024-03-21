@@ -123,20 +123,20 @@ set -e
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
-    "connector.class": "MySqlCdcSource",
-    "name": "$connector_name",
-    "kafka.auth.mode": "KAFKA_API_KEY",
-    "kafka.api.key": "$CLOUD_KEY",
-    "kafka.api.secret": "$CLOUD_SECRET",
-    "database.hostname": "$NGROK_HOSTNAME",
-    "database.port": "$NGROK_PORT",
-    "database.user": "debezium",
-    "database.password": "dbz",
-    "database.server.name": "dbserver1",
-    "database.whitelist": "mydb",
-    "plugin.name": "pgoutput",
-    "output.data.format": "AVRO",
-    "tasks.max": "1"
+  "connector.class": "MySqlCdcSource",
+  "name": "$connector_name",
+  "kafka.auth.mode": "KAFKA_API_KEY",
+  "kafka.api.key": "$CLOUD_KEY",
+  "kafka.api.secret": "$CLOUD_SECRET",
+  "database.hostname": "$NGROK_HOSTNAME",
+  "database.port": "$NGROK_PORT",
+  "database.user": "debezium",
+  "database.password": "dbz",
+  "database.server.name": "dbserver1",
+  "database.whitelist": "mydb",
+  "plugin.name": "pgoutput",
+  "output.data.format": "AVRO",
+  "tasks.max": "1"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 300
@@ -152,3 +152,8 @@ then
      log "Injecting data for $DURATION minutes"
      docker exec -d sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --connectionUrl 'jdbc:mysql://mysql:3306/mydb?user=user&password=password&useSSL=false' --maxPoolSize 10 --durationTimeMin $DURATION"
 fi
+
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name

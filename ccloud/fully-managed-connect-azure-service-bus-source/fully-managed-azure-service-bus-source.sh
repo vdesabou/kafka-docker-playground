@@ -115,3 +115,8 @@ playground topic consume --topic servicebus-topic --min-expected-messages 5 --ti
 
 # {"deliveryCount":{"long":1},"enqueuedTimeUtc":{"long":1672745480672},"contentType":null,"label":null,"correlationId":null,"messageProperties":{"string":"{}"},"partitionKey":null,"replyTo":null,"replyToSessionId":null,"deadLetterSource":null,"timeToLive":{"long":-1},"lockedUntilUtc":{"long":1672745540687},"sequenceNumber":{"long":1},"sessionId":null,"lockToken":{"string":"33067f1f-955e-4739-bcef-6e817f09c18d"},"messageBody":{"bytes":"tets"},"getTo":null}
 # {"deliveryCount":{"long":1},"enqueuedTimeUtc":{"long":1672745518954},"contentType":{"string":"application/json"},"label":null,"correlationId":null,"messageProperties":{"string":"{}"},"partitionKey":null,"replyTo":null,"replyToSessionId":null,"deadLetterSource":null,"timeToLive":{"long":-1},"lockedUntilUtc":{"long":1672745578985},"sequenceNumber":{"long":2},"sessionId":null,"lockToken":{"string":"27e486c4-d167-4720-abfb-d47bd2553776"},"messageBody":{"bytes":"{\"schema\":{\"type\":\"struct\",\"fields\":[{\"type\":\"int32\",\"optional\":false,\"field\":\"id\"},{\"type\":\"string\",\"optional\":false,\"field\":\"first_name\"},{\"type\":\"string\",\"optional\":false,\"field\":\"last_name\"},{\"type\":\"string\",\"optional\":false,\"field\":\"email\"}],\"optional\":false,\"name\":\"server1.dbo.customers.Value\"},\"payload\":{\"id\":1001,\"first_name\":\"Sally\",\"last_name\":\"Thomas\",\"email\":\"sally.thomas@acme.com\"}}"},"getTo":null}
+
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name

@@ -97,10 +97,18 @@ sleep 10
 log "Verifying topic sfdc-platform-events"
 playground topic consume --topic sfdc-platform-events --min-expected-messages 2 --timeout 60
 
-cat << EOF > connector2.json
+
+connector_name2="SalesforcePlatformEventSink_$USER"
+set +e
+log "Deleting fully managed connector $connector_name2, it might fail..."
+playground connector delete --connector $connector_name2
+set -e
+
+log "Creating fully managed connector"
+playground connector create-or-update --connector $connector_name2 << EOF
 {
      "connector.class": "SalesforcePlatformEventSink",
-     "name": "SalesforcePlatformEventSink",
+     "name": "$connector_name2",
      "kafka.auth.mode": "KAFKA_API_KEY",
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",
@@ -116,23 +124,20 @@ cat << EOF > connector2.json
      "tasks.max" : "1"
 }
 EOF
+wait_for_ccloud_connector_up $connector_name2 300
 
-log "Connector configuration is:"
-cat connector2.json
+connectorId2=$(get_ccloud_connector_lcc $connector_name2)
 
-set +e
-log "Deleting fully managed connector, it might fail..."
-delete_ccloud_connector connector2.json
-set -e
+log "Verifying topic success-$connectorId2"
+playground topic consume --topic success-$connectorId2 --min-expected-messages 2 --timeout 60
 
-log "Creating fully managed connector"
-create_ccloud_connector connector2.json
-wait_for_ccloud_connector_up connector2.json 300
 
-sleep 10
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
 
-connectorName=$(cat connector2.json| jq -r .name)
-connectorId=$(get_ccloud_connector_lcc $connector_name)
+playground connector delete --connector $connector_name
 
-log "Verifying topic success-$connectorId"
-playground topic consume --topic success-$connectorId --min-expected-messages 2 --timeout 60
+log "Do you want to delete the fully managed connector $connector_name2 ?"
+check_if_continue
+
+playground connector delete --connector $connector_name2

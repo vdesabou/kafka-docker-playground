@@ -93,4 +93,7 @@ cat /tmp/result.log
 grep "f1" /tmp/result.log | grep "value1"
 grep "f1" /tmp/result.log | grep "value10"
 
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
 
+playground connector delete --connector $connector_name

@@ -96,20 +96,16 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 300
 
-log "Sleeping 120 seconds"
-sleep 120
+log "Sleeping 60 seconds"
+sleep 60
 
 log "Verify data is in GCP BigQuery:"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" query "SELECT * FROM $DATASET.bqtopic;" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "value1" /tmp/result.log
 
-log "Do you want to delete the fully managed connector $connector_name ?"
-check_if_continue
-
-playground connector delete --connector $connector_name
-
 log "Drop dataset $DATASET"
+check_if_continue
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" rm -r -f -d "$DATASET"
 
 docker rm -f gcloud-config

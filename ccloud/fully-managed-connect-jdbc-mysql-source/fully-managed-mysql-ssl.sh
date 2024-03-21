@@ -158,3 +158,7 @@ log "Verifying topic mysql-team"
 playground topic consume --topic mysql-team --min-expected-messages 2 --timeout 60
 
 
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name

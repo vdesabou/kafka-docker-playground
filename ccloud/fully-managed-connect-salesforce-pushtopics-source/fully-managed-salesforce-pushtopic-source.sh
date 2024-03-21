@@ -119,3 +119,8 @@ sleep 30
 
 log "Verify we have received the data in sfdc-pushtopic-leads topic"
 playground topic consume --topic sfdc-pushtopic-leads --min-expected-messages 1 --timeout 60
+
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name

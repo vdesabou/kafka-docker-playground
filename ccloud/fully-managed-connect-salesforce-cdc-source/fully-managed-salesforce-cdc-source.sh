@@ -96,3 +96,9 @@ sleep 60
 
 log "Verify we have received the data in sfdc-cdc-contacts topic"
 playground topic consume --topic sfdc-cdc-contacts --min-expected-messages 1 --timeout 60
+
+
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name

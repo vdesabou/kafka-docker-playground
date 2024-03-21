@@ -157,17 +157,17 @@ log "Verify we have received the data in sfdc-pushtopic-leads topic"
 playground topic consume --topic sfdc-pushtopic-leads --min-expected-messages 1 --timeout 60
 
 log "Creating Salesforce SObject Sink connector"
-connector_name="SalesforceSObjectSink_$USER"
+connector_name2="SalesforceSObjectSink_$USER"
 set +e
-log "Deleting fully managed connector $connector_name, it might fail..."
-playground connector delete --connector $connector_name
+log "Deleting fully managed connector $connector_name2, it might fail..."
+playground connector delete --connector $connector_name2
 set -e
 
 log "Creating fully managed connector"
-playground connector create-or-update --connector $connector_name << EOF
+playground connector create-or-update --connector $connector_name2 << EOF
 {
      "connector.class": "SalesforceSObjectSink",
-     "name": "SalesforceSObjectSink",
+     "name": "$connector_name2",
      "kafka.auth.mode": "KAFKA_API_KEY",
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",
@@ -190,14 +190,14 @@ playground connector create-or-update --connector $connector_name << EOF
      "tasks.max": "1"
 }
 EOF
-wait_for_ccloud_connector_up $connector_name 300
+wait_for_ccloud_connector_up $connector_name2 300
 
 sleep 40
 
-connectorId=$(get_ccloud_connector_lcc $connector_name)
+connectorId2=$(get_ccloud_connector_lcc $connector_name2)
 
-log "Verifying topic success-$connectorId"
-playground topic consume --topic success-$connectorId --min-expected-messages 1 --timeout 60
+log "Verifying topic success-$connectorId2"
+playground topic consume --topic success-$connectorId2 --min-expected-messages 1 --timeout 60
 
 log "Login with sfdx CLI on the account #2"
 docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\""
@@ -206,3 +206,13 @@ log "Get the Lead created on account #2"
 docker exec sfdx-cli sh -c "sfdx force:data:record:get  -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -s Lead -w \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\"" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "$LEAD_FIRSTNAME" /tmp/result.log
+
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name
+
+log "Do you want to delete the fully managed connector $connector_name2 ?"
+check_if_continue
+
+playground connector delete --connector $connector_name2
