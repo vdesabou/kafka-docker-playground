@@ -1,7 +1,7 @@
 tags="${args[--tags]}"
 
 set +e
-tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+tmp_dir="/tmp/update-readme"
 trap 'rm -rf $tmp_dir' EXIT
 
 cd ${root_folder}
@@ -21,11 +21,11 @@ cp $badges_template_file $badges_file
 curl -s https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o $tmp_dir/README.txt
 
 ci_folder="$tmp_dir/ci"
+mkdir -p "$ci_folder"
 log "Getting ci result files"
 if [ ! -d "$ci_folder" ]
 then
-    mkdir -p "$ci_folder"
-    aws s3 cp --only-show-errors s3://kafka-docker-playground/ci/ "${ci_folder}/" --recursive --no-progress --region us-east-1
+  aws s3 cp --only-show-errors s3://kafka-docker-playground/ci/ "${ci_folder}/" --recursive --no-progress --region us-east-1
 fi
 
 test_list=$(grep "🚀 " ${root_folder}/.github/workflows/ci.yml | cut -d '"' -f 2 | tr '\n' ' ')
