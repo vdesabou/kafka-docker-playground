@@ -91,7 +91,7 @@ jobs:
                       "🚀 multi-data-center/replicator-executable",
                       "🚀 multi-data-center/mirrormaker2 ksqldb/materialized-view connect/connect-pagerduty-sink connect/connect-zendesk-source connect/connect-datadog-metrics-sink connect/connect-gcp-spanner-sink connect/connect-gcp-firebase-source connect/connect-gcp-firebase-sink",
                       "🚀 other/filebeat-to-kafka other/rest-proxy-security-plugin other/tiered-storage-with-aws other/write-logs-to-files other/audit-logs schema-registry/multiple-event-types-in-topic other/broker-schema-validation other/schema-registry-security-plugin multi-data-center/cluster-linking other/secrets-management other/connect-secret-registry other/ldap-authorizer-with-ldap-failover other/schema-format-protobuf other/schema-format-json-schema other/schema-format-avro",
-                      "🚀 ccloud/replicator ccloud/rest-proxy-security-plugin ccloud/schema-registry-security-plugin ccloud/audit-log-connector",
+                      "🚀 ccloud/replicator ccloud/rest-proxy-security-plugin ccloud/schema-registry-security-plugin ccloud/audit-log-connector ccloud/fully-managed-connect-http-sink",
                       "🚀 connect/connect-cdc-oracle12-source",
                       "🚀 connect/connect-cdc-oracle19-source",
                       "🚀 connect/connect-cdc-oracle18-source",
