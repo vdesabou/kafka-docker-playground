@@ -2,6 +2,7 @@ tags="${args[--tags]}"
 
 set +e
 tmp_dir="/tmp/update-readme"
+mkdir -p "$tmp_dir"
 trap 'rm -rf $tmp_dir' EXIT
 
 cd ${root_folder}
