@@ -1155,7 +1155,13 @@ function display_interactive_menu_categories () {
   if [ "$repro" == 1 ]
   then
     propose_current_example=0
+    set +e
     current_file=$(playground state get run.test_file)
+    if [ $? -ne 0 ]
+    then
+      propose_current_example=0
+    fi
+    set -e
     if [ -f "$current_file" ]
     then
       last_two_folders=$(basename $(dirname $(dirname $current_file)))/$(basename $(dirname $current_file))
