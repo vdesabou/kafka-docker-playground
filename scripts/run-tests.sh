@@ -23,6 +23,8 @@ source ${DIR}/../scripts/utils.sh
 # go to root folder
 cd ${DIR}/..
 
+latest_tag=$(grep "default tag" ./scripts/utils.sh | cut -d "=" -f 2 | cut -d " " -f 1)
+
 nb_test_failed=0
 nb_test_skipped=0
 failed_tests=""
@@ -68,6 +70,15 @@ do
         if [[ "$script" == *"repro"* ]]; then
             log "####################################################"
             log "⏭ skipping reproduction model $script in dir $dir"
+            log "####################################################"
+            continue
+        fi
+
+        # check for scripts containing "fully-managed-connect"
+        if [[ "$script" == *"fully-managed-connect"* ]] && [ "$tag" != "$latest_tag" ]
+        then
+            log "####################################################"
+            log "⏭ skipping fully managed connector test $script in dir $dir" as $tag is not latest $latest_tag
             log "####################################################"
             continue
         fi
