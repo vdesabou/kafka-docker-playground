@@ -116,12 +116,9 @@ playground state set run.environment "mdc-kerberos"
 log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command playground container recreate"
 
 
-if [ "$#" -ne 0 ]
-then
-    shift
-fi
-../../scripts/wait-for-connect-and-controlcenter.sh connect-us $@
-../../scripts/wait-for-connect-and-controlcenter.sh connect-europe $@
+
+wait_container_ready connect-us
+wait_container_ready connect-europe
 
 
 # Adding ACLs for consumer and producer user:

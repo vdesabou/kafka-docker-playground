@@ -24,8 +24,8 @@ docker compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../en
 docker container exec -i replicator-us bash -c 'kinit -k -t /var/lib/secret/kafka-connect.key connect'
 docker container exec -i replicator-europe bash -c 'kinit -k -t /var/lib/secret/kafka-connect.key connect'
 
-../../scripts/wait-for-connect-and-controlcenter.sh replicator-us $@
-../../scripts/wait-for-connect-and-controlcenter.sh replicator-europe $@
+wait_container_ready  replicator-us
+wait_container_ready  replicator-europe
 
 sleep 120
 

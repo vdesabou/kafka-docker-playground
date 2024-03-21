@@ -238,7 +238,7 @@ playground state set run.docker_command "$command"
 playground state set run.environment "plaintext"
 log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command playground container recreate"
 
-../../scripts/wait-for-connect-and-controlcenter.sh
+wait_container_ready
 
 log "Creating Oracle source connector"
 playground connector create-or-update --connector cdc-oracle-source-cdb --package "io.confluent.connect.oracle.cdc.util.metrics.MetricsReporter" --level DEBUG  << EOF

@@ -21,8 +21,8 @@ seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-us kafka-cons
 log "Starting replicator instances"
 docker compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../environment/mdc-sasl-plain/docker-compose.sasl-plain.yml -f docker-compose.mdc-sasl-plain.replicator.yml up -d
 
-../../scripts/wait-for-connect-and-controlcenter.sh replicator-us $@
-../../scripts/wait-for-connect-and-controlcenter.sh replicator-europe $@
+wait_container_ready  replicator-us
+wait_container_ready  replicator-europe
 
 sleep 120
 

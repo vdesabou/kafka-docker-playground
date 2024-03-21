@@ -14,7 +14,7 @@ fi
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-../../scripts/wait-for-connect-and-controlcenter.sh
+wait_container_ready
 
 set +e
 log "Trying to create a topic with name that does not start with kafka-docker-playground, it should FAIL"

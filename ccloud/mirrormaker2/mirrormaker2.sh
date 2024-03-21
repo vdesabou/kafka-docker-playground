@@ -12,7 +12,7 @@ fi
 # make sure control-center is not disabled
 export ENABLE_CONTROL_CENTER=true
 
-playground start-environment --environment ccloud --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml" "-a -b"
+playground start-environment --environment ccloud --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml" --wait-for-control-center
 
 
 

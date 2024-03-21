@@ -30,10 +30,7 @@ playground state set run.environment "sasl-plain"
 log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command playground container recreate"
 
 
-if [ "$#" -ne 0 ]
-then
-    shift
-fi
-../../scripts/wait-for-connect-and-controlcenter.sh $@
+
+wait_container_ready
 
 display_jmx_info

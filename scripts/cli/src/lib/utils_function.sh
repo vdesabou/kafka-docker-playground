@@ -983,6 +983,30 @@ function stop_all() {
   playground stop
 }
 
+function wait_container_ready() {
+  
+  CONNECT_CONTAINER=${1:-"connect"}
+  CONTROL_CENTER_CONTAINER=${1:-"control-center"}
+  MAX_WAIT=300
+
+  if [ ! -z $WAIT_FOR_CONTROL_CENTER ]
+  then
+    log "⌛ Waiting up to $MAX_WAIT seconds for ${CONTROL_CENTER_CONTAINER} to start"
+    playground --output-level WARN container logs --container $CONTROL_CENTER_CONTAINER --wait-for-log "Started NetworkTrafficServerConnector" --max-wait $MAX_WAIT
+  else
+    log "⌛ Waiting up to $MAX_WAIT seconds for ${CONNECT_CONTAINER} to start"
+    playground --output-level WARN container logs --container $CONNECT_CONTAINER --wait-for-log "Finished starting connectors and tasks" --max-wait $MAX_WAIT
+  fi
+  # Verify Docker containers started
+  if [[ $(docker container ps) =~ "Exit 137" ]]
+  then
+    logerror "at least one Docker container did not start properly, see <docker container ps>"
+    exit 1
+  fi
+
+  log "🚦 containers have started!"
+}
+
 function display_jmx_info() {
   if [ -z "$ENABLE_JMX_GRAFANA" ]
   then

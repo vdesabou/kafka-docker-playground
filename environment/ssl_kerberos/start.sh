@@ -127,11 +127,8 @@ log "✨ If you modify a docker-compose file and want to re-create the container
 
 cd ${OLDDIR}
 
-if [ "$#" -ne 0 ]
-then
-    shift
-fi
-../../scripts/wait-for-connect-and-controlcenter.sh $@
+
+wait_container_ready
 
 # Adding ACLs for consumer and producer user:
 docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker:9092 --command-config /etc/kafka/command.properties --add --allow-principal User:kafka_producer --producer --topic=*"

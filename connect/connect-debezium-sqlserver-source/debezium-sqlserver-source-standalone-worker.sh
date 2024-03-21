@@ -14,7 +14,7 @@ then
   logwarn "Only plaintext environment is supported with that example (you have set $environment)"
   exit 0
 fi
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.standalone-worker.yml" "-a -b"
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.standalone-worker.yml" --wait-for-control-center
 
 log "Create table"
 docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF

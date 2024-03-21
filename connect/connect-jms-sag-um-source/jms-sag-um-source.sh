@@ -50,7 +50,7 @@ command="source ${DIR}/../../scripts/utils.sh && docker compose -f ../../environ
 playground state set run.docker_command "$command"
 playground state set run.environment "plaintext"
 
-../../scripts/wait-for-connect-and-controlcenter.sh
+wait_container_ready
 
 log "Create Connection Factory"
 docker exec umserver runUMTool.sh CreateConnectionFactory -rname=nsp://localhost:9000 -connectionurl=nsp://umserver:9000 -factoryname=QueueConnectionFactory -factorytype=queue

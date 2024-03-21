@@ -73,7 +73,7 @@ fi
 log "Starting worker"
 docker start connect
 
-../../scripts/wait-for-connect-and-controlcenter.sh
+wait_container_ready
 
 sleep 30
 

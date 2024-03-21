@@ -9,9 +9,9 @@ source ${DIR}/../../scripts/utils.sh
 
 docker compose down -v --remove-orphans
 docker compose up -d
-${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh "connect1"
-${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh "connect2"
-${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh "connect3"
+${DIR}/wait_container_ready "connect1"
+${DIR}/wait_container_ready "connect2"
+${DIR}/wait_container_ready "connect3"
 
 docker exec broker1 kafka-topics --create --topic test-topic --partitions 10 --replication-factor 3 --bootstrap-server broker:9092
 

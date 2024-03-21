@@ -11,7 +11,7 @@ export ENABLE_KSQLDB=true
 
 docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-plain/docker-compose.yml -f ${DIR}/docker-compose.plaintext.autherror.yml --profile control-center --profile ksqldb up -d zookeeper broker schema-registry connect
 
-../../scripts/wait-for-connect-and-controlcenter.sh
+wait_container_ready
 
 # Allow ksqlDB to discover the cluster:
 docker exec broker kafka-acls --bootstrap-server broker:9092 --add --allow-principal User:ksqldb --operation DescribeConfigs --cluster --command-config /tmp/client.properties

@@ -185,7 +185,7 @@ else
 playground state set run.environment "plaintext"
 fi
 
-../../scripts/wait-for-connect-and-controlcenter.sh
+wait_container_ready
 
 sleep 10
 

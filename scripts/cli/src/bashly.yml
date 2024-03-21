@@ -674,11 +674,6 @@ commands:
     - ssl_kerberos
 
     Note: when running an example with <playground run>, it is already automatically done
-  catch_all:
-    label: arguments
-    help: |-
-      Arguments to use by example script
-    required: false
   flags:
     - &environment
       long: --environment
@@ -707,6 +702,9 @@ commands:
         - ssl_kerberos
 
         Default is plaintext
+    - long: --wait-for-control-center
+      help: |- 
+        😴 Wait for control-center instead of connect
     - long: --docker-compose-override-file
       short: -f
       validate: file_exists

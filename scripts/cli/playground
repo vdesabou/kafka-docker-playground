@@ -1508,7 +1508,7 @@ playground_start_environment_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground start-environment [OPTIONS] [ARGUMENTS...]\n"
+  printf "  playground start-environment [OPTIONS]\n"
   printf "  playground start-environment --help | -h\n"
   echo
 
@@ -1525,6 +1525,11 @@ playground_start_environment_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--wait-for-control-center")"
+    printf "    😴 Wait for control-center instead of connect\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--docker-compose-override-file, -f DOCKER-COMPOSE-OVERRIDE-FILE")"
     printf "    🔖 docker-compose override file\n    \n    ❕ It must be absolute full path\n"
     echo
@@ -1532,13 +1537,6 @@ playground_start_environment_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
-    echo
-
-    # :command.usage_args
-    printf "%s\n" "$(bold "== Arguments ==")"
-
-    echo "  ARGUMENTS..."
-    printf "    Arguments to use by example script\n"
     echo
 
     # :command.usage_examples
@@ -6579,7 +6577,13 @@ function display_interactive_menu_categories () {
   if [ "$repro" == 1 ]
   then
     propose_current_example=0
+    set +e
     current_file=$(playground state get run.test_file)
+    if [ $? -ne 0 ]
+    then
+      propose_current_example=0
+    fi
+    set -e
     if [ -f "$current_file" ]
     then
       last_two_folders=$(basename $(dirname $(dirname $current_file)))/$(basename $(dirname $current_file))
@@ -7828,6 +7832,30 @@ function addhost() {
 
 function stop_all() {
   playground stop
+}
+
+function wait_container_ready() {
+
+  CONNECT_CONTAINER=${1:-"connect"}
+  CONTROL_CENTER_CONTAINER=${1:-"control-center"}
+  MAX_WAIT=300
+
+  if [ ! -z $WAIT_FOR_CONTROL_CENTER ]
+  then
+    log "⌛ Waiting up to $MAX_WAIT seconds for ${CONTROL_CENTER_CONTAINER} to start"
+    playground --output-level WARN container logs --container $CONTROL_CENTER_CONTAINER --wait-for-log "Started NetworkTrafficServerConnector" --max-wait $MAX_WAIT
+  else
+    log "⌛ Waiting up to $MAX_WAIT seconds for ${CONNECT_CONTAINER} to start"
+    playground --output-level WARN container logs --container $CONNECT_CONTAINER --wait-for-log "Finished starting connectors and tasks" --max-wait $MAX_WAIT
+  fi
+  # Verify Docker containers started
+  if [[ $(docker container ps) =~ "Exit 137" ]]
+  then
+    logerror "at least one Docker container did not start properly, see <docker container ps>"
+    exit 1
+  fi
+
+  log "🚦 containers have started!"
 }
 
 function display_jmx_info() {
@@ -11329,9 +11357,9 @@ playground_config_get_command() {
   if [ ! -f "$root_folder/playground_config.ini" ]
   then
       # set defaults
-      playground config editor code > /dev/null 2>&1
-      playground config clipboard true > /dev/null 2>&1
-      playground config folder_zip_or_jar ~ > /dev/null 2>&1
+      playground config set editor code > /dev/null 2>&1
+      playground config set clipboard true > /dev/null 2>&1
+      playground config set folder_zip_or_jar ~ > /dev/null 2>&1
   fi
   ini_load $root_folder/playground_config.ini
 
@@ -13006,16 +13034,8 @@ playground_start_environment_command() {
   IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 
   environment="${args[--environment]}"
-  tag="${args[--tag]}"
-  enable_ksqldb="${args[--enable-ksqldb]}"
-  enable_rest_proxy="${args[--enable-rest-proxy]}"
-  enable_c3="${args[--enable-control-center]}"
-  enable_conduktor="${args[--enable-conduktor]}"
-  enable_multiple_brokers="${args[--enable-multiple-brokers]}"
-  enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
-  enable_jmx_grafana="${args[--enable-jmx-grafana]}"
-  enable_kcat="${args[--enable-kcat]}"
   docker_compose_override_file="${args[--docker-compose-override-file]}"
+  wait_for_control_center="${args[--wait-for-control-center]}"
 
   if [ "$environment" = "ccloud" ]
   then
@@ -13025,83 +13045,21 @@ playground_start_environment_command() {
   fi
   test_file_directory="$(dirname "${test_file}")"
 
-  flag_list=""
-  if [[ -n "$tag" ]]
-  then
-    if [[ $tag == *"@"* ]]
-    then
-      tag=$(echo "$tag" | cut -d "@" -f 2)
-    fi
-    flag_list="--tag=$tag"
-    export TAG=$tag
-  fi
-
-  if [[ -n "$enable_ksqldb" ]]
-  then
-    flag_list="$flag_list --enable-ksqldb"
-    export ENABLE_KSQLDB=true
-  fi
-
-  if [[ -n "$enable_rest_proxy" ]]
-  then
-    flag_list="$flag_list --enable-rest-proxy"
-    export ENABLE_RESTPROXY=true
-  fi
-
-  if [[ -n "$enable_c3" ]]
-  then
-    flag_list="$flag_list --enable-control-center"
-    export ENABLE_CONTROL_CENTER=true
-  fi
-
-  if [[ -n "$enable_conduktor" ]]
-  then
-    flag_list="$flag_list --enable-conduktor"
-    export ENABLE_CONDUKTOR=true
-  fi
-
-  if [[ -n "$enable_multiple_brokers" ]]
-  then
-    flag_list="$flag_list --enable-multiple-broker"
-    export ENABLE_KAFKA_NODES=true
-  fi
-
-  if [[ -n "$enable_multiple_connect_workers" ]]
-  then
-    flag_list="$flag_list --enable-multiple-connect-workers"
-    export ENABLE_CONNECT_NODES=true
-
-    # determining the docker-compose file from from test_file
-    docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
-    docker_compose_file="${test_file_directory}/${docker_compose_file}"
-    cp $docker_compose_file /tmp/playground-backup-docker-compose.yml
-    yq -i '.services.connect2 = .services.connect' /tmp/playground-backup-docker-compose.yml
-    yq -i '.services.connect3 = .services.connect' /tmp/playground-backup-docker-compose.yml
-    cp /tmp/playground-backup-docker-compose.yml $docker_compose_file
-  fi
-
-  if [[ -n "$enable_jmx_grafana" ]]
-  then
-    flag_list="$flag_list --enable-jmx-grafana"
-    export ENABLE_JMX_GRAFANA=true
-  fi
-
-  if [[ -n "$enable_kcat" ]]
-  then
-    flag_list="$flag_list --enable-kcat"
-    export ENABLE_KCAT=true
-  fi
-
   set +e
   playground container kill-all
   set -e
 
+  if [[ -n "$wait_for_control_center" ]]
+  then
+    export WAIT_FOR_CONTROL_CENTER=1
+  fi
+
   cd $test_file_directory
   if [ -f $docker_compose_override_file ]
   then
-    $test_file "$docker_compose_override_file" ${other_args[*]}
+    $test_file "$docker_compose_override_file"
   else
-    $test_file ${other_args[*]}
+    $test_file
   fi
 }
 
@@ -24218,6 +24176,14 @@ playground_start_environment_parse_requirements() {
         ;;
 
       # :flag.case
+      --wait-for-control-center)
+
+        # :flag.case_no_arg
+        args['--wait-for-control-center']=1
+        shift
+        ;;
+
+      # :flag.case
       --docker-compose-override-file | -f)
 
         # :flag.case_arg
@@ -24231,22 +24197,16 @@ playground_start_environment_parse_requirements() {
         fi
         ;;
 
-      --)
-        shift
-        other_args+=("$@")
-        break
-        ;;
-
       -?*)
-        other_args+=("$1")
-        shift
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
         ;;
 
       *)
         # :command.parse_requirements_case
-        # :command.parse_requirements_case_catch_all
-        other_args+=("$1")
-        shift
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
 
         ;;
 

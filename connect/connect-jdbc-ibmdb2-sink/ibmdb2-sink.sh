@@ -56,7 +56,7 @@ command="source ${DIR}/../../scripts/utils.sh && docker compose -f ${DIR}/../../
 playground state set run.docker_command "$command"
 playground state set run.environment "plaintext"
 
-../../scripts/wait-for-connect-and-controlcenter.sh
+wait_container_ready
 
 # Keep it for utils.sh
 # PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}

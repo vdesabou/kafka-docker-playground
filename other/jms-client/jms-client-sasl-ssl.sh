@@ -19,7 +19,7 @@ fi
 # make sure control-center is not disabled
 export ENABLE_CONTROL_CENTER=true
 
-playground start-environment --environment sasl-ssl --docker-compose-override-file "${PWD}/docker-compose.sasl-ssl.yml" "-a -b"
+playground start-environment --environment sasl-ssl --docker-compose-override-file "${PWD}/docker-compose.sasl-ssl.yml" --wait-for-control-center
 
 log "Sending messages to topic test-queue using JMS client"
 docker exec -e BOOTSTRAP_SERVERS="broker:9092" -e ZOOKEEPER_CONNECT="zookeeper:2181" -e USERNAME="client" -e PASSWORD="client-secret" jms-client bash -c "java -jar jms-client-1.0.0-jar-with-dependencies.jar"

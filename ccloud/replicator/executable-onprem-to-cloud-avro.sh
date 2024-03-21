@@ -13,7 +13,7 @@ fi
 # make sure control-center is not disabled
 export ENABLE_CONTROL_CENTER=true
 
-playground start-environment --environment ccloud --docker-compose-override-file "${PWD}/docker-compose-executable-onprem-to-cloud.yml" "-a -b"
+playground start-environment --environment ccloud --docker-compose-override-file "${PWD}/docker-compose-executable-onprem-to-cloud.yml" --wait-for-control-center
 
 if [ -f ${DIR}/../../.ccloud/env.delta ]
 then
@@ -79,7 +79,7 @@ EOF
 
 log "Starting replicator executable"
 docker compose -f ../../ccloud/environment/docker-compose.yml -f ${PWD}/docker-compose-executable-onprem-to-cloud.yml -f docker-compose-executable-onprem-to-cloud-avro-replicator.yml up -d
-../../scripts/wait-for-connect-and-controlcenter.sh replicator $@
+wait_container_ready replicator
 
 sleep 50
 
