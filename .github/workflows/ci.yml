@@ -56,7 +56,8 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           AWS_REGION: ${{ secrets.AWS_REGION}}
-          
+          CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY}}
+          CLOUD_API_SECRET: ${{ secrets.CLOUD_API_SECRET}}
 
   build:
     if: ${{ github.event.inputs.test_name == '' }}
@@ -261,6 +262,8 @@ jobs:
           GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
           HPE_MAPR_EMAIL: ${{ secrets.HPE_MAPR_EMAIL}}
           HPE_MAPR_TOKEN: ${{ secrets.HPE_MAPR_TOKEN}}
+          CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY}}
+          CLOUD_API_SECRET: ${{ secrets.CLOUD_API_SECRET}}
 
   execute_one_test:
     if: ${{ github.event.inputs.test_name != '' }}
@@ -431,6 +434,8 @@ jobs:
           GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
           HPE_MAPR_EMAIL: ${{ secrets.HPE_MAPR_EMAIL}}
           HPE_MAPR_TOKEN: ${{ secrets.HPE_MAPR_TOKEN}}
+          CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY}}
+          CLOUD_API_SECRET: ${{ secrets.CLOUD_API_SECRET}}
 
   post-build:
     name: Cleanup resources and Update README
@@ -490,6 +495,8 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           AWS_REGION: ${{ secrets.AWS_REGION}}
+          CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY}}
+          CLOUD_API_SECRET: ${{ secrets.CLOUD_API_SECRET}}
           
 
       - name: Update README
