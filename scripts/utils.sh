@@ -128,14 +128,7 @@ fi
 ###
 if [ ! -z "$CONNECTOR_TAG" ]
 then
-  if [[ $0 == *"wait-for-connect-and-controlcenter.sh"* ]]
-  then
-    if [ -z "$CONNECT_TAG" ]
-    then
-      export CONNECT_TAG="$TAG"
-    fi
-    :
-  elif [[ $0 == *"environment"* ]]
+  if [[ $0 == *"environment"* ]]
   then
     # log "DEBUG: start.sh from environment folder. Skipping..."
     if [ -z "$CONNECT_TAG" ]
@@ -285,14 +278,7 @@ else
   ###
   #  CONNECTOR_TAG is not set
   ###
-  if [[ $0 == *"wait-for-connect-and-controlcenter.sh"* ]]
-  then
-    if [ -z "$CONNECT_TAG" ]
-    then
-      export CONNECT_TAG="$TAG"
-    fi
-    :
-  elif [[ $0 == *"environment"* ]]
+  if [[ $0 == *"environment"* ]]
   then
     if [ -z "$CONNECT_TAG" ]
     then

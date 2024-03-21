@@ -437,7 +437,7 @@ then
     fi
     sleep 5
 
-    $root_folder/scripts/wait-for-connect-and-controlcenter.sh
+    wait_container_ready
 
     sleep 10
 
@@ -445,5 +445,5 @@ then
 else
     sleep 4
 
-    $root_folder/scripts/wait-for-connect-and-controlcenter.sh
+    wait_container_ready
 fi

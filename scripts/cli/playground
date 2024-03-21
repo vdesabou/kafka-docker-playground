@@ -13574,7 +13574,7 @@ playground_update_version_command() {
       fi
       sleep 5
 
-      $root_folder/scripts/wait-for-connect-and-controlcenter.sh
+      wait_container_ready
 
       sleep 10
 
@@ -13582,7 +13582,7 @@ playground_update_version_command() {
   else
       sleep 4
 
-      $root_folder/scripts/wait-for-connect-and-controlcenter.sh
+      wait_container_ready
   fi
 }
 
