@@ -15,13 +15,13 @@ services:
 
   rabbitmq_producer:
     build:
-      context: ../../connect/connect-rabbitmq-source/producer
+      context: ../../ccloud/fully-managed-connect-rabbitmq-source/producer
     hostname: rabbitmq_producer
     container_name: rabbitmq_producer
 
   rabbitmq_consumer:
     build:
-      context: ../../connect/connect-rabbitmq-source/consumer
+      context: ../../ccloud/fully-managed-connect-rabbitmq-source/consumer
     hostname: rabbitmq_consumer
     container_name: rabbitmq_consumer
 
