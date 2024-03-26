@@ -80,6 +80,13 @@ do
             log "####################################################"
             log "⏭ skipping fully managed connector test $script in dir $dir" as $tag is not latest $latest_tag
             log "####################################################"
+            testdir=$(echo "$dir" | sed 's/\//-/g')
+            file="$TAG-$testdir--$script"
+            rm -f $file
+            touch $file
+            echo "|`date +%s`|skipped|$GITHUB_RUN_ID" > $file
+            aws s3 cp "$file" "s3://kafka-docker-playground/ci/" --region us-east-1
+            log "📄 INFO: <$file> was uploaded to S3 bucket"
             continue
         fi
 
