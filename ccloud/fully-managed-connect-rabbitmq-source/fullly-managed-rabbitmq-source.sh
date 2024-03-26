@@ -78,6 +78,7 @@ sleep 5
 log "Verifying topic rabbitmq"
 playground topic consume --topic rabbitmq --min-expected-messages 5 --timeout 60
 
+# CreateTime:2024-03-26 16:38:53.274|Partition:0|Offset:4|Headers:rabbitmq.consumer.tag:amq.ctag-W89VdFXz19PMBPcz1rZb1g,rabbitmq.content.type:application/json,rabbitmq.content.encoding:utf-8,rabbitmq.delivery.mode:1,rabbitmq.priority:1,rabbitmq.correlation.id:null,rabbitmq.reply.to:null,rabbitmq.expiration:null,rabbitmq.message.id:4,rabbitmq.timestamp:null,rabbitmq.type:null,rabbitmq.user.id:null,rabbitmq.app.id:null,rabbitmq.delivery.tag:5,rabbitmq.redeliver:false,rabbitmq.exchange:,rabbitmq.routing.key:myqueue|Key:4|Value:{"id": 4, "body": "010101010101010101010101010101010101010101010101010101010101010101010"}|ValueSchemaId:
 
 #log "Consume messages in RabbitMQ"
 #docker exec -it rabbitmq_consumer bash -c "python /consumer.py myqueue"
