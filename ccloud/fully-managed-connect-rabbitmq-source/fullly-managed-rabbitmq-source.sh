@@ -43,11 +43,6 @@ NGROK_URL=$(curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0]
 NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
 NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
 
-#confluent connect plugin describe IbmMQSource
-
-log "Send message to RabbitMQ in myqueue"
-docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"
-
 connector_name="RabbitMQSource_$USER"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
@@ -72,6 +67,9 @@ playground connector create-or-update --connector $connector_name << EOF
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 300
+
+log "Send message to RabbitMQ in myqueue"
+docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"
 
 sleep 5
 
