@@ -49,6 +49,11 @@ log "Deleting fully managed connector $connector_name, it might fail..."
 playground connector delete --connector $connector_name
 set -e
 
+sleep 3
+
+log "Send message to RabbitMQ in myqueue"
+docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"
+
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
@@ -67,9 +72,6 @@ playground connector create-or-update --connector $connector_name << EOF
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 300
-
-log "Send message to RabbitMQ in myqueue"
-docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"
 
 sleep 5
 
