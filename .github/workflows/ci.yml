@@ -67,7 +67,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: ["7.1.11","7.2.9","7.3.7","7.4.4","7.5.3","7.6.0"]
+        tag: ["7.2.9","7.3.7","7.4.4","7.5.3","7.6.0"]
         test_list : [
                       "🚀 ccloud/fully-managed-connect-aws-cloudwatch-logs-source ccloud/fully-managed-connect-aws-s3-sink ccloud/fully-managed-connect-aws-s3-source ccloud/fully-managed-connect-azure-event-hubs-source ccloud/fully-managed-connect-azure-service-bus-source ccloud/fully-managed-connect-cdc-oracle11-source ccloud/fully-managed-connect-cdc-oracle19-source ccloud/fully-managed-connect-databricks-delta-lake-sink ccloud/fully-managed-connect-debezium-mysql-source ccloud/fully-managed-connect-debezium-postgresql-source ccloud/fully-managed-connect-elasticsearch-sink ccloud/fully-managed-connect-gcp-bigquery-legacy-sink ccloud/fully-managed-connect-gcp-bigquery-v2-sink ccloud/fully-managed-connect-gcp-cloud-functions-sink ccloud/fully-managed-connect-http-sink ccloud/fully-managed-connect-http-source ccloud/fully-managed-connect-ibm-mq-source ccloud/fully-managed-connect-jdbc-mysql-source ccloud/fully-managed-connect-jdbc-oracle19-source ccloud/fully-managed-connect-jdbc-postgresql-sink ccloud/fully-managed-connect-mqtt-source ccloud/fully-managed-connect-rabbitmq-source ccloud/fully-managed-connect-salesforce-cdc-source ccloud/fully-managed-connect-salesforce-platform-events-sink ccloud/fully-managed-connect-salesforce-pushtopics-source ccloud/fully-managed-connect-salesforce-sobject-sink ccloud/fully-managed-connect-sftp-source ccloud/fully-managed-connect-snowflake-sink",
                       "🚀 connect/connect-servicenow-sink connect/connect-servicenow-source connect/connect-datagen-source",
@@ -273,7 +273,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: ["7.1.11","7.2.9","7.3.7","7.4.4","7.5.3","7.6.0"]
+        tag: ["7.2.9","7.3.7","7.4.4","7.5.3","7.6.0"]
         test_list : [
                       "🚀 ${{ github.event.inputs.test_name }}"
                     ]
@@ -503,7 +503,7 @@ jobs:
       - name: Update README
         run: |
           cd ./scripts/cli
-          ./playground update-readme --tags "7.1.11 7.2.9 7.3.7 7.4.4 7.5.3 7.6.0"
+          ./playground update-readme --tags "7.2.9 7.3.7 7.4.4 7.5.3 7.6.0"
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
