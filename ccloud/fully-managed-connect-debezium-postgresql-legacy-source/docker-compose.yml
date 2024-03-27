@@ -4,13 +4,13 @@ services:
 
   sql-datagen:
     build:
-      context: ../../ccloud/fully-managed-connect-debezium-postgresql-source/postgres-datagen/
+      context: ../../ccloud/fully-managed-connect-debezium-postgresql-legacy-source/postgres-datagen/
     hostname: sql-datagen
     container_name: sql-datagen
     profiles:
     - sql_datagen
     volumes:
-      - ../../ccloud/fully-managed-connect-debezium-postgresql-source/postgres-datagen/target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
+      - ../../ccloud/fully-managed-connect-debezium-postgresql-legacy-source/postgres-datagen/target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
 
   postgres:
     image: debezium/postgres:15-alpine
@@ -37,6 +37,6 @@ services:
       - "--config"
       - "/etc/ngrok.yml"
     volumes:
-      - ../../ccloud/fully-managed-connect-debezium-postgresql-source/ngrok.yml:/etc/ngrok.yml
+      - ../../ccloud/fully-managed-connect-debezium-postgresql-legacy-source/ngrok.yml:/etc/ngrok.yml
     environment:
       NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN

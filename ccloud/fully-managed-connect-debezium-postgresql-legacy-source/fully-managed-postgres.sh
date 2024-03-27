@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-cd ../../ccloud/fully-managed-connect-debezium-postgresql-source
+cd ../../ccloud/fully-managed-connect-debezium-postgresql-legacy-source
 if [ ! -z "$SQL_DATAGEN" ]
 then
      log "🌪️ SQL_DATAGEN is set"

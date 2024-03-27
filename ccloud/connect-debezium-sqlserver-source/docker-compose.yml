@@ -10,7 +10,7 @@ services:
     profiles:
     - sql_datagen
     volumes:
-      - ../../ccloud/fully-managed-connect-debezium-mysql-source/mysql-datagen/target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
+      - ../../ccloud/fully-managed-connect-debezium-mysql-legacy-source/mysql-datagen/target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
       
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2019-latest

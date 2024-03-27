@@ -4,21 +4,21 @@ services:
 
   sql-datagen:
     build:
-      context: ../../ccloud/fully-managed-connect-debezium-mysql-source/mysql-datagen/
+      context: ../../ccloud/fully-managed-connect-debezium-mysql-legacy-source/mysql-datagen/
     hostname: sql-datagen
     container_name: sql-datagen
     profiles:
     - sql_datagen
     volumes:
-      - ../../ccloud/fully-managed-connect-debezium-mysql-source/mysql-datagen/target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
+      - ../../ccloud/fully-managed-connect-debezium-mysql-legacy-source/mysql-datagen/target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
 
   mysql:
     image: mysql:8.1
     hostname: mysql
     container_name: mysql
     volumes:
-      - ../../ccloud/fully-managed-connect-debezium-mysql-source/mysql.cnf:/etc/mysql/conf.d/custom.cnf
-      - ../../ccloud/fully-managed-connect-debezium-mysql-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+      - ../../ccloud/fully-managed-connect-debezium-mysql-legacy-source/mysql.cnf:/etc/mysql/conf.d/custom.cnf
+      - ../../ccloud/fully-managed-connect-debezium-mysql-legacy-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: db
@@ -42,6 +42,6 @@ services:
       - "--config"
       - "/etc/ngrok.yml"
     volumes:
-      - ../../ccloud/fully-managed-connect-debezium-mysql-source/ngrok.yml:/etc/ngrok.yml
+      - ../../ccloud/fully-managed-connect-debezium-mysql-legacy-source/ngrok.yml:/etc/ngrok.yml
     environment:
       NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN
