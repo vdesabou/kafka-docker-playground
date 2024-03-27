@@ -9,7 +9,7 @@ then
     connector=$(playground get-connector-list)
     if [ "$connector" == "" ]
     then
-        logerror "💤 No $connector_type connector is running !"
+        log "💤 No $connector_type connector is running !"
         exit 1
     fi
 fi

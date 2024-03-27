@@ -19518,7 +19518,7 @@ playground_connector_status_command() {
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
-          logerror "💤 No $connector_type connector is running !"
+          log "💤 No $connector_type connector is running !"
           exit 1
       fi
   fi
@@ -19682,7 +19682,7 @@ playground_connector_offsets_get_command() {
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
-          logerror "💤 No $connector_type connector is running !"
+          log "💤 No $connector_type connector is running !"
           exit 1
       fi
   fi
@@ -19821,7 +19821,7 @@ playground_connector_offsets_reset_command() {
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
-          logerror "💤 No $connector_type connector is running !"
+          log "💤 No $connector_type connector is running !"
           exit 1
       fi
   fi
@@ -19967,7 +19967,7 @@ playground_connector_offsets_alter_command() {
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
-          logerror "💤 No $connector_type connector is running !"
+          log "💤 No $connector_type connector is running !"
           exit 1
       fi
   fi
@@ -20221,7 +20221,7 @@ playground_connector_pause_command() {
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
-          logerror "💤 No $connector_type connector is running !"
+          log "💤 No $connector_type connector is running !"
           exit 1
       fi
   fi
@@ -20338,7 +20338,7 @@ playground_connector_restart_command() {
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
-          logerror "💤 No $connector_type connector is running !"
+          log "💤 No $connector_type connector is running !"
           exit 1
       fi
   fi
@@ -20407,7 +20407,7 @@ playground_connector_stop_command() {
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
-          logerror "💤 No $connector_type connector is running !"
+          log "💤 No $connector_type connector is running !"
           exit 1
       fi
   fi
@@ -20456,7 +20456,7 @@ playground_connector_resume_command() {
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
-          logerror "💤 No $connector_type connector is running !"
+          log "💤 No $connector_type connector is running !"
           exit 1
       fi
   fi
@@ -20499,7 +20499,7 @@ playground_connector_delete_command() {
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
-          logerror "💤 No $connector_type connector is running !"
+          log "💤 No $connector_type connector is running !"
           exit 1
       fi
   fi
@@ -20541,7 +20541,7 @@ playground_connector_show_lag_command() {
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
-          logerror "💤 No $connector_type connector is running !"
+          log "💤 No $connector_type connector is running !"
           exit 1
       fi
   fi
@@ -20838,7 +20838,7 @@ playground_connector_show_config_command() {
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
-          logerror "💤 No $connector_type connector is running !"
+          log "💤 No $connector_type connector is running !"
           exit 1
       fi
   fi
@@ -20942,7 +20942,7 @@ playground_connector_show_config_parameters_command() {
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
-          logerror "💤 No $connector_type connector is running !"
+          log "💤 No $connector_type connector is running !"
           exit 1
       fi
   fi
@@ -21167,7 +21167,7 @@ playground_connector_select_config_command() {
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
-          logerror "💤 No $connector_type connector is running !"
+          log "💤 No $connector_type connector is running !"
           exit 1
       fi
   fi
@@ -21488,7 +21488,7 @@ playground_connector_log_level_command() {
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
-          logerror "💤 No $connector_type connector is running !"
+          log "💤 No $connector_type connector is running !"
           exit 1
       fi
   fi
@@ -21787,7 +21787,7 @@ playground_connector_update_command() {
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
-          logerror "💤 No $connector_type connector is running !"
+          log "💤 No $connector_type connector is running !"
           exit 1
       fi
   fi
