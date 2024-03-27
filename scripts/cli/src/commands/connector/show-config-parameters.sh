@@ -118,11 +118,14 @@ do
             fi
             set -e
 
-            if [[ $(type -f bat 2>&1) =~ "not found" ]]
+            if [ -z "$GITHUB_RUN_NUMBER" ]
             then
-                cat -n $json_file
-            else
-                bat $json_file --highlight-line $error_line
+                if [[ $(type -f bat 2>&1) =~ "not found" ]]
+                then
+                    cat -n $json_file
+                else
+                    bat $json_file --highlight-line $error_line
+                fi
             fi
 
             exit 1

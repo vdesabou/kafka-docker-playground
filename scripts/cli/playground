@@ -19439,13 +19439,15 @@ playground_connector_plugin_versions_command() {
               fi
               set -e
 
-              if [[ $(type -f bat 2>&1) =~ "not found" ]]
+              if [ -z "$GITHUB_RUN_NUMBER" ]
               then
-                  cat -n $json_file
-              else
-                  bat $json_file --highlight-line $error_line
+                  if [[ $(type -f bat 2>&1) =~ "not found" ]]
+                  then
+                      cat -n $json_file
+                  else
+                      bat $json_file --highlight-line $error_line
+                  fi
               fi
-
               exit 1
           fi
 
@@ -21041,11 +21043,14 @@ playground_connector_show_config_parameters_command() {
               fi
               set -e
 
-              if [[ $(type -f bat 2>&1) =~ "not found" ]]
+              if [ -z "$GITHUB_RUN_NUMBER" ]
               then
-                  cat -n $json_file
-              else
-                  bat $json_file --highlight-line $error_line
+                  if [[ $(type -f bat 2>&1) =~ "not found" ]]
+                  then
+                      cat -n $json_file
+                  else
+                      bat $json_file --highlight-line $error_line
+                  fi
               fi
 
               exit 1
@@ -21594,13 +21599,15 @@ playground_connector_create_or_update_command() {
       fi
       set -e
 
-      if [[ $(type -f bat 2>&1) =~ "not found" ]]
+      if [ -z "$GITHUB_RUN_NUMBER" ]
       then
-          cat -n $json_file
-      else
-          bat $json_file --highlight-line $error_line
+          if [[ $(type -f bat 2>&1) =~ "not found" ]]
+          then
+              cat -n $json_file
+          else
+              bat $json_file --highlight-line $error_line
+          fi
       fi
-
       exit 1
   fi
 
@@ -21661,11 +21668,14 @@ playground_connector_create_or_update_command() {
           fi
           set -e
 
-          if [[ $(type -f bat 2>&1) =~ "not found" ]]
+          if [ -z "$GITHUB_RUN_NUMBER" ]
           then
-              cat -n $json_validate_file
-          else
-              bat $json_validate_file --highlight-line $error_line
+              if [[ $(type -f bat 2>&1) =~ "not found" ]]
+              then
+                  cat -n $json_validate_file
+              else
+                  bat $json_validate_file --highlight-line $error_line
+              fi
           fi
 
           exit 1
