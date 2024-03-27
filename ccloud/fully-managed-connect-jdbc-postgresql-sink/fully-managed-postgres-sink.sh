@@ -81,8 +81,10 @@ wait_for_ccloud_connector_up $connector_name 300
 sleep 5
 
 log "Sending messages to topic orders"
-playground topic produce -t orders --nb-messages 3 << 'EOF'
+playground topic produce -t orders --nb-messages 1 << 'EOF'
 {
+  "type": "record",
+  "name": "myrecord",
   "fields": [
     {
       "name": "id",
@@ -100,9 +102,32 @@ playground topic produce -t orders --nb-messages 3 << 'EOF'
       "name": "price",
       "type": "float"
     }
-  ],
+  ]
+}
+EOF
+
+playground topic produce -t orders --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
+{
+  "type": "record",
   "name": "myrecord",
-  "type": "record"
+  "fields": [
+    {
+      "name": "id",
+      "type": "int"
+    },
+    {
+      "name": "product",
+      "type": "string"
+    },
+    {
+      "name": "quantity",
+      "type": "int"
+    },
+    {
+      "name": "price",
+      "type": "float"
+    }
+  ]
 }
 EOF
 
@@ -112,7 +137,7 @@ sleep 5
 log "Show content of ORDERS table:"
 docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM ORDERS'" > /tmp/result.log  2>&1
 cat /tmp/result.log
-grep "product" /tmp/result.log | grep "100"
+grep "foo" /tmp/result.log
 
 
 log "Do you want to delete the fully managed connector $connector_name ?"
