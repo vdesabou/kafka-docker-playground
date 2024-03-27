@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
@@ -118,7 +118,7 @@ jobs:
       #     remove-codeql: 'true'
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
@@ -290,7 +290,7 @@ jobs:
       #     remove-codeql: 'true'
           
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
@@ -445,7 +445,7 @@ jobs:
     needs: [pre-build, build, execute_one_test]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
