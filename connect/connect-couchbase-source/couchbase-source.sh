@@ -10,9 +10,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 log "Creating Couchbase cluster"
 docker exec couchbase bash -c "/opt/couchbase/bin/couchbase-cli cluster-init --cluster-username Administrator --cluster-password password --services=data,index,query"
 log "Install Couchbase bucket example travel-sample"
-set +e
-docker exec couchbase bash -c "/opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b travel-sample -m 100 -d /opt/couchbase/samples/travel-sample.zip"
-set -e
+curl -X POST -u Administrator:password http://localhost:8091/sampleBuckets/install -d '["travel-sample"]'
 
 log "Creating Couchbase Source connector"
 playground connector create-or-update --connector couchbase-source  << EOF
