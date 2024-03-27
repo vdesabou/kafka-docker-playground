@@ -160,65 +160,67 @@ do
 
         if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
         then
-          logerror "ERROR: Could not retrieve job url! Forcing re-run for next time..."
+          logerror "Could not retrieve job url! Forcing re-run for next time..."
           s3_file="s3://kafka-docker-playground/ci/${image_version}-${testdir}-${version}-${script_name}"
           aws s3 rm $s3_file --region us-east-1
         fi
       else
-        logerror "ERROR: result_file: ${ci_file} does not exist !"
+        logerror "result_file: ${ci_file} does not exist !"
+        continue
       fi
-        if [ "$last_execution_time" != "" ]
-        then
-          if [[ "$OSTYPE" == "darwin"* ]]
-          then
-            time_day=$(date -r $last_execution_time "+%Y-%m-%d")
-            time_day_hour=$(date -r $last_execution_time "+%Y-%m-%d %H:%M")
-          else
-            time_day=$(date -d @$last_execution_time "+%Y-%m-%d")
-            time_day_hour=$(date -d @$last_execution_time "+%Y-%m-%d %H:%M")
-          fi
-        fi
 
-        connector_version=""
-        if [ "$version" != "" ]
+      if [ "$last_execution_time" != "" ]
+      then
+        if [[ "$OSTYPE" == "darwin"* ]]
         then
-          if [ "$release_date" != "" ]
-          then
-            connector_version=" 🔢 Connector v$version (📅 release date $release_date)"
-          else
-            connector_version=" 🔢 Connector v$version"
-          fi
-        fi
-        if [ "$status" == "failure" ]
-        then
-          let "nb_fail++"
-          let "nb_total_fail++"
-          TEST_FAILED[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-red)]($html_url)"
-          echo -e "🔥 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
-          log "🔥 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
-        elif [[ "$status" = known_issue* ]]
-        then
-          let "nb_success++"
-          let "nb_total_success++"
-          known_issue_gh_issue_number=$(echo "$status" | cut -d "#" -f 2)
-          TEST_SUCCESS[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/known%20issue-CP%20$image_version-orange)](https://github.com/vdesabou/kafka-docker-playground/issues/$known_issue_gh_issue_number)"
-          
-          echo -e "💀 known issue 🐞 [#${known_issue_gh_issue_number}](https://github.com/vdesabou/kafka-docker-playground/issues/${known_issue_gh_issue_number}) CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
-          log "💀 known issue 🐞 [#${known_issue_gh_issue_number}](https://github.com/vdesabou/kafka-docker-playground/issues/${known_issue_gh_issue_number}) CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url"
-        elif [ "$status" == "skipped" ]
-        then
-          let "nb_success++"
-          let "nb_total_success++"
-          TEST_SKIPPED[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/skipped-CP%20$image_version-lightgrey)]($html_url)"
-          echo -e "⏭ SKIPPED CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
-          log "⏭ SKIPPED CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
+          time_day=$(date -r $last_execution_time "+%Y-%m-%d")
+          time_day_hour=$(date -r $last_execution_time "+%Y-%m-%d %H:%M")
         else
-          let "nb_success++"
-          let "nb_total_success++"
-          TEST_SUCCESS[$image_version_no_dot]="$html_url"
-          echo -e "👍 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
-          log "👍 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
+          time_day=$(date -d @$last_execution_time "+%Y-%m-%d")
+          time_day_hour=$(date -d @$last_execution_time "+%Y-%m-%d %H:%M")
         fi
+      fi
+
+      connector_version=""
+      if [ "$version" != "" ]
+      then
+        if [ "$release_date" != "" ]
+        then
+          connector_version=" 🔢 Connector v$version (📅 release date $release_date)"
+        else
+          connector_version=" 🔢 Connector v$version"
+        fi
+      fi
+      if [ "$status" == "failure" ]
+      then
+        let "nb_fail++"
+        let "nb_total_fail++"
+        TEST_FAILED[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-red)]($html_url)"
+        echo -e "🔥 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
+        log "🔥 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
+      elif [[ "$status" = known_issue* ]]
+      then
+        let "nb_success++"
+        let "nb_total_success++"
+        known_issue_gh_issue_number=$(echo "$status" | cut -d "#" -f 2)
+        TEST_SUCCESS[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/known%20issue-CP%20$image_version-orange)](https://github.com/vdesabou/kafka-docker-playground/issues/$known_issue_gh_issue_number)"
+        
+        echo -e "💀 known issue 🐞 [#${known_issue_gh_issue_number}](https://github.com/vdesabou/kafka-docker-playground/issues/${known_issue_gh_issue_number}) CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
+        log "💀 known issue 🐞 [#${known_issue_gh_issue_number}](https://github.com/vdesabou/kafka-docker-playground/issues/${known_issue_gh_issue_number}) CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url"
+      elif [ "$status" == "skipped" ]
+      then
+        let "nb_success++"
+        let "nb_total_success++"
+        TEST_SKIPPED[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/skipped-CP%20$image_version-lightgrey)]($html_url)"
+        echo -e "⏭ SKIPPED CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
+        log "⏭ SKIPPED CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
+      else
+        let "nb_success++"
+        let "nb_total_success++"
+        TEST_SUCCESS[$image_version_no_dot]="$html_url"
+        echo -e "👍 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
+        log "👍 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
+      fi
     done #end image_version
   done #end script
 
@@ -289,7 +291,7 @@ do
     then
       ci="$ci [![CP $image_version](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-green)](${TEST_SUCCESS[$image_version_no_dot]})"
     else
-      logerror "ERROR: TEST_SUCCESS, TEST_SKIPPED and TEST_FAILED are all empty !"
+      logerror "TEST_SUCCESS, TEST_SKIPPED and TEST_FAILED are all empty !"
     fi
   done
 
