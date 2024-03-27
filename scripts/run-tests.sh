@@ -138,34 +138,38 @@ do
                 logwarn "Error getting $s3_file"
                 elapsed_time=999999999999
             else
-                file_content=$(cat $file)
                 last_execution_time=$(cat $file | tail -1 | cut -d "|" -f 2)
                 status=$(cat $file | tail -1 | cut -d "|" -f 3)
                 now=$(date +%s)
                 elapsed_time=$((now-last_execution_time))
-
-                gh_run_id=$(grep "$connector_path" ${file} | tail -1 | cut -d "|" -f 4)
+                gh_run_id=$(cat $file | tail -1 | cut -d "|" -f 4)
 
                 if [ ! -f /tmp/${gh_run_id}_1.json ]
                 then
-                for i in {1..20}; do
-                    curl -s -u vdesabou:$CI_GITHUB_TOKEN -H "Accept: application/vnd.github.v3+json" \
-                    -o "/tmp/${gh_run_id}_${i}.json" \
-                    "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=${i}"
-                done
+                    for i in {1..10}
+                    do  
+                        # https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28#get-a-workflow-run
+                        curl_output=(curl -s -o /tmp/${gh_run_id}_${i}.json -w %{http_code} -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28"  -H "Authorization: Bearer $CI_GITHUB_TOKEN" "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=50&page=${i}")
+                        if [ $curl_output -ne 200 ]
+                        then
+                            logerror "❌ curl request <https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=50&page=${i}> failed with error code $curl_output!"
+                            cat "/tmp/${gh_run_id}_${i}.json"
+                            continue
+                        fi
+                    done
                 fi
                 
                 v=$(echo $tag | sed -e 's/\./[.]/g')
-                for i in {1..20}; do
-                html_url=$(cat "/tmp/${gh_run_id}_${i}.json" | jq ".jobs |= map(select(.name | test(\"${v}.*${dir}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url' | sed -e 's/^"//' -e 's/"$//')
-                if [ "$html_url" != "" ] && [ "$html_url" != "null" ]; then 
-                    break
-                fi
+                for i in {1..10}; do
+                    html_url=$(cat "/tmp/${gh_run_id}_${i}.json" | jq ".jobs |= map(select(.name | test(\"${v}.*${dir}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url' | sed -e 's/^"//' -e 's/"$//')
+                    if [ "$html_url" != "" ] && [ "$html_url" != "null" ]; then 
+                        break
+                    fi
                 done
 
                 if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
                 then
-                    logerror "ERROR: Could not retrieve job url! Forcing re-run for next time..."
+                    logerror "Could not retrieve job url! Forcing re-run for next time..."
                 fi
             fi
 
@@ -265,7 +269,7 @@ do
             aws s3 cp "$file" "s3://kafka-docker-playground/ci/" --region us-east-1
             log "📄 INFO: <$file> was uploaded to S3 bucket"
         else
-            logerror "ERROR: $file could not be created"
+            logerror "$file could not be created"
             exit 1
         fi
         bash stop.sh

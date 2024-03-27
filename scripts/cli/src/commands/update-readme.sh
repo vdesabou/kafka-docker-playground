@@ -143,15 +143,22 @@ do
         
         if [ ! -f $tmp_dir/${gh_run_id}_1.json ]
         then
-          for i in {1..20}; do
-            curl -s -u vdesabou:$GH_TOKEN -H "Accept: application/vnd.github.v3+json" \
-            -o "$tmp_dir/${gh_run_id}_${i}.json" \
-            "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=${i}"
+          for i in {1..10}
+          do  
+              # https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28#get-a-workflow-run
+              curl_output=(curl -s -o $tmp_dir/${gh_run_id}_${i}.json -w %{http_code} -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28"  -H "Authorization: Bearer $CI_GITHUB_TOKEN" "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=50&page=${i}")
+              if [ $curl_output -ne 200 ]
+              then
+                  logerror "❌ curl request <https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=50&page=${i}> failed with error code $curl_output!"
+                  cat "/tmp/${gh_run_id}_${i}.json"
+                  continue
+              fi
           done
         fi
         
         v=$(echo $image_version | sed -e 's/\./[.]/g')
-        for i in {1..20}; do
+        for i in {1..10}
+        do
           html_url=$(cat "$tmp_dir/${gh_run_id}_${i}.json" | jq ".jobs |= map(select(.name | test(\"${v}.*${test}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url' | sed -e 's/^"//' -e 's/"$//')
           if [ "$html_url" != "" ] && [ "$html_url" != "null" ]; then 
               break
