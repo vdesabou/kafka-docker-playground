@@ -13,8 +13,8 @@ then
      exit 1
 fi
 
-GCP_SPANNER_INSTANCE="spanner_instance_$USER"
-GCP_SPANNER_DATABASE="spanner_db_$USER"
+GCP_SPANNER_INSTANCE="spanner-instance-$USER"
+GCP_SPANNER_DATABASE="spanner-db-$USER"
 
 cd ../../connect/connect-gcp-spanner-sink
 GCP_KEYFILE="${PWD}/keyfile.json"
