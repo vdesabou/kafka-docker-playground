@@ -9,8 +9,9 @@ then
      logerror "GCP_PROJECT is not set. Export it as environment variable or pass it as argument"
      exit 1
 fi
-INSTANCE=${2:-test-instance}
-DATABASE=${3:-example-db}
+
+GCP_SPANNER_INSTANCE="spanner_instance_$USER"
+GCP_SPANNER_DATABASE="spanner_db_$USER"
 
 cd ../../connect/connect-gcp-spanner-sink
 GCP_KEYFILE="${PWD}/keyfile.json"
@@ -40,16 +41,16 @@ docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cl
 
 set +e
 log "Deleting Database and Instance, if required"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases delete $DATABASE --instance $INSTANCE --project $GCP_PROJECT << EOF
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases delete $GCP_SPANNER_DATABASE --instance $GCP_SPANNER_INSTANCE --project $GCP_PROJECT << EOF
 Y
 EOF
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances delete $INSTANCE --project $GCP_PROJECT  << EOF
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances delete $GCP_SPANNER_INSTANCE --project $GCP_PROJECT  << EOF
 Y
 EOF
 set -e
 log "Create a Spanner Instance and Database"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances create $INSTANCE --project $GCP_PROJECT --config=regional-us-east1 --description=playground-spanner-instance --nodes=1
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases create $DATABASE --instance $INSTANCE --project $GCP_PROJECT
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances create $GCP_SPANNER_INSTANCE --project $GCP_PROJECT --config=regional-us-east1 --description=playground-spanner-instance --nodes=1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases create $GCP_SPANNER_DATABASE --instance $GCP_SPANNER_INSTANCE --project $GCP_PROJECT
 
 log "Sending messages to topic products"
 playground topic produce -t products --nb-messages 2 << 'EOF'
@@ -103,8 +104,8 @@ playground connector create-or-update --connector gcp-spanner-sink  << EOF
   "topics" : "products",
   "auto.create" : "true",
   "table.name.format" : "kafka_\${topic}",
-  "gcp.spanner.instance.id" : "$INSTANCE",
-  "gcp.spanner.database.id" : "$DATABASE",
+  "gcp.spanner.instance.id" : "$GCP_SPANNER_INSTANCE",
+  "gcp.spanner.database.id" : "$GCP_SPANNER_DATABASE",
   "gcp.spanner.credentials.path" : "/tmp/keyfile.json",
   "confluent.license": "",
   "confluent.topic.bootstrap.servers": "broker:9092",
@@ -115,15 +116,16 @@ EOF
 sleep 60
 
 log "Verify data is in GCP Spanner"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases execute-sql $DATABASE --instance $INSTANCE --project $GCP_PROJECT --sql='select * from kafka_products' > /tmp/result.log  2>&1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases execute-sql $GCP_SPANNER_DATABASE --instance $GCP_SPANNER_INSTANCE --project $GCP_PROJECT --sql='select * from kafka_products' > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "notebooks" /tmp/result.log
 
-log "Deleting Database and Instance"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases delete $DATABASE --instance $INSTANCE --project $GCP_PROJECT << EOF
+log "Deleting Spanner database $GCP_SPANNER_DATABASE"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases delete $GCP_SPANNER_DATABASE --instance $GCP_SPANNER_INSTANCE --project $GCP_PROJECT << EOF
 Y
 EOF
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances delete $INSTANCE --project $GCP_PROJECT  << EOF
+log "Deleting Spanner instance $GCP_SPANNER_INSTANCE"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances delete $GCP_SPANNER_INSTANCE --project $GCP_PROJECT  << EOF
 Y
 EOF
 
