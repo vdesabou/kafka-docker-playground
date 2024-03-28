@@ -8565,6 +8565,38 @@ function bootstrap_ccloud_environment () {
       confluent login --save
   fi
 
+  test_file=$(playground state get run.test_file)
+
+  if [ ! -f $test_file ]
+  then
+    logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
+    exit 1
+  fi
+
+  if [[ $test_file == *"fully-managed-connect-databricks-delta-lake-sink"* ]]
+  then
+    if [ ! -z "$AWS_DATABRICKS_CLUSTER_NAME" ]
+    then
+      log "AWS_DATABRICKS_CLUSTER_NAME environment variable is set, forcing the cluster $AWS_DATABRICKS_CLUSTER_NAME to be used !"
+      export CLUSTER_NAME=$AWS_DATABRICKS_CLUSTER_NAME
+      export CLUSTER_REGION=$AWS_DATABRICKS_CLUSTER_REGION
+      export CLUSTER_CLOUD=$AWS_DATABRICKS_CLUSTER_CLOUD
+      export CLUSTER_CREDS=$AWS_DATABRICKS_CLUSTER_CREDS
+    fi
+  fi
+
+  if [[ $test_file == *"fully-managed-connect-gcp-bigquery-legacy-sink"* ]] || [[ $test_file == *"fully-managed-connect-gcp-bigquery-v2-sink"* ]]
+  then
+    if [ ! -z "$GCP_CLUSTER_NAME" ]
+    then
+      log "GCP_CLUSTER_NAME environment variable is set, forcing the cluster $GCP_CLUSTER_NAME to be used !"
+      export CLUSTER_NAME=$GCP_CLUSTER_NAME
+      export CLUSTER_REGION=$GCP_CLUSTER_REGION
+      export CLUSTER_CLOUD=$GCP_CLUSTER_CLOUD
+      export CLUSTER_CREDS=$GCP_CLUSTER_CREDS
+    fi
+  fi
+
   suggest_use_previous_example_ccloud=1
   for item in {ENVIRONMENT,CLUSTER_NAME,CLUSTER_CLOUD,CLUSTER_REGION,CLUSTER_CREDS}
   do
