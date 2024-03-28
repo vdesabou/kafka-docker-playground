@@ -29,7 +29,7 @@ Note down the project id, the region (example `us-central1`), and the function n
 Simply run:
 
 ```bash
-$ just use <playground run> command and search for google-cloud-functions<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <GCP_PROJECT> <REGION> .sh in this folder
+$ just use <playground run> command and search for google-cloud-functions<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <GCP_FUNCTION_REGION> <GCP_FUNCTION_FUNCTION> .sh in this folder
 ```
 
 ## Details of what the script is doing

@@ -8,8 +8,9 @@ then
      logerror "GCP_PROJECT is not set. Export it as environment variable or pass it as argument"
      exit 1
 fi
-REGION=${2:-us-central1}
-FUNCTION=${3:-function-1}
+
+GCP_FUNCTION_REGION=${1:-europe-west2}
+GCP_FUNCTION_FUNCTION=${2:-function-1}
 
 GCP_KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${GCP_KEYFILE} ] && [ -z "$GCP_KEYFILE_CONTENT" ]
@@ -66,7 +67,7 @@ playground connector create-or-update --connector $connector_name << EOF
   "kafka.api.key": "$CLOUD_KEY",
   "kafka.api.secret": "$CLOUD_SECRET",
   "topics": "functions-messages",
-  "function.name": "$FUNCTION",
+  "function.name": "$GCP_FUNCTION_FUNCTION",
   "project.id": "$GCP_PROJECT",
   "input.data.format" : "AVRO",
   "gcf.credentials.json" : $GCP_KEYFILE_CONTENT,
