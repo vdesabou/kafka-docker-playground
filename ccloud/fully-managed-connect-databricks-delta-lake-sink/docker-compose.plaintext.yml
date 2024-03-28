@@ -1,9 +1,0 @@
----
-version: '3.5'
-services:
-
-  connect:
-    volumes:
-        - ../../connect/connect-databricks-delta-lake-sink/SparkJDBC42.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-databricks-delta-lake/lib/SparkJDBC42.jar
-    environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-databricks-delta-lake,/usr/share/confluent-hub-components/confluentinc-kafka-connect-datagen

@@ -100,7 +100,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "topics": "pageviews",
      "input.data.format": "AVRO",
      "name": "$connector_name",
-     "name": "DatabricksDeltaLakeSink",
+     "connector.class": "DatabricksDeltaLakeSink",
      "kafka.auth.mode": "KAFKA_API_KEY",
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",
@@ -118,13 +118,29 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 300
 
-sleep 30
-
+sleep 90
 
 log "Listing staging Amazon S3 bucket"
 export AWS_ACCESS_KEY_ID="$DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID"
 export AWS_SECRET_ACCESS_KEY="$DATABRICKS_AWS_STAGING_S3_SECRET_ACCESS_KEY"
-aws s3api list-objects --bucket "$DATABRICKS_AWS_BUCKET_NAME"
+aws s3api list-objects --bucket "$DATABRICKS_AWS_BUCKET_NAME" > /tmp/result.log 2>&1
+if [ $? != 0 ]
+then
+     logerror "FAILED"
+     docker container logs connect >  connect.log 2>&1
+     tail -500 connect.log
+     exit 1
+fi
+
+if [ `wc -l /tmp/result.log | cut -d" " -f1` = 0 ]
+then
+     logerror "FAILED"
+     docker container logs connect >  connect.log 2>&1
+     tail -500 connect.log
+     exit 1
+fi
+
+cat /tmp/result.log
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
