@@ -14283,6 +14283,17 @@ playground_cleanup_cloud_resources_command() {
       fi
   done
 
+  GCP_SPANNER_INSTANCE="spanner_instance_$USER"
+  GCP_SPANNER_DATABASE="spanner_db_$USER"
+  log "Deleting Spanner database $GCP_SPANNER_DATABASE"
+  docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases delete $GCP_SPANNER_DATABASE --instance $GCP_SPANNER_INSTANCE --project $GCP_PROJECT << EOF
+Y
+EOF
+  log "Deleting Spanner instance $GCP_SPANNER_INSTANCE"
+  docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances delete $GCP_SPANNER_INSTANCE --project $GCP_PROJECT  << EOF
+Y
+EOF
+
   if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
   then
        logerror "ERROR: either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
