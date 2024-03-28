@@ -137,78 +137,29 @@ do
     fi
 done
 
-bootstrap_ccloud_environment
+cleanup_confluent_cloud_resources
 
-# for row in $(confluent api-key list --output json | jq -r '.[] | @base64'); do
-#     _jq() {
-#     echo ${row} | base64 --decode | jq -r ${1}
-#     }
-    
-#     key=$(echo $(_jq '.key'))
-#     resource_type=$(echo $(_jq '.resource_type'))
+if [ ! -z "$AWS_DATABRICKS_CLUSTER_NAME" ]
+then
+    log "AWS_DATABRICKS_CLUSTER_NAME environment variable is set, forcing the cluster $AWS_DATABRICKS_CLUSTER_NAME to be used !"
+    export CLUSTER_NAME=$AWS_DATABRICKS_CLUSTER_NAME
+    export CLUSTER_REGION=$AWS_DATABRICKS_CLUSTER_REGION
+    export CLUSTER_CLOUD=$AWS_DATABRICKS_CLUSTER_CLOUD
+    export CLUSTER_CREDS=$AWS_DATABRICKS_CLUSTER_CREDS
 
-#     if [[ $resource_type = cloud ]] && [[ "$key" != "$CLOUD_API_KEY" ]]
-#     then
-#       log "deleting cloud api key $key"
-#       confluent api-key delete $key --force
-#     fi
-# done
+    cleanup_confluent_cloud_resources
+fi
 
-for row in $(confluent connect cluster list --output json | jq -r '.[] | @base64'); do
-    _jq() {
-    echo ${row} | base64 --decode | jq -r ${1}
-    }
-    
-    id=$(echo $(_jq '.id'))
-    name=$(echo $(_jq '.name'))
+if [ ! -z "$GCP_CLUSTER_NAME" ]
+then
+    log "GCP_CLUSTER_NAME environment variable is set, forcing the cluster $GCP_CLUSTER_NAME to be used !"
+    export CLUSTER_NAME=$GCP_CLUSTER_NAME
+    export CLUSTER_REGION=$GCP_CLUSTER_REGION
+    export CLUSTER_CLOUD=$GCP_CLUSTER_CLOUD
+    export CLUSTER_CREDS=$GCP_CLUSTER_CREDS
 
-    if [[ $name = *_${user}* ]]
-    then
-        log "deleting connector $id ($name)"
-        check_if_skip "confluent connect cluster delete $id --force"
-    fi
-done
-
-for row in $(confluent environment list --output json | jq -r '.[] | @base64'); do
-    _jq() {
-    echo ${row} | base64 --decode | jq -r ${1}
-    }
-    
-    id=$(echo $(_jq '.id'))
-    name=$(echo $(_jq '.name'))
-
-    if [[ $name = pg-${user}-sa-* ]]
-    then
-        log "deleting environment $id ($name)"
-        check_if_skip "confluent environment delete $id --force"
-    fi
-done
-
-for topic in $(confluent kafka topic list | awk '{if(NR>2) print $1}')
-do
-    log "delete topic $topic"
-    check_if_skip "confluent kafka topic delete \"$topic\" --force"
-done
-
-for subject in $(curl -u "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$SCHEMA_REGISTRY_URL/subjects" | jq -r '.[]')
-do
-    log "permanently delete subject $subject"
-    check_if_skip "curl --request DELETE -u \"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" \"$SCHEMA_REGISTRY_URL/subjects/$subject\" && curl --request DELETE -u \"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" \"$SCHEMA_REGISTRY_URL/subjects/$subject?permanent=true\""
-done
-
-for row in $(confluent iam service-account list --output json | jq -r '.[] | @base64'); do
-    _jq() {
-    echo ${row} | base64 --decode | jq -r ${1}
-    }
-    
-    description=$(echo $(_jq '.description'))
-    id=$(echo $(_jq '.id'))
-    name=$(echo $(_jq '.name'))
-
-    log "deleting service-account $id ($description)"
-    check_if_skip "confluent iam service-account delete $id --force"
-done
-
+    cleanup_confluent_cloud_resources
+fi
 
 # always exit with success
 exit 0
