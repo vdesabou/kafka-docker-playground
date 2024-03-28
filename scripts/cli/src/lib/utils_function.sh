@@ -1681,12 +1681,14 @@ function bootstrap_ccloud_environment () {
     logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
     exit 1
   fi
+  suggest_use_previous_example_ccloud=1
 
   if [[ $test_file == *"fully-managed-connect-databricks-delta-lake-sink"* ]]
   then
     if [ ! -z "$AWS_DATABRICKS_CLUSTER_NAME" ]
     then
       log "AWS_DATABRICKS_CLUSTER_NAME environment variable is set, forcing the cluster $AWS_DATABRICKS_CLUSTER_NAME to be used !"
+      suggest_use_previous_example_ccloud=0
       export CLUSTER_NAME=$AWS_DATABRICKS_CLUSTER_NAME
       export CLUSTER_REGION=$AWS_DATABRICKS_CLUSTER_REGION
       export CLUSTER_CLOUD=$AWS_DATABRICKS_CLUSTER_CLOUD
@@ -1699,6 +1701,7 @@ function bootstrap_ccloud_environment () {
     if [ ! -z "$GCP_CLUSTER_NAME" ]
     then
       log "GCP_CLUSTER_NAME environment variable is set, forcing the cluster $GCP_CLUSTER_NAME to be used !"
+      suggest_use_previous_example_ccloud=0
       export CLUSTER_NAME=$GCP_CLUSTER_NAME
       export CLUSTER_REGION=$GCP_CLUSTER_REGION
       export CLUSTER_CLOUD=$GCP_CLUSTER_CLOUD
@@ -1706,7 +1709,7 @@ function bootstrap_ccloud_environment () {
     fi
   fi
 
-  suggest_use_previous_example_ccloud=1
+  
   for item in {ENVIRONMENT,CLUSTER_NAME,CLUSTER_CLOUD,CLUSTER_REGION,CLUSTER_CREDS}
   do
       i=$(playground state get "ccloud.${item}")
