@@ -1459,6 +1459,126 @@ playground_run_usage() {
   if [[ -n $long_usage ]]; then
     printf "%s\n" "$(bold "== Options ==")"
 
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--environment ENVIRONMENT")"
+    printf "    🔐 The environment to start when running a connector example \n    \n    - plaintext\n    - ccloud\n    - 2way-ssl\n    - kerberos\n    - kraft-external-plaintext\n    - kraft-plaintext\n    - ldap-authorizer-sasl-plain\n    - ldap-sasl-plain\n    - rbac-sasl-plain\n    - sasl-plain\n    - sasl-scram\n    - sasl-ssl\n    - ssl_kerberos\n    \n    Default is plaintext.\n    This is only supported when example is a connector example\n"
+    printf "    Allowed: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain\n"
+    printf "    Default: plaintext\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file, -f FILE")"
+    printf "    🔖 Example file to run\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--open, -o")"
+    printf "    📖 Opening example file with text editor set with playground config editor\n    <editor> (default is code)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--tag TAG")"
+    printf "    🎯 Confluent Platform (CP) version to use\n    \n    Must be greater or equal to 5.3.0\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG")"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
+    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
+    printf "    🤎 Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--enable-ksqldb")"
+    printf "    🚀 Enable ksqlDB \n    \n    ❗ not supported with ccloud examples\n    \n    By default, ksqldb-server and ksqldb-cli containers are not started for\n    every test\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--enable-rest-proxy")"
+    printf "    🧲 Enable Rest Proxy\n    \n    ❗ not supported with ccloud examples\n    \n    By default, rest-proxy container is not started for every test\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--enable-control-center")"
+    printf "    💠 Enable Control Center\n    \n    By default, control-center container is not started for every test\n    \n    Control Center is reachable at http://127.0.0.1:9021\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--enable-conduktor")"
+    printf "    🐺 Enable Conduktor Platform\n    \n    By default, Conduktor Platform container is not started for every test\n    \n    Conduktor is reachable at http://127.0.0.1:8080/console (admin/admin)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--enable-multiple-brokers")"
+    printf "    3️⃣ Enable multiple brokers\n    \n    By default, there is only one broker node enabled\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--enable-multiple-connect-workers")"
+    printf "    🥉 Enable multiple connect node\n    \n    By default, there is only one connect node enabled\n    \n    It only works when plaintext environment is used\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--enable-jmx-grafana")"
+    printf "    Enable Grafana, Prometheus and Pyroscope\n    \n    📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is\n    admin/password)\n    \n    🛡️ Prometheus is reachable at http://127.0.0.1:9090\n    \n    📛 Pyroscope is reachable at http://127.0.0.1:4040\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--enable-kcat")"
+    printf "    🐈‍⬛ Enable kcat\n    \n    You can use it with:\n    \n    $ docker exec kcat kcat -b broker:9092 -L\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--enable-sql-datagen")"
+    printf "    🌪️ Enable SQL Datagen injection\n    \n    This only works for Oracle, MySql, Postgres and Microsoft Sql Server source\n    connector examples with JDBC and Debezium\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-cloud CLUSTER-CLOUD")"
+    printf "    🌤 The cloud provider: aws, gcp or azure. Default is aws\n    \n    🎓 Tip: you can also use CLUSTER_CLOUD environment variable\n"
+    printf "    Allowed: aws, gcp, azure\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-type CLUSTER-TYPE")"
+    printf "    🔋 The cluster type: basic, standard or dedicated. Default is basic\n    \n    🎓 Tip: you can also use CLUSTER_TYPE environment variable\n"
+    printf "    Allowed: basic, standard, dedicated\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-region CLUSTER-REGION")"
+    printf "    🗺 The Cloud region. \n    \n    🎓 Tip: you can also use CLUSTER_REGION environment variable\n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-environment CLUSTER-ENVIRONMENT")"
+    printf "    🌐 The environment id where want your new cluster (example: txxxxx)\n    \n    ℹ️ Optional, if not set, new environment will be created\n    \n    🎓 Tip: you can also use ENVIRONMENT environment variable\n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-name CLUSTER-NAME")"
+    printf "    🎰 The cluster name. \n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use CLUSTER_NAME environment variable\n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-creds CLUSTER-CREDS")"
+    printf "    🔒 The Kafka api key and secret to use, it should be separated with colon\n    (example: <API_KEY>:<API_KEY_SECRET>)\n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use CLUSTER_CREDS environment variable\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-schema-registry-creds CLUSTER-SCHEMA-REGISTRY-CREDS")"
+    printf "    🔒 The Schema Registry api key and secret to use, it should be separated with\n    colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n    \n    ℹ️ Optional, if not set, new credentials will be created\n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -1672,6 +1792,27 @@ playground_update_version_usage() {
   # :command.long_usage
   if [[ -n $long_usage ]]; then
     printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--tag TAG")"
+    printf "    🎯 Confluent Platform (CP) version to use\n    \n    Must be greater or equal to 5.3.0\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG")"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
+    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
+    printf "    🤎 Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -4320,6 +4461,11 @@ playground_connector_plugin_search_jar_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-plugin, -c CONNECTOR-PLUGIN (required)")"
     printf "    🔌 Connector plugin name\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG")"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n"
     echo
 
     # :flag.usage

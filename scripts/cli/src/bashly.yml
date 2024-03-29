@@ -353,7 +353,6 @@ commands:
   flags:
   - &environment-run
     long: --environment
-    private: true
     required: false
     default: "plaintext"
     arg: environment
@@ -380,7 +379,7 @@ commands:
   - long: --file
     short: -f
     required: false
-    private: true
+    
     validate: file_exists_with_trick
     arg: file
     completions:
@@ -392,12 +391,12 @@ commands:
 
       🎓 Tip: use <tab> completion to trigger fzf completion
   - long: --open
-    private: true
+    
     short: -o
     help: 📖 Opening example file with text editor set with playground config editor <editor> (default is code)
   - &tag
     long: --tag
-    private: true
+    
     arg: tag
     required: false
     completions:
@@ -411,7 +410,7 @@ commands:
   - &connector-tag
     long: --connector-tag
     arg: connector_tag
-    private: true
+    
     required: false
     help: |- 
       🔗 Connector version to use
@@ -424,7 +423,7 @@ commands:
   - &connector-zip
     long: --connector-zip
     arg: connector_zip
-    private: true
+    
     required: false
     validate: file_exists_with_trick
     completions:
@@ -441,7 +440,7 @@ commands:
   - &connector-jar
     long: --connector-jar
     arg: connector_jar
-    private: true
+    
     required: false
     validate: file_exists_with_trick
     completions:
@@ -457,7 +456,7 @@ commands:
   - &enable-ksqldb
     long: --enable-ksqldb
     required: false
-    private: true
+    
     help: |-
       🚀 Enable ksqlDB 
       
@@ -467,7 +466,7 @@ commands:
   - &enable-rest-proxy
     long: --enable-rest-proxy
     required: false
-    private: true
+    
     help: |-
       🧲 Enable Rest Proxy
 
@@ -477,7 +476,7 @@ commands:
   - &enable-control-center
     long: --enable-control-center
     required: false
-    private: true
+    
     help: |-
       💠 Enable Control Center
 
@@ -487,7 +486,7 @@ commands:
   - &enable-conduktor
     long: --enable-conduktor
     required: false
-    private: true
+    
     help: |- 
       🐺 Enable Conduktor Platform
 
@@ -497,7 +496,7 @@ commands:
   - &enable-multiple-brokers
     long: --enable-multiple-brokers
     required: false
-    private: true
+    
     help: |- 
       3️⃣ Enable multiple brokers
 
@@ -505,7 +504,7 @@ commands:
   - &enable-multiple-connect-workers
     long: --enable-multiple-connect-workers
     required: false
-    private: true
+    
     help: |-
       🥉 Enable multiple connect node
 
@@ -515,7 +514,7 @@ commands:
   - &enable-jmx-grafana
     long: --enable-jmx-grafana
     required: false
-    private: true
+    
     help: |-
       Enable Grafana, Prometheus and Pyroscope
 
@@ -527,7 +526,7 @@ commands:
   - &enable-kcat
     long: --enable-kcat
     required: false
-    private: true
+    
     help: |-
       🐈‍⬛ Enable kcat
 
@@ -537,7 +536,7 @@ commands:
   - &enable-sql-datagen
     long: --enable-sql-datagen
     required: false
-    private: true
+    
     help: |-
       🌪️ Enable SQL Datagen injection
 
@@ -546,7 +545,7 @@ commands:
   - &cluster-cloud
     long: --cluster-cloud
     required: false
-    private: true
+    
     arg: cluster-cloud
     allowed: [aws, gcp, azure]
     help: |-
@@ -556,7 +555,7 @@ commands:
   - &cluster-type
     long: --cluster-type
     required: false
-    private: true
+    
     arg: cluster-type
     allowed: [basic, standard, dedicated]
     help: |-
@@ -566,7 +565,7 @@ commands:
   - &cluster-region
     long: --cluster-region
     required: false
-    private: true
+    
     arg: cluster-region
     completions:
       - $(playground get-kafka-region-list "$cur")
@@ -579,7 +578,7 @@ commands:
   - &cluster-environment
     long: --cluster-environment
     required: false
-    private: true
+    
     arg: cluster-environment
     validate: not_empty
     completions:
@@ -595,7 +594,7 @@ commands:
   - &cluster-name
     long: --cluster-name
     required: false
-    private: true
+    
     validate: not_empty
     completions:
       - $(playground get-ccloud-cluster-list "$cur")
@@ -610,7 +609,7 @@ commands:
   - &cluster-creds
     long: --cluster-creds
     required: false
-    private: true
+    
     validate: not_empty
     arg: cluster-creds
     help: |-
@@ -622,7 +621,7 @@ commands:
   - &cluster-schema-registry-creds
     long: --cluster-schema-registry-creds
     required: false
-    private: true
+    
     validate: not_empty
     arg: cluster-schema-registry-creds
     help: |-
