@@ -10,8 +10,6 @@ if ! version_gt $TAG_BASE "5.9.99"; then
     exit 111
 fi
 
-
-
 if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
 then
     log "Logging to Azure using environment variables AZ_USER and AZ_PASS"
@@ -23,6 +21,9 @@ else
     log "Logging to Azure using browser"
     az login
 fi
+
+# when AZURE_SUBSCRIPTION_NAME env var is set, we need to set the correct subscription
+maybe_set_azure_subscription
 
 # https://github.com/microsoft/kafka-connect-cosmosdb/blob/dev/doc/CosmosDB_Setup.md
 AZURE_NAME=pg${USER}cs${GITHUB_RUN_NUMBER}${TAG}

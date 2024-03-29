@@ -4070,3 +4070,14 @@ function display_ngrok_warning () {
   fi
   check_if_continue
 }
+
+function maybe_set_azure_subscription () {
+  if [ ! -z "$AZURE_SUBSCRIPTION_NAME" ]
+  then
+      log "💙 AZURE_SUBSCRIPTION_NAME ($AZURE_SUBSCRIPTION_NAME) is set, searching for subscription id..."
+      az account list --query "[?name=='$AZURE_SUBSCRIPTION_NAME']" | jq -r '.[].id'
+      subscriptionId=$(az account list --query "[?name=='$AZURE_SUBSCRIPTION_NAME']" | jq -r '.[].id')
+      log "💙 setting up account to use subscription $AZURE_SUBSCRIPTION_NAME ($subscriptionId)"
+      az account set --subscription $subscriptionId
+  fi
+}

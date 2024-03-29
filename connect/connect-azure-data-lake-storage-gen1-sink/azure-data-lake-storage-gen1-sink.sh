@@ -19,13 +19,16 @@ else
     az login
 fi
 
-AZURE_TENANT_NAME=${AZURE_TENANT_NAME:-$1}
+AZURE_SUBSCRIPTION_NAME=${AZURE_SUBSCRIPTION_NAME:-$1}
 
-if [ -z "$AZURE_TENANT_NAME" ]
+if [ -z "$AZURE_SUBSCRIPTION_NAME" ]
 then
-     logerror "AZURE_TENANT_NAME is not set. Export it as environment variable or pass it as argument"
-     exit 1
+  logerror "AZURE_SUBSCRIPTION_NAME is not set. Export it as environment variable or pass it as argument"
+  exit 1
 fi
+
+# when AZURE_SUBSCRIPTION_NAME env var is set, we need to set the correct subscription
+maybe_set_azure_subscription
 
 AZURE_NAME=pg${USER}dl${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
@@ -63,7 +66,7 @@ fi
 log "Creating Service Principal associated to the App"
 SERVICE_PRINCIPAL_ID=$(az ad sp create --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.id')
 
-AZURE_TENANT_ID=$(az account list --query "[?name=='$AZURE_TENANT_NAME']" | jq -r '.[].tenantId')
+AZURE_TENANT_ID=$(az account list --query "[?name=='$AZURE_SUBSCRIPTION_NAME']" | jq -r '.[].tenantId')
 AZURE_DATALAKE_TOKEN_ENDPOINT="https://login.microsoftonline.com/$AZURE_TENANT_ID/oauth2/token"
 
 log "Creating data lake $AZURE_DATALAKE_ACCOUNT_NAME in resource $AZURE_RESOURCE_GROUP"

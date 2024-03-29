@@ -19,8 +19,6 @@ do
      set -e
 done
 
-
-
 if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
 then
     log "Logging to Azure using environment variables AZ_USER and AZ_PASS"
@@ -32,6 +30,9 @@ else
     log "Logging to Azure using browser"
     az login
 fi
+
+# when AZURE_SUBSCRIPTION_NAME env var is set, we need to set the correct subscription
+maybe_set_azure_subscription
 
 AZURE_NAME=pg${USER}sb${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}

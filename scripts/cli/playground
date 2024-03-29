@@ -11118,6 +11118,17 @@ function display_ngrok_warning () {
   check_if_continue
 }
 
+function maybe_set_azure_subscription () {
+  if [ ! -z "$AZURE_SUBSCRIPTION_NAME" ]
+  then
+      log "💙 AZURE_SUBSCRIPTION_NAME ($AZURE_SUBSCRIPTION_NAME) is set, searching for subscription id..."
+      az account list --query "[?name=='$AZURE_SUBSCRIPTION_NAME']" | jq -r '.[].id'
+      subscriptionId=$(az account list --query "[?name=='$AZURE_SUBSCRIPTION_NAME']" | jq -r '.[].id')
+      log "💙 setting up account to use subscription $AZURE_SUBSCRIPTION_NAME ($subscriptionId)"
+      az account set --subscription $subscriptionId
+  fi
+}
+
 # src/lib/validations/validate_dir_exists.sh
 validate_dir_exists() {
   [[ -d "$1" ]] || logerror "<$1> must be an existing directory"

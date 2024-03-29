@@ -4,8 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-
-
 if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
 then
     log "Logging to Azure using environment variables AZ_USER and AZ_PASS"
@@ -18,13 +16,16 @@ else
     az login
 fi
 
-AZURE_TENANT_NAME=${AZURE_TENANT_NAME:-$1}
+AZURE_SUBSCRIPTION_NAME=${AZURE_SUBSCRIPTION_NAME:-$1}
 
-if [ -z "$AZURE_TENANT_NAME" ]
+if [ -z "$AZURE_SUBSCRIPTION_NAME" ]
 then
-     logerror "AZURE_TENANT_NAME is not set. Export it as environment variable or pass it as argument"
+     logerror "AZURE_SUBSCRIPTION_NAME is not set. Export it as environment variable or pass it as argument"
      exit 1
 fi
+
+# when AZURE_SUBSCRIPTION_NAME env var is set, we need to set the correct subscription
+maybe_set_azure_subscription
 
 AZURE_NAME=pg${USER}dl${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
@@ -82,7 +83,7 @@ then
 fi
 set -e
 
-AZURE_TENANT_ID=$(az account list --query "[?name=='$AZURE_TENANT_NAME']" | jq -r '.[].tenantId')
+AZURE_TENANT_ID=$(az account list --query "[?name=='$AZURE_SUBSCRIPTION_NAME']" | jq -r '.[].tenantId')
 AZURE_DATALAKE_TOKEN_ENDPOINT="https://login.microsoftonline.com/$AZURE_TENANT_ID/oauth2/token"
 
 log "Creating data lake $AZURE_DATALAKE_ACCOUNT_NAME in resource $AZURE_RESOURCE_GROUP"
