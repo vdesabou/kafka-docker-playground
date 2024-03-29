@@ -3,7 +3,6 @@ version: '3.5'
 services:
 
   connect:
-    depends_on:
     volumes:
         - ../../connect/connect-jdbc-aws-athena-source/AthenaJDBC42-2.1.1.1000.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/AthenaJDBC42-2.1.1.1000.jar
     environment:
