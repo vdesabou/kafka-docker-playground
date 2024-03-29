@@ -149,7 +149,7 @@ do
                     for i in {1..10}
                     do  
                         # https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28#get-a-workflow-run
-                        curl_output=(curl -s -o /tmp/${gh_run_id}_${i}.json -w %{http_code} -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28"  -H "Authorization: Bearer $CI_GITHUB_TOKEN" "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=50&page=${i}")
+                        curl_output=$(curl -s -o /tmp/${gh_run_id}_${i}.json -w %{http_code} -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28"  -H "Authorization: Bearer $CI_GITHUB_TOKEN" "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=50&page=${i}")
                         if [ $curl_output -ne 200 ]
                         then
                             logerror "❌ curl request <https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=50&page=${i}> failed with error code $curl_output!"
