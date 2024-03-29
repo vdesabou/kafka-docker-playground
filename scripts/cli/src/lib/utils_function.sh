@@ -4074,10 +4074,23 @@ function display_ngrok_warning () {
 function maybe_set_azure_subscription () {
   if [ ! -z "$AZURE_SUBSCRIPTION_NAME" ]
   then
-      log "💙 AZURE_SUBSCRIPTION_NAME ($AZURE_SUBSCRIPTION_NAME) is set, searching for subscription id..."
-      az account list --query "[?name=='$AZURE_SUBSCRIPTION_NAME']" | jq -r '.[].id'
-      subscriptionId=$(az account list --query "[?name=='$AZURE_SUBSCRIPTION_NAME']" | jq -r '.[].id')
-      log "💙 setting up account to use subscription $AZURE_SUBSCRIPTION_NAME ($subscriptionId)"
-      az account set --subscription $subscriptionId
+    log "💙 AZURE_SUBSCRIPTION_NAME ($AZURE_SUBSCRIPTION_NAME) is set, searching for subscription id..."
+    az account list --query "[?name=='$AZURE_SUBSCRIPTION_NAME']" | jq -r '.[].id'
+    subscriptionId=$(az account list --query "[?name=='$AZURE_SUBSCRIPTION_NAME']" | jq -r '.[].id')
+    log "💙 setting up account to use subscription $AZURE_SUBSCRIPTION_NAME ($subscriptionId)"
+    az account set --subscription $subscriptionId
+  else
+    # check if confluent employee, in that case enforce AZURE_SUBSCRIPTION_NAME
+    userEmail=$(az account show | jq -r '.user.name')
+    if [[ $userEmail == *"confluent.io"* ]]
+    then
+      logerror "🔒 Confluent employee detected, please set AZURE_SUBSCRIPTION_NAME environment variable to be sure to use correct subscription !"
+      logerror "Here is the list of subscriptions using az account list, please choose one accordingly:"
+      az account list --query "[].{name:name, isDefault:isDefault, tenantId:tenantId}" | jq -r '.[] | "name: \(.name), isDefault: \(.isDefault), tenantId: \(.tenantId)"'
+      exit 1
+    fi
+
+    default_subscription=$(az account list --query "[?isDefault].name" | jq -r '.[0]')
+    log "💎 AZURE_SUBSCRIPTION_NAME is not set, using default subscription $default_subscription"
   fi
 }
