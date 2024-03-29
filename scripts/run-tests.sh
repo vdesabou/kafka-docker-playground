@@ -169,7 +169,7 @@ do
 
                 if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
                 then
-                    logerror "Could not retrieve job url! Forcing re-run for next time..."
+                    logerror "Could not retrieve job url!"
                 fi
             fi
 

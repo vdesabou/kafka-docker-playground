@@ -146,7 +146,7 @@ do
           for i in {1..10}
           do  
               # https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28#get-a-workflow-run
-              curl_output=$(curl -s -o $tmp_dir/${gh_run_id}_${i}.json -w %{http_code} -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28"  -H "Authorization: Bearer $CI_GITHUB_TOKEN" "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=50&page=${i}")
+              curl_output=$(curl -s -o $tmp_dir/${gh_run_id}_${i}.json -w %{http_code} -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28"  -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=50&page=${i}")
               if [ $curl_output -ne 200 ]
               then
                   logerror "❌ curl request <https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=50&page=${i}> failed with error code $curl_output!"
@@ -167,9 +167,9 @@ do
 
         if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
         then
-          logerror "Could not retrieve job url! Forcing re-run for next time..."
-          s3_file="s3://kafka-docker-playground/ci/${image_version}-${testdir}-${version}-${script_name}"
-          aws s3 rm $s3_file --region us-east-1
+          logerror "Could not retrieve job url! FIXTTHIS: NOT Forcing re-run for next time..."
+          # s3_file="s3://kafka-docker-playground/ci/${image_version}-${testdir}-${version}-${script_name}"
+          # aws s3 rm $s3_file --region us-east-1
         fi
       else
         logerror "result_file: ${ci_file} does not exist !"
