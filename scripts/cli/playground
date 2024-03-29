@@ -14550,7 +14550,7 @@ playground_cleanup_cloud_resources_command() {
   GCP_KEYFILE="$tmp_dir/keyfile.json"
   echo -e "$GCP_KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${GCP_KEYFILE}
   docker rm -f gcloud-config-cleanup-resources > /dev/null 2>&1
-  docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud auth activate-service-account --project ${GCP_PROJECT} --key-file /tmp/keyfile.json
+  docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud auth activate-service-account --project ${GCP_PROJECT} --key-file /tmp/keyfile.json > /dev/null 2>&1
 
   for bucket in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gsutil ls)
   do
@@ -14574,18 +14574,18 @@ playground_cleanup_cloud_resources_command() {
   GCP_SPANNER_INSTANCE="spanner-instance-$USER"
   GCP_SPANNER_DATABASE="spanner-db-$USER"
   log "Deleting Spanner database $GCP_SPANNER_DATABASE"
-  docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner databases delete $GCP_SPANNER_DATABASE --instance $GCP_SPANNER_INSTANCE --project $GCP_PROJECT << EOF
+  docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner databases delete $GCP_SPANNER_DATABASE --instance $GCP_SPANNER_INSTANCE --project $GCP_PROJECT << EOF > /dev/null 2>&1
 Y
 EOF
   log "Deleting Spanner instance $GCP_SPANNER_INSTANCE"
-  docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner instances delete $GCP_SPANNER_INSTANCE --project $GCP_PROJECT  << EOF
+  docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner instances delete $GCP_SPANNER_INSTANCE --project $GCP_PROJECT  << EOF > /dev/null 2>&1
 Y
 EOF
 
   if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
   then
-       logerror "ERROR: either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
-       exit 1
+      logerror "ERROR: either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
+      exit 1
   else
       if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
       then
@@ -14611,20 +14611,6 @@ EOF
           fi
       fi
   fi
-
-  # log "Cleanup AWS S3 buckets"
-  # for bucket in $(aws s3api list-buckets --region $AWS_REGION | jq .Buckets[].Name -r)
-  # do
-  #     if [[ $bucket = *pgbucket${user}* ]]
-  #     then
-  #         log "Removing AWS bucket $bucket"
-  #         if [[ ! -n "$force" ]]
-  #         then
-  #             check_if_continue
-  #         fi
-  #         aws s3 rb s3://$bucket --force --region $AWS_REGION
-  #     fi
-  # done
 
   log "Cleanup AWS Kinesis streams"
   for stream in $(aws kinesis list-streams --region $AWS_REGION | jq '.StreamNames[]' -r)
