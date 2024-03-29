@@ -5,9 +5,9 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 cd ../../connect/connect-jdbc-aws-athena-source
-if [ ! -f ${PWD}/AthenaJDBC42-2.1.1.1000.jar ]
+if [ ! -f ${PWD}/AthenaJDBC42-2.1.3.1002.jar ]
 then
-     wget -q https://downloads.athena.us-east-1.amazonaws.com/drivers/JDBC/SimbaAthenaJDBC-2.1.1.1000/AthenaJDBC42-2.1.1.1000.jar
+    wget -q https://downloads.athena.us-east-1.amazonaws.com/drivers/JDBC/SimbaAthenaJDBC-2.1.3.1002/AthenaJDBC42-2.1.3.1002.jar
 fi
 cd -
 
@@ -59,25 +59,25 @@ docker run -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS
 log "Creating JDBC AWS Athena source connector"
 playground connector create-or-update --connector athena-jdbc-source  << EOF
 {
-     "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-     "tasks.max": "1",
-     "connection.url": "jdbc:awsathena://AwsRegion=$AWS_DEFAULT_REGION;S3OutputLocation=$AWS_ATHENA_S3_STAGING_DIR",
-     "connection.user": "$AWS_ACCESS_KEY_ID",
-     "connection.password": "$AWS_SECRET_ACCESS_KEY",
-     "_catalog.pattern": "AwsDataCatalog",
-     "_schema.pattern": "default",
-     "_table.whitelist": "customers",
-     "query": "SELECT * FROM customers",
-     "mode": "timestamp",
-     "timestamp.column.name": "update_ts",
-     "topic.prefix": "athena-",
-     "validate.non.null":"false",
-     "errors.log.enable": "true",
-     "errors.log.include.messages": "true"
+    "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+    "tasks.max": "1",
+    "connection.url": "jdbc:awsathena://AwsRegion=$AWS_DEFAULT_REGION;S3OutputLocation=$AWS_ATHENA_S3_STAGING_DIR",
+    "connection.user": "$AWS_ACCESS_KEY_ID",
+    "connection.password": "$AWS_SECRET_ACCESS_KEY",
+    "_catalog.pattern": "AwsDataCatalog",
+    "_schema.pattern": "default",
+    "_table.whitelist": "customers",
+    "query": "SELECT * FROM customers",
+    "mode": "timestamp",
+    "timestamp.column.name": "update_ts",
+    "topic.prefix": "athena-customers",
+    "validate.non.null":"false",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
 }
 EOF
 
-#playground debug log-level set --package "com.simba.athena" --level  TRACE
+# with custom dialect with "SELECT DATE_FORMAT(CURRENT_TIMESTAMP, '%Y-%m-%d %H:%i:%s')" it works
 
 # athena-jdbc-source             ✅ RUNNING  0:🛑 FAILED[connect]          tasks: org.apache.kafka.connect.errors.ConnectException: java.sql.SQLDataException: [Simba][JDBC](10140) Error converting value to Timestamp.
 #         at io.confluent.connect.jdbc.source.JdbcSourceTask.poll(JdbcSourceTask.java:521)

@@ -4,6 +4,6 @@ services:
 
   connect:
     volumes:
-        - ../../connect/connect-jdbc-aws-athena-source/AthenaJDBC42-2.1.1.1000.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/AthenaJDBC42-2.1.1.1000.jar
+       - ../../connect/connect-jdbc-aws-athena-source/AthenaJDBC42-2.1.3.1002.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/AthenaJDBC42-2.1.3.1002.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
