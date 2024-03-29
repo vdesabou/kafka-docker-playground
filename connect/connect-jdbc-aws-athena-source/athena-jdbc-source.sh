@@ -61,10 +61,13 @@ playground connector create-or-update --connector athena-jdbc-source  << EOF
 {
      "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
      "tasks.max": "1",
-     "connection.url": "jdbc:awsathena://athena.$AWS_DEFAULT_REGION.amazonaws.com:443;S3OutputLocation=$AWS_ATHENA_S3_STAGING_DIR;Workgroup=primary",
+     "connection.url": "jdbc:awsathena://AwsRegion=$AWS_DEFAULT_REGION;S3OutputLocation=$AWS_ATHENA_S3_STAGING_DIR",
      "connection.user": "$AWS_ACCESS_KEY_ID",
      "connection.password": "$AWS_SECRET_ACCESS_KEY",
-     "table.whitelist": "customers",
+     "_catalog.pattern": "AwsDataCatalog",
+     "_schema.pattern": "default",
+     "_table.whitelist": "customers",
+     "query": "SELECT * FROM customers",
      "mode": "timestamp",
      "timestamp.column.name": "update_ts",
      "topic.prefix": "athena-",
@@ -73,6 +76,36 @@ playground connector create-or-update --connector athena-jdbc-source  << EOF
      "errors.log.include.messages": "true"
 }
 EOF
+
+#playground debug log-level set --package "com.simba.athena" --level  TRACE
+
+# athena-jdbc-source             ✅ RUNNING  0:🛑 FAILED[connect]          tasks: org.apache.kafka.connect.errors.ConnectException: java.sql.SQLDataException: [Simba][JDBC](10140) Error converting value to Timestamp.
+#         at io.confluent.connect.jdbc.source.JdbcSourceTask.poll(JdbcSourceTask.java:521)
+#         at org.apache.kafka.connect.runtime.AbstractWorkerSourceTask.poll(AbstractWorkerSourceTask.java:488)
+#         at org.apache.kafka.connect.runtime.AbstractWorkerSourceTask.execute(AbstractWorkerSourceTask.java:360)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:229)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:284)
+#         at org.apache.kafka.connect.runtime.AbstractWorkerSourceTask.run(AbstractWorkerSourceTask.java:80)
+#         at org.apache.kafka.connect.runtime.isolation.Plugins.lambda$withClassLoader$1(Plugins.java:237)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: java.sql.SQLDataException: [Simba][JDBC](10140) Error converting value to Timestamp.
+#         at com.simba.athena.exceptions.ExceptionConverter.toSQLException(Unknown Source)
+#         at com.simba.athena.utilities.conversion.TypeConverter.convertToTimestamp(Unknown Source)
+#         at com.simba.athena.utilities.conversion.TypeConverter.toTimestamp(Unknown Source)
+#         at com.simba.athena.jdbc.common.SForwardResultSet.getTimestamp(Unknown Source)
+#         at io.confluent.connect.jdbc.dialect.GenericDatabaseDialect.currentTimeOnDB(GenericDatabaseDialect.java:565)
+#         at io.confluent.connect.jdbc.source.TimestampIncrementingTableQuerier.endTimestampValue(TimestampIncrementingTableQuerier.java:251)
+#         at io.confluent.connect.jdbc.source.TimestampIncrementingCriteria.setQueryParametersTimestamp(TimestampIncrementingCriteria.java:174)
+#         at io.confluent.connect.jdbc.source.TimestampIncrementingCriteria.setQueryParameters(TimestampIncrementingCriteria.java:136)
+#         at io.confluent.connect.jdbc.source.TimestampIncrementingTableQuerier.executeQuery(TimestampIncrementingTableQuerier.java:211)
+#         at io.confluent.connect.jdbc.source.TimestampTableQuerier.executeQuery(TimestampTableQuerier.java:119)
+#         at io.confluent.connect.jdbc.source.TimestampIncrementingTableQuerier.maybeStartQuery(TimestampIncrementingTableQuerier.java:164)
+#         at io.confluent.connect.jdbc.source.JdbcSourceTask.poll(JdbcSourceTask.java:482)
+#         ... 11 more
 
 sleep 5
 
