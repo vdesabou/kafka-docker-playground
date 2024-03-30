@@ -108,8 +108,7 @@ EOF
 
 connector_name="SqlServerCdcSourceV2_$USER"
 set +e
-log "Deleting fully managed connector $connector_name, it might fail..."
-playground connector delete --connector $connector_name
+playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
 
 base64_truststore=$(cat $PWD/ssl/truststore.jks | base64)

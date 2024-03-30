@@ -26,8 +26,7 @@ NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
 
 connector_name="RabbitMQSource_$USER"
 set +e
-log "Deleting fully managed connector $connector_name, it might fail..."
-playground connector delete --connector $connector_name
+playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
 
 sleep 3

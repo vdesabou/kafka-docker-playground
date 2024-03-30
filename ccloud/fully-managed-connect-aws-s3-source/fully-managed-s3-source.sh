@@ -62,8 +62,7 @@ aws s3 cp generalized.quickstart.json s3://$AWS_BUCKET_NAME/quickstart/generaliz
 
 connector_name="S3Source_$USER"
 set +e
-log "Deleting fully managed connector $connector_name, it might fail..."
-playground connector delete --connector $connector_name
+playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
 
 log "Creating fully managed connector"
