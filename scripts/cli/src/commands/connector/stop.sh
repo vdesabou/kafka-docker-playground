@@ -43,7 +43,7 @@ do
     get_connect_url_and_security
     handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/stop\""
 
-    echo "$curl_output" | jq .
+    log "🛑 $connector_type connector $connector has been stopped successfully"
 
     sleep 1
     playground connector status --connector $connector

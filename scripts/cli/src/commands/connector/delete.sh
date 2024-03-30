@@ -32,5 +32,5 @@ do
         handle_onprem_connect_rest_api "curl $security -s -X DELETE \"$connect_url/connectors/$connector\""
     fi
 
-    echo "$curl_output" | jq .
+    log "❌ $connector_type connector $connector has been deleted successfully"
 done

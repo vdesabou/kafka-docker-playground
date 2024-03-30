@@ -20612,7 +20612,7 @@ playground_connector_pause_command() {
           handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/pause\""
       fi
 
-      echo "$curl_output" | jq .
+      log "⏸️ $connector_type connector $connector has been paused successfully"
 
       sleep 1
       playground connector status --connector $connector
@@ -20750,7 +20750,7 @@ playground_connector_restart_command() {
       else
           handle_onprem_connect_rest_api "curl $security -s -X POST -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/restart?includeTasks=true&onlyFailed=false\""
       fi
-      echo "$curl_output" | jq .
+      log "🔄 $connector_type connector $connector has been restarted successfully"
   done
   sleep 3
   playground connector status --connector $connector
@@ -20804,7 +20804,7 @@ playground_connector_stop_command() {
       get_connect_url_and_security
       handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/stop\""
 
-      echo "$curl_output" | jq .
+      log "🛑 $connector_type connector $connector has been stopped successfully"
 
       sleep 1
       playground connector status --connector $connector
@@ -20847,7 +20847,7 @@ playground_connector_resume_command() {
           handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/resume\""
       fi
 
-      echo "$curl_output" | jq .
+      log "⏯️ $connector_type connector $connector has been resumed successfully"
 
       sleep 1
       playground connector status --connector $connector
@@ -20891,7 +20891,7 @@ playground_connector_delete_command() {
           handle_onprem_connect_rest_api "curl $security -s -X DELETE \"$connect_url/connectors/$connector\""
       fi
 
-      echo "$curl_output" | jq .
+      log "❌ $connector_type connector $connector has been deleted successfully"
   done
 }
 

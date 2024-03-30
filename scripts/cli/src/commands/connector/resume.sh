@@ -31,7 +31,7 @@ do
         handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/resume\""
     fi
 
-    echo "$curl_output" | jq .
+    log "⏯️ $connector_type connector $connector has been resumed successfully"
 
     sleep 1
     playground connector status --connector $connector

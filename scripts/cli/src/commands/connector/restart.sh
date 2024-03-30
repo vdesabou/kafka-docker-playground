@@ -52,7 +52,7 @@ do
     else
         handle_onprem_connect_rest_api "curl $security -s -X POST -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/restart?includeTasks=true&onlyFailed=false\""
     fi
-    echo "$curl_output" | jq .
+    log "🔄 $connector_type connector $connector has been restarted successfully"
 done
 sleep 3
 playground connector status --connector $connector
