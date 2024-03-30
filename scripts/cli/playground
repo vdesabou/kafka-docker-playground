@@ -11148,8 +11148,11 @@ function maybe_set_azure_subscription () {
     if [[ $userEmail == *"confluent.io"* ]]
     then
       logerror "🔒 Confluent employee detected, please set AZURE_SUBSCRIPTION_NAME environment variable to be sure to use correct subscription !"
-      logerror "✨ Here is the list of subscriptions using az account list, please choose one accordingly (for GTS, it should be COPS)"
-      az account list --query "[].{name:name, isDefault:isDefault, tenantId:tenantId}" | jq -r '.[] | "name: \(.name), isDefault: \(.isDefault), tenantId: \(.tenantId)"'
+      if [ -z "$GITHUB_RUN_NUMBER" ]
+      then
+        logerror "✨ Here is the list of subscriptions using az account list, please choose one accordingly (for GTS, it should be COPS)"
+        az account list --query "[].{name:name, isDefault:isDefault, tenantId:tenantId}" | jq -r '.[] | "name: \(.name), isDefault: \(.isDefault), tenantId: \(.tenantId)"'
+      fi
       exit 1
     fi
 
