@@ -7372,7 +7372,12 @@ function maybe_create_image()
     fi
 
     tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+    if [ -z "$PG_VERBOSE_MODE" ]
+then
     trap 'rm -rf $tmp_dir' EXIT
+else
+    log "🐛📂 not deleting tmp dir $tmp_dir"
+fi
 cat << EOF > $tmp_dir/Dockerfile
 FROM ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
 USER root
@@ -10922,7 +10927,12 @@ function force_enable () {
   logwarn "💪 Forcing $flag ($env_variable env variable)"
   line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh$' $test_file | cut -d ":" -f 1 | tail -n1)
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  trap 'rm -rf $tmp_dir' EXIT
+  if [ -z "$PG_VERBOSE_MODE" ]
+then
+    trap 'rm -rf $tmp_dir' EXIT
+else
+    log "🐛📂 not deleting tmp dir $tmp_dir"
+fi
   echo "# remove or comment those lines if you don't need it anymore" > $tmp_dir/tmp_force_enable
   echo "logwarn \"💪 Forcing $flag ($env_variable env variable) as it was set when reproduction model was created\"" >> $tmp_dir/tmp_force_enable
   echo "export $env_variable=true" >> $tmp_dir/tmp_force_enable
@@ -11614,8 +11624,14 @@ playground_update_readme_command() {
 
   set +e
   tmp_dir="/tmp/update-readme"
+  rm -rf $tmp_dir
   mkdir -p "$tmp_dir"
-  trap 'rm -rf $tmp_dir' EXIT
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
 
   cd ${root_folder}
 
@@ -11635,11 +11651,9 @@ playground_update_readme_command() {
 
   ci_folder="$tmp_dir/ci"
   log "Getting ci result files"
-  if [ ! -d "$ci_folder" ]
-  then
-    mkdir -p "$ci_folder"
-    aws s3 cp --only-show-errors s3://kafka-docker-playground/ci/ "${ci_folder}/" --recursive --no-progress --region us-east-1
-  fi
+  rm -rf "$ci_folder"
+  mkdir -p "$ci_folder"
+  aws s3 cp --only-show-errors s3://kafka-docker-playground/ci/ "${ci_folder}/" --recursive --no-progress --region us-east-1
 
   test_list=$(grep "🚀 " ${root_folder}/.github/workflows/ci.yml | cut -d '"' -f 2 | tr '\n' ' ')
   declare -a TEST_FAILED
@@ -14512,7 +14526,12 @@ playground_cleanup_cloud_resources_command() {
 
   set +e
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  trap 'rm -rf $tmp_dir' EXIT
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
 
   if [[ ! -n "$user" ]]
   then
@@ -15095,7 +15114,12 @@ playground_repro_bootstrap_command() {
   repro_dir=$root_folder/$output_folder/$final_dir
   mkdir -p $repro_dir
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  trap 'rm -rf $tmp_dir' EXIT
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
 
   description_kebab_case="${description// /-}"
   description_kebab_case=$(echo "$description_kebab_case" | tr '[:upper:]' '[:lower:]')
@@ -16165,7 +16189,12 @@ playground_schema_get_command() {
   get_sr_url_and_security
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  trap 'rm -rf $tmp_dir' EXIT
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
   #log "tmp_dir is $tmp_dir"
 
   if [[ -n "$id" ]]
@@ -16309,7 +16338,12 @@ playground_schema_register_command() {
   get_sr_url_and_security
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  trap 'rm -rf $tmp_dir' EXIT
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
   #log "tmp_dir is $tmp_dir"
   schema_file=$tmp_dir/value_schema
 
@@ -16730,7 +16764,12 @@ playground_schema_delete_command() {
 playground_debug_install_vscode_extension_command() {
   # src/commands/debug/install-vscode-extension.sh
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  trap 'rm -rf $tmp_dir' EXIT
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
 
   extension_dir=$tmp_dir/extension
 
@@ -16799,7 +16838,12 @@ playground_debug_enable_remote_debugging_command() {
   fi
   echo "$docker_command" > /tmp/tmp
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  trap 'rm -rf $tmp_dir' EXIT
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
   cat << EOF > $tmp_dir/docker-compose-remote-debugging.yml
 version: '3.5'
 services:
@@ -16854,7 +16898,12 @@ playground_debug_generate_diagnostics_command() {
   # src/commands/debug/generate-diagnostics.sh
   container="${args[--container]}"
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  trap 'rm -rf $tmp_dir' EXIT
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
 
   if [[ "$container" == "connect" ]] || [[ "$container" == "broker" ]]
   then
@@ -18005,7 +18054,12 @@ playground_topic_consume_command() {
 
     type=""
     tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-    trap 'rm -rf $tmp_dir' EXIT
+    if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
     fifo_path="$tmp_dir/kafka_output_fifo"
     mkfifo "$fifo_path"
 
@@ -18266,7 +18320,12 @@ playground_topic_produce_command() {
   eval "references=(${args[--reference]})"
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  trap 'rm -rf $tmp_dir' EXIT
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
 
   # debug
   if [[ -n "$debug" ]]
@@ -19626,7 +19685,12 @@ playground_connector_plugin_search_jar_command() {
   fi
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  trap 'rm -rf $tmp_dir' EXIT
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
 
   get_connect_image
   log "🔌 Downloading connector plugin $connector_plugin:$connector_tag"
@@ -20152,7 +20216,12 @@ playground_connector_offsets_reset_command() {
   }
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  trap 'rm -rf $tmp_dir' EXIT
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
 
   items=($connector)
   length=${#items[@]}
@@ -20325,7 +20394,12 @@ playground_connector_offsets_alter_command() {
   }
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  trap 'rm -rf $tmp_dir' EXIT
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
 
   items=($connector)
   length=${#items[@]}
@@ -20943,7 +21017,12 @@ playground_connector_show_lag_command() {
   }
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  trap 'rm -rf $tmp_dir' EXIT
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
   lag_output=$tmp_dir/lag_output
 
   function handle_signal {
@@ -21145,7 +21224,12 @@ playground_connector_show_config_command() {
             if ( [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] ) && [[ ! -n "$no_clipboard" ]]
             then
                 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-                trap 'rm -rf $tmp_dir' EXIT
+                if [ -z "$PG_VERBOSE_MODE" ]
+then
+    trap 'rm -rf $tmp_dir' EXIT
+else
+    log "🐛📂 not deleting tmp dir $tmp_dir"
+fi
                 echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
                 cat "/tmp/config-$connector" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
                 echo "EOF" >> $tmp_dir/tmp
@@ -21181,7 +21265,12 @@ playground_connector_show_config_command() {
             if ( [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] ) && [[ ! -n "$no_clipboard" ]]
             then
                 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-                trap 'rm -rf $tmp_dir' EXIT
+                if [ -z "$PG_VERBOSE_MODE" ]
+then
+    trap 'rm -rf $tmp_dir' EXIT
+else
+    log "🐛📂 not deleting tmp dir $tmp_dir"
+fi
                 echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
                 echo "$curl_output" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
                 echo "EOF" >> $tmp_dir/tmp
@@ -21224,7 +21313,12 @@ playground_connector_show_config_parameters_command() {
   fi
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  trap 'rm -rf $tmp_dir' EXIT
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
   json_file=$tmp_dir/connector.json
 
   items=($connector)
@@ -21497,7 +21591,12 @@ playground_connector_select_config_command() {
           if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
           then
               tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-              trap 'rm -rf $tmp_dir' EXIT
+              if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
               echo "$res" > $tmp_dir/tmp
 
               cat $tmp_dir/tmp | pbcopy
@@ -21514,7 +21613,12 @@ playground_connector_snippets_command() {
   dlq=${args[--dlq]}
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  trap 'rm -rf $tmp_dir' EXIT
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
 
   if [[ ! -n "$converter" ]] && [[ ! -n "$dlq" ]]
   then
@@ -21854,7 +21958,12 @@ playground_connector_create_or_update_command() {
   fi
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  trap 'rm -rf $tmp_dir' EXIT
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
   json_file=$tmp_dir/connector.json
   new_json_file=$tmp_dir/connector_new.json
   json_validate_file=$tmp_dir/json_validate_file
@@ -22077,7 +22186,12 @@ playground_connector_update_command() {
   fi
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  trap 'rm -rf $tmp_dir' EXIT
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
 
   items=($connector)
   length=${#items[@]}
@@ -32354,7 +32468,7 @@ before_hook() {
       log "🐛 --vvv is set"
       export PS4='\[\033[0;36m\]🐞$(date "+%H:%M:%S")[$(basename $0):${LINENO}] \[\033[0m\]'
       set -x
-
+      export PG_VERBOSE_MODE=true
   fi
 
   if [[ -n "$level" ]]

@@ -6,7 +6,12 @@ source ${DIR}/../../scripts/utils.sh
 
 
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-trap 'rm -rf $tmp_dir' EXIT
+if [ -z "$PG_VERBOSE_MODE" ]
+then
+    trap 'rm -rf $tmp_dir' EXIT
+else
+    log "🐛📂 not deleting tmp dir $tmp_dir"
+fi
 export TMP_CREDENTIALS_FILE="$tmp_dir/credentials"
 
 if [ ! -z $AWS_ACCESS_KEY_ID ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ] && [ ! -z "$AWS_SESSION_TOKEN" ]

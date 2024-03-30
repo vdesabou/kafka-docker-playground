@@ -1,5 +1,10 @@
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-trap 'rm -rf $tmp_dir' EXIT
+if [ -z "$PG_VERBOSE_MODE" ]
+then
+    trap 'rm -rf $tmp_dir' EXIT
+else
+    log "🐛📂 not deleting tmp dir $tmp_dir"
+fi
 
 extension_dir=$tmp_dir/extension
 

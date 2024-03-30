@@ -2,8 +2,14 @@ tags="${args[--tags]}"
 
 set +e
 tmp_dir="/tmp/update-readme"
+rm -rf $tmp_dir
 mkdir -p "$tmp_dir"
-trap 'rm -rf $tmp_dir' EXIT
+if [ -z "$PG_VERBOSE_MODE" ]
+then
+    trap 'rm -rf $tmp_dir' EXIT
+else
+    log "🐛📂 not deleting tmp dir $tmp_dir"
+fi
 
 cd ${root_folder}
 
@@ -23,11 +29,9 @@ curl -s https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-conne
 
 ci_folder="$tmp_dir/ci"
 log "Getting ci result files"
-if [ ! -d "$ci_folder" ]
-then
-  mkdir -p "$ci_folder"
-  aws s3 cp --only-show-errors s3://kafka-docker-playground/ci/ "${ci_folder}/" --recursive --no-progress --region us-east-1
-fi
+rm -rf "$ci_folder"
+mkdir -p "$ci_folder"
+aws s3 cp --only-show-errors s3://kafka-docker-playground/ci/ "${ci_folder}/" --recursive --no-progress --region us-east-1
 
 test_list=$(grep "🚀 " ${root_folder}/.github/workflows/ci.yml | cut -d '"' -f 2 | tr '\n' ' ')
 declare -a TEST_FAILED

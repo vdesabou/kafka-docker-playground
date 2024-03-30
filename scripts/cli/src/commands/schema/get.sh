@@ -6,7 +6,12 @@ verbose="${args[--verbose]}"
 get_sr_url_and_security
 
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-trap 'rm -rf $tmp_dir' EXIT
+if [ -z "$PG_VERBOSE_MODE" ]
+then
+    trap 'rm -rf $tmp_dir' EXIT
+else
+    log "🐛📂 not deleting tmp dir $tmp_dir"
+fi
 #log "tmp_dir is $tmp_dir"
 
 if [[ -n "$id" ]]

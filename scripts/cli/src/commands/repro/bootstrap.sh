@@ -269,7 +269,12 @@ fi
 repro_dir=$root_folder/$output_folder/$final_dir
 mkdir -p $repro_dir
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-trap 'rm -rf $tmp_dir' EXIT
+if [ -z "$PG_VERBOSE_MODE" ]
+then
+    trap 'rm -rf $tmp_dir' EXIT
+else
+    log "🐛📂 not deleting tmp dir $tmp_dir"
+fi
 
 description_kebab_case="${description// /-}"
 description_kebab_case=$(echo "$description_kebab_case" | tr '[:upper:]' '[:lower:]')

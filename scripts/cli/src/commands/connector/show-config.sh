@@ -41,7 +41,12 @@ do
             if ( [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] ) && [[ ! -n "$no_clipboard" ]]
             then
                 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-                trap 'rm -rf $tmp_dir' EXIT
+                if [ -z "$PG_VERBOSE_MODE" ]
+then
+    trap 'rm -rf $tmp_dir' EXIT
+else
+    log "🐛📂 not deleting tmp dir $tmp_dir"
+fi
                 echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
                 cat "/tmp/config-$connector" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
                 echo "EOF" >> $tmp_dir/tmp
@@ -77,7 +82,12 @@ do
             if ( [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] ) && [[ ! -n "$no_clipboard" ]]
             then
                 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-                trap 'rm -rf $tmp_dir' EXIT
+                if [ -z "$PG_VERBOSE_MODE" ]
+then
+    trap 'rm -rf $tmp_dir' EXIT
+else
+    log "🐛📂 not deleting tmp dir $tmp_dir"
+fi
                 echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
                 echo "$curl_output" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
                 echo "EOF" >> $tmp_dir/tmp

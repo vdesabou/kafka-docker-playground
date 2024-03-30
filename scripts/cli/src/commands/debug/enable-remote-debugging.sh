@@ -23,7 +23,12 @@ then
 fi
 echo "$docker_command" > /tmp/tmp
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-trap 'rm -rf $tmp_dir' EXIT
+if [ -z "$PG_VERBOSE_MODE" ]
+then
+    trap 'rm -rf $tmp_dir' EXIT
+else
+    log "🐛📂 not deleting tmp dir $tmp_dir"
+fi
 cat << EOF > $tmp_dir/docker-compose-remote-debugging.yml
 version: '3.5'
 services:
