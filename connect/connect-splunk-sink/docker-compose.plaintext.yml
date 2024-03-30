@@ -2,7 +2,7 @@
 version: '3.5'
 services:
   splunk:
-    image: splunk/splunk:latest
+    image: splunk/splunk:9.2.0.1
     hostname: splunk
     container_name: splunk
     platform: linux/amd64
