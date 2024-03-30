@@ -149,7 +149,7 @@ playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
 
 log "Creating fully managed connector"
-playground -v connector create-or-update --connector $connector_name << EOF
+playground connector create-or-update --connector $connector_name << EOF
 {
   "connector.class": "SnowflakeSink",
   "name": "$connector_name",
