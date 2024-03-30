@@ -10,6 +10,10 @@ on:
 
   workflow_dispatch:
     inputs:
+      test_name:
+        description: 'test(s) to run (example connect/connect-jms-weblogic-sink connect/connect-http-sink)'
+        required: false
+        default: ''
 
 jobs:
   start-runner:
