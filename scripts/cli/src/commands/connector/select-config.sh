@@ -59,11 +59,11 @@ do
         then
             tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
             if [ -z "$PG_VERBOSE_MODE" ]
-then
-    trap 'rm -rf $tmp_dir' EXIT
-else
-    log "🐛📂 not deleting tmp dir $tmp_dir"
-fi
+            then
+                trap 'rm -rf $tmp_dir' EXIT
+            else
+                log "🐛📂 not deleting tmp dir $tmp_dir"
+            fi
             echo "$res" > $tmp_dir/tmp
 
             cat $tmp_dir/tmp | pbcopy

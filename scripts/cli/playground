@@ -13728,6 +13728,21 @@ playground_run_command() {
   echo "" >> "$root_folder/playground-run-history"
   echo "playground run -f $test_file $flag_list" >> "$root_folder/playground-run-history"
 
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+      clipboard=$(playground config get clipboard)
+      if [ "$clipboard" == "" ]
+      then
+          playground config set clipboard true
+      fi
+
+      if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
+      then
+          echo "playground run -f $test_file $flag_list" | pbcopy
+          log "📋 command to run again example has been copied to the clipboard (disable with 'playground config set clipboard false')"
+      fi
+  fi
+
   increment_cli_metric nb_runs
   log "🚀 Number of examples ran so far: $(get_cli_metric nb_runs)"
 
@@ -21228,11 +21243,11 @@ playground_connector_show_config_command() {
             then
                 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
                 if [ -z "$PG_VERBOSE_MODE" ]
-then
-    trap 'rm -rf $tmp_dir' EXIT
-else
-    log "🐛📂 not deleting tmp dir $tmp_dir"
-fi
+                then
+                    trap 'rm -rf $tmp_dir' EXIT
+                else
+                    log "🐛📂 not deleting tmp dir $tmp_dir"
+                fi
                 echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
                 cat "/tmp/config-$connector" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
                 echo "EOF" >> $tmp_dir/tmp
@@ -21269,11 +21284,11 @@ fi
             then
                 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
                 if [ -z "$PG_VERBOSE_MODE" ]
-then
-    trap 'rm -rf $tmp_dir' EXIT
-else
-    log "🐛📂 not deleting tmp dir $tmp_dir"
-fi
+                then
+                    trap 'rm -rf $tmp_dir' EXIT
+                else
+                    log "🐛📂 not deleting tmp dir $tmp_dir"
+                fi
                 echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
                 echo "$curl_output" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
                 echo "EOF" >> $tmp_dir/tmp
@@ -21595,11 +21610,11 @@ playground_connector_select_config_command() {
           then
               tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
               if [ -z "$PG_VERBOSE_MODE" ]
-  then
-      trap 'rm -rf $tmp_dir' EXIT
-  else
-      log "🐛📂 not deleting tmp dir $tmp_dir"
-  fi
+              then
+                  trap 'rm -rf $tmp_dir' EXIT
+              else
+                  log "🐛📂 not deleting tmp dir $tmp_dir"
+              fi
               echo "$res" > $tmp_dir/tmp
 
               cat $tmp_dir/tmp | pbcopy

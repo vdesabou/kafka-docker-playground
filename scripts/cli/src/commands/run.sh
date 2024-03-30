@@ -1466,6 +1466,21 @@ playground state set run.test_file "$test_file"
 echo "" >> "$root_folder/playground-run-history"
 echo "playground run -f $test_file $flag_list" >> "$root_folder/playground-run-history"
 
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+    clipboard=$(playground config get clipboard)
+    if [ "$clipboard" == "" ]
+    then
+        playground config set clipboard true
+    fi
+
+    if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
+    then
+        echo "playground run -f $test_file $flag_list" | pbcopy
+        log "📋 command to run again example has been copied to the clipboard (disable with 'playground config set clipboard false')"
+    fi
+fi
+
 increment_cli_metric nb_runs
 log "🚀 Number of examples ran so far: $(get_cli_metric nb_runs)"
 
