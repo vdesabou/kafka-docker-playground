@@ -14,10 +14,13 @@ level="${args[--output-level]}"
 
 if [[ -n "$vvv" ]]
 then
-    log "🐛 --vvv is set"
-    export PS4='\[\033[0;36m\]🐞$(date "+%H:%M:%S")[$(basename $0):${LINENO}] \[\033[0m\]'
-    set -x
-    export PG_VERBOSE_MODE=true
+    if [ ! -z "$GITHUB_RUN_NUMBER" ]
+    then
+        log "🐛 --vvv is set"
+        export PS4='\[\033[0;36m\]🐞$(date "+%H:%M:%S")[$(basename $0):${LINENO}] \[\033[0m\]'
+        set -x
+        export PG_VERBOSE_MODE=true
+    fi
 fi
 
 if [[ -n "$level" ]]
