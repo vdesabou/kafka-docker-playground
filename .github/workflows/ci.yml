@@ -40,6 +40,7 @@ jobs:
         env:
           AZ_USER: ${{ secrets.AZ_USER}}
           AZ_PASS: ${{ secrets.AZ_PASS}}
+          AZURE_SUBSCRIPTION_NAME: ${{ secrets.AZURE_SUBSCRIPTION_NAME}}
           CONFLUENT_CLOUD_EMAIL: ${{ secrets.CONFLUENT_CLOUD_EMAIL}}
           CONFLUENT_CLOUD_PASSWORD: ${{ secrets.CONFLUENT_CLOUD_PASSWORD}}
           ENVIRONMENT: ${{ secrets.ENVIRONMENT}}
@@ -505,6 +506,7 @@ jobs:
         env:
           AZ_USER: ${{ secrets.AZ_USER}}
           AZ_PASS: ${{ secrets.AZ_PASS}}
+          AZURE_SUBSCRIPTION_NAME: ${{ secrets.AZURE_SUBSCRIPTION_NAME}}
           CONFLUENT_CLOUD_EMAIL: ${{ secrets.CONFLUENT_CLOUD_EMAIL}}
           CONFLUENT_CLOUD_PASSWORD: ${{ secrets.CONFLUENT_CLOUD_PASSWORD}}
           ENVIRONMENT: ${{ secrets.ENVIRONMENT}}
