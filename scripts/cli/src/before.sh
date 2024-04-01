@@ -14,7 +14,7 @@ level="${args[--output-level]}"
 
 if [[ -n "$vvv" ]]
 then
-    if [ ! -z "$GITHUB_RUN_NUMBER" ]
+    if [ -z "$GITHUB_RUN_NUMBER" ]
     then
         log "🐛 --vvv is set"
         export PS4='\[\033[0;36m\]🐞$(date "+%H:%M:%S")[$(basename $0):${LINENO}] \[\033[0m\]'
