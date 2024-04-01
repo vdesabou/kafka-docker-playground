@@ -1680,7 +1680,9 @@ function bootstrap_ccloud_environment () {
   fi
 
   suggest_use_previous_example_ccloud=1
-  test_file=$(playground state get run.test_file)
+  set +e
+  test_file=$(playground state get run.test_file) > /dev/null 2>&1
+  set -e
 
   if [ "$test_file" != "" ]
   then
