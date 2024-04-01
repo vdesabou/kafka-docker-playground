@@ -8793,17 +8793,12 @@ function bootstrap_ccloud_environment () {
   fi
 
   suggest_use_previous_example_ccloud=1
-  set +e
-  test_file=$(playground state get run.test_file) > /dev/null 2>&1
-  set -e
+  test_file=$(playground state get run.test_file)
 
   if [ "$test_file" != "" ]
   then
     if [ ! -f "$test_file" ]
     then
-      logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
-      exit 1
-    else
       if [[ $test_file == *"fully-managed-connect-databricks-delta-lake-sink"* ]]
       then
         if [ ! -z "$AWS_DATABRICKS_CLUSTER_NAME" ]
