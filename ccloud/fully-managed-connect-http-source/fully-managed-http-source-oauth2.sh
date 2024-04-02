@@ -55,7 +55,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "http.initial.offset": "0"
 }
 EOF
-wait_for_ccloud_connector_up $connector_name 300
+wait_for_ccloud_connector_up $connector_name 600
 
 # create token, see https://github.com/confluentinc/kafka-connect-http-demo#oauth2
 token=$(curl -X POST \

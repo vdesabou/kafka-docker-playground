@@ -166,7 +166,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "tasks.max" : "1"
 }
 EOF
-wait_for_ccloud_connector_up $connector_name 300
+wait_for_ccloud_connector_up $connector_name 600
 
 
 log "Waiting 20s for connector to read existing data"

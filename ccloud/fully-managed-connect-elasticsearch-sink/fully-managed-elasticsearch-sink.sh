@@ -50,7 +50,7 @@ playground connector create-or-update --connector $connector_name << EOF
   "tasks.max" : "1"
 }
 EOF
-wait_for_ccloud_connector_up $connector_name 300
+wait_for_ccloud_connector_up $connector_name 600
 
 log "Sending messages to topic test-elasticsearch-sink"
 playground topic produce -t test-elasticsearch-sink --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'

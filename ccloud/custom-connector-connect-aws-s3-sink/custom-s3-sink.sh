@@ -168,7 +168,7 @@ playground connector create-or-update --connector $connector_name << EOF
     "value.converter": "io.confluent.connect.avro.AvroConverter"
 }
 EOF
-wait_for_ccloud_connector_up $connector_name 300
+wait_for_ccloud_connector_up $connector_name 600
 
 sleep 120
 

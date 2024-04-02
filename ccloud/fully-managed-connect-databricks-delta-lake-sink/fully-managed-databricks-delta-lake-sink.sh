@@ -85,7 +85,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "tasks.max" : "1"
 }
 EOF
-wait_for_ccloud_connector_up $connector_name 300
+wait_for_ccloud_connector_up $connector_name 600
 
 connector_name="DatabricksDeltaLakeSink_$USER"
 set +e
@@ -114,7 +114,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "tasks.max": "1"
 }
 EOF
-wait_for_ccloud_connector_up $connector_name 300
+wait_for_ccloud_connector_up $connector_name 600
 
 sleep 90
 
