@@ -160,7 +160,10 @@ playground connector create-or-update --connector $connector_name << EOF
   "topics": "test_table",
   "snowflake.url.name": "$SNOWFLAKE_URL",
   "snowflake.user.name": "$PLAYGROUND_USER",
-  
+
+  "buffer.count.records": "3",
+  "buffer.flush.time" : "10",
+
   "snowflake.private.key":"$RSA_PRIVATE_KEY",
   "snowflake.private.key.passphrase": "confluent",
   "snowflake.database.name": "$PLAYGROUND_DB",
