@@ -77,4 +77,5 @@ log "Verify we have received the data in kinesis_topic topic"
 playground topic consume --topic kinesis_topic --min-expected-messages 1 --timeout 60
 
 log "Delete the stream"
+check_if_continue
 aws kinesis delete-stream --stream-name $KINESIS_STREAM_NAME --region $AWS_REGION

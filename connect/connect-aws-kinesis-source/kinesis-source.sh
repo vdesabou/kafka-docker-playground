@@ -90,4 +90,5 @@ playground topic consume --topic kinesis_topic --min-expected-messages 1 --timeo
 # Processed a total of 1 messages
 
 log "Delete the stream"
+check_if_continue
 aws kinesis delete-stream --stream-name $KINESIS_STREAM_NAME --region $AWS_REGION
