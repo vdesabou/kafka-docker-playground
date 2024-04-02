@@ -101,7 +101,7 @@ log "Listing objects of in GCS"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gsutil ls gs://$GCS_BUCKET_NAME/topics/gcs_topic/*/*
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-docker run -i --volumes-from gcloud-config -v /tmp:/tmp/ google/cloud-sdk:latest gsutil cp gs://$GCS_BUCKET_NAME/topics/gcs_topic/*/*/gcs_topic+0+0000000000.avro /tmp/gcs_topic+0+0000000000.avro
+docker run -i --volumes-from gcloud-config -v /tmp:/tmp/ google/cloud-sdk:latest gsutil cp gs://$GCS_BUCKET_NAME/topics/gcs_topic/*/*/*/*/gcs_topic+0+0000000000.avro /tmp/gcs_topic+0+0000000000.avro
 
 docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/gcs_topic+0+0000000000.avro
 
