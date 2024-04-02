@@ -82,22 +82,22 @@ set -e
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
-     "connector.class": "S3_SINK",
-     "name": "$connector_name",
-     "kafka.auth.mode": "KAFKA_API_KEY",
-     "kafka.api.key": "$CLOUD_KEY",
-     "kafka.api.secret": "$CLOUD_SECRET",
-     "topics": "s3_topic",
-     "topics.dir": "$TAG",
-     "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
-     "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
-     "input.data.format": "AVRO",
-     "output.data.format": "AVRO",
-     "s3.bucket.name": "$AWS_BUCKET_NAME",
-     "time.interval" : "HOURLY",
-     "flush.size": "1000",
-     "schema.compatibility": "NONE",
-     "tasks.max" : "1"
+    "connector.class": "S3_SINK",
+    "name": "$connector_name",
+    "kafka.auth.mode": "KAFKA_API_KEY",
+    "kafka.api.key": "$CLOUD_KEY",
+    "kafka.api.secret": "$CLOUD_SECRET",
+    "topics": "s3_topic",
+    "topics.dir": "$TAG",
+    "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
+    "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
+    "input.data.format": "AVRO",
+    "output.data.format": "AVRO",
+    "s3.bucket.name": "$AWS_BUCKET_NAME",
+    "time.interval" : "HOURLY",
+    "flush.size": "1000",
+    "schema.compatibility": "NONE",
+    "tasks.max" : "1"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 600
