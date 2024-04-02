@@ -32,8 +32,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 GCS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${TAG}
 GCS_BUCKET_NAME=${GCS_BUCKET_NAME//[-.]/}
-
-log "Doing gsutil authentication"
+GCS_BUCKET_REGION=${1:-europe-west2}log "Doing gsutil authentication"
 set +e
 docker rm -f gcloud-config
 set -e
@@ -41,7 +40,7 @@ docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cl
 
 log "Creating bucket name <$GCS_BUCKET_NAME>, if required"
 set +e
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gsutil mb -p $(cat ${GCP_KEYFILE} | jq -r .project_id) gs://$GCS_BUCKET_NAME
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gsutil mb -p $(cat ${GCP_KEYFILE} | jq -r .project_id) -l $GCS_BUCKET_REGION gs://$GCS_BUCKET_NAME
 set -e
 
 log "Removing existing objects in GCS, if applicable"
