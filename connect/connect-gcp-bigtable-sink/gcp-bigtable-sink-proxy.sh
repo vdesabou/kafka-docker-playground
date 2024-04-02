@@ -10,6 +10,7 @@ then
      exit 1
 fi
 
+GCP_BIGTABLE_REGION=${1:-europe-west2-a}
 GCP_BIGTABLE_INSTANCE="bigtable-$USER"
 
 cd ../../connect/connect-gcp-bigtable-sink
@@ -45,10 +46,10 @@ Y
 EOF
 set -e
 log "Create a BigTable Instance and Database"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances create $GCP_BIGTABLE_INSTANCE --project $GCP_PROJECT --cluster-config=id=$GCP_BIGTABLE_INSTANCE,zone=us-east1-c --display-name="playground-bigtable-instance"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances create $GCP_BIGTABLE_INSTANCE --project $GCP_PROJECT --cluster-config=id=$GCP_BIGTABLE_INSTANCE,zone=$GCP_BIGTABLE_REGION --display-name="playground-bigtable-instance"
 
-log "Sending messages to topic stats"
-playground topic produce -t stats --nb-messages 1 --forced-value '{"users": {"name":"Bob","friends": "1000"}}' --key "simple-key-1" << 'EOF'
+log "Sending messages to topic big_query_stats"
+playground topic produce -t big_query_stats --nb-messages 1 --forced-value '{"users": {"name":"Bob","friends": "1000"}}' --key "simple-key-1" << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -73,10 +74,10 @@ playground topic produce -t stats --nb-messages 1 --forced-value '{"users": {"na
   ]
 }
 EOF
-playground topic produce -t stats --nb-messages 1 --forced-value '{"users": {"name":"Jess","friends": "10000"}}' --key "simple-key-2" << 'EOF'
+playground topic produce -t big_query_stats --nb-messages 1 --forced-value '{"users": {"name":"Jess","friends": "10000"}}' --key "simple-key-2" << 'EOF'
 {"type":"record","name":"myrecord","fields":[{"name":"users","type":{"name":"columnfamily","type":"record","fields":[{"name":"name","type":"string"},{"name":"friends","type":"string"}]}}]}
 EOF
-playground topic produce -t stats --nb-messages 1 --forced-value '{"users": {"name":"John","friends": "10000"}}' --key "simple-key-3" << 'EOF'
+playground topic produce -t big_query_stats --nb-messages 1 --forced-value '{"users": {"name":"John","friends": "10000"}}' --key "simple-key-3" << 'EOF'
 {"type":"record","name":"myrecord","fields":[{"name":"users","type":{"name":"columnfamily","type":"record","fields":[{"name":"name","type":"string"},{"name":"friends","type":"string"}]}}]}
 EOF
 
@@ -90,7 +91,7 @@ playground connector create-or-update --connector gcp-bigtable-sink  << EOF
 {
     "connector.class": "io.confluent.connect.gcp.bigtable.BigtableSinkConnector",
     "tasks.max" : "1",
-    "topics" : "stats",
+    "topics" : "big_query_stats",
     "auto.create" : "true",
     "gcp.bigtable.credentials.path": "/tmp/keyfile.json",
     "gcp.bigtable.instance.id": "$GCP_BIGTABLE_INSTANCE",
@@ -108,14 +109,16 @@ EOF
 sleep 30
 
 log "Verify data is in GCP BigTable"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE read kafka_stats > /tmp/result.log  2>&1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE read kafka_big_query_stats > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "Bob" /tmp/result.log
 
 log "Delete table"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE deletetable kafka_stats
+check_if_continue
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE deletetable kafka_big_query_stats
 
 log "Deleting instance"
+check_if_continue
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances delete $GCP_BIGTABLE_INSTANCE --project $GCP_PROJECT  << EOF
 Y
 EOF

@@ -1697,7 +1697,7 @@ function bootstrap_ccloud_environment () {
       fi
     fi
 
-    if [[ $test_file == *"fully-managed-connect-gcp-bigquery-legacy-sink"* ]] || [[ $test_file == *"fully-managed-connect-gcp-bigquery-v2-sink"* ]] || [[ $test_file == *"fully-managed-connect-gcp-cloud-functions-sink"* ]]
+    if [[ $test_file == *"fully-managed-connect-gcp-bigquery-legacy-sink"* ]] || [[ $test_file == *"fully-managed-connect-gcp-bigquery-v2-sink"* ]] || [[ $test_file == *"fully-managed-connect-gcp-cloud-functions-sink"* ]] || [[ $test_file == *"fully-managed-connect-gcp-bigtable-sink"* ]]
     then
       if [ ! -z "$GCP_CLUSTER_NAME" ]
       then

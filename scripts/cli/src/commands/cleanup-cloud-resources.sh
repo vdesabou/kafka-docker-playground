@@ -79,8 +79,8 @@ Y
 EOF
 
 GCP_BIGTABLE_INSTANCE="bigtable-$USER"
-log "Delete BigTable table kafka_stats"
-docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE deletetable kafka_stats
+log "Delete BigTable table kafka_big_query_stats"
+docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE deletetable kafka_big_query_stats
 
 log "Deleting BigTable instance $GCP_BIGTABLE_INSTANCE"
 docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud bigtable instances delete $GCP_BIGTABLE_INSTANCE --project $GCP_PROJECT << EOF > /dev/null 2>&1

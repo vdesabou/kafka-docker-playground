@@ -13,7 +13,7 @@ fi
 GCP_BIGTABLE_REGION=${1:-europe-west2-a}
 GCP_BIGTABLE_INSTANCE="bigtable-$USER"
 
-cd ../../connect/connect-gcp-bigtable-sink
+cd ../../ccloud/fully-managed-connect-gcp-bigtable-sink
 GCP_KEYFILE="${PWD}/keyfile.json"
 if [ ! -f ${GCP_KEYFILE} ] && [ -z "$GCP_KEYFILE_CONTENT" ]
 then
@@ -30,8 +30,14 @@ else
 fi
 cd -
 
-PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+bootstrap_ccloud_environment
+
+log "Creating big_query_stats topic"
+set +e
+playground topic delete --topic big_query_stats
+sleep 3
+playground topic create --topic big_query_stats
+set -e
 
 log "Doing gsutil authentication"
 set +e
@@ -46,7 +52,7 @@ Y
 EOF
 set -e
 log "Create a BigTable Instance and Database"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances create $GCP_BIGTABLE_INSTANCE --project $GCP_PROJECT --cluster-config=id=$GCP_BIGTABLE_INSTANCE,$GCP_BIGTABLE_REGION --display-name="playground-bigtable-instance"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances create $GCP_BIGTABLE_INSTANCE --project $GCP_PROJECT --cluster-config=id=$GCP_BIGTABLE_INSTANCE,zone=$GCP_BIGTABLE_REGION --display-name="playground-bigtable-instance"
 
 log "Sending messages to topic big_query_stats"
 playground topic produce -t big_query_stats --nb-messages 1 --forced-value '{"users": {"name":"Bob","friends": "1000"}}' --key "simple-key-1" << 'EOF'
@@ -81,24 +87,33 @@ playground topic produce -t big_query_stats --nb-messages 1 --forced-value '{"us
 {"type":"record","name":"myrecord","fields":[{"name":"users","type":{"name":"columnfamily","type":"record","fields":[{"name":"name","type":"string"},{"name":"friends","type":"string"}]}}]}
 EOF
 
-log "Creating GCP BigTable Sink connector"
-playground connector create-or-update --connector gcp-bigtable-sink  << EOF
+
+connector_name="BigTableSink_$USER"
+set +e
+playground connector delete --connector $connector_name > /dev/null 2>&1
+set -e
+
+log "Creating fully managed connector"
+playground connector create-or-update --connector $connector_name << EOF
 {
-    "connector.class": "io.confluent.connect.gcp.bigtable.BigtableSinkConnector",
-    "tasks.max" : "1",
-    "topics" : "big_query_stats",
-    "auto.create" : "true",
-    "gcp.bigtable.credentials.path": "/tmp/keyfile.json",
-    "gcp.bigtable.instance.id": "$GCP_BIGTABLE_INSTANCE",
-    "gcp.bigtable.project.id": "$GCP_PROJECT",
-    "auto.create.tables": "true",
-    "auto.create.column.families": "true",
-    "table.name.format" : "kafka_\${topic}",
-    "confluent.license": "",
-    "confluent.topic.bootstrap.servers": "broker:9092",
-    "confluent.topic.replication.factor": "1"
+  "connector.class": "BigTableSink",
+  "name": "$connector_name",
+  "kafka.auth.mode": "KAFKA_API_KEY",
+  "kafka.api.key": "$CLOUD_KEY",
+  "kafka.api.secret": "$CLOUD_SECRET",
+  "topics": "big_query_stats",
+  "gcp.bigtable.credentials.json" : $GCP_KEYFILE_CONTENT,
+  "gcp.bigtable.instance.id": "$GCP_BIGTABLE_INSTANCE",
+  "gcp.bigtable.project.id": "$GCP_PROJECT",
+  "input.data.format" : "AVRO",
+  "input.key.format": "STRING",
+  "auto.create.tables": "true",
+  "auto.create.column.families": "true",
+  "table.name.format" : "kafka_\${topic}",
+  "tasks.max" : "1"
 }
 EOF
+wait_for_ccloud_connector_up $connector_name 600
 
 sleep 30
 
@@ -118,3 +133,8 @@ Y
 EOF
 
 docker rm -f gcloud-config
+
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name
