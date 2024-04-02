@@ -19,7 +19,7 @@ then
 else 
     if [ -f ${GCP_KEYFILE} ]
     then
-        GCP_KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
+        GCP_KEYFILE_CONTENT=$(cat keyfile.json | jq -aRs . | sed 's/^"//' | sed 's/"$//')
     else
         log "Creating ${GCP_KEYFILE} based on environment variable GCP_KEYFILE_CONTENT"
         echo -e "$GCP_KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${GCP_KEYFILE}
@@ -83,7 +83,7 @@ playground connector create-or-update --connector $connector_name << EOF
   "kafka.api.key": "$CLOUD_KEY",
   "kafka.api.secret": "$CLOUD_SECRET",
   "topics": "gcs_topic",
-  "gcs.credentials.config" : $GCP_KEYFILE_CONTENT,
+  "gcs.credentials.config" : "$GCP_KEYFILE_CONTENT",
   "gcs.bucket.name" : "$GCS_BUCKET_NAME",
   "input.data.format" : "AVRO",
   "output.data.format" : "AVRO",
