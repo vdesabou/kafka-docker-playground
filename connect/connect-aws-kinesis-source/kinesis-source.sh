@@ -78,7 +78,6 @@ playground connector create-or-update --connector kinesis-source  << EOF
     "kinesis.region": "$AWS_REGION",
     "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
     "aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY",
-    "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
     "confluent.license": "",
     "confluent.topic.bootstrap.servers": "broker:9092",
     "confluent.topic.replication.factor": "1"

@@ -67,7 +67,6 @@ playground connector create-or-update --connector kinesis-source  << EOF
      "kafka.topic": "kinesis_topic",
      "kinesis.stream": "$KINESIS_STREAM_NAME",
      "kinesis.region": "$AWS_REGION",
-     "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
      "confluent.license": "",
      "confluent.topic.bootstrap.servers": "broker:9092",
      "confluent.topic.replication.factor": "1"
