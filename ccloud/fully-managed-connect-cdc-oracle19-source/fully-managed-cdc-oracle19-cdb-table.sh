@@ -213,8 +213,8 @@ docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB <<
      exit;
 EOF
 
-log "Waiting 20s for connector to read new data"
-sleep 20
+log "Waiting 60s for connector to read new data"
+sleep 60
 
 log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS: there should be 13 records"
 playground topic consume --topic ORCLCDB.C__MYUSER.CUSTOMERS --min-expected-messages 13 --timeout 60
