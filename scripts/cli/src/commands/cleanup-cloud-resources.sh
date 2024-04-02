@@ -78,6 +78,15 @@ docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:la
 Y
 EOF
 
+GCP_BIGTABLE_INSTANCE="bigtable-$USER"
+log "Delete BigTable table kafka_stats"
+docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE deletetable kafka_stats
+
+log "Deleting BigTable instance $GCP_BIGTABLE_INSTANCE"
+docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud bigtable instances delete $GCP_BIGTABLE_INSTANCE --project $GCP_PROJECT << EOF > /dev/null 2>&1
+Y
+EOF
+
 if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
 then
     logerror "ERROR: either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"

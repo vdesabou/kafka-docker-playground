@@ -9,7 +9,8 @@ then
      logerror "GCP_PROJECT is not set. Export it as environment variable or pass it as argument"
      exit 1
 fi
-INSTANCE=${2:-test-instance}
+
+GCP_BIGTABLE_INSTANCE="bigtable-$USER"
 
 cd ../../connect/connect-gcp-bigtable-sink
 GCP_KEYFILE="${PWD}/keyfile.json"
@@ -39,12 +40,12 @@ docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cl
 
 set +e
 log "Deleting instance, if required"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances delete $INSTANCE --project $GCP_PROJECT  << EOF
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances delete $GCP_BIGTABLE_INSTANCE --project $GCP_PROJECT  << EOF
 Y
 EOF
 set -e
 log "Create a BigTable Instance and Database"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances create $INSTANCE --project $GCP_PROJECT --cluster-config=id=$INSTANCE,zone=us-east1-c --display-name="playground-bigtable-instance"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances create $GCP_BIGTABLE_INSTANCE --project $GCP_PROJECT --cluster-config=id=$GCP_BIGTABLE_INSTANCE,zone=us-east1-c --display-name="playground-bigtable-instance"
 
 log "Sending messages to topic stats"
 playground topic produce -t stats --nb-messages 1 --forced-value '{"users": {"name":"Bob","friends": "1000"}}' --key "simple-key-1" << 'EOF'
@@ -92,7 +93,7 @@ playground connector create-or-update --connector gcp-bigtable-sink  << EOF
     "topics" : "stats",
     "auto.create" : "true",
     "gcp.bigtable.credentials.path": "/tmp/keyfile.json",
-    "gcp.bigtable.instance.id": "$INSTANCE",
+    "gcp.bigtable.instance.id": "$GCP_BIGTABLE_INSTANCE",
     "gcp.bigtable.project.id": "$GCP_PROJECT",
     "proxy.url": "https://nginx-proxy:8888",
     "auto.create.tables": "true",
@@ -107,15 +108,15 @@ EOF
 sleep 30
 
 log "Verify data is in GCP BigTable"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $INSTANCE read kafka_stats > /tmp/result.log  2>&1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE read kafka_stats > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "Bob" /tmp/result.log
 
 log "Delete table"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $INSTANCE deletetable kafka_stats
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE deletetable kafka_stats
 
 log "Deleting instance"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances delete $INSTANCE --project $GCP_PROJECT  << EOF
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances delete $GCP_BIGTABLE_INSTANCE --project $GCP_PROJECT  << EOF
 Y
 EOF
 
