@@ -78,6 +78,7 @@ playground connector create-or-update --connector kinesis-source  << EOF
     "kinesis.region": "$AWS_REGION",
     "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
     "aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY",
+    "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
     "confluent.license": "",
     "confluent.topic.bootstrap.servers": "broker:9092",
     "confluent.topic.replication.factor": "1"
@@ -86,8 +87,6 @@ EOF
 
 log "Verify we have received the data in kinesis_topic topic"
 playground topic consume --topic kinesis_topic --min-expected-messages 1 --timeout 60
-# 123     "µë-ë,j\u0007µ"
-# Processed a total of 1 messages
 
 log "Delete the stream"
 check_if_continue
