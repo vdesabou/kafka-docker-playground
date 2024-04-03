@@ -32,7 +32,9 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 GCS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${TAG}
 GCS_BUCKET_NAME=${GCS_BUCKET_NAME//[-.]/}
-GCS_BUCKET_REGION=${1:-europe-west2}log "Doing gsutil authentication"
+GCS_BUCKET_REGION=${1:-europe-west2}
+
+log "Doing gsutil authentication"
 set +e
 docker rm -f gcloud-config
 set -e
