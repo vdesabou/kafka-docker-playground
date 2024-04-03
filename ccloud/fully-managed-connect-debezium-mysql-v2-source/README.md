@@ -1,10 +1,10 @@
-# Fully-Managed Debezium MySQL source connector
+# Fully-Managed Debezium MySQL v2 source connector
 
 
 
 ## Objective
 
-Quickly test [Debezium MySQL](https://docs.confluent.io/cloud/current/connectors/cc-mysql-source-cdc-debezium.html) connector.
+Quickly test [Debezium MySQL](https://docs.confluent.io/cloud/current/connectors/cc-mysql-source-cdc-v2-debezium/cc-mysql-source-cdc-v2-debezium.html) connector.
 
 
 ## How to run
@@ -58,5 +58,4 @@ In case you want to use your own existing cluster, you need to setup these envir
 * `CLUSTER_REGION`: The Cloud region (example `us-east-2`)
 * `CLUSTER_CREDS`: The Kafka api key and secret to use, it should be separated with colon (example: `<API_KEY>:<API_KEY_SECRET>`)
 * `SCHEMA_REGISTRY_CREDS` (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: `<SR_API_KEY>:<SR_API_KEY_SECRET>`)
-
 
