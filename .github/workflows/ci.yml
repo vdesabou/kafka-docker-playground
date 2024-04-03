@@ -76,7 +76,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: ["7.6.0"]
+        tag: "7.6.0"
         test_list : [
                       "🚀 ccloud/fully-managed-connect-aws-cloudwatch-logs-source ccloud/fully-managed-connect-aws-s3-sink ccloud/fully-managed-connect-aws-s3-source ccloud/fully-managed-connect-azure-event-hubs-source ccloud/fully-managed-connect-azure-service-bus-source ccloud/fully-managed-connect-databricks-delta-lake-sink ccloud/fully-managed-connect-debezium-mysql-legacy-source ccloud/fully-managed-connect-debezium-postgresql-legacy-source ccloud/fully-managed-connect-debezium-mysql-v2-source",
                       "🚀 ccloud/fully-managed-connect-debezium-sqlserver-legacy-source ccloud/fully-managed-connect-debezium-sqlserver-v2-source ccloud/fully-managed-connect-elasticsearch-sink ccloud/fully-managed-connect-gcp-bigquery-legacy-sink ccloud/fully-managed-connect-gcp-bigquery-v2-sink ccloud/fully-managed-connect-gcp-cloud-functions-sink ccloud/fully-managed-connect-gcp-bigtable-sink ccloud/fully-managed-connect-debezium-postgresql-v2-source",
@@ -294,7 +294,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: ["7.6.0"]
+        tag: "7.6.0"
         test_list : [
                       "🚀 ${{ github.event.inputs.test_name }}"
                     ]
