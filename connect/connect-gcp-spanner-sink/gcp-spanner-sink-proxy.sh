@@ -15,6 +15,7 @@ fi
 
 GCP_SPANNER_INSTANCE="spanner-instance-$USER"
 GCP_SPANNER_DATABASE="spanner-db-$USER"
+GCP_SPANNER_REGION=${1:-europe-west2}
 
 cd ../../connect/connect-gcp-spanner-sink
 GCP_KEYFILE="${PWD}/keyfile.json"
@@ -52,7 +53,7 @@ Y
 EOF
 set -e
 log "Create a Spanner Instance and Database"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances create $GCP_SPANNER_INSTANCE --project $GCP_PROJECT --config=regional-us-east1 --description=playground-spanner-instance --nodes=1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances create $GCP_SPANNER_INSTANCE --project $GCP_PROJECT --config=regional-$GCP_SPANNER_REGION --description=playground-spanner-instance --nodes=1
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases create $GCP_SPANNER_DATABASE --instance $GCP_SPANNER_INSTANCE --project $GCP_PROJECT
 
 log "Sending messages to topic products"
