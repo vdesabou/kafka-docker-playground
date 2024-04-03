@@ -46,7 +46,7 @@ Y
 EOF
 set -e
 log "Create a BigTable Instance and Database"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances create $GCP_BIGTABLE_INSTANCE --project $GCP_PROJECT --cluster-config=id=$GCP_BIGTABLE_INSTANCE,$GCP_BIGTABLE_REGION --display-name="playground-bigtable-instance"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances create $GCP_BIGTABLE_INSTANCE --project $GCP_PROJECT --cluster-config=id=$GCP_BIGTABLE_INSTANCE,zone=$GCP_BIGTABLE_REGION --display-name="playground-bigtable-instance"
 
 log "Sending messages to topic big_query_stats"
 playground topic produce -t big_query_stats --nb-messages 1 --forced-value '{"users": {"name":"Bob","friends": "1000"}}' --key "simple-key-1" << 'EOF'
