@@ -10,7 +10,7 @@ then
      exit 1
 fi
 
-cd ../../fully-managed-connect-gcp-bigquery-v2-sink
+cd ../../ccloud/fully-managed-connect-gcp-bigquery-v2-sink
 GCP_KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${GCP_KEYFILE} ] && [ -z "$GCP_KEYFILE_CONTENT" ]
 then
