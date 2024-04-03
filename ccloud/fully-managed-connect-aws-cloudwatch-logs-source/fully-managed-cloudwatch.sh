@@ -80,8 +80,6 @@ set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
 
-CLOUDWATCH_LOGS_URL="https://logs.$AWS_REGION.amazonaws.com"
-
 log "Creating AWS CloudWatch Logs Source connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
@@ -93,7 +91,7 @@ playground connector create-or-update --connector $connector_name << EOF
     "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
     "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
     "output.data.format": "AVRO",
-    "aws.cloudwatch.logs.url": "$CLOUDWATCH_LOGS_URL",
+    "aws.cloudwatch.logs.url": "https://logs.$AWS_REGION.amazonaws.com",
     "aws.cloudwatch.log.group": "$LOG_GROUP",
     "aws.cloudwatch.log.streams": "$LOG_STREAM",
     "tasks.max" : "1"
@@ -103,17 +101,6 @@ wait_for_ccloud_connector_up $connector_name 600
 
 log "Verify we have received the data in $TOPIC topic"
 playground topic consume --topic $TOPIC --min-expected-messages 10 --timeout 60
-
-# Struct{logGroupName=myloggroup731,logStreamName=mylogstream731,timestamp=1675092839000} "This is a log #0"
-# Struct{logGroupName=myloggroup731,logStreamName=mylogstream731,timestamp=1675092841000} "This is a log #1"
-# Struct{logGroupName=myloggroup731,logStreamName=mylogstream731,timestamp=1675092844000} "This is a log #2"
-# Struct{logGroupName=myloggroup731,logStreamName=mylogstream731,timestamp=1675092846000} "This is a log #3"
-# Struct{logGroupName=myloggroup731,logStreamName=mylogstream731,timestamp=1675092848000} "This is a log #4"
-# Struct{logGroupName=myloggroup731,logStreamName=mylogstream731,timestamp=1675092851000} "This is a log #5"
-# Struct{logGroupName=myloggroup731,logStreamName=mylogstream731,timestamp=1675092853000} "This is a log #6"
-# Struct{logGroupName=myloggroup731,logStreamName=mylogstream731,timestamp=1675092856000} "This is a log #7"
-# Struct{logGroupName=myloggroup731,logStreamName=mylogstream731,timestamp=1675092858000} "This is a log #8"
-# Struct{logGroupName=myloggroup731,logStreamName=mylogstream731,timestamp=1675092861000} "This is a log #9"
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
