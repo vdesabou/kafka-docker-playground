@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  postgres:
+    addr: postgres:5432
+    proto: tcp

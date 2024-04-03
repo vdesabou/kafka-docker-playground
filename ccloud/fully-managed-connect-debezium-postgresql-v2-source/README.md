@@ -1,8 +1,8 @@
-# Fully-Managed PostgreSQL CDC Source Connector (Debezium) Legacy source connector
+# Fully-Managed PostgreSQL CDC Source Connector (Debezium) V2 source connector
 
 ## Objective
 
-Quickly test [Debezium CDC PostGreSQL](https://docs.confluent.io/cloud/current/connectors/cc-postgresql-cdc-source-debezium.html) connector.
+Quickly test [Debezium CDC PostGreSQL](https://docs.confluent.io/cloud/current/connectors/cc-mysql-source-cdc-v2-debezium/cc-mysql-source-cdc-v2-debezium.html#) connector.
 
 ## Exposing docker container over internet
 
