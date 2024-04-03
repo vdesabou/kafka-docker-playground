@@ -98,8 +98,8 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 600
 
-log "Sleeping 60 seconds"
-sleep 60
+log "Sleeping 120 seconds"
+sleep 120
 
 log "Verify data is in GCP BigQuery:"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" query "SELECT * FROM $DATASET.bqtopic;" > /tmp/result.log  2>&1
