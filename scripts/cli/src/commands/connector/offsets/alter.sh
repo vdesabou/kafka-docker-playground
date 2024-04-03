@@ -171,7 +171,7 @@ do
                 then
                     playground connector stop --connector $connector
                 else
-                    playground connector show-config --connector $connector | grep -v "ℹ️" > "$tmp_dir/create-$connector-config.sh"
+                    playground --output-level ERROR connector show-config --connector $connector > "$tmp_dir/create-$connector-config.sh"
                     playground connector delete --connector $connector
                 fi
 
