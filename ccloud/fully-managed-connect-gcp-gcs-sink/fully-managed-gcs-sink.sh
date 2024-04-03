@@ -105,9 +105,9 @@ docker run -i --volumes-from gcloud-config -v /tmp:/tmp/ google/cloud-sdk:latest
 
 docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/gcs_topic+0+0000000000.avro
 
-docker rm -f gcloud-config
-
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
 playground connector delete --connector $connector_name
+
+docker rm -f gcloud-config
