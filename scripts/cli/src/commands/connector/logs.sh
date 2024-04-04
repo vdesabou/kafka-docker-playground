@@ -21,7 +21,7 @@ then
         # confluent employee
         export number_of_days=4
         export open_audit_logs=1
-        log "🐛 Opening dashboards for $CONNECTOR_TYPE_CUSTOM connector ($lcc_id)"
+        log "🐛 Opening dashboards for $CONNECTOR_TYPE_FULLY_MANAGED connector ($lcc_id)"
         bash "$opensearch_script" "$lcc_id"
         bash "$datadog_script" "$lcc_id"
         exit 0
