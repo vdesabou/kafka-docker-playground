@@ -163,5 +163,16 @@ then
     cleanup_confluent_cloud_resources
 fi
 
+if [ ! -z "$AZURE_CLUSTER_NAME" ]
+then
+    log "AZURE_CLUSTER_NAME environment variable is set, forcing the cluster $AZURE_CLUSTER_NAME to be used !"
+    export CLUSTER_NAME=$AZURE_CLUSTER_NAME
+    export CLUSTER_REGION=$AZURE_CLUSTER_REGION
+    export CLUSTER_CLOUD=$AZURE_CLUSTER_CLOUD
+    export CLUSTER_CREDS=$AZURE_CLUSTER_CREDS
+
+    cleanup_confluent_cloud_resources
+fi
+
 # always exit with success
 exit 0

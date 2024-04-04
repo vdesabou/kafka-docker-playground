@@ -1709,6 +1709,19 @@ function bootstrap_ccloud_environment () {
         export CLUSTER_CREDS=$GCP_CLUSTER_CREDS
       fi
     fi
+
+    if [[ $test_file == *"fully-managed-connect-azure"* ]]
+    then
+      if [ ! -z "$AZURE_CLUSTER_NAME" ]
+      then
+        log "AZURE_CLUSTER_NAME environment variable is set, forcing the cluster $AZURE_CLUSTER_NAME to be used !"
+        suggest_use_previous_example_ccloud=0
+        export CLUSTER_NAME=$AZURE_CLUSTER_NAME
+        export CLUSTER_REGION=$AZURE_CLUSTER_REGION
+        export CLUSTER_CLOUD=$AZURE_CLUSTER_CLOUD
+        export CLUSTER_CREDS=$AZURE_CLUSTER_CREDS
+      fi
+    fi
   fi
   
   for item in {ENVIRONMENT,CLUSTER_NAME,CLUSTER_CLOUD,CLUSTER_REGION,CLUSTER_CREDS}
