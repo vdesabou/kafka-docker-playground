@@ -126,5 +126,6 @@ playground topic consume --topic success-responses --min-expected-messages 10 --
 playground topic consume --topic error-responses --min-expected-messages 0 --timeout 60
 
 log "Cleanup role and function"
+check_if_continue
 aws iam delete-role --role-name $LAMBDA_ROLE_NAME
 aws lambda delete-function --function-name $LAMBDA_FUNCTION_NAME
