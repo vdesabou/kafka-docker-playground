@@ -2139,7 +2139,7 @@
         },
         {
           "name": "logs",
-          "description": "🕵️  Tail and follow connect logs\n  \n  This is basically a shortcut for \"playground container  logs --container connect\"\n  \n  It does not work for Fully Managed conectors, except if you're a Confluent employee, this will open log in our internal tools (make sure to follow this first https://github.com/confluentinc/kafka-docker-playground-internal#how-to-use)\n",
+          "description": "🕵️  Tail and follow connect logs\n  \n  This is basically a shortcut for \"playground container logs --container connect\"\n  \n  It does not work for Fully Managed connectors, except if you're a Confluent employee, this will open log in our internal tools (make sure to follow this first https://github.com/confluentinc/kafka-docker-playground-internal#how-to-use)\n",
           "usage": "playground connector logs [OPTIONS]",
           "options": [
             {

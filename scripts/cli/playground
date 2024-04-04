@@ -5402,7 +5402,7 @@ playground_connector_logs_usage() {
     printf "playground connector logs\n"
     echo
 
-    printf "  🕵️  Tail and follow connect logs\n  \n  This is basically a shortcut for \"playground container  logs --container\n  connect\"\n  \n  It does not work for Fully Managed conectors, except if you're a Confluent\n  employee, this will open log in our internal tools (make sure to follow this\n  first\n  https://github.com/confluentinc/kafka-docker-playground-internal#how-to-use)\n"
+    printf "  🕵️  Tail and follow connect logs\n  \n  This is basically a shortcut for \"playground container logs --container\n  connect\"\n  \n  It does not work for Fully Managed connectors, except if you're a Confluent\n  employee, this will open log in our internal tools (make sure to follow this\n  first\n  https://github.com/confluentinc/kafka-docker-playground-internal#how-to-use)\n"
     echo
 
   else
@@ -22085,8 +22085,8 @@ playground_connector_logs_command() {
           export open_audit_logs=1
           for connector in ${items[@]}
           do
-              log "🐛 Opening dashboards for $connector_type connector $connector ($connectorId)"
               connectorId=$(get_ccloud_connector_lcc $connector)
+              log "🐛 Opening dashboards for $connector_type connector $connector ($connectorId)"
               bash "$opensearch_script" "$connectorId"
               bash "$datadog_script" "$connectorId"
           done
