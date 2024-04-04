@@ -2138,6 +2138,44 @@
           ]
         },
         {
+          "name": "logs",
+          "description": "🕵️  Tail and follow connect logs\n  \n  This is basically a shortcut for \"playground container  logs --container connect\"\n  \n  It does not work for Fully Managed conectors, except if you're a Confluent employee, this will open log in our internal tools (make sure to follow this first https://github.com/confluentinc/kafka-docker-playground-internal#how-to-use)\n",
+          "usage": "playground connector logs [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--open",
+                "-o"
+              ],
+              "argument": "",
+              "description": "🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)\n\nConflicts with: --wait-for-log\n"
+            },
+            {
+              "names": [
+                "--wait-for-log",
+                "-w"
+              ],
+              "argument": "LOG",
+              "description": "😴 Wait until log appears\n\nConflicts with: --open\n"
+            },
+            {
+              "names": [
+                "--max-wait",
+                "-m"
+              ],
+              "argument": 600,
+              "description": "⏳ Max time in seconds to wait when using --wait-for-log (default 600s)\n\nDefault value: 600\n\nConflicts with: --open\n"
+            },
+            {
+              "names": [
+                "--lcc-id"
+              ],
+              "argument": "LCC-ID",
+              "description": "☁️ Fully Managed lcc id (only for Confluent employees)\n"
+            }
+          ]
+        },
+        {
           "name": "create-or-update",
           "description": "🧑‍🎨  Create or update connector\n",
           "usage": "playground connector create-or-update [JSON] [OPTIONS]",

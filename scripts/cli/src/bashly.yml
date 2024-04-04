@@ -1512,19 +1512,22 @@ commands:
 
       flags:
       - *container
-      - long: --open
+      - &logsopen
+        long: --open
         short: -o
         help: |- 
           🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
         conflicts: [--wait-for-log]
-      - long: --wait-for-log
+      - &logswaitforlog
+        long: --wait-for-log
         short: -w
         arg: log
         validate: not_empty
         help: |- 
           😴 Wait until log appears
         conflicts: [--open]
-      - long: --max-wait
+      - &logsmaxwait
+        long: --max-wait
         short: -m
         arg: max_wait
         validate: integer
@@ -2793,6 +2796,25 @@ commands:
     flags:
     - *connector
     - *level
+
+  - name: logs
+    group: Connect
+    help: |-
+      🕵️  Tail and follow connect logs
+
+      This is basically a shortcut for "playground container  logs --container connect"
+
+      It does not work for Fully Managed conectors, except if you're a Confluent employee, this will open log in our internal tools (make sure to follow this first https://github.com/confluentinc/kafka-docker-playground-internal#how-to-use)
+
+    flags:
+    - *logsopen
+    - *logswaitforlog
+    - *logsmaxwait
+    - long: --lcc-id
+      required: false
+      arg: lcc-id
+      help: |-
+        ☁️ Fully Managed lcc id (only for Confluent employees)
 
   - name: create-or-update
     help: 🧑‍🎨  Create or update connector
