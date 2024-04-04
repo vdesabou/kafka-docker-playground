@@ -74,8 +74,10 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.generalized.yml"
 
 log "Copy generalized.quickstart.json to container $AZURE_CONTAINER_NAME quickstart/generalized.quickstart.json"
+cd ../../connect/connect-azure-blob-storage-source
 rm -f /tmp/generalized.quickstart.json
 cp generalized.quickstart.json /tmp/
+cd -
 az storage blob upload --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --name quickstart/generalized.quickstart.json --file /tmp/generalized.quickstart.json
 
 log "Creating Generalized Azure Blob Storage Source connector"
