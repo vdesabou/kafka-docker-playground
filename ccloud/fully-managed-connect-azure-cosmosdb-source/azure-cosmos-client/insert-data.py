@@ -10,7 +10,7 @@ client = CosmosClient(url, credential=key)
 database = client.get_database_client(database_name)
 container = database.get_container_client(container_name)
 
-for i in range(1, 30):
+for i in range(1, 100):
     container.upsert_item({
             'id': 'item{0}'.format(i),
             'productName': 'Widget',

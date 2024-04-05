@@ -91,36 +91,44 @@ sleep 20
 log "Assigning Storage Blob Data Owner role to Service Principal $SERVICE_PRINCIPAL_ID"
 az role assignment create --assignee $SERVICE_PRINCIPAL_ID --role "Storage Blob Data Owner" --scope $AZURE_RESOURCE_GROUP_ID
 
-# generate data file for externalizing secrets
-sed -e "s|:AZURE_DATALAKE_CLIENT_ID:|$AZURE_DATALAKE_CLIENT_ID|g" \
-    -e "s|:AZURE_DATALAKE_CLIENT_PASSWORD:|$AZURE_DATALAKE_CLIENT_PASSWORD|g" \
-    -e "s|:AZURE_DATALAKE_ACCOUNT_NAME:|$AZURE_DATALAKE_ACCOUNT_NAME|g" \
-    -e "s|:AZURE_DATALAKE_TOKEN_ENDPOINT:|$AZURE_DATALAKE_TOKEN_ENDPOINT|g" \
-    ../../connect/connect-azure-data-lake-storage-gen2-sink/data.template > ../../connect/connect-azure-data-lake-storage-gen2-sink/data
 
-PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+bootstrap_ccloud_environment
 
-log "Creating Data Lake Storage Gen2 Sink connector"
-playground connector create-or-update --connector azure-datalake-gen2-sink  << EOF
+set +e
+playground topic delete --topic datalake_topic
+sleep 3
+playground topic create --topic datalake_topic --nb-partitions 1
+set -e
+
+
+connector_name="AzureDataLakeGen2Sink_$USER"
+set +e
+playground connector delete --connector $connector_name > /dev/null 2>&1
+set -e
+
+log "Creating fully managed connector"
+playground connector create-or-update --connector $connector_name << EOF
 {
-    "connector.class": "io.confluent.connect.azure.datalake.gen2.AzureDataLakeGen2SinkConnector",
-    "tasks.max": "1",
-    "topics": "datalake_topic",
-    "flush.size": "3",
-    "azure.datalake.gen2.client.id": "\${file:/data:AZURE_DATALAKE_CLIENT_ID}",
-    "azure.datalake.gen2.client.key": "\${file:/data:AZURE_DATALAKE_CLIENT_PASSWORD}",
-    "azure.datalake.gen2.account.name": "\${file:/data:AZURE_DATALAKE_ACCOUNT_NAME}",
-    "azure.datalake.gen2.token.endpoint": "\${file:/data:AZURE_DATALAKE_TOKEN_ENDPOINT}",
-    "format.class": "io.confluent.connect.azure.storage.format.avro.AvroFormat",
-    "confluent.license": "",
-    "confluent.topic.bootstrap.servers": "broker:9092",
-    "confluent.topic.replication.factor": "1"
+  "connector.class": "AzureDataLakeGen2Sink",
+  "name": "$connector_name",
+  "kafka.auth.mode": "KAFKA_API_KEY",
+  "kafka.api.key": "$CLOUD_KEY",
+  "kafka.api.secret": "$CLOUD_SECRET",
+  "topics": "datalake_topic",
+  "azure.datalake.gen2.client.id": "$AZURE_DATALAKE_CLIENT_ID",
+  "azure.datalake.gen2.client.key": "$AZURE_DATALAKE_CLIENT_PASSWORD",
+  "azure.datalake.gen2.account.name": "$AZURE_DATALAKE_ACCOUNT_NAME",
+  "azure.datalake.gen2.token.endpoint": "$AZURE_DATALAKE_TOKEN_ENDPOINT",
+  "input.data.format" : "AVRO",
+  "output.data.format" : "AVRO",
+  "time.interval" : "HOURLY",
+  "flush.size": "1000",
+  "tasks.max" : "1"
 }
 EOF
+wait_for_ccloud_connector_up $connector_name 600
 
-
-playground topic produce -t datalake_topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+playground topic produce -t datalake_topic --nb-messages 1000 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -138,16 +146,18 @@ sleep 20
 log "Listing ${AZURE_DATALAKE_ACCOUNT_NAME} in Azure Data Lake"
 az storage fs file list --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}" --file-system topics
 
-log "Getting one of the avro files locally and displaying content with avro-tools"
-az storage blob download  --container-name topics --name datalake_topic/partition=0/datalake_topic+0+0000000000.avro --file /tmp/datalake_topic+0+0000000000.avro --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}"
+playground connnector show-lag --connector $connector_name
 
-docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/datalake_topic+0+0000000000.avro
+# log "Getting one of the avro files locally and displaying content with avro-tools"
+# az storage blob download  --container-name topics --name datalake_topic/partition=0/datalake_topic+0+0000000000.avro --file /tmp/datalake_topic+0+0000000000.avro --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}"
+
+# docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/datalake_topic+0+0000000000.avro
+
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name
 
 log "Deleting resource group"
 check_if_continue
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
-
-# keep AD app
-# log "Deleting active directory app"
-# az ad app delete --id $AZURE_DATALAKE_CLIENT_ID
-
