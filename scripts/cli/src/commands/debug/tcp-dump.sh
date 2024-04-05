@@ -4,31 +4,20 @@ duration="${args[--duration]}"
 filename="tcp-dump-$container-$port-`date '+%Y-%m-%d-%H-%M-%S'`.pcap"
 
 set +e
-docker exec $container type tcpdump > /dev/null 2>&1
+docker exec $container which tcpdump > /dev/null 2>&1
 if [ $? != 0 ]
 then
-    tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
-    if [ $? != 0 ] || [ "$tag" == "" ]
-    then
-        logerror "Could not find current CP version from docker ps"
-        exit 1
-    fi
+  logwarn "tcpdump is not installed on container $container, attempting to install it"
+  docker exec --privileged --user root $container bash -c "rpm -i --nosignature https://rpmfind.net/linux/centos/8-stream/AppStream/aarch64/os/Packages/tcpdump-4.9.3-2.el8.aarch64.rpm" > /dev/null 2>&1
+  docker exec --privileged --user root $container bash -c "curl http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/tcpdump-4.9.3-1.el8.x86_64.rpm -o tcpdump-4.9.3-1.el8.x86_64.rpm && rpm -Uvh tcpdump-4.9.3-1.el8.x86_64.rpm" > /dev/null 2>&1
 
-    logwarn "tcpdump is not installed on container $container, attempting to install it"
-    
-    if [[ "$tag" == *ubi8 ]] || version_gt $tag "5.9.0"
-    then
-      if [ `uname -m` = "arm64" ]
-      then
-        docker exec --privileged --user root $container bash -c "rpm -i --nosignature https://rpmfind.net/linux/centos/8-stream/AppStream/aarch64/os/Packages/tcpdump-4.9.3-2.el8.aarch64.rpm"
-      else
-        docker exec --privileged --user root $container bash -c "curl http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/tcpdump-4.9.3-1.el8.x86_64.rpm -o tcpdump-4.9.3-1.el8.x86_64.rpm && rpm -Uvh tcpdump-4.9.3-1.el8.x86_64.rpm"
-      fi
-    else
-      docker exec --privileged --user root $container bash -c "apt-get update && echo bind-utils openssl unzip findutils net-tools nc jq which iptables iproute tree | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*"
-    fi
+  if [ "$container" == "ngrok" ]
+  then
+    playground container exec -c ngrok --command "adduser --force-badname --system --no-create-home _apt" --root > /dev/null 2>&1
+  fi
+  docker exec --privileged --user root $container bash -c "apt-get update && echo tcpdump | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*" > /dev/null 2>&1
 fi
-docker exec $container type tcpdump > /dev/null 2>&1
+docker exec $container which tcpdump > /dev/null 2>&1
 if [ $? != 0 ]
 then
     logerror "❌ tcpdump could not be installed"
