@@ -1,6 +1,0 @@
-confluent-operator
-ccloud-cluster.properties
-client.properties
-ns-without-finalizers.json
-schemas/orders.avro
-schemas/shipments.avro
