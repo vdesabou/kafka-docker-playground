@@ -247,8 +247,6 @@
 
 ### 🚀 And much more...
 
-  - ⛈️ Using [cp-ansible](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/cp-ansible-playground/) with Confluent Cloud ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
-  - 🌤 Using [cp-helm-charts](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/cp-helm-chart/) with Confluent Cloud ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
   - 🌨 Using [Confluent for Kubernetes](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/confluent-for-kubernetes/) with Confluent Cloud ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
   - 💠 [.NET](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-dotnet) client (producer/consumer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
   - 🗯 [Go](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-go) client (producer/consumer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
