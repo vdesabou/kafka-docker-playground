@@ -38,13 +38,6 @@ playground topic produce -t orders --nb-messages 1 --forced-value '{"measurement
 }
 EOF
 
-docker exec -i connect kafka-avro-console-consumer \
-     --bootstrap-server broker:9092 \
-     --property schema.registry.url=http://schema-registry:8081 \
-     --topic orders \
-     --from-beginning \
-     --max-messages=1
-
 log "Creating InfluxDB sink connector"
 playground connector create-or-update --connector influxdb-sink  << EOF
 {
