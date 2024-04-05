@@ -1,11 +1,10 @@
-# Fully Managed Azure Cognitive Search Sink connector
+# Fully Managed Azure Cosmos DB Sink connector
 
 
 
 ## Objective
 
-Quickly test [Fully Managed Azure Cognitive Search Sink](https://docs.confluent.io/cloud/current/connectors/cc-azure-cognitive-search-sink.html) connector.
-
+Quickly test [Fully Managed Azure Cosmos DB Sink](https://docs.confluent.io/cloud/current/connectors/cc-azure-cosmos-sink.html) connector.
 
 ## Prerequisites
 
