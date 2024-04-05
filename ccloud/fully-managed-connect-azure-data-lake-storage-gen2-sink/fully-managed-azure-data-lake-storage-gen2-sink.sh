@@ -146,7 +146,7 @@ sleep 20
 log "Listing ${AZURE_DATALAKE_ACCOUNT_NAME} in Azure Data Lake"
 az storage fs file list --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}" --file-system topics
 
-playground connnector show-lag --connector $connector_name
+playground connector show-lag --connector $connector_name
 
 # log "Getting one of the avro files locally and displaying content with avro-tools"
 # az storage blob download  --container-name topics --name datalake_topic/partition=0/datalake_topic+0+0000000000.avro --file /tmp/datalake_topic+0+0000000000.avro --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}"
