@@ -74,6 +74,11 @@ az sql dw create \
     --resource-group $AZURE_RESOURCE_GROUP \
     --server $AZURE_SQL_NAME
 
+if [ -z "$GITHUB_RUN_NUMBER" ]
+then
+  log "🔐 PASSWORD is $PASSWORD" 
+fi
+
 bootstrap_ccloud_environment
 
 set +e
@@ -100,10 +105,10 @@ playground connector create-or-update --connector $connector_name << EOF
   "auto.create": "true",
   "auto.evolve": "true",
   "table.name.format": "kafka_\${topic}",
-  "azure.sql.dw.url": "$AZURE_SQL_URL",
+  "azure.sql.dw.server.name": "$AZURE_SQL_NAME.database.windows.net",
   "azure.sql.dw.user": "myadmin",
   "azure.sql.dw.password": "$PASSWORD",
-  "azure.sql.dw.server.name": "$AZURE_DATA_WAREHOUSE_NAME",
+  "azure.sql.dw.database.name": "$AZURE_DATA_WAREHOUSE_NAME",
   "input.data.format" : "AVRO",
   "tasks.max" : "1"
 }
