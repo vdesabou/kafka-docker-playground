@@ -103,7 +103,7 @@ playground connector create-or-update --connector $connector_name << EOF
   "azure.sql.dw.url": "$AZURE_SQL_URL",
   "azure.sql.dw.user": "myadmin",
   "azure.sql.dw.password": "$PASSWORD",
-  "azure.sql.dw.database.name": "$AZURE_DATA_WAREHOUSE_NAME",
+  "azure.sql.dw.server.name": "$AZURE_DATA_WAREHOUSE_NAME",
   "input.data.format" : "AVRO",
   "tasks.max" : "1"
 }
