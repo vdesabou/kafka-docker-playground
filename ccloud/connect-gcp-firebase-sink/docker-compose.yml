@@ -1,8 +1,0 @@
----
-version: '3.5'
-services:
-  connect:
-    volumes:
-        - ../../ccloud/connect-gcp-firebase-sink/keyfile.json:/tmp/keyfile.json:ro
-    environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-firebase
