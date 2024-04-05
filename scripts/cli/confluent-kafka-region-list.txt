@@ -10,6 +10,7 @@ aws/ap-southeast-2
 aws/ap-southeast-3
 aws/ap-southeast-4
 aws/ca-central-1
+aws/ca-west-1
 aws/eu-central-1
 aws/eu-central-2
 aws/eu-north-1
