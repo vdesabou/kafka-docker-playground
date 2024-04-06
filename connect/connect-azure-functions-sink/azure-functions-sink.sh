@@ -84,7 +84,10 @@ done
 output=$(docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node14-core-tools bash -c "az login -u \"$AZ_USER\" -p \"$AZ_PASS\" > /dev/null 2>&1 && cd LocalFunctionProj && func azure functionapp list-functions $AZURE_FUNCTIONS_NAME --show-keys")
 FUNCTIONS_URL=$(echo $output | grep -Eo 'https://[^ >]+'|head -1)
 
-log "Functions URL is $FUNCTIONS_URL"
+if [ -z "$GITHUB_RUN_NUMBER" ]
+then
+  log "Functions URL is $FUNCTIONS_URL"
+fi
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
