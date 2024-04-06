@@ -175,6 +175,16 @@ do
     fi
 done
 
+log "Cleanup AWS DynamoDB tables"
+for dynamo_table in $(aws dynamodb list-tables --region $AWS_REGION | jq '.TableNames[].TableName' -r)
+do
+    if [[ $dynamo_table = *pg${user}* ]]
+    then
+        log "Removing AWS dynamodb table $dynamo_table"
+        check_if_skip "aws dynamodb delete-table --table-name ${dynamo_table}"
+    fi
+done
+
 cleanup_confluent_cloud_resources
 
 if [ ! -z "$AWS_DATABRICKS_CLUSTER_NAME" ]

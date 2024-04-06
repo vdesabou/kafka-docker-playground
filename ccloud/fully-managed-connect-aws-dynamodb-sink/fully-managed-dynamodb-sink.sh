@@ -103,3 +103,7 @@ log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
 playground connector delete --connector $connector_name
+
+log "Delete table $DYNAMODB_TABLE"
+check_if_continue
+aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION

@@ -120,3 +120,7 @@ log "Verify data is in DynamoDB"
 aws dynamodb scan --table-name $DYNAMODB_TABLE --region $AWS_REGION  > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "value1" /tmp/result.log
+
+log "Delete table $DYNAMODB_TABLE"
+check_if_continue
+aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION
