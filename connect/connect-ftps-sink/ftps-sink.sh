@@ -70,4 +70,4 @@ docker exec ftps-server bash -c "ls /home/vsftpd/bob/test_ftps_sink/partition\=0
 
 docker cp ftps-server:/home/vsftpd/bob/test_ftps_sink/partition\=0/test_ftps_sink+0+0000000000.avro /tmp/
 
-docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/test_ftps_sink+0+0000000000.avro
+docker run --quiet --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/test_ftps_sink+0+0000000000.avro

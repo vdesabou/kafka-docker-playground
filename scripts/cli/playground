@@ -7297,7 +7297,7 @@ function jq() {
   verbose_begin
   if [[ $(type -f jq 2>&1) =~ "not found" ]]
   then
-    docker run --rm -i imega/jq "$@"
+    docker run --quiet --rm -i imega/jq "$@"
   else
     $(type -f jq | awk '{print $3}') "$@"
   fi
@@ -7449,7 +7449,7 @@ function maybe_create_image()
   set +e
   log "🧰 Checking if Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG} contains additional tools"
   log "⏳ it can take a while if image is downloaded for the first time"
-  docker run --rm ${CP_CONNECT_IMAGE}:${CONNECT_TAG} type unzip > /dev/null 2>&1
+  docker run --quiet --rm ${CP_CONNECT_IMAGE}:${CONNECT_TAG} type unzip > /dev/null 2>&1
   if [ $? != 0 ]
   then
     if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
@@ -7871,10 +7871,10 @@ EOF
       # log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
       if [ -f $aws_tmp_dir/config ]
       then
-        docker run --rm -iv $aws_tmp_dir/config:/root/.aws/config -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
+        docker run --quiet --rm -iv $aws_tmp_dir/config:/root/.aws/config -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
         rm -rf $aws_tmp_dir
       else
-        docker run --rm -iv $HOME/.aws/config:/root/.aws/config -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
+        docker run --quiet --rm -iv $HOME/.aws/config:/root/.aws/config -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
       fi
     else
       if [ ! -f $HOME/.aws/credentials ]
@@ -7882,7 +7882,7 @@ EOF
         logerror '$HOME/.aws/credentials does not exist.'
       else
         # log "💭 AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
-        docker run --rm -iv $HOME/.aws:/root/.aws -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
+        docker run --quiet --rm -iv $HOME/.aws:/root/.aws -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
       fi
     fi
 }
@@ -17104,7 +17104,7 @@ playground_debug_testssl_command() {
   arguments="${args[arguments]}"
 
   log "🔐 Testing TLS/SSL encryption with arguments $arguments"
-  docker run --rm -ti  drwetter/testssl.sh $arguments
+  docker run --quiet --rm -ti  drwetter/testssl.sh $arguments
 }
 
 # :command.function
@@ -17926,7 +17926,7 @@ playground_topic_describe_command() {
               echo "kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
           fi
           get_connect_image
-          docker run --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
+          docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
       else
           if [[ -n "$verbose" ]]
           then
@@ -18473,7 +18473,7 @@ playground_topic_consume_command() {
   if [[ -n "$timestamp_field" ]]
   then
     log "Plot data using gnuplot, see ${latency_png}"
-    docker run --rm -i -v /tmp/latency:/work remuslazar/gnuplot -e \
+    docker run --quiet --rm -i -v /tmp/latency:/work remuslazar/gnuplot -e \
     "
     set grid;
     set datafile separator ',';
@@ -18882,7 +18882,7 @@ playground_topic_produce_command() {
               json|sql)
                   # https://github.com/MaterializeInc/datagen
                   set +e
-                  docker run --rm -i -v $schema_file:/app/schema.$schema_type materialize/datagen -s schema.$schema_type -n $nb_messages_to_generate --dry-run > $tmp_dir/result.log
+                  docker run --quiet --rm -i -v $schema_file:/app/schema.$schema_type materialize/datagen -s schema.$schema_type -n $nb_messages_to_generate --dry-run > $tmp_dir/result.log
 
                   nb=$(grep -c "Payload: " $tmp_dir/result.log)
                   if [ $nb -eq 0 ]
@@ -18896,8 +18896,8 @@ playground_topic_produce_command() {
               ;;
               avro)
                   schema_file_name="$(basename "${schema_file}")"
-                  docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/$schema_file_name --count $nb_messages_to_generate --no-null "$no_null"
-                  docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
+                  docker run --quiet --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/$schema_file_name --count $nb_messages_to_generate --no-null "$no_null"
+                  docker run --quiet --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
               ;;
               json-schema)
                   # https://github.com/json-schema-faker/json-schema-faker/tree/master/docs
@@ -18905,9 +18905,9 @@ playground_topic_produce_command() {
                   if [ -f $ref_array_schema_file ]
                   then
                       ref_array_schema_file_name="$(basename "${ref_array_schema_file}")"
-                      docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate -e SCHEMA=/tmp/$schema_file_name -e REFS=/tmp/$ref_array_schema_file_name -e NO_NULL="$no_null" vdesabou/json-schema-faker > $tmp_dir/out.json
+                      docker run --quiet --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate -e SCHEMA=/tmp/$schema_file_name -e REFS=/tmp/$ref_array_schema_file_name -e NO_NULL="$no_null" vdesabou/json-schema-faker > $tmp_dir/out.json
                   else
-                      docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate -e SCHEMA=/tmp/$schema_file_name -e NO_NULL="$no_null" vdesabou/json-schema-faker > $tmp_dir/out.json
+                      docker run --quiet --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate -e SCHEMA=/tmp/$schema_file_name -e NO_NULL="$no_null" vdesabou/json-schema-faker > $tmp_dir/out.json
                   fi
               ;;
               protobuf)
@@ -19727,7 +19727,7 @@ playground_topic_create_command() {
               echo "kafka-topics --create --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --partitions $nb_partitions ${other_args[*]}"
           fi
           get_connect_image
-          docker run --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --create --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --partitions $nb_partitions ${other_args[*]}
+          docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --create --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --partitions $nb_partitions ${other_args[*]}
       else
           if [[ -n "$verbose" ]]
           then
@@ -19786,7 +19786,7 @@ playground_topic_delete_command() {
           echo "kafka-topics --delete --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
       fi
       get_connect_image
-      docker run --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --delete --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
+      docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --delete --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
   else
       if [[ -n "$verbose" ]]
       then
@@ -19855,7 +19855,7 @@ playground_topic_alter_command() {
           fi
 
           get_connect_image
-          docker run --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties ${other_args[*]}
+          docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties ${other_args[*]}
       else
           docker exec $container kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server broker:9092 $security ${other_args[*]}
       fi
@@ -20332,7 +20332,7 @@ playground_connector_offsets_get_command() {
               else
                   consumer_group="connect-$connector"
               fi
-              docker run --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group $consumer_group --describe
+              docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group $consumer_group --describe
 
           else
               if version_gt $tag "7.5.99"
@@ -21301,7 +21301,7 @@ playground_connector_show_lag_command() {
         else
           consumer_group="connect-$connector"
         fi
-        docker run --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group $consumer_group --describe | grep -v PARTITION | sed '/^$/d' &> $lag_output
+        docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group $consumer_group --describe | grep -v PARTITION | sed '/^$/d' &> $lag_output
       else
         docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d' &> $lag_output
       fi

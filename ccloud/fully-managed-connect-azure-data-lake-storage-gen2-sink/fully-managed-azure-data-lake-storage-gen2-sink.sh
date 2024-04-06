@@ -151,7 +151,7 @@ playground connector show-lag --connector $connector_name
 # log "Getting one of the avro files locally and displaying content with avro-tools"
 # az storage blob download  --container-name topics --name datalake_topic/partition=0/datalake_topic+0+0000000000.avro --file /tmp/datalake_topic+0+0000000000.avro --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}"
 
-# docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/datalake_topic+0+0000000000.avro
+# docker run --quiet --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/datalake_topic+0+0000000000.avro
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue

@@ -90,7 +90,7 @@ test_sftp_sink+0+0000000000.avro  test_sftp_sink+0+0000000003.avro  test_sftp_si
 ```
 
 ```bash
-docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/test_sftp_sink+0+0000000000.avro
+docker run --quiet --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/test_sftp_sink+0+0000000000.avro
 {"f1":"value1"}
 {"f1":"value2"}
 {"f1":"value3"}

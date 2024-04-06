@@ -101,9 +101,9 @@ else
     sudo chmod -R a+rw .
     ls -lrt
 fi
-docker run --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} keytool -import -trustcacerts -v -noprompt -alias myAlias -file /tmp/server.arm -keystore /tmp/truststore.jks -storepass 'confluent'
+docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} keytool -import -trustcacerts -v -noprompt -alias myAlias -file /tmp/server.arm -keystore /tmp/truststore.jks -storepass 'confluent'
 log "Displaying truststore"
-docker run --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} keytool -list -keystore /tmp/truststore.jks -storepass 'confluent' -v
+docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} keytool -list -keystore /tmp/truststore.jks -storepass 'confluent' -v
 cd -
 
 docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.ssl.yml" ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} up -d

@@ -382,7 +382,7 @@ function generate_data() {
             json|sql)
                 # https://github.com/MaterializeInc/datagen
                 set +e
-                docker run --rm -i -v $schema_file:/app/schema.$schema_type materialize/datagen -s schema.$schema_type -n $nb_messages_to_generate --dry-run > $tmp_dir/result.log
+                docker run --quiet --rm -i -v $schema_file:/app/schema.$schema_type materialize/datagen -s schema.$schema_type -n $nb_messages_to_generate --dry-run > $tmp_dir/result.log
                 
                 nb=$(grep -c "Payload: " $tmp_dir/result.log)
                 if [ $nb -eq 0 ]
@@ -396,8 +396,8 @@ function generate_data() {
             ;;
             avro)
                 schema_file_name="$(basename "${schema_file}")"
-                docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/$schema_file_name --count $nb_messages_to_generate --no-null "$no_null"
-                docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
+                docker run --quiet --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/$schema_file_name --count $nb_messages_to_generate --no-null "$no_null"
+                docker run --quiet --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
             ;;
             json-schema)
                 # https://github.com/json-schema-faker/json-schema-faker/tree/master/docs
@@ -405,9 +405,9 @@ function generate_data() {
                 if [ -f $ref_array_schema_file ]
                 then
                     ref_array_schema_file_name="$(basename "${ref_array_schema_file}")"
-                    docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate -e SCHEMA=/tmp/$schema_file_name -e REFS=/tmp/$ref_array_schema_file_name -e NO_NULL="$no_null" vdesabou/json-schema-faker > $tmp_dir/out.json
+                    docker run --quiet --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate -e SCHEMA=/tmp/$schema_file_name -e REFS=/tmp/$ref_array_schema_file_name -e NO_NULL="$no_null" vdesabou/json-schema-faker > $tmp_dir/out.json
                 else
-                    docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate -e SCHEMA=/tmp/$schema_file_name -e NO_NULL="$no_null" vdesabou/json-schema-faker > $tmp_dir/out.json
+                    docker run --quiet --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages_to_generate -e SCHEMA=/tmp/$schema_file_name -e NO_NULL="$no_null" vdesabou/json-schema-faker > $tmp_dir/out.json
                 fi
             ;;
             protobuf)

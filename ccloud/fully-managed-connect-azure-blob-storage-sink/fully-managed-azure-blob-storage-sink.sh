@@ -129,7 +129,7 @@ playground connector show-lag --connector $connector_name
 # log "Getting one of the avro files locally and displaying content with avro-tools"
 # az storage blob download --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --name topics/blob_topic/year=2024/month=04/day=04/hour=08/blob_topic+0+0000000000.avro --file /tmp/blob_topic+0+0000000000.avro
 
-# docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/blob_topic+0+0000000000.avro
+# docker run --quiet --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/blob_topic+0+0000000000.avro
 
 
 log "Do you want to delete the fully managed connector $connector_name ?"

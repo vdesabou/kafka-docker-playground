@@ -1,6 +1,6 @@
 docker pull dannyben/bashly
 
-alias bashly='docker run --rm -it --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/bashly'
+alias bashly='docker run --quiet --rm -it --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/bashly'
 
 cd /Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/cli
 bashly generate
