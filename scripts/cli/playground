@@ -20066,7 +20066,7 @@ playground_connector_status_command() {
   then
       log "✨ --connector flag was not provided, applying command to all connectors"
   fi
-  for connector in ${items[@]}
+  for connector in "${items[@]}"
   do
       set +e
       log "🧩 Displaying $connector_type connector $connector"
@@ -20276,7 +20276,7 @@ playground_connector_offsets_get_command() {
   then
       log "✨ --connector flag was not provided, applying command to all connectors"
   fi
-  for connector in ${items[@]}
+  for connector in "${items[@]}"
   do
       maybe_id=""
       if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
@@ -20426,7 +20426,7 @@ playground_connector_offsets_reset_command() {
   then
       log "✨ --connector flag was not provided, applying command to all connectors"
   fi
-  for connector in ${items[@]}
+  for connector in "${items[@]}"
   do
       maybe_id=""
       if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
@@ -20604,7 +20604,7 @@ playground_connector_offsets_alter_command() {
   then
       log "✨ --connector flag was not provided, applying command to all connectors"
   fi
-  for connector in ${items[@]}
+  for connector in "${items[@]}"
   do
       maybe_id=""
       if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
@@ -20779,7 +20779,7 @@ playground_connector_pause_command() {
   then
       log "✨ --connector flag was not provided, applying command to all connectors"
   fi
-  for connector in ${items[@]}
+  for connector in "${items[@]}"
   do
       log "⏸️ Pausing $connector_type connector $connector"
       if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
@@ -20909,7 +20909,7 @@ playground_connector_restart_command() {
   then
       log "✨ --connector flag was not provided, applying command to all connectors"
   fi
-  for connector in ${items[@]}
+  for connector in "${items[@]}"
   do
       log "🔄 Restarting $connector_type connector $connector"
 
@@ -20977,7 +20977,7 @@ playground_connector_stop_command() {
   then
       log "✨ --connector flag was not provided, applying command to all connectors"
   fi
-  for connector in ${items[@]}
+  for connector in "${items[@]}"
   do
       log "🛑 Stopping $connector_type connector $connector"
       get_connect_url_and_security
@@ -21014,7 +21014,7 @@ playground_connector_resume_command() {
   then
       log "✨ --connector flag was not provided, applying command to all connectors"
   fi
-  for connector in ${items[@]}
+  for connector in "${items[@]}"
   do
       log "⏯️ Resuming $connector_type connector $connector"
       if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
@@ -21058,7 +21058,7 @@ playground_connector_delete_command() {
       log "✨ --connector flag was not provided, applying command to all connectors"
       check_if_continue
   fi
-  for connector in ${items[@]}
+  for connector in "${items[@]}"
   do
       log "❌ Deleting $connector_type connector $connector"
       if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
@@ -21235,7 +21235,7 @@ playground_connector_show_lag_command() {
   then
       log "✨ --connector flag was not provided, applying command to all connectors"
   fi
-  for connector in ${items[@]}
+  for connector in "${items[@]}"
   do
     maybe_id=""
     if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
@@ -21401,7 +21401,7 @@ playground_connector_show_config_command() {
   then
       log "✨ --connector flag was not provided, applying command to all connectors"
   fi
-  for connector in ${items[@]}
+  for connector in "${items[@]}"
   do
       if [ -f "/tmp/config-$connector" ] && [ -z "$GITHUB_RUN_NUMBER" ] && [[ ! -n "$force_rest_endpoint" ]]
       then
@@ -21524,7 +21524,7 @@ playground_connector_show_config_parameters_command() {
   then
       log "✨ --connector flag was not provided, applying command to all connectors"
   fi
-  for connector in ${items[@]}
+  for connector in "${items[@]}"
   do
       if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
       then
@@ -21751,7 +21751,7 @@ playground_connector_select_config_command() {
   then
       log "✨ --connector flag was not provided, applying command to all connectors"
   fi
-  for connector in ${items[@]}
+  for connector in "${items[@]}"
   do
       json_file=$(playground connector show-config-parameters --only-show-json --only-show-json-file-path --connector $connector)
       if [ ! -f "$json_file" ]
@@ -22084,7 +22084,7 @@ playground_connector_log_level_command() {
   then
       log "✨ --connector flag was not provided, applying command to all connectors"
   fi
-  for connector in ${items[@]}
+  for connector in "${items[@]}"
   do
       get_connect_url_and_security
       handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector\""
@@ -22165,7 +22165,7 @@ playground_connector_logs_command() {
           fi
           export number_of_days=4
           export open_audit_logs=1
-          for connector in ${items[@]}
+          for connector in "${items[@]}"
           do
               connectorId=$(get_ccloud_connector_lcc $connector)
               log "🐛 Opening dashboards for $connector_type connector $connector ($connectorId)"
@@ -22221,7 +22221,7 @@ playground_connector_open_in_confluent_cloud_command() {
       log "✨ --connector flag was not provided, applying command to all connectors"
       check_if_continue
   fi
-  for connector in ${items[@]}
+  for connector in "${items[@]}"
   do
       get_ccloud_connect
       handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status\" --header \"authorization: Basic $authorization\""
@@ -22531,7 +22531,7 @@ playground_connector_update_command() {
   then
       log "✨ --connector flag was not provided, applying command to all connectors"
   fi
-  for connector in ${items[@]}
+  for connector in "${items[@]}"
   do
       log "🛠️ Updating $connector_type connector $connector"
       file=$tmp_dir/config-$connector.sh

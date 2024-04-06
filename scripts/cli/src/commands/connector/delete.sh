@@ -20,7 +20,7 @@ then
     log "✨ --connector flag was not provided, applying command to all connectors"
     check_if_continue
 fi
-for connector in ${items[@]}
+for connector in "${items[@]}"
 do
     log "❌ Deleting $connector_type connector $connector"
     if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]

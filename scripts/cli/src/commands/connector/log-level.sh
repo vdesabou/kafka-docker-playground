@@ -30,7 +30,7 @@ if ((length > 1))
 then
     log "✨ --connector flag was not provided, applying command to all connectors"
 fi
-for connector in ${items[@]}
+for connector in "${items[@]}"
 do
     get_connect_url_and_security
     handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector\""

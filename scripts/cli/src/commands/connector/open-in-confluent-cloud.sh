@@ -25,7 +25,7 @@ then
     log "✨ --connector flag was not provided, applying command to all connectors"
     check_if_continue
 fi
-for connector in ${items[@]}
+for connector in "${items[@]}"
 do
     get_ccloud_connect
     handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status\" --header \"authorization: Basic $authorization\""

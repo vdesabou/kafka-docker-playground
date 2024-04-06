@@ -26,7 +26,7 @@ if ((length > 1))
 then
     log "✨ --connector flag was not provided, applying command to all connectors"
 fi
-for connector in ${items[@]}
+for connector in "${items[@]}"
 do
     log "🛠️ Updating $connector_type connector $connector"
     file=$tmp_dir/config-$connector.sh

@@ -54,7 +54,7 @@ then
         fi
         export number_of_days=4
         export open_audit_logs=1
-        for connector in ${items[@]}
+        for connector in "${items[@]}"
         do
             connectorId=$(get_ccloud_connector_lcc $connector)
             log "🐛 Opening dashboards for $connector_type connector $connector ($connectorId)"

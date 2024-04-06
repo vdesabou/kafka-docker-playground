@@ -21,7 +21,7 @@ if ((length > 1))
 then
     log "✨ --connector flag was not provided, applying command to all connectors"
 fi
-for connector in ${items[@]}
+for connector in "${items[@]}"
 do
     json_file=$(playground connector show-config-parameters --only-show-json --only-show-json-file-path --connector $connector)
     if [ ! -f "$json_file" ]

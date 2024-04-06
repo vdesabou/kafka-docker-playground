@@ -19,7 +19,7 @@ if ((length > 1))
 then
     log "✨ --connector flag was not provided, applying command to all connectors"
 fi
-for connector in ${items[@]}
+for connector in "${items[@]}"
 do
     log "⏸️ Pausing $connector_type connector $connector"
     if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
