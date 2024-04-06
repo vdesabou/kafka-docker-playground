@@ -75,10 +75,10 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
-LAMBDA_ROLE_NAME=pglambdarole$TAG
+LAMBDA_ROLE_NAME=pg${USER}lambdabrole${TAG}
 LAMBDA_ROLE_NAME=${LAMBDA_ROLE_NAME//[-._]/}
 
-LAMBDA_FUNCTION_NAME=pglambdafunction$TAG
+LAMBDA_FUNCTION_NAME=pg${USER}lambdafn${TAG}
 LAMBDA_FUNCTION_NAME=${LAMBDA_FUNCTION_NAME//[-._]/}
 
 set +e

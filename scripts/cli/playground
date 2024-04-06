@@ -14758,10 +14758,20 @@ EOF
   log "Cleanup AWS Lambda functions"
   for function in $(aws lambda list-functions --region $AWS_REGION | jq '.Functions[].FunctionName' -r)
   do
-      if [[ $function = *pg${user}* ]]
+      if [[ $function = *pglambdafunction* ]] || [[ $function = *pg${user}* ]]
       then
           log "Removing AWS Lambda function $function"
           check_if_skip "aws lambda delete-function --function-name ${function}"
+      fi
+  done
+
+  log "Cleanup AWS Lambda IAM roles"
+  for role in $(aws iam list-roles --region $AWS_REGION | jq '.Roles[].RoleName' -r)
+  do
+      if [[ $role = *pglambdarole* ]] || [[ $role = *pg${user}* ]]
+      then
+          log "Removing AWS Lambda role $role"
+          check_if_skip "aws iam delete-role --role-name ${role}"
       fi
   done
 
