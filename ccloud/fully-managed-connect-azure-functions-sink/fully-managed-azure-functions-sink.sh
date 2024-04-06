@@ -110,7 +110,7 @@ playground connector create-or-update --connector $connector_name << EOF
     "kafka.api.secret": "$CLOUD_SECRET",
     "topics": "functions-test",
     "function.url": "$FUNCTIONS_URL",
-    "function.key": "",
+    "function.key": "HttpExample",
     "input.data.format" : "BYTES",
     "tasks.max" : "1"
 }
