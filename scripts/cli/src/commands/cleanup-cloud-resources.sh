@@ -126,6 +126,16 @@ do
     fi
 done
 
+log "Cleanup AWS SQS queues"
+for queue in $(aws sqs list-queues --region $AWS_REGION | jq '.QueueUrls[]' -r)
+do
+    if [[ $queue = *pg${user}* ]]
+    then
+        log "Removing AWS SQS queue $queue"
+        check_if_skip "aws sqs delete-queue --queue-url ${queue}"
+    fi
+done
+
 log "Cleanup AWS Redshift clusters"
 for cluster in $(aws redshift describe-clusters --region $AWS_REGION | jq '.Clusters[].ClusterIdentifier' -r)
 do
