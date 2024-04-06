@@ -139,7 +139,7 @@ playground connector create-or-update --connector $connector_name << EOF
     "azure.search.service.name": "$AZURE_SEARCH_SERVICE_NAME",
     "azure.search.api.key": "$AZURE_SEARCH_ADMIN_PRIMARY_KEY",
     "azure.search.resourcegroup.name": "$AZURE_RESOURCE_GROUP",
-
+    "index.name": "\${topic}-index",
     "azure.search.client.id": "$AZ_USER",
     "azure.search.client.secret": "$AZ_PASS",
     "azure.search.tenant.id": "$tenantId",
