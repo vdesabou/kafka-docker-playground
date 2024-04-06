@@ -1960,9 +1960,14 @@ function wait_for_ccloud_connector_up() {
   maxWait=$2
 
   connectorId=$(get_ccloud_connector_lcc $connectorName)
-  log "Waiting up to $maxWait seconds for connector $connectorName ($connectorId) to be RUNNING"
+  log "waiting up to $maxWait seconds for connector $connectorName ($connectorId) to be RUNNING"
   ccloud::retry $maxWait validate_ccloud_connector_up $connectorName || exit 1
-  log "Connector $connectorName ($connectorId) is RUNNING"
+  log "connector $connectorName ($connectorId) is RUNNING"
+
+  if [ -z "$GITHUB_RUN_NUMBER" ]
+  then
+    playground connector open-in-confluent-cloud --connector $connectorName
+  fi
 
   return 0
 }
