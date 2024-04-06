@@ -3150,8 +3150,8 @@ function ccloud::generate_configs() {
     return 1
   fi
 
-  log "Generating component configurations"
-  log "(If you want to run any of these components to talk to Confluent Cloud, these are the configurations to add to the properties file for each component)"
+  # log "Generating component configurations"
+  # log "(If you want to run any of these components to talk to Confluent Cloud, these are the configurations to add to the properties file for each component)"
 
   # Set permissions
   PERM=600
@@ -3234,13 +3234,13 @@ function ccloud::generate_configs() {
   done < "$CCLOUD_CONFIG_FILE"
   chmod $PERM $INTERCEPTORS_CONFIG_FILE
 
-  log "Confluent Platform Components:"
+  #log "Confluent Platform Components:"
 
   ################################################################################
   # Confluent Schema Registry instance (local) for Confluent Cloud
   ################################################################################
   SR_CONFIG_DELTA=$DEST/schema-registry-ccloud.delta
-  echo "$SR_CONFIG_DELTA"
+  #echo "$SR_CONFIG_DELTA"
   rm -f $SR_CONFIG_DELTA
   while read -r line
   do
@@ -3256,7 +3256,7 @@ function ccloud::generate_configs() {
   # Confluent Replicator (executable) for Confluent Cloud
   ################################################################################
   REPLICATOR_PRODUCER_DELTA=$DEST/replicator-to-ccloud-producer.delta
-  echo "$REPLICATOR_PRODUCER_DELTA"
+  #echo "$REPLICATOR_PRODUCER_DELTA"
   rm -f $REPLICATOR_PRODUCER_DELTA
   cp $INTERCEPTORS_CONFIG_FILE $REPLICATOR_PRODUCER_DELTA
   echo -e "\n# Confluent Replicator (executable) specific configuration" >> $REPLICATOR_PRODUCER_DELTA
@@ -3270,7 +3270,7 @@ function ccloud::generate_configs() {
   # ksqlDB Server runs locally and connects to Confluent Cloud
   ################################################################################
   KSQLDB_SERVER_DELTA=$DEST/ksqldb-server-ccloud.delta
-  echo "$KSQLDB_SERVER_DELTA"
+  #echo "$KSQLDB_SERVER_DELTA"
   rm -f $KSQLDB_SERVER_DELTA
   cp $INTERCEPTORS_CONFIG_FILE $KSQLDB_SERVER_DELTA
   echo -e "\n# ksqlDB Server specific configuration" >> $KSQLDB_SERVER_DELTA
@@ -3298,7 +3298,7 @@ function ccloud::generate_configs() {
   # KSQL DataGen for Confluent Cloud
   ################################################################################
   KSQL_DATAGEN_DELTA=$DEST/ksql-datagen.delta
-  echo "$KSQL_DATAGEN_DELTA"
+  #echo "$KSQL_DATAGEN_DELTA"
   rm -f $KSQL_DATAGEN_DELTA
   cp $INTERCEPTORS_CONFIG_FILE $KSQL_DATAGEN_DELTA
   echo -e "\n# KSQL DataGen specific configuration" >> $KSQL_DATAGEN_DELTA
@@ -3318,7 +3318,7 @@ function ccloud::generate_configs() {
   # Confluent Control Center runs locally, monitors Confluent Cloud, and uses Confluent Cloud cluster as the backstore
   ################################################################################
   C3_DELTA=$DEST/control-center-ccloud.delta
-  echo "$C3_DELTA"
+  #echo "$C3_DELTA"
   rm -f $C3_DELTA
   echo -e "\n# Confluent Control Center specific configuration" >> $C3_DELTA
   while read -r line
@@ -3350,7 +3350,7 @@ function ccloud::generate_configs() {
   # Confluent Metrics Reporter to Confluent Cloud
   ################################################################################
   METRICS_REPORTER_DELTA=$DEST/metrics-reporter.delta
-  echo "$METRICS_REPORTER_DELTA"
+  #echo "$METRICS_REPORTER_DELTA"
   rm -f $METRICS_REPORTER_DELTA
   echo "metric.reporters=io.confluent.metrics.reporter.ConfluentMetricsReporter" >> $METRICS_REPORTER_DELTA
   echo "confluent.metrics.reporter.topic.replicas=3" >> $METRICS_REPORTER_DELTA
@@ -3368,7 +3368,7 @@ function ccloud::generate_configs() {
   # Confluent REST Proxy to Confluent Cloud
   ################################################################################
   REST_PROXY_DELTA=$DEST/rest-proxy.delta
-  echo "$REST_PROXY_DELTA"
+  #echo "$REST_PROXY_DELTA"
   rm -f $REST_PROXY_DELTA
   while read -r line
     do
@@ -3394,7 +3394,7 @@ function ccloud::generate_configs() {
   # Kafka Connect runs locally and connects to Confluent Cloud
   ################################################################################
   CONNECT_DELTA=$DEST/connect-ccloud.delta
-  echo "$CONNECT_DELTA"
+  #echo "$CONNECT_DELTA"
   rm -f $CONNECT_DELTA
   cat <<EOF > $CONNECT_DELTA
 # Configuration for embedded admin client
@@ -3449,7 +3449,7 @@ EOF
   # Kafka connector
   ################################################################################
   CONNECTOR_DELTA=$DEST/connector-ccloud.delta
-  echo "$CONNECTOR_DELTA"
+  #echo "$CONNECTOR_DELTA"
   rm -f $CONNECTOR_DELTA
   cat <<EOF >> $CONNECTOR_DELTA
 // Confluent Schema Registry for Kafka connectors
@@ -3464,19 +3464,19 @@ EOF
   # AK command line tools
   ################################################################################
   AK_TOOLS_DELTA=$DEST/ak-tools-ccloud.delta
-  echo "$AK_TOOLS_DELTA"
+  #echo "$AK_TOOLS_DELTA"
   rm -f $AK_TOOLS_DELTA
   cp $CCLOUD_CONFIG_FILE $AK_TOOLS_DELTA
   chmod $PERM $AK_TOOLS_DELTA
 
 
-  log "Kafka Clients:"
+  #log "Kafka Clients:"
 
   ################################################################################
   # Java (Producer/Consumer)
   ################################################################################
   JAVA_PC_CONFIG=$DEST/java_producer_consumer.delta
-  echo "$JAVA_PC_CONFIG"
+  #echo "$JAVA_PC_CONFIG"
   rm -f $JAVA_PC_CONFIG
 
   cat <<EOF >> $JAVA_PC_CONFIG
@@ -3525,7 +3525,7 @@ EOF
   # Java (Streams)
   ################################################################################
   JAVA_STREAMS_CONFIG=$DEST/java_streams.delta
-  echo "$JAVA_STREAMS_CONFIG"
+  #echo "$JAVA_STREAMS_CONFIG"
   rm -f $JAVA_STREAMS_CONFIG
 
   cat <<EOF >> $JAVA_STREAMS_CONFIG
@@ -3575,7 +3575,7 @@ EOF
   # librdkafka
   ################################################################################
   LIBRDKAFKA_CONFIG=$DEST/librdkafka.delta
-  echo "$LIBRDKAFKA_CONFIG"
+  #echo "$LIBRDKAFKA_CONFIG"
   rm -f $LIBRDKAFKA_CONFIG
 
   cat <<EOF >> $LIBRDKAFKA_CONFIG
@@ -3593,7 +3593,7 @@ EOF
   # Python
   ################################################################################
   PYTHON_CONFIG=$DEST/python.delta
-  echo "$PYTHON_CONFIG"
+ # echo "$PYTHON_CONFIG"
   rm -f $PYTHON_CONFIG
 
   cat <<EOF >> $PYTHON_CONFIG
@@ -3631,7 +3631,7 @@ EOF
   # .NET
   ################################################################################
   DOTNET_CONFIG=$DEST/dotnet.delta
-  echo "$DOTNET_CONFIG"
+  #echo "$DOTNET_CONFIG"
   rm -f $DOTNET_CONFIG
 
   cat <<EOF >> $DOTNET_CONFIG
@@ -3671,7 +3671,7 @@ EOF
   # Go
   ################################################################################
   GO_CONFIG=$DEST/go.delta
-  echo "$GO_CONFIG"
+  #echo "$GO_CONFIG"
   rm -f $GO_CONFIG
 
   cat <<EOF >> $GO_CONFIG
@@ -3712,7 +3712,7 @@ EOF
   # Node.js
   ################################################################################
   NODE_CONFIG=$DEST/node.delta
-  echo "$NODE_CONFIG"
+ # echo "$NODE_CONFIG"
   rm -f $NODE_CONFIG
 
   cat <<EOF >> $NODE_CONFIG
@@ -3750,7 +3750,7 @@ EOF
   # C++
   ################################################################################
   CPP_CONFIG=$DEST/cpp.delta
-  echo "$CPP_CONFIG"
+  #echo "$CPP_CONFIG"
   rm -f $CPP_CONFIG
 
   cat <<EOF >> $CPP_CONFIG
