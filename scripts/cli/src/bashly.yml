@@ -2816,6 +2816,13 @@ commands:
       help: |-
         ☁️ Fully Managed lcc id (only for Confluent employees)
 
+  - name: open-in-confluent-cloud
+    group: Connect
+    help: |-
+      🤖 Open Fully Managed connector in Confluent Cloud dashboard
+    flags:
+    - *connector
+
   - name: create-or-update
     help: 🧑‍🎨  Create or update connector
     args:
