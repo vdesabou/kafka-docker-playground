@@ -15,8 +15,11 @@ then
     verify_installed "confluent"
     check_confluent_version 3.0.0 || exit 1
 else
-    log "Installing confluent CLI"
-    curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
+    if [ ! -f /usr/local/bin/confluent ]
+    then
+      log "🚚 installing confluent CLI"
+      curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
+    fi
     export PATH=$PATH:/usr/local/bin
 fi
 

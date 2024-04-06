@@ -8878,13 +8878,14 @@ function bootstrap_ccloud_environment () {
     check_confluent_version 3.0.0 || exit 1
     verify_confluent_login  "confluent kafka cluster list"
   else
-      log "Installing confluent CLI"
+    if [ ! -f /usr/local/bin/confluent ]
+    then
+      log "🚚 installing confluent CLI"
       curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
-      export PATH=$PATH:/usr/local/bin
-      log "##################################################"
-      log "Log in to Confluent Cloud"
-      log "##################################################"
-      confluent login --save
+    fi
+    export PATH=$PATH:/usr/local/bin
+    log "⛺ log in to Confluent Cloud"
+    confluent login --save
   fi
 
   suggest_use_previous_example_ccloud=1
