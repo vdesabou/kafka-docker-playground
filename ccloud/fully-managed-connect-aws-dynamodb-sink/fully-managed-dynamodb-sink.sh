@@ -39,21 +39,23 @@ else
     fi
 fi
 
+DYNAMODB_TABLE="pg${USER}dynamo${TAG}"
+
 set +e
 log "Delete table, this might fail"
-aws dynamodb delete-table --table-name mytable --region $AWS_REGION
+aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION
 set -e
 
 bootstrap_ccloud_environment
 
 set +e
-playground topic delete --topic mytable
+playground topic delete --topic $DYNAMODB_TABLE
 sleep 3
-playground topic create --topic mytable --nb-partitions 1
+playground topic create --topic $DYNAMODB_TABLE --nb-partitions 1
 set -e
 
-log "Sending messages to topic mytable"
-playground topic produce -t mytable --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+log "Sending messages to topic $DYNAMODB_TABLE"
+playground topic produce -t $DYNAMODB_TABLE --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -82,7 +84,7 @@ playground connector create-or-update --connector $connector_name << EOF
     "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
     "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
     "input.data.format": "AVRO",
-    "topics": "mytable",
+    "topics": "$DYNAMODB_TABLE",
     "aws.dynamodb.endpoint": "https://dynamodb.$AWS_REGION.amazonaws.com",
     "tasks.max" : "1"
 }
@@ -93,7 +95,7 @@ log "Sleeping 120 seconds, waiting for table to be created"
 sleep 120
 
 log "Verify data is in DynamoDB"
-aws dynamodb scan --table-name mytable --region $AWS_REGION  > /tmp/result.log  2>&1
+aws dynamodb scan --table-name $DYNAMODB_TABLE --region $AWS_REGION  > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "value1" /tmp/result.log
 

@@ -72,19 +72,19 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
-
+DYNAMODB_TABLE="pg${USER}dynamo${TAG}"
 DYNAMODB_ENDPOINT="https://dynamodb.$AWS_REGION.amazonaws.com"
 
 set +e
 log "Delete table, this might fail"
-aws dynamodb delete-table --table-name mytable --region $AWS_REGION
+aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION
 set -e
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.with-custom-basic-aws-credentials-provider.yml"
 
-log "Sending messages to topic mytable"
-playground topic produce -t mytable --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+log "Sending messages to topic $DYNAMODB_TABLE"
+playground topic produce -t $DYNAMODB_TABLE --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -101,7 +101,7 @@ playground connector create-or-update --connector dynamodb-sink  << EOF
 {
     "connector.class": "io.confluent.connect.aws.dynamodb.DynamoDbSinkConnector",
     "tasks.max": "1",
-    "topics": "mytable",
+    "topics": "$DYNAMODB_TABLE",
     "aws.dynamodb.region": "$AWS_REGION",
     "aws.dynamodb.endpoint": "$DYNAMODB_ENDPOINT",
     "confluent.license": "",
@@ -117,6 +117,6 @@ log "Sleeping 120 seconds, waiting for table to be created"
 sleep 120
 
 log "Verify data is in DynamoDB"
-aws dynamodb scan --table-name mytable --region $AWS_REGION  > /tmp/result.log  2>&1
+aws dynamodb scan --table-name $DYNAMODB_TABLE --region $AWS_REGION  > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "value1" /tmp/result.log
