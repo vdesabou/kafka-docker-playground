@@ -336,7 +336,6 @@ fi
       fi
     ;;
   esac
-  set +x
   # Detect the platform (macOS or Linux) and set the date command accordingly
   if [[ "$(uname)" == "Darwin" ]]; then
     # macOS
@@ -356,6 +355,7 @@ fi
   found=0
   first_record=1
   is_base64=0
+  export LC_ALL=C
   # Loop through each line in the named pipe
   while read -r line
   do
