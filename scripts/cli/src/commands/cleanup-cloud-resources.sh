@@ -136,6 +136,16 @@ do
     fi
 done
 
+log "Cleanup AWS Lmbda functions"
+for function in $(aws lambda list-functions --region $AWS_REGION | jq '.Functions[].FunctionName' -r)
+do
+    if [[ $function = *pg${user}* ]]
+    then
+        log "Removing AWS Lambda function $function"
+        check_if_skip "aws lambda delete-function --function-name ${function}"
+    fi
+done
+
 log "Cleanup AWS Redshift clusters"
 for cluster in $(aws redshift describe-clusters --region $AWS_REGION | jq '.Clusters[].ClusterIdentifier' -r)
 do
