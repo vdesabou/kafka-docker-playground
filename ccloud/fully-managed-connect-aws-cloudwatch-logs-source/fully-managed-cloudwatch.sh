@@ -103,3 +103,8 @@ log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
 playground connector delete --connector $connector_name
+
+log "Do you want to delete the log group $LOG_GROUP ?"
+check_if_continue
+aws logs delete-log-stream --log-group-name "$LOG_GROUP" --log-stream-name "$LOG_STREAM"
+aws logs delete-log-group --log-group-name "$LOG_GROUP"

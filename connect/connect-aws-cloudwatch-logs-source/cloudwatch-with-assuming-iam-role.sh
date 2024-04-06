@@ -80,3 +80,8 @@ sleep 5
 
 log "Verify we have received the data in $LOG_GROUP.$LOG_STREAM topic"
 playground topic consume --topic $LOG_GROUP.$LOG_STREAM --min-expected-messages 11 --timeout 60
+
+log "Do you want to delete the log group $LOG_GROUP ?"
+check_if_continue
+aws logs delete-log-stream --log-group-name "$LOG_GROUP" --log-stream-name "$LOG_STREAM"
+aws logs delete-log-group --log-group-name "$LOG_GROUP"
