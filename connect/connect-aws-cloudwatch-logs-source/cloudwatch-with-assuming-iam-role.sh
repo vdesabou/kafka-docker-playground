@@ -31,9 +31,9 @@ fi
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.with-assuming-iam-role.yml"
 
-LOG_GROUP=my-log-group$TAG
+LOG_GROUP=pg${USER}lg${TAG}
 LOG_GROUP=${LOG_GROUP//[-.]/}
-LOG_STREAM=my-log-stream$TAG
+LOG_STREAM=pg${USER}ls${TAG}
 LOG_STREAM=${LOG_STREAM//[-.]/}
 
 # cleanup

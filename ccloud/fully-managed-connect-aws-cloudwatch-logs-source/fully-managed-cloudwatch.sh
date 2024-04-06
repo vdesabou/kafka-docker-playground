@@ -35,12 +35,9 @@ fi
 
 bootstrap_ccloud_environment
 
-
-
-
-LOG_GROUP=my-log-group$TAG
+LOG_GROUP=pg${USER}lg${TAG}
 LOG_GROUP=${LOG_GROUP//[-.]/}
-LOG_STREAM=my-log-stream$TAG
+LOG_STREAM=pg${USER}ls${TAG}
 LOG_STREAM=${LOG_STREAM//[-.]/}
 
 TOPIC="$LOG_GROUP.$LOG_STREAM"

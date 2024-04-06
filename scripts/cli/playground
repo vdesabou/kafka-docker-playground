@@ -14755,6 +14755,32 @@ EOF
       fi
   done
 
+  log "Cleanup AWS Lambda functions"
+  for function in $(aws lambda list-functions --region $AWS_REGION | jq '.Functions[].FunctionName' -r)
+  do
+      if [[ $function = *pg${user}* ]]
+      then
+          log "Removing AWS Lambda function $function"
+          check_if_skip "aws lambda delete-function --function-name ${function}"
+      fi
+  done
+
+  log "Cleanup AWS CloudWatch log group"
+  for log_group in $(aws logs describe-log-groups --region $AWS_REGION | jq '.logGroups[].logGroupName' -r)
+  do
+      if [[ $log_group = *myloggroup* ]] || [[ $log_group = *pg${user}* ]]
+      then
+          for log_stream in $(aws logs describe-log-streams --log-group-name $log_group --region $AWS_REGION | jq '.logStreams[].logStreamName' -r)
+          do
+              log "Removing AWS CloudWatch log stream $log_stream for log group $log_group"
+              check_if_skip "aws logs delete-log-stream --log-group-name ${log_group} --log-stream-name ${log_stream}"
+          done
+
+          log "Removing AWS CloudWatch log group $log_group"
+          check_if_skip "aws logs delete-log-group --log-group-name ${log_group}"
+      fi
+  done
+
   log "Cleanup AWS Redshift clusters"
   for cluster in $(aws redshift describe-clusters --region $AWS_REGION | jq '.Clusters[].ClusterIdentifier' -r)
   do
