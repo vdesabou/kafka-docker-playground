@@ -78,7 +78,7 @@ playground topic produce -t executable-products-avro --nb-messages 3 << 'EOF'
 EOF
 
 log "Starting replicator executable"
-docker compose -f ../../ccloud/environment/docker-compose.yml -f ${PWD}/docker-compose-executable-onprem-to-cloud.yml -f docker-compose-executable-onprem-to-cloud-avro-replicator.yml up -d
+docker compose -f ../../ccloud/environment/docker-compose.yml -f ${PWD}/docker-compose-executable-onprem-to-cloud.yml -f docker-compose-executable-onprem-to-cloud-avro-replicator.yml up -d --quiet-pull
 wait_container_ready replicator
 
 sleep 50

@@ -138,7 +138,7 @@ then
 fi
 
 docker compose -f ${DIR}/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
-docker compose -f ${DIR}/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} up -d
+docker compose -f ${DIR}/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} up -d --quiet-pull
 
 log "Checking Ansible can connect over DOCKER."
 ansible -i ${HOSTS_FILE} all -m ping

@@ -12,7 +12,7 @@ bootstrap_ccloud_environment
 
 docker compose -f docker-compose.basic-auth.yml build
 docker compose -f docker-compose.basic-auth.yml down -v --remove-orphans
-docker compose -f docker-compose.basic-auth.yml up -d
+docker compose -f docker-compose.basic-auth.yml up -d --quiet-pull
 
 sleep 5
 

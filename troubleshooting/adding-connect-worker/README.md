@@ -85,7 +85,7 @@ $ curl --request GET \
 Adding a second connect worker
 
 ```bash
-$ docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.yml" -f "${PWD}/docker-compose.add-connect-worker.yml" up -d
+$ docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.yml" -f "${PWD}/docker-compose.add-connect-worker.yml" up -d --quiet-pull
 ```
 
 Getting tasks placement

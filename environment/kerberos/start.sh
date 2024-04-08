@@ -25,7 +25,7 @@ fi
 docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
 docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} build kdc
 docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} build client
-docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} up -d kdc
+docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} up -d --quiet-pull kdc
 
 
 docker exec -i kdc kadmin.local -w password -q "modprinc -maxrenewlife 11days +allow_renewable krbtgt/TEST.CONFLUENT.IO"  > /dev/null
@@ -121,9 +121,9 @@ fi
 
 # Starting zookeeper and kafka now that the keytab has been created with the required credentials and services
 docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} build
-docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_kafka_nodes_command} up -d
+docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_kafka_nodes_command} up -d --quiet-pull
 log "📝 To see the actual properties file, use cli command playground container get-properties -c <container>"
-command="source ${DIR}/../../scripts/utils.sh && docker compose -f ${DIR}/../../environment/plaintext/docker-compose.yml -f ${DIR}/../../environment/kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_kafka_nodes_command} up -d"
+command="source ${DIR}/../../scripts/utils.sh && docker compose -f ${DIR}/../../environment/plaintext/docker-compose.yml -f ${DIR}/../../environment/kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_kafka_nodes_command} up -d --quiet-pull"
 playground state set run.docker_command "$command"
 playground state set run.environment "kerberos"
 log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command playground container recreate"

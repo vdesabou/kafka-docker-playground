@@ -10,7 +10,7 @@ bootstrap_ccloud_environment
 
 docker compose -f docker-compose.noauth.yml build
 docker compose -f docker-compose.noauth.yml down -v --remove-orphans
-docker compose -f docker-compose.noauth.yml up -d
+docker compose -f docker-compose.noauth.yml up -d --quiet-pull
 
 sleep 5
 

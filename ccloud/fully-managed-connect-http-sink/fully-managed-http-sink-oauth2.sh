@@ -14,7 +14,7 @@ bootstrap_ccloud_environment
 
 docker compose -f docker-compose.oauth2.yml build
 docker compose -f docker-compose.oauth2.yml down -v --remove-orphans
-docker compose -f docker-compose.oauth2.yml up -d
+docker compose -f docker-compose.oauth2.yml up -d --quiet-pull
 
 sleep 5
 

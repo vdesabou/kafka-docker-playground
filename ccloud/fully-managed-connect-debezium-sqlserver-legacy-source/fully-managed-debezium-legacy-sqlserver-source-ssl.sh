@@ -70,7 +70,7 @@ set -e
 
 docker compose -f docker-compose-ssl.yml build
 docker compose -f docker-compose-ssl.yml down -v --remove-orphans
-docker compose -f docker-compose-ssl.yml up -d
+docker compose -f docker-compose-ssl.yml up -d --quiet-pull
 
 sleep 5
 
