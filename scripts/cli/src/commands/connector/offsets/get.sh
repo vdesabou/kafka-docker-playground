@@ -35,7 +35,7 @@ else
   get_security_broker "--command-config"
 fi
 
-if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] 
+if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
 then
     tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
     if [ $? != 0 ] || [ "$tag" == "" ]
@@ -46,15 +46,20 @@ then
 fi
 
 function handle_first_class_offset() {
-    
-    if ! version_gt $tag "7.4.99"
+    if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
     then
-        logerror "❌ command is available since CP 7.5 only"
-        return
-    fi
+        get_ccloud_connect
+        handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets\" --header \"authorization: Basic $authorization\""
+    else
+        if ! version_gt $tag "7.4.99"
+        then
+            logerror "❌ command is available since CP 7.5 only"
+            return
+        fi
 
-    get_connect_url_and_security
-    handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\""
+        get_connect_url_and_security
+        handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\""
+    fi
 
     echo "$curl_output" | jq .
 }
@@ -84,12 +89,6 @@ do
         ##
         # SOURCE CONNECTOR
         ##
-        if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
-        then
-            logwarn "command is not available with $connector_type $type connector"
-            continue
-        fi
-
         handle_first_class_offset
         if [ $? != 0 ]
         then
@@ -107,16 +106,7 @@ do
         get_environment_used
         if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [[ "$environment" == "ccloud" ]]
         then
-            get_ccloud_connect
-            get_connect_image
-
-            if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] 
-            then
-                consumer_group="connect-$connectorId"
-            else
-                consumer_group="connect-$connector"
-            fi
-            docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group $consumer_group --describe 
+            handle_first_class_offset 
         else
             if version_gt $tag "7.5.99"
             then

@@ -2408,7 +2408,7 @@ subcommands:
         description: | 
           🏹 Get current offsets for source and sink connectors
             
-            ⚠️ Not available for ccloud source connectors
+            ⚠️ Available for ccloud source connectors as EA (see https://docs.confluent.io/cloud/current/connectors/offsets.html)
             
         usage: playground connector offsets get [OPTIONS]
         options:
@@ -2432,7 +2432,7 @@ subcommands:
         description: | 
           🆕 Reset offsets for source and sink connectors
             
-            ⚠️ Not available for ccloud connectors
+            ⚠️ Available for ccloud connectors as EA (see https://docs.confluent.io/cloud/current/connectors/offsets.html)
             
         usage: playground connector offsets reset [OPTIONS]
         options:
@@ -2456,7 +2456,7 @@ subcommands:
         description: | 
           ⛏️ Alter offsets for source and sink connectors
             
-            ⚠️ Not available for ccloud connectors
+            ⚠️ Available for ccloud connectors as EA (see https://docs.confluent.io/cloud/current/connectors/offsets.html)
             
         usage: playground connector offsets alter [OPTIONS]
         options:

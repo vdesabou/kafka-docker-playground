@@ -35,7 +35,7 @@ else
   get_security_broker "--command-config"
 fi
 
-if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] 
+if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
 then
     tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
     if [ $? != 0 ] || [ "$tag" == "" ]
@@ -46,19 +46,26 @@ then
 fi
 
 function handle_first_class_offset() {
+    if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+    then
 
-    if ! version_gt $tag "7.5.99"; then
-        logerror "❌ command is available since CP 7.6 only"
-        return
+        echo '{"type":"DELETE"}' > /tmp/delete.json
+        get_ccloud_connect
+        handle_ccloud_connect_rest_api "curl -s --request POST -H \"Content-Type: application/json\" --data @/tmp/delete.json \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request\" --header \"authorization: Basic $authorization\""
+    else
+        if ! version_gt $tag "7.5.99"; then
+            logerror "❌ command is available since CP 7.6 only"
+            return
+        fi
+        playground connector stop --connector $connector
+
+        get_connect_url_and_security
+        handle_onprem_connect_rest_api "curl $security -s -X DELETE \"$connect_url/connectors/$connector/offsets\""
+
+        echo "$curl_output" | jq .
+
+        playground connector resume --connector $connector
     fi
-    playground connector stop --connector $connector
-
-    get_connect_url_and_security
-    handle_onprem_connect_rest_api "curl $security -s -X DELETE \"$connect_url/connectors/$connector/offsets\""
-
-    echo "$curl_output" | jq .
-
-    playground connector resume --connector $connector
 }
 
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
@@ -95,23 +102,34 @@ do
         ##
         # SOURCE CONNECTOR
         ##
-        if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
-        then
-            logwarn "command is not available with $connector_type $type connector"
-            continue
-        fi
-
         handle_first_class_offset
         if [ $? != 0 ]
         then
             continue
         fi
+        sleep 5
+        get_ccloud_connect
+        log "🎯 get the status of the last offset request"
+        handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request/status\" --header \"authorization: Basic $authorization\""
+        echo "$curl_output" | jq .
+        sleep 20
         playground connector offsets get --connector $connector
     else
         if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
         then
-            logwarn "command is not available with $connector_type $type connector"
-            continue
+            handle_first_class_offset
+            if [ $? != 0 ]
+            then
+                continue
+            fi
+            sleep 5
+            get_ccloud_connect
+            log "🎯 get the status of the last offset request"
+            handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request/status\" --header \"authorization: Basic $authorization\""
+            echo "$curl_output" | jq .
+            sleep 20
+            playground connector offsets get --connector $connector
+            exit 0
         fi
 
         if version_gt $tag "7.5.99"
