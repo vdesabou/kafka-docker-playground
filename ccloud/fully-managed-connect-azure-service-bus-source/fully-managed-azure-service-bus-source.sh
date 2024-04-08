@@ -70,7 +70,7 @@ AZURE_SAS_KEY=$(az servicebus namespace authorization-rule keys list \
 
 docker compose build
 docker compose down -v --remove-orphans
-docker compose up -d
+docker compose up -d --quiet-pull
 
 
 connector_name="AzureServiceBusSource_$USER"

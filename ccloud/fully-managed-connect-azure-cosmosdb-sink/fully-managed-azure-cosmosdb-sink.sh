@@ -82,7 +82,7 @@ AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY=$(az cosmosdb keys list -n $AZURE_COSMOSDB
 
 docker compose build
 docker compose down -v --remove-orphans
-docker compose up -d
+docker compose up -d --quiet-pull
 
 connector_name="CosmosDbSink_$USER"
 set +e

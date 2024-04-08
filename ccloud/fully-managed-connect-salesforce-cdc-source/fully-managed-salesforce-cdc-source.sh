@@ -56,7 +56,7 @@ set -e
 
 docker compose build
 docker compose down -v --remove-orphans
-docker compose up -d
+docker compose up -d --quiet-pull
 
 log "Login with sfdx CLI"
 docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""

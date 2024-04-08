@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 docker compose down -v --remove-orphans
-docker compose up -d
+docker compose up -d --quiet-pull
 ${DIR}/wait_container_ready -a -b
 
 log "Create topic adb-test"

@@ -20,7 +20,7 @@ playground topic create --topic orders
 
 docker compose build
 docker compose down -v --remove-orphans
-docker compose up -d
+docker compose up -d --quiet-pull
 
 sleep 5
 

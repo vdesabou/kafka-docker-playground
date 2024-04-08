@@ -54,7 +54,7 @@ git checkout "${GIT_BRANCH}"
 cp ${DIR}/${HOSTS_FILE} ${DIR}/cp-ansible/
 
 docker compose down -v --remove-orphans
-docker compose up -d
+docker compose up -d --quiet-pull
 
 log "INFO: Checking Ansible can connect over DOCKER."
 cd ${DIR}/cp-ansible

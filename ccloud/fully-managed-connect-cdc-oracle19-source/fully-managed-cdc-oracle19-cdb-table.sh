@@ -21,7 +21,7 @@ set -e
 
 docker compose build
 docker compose down -v --remove-orphans
-docker compose up -d
+docker compose up -d --quiet-pull
 
 # Verify Oracle DB has started within MAX_WAIT seconds
 MAX_WAIT=2500

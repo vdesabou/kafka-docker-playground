@@ -76,7 +76,7 @@ AZURE_EVENT_CONNECTION_STRING=$(az eventhubs namespace authorization-rule keys l
     
 docker compose build
 docker compose down -v --remove-orphans
-docker compose up -d
+docker compose up -d --quiet-pull
 
 connector_name="AzureEventHubsSource_$USER"
 set +e
