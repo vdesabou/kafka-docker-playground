@@ -103,10 +103,7 @@ set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
 
-set -x
-which base64
-base64_truststore=$(cat $PWD/security/truststore.jks | base64)
-set +x
+base64_truststore=$(cat $PWD/security/truststore.jks | base64 | tr -d '\n')
 
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
