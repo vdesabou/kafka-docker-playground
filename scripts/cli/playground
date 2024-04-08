@@ -10344,8 +10344,8 @@ function ccloud::generate_configs() {
     return 1
   fi
 
-  log "Generating component configurations"
-  log "(If you want to run any of these components to talk to Confluent Cloud, these are the configurations to add to the properties file for each component)"
+  # log "Generating component configurations"
+  # log "(If you want to run any of these components to talk to Confluent Cloud, these are the configurations to add to the properties file for each component)"
 
   # Set permissions
   PERM=600
@@ -10424,11 +10424,11 @@ function ccloud::generate_configs() {
   done < "$CCLOUD_CONFIG_FILE"
   chmod $PERM $INTERCEPTORS_CONFIG_FILE
 
-  log "Confluent Platform Components:"
+  #log "Confluent Platform Components:"
 
   # Confluent Schema Registry instance (local) for Confluent Cloud
   SR_CONFIG_DELTA=$DEST/schema-registry-ccloud.delta
-  echo "$SR_CONFIG_DELTA"
+  #echo "$SR_CONFIG_DELTA"
   rm -f $SR_CONFIG_DELTA
   while read -r line
   do
@@ -10442,7 +10442,7 @@ function ccloud::generate_configs() {
 
   # Confluent Replicator (executable) for Confluent Cloud
   REPLICATOR_PRODUCER_DELTA=$DEST/replicator-to-ccloud-producer.delta
-  echo "$REPLICATOR_PRODUCER_DELTA"
+  #echo "$REPLICATOR_PRODUCER_DELTA"
   rm -f $REPLICATOR_PRODUCER_DELTA
   cp $INTERCEPTORS_CONFIG_FILE $REPLICATOR_PRODUCER_DELTA
   echo -e "\n# Confluent Replicator (executable) specific configuration" >> $REPLICATOR_PRODUCER_DELTA
@@ -10454,7 +10454,7 @@ function ccloud::generate_configs() {
 
   # ksqlDB Server runs locally and connects to Confluent Cloud
   KSQLDB_SERVER_DELTA=$DEST/ksqldb-server-ccloud.delta
-  echo "$KSQLDB_SERVER_DELTA"
+  #echo "$KSQLDB_SERVER_DELTA"
   rm -f $KSQLDB_SERVER_DELTA
   cp $INTERCEPTORS_CONFIG_FILE $KSQLDB_SERVER_DELTA
   echo -e "\n# ksqlDB Server specific configuration" >> $KSQLDB_SERVER_DELTA
@@ -10480,7 +10480,7 @@ function ccloud::generate_configs() {
 
   # KSQL DataGen for Confluent Cloud
   KSQL_DATAGEN_DELTA=$DEST/ksql-datagen.delta
-  echo "$KSQL_DATAGEN_DELTA"
+  #echo "$KSQL_DATAGEN_DELTA"
   rm -f $KSQL_DATAGEN_DELTA
   cp $INTERCEPTORS_CONFIG_FILE $KSQL_DATAGEN_DELTA
   echo -e "\n# KSQL DataGen specific configuration" >> $KSQL_DATAGEN_DELTA
@@ -10498,7 +10498,7 @@ function ccloud::generate_configs() {
 
   # Confluent Control Center runs locally, monitors Confluent Cloud, and uses Confluent Cloud cluster as the backstore
   C3_DELTA=$DEST/control-center-ccloud.delta
-  echo "$C3_DELTA"
+  #echo "$C3_DELTA"
   rm -f $C3_DELTA
   echo -e "\n# Confluent Control Center specific configuration" >> $C3_DELTA
   while read -r line
@@ -10528,7 +10528,7 @@ function ccloud::generate_configs() {
 
   # Confluent Metrics Reporter to Confluent Cloud
   METRICS_REPORTER_DELTA=$DEST/metrics-reporter.delta
-  echo "$METRICS_REPORTER_DELTA"
+  #echo "$METRICS_REPORTER_DELTA"
   rm -f $METRICS_REPORTER_DELTA
   echo "metric.reporters=io.confluent.metrics.reporter.ConfluentMetricsReporter" >> $METRICS_REPORTER_DELTA
   echo "confluent.metrics.reporter.topic.replicas=3" >> $METRICS_REPORTER_DELTA
@@ -10544,7 +10544,7 @@ function ccloud::generate_configs() {
 
   # Confluent REST Proxy to Confluent Cloud
   REST_PROXY_DELTA=$DEST/rest-proxy.delta
-  echo "$REST_PROXY_DELTA"
+  #echo "$REST_PROXY_DELTA"
   rm -f $REST_PROXY_DELTA
   while read -r line
     do
@@ -10568,7 +10568,7 @@ function ccloud::generate_configs() {
 
   # Kafka Connect runs locally and connects to Confluent Cloud
   CONNECT_DELTA=$DEST/connect-ccloud.delta
-  echo "$CONNECT_DELTA"
+  #echo "$CONNECT_DELTA"
   rm -f $CONNECT_DELTA
   cat <<EOF > $CONNECT_DELTA
 # Configuration for embedded admin client
@@ -10620,7 +10620,7 @@ EOF
 
   # Kafka connector
   CONNECTOR_DELTA=$DEST/connector-ccloud.delta
-  echo "$CONNECTOR_DELTA"
+  #echo "$CONNECTOR_DELTA"
   rm -f $CONNECTOR_DELTA
   cat <<EOF >> $CONNECTOR_DELTA
 // Confluent Schema Registry for Kafka connectors
@@ -10633,16 +10633,16 @@ EOF
 
   # AK command line tools
   AK_TOOLS_DELTA=$DEST/ak-tools-ccloud.delta
-  echo "$AK_TOOLS_DELTA"
+  #echo "$AK_TOOLS_DELTA"
   rm -f $AK_TOOLS_DELTA
   cp $CCLOUD_CONFIG_FILE $AK_TOOLS_DELTA
   chmod $PERM $AK_TOOLS_DELTA
 
-  log "Kafka Clients:"
+  #log "Kafka Clients:"
 
   # Java (Producer/Consumer)
   JAVA_PC_CONFIG=$DEST/java_producer_consumer.delta
-  echo "$JAVA_PC_CONFIG"
+  #echo "$JAVA_PC_CONFIG"
   rm -f $JAVA_PC_CONFIG
 
   cat <<EOF >> $JAVA_PC_CONFIG
@@ -10689,7 +10689,7 @@ EOF
 
   # Java (Streams)
   JAVA_STREAMS_CONFIG=$DEST/java_streams.delta
-  echo "$JAVA_STREAMS_CONFIG"
+  #echo "$JAVA_STREAMS_CONFIG"
   rm -f $JAVA_STREAMS_CONFIG
 
   cat <<EOF >> $JAVA_STREAMS_CONFIG
@@ -10737,7 +10737,7 @@ EOF
 
   # librdkafka
   LIBRDKAFKA_CONFIG=$DEST/librdkafka.delta
-  echo "$LIBRDKAFKA_CONFIG"
+  #echo "$LIBRDKAFKA_CONFIG"
   rm -f $LIBRDKAFKA_CONFIG
 
   cat <<EOF >> $LIBRDKAFKA_CONFIG
@@ -10753,7 +10753,7 @@ EOF
 
   # Python
   PYTHON_CONFIG=$DEST/python.delta
-  echo "$PYTHON_CONFIG"
+ # echo "$PYTHON_CONFIG"
   rm -f $PYTHON_CONFIG
 
   cat <<EOF >> $PYTHON_CONFIG
@@ -10789,7 +10789,7 @@ EOF
 
   # .NET
   DOTNET_CONFIG=$DEST/dotnet.delta
-  echo "$DOTNET_CONFIG"
+  #echo "$DOTNET_CONFIG"
   rm -f $DOTNET_CONFIG
 
   cat <<EOF >> $DOTNET_CONFIG
@@ -10827,7 +10827,7 @@ EOF
 
   # Go
   GO_CONFIG=$DEST/go.delta
-  echo "$GO_CONFIG"
+  #echo "$GO_CONFIG"
   rm -f $GO_CONFIG
 
   cat <<EOF >> $GO_CONFIG
@@ -10865,7 +10865,7 @@ EOF
 
   # Node.js
   NODE_CONFIG=$DEST/node.delta
-  echo "$NODE_CONFIG"
+ # echo "$NODE_CONFIG"
   rm -f $NODE_CONFIG
 
   cat <<EOF >> $NODE_CONFIG
@@ -10901,7 +10901,7 @@ EOF
 
   # C++
   CPP_CONFIG=$DEST/cpp.delta
-  echo "$CPP_CONFIG"
+  #echo "$CPP_CONFIG"
   rm -f $CPP_CONFIG
 
   cat <<EOF >> $CPP_CONFIG
@@ -22437,73 +22437,103 @@ playground_connector_create_or_update_command() {
       log "🔄 Updating $connector_type connector $connector"
   fi
 
-  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
-  then
-      get_ccloud_connect
-      handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config"
-  else
-      get_connect_url_and_security
-      if [[ -n "$skip_automatic_connector_config" ]]
-      then
-          log "🤖 --skip-automatic-connector-config is set"
-      else
-          add_connector_config_based_on_environment "$environment" "$json_content"
-      fi
-      echo "$json_content" > $new_json_file
-      handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$new_json_file $connect_url/connectors/$connector/config"
-  fi
-
-  if [[ -n "$level" ]]
-  then
-      if [[ -n "$package" ]]
-      then
-          playground debug log-level set --level $level --package $package
-      else
-          playground connector log-level --connector $connector --level $level
-      fi
-  fi
-  if [ $is_create == 1 ]
-  then
-      log "✅ $connector_type connector $connector was successfully created"
-  else
-      log "✅ $connector_type connector $connector was successfully updated"
-  fi
   if [ -z "$GITHUB_RUN_NUMBER" ]
   then
       echo "$json_content" > "/tmp/config-$connector"
-      playground connector show-config --connector "$connector"
-  fi
 
-  playground connector show-config-parameters --connector "$connector" --only-show-json
-  log "🥁 Waiting a few seconds to get new status"
-  sleep 5
-  set +e
-  playground connector status --connector $connector
-  if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
-  then
-      playground connector open-docs --only-show-url
-  fi
-  set -e
-
-  if [[ -n "$wait_for_zero_lag" ]]
-  then
-      maybe_id=""
-      if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+      if [[ "$OSTYPE" == "darwin"* ]]
       then
-          handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status\" --header \"authorization: Basic $authorization\""
-          connectorId=$(get_ccloud_connector_lcc $connector)
-          maybe_id=" ($connectorId)"
-      else
-          handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\""
-      fi
+          clipboard=$(playground config get clipboard)
+          if [ "$clipboard" == "" ]
+          then
+              playground config set clipboard true
+          fi
 
-      type=$(echo "$curl_output" | jq -r '.type')
-      if [ "$type" != "sink" ]
-      then
-          logwarn "⏭️ --wait-for-zero-lag is set but $connector_type connector ${connector}${maybe_id} is not a sink"
-      fi
-      playground connector show-lag --connector $connector
-  fi
+          if ( [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] ) && [[ ! -n "$no_clipboard" ]]
+          then
+              tmp_dir_clipboard=$(mktemp -d -t pg-XXXXXXXXXX)
+              if [ -z "$PG_VERBOSE_MODE" ]
+              then
+                  trap 'rm -rf $tmp_dir_clipboard' EXIT
+              else
+                  log "🐛📂 not deleting tmp dir $tmp_dir_clipboard"
+              fi
+              echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir_clipboard/tmp
+            cat "/tmp/config-$connector" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir_clipboard/tmp
+            echo "EOF" >> $tmp_dir_clipboard/tmp
+
+            cat $tmp_dir_clipboard/tmp | pbcopy
+            log "📋 $connector_type connector config has been copied to the clipboard (disable with 'playground config set clipboard false')"
+        fi
+    fi
+fi
+
+if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+then
+    get_ccloud_connect
+    handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config"
+else
+    get_connect_url_and_security
+    if [[ -n "$skip_automatic_connector_config" ]]
+    then
+        log "🤖 --skip-automatic-connector-config is set"
+    else
+        add_connector_config_based_on_environment "$environment" "$json_content"
+    fi
+    echo "$json_content" > $new_json_file
+    handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$new_json_file $connect_url/connectors/$connector/config"
+fi
+
+if [[ -n "$level" ]]
+then
+    if [[ -n "$package" ]]
+    then
+        playground debug log-level set --level $level --package $package
+    else
+        playground connector log-level --connector $connector --level $level
+    fi
+fi
+if [ $is_create == 1 ]
+then
+    log "✅ $connector_type connector $connector was successfully created"
+else
+    log "✅ $connector_type connector $connector was successfully updated"
+fi
+if [ -z "$GITHUB_RUN_NUMBER" ]
+then
+    playground connector show-config --connector "$connector" --no-clipboard
+fi
+
+playground connector show-config-parameters --connector "$connector" --only-show-json
+log "🥁 Waiting a few seconds to get new status"
+sleep 5
+set +e
+playground connector status --connector $connector
+if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
+then
+    playground connector open-docs --only-show-url
+fi
+set -e
+
+if [[ -n "$wait_for_zero_lag" ]]
+then
+    maybe_id=""
+    if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+    then
+        handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status\" --header \"authorization: Basic $authorization\""
+        connectorId=$(get_ccloud_connector_lcc $connector)
+        maybe_id=" ($connectorId)"
+    else
+        handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\""
+    fi
+
+    type=$(echo "$curl_output" | jq -r '.type')
+    if [ "$type" != "sink" ]
+    then
+        logwarn "⏭️ --wait-for-zero-lag is set but $connector_type connector ${connector}${maybe_id} is not a sink"
+    fi
+    playground connector show-lag --connector $connector
+fi
 }
 
 # :command.function

@@ -183,6 +183,37 @@ else
     log "🔄 Updating $connector_type connector $connector"
 fi
 
+if [ -z "$GITHUB_RUN_NUMBER" ]
+then
+    echo "$json_content" > "/tmp/config-$connector"
+
+    if [[ "$OSTYPE" == "darwin"* ]]
+    then
+        clipboard=$(playground config get clipboard)
+        if [ "$clipboard" == "" ]
+        then
+            playground config set clipboard true
+        fi
+
+        if ( [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] ) && [[ ! -n "$no_clipboard" ]]
+        then
+            tmp_dir_clipboard=$(mktemp -d -t pg-XXXXXXXXXX)
+            if [ -z "$PG_VERBOSE_MODE" ]
+            then
+                trap 'rm -rf $tmp_dir_clipboard' EXIT
+            else
+                log "🐛📂 not deleting tmp dir $tmp_dir_clipboard"
+            fi
+            echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir_clipboard/tmp
+            cat "/tmp/config-$connector" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir_clipboard/tmp
+            echo "EOF" >> $tmp_dir_clipboard/tmp
+
+            cat $tmp_dir_clipboard/tmp | pbcopy
+            log "📋 $connector_type connector config has been copied to the clipboard (disable with 'playground config set clipboard false')"
+        fi
+    fi
+fi
+
 if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
 then
     get_ccloud_connect
@@ -216,8 +247,7 @@ else
 fi
 if [ -z "$GITHUB_RUN_NUMBER" ]
 then
-    echo "$json_content" > "/tmp/config-$connector"
-    playground connector show-config --connector "$connector"
+    playground connector show-config --connector "$connector" --no-clipboard
 fi
 
 playground connector show-config-parameters --connector "$connector" --only-show-json
