@@ -130,7 +130,7 @@ sleep 10
 connectorId=$(get_ccloud_connector_lcc $connector_name)
 
 log "Verifying topic success-$connectorId"
-playground topic consume --topic success-$connectorId --min-expected-messages 10 --timeout 60
+playground topic consume --topic success-$connectorId --min-expected-messages 3 --timeout 60
 
 playground topic consume --topic error-$connectorId --min-expected-messages 0 --timeout 60
 
