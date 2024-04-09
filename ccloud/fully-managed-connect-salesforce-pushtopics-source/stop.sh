@@ -25,4 +25,7 @@ then
     docker exec  sfdx-cli sh -c "sfdx force:data:bulk:delete -u \"$SALESFORCE_USERNAME\" -s Lead -f /tmp/out.csv"
 fi
 
-stop_all "$DIR"
+docker compose down -v --remove-orphans
+
+
+maybe_delete_ccloud_environment
