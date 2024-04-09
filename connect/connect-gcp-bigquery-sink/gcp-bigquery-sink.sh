@@ -116,7 +116,7 @@ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_
 cat /tmp/result.log
 grep "notebooks" /tmp/result.log
 
-# log "Drop dataset $DATASET"
-# docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" rm -r -f -d "$DATASET"
-
-# docker rm -f gcloud-config
+log "Drop dataset $DATASET"
+check_if_continue
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" rm -r -f -d "$DATASET"
+docker rm -f gcloud-config
