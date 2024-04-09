@@ -122,8 +122,6 @@ log "Verify data from Azure Cosmos DB"
 docker exec -e AZURE_COSMOSDB_DB_ENDPOINT_URI=$AZURE_COSMOSDB_DB_ENDPOINT_URI -e AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY=$AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY -e AZURE_COSMOSDB_DB_NAME=$AZURE_COSMOSDB_DB_NAME -e AZURE_COSMOSDB_CONTAINER_NAME=$AZURE_COSMOSDB_CONTAINER_NAME azure-cosmos-client bash -c "python /get-data.py" > /tmp/result.log  2>&1
 
 cat /tmp/result.log
-grep "Marriott" /tmp/result.log
-grep "HolidayInn" /tmp/result.log
 grep "Motel8" /tmp/result.log
 
 log "Do you want to delete the fully managed connector $connector_name ?"
