@@ -95,7 +95,7 @@ function yq() {
   verbose_begin
   if [[ $(type -f yq 2>&1) =~ "not found" ]]
   then
-    docker run -u0 -v /tmp:/tmp --rm -i mikefarah/yq "$@"
+    docker run --quiet  -u0 -v /tmp:/tmp --rm -i mikefarah/yq "$@"
   else
     $(type -f yq | awk '{print $3}') "$@"
   fi
@@ -712,7 +712,7 @@ function get_connect_image() {
 }
 
 function az() {
-    docker run -v /tmp:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli az "$@"
+  docker run --quiet --rm -v /tmp:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli az "$@"
 }
 
 function display_docker_container_error_log() {
