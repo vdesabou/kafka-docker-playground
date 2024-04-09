@@ -1289,22 +1289,25 @@ function cleanup_confluent_cloud_resources () {
       check_if_skip "confluent kafka topic delete \"$topic\" --force"
   done
 
-  for subject in $(curl -u "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$SCHEMA_REGISTRY_URL/subjects" | jq -r '.[]')
-  do
-      log "permanently delete subject $subject"
-      check_if_skip "curl --request DELETE -u \"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" \"$SCHEMA_REGISTRY_URL/subjects/$subject\" && curl --request DELETE -u \"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" \"$SCHEMA_REGISTRY_URL/subjects/$subject?permanent=true\""
-  done
+  if [ ! -z "$GITHUB_RUN_NUMBER" ]
+  then
+    for subject in $(curl -u "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$SCHEMA_REGISTRY_URL/subjects" | jq -r '.[]')
+    do
+        log "permanently delete subject $subject"
+        check_if_skip "curl --request DELETE -u \"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" \"$SCHEMA_REGISTRY_URL/subjects/$subject\" && curl --request DELETE -u \"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" \"$SCHEMA_REGISTRY_URL/subjects/$subject?permanent=true\""
+    done
 
-  for row in $(confluent iam service-account list --output json | jq -r '.[] | @base64'); do
-      _jq() {
-      echo ${row} | base64 --decode | jq -r ${1}
-      }
-      
-      description=$(echo $(_jq '.description'))
-      id=$(echo $(_jq '.id'))
-      name=$(echo $(_jq '.name'))
+    for row in $(confluent iam service-account list --output json | jq -r '.[] | @base64'); do
+        _jq() {
+        echo ${row} | base64 --decode | jq -r ${1}
+        }
+        
+        description=$(echo $(_jq '.description'))
+        id=$(echo $(_jq '.id'))
+        name=$(echo $(_jq '.name'))
 
-      log "deleting service-account $id ($description)"
-      check_if_skip "confluent iam service-account delete $id --force"
-  done
+        log "deleting service-account $id ($description)"
+        check_if_skip "confluent iam service-account delete $id --force"
+    done
+  fi
 }
