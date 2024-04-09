@@ -39,7 +39,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "github.resources":"stargazers",
      "github.since":"2019-01-01",
      "github.access.token": "$CONNECTOR_GITHUB_ACCESS_TOKEN",
-     "topic.name.pattern":"github-topic-\${entityName}",
+     "topic.name.pattern":"github-topic-\${resourceName}",
      "output.data.format": "AVRO",
      "tasks.max" : "1"
 }
