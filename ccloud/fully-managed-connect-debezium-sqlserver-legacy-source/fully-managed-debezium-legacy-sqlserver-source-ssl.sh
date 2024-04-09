@@ -111,7 +111,9 @@ set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
 
-base64_truststore=$(cat $PWD/ssl/truststore.jks | base64 | tr -d '\n')
+log "running base64 on jks file to be able to pass it to the connector"
+echo "docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} cat /tmp/ssl/truststore.jks | base64"
+base64_truststore=$(docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} cat /tmp/ssl/truststore.jks | base64)
 
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF

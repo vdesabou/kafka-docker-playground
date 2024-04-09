@@ -25,15 +25,15 @@ docker compose up -d --quiet-pull
 sleep 15
 
 log "Getting certs from mysql container and transform them to JKS"
-mkdir -p ${PWD}/security/
-rm -rf ${PWD}/security/*
+mkdir -p ${PWD}/ssl/
+rm -rf ${PWD}/ssl/*
 # https://dev.mysql.com/doc/connector-j/5.1/en/connector-j-reference-using-ssl.html
-docker cp mysql:/var/lib/mysql/ca.pem ${PWD}/security/
-docker cp mysql:/var/lib/mysql/client-key.pem ${PWD}/security/
-docker cp mysql:/var/lib/mysql/client-cert.pem ${PWD}/security/
+docker cp mysql:/var/lib/mysql/ca.pem ${PWD}/ssl/
+docker cp mysql:/var/lib/mysql/client-key.pem ${PWD}/ssl/
+docker cp mysql:/var/lib/mysql/client-cert.pem ${PWD}/ssl/
 
 log "Creating JKS from pem files"
-cd ${PWD}/security/
+cd ${PWD}/ssl/
 if [[ "$OSTYPE" == "darwin"* ]]
 then
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
@@ -103,7 +103,9 @@ set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
 
-base64_truststore=$(cat $PWD/security/truststore.jks | base64 | tr -d '\n')
+log "running base64 on jks file to be able to pass it to the connector"
+echo "docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} cat /tmp/ssl/truststore.jks | base64"
+base64_truststore=$(docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} cat /tmp/ssl/truststore.jks | base64)
 
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
