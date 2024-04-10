@@ -84,4 +84,7 @@ sleep 5
 log "Verifying topic mongo.inventory.customers"
 playground topic consume --topic mongo.inventory.customers --min-expected-messages 1 --timeout 60
 
-exit 0
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name
