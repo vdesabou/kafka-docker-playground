@@ -13,10 +13,10 @@ bootstrap_ccloud_environment
 
 
 set +e
-playground topic delete --topic orders
+playground topic delete --topic sqlserver_table
 set -e
 
-playground topic create --topic orders
+playground topic create --topic sqlserver_table
 
 docker compose build
 docker compose down -v --remove-orphans
@@ -61,16 +61,16 @@ playground connector create-or-update --connector $connector_name << EOF
   "connection.port": "$NGROK_PORT",
   "connection.user": "sa",
   "connection.password": "Password!",
-  "db.name": "dbo",
-  "topics": "orders",
+  "db.name": "master",
+  "topics": "sqlserver_table",
   "auto.create": "true",
   "tasks.max": "1"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 600
 
-log "Sending messages to topic orders"
-playground topic produce -t orders --nb-messages 1 << 'EOF'
+log "Sending messages to topic sqlserver_table"
+playground topic produce -t sqlserver_table --nb-messages 1 << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -95,7 +95,7 @@ playground topic produce -t orders --nb-messages 1 << 'EOF'
 }
 EOF
 
-playground topic produce -t orders --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
+playground topic produce -t sqlserver_table --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -122,9 +122,9 @@ EOF
 
 sleep 5
 
-log "Show content of orders table:"
+log "Show content of sqlserver_table table:"
 docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! > /tmp/result.log  2>&1 <<-EOF
-select * from orders
+select * from sqlserver_table
 GO
 EOF
 cat /tmp/result.log
