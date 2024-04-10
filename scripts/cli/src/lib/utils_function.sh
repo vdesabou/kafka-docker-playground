@@ -4088,15 +4088,15 @@ function display_ngrok_warning () {
       exit 1
   fi
 
-  logwarn "🚨WARNING🚨"
-  logwarn "It is considered a security risk to run this example on your personal machine since you'll be exposing a TCP port over internet using Ngrok (https://ngrok.com)."
-  logwarn "It is strongly encouraged to run it on a AWS EC2 instance where you'll use Confluent Static Egress IP Addresses (https://docs.confluent.io/cloud/current/networking/static-egress-ip-addresses.html#use-static-egress-ip-addresses-with-ccloud) (only available for public endpoints on AWS) to allow traffic from your Confluent Cloud cluster to your EC2 instance using EC2 Security Group."
-  logwarn ""
-  logwarn "Example in order to set EC2 Security Group with Confluent Static Egress IP Addresses and port xxxx:"
-  logwarn "group=\$(aws ec2 describe-instances --instance-id <\$ec2-instance-id> --output=json | jq '.Reservations[] | .Instances[] | {SecurityGroups: .SecurityGroups}' | jq -r '.SecurityGroups[] | .GroupName')"
-  logwarn "aws ec2 authorize-security-group-ingress --group-name "\$group" --protocol tcp --port xxxx --cidr 13.36.88.88/32"
-  logwarn "aws ec2 authorize-security-group-ingress --group-name "\$group" --protocol tcp --port xxxx --cidr 13.36.88.89/32"
-  logwarn "etc..."
+  log "🚨WARNING🚨"
+  log "It is considered a security risk to run this example on your personal machine since you'll be exposing a TCP port over internet using Ngrok (https://ngrok.com)."
+  log "It is strongly encouraged to run it on a AWS EC2 instance where you'll use Confluent Static Egress IP Addresses (https://docs.confluent.io/cloud/current/networking/static-egress-ip-addresses.html#use-static-egress-ip-addresses-with-ccloud) (only available for public endpoints on AWS) to allow traffic from your Confluent Cloud cluster to your EC2 instance using EC2 Security Group."
+  log ""
+  log "Example in order to set EC2 Security Group with Confluent Static Egress IP Addresses and port xxxx:"
+  log "group=\$(aws ec2 describe-instances --instance-id <\$ec2-instance-id> --output=json | jq '.Reservations[] | .Instances[] | {SecurityGroups: .SecurityGroups}' | jq -r '.SecurityGroups[] | .GroupName')"
+  log "aws ec2 authorize-security-group-ingress --group-name "\$group" --protocol tcp --port xxxx --cidr 13.36.88.88/32"
+  log "aws ec2 authorize-security-group-ingress --group-name "\$group" --protocol tcp --port xxxx --cidr 13.36.88.89/32"
+  log "etc..."
 
   if [ "$USER" == "vsaboulin" ]
   then
