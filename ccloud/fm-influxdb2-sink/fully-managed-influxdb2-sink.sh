@@ -11,9 +11,9 @@ display_ngrok_warning
 bootstrap_ccloud_environment
 
 set +e
-playground topic delete --topic orders
+playground topic delete --topic influx_measures
 sleep 3
-playground topic create --topic orders --nb-partitions 1
+playground topic create --topic influx_measures --nb-partitions 1
 set -e
 
 docker compose build
@@ -41,8 +41,8 @@ NGROK_URL=$(curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0]
 NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
 NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
 
-log "Sending messages to topic orders"
-playground topic produce -t orders --nb-messages 1 --forced-value '{"measurement": "orders", "id": 999, "product": "foo", "quantity": 100, "price": 50}' << 'EOF'
+log "Sending messages to topic influx_measures"
+playground topic produce -t influx_measures --nb-messages 1 --forced-value '{"measurement": "influx_measures", "id": 999, "product": "foo", "quantity": 100, "price": 50}' << 'EOF'
 {
   "fields": [
     {
@@ -89,7 +89,7 @@ playground connector create-or-update --connector $connector_name << EOF
   "influxdb.token": "my-super-secret-auth-token",
   "influxdb.org.id": "acme",
   "influxdb.bucket": "mybucket",
-  "topics": "orders",
+  "topics": "influx_measures",
   "tasks.max" : "1"
 }
 EOF
