@@ -1,0 +1,32 @@
+---
+version: '3.5'
+services:
+
+  postgres:
+    image: postgres:15
+    hostname: postgres
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=mypassword
+      - POSTGRES_DB=postgres
+
+  # https://ngrok.com/docs/using-ngrok-with/docker/
+  ngrok:
+    image: ngrok/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    ports:
+      - 4040:4040
+    restart: unless-stopped
+    links:
+      - postgres
+    command:
+      - "start"
+      - "--all"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ../../ccloud/fm-jdbc-postgresql-sink/ngrok.yml:/etc/ngrok.yml
+    environment:
+      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN

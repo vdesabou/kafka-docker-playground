@@ -1,0 +1,45 @@
+---
+version: '3.5'
+services:
+
+  sql-datagen:
+    build:
+      context: ../../ccloud/fm-debezium-sqlserver-legacy-source/sqlserver-datagen/
+    hostname: sql-datagen
+    container_name: sql-datagen
+    profiles:
+    - sql_datagen
+    volumes:
+      - ../../ccloud/fm-debezium-sqlserver-legacy-source/sqlserver-datagen/target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    hostname: sqlserver
+    container_name: sqlserver
+    ports:
+      - "1433:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_AGENT_ENABLED: "true"
+      MSSQL_PID: "Standard"
+      SA_PASSWORD: "Password!"
+
+  # https://ngrok.com/docs/using-ngrok-with/docker/
+  ngrok:
+    image: ngrok/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    ports:
+      - 4040:4040
+    restart: unless-stopped
+    links:
+      - sqlserver
+    command:
+      - "start"
+      - "--all"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ../../ccloud/fm-debezium-sqlserver-legacy-source/ngrok.yml:/etc/ngrok.yml
+    environment:
+      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN

@@ -1,0 +1,42 @@
+---
+version: '3.5'
+services:
+
+  sql-datagen:
+    build:
+      context: ../../ccloud/fm-debezium-postgresql-v2-source/postgres-datagen/
+    hostname: sql-datagen
+    container_name: sql-datagen
+    profiles:
+    - sql_datagen
+    volumes:
+      - ../../ccloud/fm-debezium-postgresql-v2-source/postgres-datagen/target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
+
+  postgres:
+    image: debezium/postgres:15-alpine
+    hostname: postgres
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=mypassword
+      - POSTGRES_DB=postgres
+
+  # https://ngrok.com/docs/using-ngrok-with/docker/
+  ngrok:
+    image: ngrok/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    ports:
+      - 4040:4040
+    restart: unless-stopped
+    links:
+      - postgres
+    command:
+      - "start"
+      - "--all"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ../../ccloud/fm-debezium-postgresql-v2-source/ngrok.yml:/etc/ngrok.yml
+    environment:
+      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN

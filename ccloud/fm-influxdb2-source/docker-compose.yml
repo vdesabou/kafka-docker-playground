@@ -1,0 +1,37 @@
+---
+version: '3.5'
+services:
+  # https://docs.influxdata.com/influxdb/v2.0/get-started/
+  influxdb2:
+    image: influxdb:2
+    hostname: influxdb2
+    container_name: influxdb2
+    ports:
+      - "8086:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: myuser
+      DOCKER_INFLUXDB_INIT_PASSWORD: mypassword
+      DOCKER_INFLUXDB_INIT_ORG: acme
+      DOCKER_INFLUXDB_INIT_BUCKET: mybucket
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: my-super-secret-auth-token
+
+  # https://ngrok.com/docs/using-ngrok-with/docker/
+  ngrok:
+    image: ngrok/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    ports:
+      - 4040:4040
+    restart: unless-stopped
+    links:
+      - influxdb2
+    command:
+      - "start"
+      - "--all"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ../../ccloud/fm-influxdb2-source/ngrok.yml:/etc/ngrok.yml
+    environment:
+      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN

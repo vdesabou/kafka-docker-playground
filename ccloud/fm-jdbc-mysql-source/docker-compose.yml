@@ -1,0 +1,36 @@
+---
+version: '3.5'
+services:
+
+  mysql:
+    image: mysql:8.1
+    hostname: mysql
+    container_name: mysql
+    volumes:
+      - ../../ccloud/fm-jdbc-mysql-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_HOST: 172.%  # Allow docker containers to connect to mysql
+
+  # https://ngrok.com/docs/using-ngrok-with/docker/
+  ngrok:
+    image: ngrok/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    ports:
+      - 4040:4040
+    restart: unless-stopped
+    links:
+      - mysql
+    command:
+      - "start"
+      - "--all"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ../../ccloud/fm-jdbc-mysql-source/ngrok.yml:/etc/ngrok.yml
+    environment:
+      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN

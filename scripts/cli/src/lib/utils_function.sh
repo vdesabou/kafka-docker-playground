@@ -1685,7 +1685,7 @@ function bootstrap_ccloud_environment () {
 
   if [ -f "$test_file" ]
   then
-    if [[ $test_file == *"fully-managed-connect-databricks-delta-lake-sink"* ]]
+    if [[ $test_file == *"fm-databricks-delta-lake-sink"* ]]
     then
       if [ ! -z "$AWS_DATABRICKS_CLUSTER_NAME" ]
       then
@@ -1698,7 +1698,7 @@ function bootstrap_ccloud_environment () {
       fi
     fi
 
-    if [[ $test_file == *"fully-managed-connect-gcp"* ]]
+    if [[ $test_file == *"fm-gcp"* ]]
     then
       if [ ! -z "$GCP_CLUSTER_NAME" ]
       then
@@ -1711,7 +1711,7 @@ function bootstrap_ccloud_environment () {
       fi
     fi
 
-    if [[ $test_file == *"fully-managed-connect-azure"* ]]
+    if [[ $test_file == *"fm-azure"* ]]
     then
       if [ ! -z "$AZURE_CLUSTER_NAME" ]
       then

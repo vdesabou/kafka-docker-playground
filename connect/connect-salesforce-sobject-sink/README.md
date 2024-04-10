@@ -47,7 +47,7 @@ Example:
 
 You need to activate this (otherwise you get `{"error":"invalid_grant","error_description":"authentication failure"}`):
 
-![Username-Password Flow enabled](../../ccloud/fully-managed-connect-salesforce-cdc-source/ScreenshotOauthDisabled.jpg)
+![Username-Password Flow enabled](../../ccloud/fm-salesforce-cdc-source/ScreenshotOauthDisabled.jpg)
 
 ### Find your Security token
 

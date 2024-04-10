@@ -1,0 +1,32 @@
+---
+version: '3.5'
+services:
+
+  httpserver:
+    image: vdesabou/http-sink-demo
+    hostname: httpserver
+    container_name: httpserver
+    ports:
+      - "18080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: 'oauth2'
+
+  # https://ngrok.com/docs/using-ngrok-with/docker/
+  ngrok:
+    image: ngrok/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    ports:
+      - 4040:4040
+    restart: unless-stopped
+    links:
+      - httpserver
+    command:
+      - "start"
+      - "--all"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ../../ccloud/fm-http-source/ngrok.yml:/etc/ngrok.yml
+    environment:
+      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN
