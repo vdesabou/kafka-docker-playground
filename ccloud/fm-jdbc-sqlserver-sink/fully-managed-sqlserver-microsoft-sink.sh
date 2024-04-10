@@ -129,3 +129,8 @@ GO
 EOF
 cat /tmp/result.log
 grep "foo" /tmp/result.log
+
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name
