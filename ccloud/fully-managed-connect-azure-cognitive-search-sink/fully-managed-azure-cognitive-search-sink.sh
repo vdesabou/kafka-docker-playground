@@ -46,7 +46,9 @@ AZURE_SEARCH_ADMIN_PRIMARY_KEY=$(az search admin-key show \
 
 subscriptionId=$(az account list --query "[?isDefault].id" | jq -r '.[0]')
 tenantId=$(az account list --query "[?isDefault].tenantId" | jq -r '.[0]')
-
+# https://docs.confluent.io/cloud/current/connectors/cc-azure-cognitive-search-sink.html#az-service-principal
+appId=$(az ad sp create-for-rbac --name $AZURE_NAME --role Contributor --scopes /subscriptions/$subscriptionId/resourceGroups/$AZURE_RESOURCE_GROUP --output json | jq -r '.appId')
+appPassword=$(az ad sp create-for-rbac --name $AZURE_NAME --role Contributor --scopes /subscriptions/$subscriptionId/resourceGroups/$AZURE_RESOURCE_GROUP --output json | jq -r '.password')
 
 log "Creating Azure Search index"
 curl -X POST \
@@ -140,8 +142,8 @@ playground connector create-or-update --connector $connector_name << EOF
     "azure.search.api.key": "$AZURE_SEARCH_ADMIN_PRIMARY_KEY",
     "azure.search.resourcegroup.name": "$AZURE_RESOURCE_GROUP",
     "index.name": "\${topic}-index",
-    "azure.search.client.id": "$AZ_USER",
-    "azure.search.client.secret": "$AZ_PASS",
+    "azure.search.client.id": "$appId",
+    "azure.search.client.secret": "$appPassword",
     "azure.search.tenant.id": "$tenantId",
     "azure.search.subscription.id": "$subscriptionId",
     "input.data.format": "AVRO",
