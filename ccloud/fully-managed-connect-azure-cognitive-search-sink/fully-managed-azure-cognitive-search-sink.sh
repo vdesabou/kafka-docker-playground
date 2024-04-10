@@ -24,6 +24,7 @@ AZURE_NAME=${AZURE_NAME//[-._]/}
 AZURE_RESOURCE_GROUP=$AZURE_NAME
 AZURE_SEARCH_SERVICE_NAME=$AZURE_NAME
 AZURE_REGION=westeurope
+AZURE_AD_APP=pg${USER}
 
 set +e
 az group delete --name $AZURE_RESOURCE_GROUP --yes
@@ -47,8 +48,8 @@ AZURE_SEARCH_ADMIN_PRIMARY_KEY=$(az search admin-key show \
 subscriptionId=$(az account list --query "[?isDefault].id" | jq -r '.[0]')
 tenantId=$(az account list --query "[?isDefault].tenantId" | jq -r '.[0]')
 # https://docs.confluent.io/cloud/current/connectors/cc-azure-cognitive-search-sink.html#az-service-principal
-appId=$(az ad sp create-for-rbac --name $AZURE_NAME --role Contributor --scopes /subscriptions/$subscriptionId/resourceGroups/$AZURE_RESOURCE_GROUP --output json | jq -r '.appId')
-appPassword=$(az ad sp create-for-rbac --name $AZURE_NAME --role Contributor --scopes /subscriptions/$subscriptionId/resourceGroups/$AZURE_RESOURCE_GROUP --output json | jq -r '.password')
+appId=$(az ad sp create-for-rbac --name $AZURE_AD_APP --role Contributor --scopes /subscriptions/$subscriptionId/resourceGroups/$AZURE_RESOURCE_GROUP --output json | jq -r '.appId')
+appPassword=$(az ad sp create-for-rbac --name $AZURE_AD_APP --role Contributor --scopes /subscriptions/$subscriptionId/resourceGroups/$AZURE_RESOURCE_GROUP --output json | jq -r '.password')
 
 log "Creating Azure Search index"
 curl -X POST \
