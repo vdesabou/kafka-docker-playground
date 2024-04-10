@@ -37,6 +37,20 @@ rm -f json-sftp-source.json
 
 
 
+log "Waiting for ngrok to start"
+while true
+do
+  container_id=$(docker ps -q -f name=ngrok)
+  if [ -n "$container_id" ]
+  then
+    status=$(docker inspect --format '{{.State.Status}}' $container_id)
+    if [ "$status" = "running" ]; then
+      break
+    fi
+  fi
+  log "Waiting for container ngrok to start..."
+  sleep 5
+done
 log "Getting ngrok hostname and port"
 NGROK_URL=$(curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url')
 NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
