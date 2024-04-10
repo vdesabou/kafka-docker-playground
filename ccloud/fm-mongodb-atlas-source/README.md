@@ -1,12 +1,15 @@
-# MongoDB source connector
+# Fully Managed MongoDB Atlas Source connector
 
 
 
 ## Objective
 
-Quickly test [MongoDB](https://docs.mongodb.com/ecosystem/connectors/kafka/) connector.
+Quickly test [MongoDB Atlas Source](https://docs.confluent.io/cloud/current/connectors/cc-mongo-db-source.html) connector.
 
 
+## Prerequisites
+
+See [here](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)
 
 
 ## How to run
@@ -14,80 +17,4 @@ Quickly test [MongoDB](https://docs.mongodb.com/ecosystem/connectors/kafka/) con
 Simply run:
 
 ```
-$ just use <playground run> command and search for mongo.sh in this folder
-```
-
-## Details of what the script is doing
-
-
-Initialize MongoDB replica set
-
-```bash
-$ docker exec -i mongodb mongosh --eval 'rs.initiate({_id: "myuser", members:[{_id: 0, host: "mongodb:27017"}]})'
-```
-
-Note: `mongodb:27017`is important here
-
-Create a user profile
-
-```bash
-$ docker exec -i mongodb mongosh << EOF
-use admin
-db.createUser(
-{
-user: "myuser",
-pwd: "mypassword",
-roles: ["dbOwner"]
-}
-)
-```
-
-Create the connector:
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class" : "com.mongodb.kafka.connect.MongoSourceConnector",
-                    "tasks.max" : "1",
-                    "connection.uri" : "mongodb://myuser:mypassword@mongodb:27017",
-                    "database":"inventory",
-                    "collection":"customers",
-                    "topic.prefix":"mongo"
-          }' \
-     http://localhost:8083/connectors/mongodb-source/config | jq .
-```
-
-Insert a record
-
-```bash
-$ docker exec -i mongodb mongosh << EOF
-use inventory
-db.customers.insert([
-{ _id : 1006, first_name : 'Bob', last_name : 'Hopper', email : 'thebob@example.com' }
-]);
-EOF
-```
-
-View the record
-
-```bash
-$ docker exec -i mongodb mongosh << EOF
-use inventory
-db.customers.find().pretty();
-EOF
-```
-
-Verifying topic `mongo.inventory.customers`:
-
-```bash
-playground topic consume --topic mongo.inventory.customers --min-expected-messages 1 --timeout 60
-```
-
-Result is:
-
-```json
-"{\"_id\": {\"_data\": \"825DEFAD7F000000022B022C0100296E5A100464FD9F727D5D40EC96C7C03D3B636406461E5F6964002B020004\", \"_typeBits\": {\"$binary\": \"QA==\", \"$type\": \"00\"}}, \"operationType\": \"insert\", \"clusterTime\": {\"$timestamp\": {\"t\": 1575988607, \"i\": 2}}, \"fullDocument\": {\"_id\": 1.0, \"first_name\": \"Bob\", \"last_name\": \"Hopper\", \"email\": \"thebob@example.com\"}, \"ns\": {\"db\": \"inventory\", \"coll\": \"customers\"}, \"documentKey\": {\"_id\": 1.0}}"
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+$ just use <playground run> command

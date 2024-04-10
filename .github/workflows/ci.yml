@@ -89,7 +89,7 @@ jobs:
 
                       "🚀 ccloud/fm-salesforce-cdc-source ccloud/fm-salesforce-platform-events-sink ccloud/fm-salesforce-pushtopics-source ccloud/fm-salesforce-sobject-sink ccloud/fm-snowflake-sink ccloud/fm-gcp-pubsub-source ccloud/fm-gcp-spanner-sink ccloud/fm-aws-cloudwatch-metrics-sink ccloud/fm-gcp-bigquery-legacy-sink ccloud/fm-gcp-bigquery-v2-sink ccloud/fm-github-source ccloud/fm-jira-source ccloud/fm-gcp-cloud-functions-sink ccloud/fm-gcp-bigtable-sink",
 
-                      "🚀 ccloud/fm-aws-kinesis-source ccloud/fm-aws-redshift-sink ccloud/fm-aws-sqs-source ccloud/fm-aws-lambda-sink ccloud/fm-azure-blob-storage-sink ccloud/fm-azure-blob-storage-source ccloud/fm-azure-cognitive-search-sink",
+                      "🚀 ccloud/fm-aws-kinesis-source ccloud/fm-aws-redshift-sink ccloud/fm-aws-sqs-source ccloud/fm-aws-lambda-sink ccloud/fm-azure-blob-storage-sink ccloud/fm-azure-blob-storage-source ccloud/fm-azure-cognitive-search-sink ccloud/fm-mongodb-source",
 
                       "🚀 connect/connect-servicenow-sink connect/connect-servicenow-source connect/connect-datagen-source",
                       "🚀 connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source",
@@ -491,7 +491,7 @@ jobs:
           MONGODB_ATLAS_HOST: ${{ secrets.MONGODB_ATLAS_HOST}}
           MONGODB_ATLAS_USER: ${{ secrets.MONGODB_ATLAS_USER}}
           MONGODB_ATLAS_PASSWORD: ${{ secrets.MONGODB_ATLAS_PASSWORD}}
-          
+
   post-build:
     name: Cleanup resources and Update README
     runs-on: ubuntu-latest
