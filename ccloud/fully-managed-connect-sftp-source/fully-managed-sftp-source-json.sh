@@ -37,7 +37,7 @@ rm -f json-sftp-source.json
 
 
 
-log "Getting ngrok hostname and port®"
+log "Getting ngrok hostname and port"
 NGROK_URL=$(curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url')
 NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
 NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)

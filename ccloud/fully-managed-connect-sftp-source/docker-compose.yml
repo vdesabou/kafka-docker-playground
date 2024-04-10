@@ -19,8 +19,6 @@ services:
     image: ngrok/ngrok:latest
     hostname: ngrok
     container_name: ngrok
-    ports:
-      - 4040:4040
     restart: unless-stopped
     links:
       - sftp-server
