@@ -49,6 +49,9 @@ fi
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.proxy.yml"
 
+DYNAMODB_TABLE="pg${USER}dynamo${TAG}"
+DYNAMODB_ENDPOINT="https://dynamodb.$AWS_REGION.amazonaws.com"
+
 log "Sending messages to topic $DYNAMODB_TABLE"
 playground topic produce -t $DYNAMODB_TABLE --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
@@ -62,9 +65,6 @@ playground topic produce -t $DYNAMODB_TABLE --nb-messages 10 --forced-value '{"f
   ]
 }
 EOF
-
-DYNAMODB_TABLE="pg${USER}dynamo${TAG}"
-DYNAMODB_ENDPOINT="https://dynamodb.$AWS_REGION.amazonaws.com"
 
 log "Creating AWS DynamoDB Sink connector"
 playground connector create-or-update --connector dynamodb-sink  << EOF
