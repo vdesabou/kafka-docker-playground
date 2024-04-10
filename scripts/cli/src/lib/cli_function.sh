@@ -30,7 +30,7 @@ function generate_get_examples_add_emoji () {
 
   if [[ $file_path == *"ccloud"* ]]
   then
-    if [[ $file_path == *"fully-managed-connect"* ]]
+    if [[ $file_path == *"fm-"* ]]
     then
       echo "${repro}🌤️🤖 $file_path" >> $output_file
     elif [[ $file_path == *"custom-connector"* ]]

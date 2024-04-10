@@ -5706,7 +5706,7 @@ function generate_get_examples_add_emoji () {
 
   if [[ $file_path == *"ccloud"* ]]
   then
-    if [[ $file_path == *"fully-managed-connect"* ]]
+    if [[ $file_path == *"fm-"* ]]
     then
       echo "${repro}🌤️🤖 $file_path" >> $output_file
     elif [[ $file_path == *"custom-connector"* ]]
@@ -11123,7 +11123,7 @@ function get_connector_type () {
   get_connector_paths
   if [ "$connector_paths" == "" ]
   then
-    if grep -q -e "fully-managed-connect" <<< "$test_file"
+    if grep -q -e "fm-" <<< "$test_file"
     then
       echo "$CONNECTOR_TYPE_FULLY_MANAGED"
     elif grep -q -e "custom-connector" <<< "$test_file"
