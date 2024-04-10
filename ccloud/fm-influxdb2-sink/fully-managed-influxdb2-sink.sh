@@ -16,6 +16,31 @@ sleep 3
 playground topic create --topic orders --nb-partitions 1
 set -e
 
+docker compose build
+docker compose down -v --remove-orphans
+docker compose up -d --quiet-pull
+
+sleep 5
+
+log "Waiting for ngrok to start"
+while true
+do
+  container_id=$(docker ps -q -f name=ngrok)
+  if [ -n "$container_id" ]
+  then
+    status=$(docker inspect --format '{{.State.Status}}' $container_id)
+    if [ "$status" = "running" ]; then
+      break
+    fi
+  fi
+  log "Waiting for container ngrok to start..."
+  sleep 5
+done
+log "Getting ngrok hostname and port"
+NGROK_URL=$(curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
+NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
+
 log "Sending messages to topic orders"
 playground topic produce -t orders --nb-messages 1 --forced-value '{"measurement": "orders", "id": 999, "product": "foo", "quantity": 100, "price": 50}' << 'EOF'
 {
@@ -45,31 +70,6 @@ playground topic produce -t orders --nb-messages 1 --forced-value '{"measurement
   "type": "record"
 }
 EOF
-
-docker compose build
-docker compose down -v --remove-orphans
-docker compose up -d --quiet-pull
-
-sleep 5
-
-log "Waiting for ngrok to start"
-while true
-do
-  container_id=$(docker ps -q -f name=ngrok)
-  if [ -n "$container_id" ]
-  then
-    status=$(docker inspect --format '{{.State.Status}}' $container_id)
-    if [ "$status" = "running" ]; then
-      break
-    fi
-  fi
-  log "Waiting for container ngrok to start..."
-  sleep 5
-done
-log "Getting ngrok hostname and port"
-NGROK_URL=$(curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
-NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
 
 connector_name="InfluxDB2Sink_$USER"
 set +e
