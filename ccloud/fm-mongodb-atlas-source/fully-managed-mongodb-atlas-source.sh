@@ -30,10 +30,10 @@ fi
 bootstrap_ccloud_environment
 
 set +e
-playground topic delete --topic orders
+playground topic delete --topic mongo.inventory.customers
 set -e
 
-playground topic create --topic orders
+playground topic create --topic mongo.inventory.customers
 
 log "Drop customers collection, it might fail"
 set +e
