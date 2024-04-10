@@ -27,12 +27,12 @@ MAX_WAIT=900
 CUR_WAIT=0
 log "⌛ Waiting up to $MAX_WAIT seconds for Oracle DB to start"
 docker container logs oracle > /tmp/out.txt 2>&1
-while [[ ! $(cat /tmp/out.txt) =~ "04_populate_customer.sh" ]]; do
+while [[ ! $(cat /tmp/out.txt) =~ "Grant succeeded." ]]; do
 sleep 10
 docker container logs oracle > /tmp/out.txt 2>&1
 CUR_WAIT=$(( CUR_WAIT+10 ))
 if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-     logerror "ERROR: The logs in oracle container do not show '04_populate_customer.sh' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+     logerror "ERROR: The logs in oracle container do not show 'Grant succeeded.' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
      exit 1
 fi
 done
@@ -144,9 +144,6 @@ playground topic consume --topic XE.MYUSER.CUSTOMERS --min-expected-messages 13 
 
 log "Verifying topic redo-log-topic: there should be 14 records"
 playground topic consume --topic redo-log-topic --min-expected-messages 14 --timeout 60
-
-
-
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
