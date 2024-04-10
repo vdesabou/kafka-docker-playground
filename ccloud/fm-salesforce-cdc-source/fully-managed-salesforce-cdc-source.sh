@@ -58,12 +58,6 @@ docker compose build
 docker compose down -v --remove-orphans
 docker compose up -d --quiet-pull
 
-log "Login with sfdx CLI"
-docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
-
-log "Add a Contact to Salesforce"
-docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Contact -v \"FirstName='John_$RANDOM' LastName='Doe_$RANDOM'\""
-
 connector_name="SalesforceCdcSource_$USER"
 set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
@@ -91,7 +85,15 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 600
 
-sleep 60
+sleep 10
+
+log "Login with sfdx CLI"
+docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
+
+log "Add a Contact to Salesforce"
+docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Contact -v \"FirstName='John_$RANDOM' LastName='Doe_$RANDOM'\""
+
+sleep 30
 
 log "Verify we have received the data in sfdc-cdc-contacts topic"
 playground topic consume --topic sfdc-cdc-contacts --min-expected-messages 1 --timeout 60
