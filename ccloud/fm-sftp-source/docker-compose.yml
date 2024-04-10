@@ -20,6 +20,8 @@ services:
     hostname: ngrok
     container_name: ngrok
     restart: unless-stopped
+    ports:
+      - 4040:4040
     links:
       - sftp-server
     command:
