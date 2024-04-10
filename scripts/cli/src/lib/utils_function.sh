@@ -738,8 +738,8 @@ function display_docker_container_error_log() {
 
 function retry() {
   local n=1
-  local max_retriable=4
-  local max_default_retry=2
+  local max_retriable=3
+  local max_default_retry=1
   while true; do
     "$@"
     ret=$?

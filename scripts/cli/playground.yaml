@@ -1762,7 +1762,7 @@ subcommands:
       - name: create
         description: | 
           🆕 Create topic
-        usage: playground topic create [OPTIONS] [ARGUMENTS...]
+        usage: playground topic create [OPTIONS] [--] [ARGUMENTS...]
         options:
         - names:
           - --verbose
@@ -1818,7 +1818,7 @@ subcommands:
       - name: alter
         description: | 
           🪛 Alter topic config
-        usage: playground topic alter [OPTIONS] [ARGUMENTS...]
+        usage: playground topic alter [OPTIONS] [--] [ARGUMENTS...]
         options:
         - names:
           - --verbose

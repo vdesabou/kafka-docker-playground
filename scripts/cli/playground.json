@@ -1599,7 +1599,7 @@
         {
           "name": "create",
           "description": "🆕 Create topic\n",
-          "usage": "playground topic create [OPTIONS] [ARGUMENTS...]",
+          "usage": "playground topic create [OPTIONS] [--] [ARGUMENTS...]",
           "options": [
             {
               "names": [
@@ -1659,7 +1659,7 @@
         {
           "name": "alter",
           "description": "🪛 Alter topic config\n",
-          "usage": "playground topic alter [OPTIONS] [ARGUMENTS...]",
+          "usage": "playground topic alter [OPTIONS] [--] [ARGUMENTS...]",
           "options": [
             {
               "names": [
