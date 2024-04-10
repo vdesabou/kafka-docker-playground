@@ -1498,11 +1498,22 @@ function cleanup {
   echo ""
   sleep 3
   set +e
-  playground connector status
-
-  playground open-docs --only-show-url
 
   connector_type=$(playground state get run.connector_type)
+  
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+    if [ "$connector_name" != "" ]
+    then
+      playground connector status --connector "$connector_name"
+    fi
+  elif [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
+  then
+    playground connector status
+  fi
+
+  playground open-docs --only-show-url
+ 
   if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
   then
     playground connector versions
