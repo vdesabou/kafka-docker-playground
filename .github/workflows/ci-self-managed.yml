@@ -173,7 +173,10 @@ jobs:
           GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
           HPE_MAPR_EMAIL: ${{ secrets.HPE_MAPR_EMAIL}}
           HPE_MAPR_TOKEN: ${{ secrets.HPE_MAPR_TOKEN}}
-
+          MONGODB_ATLAS_HOST: ${{ secrets.MONGODB_ATLAS_HOST}}
+          MONGODB_ATLAS_USER: ${{ secrets.MONGODB_ATLAS_USER}}
+          MONGODB_ATLAS_PASSWORD: ${{ secrets.MONGODB_ATLAS_PASSWORD}}
+          
   stop-runner:
     name: Stop Github self-hosted runner
     needs:
