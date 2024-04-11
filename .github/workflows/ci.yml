@@ -83,7 +83,7 @@ jobs:
         tag: ["7.6.0"]
         test_list : [
                       # requiring ngrok
-                      "🚀 ccloud/fm-debezium-mysql-legacy-source ccloud/fm-debezium-postgresql-legacy-source ccloud/fm-debezium-mysql-v2-source ccloud/fm-debezium-sqlserver-legacy-source ccloud/fm-debezium-sqlserver-v2-source ccloud/fm-elasticsearch-sink ccloud/fm-sftp-source ccloud/fm-jdbc-sqlserver-sink ccloud/fm-http-sink ccloud/fm-http-source ccloud/fm-ibm-mq-source ccloud/fm-jdbc-mysql-source ccloud/fm-jdbc-postgresql-sink ccloud/fm-mqtt-source ccloud/fm-rabbitmq-source ccloud/fm-debezium-postgresql-v2-source",
+                      "🚀 ccloud/fm-debezium-mysql-legacy-source ccloud/fm-debezium-postgresql-legacy-source ccloud/fm-debezium-mysql-v2-source ccloud/fm-debezium-sqlserver-legacy-source ccloud/fm-debezium-sqlserver-v2-source ccloud/fm-elasticsearch-sink ccloud/fm-sftp-source ccloud/fm-jdbc-sqlserver-sink ccloud/fm-jdbc-sqlserver-source ccloud/fm-http-sink ccloud/fm-http-source ccloud/fm-ibm-mq-source ccloud/fm-jdbc-mysql-source ccloud/fm-jdbc-postgresql-sink ccloud/fm-mqtt-source ccloud/fm-debezium-postgresql-v2-source",
                       
                       "🚀 ccloud/fm-aws-cloudwatch-logs-source ccloud/fm-aws-s3-sink ccloud/fm-aws-s3-source ccloud/fm-azure-event-hubs-source ccloud/fm-azure-service-bus-source ccloud/fm-databricks-delta-lake-sink ccloud/fm-gcp-gcs-sink ccloud/fm-gcp-gcs-source ccloud/fm-aws-dynamodb-sink ccloud/fm-azure-data-lake-storage-gen2-sink ccloud/fm-azure-functions-sink ccloud/fm-azure-synapse-analytics-sink ccloud/fm-azure-cosmosdb-sink ccloud/fm-azure-cosmosdb-source ccloud/fully-managed-datadog-metrics-sink",
 
@@ -127,7 +127,7 @@ jobs:
                       "🚀 connect/connect-jdbc-sap-hana-sink connect/connect-jdbc-sap-hana-source connect/connect-sap-hana-sink",
 
                       # requiring ngrok
-                      "🚀 ccloud/fm-influxdb2-sink ccloud/fm-influxdb2-source ccloud/fm-cdc-oracle11-source ccloud/fm-jdbc-oracle19-source ccloud/fm-cdc-oracle19-source"
+                      "🚀 ccloud/fm-influxdb2-sink ccloud/fm-influxdb2-source ccloud/fm-cdc-oracle11-source ccloud/fm-jdbc-oracle19-source ccloud/fm-cdc-oracle19-source ccloud/fm-rabbitmq-source"
                     ]
     steps:
 
