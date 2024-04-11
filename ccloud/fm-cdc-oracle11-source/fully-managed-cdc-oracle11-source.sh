@@ -38,6 +38,50 @@ fi
 done
 log "Oracle DB has started!"
 
+log "create table"
+docker exec -i oracle bash -c "ORACLE_SID=XE;export ORACLE_SID;export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe;/u01/app/oracle/product/11.2.0/xe/bin/sqlplus MYUSER/password@//localhost:1521/XE" << EOF
+create table CUSTOMERS (
+        id NUMBER(10) NOT NULL PRIMARY KEY,
+        first_name VARCHAR(50),
+        last_name VARCHAR(50),
+        email VARCHAR(50),
+        gender VARCHAR(50),
+        club_status VARCHAR(20),
+        comments VARCHAR(4000),
+        create_ts timestamp DEFAULT CURRENT_TIMESTAMP,
+        update_ts timestamp
+);
+
+CREATE SEQUENCE CUSTOMERS_SEQ START WITH 1;
+
+CREATE OR REPLACE TRIGGER CUSTOMERS_TRIGGER_ID
+BEFORE INSERT ON CUSTOMERS
+FOR EACH ROW
+
+BEGIN
+  SELECT CUSTOMERS_SEQ.NEXTVAL
+  INTO   :new.id
+  FROM   dual;
+END;
+/
+
+CREATE OR REPLACE TRIGGER CUSTOMERS_TRIGGER_TS
+BEFORE INSERT OR UPDATE ON CUSTOMERS
+REFERENCING NEW AS NEW_ROW
+  FOR EACH ROW
+BEGIN
+  SELECT SYSDATE
+        INTO :NEW_ROW.UPDATE_TS
+        FROM DUAL;
+END;
+/
+
+insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, comments) values (1, 'Rica', 'Blaisdell', 'rblaisdell0@rambler.ru', 'Female', 'bronze', 'Universal optimal hierarchy');
+insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, comments) values (2, 'Ruthie', 'Brockherst', 'rbrockherst1@ow.ly', 'Female', 'platinum', 'Reverse-engineered tangible interface');
+insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, comments) values (3, 'Mariejeanne', 'Cocci', 'mcocci2@techcrunch.com', 'Female', 'bronze', 'Multi-tiered bandwidth-monitored capability');
+insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, comments) values (4, 'Hashim', 'Rumke', 'hrumke3@sohu.com', 'Male', 'platinum', 'Self-enabling 24/7 firmware');
+insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, comments) values (5, 'Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach');
+EOF
 
 log "Waiting for ngrok to start"
 while true
@@ -95,39 +139,34 @@ log "Waiting 20s for connector to read existing data"
 sleep 20
 
 log "Insert 2 customers in CUSTOMERS table"
-docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+docker exec -i oracle bash -c "export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe && /u01/app/oracle/product/11.2.0/xe/bin/sqlplus MYUSER/password@//localhost:1521/XE" << EOF
      insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Frantz', 'Kafka', 'fkafka@confluent.io', 'Male', 'bronze', 'Evil is whatever distracts');
      insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Gregor', 'Samsa', 'gsamsa@confluent.io', 'Male', 'platinium', 'How about if I sleep a little bit longer and forget all this nonsense');
      exit;
 EOF
 
 log "Update CUSTOMERS with email=fkafka@confluent.io"
-docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+docker exec -i oracle bash -c "export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe && /u01/app/oracle/product/11.2.0/xe/bin/sqlplus MYUSER/password@//localhost:1521/XE" << EOF
      update CUSTOMERS set club_status = 'gold' where email = 'fkafka@confluent.io';
      exit;
 EOF
 
 log "Deleting CUSTOMERS with email=fkafka@confluent.io"
-docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+docker exec -i oracle bash -c "export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe && /u01/app/oracle/product/11.2.0/xe/bin/sqlplus MYUSER/password@//localhost:1521/XE" << EOF
      delete from CUSTOMERS where email = 'fkafka@confluent.io';
      exit;
 EOF
 
 log "Altering CUSTOMERS table with an optional column"
-docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
-     ALTER SESSION SET CONTAINER=CDB\$ROOT;
-     EXECUTE DBMS_LOGMNR_D.BUILD(OPTIONS=>DBMS_LOGMNR_D.STORE_IN_REDO_LOGS);
-     ALTER SESSION SET CONTAINER=ORCLPDB1;
+docker exec -i oracle bash -c "export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe && /u01/app/oracle/product/11.2.0/xe/bin/sqlplus MYUSER/password@//localhost:1521/XE" << EOF
      alter table CUSTOMERS add (
-     country VARCHAR(50)
+          country VARCHAR(50)
      );
-     ALTER SESSION SET CONTAINER=CDB\$ROOT;
-     EXECUTE DBMS_LOGMNR_D.BUILD(OPTIONS=>DBMS_LOGMNR_D.STORE_IN_REDO_LOGS);
      exit;
 EOF
 
 log "Populating CUSTOMERS table after altering the structure"
-docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+docker exec -i oracle bash -c "export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe && /u01/app/oracle/product/11.2.0/xe/bin/sqlplus MYUSER/password@//localhost:1521/XE" << EOF
      insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, country) values ('Josef', 'K', 'jk@confluent.io', 'Male', 'bronze', 'How is it even possible for someone to be guilty', 'Poland');
      update CUSTOMERS set club_status = 'silver' where email = 'gsamsa@confluent.io';
      update CUSTOMERS set club_status = 'gold' where email = 'gsamsa@confluent.io';
@@ -135,12 +174,12 @@ docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 <
      commit;
      exit;
 EOF
+
 log "Waiting 20s for connector to read new data"
 sleep 20
 
 log "Verifying topic XE.MYUSER.CUSTOMERS: there should be 13 records"
 playground topic consume --topic XE.MYUSER.CUSTOMERS --min-expected-messages 13 --timeout 60
-
 
 log "Verifying topic redo-log-topic: there should be 14 records"
 playground topic consume --topic redo-log-topic --min-expected-messages 14 --timeout 60
