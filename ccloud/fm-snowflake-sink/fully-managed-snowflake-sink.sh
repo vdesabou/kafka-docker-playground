@@ -42,7 +42,9 @@ fi
 
 bootstrap_ccloud_environment
 
-
+set +e
+playground topic delete --topic test_table
+set -e
 
 # https://<account_name>.<region_id>.snowflakecomputing.com:443
 SNOWFLAKE_URL="https://$SNOWFLAKE_ACCOUNT_NAME.snowflakecomputing.com"
