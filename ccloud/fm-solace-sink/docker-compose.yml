@@ -1,0 +1,46 @@
+---
+version: '3.5'
+services:
+
+  solace:
+    image: solace/solace-pubsub-standard:10.2
+    hostname: solace
+    container_name: solace
+    user: root
+    volumes:
+      - ../../ccloud/fm-solace-sink/show_queue_cmd:/usr/sw/jail/cliscripts/show_queue_cmd
+    ports:
+      - 8080:8080
+      - 5550:5550
+    tmpfs: /dev/shm
+    ulimits:
+      nofile:
+        soft: 2448
+        hard: 38048
+    environment:
+      username_admin_globalaccesslevel: admin
+      username_admin_password: admin
+      system_scaling_maxconnectioncount: 100
+      security-opt: "apparmor:unconfined"
+
+
+
+  # https://ngrok.com/docs/using-ngrok-with/docker/
+  ngrok:
+    image: ngrok/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    ports:
+      - 4040:4040
+    restart: unless-stopped
+    links:
+      - solace
+    command:
+      - "start"
+      - "--all"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ../../ccloud/fm-solace-sink/ngrok.yml:/etc/ngrok.yml
+    environment:
+      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN

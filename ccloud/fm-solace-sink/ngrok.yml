@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  solace:
+    addr: solace:55555
+    proto: tcp
