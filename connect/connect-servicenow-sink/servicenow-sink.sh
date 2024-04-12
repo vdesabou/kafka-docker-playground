@@ -154,8 +154,7 @@ EOF
 sleep 15
 
 log "Confirm that the messages were delivered to the ServiceNow table"
-docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICENOW_PASSWORD" connect \
-   curl -X GET \
+curl -X GET \
     "${SERVICENOW_URL}/api/now/table/u_test_table" \
     --user admin:"$SERVICENOW_PASSWORD" \
     -H 'Accept: application/json' \
