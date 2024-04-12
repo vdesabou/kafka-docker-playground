@@ -3,7 +3,6 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
-
 SALESFORCE_USERNAME=${SALESFORCE_USERNAME:-$1}
 SALESFORCE_PASSWORD=${SALESFORCE_PASSWORD:-$2}
 SALESFORCE_CONSUMER_KEY=${SALESFORCE_CONSUMER_KEY:-$3}
@@ -94,47 +93,7 @@ sleep 10
 log "Verifying topic sfdc-platform-events"
 playground topic consume --topic sfdc-platform-events --min-expected-messages 2 --timeout 60
 
-
-connector_name2="SalesforcePlatformEventSink_$USER"
-set +e
-log "Deleting fully managed connector $connector_name2, it might fail..."
-playground connector delete --connector $connector_name2
-set -e
-
-log "Creating fully managed connector"
-playground connector create-or-update --connector $connector_name2 << EOF
-{
-     "connector.class": "SalesforcePlatformEventSink",
-     "name": "$connector_name2",
-     "kafka.auth.mode": "KAFKA_API_KEY",
-     "kafka.api.key": "$CLOUD_KEY",
-     "kafka.api.secret": "$CLOUD_SECRET",
-     "topics": "sfdc-platform-events",
-     "input.data.format": "AVRO",
-     "salesforce.platform.event.name" : "MyPlatformEvent__e",
-     "salesforce.instance" : "$SALESFORCE_INSTANCE",
-     "salesforce.username" : "$SALESFORCE_USERNAME",
-     "salesforce.password" : "$SALESFORCE_PASSWORD",
-     "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
-     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY",
-     "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD",
-     "tasks.max" : "1"
-}
-EOF
-wait_for_ccloud_connector_up $connector_name2 300
-
-connectorId2=$(get_ccloud_connector_lcc $connector_name2)
-
-log "Verifying topic success-$connectorId2"
-playground topic consume --topic success-$connectorId2 --min-expected-messages 2 --timeout 60
-
-
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
 playground connector delete --connector $connector_name
-
-log "Do you want to delete the fully managed connector $connector_name2 ?"
-check_if_continue
-
-playground connector delete --connector $connector_name2
