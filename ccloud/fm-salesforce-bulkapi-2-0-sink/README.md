@@ -1,10 +1,10 @@
-# Fully Managed Salesforce Bulk API 2.0 Source connector
+# Fully Managed Salesforce Bulk API 2.0 Sink connector
 
 
 
 ## Objective
 
-Quickly test [Fully Managed Salesforce Bulk API 2.0 Source](https://docs.confluent.io/cloud/current/connectors/cc-salesforce-bulk-api-v2-source.html) connector.
+Quickly test [Fully Managed Salesforce Bulk API 2.0 Sink](https://docs.confluent.io/cloud/current/connectors/cc-salesforce-bulk-api-v2-source.html) connector.
 
 
 
