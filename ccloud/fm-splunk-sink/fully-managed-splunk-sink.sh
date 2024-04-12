@@ -72,17 +72,18 @@ set -e
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
-     "connector.class": "SplunkSink",
-     "name": "$connector_name",
-     "kafka.auth.mode": "KAFKA_API_KEY",
-     "kafka.api.key": "$CLOUD_KEY",
-     "kafka.api.secret": "$CLOUD_SECRET",
-     "input.data.format": "STRING",
-     "splunk.indexes": "main",
-     "splunk.hec.uri": "http://$NGROK_HOSTNAME:$NGROK_PORT",
-     "splunk.hec.token": "99582090-3ac3-4db1-9487-e17b17a05081",
-     "splunk.sourcetypes": "my_sourcetype",
-     "tasks.max" : "1"
+  "connector.class": "SplunkSink",
+  "name": "$connector_name",
+  "kafka.auth.mode": "KAFKA_API_KEY",
+  "kafka.api.key": "$CLOUD_KEY",
+  "kafka.api.secret": "$CLOUD_SECRET",
+  "topics": "splunk-qs",
+  "input.data.format": "STRING",
+  "splunk.indexes": "main",
+  "splunk.hec.uri": "http://$NGROK_HOSTNAME:$NGROK_PORT",
+  "splunk.hec.token": "99582090-3ac3-4db1-9487-e17b17a05081",
+  "splunk.sourcetypes": "my_sourcetype",
+  "tasks.max" : "1"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 600
