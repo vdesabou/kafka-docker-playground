@@ -243,6 +243,7 @@
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/salesforce.png" height="15"> [SalesForce PushTopics Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fm-salesforce-pushtopics-source) :ccloud/fm-salesforce-pushtopics-source:
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/sftp.png" width="15"> [SFTP Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fm-sftp-source) :ccloud/fm-sftp-source:
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/snowflake.png" width="15"> [Snowflake Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fm-snowflake-sink) :ccloud/fm-snowflake-sink:
+  - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/zendesk.png" width="15"> [Zendesk Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fm-zendesk-source) :ccloud/fm-zendesk-source:
 
 ### 🛃 Custom Connectors
 
