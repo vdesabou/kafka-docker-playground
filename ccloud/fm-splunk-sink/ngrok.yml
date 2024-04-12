@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  splunk:
+    addr: splunk:8088
+    proto: tcp
