@@ -153,8 +153,6 @@ playground connector create-or-update --connector $connector_name << EOF
      "oracle.password": "mypassword",
      "table.inclusion.regex": ".*CUSTOMERS.*",
      "start.from": "snapshot",
-     "query.timeout.ms": "60000",
-     "redo.log.row.fetch.size": "1",
      "redo.log.topic.name": "redo-log-topic",
      "table.topic.name.template": "\${databaseName}.\${schemaName}.\${tableName}",
      "lob.topic.name.template":"\${databaseName}.\${schemaName}.\${tableName}.\${columnName}",
