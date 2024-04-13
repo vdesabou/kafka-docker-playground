@@ -103,6 +103,8 @@ INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@of
 GO
 EOF
 
+sleep 10
+
 log "Verifying topic sqlserver-customers"
 playground topic consume --topic sqlserver-customers --min-expected-messages 5 --timeout 60
 
