@@ -102,7 +102,7 @@ log "Creating MySQL source connector"
 playground connector create-or-update --connector mysql-mtls-source  << EOF
 {
   "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
-  "tasks.max":"10",
+  "tasks.max":"1",
   "connection.url": "jdbc:mysql://mysql:3306/mydb?user=userssl&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1,TLSv1.1,TLSv1.2,TLSv1.3",
   "table.whitelist":"team",
   "mode":"timestamp+incrementing",

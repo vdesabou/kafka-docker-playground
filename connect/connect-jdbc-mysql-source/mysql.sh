@@ -86,7 +86,7 @@ log "Creating MySQL source connector"
 playground connector create-or-update --connector mysql-source  << EOF
 {
      "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
-     "tasks.max":"10",
+     "tasks.max":"1",
      "connection.url":"jdbc:mysql://mysql:3306/mydb?user=user&password=password&useSSL=false",
      "table.whitelist":"team",
      "mode":"timestamp+incrementing",
