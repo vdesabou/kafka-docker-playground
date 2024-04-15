@@ -72,6 +72,7 @@ playground connector create-or-update --connector $connector_name << EOF
   "index1.topic": "users",
   "request.method": "POST",
   "opensearch.ssl.enabled": "true",
+  "opensearch.ssl.protocol": "TLSv1.2",
   "retry.backoff.policy": "CONSTANT_VALUE",
   "max.retries": "1",
   "tasks.max" : "1"
