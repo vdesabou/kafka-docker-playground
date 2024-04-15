@@ -25,6 +25,7 @@ services:
     command:
       - "start"
       - "--all"
+      - "--log=stdout"
       - "--config"
       - "/etc/ngrok.yml"
     volumes:
