@@ -3,8 +3,10 @@ version: '3.5'
 services:
 
   connect:
-    volumes:
-      - ../../connect/connect-servicenow-source/nginx-proxy/logging.properties:/tmp/logging.properties
+    # volumes:
+    #   - ../../connect/connect-servicenow-source/nginx-proxy/logging.properties:/tmp/logging.properties
     environment:
-      KAFKA_OPTS: -Djava.util.logging.config.file=/tmp/logging.properties
+      # the following line creates issue 
+      # org.apache.kafka.connect.errors.ConnectException: Failed on attempt 1 of 4 to send request to ServiceNow: class com.google.api.client.util.LoggingStreamingContent cannot be cast to class com.google.api.client.http.HttpContent (com.google.api.client.util.LoggingStreamingContent and com.google.api.client.http.HttpContent are in unnamed module of loader org.apache.kafka.connect.runtime.isolation.PluginClassLoader @31e3250d)
+      #KAFKA_OPTS: -Djava.util.logging.config.file=/tmp/logging.properties
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-servicenow
