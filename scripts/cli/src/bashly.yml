@@ -2834,6 +2834,7 @@ commands:
 
     flags:
     - *verbose
+    - *noclipboard
     - long: --connector
       short: -c
       required: true

@@ -2205,6 +2205,13 @@
             },
             {
               "names": [
+                "--no-clipboard"
+              ],
+              "argument": "",
+              "description": "do not copy to clipboard (internal)\n"
+            },
+            {
+              "names": [
                 "--connector",
                 "-c"
               ],

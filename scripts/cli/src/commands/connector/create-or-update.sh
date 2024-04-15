@@ -6,6 +6,7 @@ validate=${args[--validate]}
 wait_for_zero_lag=${args[--wait-for-zero-lag]}
 skip_automatic_connector_config=${args[--skip-automatic-connector-config]}
 verbose="${args[--verbose]}"
+no_clipboard="${args[--no-clipboard]}"
 
 connector_type=$(playground state get run.connector_type)
 

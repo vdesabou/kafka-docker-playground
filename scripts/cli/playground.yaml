@@ -2335,6 +2335,12 @@ subcommands:
             🐞 Show command being ran.
             
         - names:
+          - --no-clipboard
+          argument: ""
+          description: | 
+            do not copy to clipboard (internal)
+            
+        - names:
           - --connector
           - -c
           argument: CONNECTOR
