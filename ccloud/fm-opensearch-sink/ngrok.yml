@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  opensearch-node1:
+    addr: opensearch-node1:9200
+    proto: tcp
