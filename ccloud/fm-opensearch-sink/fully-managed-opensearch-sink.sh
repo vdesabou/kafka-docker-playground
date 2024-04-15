@@ -63,7 +63,7 @@ playground connector create-or-update --connector $connector_name << EOF
   "kafka.api.secret": "$CLOUD_SECRET",
   "input.data.format": "AVRO",
   "topics": "users",
-  "instance.url": "https://$NGROK_HOSTNAME:$NGROK_PORT",
+  "instance.url": "http://$NGROK_HOSTNAME:$NGROK_PORT",
   "auth.type": "BASIC",
   "connection.user": "admin",
   "connection.password": "P@szw0rd1!",
@@ -71,8 +71,6 @@ playground connector create-or-update --connector $connector_name << EOF
   "index1.name" : "users_index",
   "index1.topic": "users",
   "request.method": "POST",
-  "opensearch.ssl.enabled": "true",
-  "opensearch.ssl.protocol": "TLSv1.2",
   "retry.backoff.policy": "CONSTANT_VALUE",
   "max.retries": "1",
   "tasks.max" : "1"
@@ -96,12 +94,8 @@ EOF
 
 sleep 10
 
-# curl -XPUT --insecure -u 'admin:P@szw0rd1!' 'https://localhost:9200/users_index/_doc/1' -H 'Content-Type: application/json' -d '{"f1": "value1"}'
-
-# curl -XGET --insecure -u 'admin:P@szw0rd1!' 'https://4.tcp.eu.ngrok.io:14463/users_index/_search?pretty' > /tmp/result.log  2>&1
-
 log "Check that the data is available in opensearch in users_index"
-curl -XGET --insecure -u 'admin:P@szw0rd1!' 'https://localhost:9200/users_index/_search?pretty' > /tmp/result.log  2>&1
+curl -XGET -u 'admin:P@szw0rd1!' 'http://localhost:9200/users_index/_search?pretty' > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "f1" /tmp/result.log | grep "value1"
 grep "f1" /tmp/result.log | grep "value10"
