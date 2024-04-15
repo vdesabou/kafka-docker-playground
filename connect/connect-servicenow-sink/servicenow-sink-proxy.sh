@@ -112,8 +112,12 @@ playground connector create-or-update --connector servicenow-sink  << EOF
 }
 EOF
 
-
 sleep 15
+
+log "Verifying topic test-result"
+playground topic consume --topic test-result --min-expected-messages 3 --timeout 60
+
+playground topic consume --topic test-error --min-expected-messages 0 --timeout 60
 
 log "Confirm that the messages were delivered to the ServiceNow table"
 docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICENOW_PASSWORD" connect bash -c "export HTTP_PROXY=nginx-proxy:8888 && export HTTPS_PROXY=nginx-proxy:8888 && \

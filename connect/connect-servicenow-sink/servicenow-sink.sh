@@ -111,47 +111,12 @@ playground connector create-or-update --connector servicenow-sink  << EOF
 }
 EOF
 
-
-# [2023-12-27 16:48:03,273] ERROR [servicenow-sink|task-0] WorkerSinkTask{id=servicenow-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. Error: Failed on attempt 1 of 4 to send request to ServiceNow: class com.google.api.client.util.LoggingStreamingContent cannot be cast to class com.google.api.client.http.HttpContent (com.google.api.client.util.LoggingStreamingContent and com.google.api.client.http.HttpContent are in unnamed module of loader org.apache.kafka.connect.runtime.isolation.PluginClassLoader @31e3250d) (org.apache.kafka.connect.runtime.WorkerSinkTask:626)
-# org.apache.kafka.connect.errors.ConnectException: Failed on attempt 1 of 4 to send request to ServiceNow: class com.google.api.client.util.LoggingStreamingContent cannot be cast to class com.google.api.client.http.HttpContent (com.google.api.client.util.LoggingStreamingContent and com.google.api.client.http.HttpContent are in unnamed module of loader org.apache.kafka.connect.runtime.isolation.PluginClassLoader @31e3250d)
-# 	at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:423)
-# 	at io.confluent.connect.utils.retry.RetryPolicy.call(RetryPolicy.java:337)
-# 	at io.confluent.connect.servicenow.rest.ServiceNowClient.executeRequest(ServiceNowClient.java:260)
-# 	at io.confluent.connect.servicenow.rest.ServiceNowClient.doRequest(ServiceNowClient.java:256)
-# 	at io.confluent.connect.servicenow.rest.ServiceNowClient.put(ServiceNowClient.java:191)
-# 	at io.confluent.connect.servicenow.ServiceNowSinkTask.put(ServiceNowSinkTask.java:58)
-# 	at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:593)
-# 	at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:340)
-# 	at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:238)
-# 	at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:207)
-# 	at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:229)
-# 	at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:284)
-# 	at org.apache.kafka.connect.runtime.isolation.Plugins.lambda$withClassLoader$1(Plugins.java:181)
-# 	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
-# 	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-# 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-# 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-# 	at java.base/java.lang.Thread.run(Thread.java:829)
-# Caused by: java.lang.ClassCastException: class com.google.api.client.util.LoggingStreamingContent cannot be cast to class com.google.api.client.http.HttpContent (com.google.api.client.util.LoggingStreamingContent and com.google.api.client.http.HttpContent are in unnamed module of loader org.apache.kafka.connect.runtime.isolation.PluginClassLoader @31e3250d)
-# 	at io.confluent.connect.servicenow.rest.RepeatableContentEntity.isRepeatable(RepeatableContentEntity.java:33)
-# 	at org.apache.http.impl.execchain.RequestEntityProxy.enhance(RequestEntityProxy.java:47)
-# 	at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:171)
-# 	at org.apache.http.impl.execchain.ProtocolExec.execute(ProtocolExec.java:186)
-# 	at org.apache.http.impl.execchain.RetryExec.execute(RetryExec.java:89)
-# 	at org.apache.http.impl.execchain.RedirectExec.execute(RedirectExec.java:110)
-# 	at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:185)
-# 	at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:83)
-# 	at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:108)
-# 	at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:56)
-# 	at io.confluent.connect.servicenow.rest.RepeatableApacheHttpRequest.execute(RepeatableApacheHttpRequest.java:53)
-# 	at com.google.api.client.http.HttpRequest.execute(HttpRequest.java:1012)
-# 	at io.confluent.connect.servicenow.rest.ServiceNowClient.lambda$executeRequest$2(ServiceNowClient.java:262)
-# 	at io.confluent.connect.utils.retry.RetryPolicy.lambda$call$1(RetryPolicy.java:337)
-# 	at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:417)
-# 	... 17 more
-
-
 sleep 15
+
+log "Verifying topic test-result"
+playground topic consume --topic test-result --min-expected-messages 3 --timeout 60
+
+playground topic consume --topic test-error --min-expected-messages 0 --timeout 60
 
 log "Confirm that the messages were delivered to the ServiceNow table"
 curl -X GET \
@@ -161,4 +126,4 @@ curl -X GET \
     -H 'Content-Type: application/json' \
     -H 'cache-control: no-cache' | jq . > /tmp/result.log  2>&1
 cat /tmp/result.log
-grep "u_name" /tmp/result.log | grep "notebooks"
+grep "u_name" /tmp/result.log
