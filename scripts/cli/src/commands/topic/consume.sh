@@ -379,14 +379,16 @@ fi
           # check if it is base64 encoded
           set +e
           base64=$(echo "$payload" | tr -d '"' | base64 --decode 2>/dev/null)
-
-          if [ "$base64" != "" ]
+          if [ $? -eq 0 ]
           then
-            decoded=$(echo "$base64" | iconv -t UTF-8//IGNORE 2>/dev/null)
-            if [ "$decoded" == "$base64" ]
+            if [ "$base64" != "" ]
             then
-              logwarn "🤖 Data is base64 encoded, payload will be decoded"
-              is_base64=1
+              decoded=$(echo "$base64" | iconv -t UTF-8//IGNORE 2>/dev/null)
+              if [ "$decoded" == "$base64" ]
+              then
+                logwarn "🤖 Data is base64 encoded, payload will be decoded"
+                is_base64=1
+              fi
             fi
           fi
           set -e
