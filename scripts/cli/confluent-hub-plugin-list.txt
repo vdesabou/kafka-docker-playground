@@ -154,6 +154,8 @@ konghq/kong-kafka-upstream-plugin
 levyx/xenon-connector
 llofberg/kafka-connect-aws-lambda
 marklogic/kafka-marklogic-connector
+markteehan/file-chunk-sink
+markteehan/file-chunk-source
 microsoft/kafka-connect-iothub
 microsoftcorporation/kafka-connect-cosmos
 microsoftcorporation/kafka-sink-azure-kusto
