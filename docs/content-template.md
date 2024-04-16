@@ -261,6 +261,13 @@
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/snowflake.png" width="15"> [Snowflake Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fm-snowflake-sink) :ccloud/fm-snowflake-sink:
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/zendesk.png" width="15"> [Zendesk Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fm-zendesk-source) :ccloud/fm-zendesk-source:
 
+🚨 Unavailable examples are:
+
+  - [AlloyDB Sink](https://docs.confluent.io/cloud/current/connectors/cc-alloydb-sink.html) as it requires VM to deploy a proxy
+  - [Google Cloud Dataproc Sink](https://docs.confluent.io/cloud/current/connectors/cc-gcp-dataproc-sink.html) as it [requires a VM](https://cloud.google.com/dataproc/docs/guides/create-cluster#creating_a_cloud_dataproc_cluster) to deploy cluster
+  - [New Relic Metrics Sink](https://docs.confluent.io/cloud/current/connectors/cc-new-relic-metrics-sink.html) as I can't make it work 😀
+  - [Pinecone Sink](https://docs.confluent.io/cloud/current/connectors/cc-pinecone-sink.html) as it is not a Fully Managed connector
+
 ### 🛃 Custom Connectors
 
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/s3.png" width="15"> [Amazon S3 Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/custom-connector-connect-aws-s3-sink) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
