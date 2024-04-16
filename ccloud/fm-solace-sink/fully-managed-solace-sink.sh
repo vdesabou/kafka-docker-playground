@@ -90,7 +90,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "solace.password": "admin",
      "jms.destination.type": "queue",
      "jms.destination.name": "connector-quickstart",
-     "solace.dynamic.durables": "false",
+     "solace.dynamic.durables": "true",
      "tasks.max" : "1"
 }
 EOF
