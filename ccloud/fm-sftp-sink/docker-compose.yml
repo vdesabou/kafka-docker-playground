@@ -1,0 +1,32 @@
+---
+version: '3.5'
+services:
+  sftp-server:
+    image: atmoz/sftp
+    hostname: sftp-server
+    container_name: sftp-server
+    ports:
+      - "2222:22"
+    command: foo:pass:::upload
+
+
+  # https://ngrok.com/docs/using-ngrok-with/docker/
+  ngrok:
+    image: ngrok/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    restart: unless-stopped
+    ports:
+      - 4040:4040
+    links:
+      - sftp-server
+    command:
+      - "start"
+      - "--all"
+      - "--log=stdout"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ../../ccloud/fm-sftp-sink/ngrok.yml:/etc/ngrok.yml
+    environment:
+      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN
