@@ -127,7 +127,7 @@ jobs:
                       "🚀 connect/connect-jdbc-sap-hana-sink connect/connect-jdbc-sap-hana-source connect/connect-sap-hana-sink",
 
                       # requiring ngrok
-                      "🚀 ccloud/fm-influxdb2-sink ccloud/fm-influxdb2-source ccloud/fm-cdc-oracle11-source ccloud/fm-jdbc-oracle19-source ccloud/fm-cdc-oracle19-source ccloud/fm-rabbitmq-source ccloud/fm-zendesk-source ccloud/fm-splunk-sink ccloud/fm-solace-sink ccloud/fm-opensearch-sink ccloud/fm-sftp-sink ccloud/fm-redis-sink ccloud/fm-rabbitmq-sink"
+                      "🚀 ccloud/fm-influxdb2-sink ccloud/fm-influxdb2-source ccloud/fm-cdc-oracle11-source ccloud/fm-jdbc-oracle19-source ccloud/fm-cdc-oracle19-source ccloud/fm-rabbitmq-source ccloud/fm-zendesk-source ccloud/fm-splunk-sink ccloud/fm-solace-sink ccloud/fm-opensearch-sink ccloud/fm-sftp-sink ccloud/fm-redis-sink ccloud/fm-rabbitmq-sink ccloud/fm-jdbc-mysql-sink"
                     ]
     steps:
 
