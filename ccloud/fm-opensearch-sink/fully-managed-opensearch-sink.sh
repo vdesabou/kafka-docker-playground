@@ -92,7 +92,7 @@ playground topic produce -t users --nb-messages 10 --forced-value '{"f1":"value%
 }
 EOF
 
-sleep 10
+sleep 20
 
 log "Check that the data is available in opensearch in users_index"
 curl -XGET -u 'admin:P@szw0rd1!' 'http://localhost:9200/users_index/_search?pretty' > /tmp/result.log  2>&1
