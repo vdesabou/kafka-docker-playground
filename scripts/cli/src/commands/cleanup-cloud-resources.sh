@@ -226,6 +226,17 @@ then
     cleanup_confluent_cloud_resources
 fi
 
+if [ ! -z "$AWS_CLUSTER_NAME" ]
+then
+    log "AWS_CLUSTER_NAME environment variable is set, forcing the cluster $AWS_CLUSTER_NAME to be used !"
+    export CLUSTER_NAME=$AWS_CLUSTER_NAME
+    export CLUSTER_REGION=$AWS_CLUSTER_REGION
+    export CLUSTER_CLOUD=$AWS_CLUSTER_CLOUD
+    export CLUSTER_CREDS=$AWS_CLUSTER_CREDS
+
+    cleanup_confluent_cloud_resources
+fi
+
 if [ ! -z "$GCP_CLUSTER_NAME" ]
 then
     log "GCP_CLUSTER_NAME environment variable is set, forcing the cluster $GCP_CLUSTER_NAME to be used !"

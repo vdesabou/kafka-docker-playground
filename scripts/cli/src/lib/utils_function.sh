@@ -1698,11 +1698,24 @@ function bootstrap_ccloud_environment () {
       fi
     fi
 
+    if [[ $test_file == *"fm-aws"* ]]
+    then
+      if [ ! -z "$AWS_CLUSTER_NAME" ]
+      then
+        log "🤖 AWS Fully managed example and AWS_CLUSTER_NAME environment variable is set, forcing the cluster $AWS_CLUSTER_NAME to be used !"
+        suggest_use_previous_example_ccloud=0
+        export CLUSTER_NAME=$AWS_CLUSTER_NAME
+        export CLUSTER_REGION=$AWS_CLUSTER_REGION
+        export CLUSTER_CLOUD=$AWS_CLUSTER_CLOUD
+        export CLUSTER_CREDS=$AWS_CLUSTER_CREDS
+      fi
+    fi
+
     if [[ $test_file == *"fm-gcp"* ]]
     then
       if [ ! -z "$GCP_CLUSTER_NAME" ]
       then
-        log "GCP_CLUSTER_NAME environment variable is set, forcing the cluster $GCP_CLUSTER_NAME to be used !"
+        log "🤖 GCP Fully managed example and GCP_CLUSTER_NAME environment variable is set, forcing the cluster $GCP_CLUSTER_NAME to be used !"
         suggest_use_previous_example_ccloud=0
         export CLUSTER_NAME=$GCP_CLUSTER_NAME
         export CLUSTER_REGION=$GCP_CLUSTER_REGION
@@ -1715,7 +1728,7 @@ function bootstrap_ccloud_environment () {
     then
       if [ ! -z "$AZURE_CLUSTER_NAME" ]
       then
-        log "AZURE_CLUSTER_NAME environment variable is set, forcing the cluster $AZURE_CLUSTER_NAME to be used !"
+        log "🤖 Azure Fully managed example and AZURE_CLUSTER_NAME environment variable is set, forcing the cluster $AZURE_CLUSTER_NAME to be used !"
         suggest_use_previous_example_ccloud=0
         export CLUSTER_NAME=$AZURE_CLUSTER_NAME
         export CLUSTER_REGION=$AZURE_CLUSTER_REGION
