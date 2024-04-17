@@ -26,7 +26,12 @@ do
     if [ -f "/tmp/config-$connector" ] && [ -z "$GITHUB_RUN_NUMBER" ] && [[ ! -n "$force_rest_endpoint" ]]
     then
         log "🧰 Current config for $connector_type connector $connector"
-        echo "playground connector create-or-update --connector $connector << EOF"
+        if [[ -n "$no_clipboard" ]]
+        then
+            echo "playground connector create-or-update --connector $connector --no-clipboard << EOF"
+        else
+            echo "playground connector create-or-update --connector $connector << EOF"
+        fi
         cat "/tmp/config-$connector" | jq -S . | sed 's/\$/\\$/g'
         echo "EOF"
 
@@ -67,7 +72,12 @@ do
             handle_onprem_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/config\""
         fi
 
-        echo "playground connector create-or-update --connector $connector << EOF"
+        if [[ -n "$no_clipboard" ]]
+        then
+            echo "playground connector create-or-update --connector $connector --no-clipboard << EOF"
+        else
+            echo "playground connector create-or-update --connector $connector << EOF"
+        fi
         echo "$curl_output" | jq -S . | sed 's/\$/\\$/g'
         echo "EOF"
 
