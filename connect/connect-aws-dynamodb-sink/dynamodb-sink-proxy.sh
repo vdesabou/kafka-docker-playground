@@ -39,6 +39,16 @@ else
     fi
 fi
 
+export AWS_CREDENTIALS_FILE_NAME=credentials
+if [ ! -f $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME ]
+then
+    log "generating $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME"
+    mkdir -p $HOME/.aws
+    sed -e "s|:AWS_ACCESS_KEY_ID:|$AWS_ACCESS_KEY_ID|g" \
+        -e "s|:AWS_SECRET_ACCESS_KEY:|$AWS_SECRET_ACCESS_KEY|g" \
+        ../../connect/connect-aws-dynamodb-sink/aws-credentials.template > $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME
+fi
+
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
      export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
