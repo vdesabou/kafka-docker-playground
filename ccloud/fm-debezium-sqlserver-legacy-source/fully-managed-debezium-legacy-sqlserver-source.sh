@@ -37,9 +37,6 @@ bootstrap_ccloud_environment
 
 
 set +e
-# delete subject as required
-curl -X DELETE -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO $SCHEMA_REGISTRY_URL/subjects/server1.dbo.customers-key
-curl -X DELETE -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO $SCHEMA_REGISTRY_URL/subjects/server1.dbo.customers-value
 playground topic delete --topic server1.dbo.customers
 set -e
 
