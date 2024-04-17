@@ -149,8 +149,8 @@ playground connector create-or-update --connector $connector_name << EOF
   "connection.password": "mypassword",
   "topics": "ORDERS",
   "auto.create": "true",
-  "insert.mode":"insert",
   "auto.evolve":"true",
+  "ssl.mode": "disabled",
   "tasks.max" : "1"
 }
 EOF
