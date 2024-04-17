@@ -4088,15 +4088,28 @@ function display_ngrok_warning () {
       exit 1
   fi
 
-  log "🚨WARNING🚨"
-  echo "It is considered a security risk to run this example on your personal machine since you'll be exposing a TCP port over internet using Ngrok (https://ngrok.com)."
-  echo "It is strongly encouraged to run it on a AWS EC2 instance where you'll use Confluent Static Egress IP Addresses (https://docs.confluent.io/cloud/current/networking/static-egress-ip-addresses.html#use-static-egress-ip-addresses-with-ccloud) (only available for public endpoints on AWS) to allow traffic from your Confluent Cloud cluster to your EC2 instance using EC2 Security Group."
-  echo "    "
-  echo "Example in order to set EC2 Security Group with Confluent Static Egress IP Addresses and port xxxx:"
-  echo "    group=\$(aws ec2 describe-instances --instance-id <\$ec2-instance-id> --output=json | jq '.Reservations[] | .Instances[] | {SecurityGroups: .SecurityGroups}' | jq -r '.SecurityGroups[] | .GroupName')"
-  echo "    aws ec2 authorize-security-group-ingress --group-name "\$group" --protocol tcp --port xxxx --cidr 13.36.88.88/32"
-  echo "    aws ec2 authorize-security-group-ingress --group-name "\$group" --protocol tcp --port xxxx --cidr 13.36.88.89/32"
-  echo "    etc..."
+  if [ ! -z "$GITHUB_RUN_NUMBER" ]
+  then
+    test_file=$(playground state get run.test_file)
+
+    DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+    dir1=$(echo ${DIR_CLI%/*})
+    cli_folder=$(echo ${dir1%/*})
+
+    # trick to use different ngrok token
+    if [ ! -f $test_file ]
+    then 
+      logerror "File $test_file retrieved from $cli_folder/../../playground.ini does not exist!"
+      exit 1
+    fi
+    last_two_folders=$(basename $(dirname $(dirname $test_file)))/$(basename $(dirname $test_file))
+
+    if grep "$last_two_folders" ${cli_folder}/../../.github/workflows/ci.yml | grep -q "2️⃣"
+    then
+      log "😋 Using NGROK_CI_AUTH_TOKEN_BACKUP"
+      export NGROK_AUTH_TOKEN=$NGROK_CI_AUTH_TOKEN_BACKUP
+    fi
+  fi
 
   if [ "$USER" == "vsaboulin" ]
   then
