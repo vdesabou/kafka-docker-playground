@@ -75,12 +75,11 @@ playground connector create-or-update --connector $connector_name << EOF
   "kafka.api.key": "$CLOUD_KEY",
   "kafka.api.secret": "$CLOUD_SECRET",
   "topics": "test_sftp_sink",
-
   "sftp.username":"foo",
   "sftp.password":"pass",
   "sftp.host":"$NGROK_HOSTNAME",
   "sftp.port":"$NGROK_PORT",
-
+  "sftp.working.dir": "/upload",
   "input.data.format" : "AVRO",
   "output.data.format" : "AVRO",
   "time.interval" : "HOURLY",
@@ -92,11 +91,10 @@ wait_for_ccloud_connector_up $connector_name 600
 
 sleep 10
 
-log "Listing content of ./upload/topics/test_sftp_sink/partition\=0/"
-docker exec sftp-server bash -c "ls /home/foo/upload/topics/test_sftp_sink/partition\=0/"
-
-docker cp sftp-server:/home/foo/upload/topics/test_sftp_sink/partition\=0/test_sftp_sink+0+0000000000.avro /tmp/
-
+log "Listing content of ./upload/topics/test_sftp_sink"
+docker exec sftp-server bash -c "ls /home/foo/upload/topics/test_sftp_sink/*/*/*/*"
+docker exec sftp-server bash -c "cp /home/foo/upload/topics/test_sftp_sink/*/*/*/*/test_sftp_sink+0+0000000000.avro /tmp/"
+docker cp sftp-server:/tmp/test_sftp_sink+0+0000000000.avro /tmp/
 docker run --quiet --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/test_sftp_sink+0+0000000000.avro
 
 
