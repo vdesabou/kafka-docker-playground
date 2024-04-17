@@ -142,7 +142,7 @@ playground connector create-or-update --connector $connector_name << EOF
   "topics": "ORDERS",
   "auto.create": "true",
   "insert.mode":"insert",
-  "auto.evolve":"true"
+  "auto.evolve":"true",
   "tasks.max" : "1"
 }
 EOF
