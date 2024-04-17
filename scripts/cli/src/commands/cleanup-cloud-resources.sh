@@ -195,6 +195,18 @@ do
     fi
 done
 
+if [ ! -z $SALESFORCE_USERNAME ]
+then
+    log "Cleanup Salesforce Leads on account with $SALESFORCE_USERNAME"
+    docker run -i --rm vdesabou/sfdx-cli:latest sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\" && sfdx data:query --target-org \"$SALESFORCE_USERNAME\" -q \"SELECT Id FROM Lead\" --result-format csv > /tmp/out.csv && sfdx force:data:bulk:delete --target-org \"$SALESFORCE_USERNAME\" -s Lead -f /tmp/out.csv"
+fi
+
+if [ ! -z $SALESFORCE_USERNAME_ACCOUNT2 ]
+then
+    log "Cleanup Salesforce Leads on account with $SALESFORCE_USERNAME_ACCOUNT2"
+    docker run -i --rm vdesabou/sfdx-cli:latest sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\" && sfdx data:query --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -q \"SELECT Id FROM Lead\" --result-format csv > /tmp/out.csv && sfdx force:data:bulk:delete --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -s Lead -f /tmp/out.csv"
+fi
+
 cleanup_confluent_cloud_resources
 
 if [ ! -z "$AWS_DATABRICKS_CLUSTER_NAME" ]
