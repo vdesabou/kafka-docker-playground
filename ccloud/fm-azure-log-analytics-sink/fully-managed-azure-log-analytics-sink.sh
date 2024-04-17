@@ -118,6 +118,11 @@ sleep 10
 
 playground connector show-lag --connector $connector_name
 
+# https://learn.microsoft.com/en-us/azure/azure-monitor/logs/data-ingestion-time#checking-ingestion-time
+# there is known latency: "The average latency to ingest log data is between 20 seconds and 3 minutes."
+
+sleep 180
+
 az extension add --name log-analytics
 az monitor log-analytics query \
     --workspace $AZURE_LOG_ANALYTICS_WORKSPACE_ID \
