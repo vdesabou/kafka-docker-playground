@@ -4,8 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-
-
 DD_API_KEY=${DD_API_KEY:-$1}
 DD_APP_KEY=${DD_APP_KEY:-$2}
 
@@ -23,11 +21,11 @@ fi
 
 if test -z "$(docker images -q dogshell:latest)"
 then
-     log "Building dogshell docker image.."
-     OLDDIR=$PWD
-     cd ${DIR}/docker-dogshell
-     docker build -t dogshell:latest .
-     cd ${OLDDIR}
+  log "Building dogshell docker image.."
+  OLDDIR=$PWD
+  cd ${DIR}/docker-dogshell
+  docker build -t dogshell:latest .
+  cd ${OLDDIR}
 fi
 
 bootstrap_ccloud_environment
