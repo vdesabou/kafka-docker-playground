@@ -115,7 +115,7 @@ playground connector create-or-update --connector $connector_name << EOF
   "connection.port": "$NGROK_PORT",
   "connection.user": "user",
   "connection.password": "password",
-  "db.name": "db",
+  "db.name": "mydb",
   "input.data.format": "AVRO",
   "topics": "orders",
   "insert.mode": "INSERT",
@@ -128,11 +128,11 @@ wait_for_ccloud_connector_up $connector_name 600
 
 sleep 5
 
-log "Describing the orders table in DB 'db':"
-docker exec mysql bash -c "mysql --user=root --password=password --database=db -e 'describe orders'"
+log "Describing the orders table in DB 'mydb':"
+docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'describe orders'"
 
 log "Show content of orders table:"
-docker exec mysql bash -c "mysql --user=root --password=password --database=db -e 'select * from orders'" > /tmp/result.log  2>&1
+docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from orders'" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "foo" /tmp/result.log
 
