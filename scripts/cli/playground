@@ -62,7 +62,7 @@ playground_usage() {
   echo
   printf "%s\n" "$(bold "Kafka commands:")"
   printf "  %s   🐋 Get docker-compose\n" "$(green "get-docker-compose")               "
-  printf "  %s   🔢 Get JMX metrics from a component\n" "$(green "get-jmx-metrics")                  "
+  printf "  %s   🔢 Get JMX metrics from a container\n" "$(green "get-jmx-metrics")                  "
   echo
   printf "%s\n" "$(bold "Schema commands:")"
   printf "  %s   🔰 Schema commands\n" "$(green "schema")                           "
@@ -3213,11 +3213,11 @@ playground_get_jmx_metrics_usage() {
     printf "playground get-jmx-metrics\n"
     echo
 
-    printf "  🔢 Get JMX metrics from a component\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%94%%a2-jmx-metrics\n"
+    printf "  🔢 Get JMX metrics from a container\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%94%%a2-jmx-metrics\n"
     echo
 
   else
-    printf "playground get-jmx-metrics - 🔢 Get JMX metrics from a component\n"
+    printf "playground get-jmx-metrics - 🔢 Get JMX metrics from a container\n"
     echo
 
   fi
@@ -3233,9 +3233,8 @@ playground_get_jmx_metrics_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--component, -c COMPONENT")"
-    printf "    Component name\n"
-    printf "    Allowed: zookeeper, broker, connect, schema-registry\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
+    printf "    🐳 Container name\n"
     printf "    Default: connect\n"
     echo
 
@@ -3256,8 +3255,8 @@ playground_get_jmx_metrics_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground get-jmx-metrics --component connect\n"
-    printf "  playground get-jmx-metrics --component connect --domain \"kafka.connect\n  kafka.consumer kafka.producer\"\n"
+    printf "  playground get-jmx-metrics --container connect\n"
+    printf "  playground get-jmx-metrics --container connect --domain \"kafka.connect\n  kafka.consumer kafka.producer\"\n"
     printf "  playground get-jmx-metrics -c broker\n"
     echo
 
@@ -8270,7 +8269,7 @@ function get_jmx_metrics() {
   rm -f /tmp/commands
   rm -f /tmp/jmx_metrics.log
 
-  component="$1"
+  container="$1"
   domains="$2"
   open="$3"
   if [ "$domains" = "" ]
@@ -8280,7 +8279,7 @@ function get_jmx_metrics() {
     domains="ALL"
   fi
 
-  case "$component" in
+  case "$container" in
   zookeeper )
     port=9999
   ;;
@@ -8293,16 +8292,22 @@ function get_jmx_metrics() {
   connect )
     port=10002
   ;;
+  connect2 )
+    port=10022
+  ;;
+  connect3 )
+    port=10032
+  ;;
   n|N ) ;;
-  * ) logerror "invalid component $component! it should be one of zookeeper, broker, schema-registry or connect";exit 1;;
+  * ) logerror "invalid container $container! it should be one of zookeeper, broker, schema-registry, connect, connect2 or connect3";exit 1;;
   esac
 
-  docker cp $JMXTERM_UBER_JAR $component:$JMXTERM_UBER_JAR
+  docker cp $JMXTERM_UBER_JAR $container:$JMXTERM_UBER_JAR
   if [ "$domains" = "ALL" ]
   then
 
-log "This is the list of domains for component $component"
-docker exec -i $component java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n -v silent << EOF
+log "This is the list of domains for container $container"
+docker exec -i $container java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n -v silent << EOF
 domains
 exit
 EOF
@@ -8310,7 +8315,7 @@ EOF
 
 for domain in `echo $domains`
 do
-docker exec -i $component java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n -v silent > /tmp/beans.log << EOF
+docker exec -i $container java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n -v silent > /tmp/beans.log << EOF
 domain $domain
 beans
 exit
@@ -8320,10 +8325,10 @@ EOF
   if [[ -n "$open" ]]
   then
     echo "####### domain $domain ########" >> /tmp/jmx_metrics.log
-    docker exec -i $component java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n < /tmp/commands >> /tmp/jmx_metrics.log 2>&1
+    docker exec -i $container java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n < /tmp/commands >> /tmp/jmx_metrics.log 2>&1
   else
     echo "####### domain $domain ########"
-    docker exec -i $component java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n < /tmp/commands 2>&1
+    docker exec -i $container java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n < /tmp/commands 2>&1
   fi
 done
 
@@ -17667,20 +17672,20 @@ playground_get_jmx_metrics_command() {
   # src/commands/get-jmx-metrics.sh
   IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 
-  component="${args[--component]}"
+  container="${args[--container]}"
   domain="${args[--domain]}"
   open="${args[--open]}"
 
-  case "${component}" in
-    zookeeper|broker|schema-registry|connect)
+  case "${container}" in
+    zookeeper|broker|schema-registry|connect|connect2|connect3)
     ;;
     *)
-      logerror "ERROR: component name not valid ! Should be one of zookeeper, broker, schema-registry or connect"
+      logerror "ERROR: container name not valid ! Should be one of zookeeper, broker, schema-registry, connect, connect2 or connect3"
       exit 1
     ;;
   esac
 
-  get_jmx_metrics "$component" "$domain" "$open"
+  get_jmx_metrics "$container" "$domain" "$open"
 }
 
 # :command.function
@@ -28702,15 +28707,15 @@ playground_get_jmx_metrics_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
-      --component | -c)
+      --container | -c)
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--component']="$2"
+          args['--container']="$2"
           shift
           shift
         else
-          printf "%s\n" "--component requires an argument: --component, -c COMPONENT" >&2
+          printf "%s\n" "--container requires an argument: --container, -c CONTAINER" >&2
           exit 1
         fi
         ;;
@@ -28754,13 +28759,7 @@ playground_get_jmx_metrics_parse_requirements() {
   done
 
   # :command.default_assignments
-  [[ -n ${args['--component']:-} ]] || args['--component']="connect"
-
-  # :command.whitelist_filter
-  if [[ ${args['--component']:-} ]] && [[ ! ${args['--component']:-} =~ ^(zookeeper|broker|connect|schema-registry)$ ]]; then
-    printf "%s\n" "--component must be one of: zookeeper, broker, connect, schema-registry" >&2
-    exit 1
-  fi
+  [[ -n ${args['--container']:-} ]] || args['--container']="connect"
 
 }
 

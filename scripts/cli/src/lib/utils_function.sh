@@ -1042,7 +1042,7 @@ function get_jmx_metrics() {
   rm -f /tmp/commands
   rm -f /tmp/jmx_metrics.log
 
-  component="$1"
+  container="$1"
   domains="$2"
   open="$3"
   if [ "$domains" = "" ]
@@ -1052,7 +1052,7 @@ function get_jmx_metrics() {
     domains="ALL"
   fi
 
-  case "$component" in
+  case "$container" in
   zookeeper )
     port=9999
   ;;
@@ -1065,16 +1065,22 @@ function get_jmx_metrics() {
   connect )
     port=10002
   ;;
+  connect2 )
+    port=10022
+  ;;
+  connect3 )
+    port=10032
+  ;;
   n|N ) ;;
-  * ) logerror "invalid component $component! it should be one of zookeeper, broker, schema-registry or connect";exit 1;;
+  * ) logerror "invalid container $container! it should be one of zookeeper, broker, schema-registry, connect, connect2 or connect3";exit 1;;
   esac
 
-  docker cp $JMXTERM_UBER_JAR $component:$JMXTERM_UBER_JAR
+  docker cp $JMXTERM_UBER_JAR $container:$JMXTERM_UBER_JAR
   if [ "$domains" = "ALL" ]
   then
 
-log "This is the list of domains for component $component"
-docker exec -i $component java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n -v silent << EOF
+log "This is the list of domains for container $container"
+docker exec -i $container java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n -v silent << EOF
 domains
 exit
 EOF
@@ -1082,7 +1088,7 @@ EOF
 
 for domain in `echo $domains`
 do
-docker exec -i $component java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n -v silent > /tmp/beans.log << EOF
+docker exec -i $container java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n -v silent > /tmp/beans.log << EOF
 domain $domain
 beans
 exit
@@ -1092,10 +1098,10 @@ EOF
   if [[ -n "$open" ]]
   then
     echo "####### domain $domain ########" >> /tmp/jmx_metrics.log
-    docker exec -i $component java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n < /tmp/commands >> /tmp/jmx_metrics.log 2>&1
+    docker exec -i $container java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n < /tmp/commands >> /tmp/jmx_metrics.log 2>&1
   else
     echo "####### domain $domain ########"
-    docker exec -i $component java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n < /tmp/commands 2>&1
+    docker exec -i $container java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n < /tmp/commands 2>&1
   fi
 done
 

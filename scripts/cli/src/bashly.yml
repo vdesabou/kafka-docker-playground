@@ -1451,20 +1451,13 @@ commands:
 - name: get-jmx-metrics
   group: Kafka
   help: |-
-    🔢 Get JMX metrics from a component
+    🔢 Get JMX metrics from a container
     
     👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics
   dependencies:
     java: visit https://openjdk.org/install/ to install
   flags:
-  - long: --component
-    short: -c
-    default: "connect"
-    required: false
-    arg: component
-    allowed: [zookeeper, broker, connect, schema-registry]
-    help: |-
-      Component name
+  - *container
   - long: --open
     short: -o
     help: |- 
@@ -1478,8 +1471,8 @@ commands:
       Domain name
 
   examples:
-  - playground get-jmx-metrics --component connect
-  - playground get-jmx-metrics --component connect --domain "kafka.connect kafka.consumer kafka.producer"
+  - playground get-jmx-metrics --container connect
+  - playground get-jmx-metrics --container connect --domain "kafka.connect kafka.consumer kafka.producer"
   - playground get-jmx-metrics -c broker
 
 - name: container

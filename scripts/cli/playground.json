@@ -962,16 +962,16 @@
     },
     {
       "name": "get-jmx-metrics",
-      "description": "🔢 Get JMX metrics from a component\n\n👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics\n",
+      "description": "🔢 Get JMX metrics from a container\n\n👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics\n",
       "usage": "playground get-jmx-metrics [OPTIONS]",
       "options": [
         {
           "names": [
-            "--component",
+            "--container",
             "-c"
           ],
           "argument": "connect",
-          "description": "Component name\n\nDefault value: connect\n\nAllowed values: zookeeper, broker, connect, schema-registry\n"
+          "description": "🐳 Container name\n\nDefault value: connect\n"
         },
         {
           "names": [

@@ -1,16 +1,16 @@
 IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 
-component="${args[--component]}"
+container="${args[--container]}"
 domain="${args[--domain]}"
 open="${args[--open]}"
 
-case "${component}" in
-  zookeeper|broker|schema-registry|connect)
+case "${container}" in
+  zookeeper|broker|schema-registry|connect|connect2|connect3)
   ;;
   *)
-    logerror "ERROR: component name not valid ! Should be one of zookeeper, broker, schema-registry or connect"
+    logerror "ERROR: container name not valid ! Should be one of zookeeper, broker, schema-registry, connect, connect2 or connect3"
     exit 1
   ;;
 esac
 
-get_jmx_metrics "$component" "$domain" "$open"
+get_jmx_metrics "$container" "$domain" "$open"

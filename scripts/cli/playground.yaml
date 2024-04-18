@@ -1091,21 +1091,19 @@ subcommands:
             
   - name: get-jmx-metrics
     description: | 
-        🔢 Get JMX metrics from a component
+        🔢 Get JMX metrics from a container
         
         👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics
     usage: playground get-jmx-metrics [OPTIONS]
     options:
     - names:
-      - --component
+      - --container
       - -c
       argument: connect
       description: | 
-        Component name
+        🐳 Container name
         
         Default value: connect
-        
-        Allowed values: zookeeper, broker, connect, schema-registry
         
     - names:
       - --open
