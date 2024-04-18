@@ -6,16 +6,19 @@ source ${DIR}/../../scripts/utils.sh
 
 logwarn "Using JDBC with snowflake comes with caveats, see https://github.com/vdesabou/kafka-docker-playground/blob/084a41e82b2bb4ef0f2c98e46bd68cf2a9bf780d/connect/connect-jdbc-snowflake-source/README.md?plain=1#L8C1-L8C11"
 
-PLAYGROUND_DB=PLAYGROUND_DB${TAG}
+username=$(whoami)
+uppercase_username=$(echo $username | tr '[:lower:]' '[:upper:]')
+
+PLAYGROUND_DB=PG_DB_${uppercase_username}${TAG}
 PLAYGROUND_DB=${PLAYGROUND_DB//[-._]/}
 
-PLAYGROUND_WAREHOUSE=PLAYGROUND_WAREHOUSE${TAG}
+PLAYGROUND_WAREHOUSE=PG_WH_${uppercase_username}${TAG}
 PLAYGROUND_WAREHOUSE=${PLAYGROUND_WAREHOUSE//[-._]/}
 
-PLAYGROUND_CONNECTOR_ROLE=PLAYGROUND_CONNECTOR_ROLE${TAG}
+PLAYGROUND_CONNECTOR_ROLE=PG_ROLE_${uppercase_username}${TAG}
 PLAYGROUND_CONNECTOR_ROLE=${PLAYGROUND_CONNECTOR_ROLE//[-._]/}
 
-PLAYGROUND_USER=PLAYGROUND_USER${TAG}
+PLAYGROUND_USER=PG_USER_${uppercase_username}${TAG}
 PLAYGROUND_USER=${PLAYGROUND_USER//[-._]/}
 
 cd ../../connect/connect-jdbc-snowflake-source
