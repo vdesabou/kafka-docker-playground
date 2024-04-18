@@ -477,6 +477,22 @@ subcommands:
       description: | 
         ☢️ force user
         
+    - names:
+      - --resource
+      argument: ["aws", "gcp", "azure", "ccloud", "salesforce"]
+      description: | 
+        🛁 resource to cleanup
+        
+        If not provided, all of them are cleaned up
+        
+        🎓 Tip: you can pass multiple resources by specifying --resource multiple times
+        
+        Repeatable: ✓ Yes
+        
+        Default value: ["aws", "gcp", "azure", "ccloud", "salesforce"]
+        
+        Allowed values: aws, gcp, azure, ccloud, salesforce
+        
     subcommands:
   - name: repro
     description: | 

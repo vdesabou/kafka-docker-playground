@@ -830,6 +830,29 @@ commands:
     arg: user
     help: |-
       ☢️ force user
+  - long: --resource
+    arg: resource
+    help: |-
+      🛁 resource to cleanup
+
+      If not provided, all of them are cleaned up
+
+      🎓 Tip: you can pass multiple resources by specifying --resource multiple times
+    required: false
+    repeatable: true
+    unique: true
+    default:
+      - aws
+      - gcp
+      - azure
+      - ccloud
+      - salesforce
+    allowed: 
+      - aws
+      - gcp
+      - azure
+      - ccloud
+      - salesforce
 
 - name: repro
   expose: always

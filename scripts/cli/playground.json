@@ -365,6 +365,19 @@
           ],
           "argument": "USER",
           "description": "☢️ force user\n"
+        },
+        {
+          "names": [
+            "--resource"
+          ],
+          "argument": [
+            "aws",
+            "gcp",
+            "azure",
+            "ccloud",
+            "salesforce"
+          ],
+          "description": "🛁 resource to cleanup\n\nIf not provided, all of them are cleaned up\n\n🎓 Tip: you can pass multiple resources by specifying --resource multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: [\"aws\", \"gcp\", \"azure\", \"ccloud\", \"salesforce\"]\n\nAllowed values: aws, gcp, azure, ccloud, salesforce\n"
         }
       ],
       "subcommands": null
