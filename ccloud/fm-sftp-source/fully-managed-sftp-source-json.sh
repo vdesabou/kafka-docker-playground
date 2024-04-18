@@ -86,7 +86,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "input.path": "/home/foo/upload/input",
      "error.path": "/home/foo/upload/error",
      "finished.path": "/home/foo/upload/finished",
-     "input.file.pattern": ".*\\\.json",
+     "input.file.pattern": ".*\\\\.json",
 
      "sftp.username":"foo",
      "sftp.password":"pass",
