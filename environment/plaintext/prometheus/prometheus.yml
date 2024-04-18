@@ -53,6 +53,8 @@ scrape_configs:
     static_configs:
       - targets:
           - "broker:1234"
+          - "broker2:1234"
+          - "broker3:1234"
         labels:
           env: "dev"
     relabel_configs:
