@@ -34,10 +34,32 @@ echo $'id,first_name,last_name,email,gender,ip_address,last_login,account_balanc
 docker cp csv-sftp-source.csv sftp-server:/chroot/home/foo/upload/input/
 rm -f csv-sftp-source.csv
 
-log "Getting ngrok hostname and port"
-NGROK_URL=$(curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
-NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
+log "Waiting for ngrok to start"
+while true
+do
+  container_id=$(docker ps -q -f name=ngrok)
+  if [ -n "$container_id" ]
+  then
+    status=$(docker inspect --format '{{.State.Status}}' $container_id)
+    if [ "$status" = "running" ]
+    then
+      log "Getting ngrok hostname and port"
+      NGROK_URL=$(curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+      NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
+      NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
+
+      if ! [[ $NGROK_PORT =~ ^[0-9]+$ ]]
+      then
+        log "NGROK_PORT is not a valid number, keep retrying..."
+        continue
+      else 
+        break
+      fi
+    fi
+  fi
+  log "Waiting for container ngrok to start..."
+  sleep 5
+done
 
 connector_name="SftpSource_$USER"
 set +e
@@ -76,8 +98,9 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 600
 
+sleep 5
 
-log "Verifying topic sftp-testing-topic"
+log "Verify we have received the data in sftp-testing-topic topic"
 playground topic consume --topic sftp-testing-topic --min-expected-messages 2 --timeout 60
 
 
