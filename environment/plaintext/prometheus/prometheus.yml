@@ -79,6 +79,8 @@ scrape_configs:
     static_configs:
       - targets:
           - "connect:1234"
+          - "connect2:1234"
+          - "connect3:1234"
         labels:
           env: "dev"
           kafka_connect_cluster_id: "cluster1"
