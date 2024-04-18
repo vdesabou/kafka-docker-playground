@@ -118,17 +118,22 @@ sleep 10
 
 playground connector show-lag --connector $connector_name
 
-# https://learn.microsoft.com/en-us/azure/azure-monitor/logs/data-ingestion-time#checking-ingestion-time
-# there is known latency: "The average latency to ingest log data is between 20 seconds and 3 minutes."
+if [ -z "$GITHUB_RUN_NUMBER" ]
+then
+    # do not test in CI, only rely on lag
 
-sleep 180
+    # https://learn.microsoft.com/en-us/azure/azure-monitor/logs/data-ingestion-time#checking-ingestion-time
+    # there is known latency: "The average latency to ingest log data is between 20 seconds and 3 minutes."
 
-az extension add --name log-analytics
-az monitor log-analytics query \
-    --workspace $AZURE_LOG_ANALYTICS_WORKSPACE_ID \
-    --analytics-query 'log_analytics_topic_CL | limit 10' > /tmp/result.log  2>&1
-cat /tmp/result.log
-grep "first_name_s" /tmp/result.log
+    sleep 180
+
+    az extension add --name log-analytics
+    az monitor log-analytics query \
+        --workspace $AZURE_LOG_ANALYTICS_WORKSPACE_ID \
+        --analytics-query 'log_analytics_topic_CL | limit 10' > /tmp/result.log  2>&1
+    cat /tmp/result.log
+    grep "first_name_s" /tmp/result.log
+fi
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
