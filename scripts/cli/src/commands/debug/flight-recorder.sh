@@ -42,7 +42,8 @@ case "${action}" in
         fi
         set -e
 
-        docker exec ${container} jcmd 1 JFR.start name=dump1 filename=/tmp/${filename}
+        docker cp ${root_folder}/scripts/cli/all.jfc ${container}:/tmp/all.jfc > /dev/null 2>&1
+        docker exec ${container} jcmd 1 JFR.start name=dump1 filename=/tmp/${filename} settings=/tmp/all.jfc
         if [ $? -eq 0 ]
         then
             log "🛩️ flight recorder is now started"
