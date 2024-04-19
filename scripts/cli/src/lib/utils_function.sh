@@ -1942,6 +1942,19 @@ function validate_ccloud_connector_up() {
   trap 'rm -rf $tmp_dir_validate' EXIT
 
   set +e
+
+  log "1"
+
+  playground --output-level ERROR connector show-config --connector "$1" --no-clipboard | grep -v "kafka.api.secret"
+
+  log "2"
+  cat "/tmp/config-$1"| grep -v "kafka.api.secret"
+
+  log "3"
+  cat "/tmp/config-$1" | jq -S . | sed 's/\$/\\$/g' | grep -v "kafka.api.secret"
+
+
+
   playground --output-level ERROR connector show-config --connector "$1" --no-clipboard > "$tmp_dir_validate/update-connector-config.sh"
   if [ $? -ne 1 ]
   then
@@ -1981,12 +1994,10 @@ function ccloud::retry() {
             echo "ERROR: Failed after $curr_wait seconds. Please troubleshoot and run again."
             return 1
         else
-            printf "."
             curr_wait=$((curr_wait+sleep_interval))
             sleep $sleep_interval
         fi
     done
-    printf "\n"
 }
 
 function wait_for_ccloud_connector_up() {
@@ -3868,12 +3879,10 @@ function ccloud::retry() {
             echo "ERROR: Failed after $curr_wait seconds. Please troubleshoot and run again."
             return 1
         else
-            printf "."
             curr_wait=$((curr_wait+sleep_interval))
             sleep $sleep_interval
         fi
     done
-    printf "\n"
 }
 function ccloud::version_gt() {
   test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
