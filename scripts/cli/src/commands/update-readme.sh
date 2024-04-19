@@ -33,7 +33,7 @@ rm -rf "$ci_folder"
 mkdir -p "$ci_folder"
 aws s3 cp --only-show-errors s3://kafka-docker-playground/ci/ "${ci_folder}/" --recursive --no-progress --region us-east-1
 
-test_list=$(grep "🚀 " ${root_folder}/.github/workflows/ci.yml | cut -d '"' -f 2 | tr '\n' ' ')
+test_list=$(grep "🚀" ${root_folder}/.github/workflows/ci.yml | cut -d '"' -f 2 | tr '\n' ' ')
 declare -a TEST_FAILED
 declare -a TEST_SUCCESS
 nb_total_tests=0

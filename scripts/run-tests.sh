@@ -33,7 +33,7 @@ skipped_tests=""
 test_list="$1"
 if [ "$1" = "ALL" ]
 then
-    test_list=$(grep "🚀 " ${DIR}/../.github/workflows/ci.yml | cut -d '"' -f 2 | tr '\n' ' ')
+    test_list=$(grep "🚀" ${DIR}/../.github/workflows/ci.yml | cut -d '"' -f 2 | tr '\n' ' ')
 fi
 
 for dir in $test_list
