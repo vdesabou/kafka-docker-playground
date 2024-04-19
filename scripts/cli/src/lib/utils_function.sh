@@ -1942,25 +1942,10 @@ function validate_ccloud_connector_up() {
   trap 'rm -rf $tmp_dir_validate' EXIT
 
   set +e
-
-  log "1"
-
-  playground --output-level ERROR connector show-config --connector "$1" --no-clipboard | grep -v "kafka.api.secret"
-
-  log "2"
-  cat "/tmp/config-$1"| grep -v "kafka.api.secret"
-
-  log "3"
-  cat "/tmp/config-$1" | jq -S . | sed 's/\$/\\$/g' | grep -v "kafka.api.secret"
-
-
-
   playground --output-level ERROR connector show-config --connector "$1" --no-clipboard > "$tmp_dir_validate/update-connector-config.sh"
   if [ $? -ne 1 ]
   then
     first_line=$(head -n 1 "$tmp_dir_validate/update-connector-config.sh")
-
-    cat "$tmp_dir_validate/update-connector-config.sh" | grep -v "kafka.api.secret"
     if [[ $first_line == *"playground"* ]]
     then
       bash "$tmp_dir_validate/update-connector-config.sh" > /dev/null 2>&1
