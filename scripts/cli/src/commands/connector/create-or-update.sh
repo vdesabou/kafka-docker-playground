@@ -184,10 +184,9 @@ else
     log "🔄 Updating $connector_type connector $connector"
 fi
 
+echo "$json_content" > "/tmp/config-$connector"
 if [ -z "$GITHUB_RUN_NUMBER" ]
 then
-    echo "$json_content" > "/tmp/config-$connector"
-
     if [[ "$OSTYPE" == "darwin"* ]]
     then
         clipboard=$(playground config get clipboard)
