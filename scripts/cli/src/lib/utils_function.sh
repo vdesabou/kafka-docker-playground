@@ -1943,7 +1943,20 @@ function validate_ccloud_connector_up() {
 
   set +e
   playground --output-level ERROR connector show-config --connector "$1" --no-clipboard > "$tmp_dir_validate/update-connector-config.sh"
-  bash "$tmp_dir_validate/update-connector-config.sh" > /dev/null 2>&1
+  if [ $? -ne 1 ]
+  then
+    first_line=$(head -n 1 "$tmp_dir_validate/update-connector-config.sh")
+
+    if [[ $first_line == *"playground"* ]]
+    then
+      bash "$tmp_dir_validate/update-connector-config.sh" > /dev/null 2>&1
+      echo "🔁"
+    else
+      echo "❌"
+    fi
+  else
+    echo "⏳"
+  fi
   set -e
   
   confluent connect cluster list -o json | jq -e 'map(select(.name == "'"$1"'" and .status == "RUNNING")) | .[]' > /dev/null 2>&1
