@@ -15,6 +15,11 @@ then
     fi
 fi
 
+ci_ok=0
+if [ ! -z "$GITHUB_RUN_NUMBER" ] && [[ -n "$no_clipboard" ]]
+then
+    ci_ok=1
+fi
 items=($connector)
 length=${#items[@]}
 if ((length > 1))
@@ -23,7 +28,7 @@ then
 fi
 for connector in "${items[@]}"
 do
-    if [ -f "/tmp/config-$connector" ] && [ -z "$GITHUB_RUN_NUMBER" ] && [[ ! -n "$force_rest_endpoint" ]]
+    if [ -f "/tmp/config-$connector" ] && [ ${ci_ok} -eq 1 ] && [[ ! -n "$force_rest_endpoint" ]]
     then
         log "🧰 Current config for $connector_type connector $connector"
         if [[ -n "$no_clipboard" ]]
