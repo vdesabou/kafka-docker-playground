@@ -1947,6 +1947,7 @@ function validate_ccloud_connector_up() {
   then
     first_line=$(head -n 1 "$tmp_dir_validate/update-connector-config.sh")
 
+    cat "$tmp_dir_validate/update-connector-config.sh" | grep -v "kafka.api.secret""
     if [[ $first_line == *"playground"* ]]
     then
       bash "$tmp_dir_validate/update-connector-config.sh" > /dev/null 2>&1
