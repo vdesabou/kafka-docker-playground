@@ -1937,34 +1937,21 @@ function create_ccloud_connector() {
 }
 
 function validate_ccloud_connector_up() {
-  
-  tmp_dir_validate=$(mktemp -d -t pg-XXXXXXXXXX)
-  trap 'rm -rf $tmp_dir_validate' EXIT
-
+  connector="$1"
   set +e
-  playground --output-level ERROR connector show-config --connector "$1" --no-clipboard > "$tmp_dir_validate/update-connector-config.sh"
-  if [ $? -eq 0 ]
+  if [ -f "/tmp/config-$connector" ]
   then
-    first_line=$(head -n 1 "$tmp_dir_validate/update-connector-config.sh")
-    if [[ $first_line == *"playground"* ]]
+    playground connector create-or-update --connector "$connector" --no-clipboard < "/tmp/config-$connector" > /dev/null 2>&1
+    if [ $? -ne 0 ]
     then
-      bash "$tmp_dir_validate/update-connector-config.sh" > /dev/null 2>&1
-      if [ $? -ne 0 ]
-      then
-        echo "💀"
-
-         bash "$tmp_dir_validate/update-connector-config.sh" | grep -v "kafka.api.secret"
-      else
-        echo "🔁"
-      fi
+      echo "💀"
     else
-      echo "❌"
+      echo "🔁"
     fi
   else
-    echo "⏳"
+    echo "❌"
   fi
-  set -e
-  
+
   confluent connect cluster list -o json | jq -e 'map(select(.name == "'"$1"'" and .status == "RUNNING")) | .[]' > /dev/null 2>&1
 }
 

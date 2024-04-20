@@ -186,41 +186,6 @@ fi
 
 echo "$json_content" > "/tmp/config-$connector"
 
-log "FIXTHIS TO REMOVE"
-
-log "json"
-echo "$json_content" | grep -v "kafka.api.secret"
-
-log "file"
-cat "/tmp/config-$connector" | grep -v "kafka.api.secret"
-
-log "json_file"
-cat $json_file | grep -v "kafka.api.secret"
-
-if ! echo "$json_content" | jq -e .  > /dev/null 2>&1
-then
-    set +e
-    jq_output=$(jq . "$json_file" 2>&1)
-    error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
-
-    if [[ -n "$error_line" ]]; then
-        logerror "❌ Invalid JSON at line $error_line"
-    fi
-    set -e
-
-    if [ -z "$GITHUB_RUN_NUMBER" ]
-    then
-        if [[ $(type -f bat 2>&1) =~ "not found" ]]
-        then
-            cat -n $json_file
-        else
-            bat $json_file --highlight-line $error_line
-        fi
-    fi
-    exit 1
-fi
-
-
 if [ -z "$GITHUB_RUN_NUMBER" ]
 then
     if [[ "$OSTYPE" == "darwin"* ]]
