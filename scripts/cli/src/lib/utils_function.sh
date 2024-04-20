@@ -1938,9 +1938,9 @@ function create_ccloud_connector() {
 
 function validate_ccloud_connector_up() {
   connector="$1"
-  set +e
   if [ -f "/tmp/config-$connector" ]
   then
+    set +e
     playground connector create-or-update --connector "$connector" --no-clipboard < "/tmp/config-$connector" > /dev/null 2>&1
     if [ $? -ne 0 ]
     then
@@ -1951,7 +1951,8 @@ function validate_ccloud_connector_up() {
   else
     echo "❌"
   fi
-
+  set -e
+  
   confluent connect cluster list -o json | jq -e 'map(select(.name == "'"$1"'" and .status == "RUNNING")) | .[]' > /dev/null 2>&1
 }
 
