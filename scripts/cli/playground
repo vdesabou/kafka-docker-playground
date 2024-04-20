@@ -9170,13 +9170,18 @@ function validate_ccloud_connector_up() {
 
   set +e
   playground --output-level ERROR connector show-config --connector "$1" --no-clipboard > "$tmp_dir_validate/update-connector-config.sh"
-  if [ $? -ne 1 ]
+  if [ $? -eq 0 ]
   then
     first_line=$(head -n 1 "$tmp_dir_validate/update-connector-config.sh")
     if [[ $first_line == *"playground"* ]]
     then
       bash "$tmp_dir_validate/update-connector-config.sh" > /dev/null 2>&1
-      echo "🔁"
+      if [ $? -ne 0 ]
+      then
+        echo "💀"
+      else
+        echo "🔁"
+      fi
     else
       echo "❌"
     fi
@@ -22662,6 +22667,32 @@ playground_connector_create_or_update_command() {
 
   log "file"
   cat "/tmp/config-$connector" | grep -v "kafka.api.secret"
+
+  log "json_file"
+  cat $json_file | grep -v "kafka.api.secret"
+
+  if ! echo "$json_content" | jq -e .  > /dev/null 2>&1
+  then
+      set +e
+      jq_output=$(jq . "$json_file" 2>&1)
+      error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
+
+      if [[ -n "$error_line" ]]; then
+          logerror "❌ Invalid JSON at line $error_line"
+      fi
+      set -e
+
+      if [ -z "$GITHUB_RUN_NUMBER" ]
+      then
+          if [[ $(type -f bat 2>&1) =~ "not found" ]]
+          then
+              cat -n $json_file
+          else
+              bat $json_file --highlight-line $error_line
+          fi
+      fi
+      exit 1
+  fi
 
   if [ -z "$GITHUB_RUN_NUMBER" ]
   then

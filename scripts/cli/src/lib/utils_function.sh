@@ -1943,13 +1943,20 @@ function validate_ccloud_connector_up() {
 
   set +e
   playground --output-level ERROR connector show-config --connector "$1" --no-clipboard > "$tmp_dir_validate/update-connector-config.sh"
-  if [ $? -ne 1 ]
+  if [ $? -eq 0 ]
   then
     first_line=$(head -n 1 "$tmp_dir_validate/update-connector-config.sh")
     if [[ $first_line == *"playground"* ]]
     then
       bash "$tmp_dir_validate/update-connector-config.sh" > /dev/null 2>&1
-      echo "🔁"
+      if [ $? -ne 0 ]
+      then
+        echo "💀"
+
+         bash "$tmp_dir_validate/update-connector-config.sh" | grep -v "kafka.api.secret"
+      else
+        echo "🔁"
+      fi
     else
       echo "❌"
     fi
