@@ -9173,7 +9173,6 @@ function validate_ccloud_connector_up() {
   if [ $? -ne 1 ]
   then
     first_line=$(head -n 1 "$tmp_dir_validate/update-connector-config.sh")
-
     if [[ $first_line == *"playground"* ]]
     then
       bash "$tmp_dir_validate/update-connector-config.sh" > /dev/null 2>&1
@@ -9207,12 +9206,10 @@ function ccloud::retry() {
             echo "ERROR: Failed after $curr_wait seconds. Please troubleshoot and run again."
             return 1
         else
-            printf "."
             curr_wait=$((curr_wait+sleep_interval))
             sleep $sleep_interval
         fi
     done
-    printf "\n"
 }
 
 function wait_for_ccloud_connector_up() {
@@ -11030,12 +11027,10 @@ function ccloud::retry() {
             echo "ERROR: Failed after $curr_wait seconds. Please troubleshoot and run again."
             return 1
         else
-            printf "."
             curr_wait=$((curr_wait+sleep_interval))
             sleep $sleep_interval
         fi
     done
-    printf "\n"
 }
 function ccloud::version_gt() {
   test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
@@ -22659,6 +22654,15 @@ playground_connector_create_or_update_command() {
   fi
 
   echo "$json_content" > "/tmp/config-$connector"
+
+  log "FIXTHIS TO REMOVE"
+
+  log "json"
+  echo "$json_content" | grep -v "kafka.api.secret"
+
+  log "file"
+  cat "/tmp/config-$connector" | grep -v "kafka.api.secret"
+
   if [ -z "$GITHUB_RUN_NUMBER" ]
   then
       if [[ "$OSTYPE" == "darwin"* ]]

@@ -185,6 +185,16 @@ else
 fi
 
 echo "$json_content" > "/tmp/config-$connector"
+
+log "FIXTHIS TO REMOVE"
+
+log "json"
+echo "$json_content" | grep -v "kafka.api.secret"
+
+log "file"
+cat "/tmp/config-$connector" | grep -v "kafka.api.secret"
+
+
 if [ -z "$GITHUB_RUN_NUMBER" ]
 then
     if [[ "$OSTYPE" == "darwin"* ]]
