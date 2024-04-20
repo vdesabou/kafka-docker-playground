@@ -70,7 +70,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "tasks.max": "1"
 }
 EOF
-wait_for_ccloud_connector_up $connector_name 600
+wait_for_ccloud_connector_up $connector_name 180
 
 log "Login with sfdx CLI"
 docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""

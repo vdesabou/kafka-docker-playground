@@ -95,7 +95,7 @@ playground connector create-or-update --connector $connector_name << EOF
   "headers": "Content-Type: application/json"
 }
 EOF
-wait_for_ccloud_connector_up $connector_name 600
+wait_for_ccloud_connector_up $connector_name 180
 
 connectorId=$(get_ccloud_connector_lcc $connector_name)
 

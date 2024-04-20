@@ -107,7 +107,7 @@ playground connector create-or-update --connector $connector_name << EOF
     "tasks.max" : "1"
 }
 EOF
-wait_for_ccloud_connector_up $connector_name 600
+wait_for_ccloud_connector_up $connector_name 180
 
 log "Send messages to Azure Cosmos DB"
 docker exec -e AZURE_COSMOSDB_DB_ENDPOINT_URI="$AZURE_COSMOSDB_DB_ENDPOINT_URI" -e AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY="$AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY" -e AZURE_COSMOSDB_DB_NAME="$AZURE_COSMOSDB_DB_NAME" -e AZURE_COSMOSDB_CONTAINER_NAME="$AZURE_COSMOSDB_CONTAINER_NAME" azure-cosmos-client bash -c "python /insert-data.py"

@@ -222,7 +222,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "tasks.max" : "1"
 }
 EOF
-wait_for_ccloud_connector_up $connector_name 600
+wait_for_ccloud_connector_up $connector_name 180
 
 #      "ssl.server.cert.dn": "CN=server,C=US", not needed as we use verify-ca
 

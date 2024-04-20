@@ -94,7 +94,7 @@ playground connector create-or-update --connector $connector_name << EOF
     "tasks.max" : "1"
 }
 EOF
-wait_for_ccloud_connector_up $connector_name 600
+wait_for_ccloud_connector_up $connector_name 180
 
 log "Verify we have received the data in $TOPIC topic"
 playground topic consume --topic $TOPIC --min-expected-messages 10 --timeout 60

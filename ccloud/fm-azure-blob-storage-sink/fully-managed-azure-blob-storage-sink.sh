@@ -85,7 +85,7 @@ playground connector create-or-update --connector $connector_name << EOF
     "tasks.max" : "1"
 }
 EOF
-wait_for_ccloud_connector_up $connector_name 600
+wait_for_ccloud_connector_up $connector_name 180
 
 log "Sending messages to topic blob_topic"
 playground topic produce -t blob_topic --nb-messages 1000 << 'EOF'
