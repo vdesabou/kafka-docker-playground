@@ -46,6 +46,13 @@ log "Delete table, this might fail"
 aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION
 set -e
 
+function cleanup_cloud_resources {
+    log "Delete table $DYNAMODB_TABLE"
+    check_if_continue
+    aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION
+}
+trap cleanup_cloud_resources EXIT
+
 bootstrap_ccloud_environment
 
 set +e
@@ -103,7 +110,3 @@ log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
 playground connector delete --connector $connector_name
-
-log "Delete table $DYNAMODB_TABLE"
-check_if_continue
-aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION

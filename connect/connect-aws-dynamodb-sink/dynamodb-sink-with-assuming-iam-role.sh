@@ -42,6 +42,13 @@ log "Delete table, this might fail"
 aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION
 set -e
 
+function cleanup_cloud_resources {
+    log "Delete table $DYNAMODB_TABLE"
+    check_if_continue
+    aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION
+}
+trap cleanup_cloud_resources EXIT
+
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.with-assuming-iam-role.yml"
 
@@ -80,7 +87,3 @@ log "Verify data is in DynamoDB"
 aws dynamodb scan --table-name $DYNAMODB_TABLE --region $AWS_REGION  > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "value1" /tmp/result.log
-
-log "Delete table $DYNAMODB_TABLE"
-check_if_continue
-aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION
