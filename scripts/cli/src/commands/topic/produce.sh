@@ -415,7 +415,13 @@ function generate_data() {
                 docker run -u0 --rm -v $tmp_dir:/tmp/ -v $schema_file:/app/schema.proto -e NB_MESSAGES=$nb_messages_to_generate vdesabou/protobuf-faker bash -c "bash /app/produce.sh && chown -R $(id -u $USER):$(id -g $USER) /tmp/" > $tmp_dir/out.json
             ;;
             raw)
-                if jq -e . >/dev/null 2>&1 <<< "$(cat "$schema_file")"
+                if jq -e . >/dev/null 2>&1 <<< "$(head -1 "$schema_file")"
+                then
+                    log "💫 payload is one json per line, one json record per line will be sent"
+                    set +e
+                    repcat "$schema_file" | head -n "$nb_messages_to_generate" > $tmp_dir/out.json
+                    set -e
+                elif jq -e . >/dev/null 2>&1 <<< "$(cat "$schema_file")"
                 then
                     log "💫 payload is single json, it will be sent as one record"
                     jq -c . "$schema_file" > $tmp_dir/minified.json
