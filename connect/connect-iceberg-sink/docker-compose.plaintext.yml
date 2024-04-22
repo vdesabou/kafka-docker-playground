@@ -1,0 +1,91 @@
+---
+version: '3.5'
+services:
+  # based on https://github.com/Wuerike/kafka-iceberg-streaming/tree/main
+  minio:
+    image: minio/minio
+    hostname: minio
+    container_name: minio
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_DOMAIN=minio
+    networks:
+      default:
+        aliases:
+          - warehouse.minio
+    ports:
+      - 9001:9001
+      - 9000:9000
+    command: ["server", "/data", "--console-address", ":9001"]
+
+  aws:
+    image: amazon/aws-cli
+    container_name: aws-cli
+    command: |
+      -c "sleep 2 && \
+      aws --endpoint-url http://minio:9000 s3 mb s3://warehouse --region eu-west-1 || exit 0"
+    entrypoint: [/bin/bash]
+    environment: 
+      AWS_ACCESS_KEY_ID: "minioadmin"
+      AWS_SECRET_ACCESS_KEY: "minioadmin"
+    depends_on: 
+      - minio
+
+  spark-iceberg:
+    image: tabulario/spark-iceberg
+    hostname: spark-iceberg
+    container_name: spark-iceberg
+    build: ../../connect/connect-iceberg-sink/spark/
+    depends_on:
+      - rest
+      - minio
+    environment:
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+      AWS_REGION: eu-west-1
+      SPARK_DEFAULTS: |
+        spark.sql.extensions                    org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions
+        spark.sql.catalog.iceberg               org.apache.iceberg.spark.SparkCatalog
+        spark.sql.catalog.iceberg.catalog-impl  org.apache.iceberg.rest.RESTCatalog
+        spark.sql.catalog.iceberg.uri           http://rest:8181
+        spark.sql.catalog.iceberg.io-impl       org.apache.iceberg.aws.s3.S3FileIO
+        spark.sql.catalog.iceberg.warehouse     s3://warehouse/wh/
+        spark.sql.catalog.iceberg.s3.endpoint   http://minio:9000
+        spark.sql.catalog.iceberg.s3.path-style-access  true
+        spark.sql.defaultCatalog                iceberg
+        spark.sql.catalogImplementation         in-memory
+        spark.eventLog.enabled                  true
+        spark.eventLog.dir                      /home/iceberg/spark-events
+        spark.history.fs.logDirectory           /home/iceberg/spark-events
+        spark.jars.packages                     org.apache.hadoop:hadoop-aws:3.2.0
+    ports:
+      - 8888:8888
+      # - 8080:8080
+      # - 10000:10000
+      # - 10001:10001
+    volumes:
+      - ../../connect/connect-iceberg-sink/spark:/home/iceberg/scripts
+      - ../../connect/connect-iceberg-sink/notebooks:/home/iceberg/notebooks/notebooks
+    command: ["echo \"$$SPARK_DEFAULTS\" > /opt/spark/conf/spark-defaults.conf && spark-submit /home/iceberg/scripts/create_table.py && notebook"]
+
+  rest:
+    image: tabulario/iceberg-rest
+    hostname: rest
+    container_name: rest
+    ports:
+      - 8181:8181
+    environment:
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
+      - AWS_REGION=eu-west-1
+      - CATALOG_WAREHOUSE=s3://warehouse/
+      - CATALOG_IO__IMPL=org.apache.iceberg.aws.s3.S3FileIO
+      - CATALOG_S3_ENDPOINT=http://minio:9000
+      - CATALOG_S3_PATH__STYLE__ACCESS=True
+
+  connect:
+    depends_on:
+      - spark-iceberg
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/tabular-iceberg-kafka-connect
