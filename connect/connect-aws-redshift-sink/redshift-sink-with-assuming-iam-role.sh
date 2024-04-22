@@ -74,6 +74,15 @@ log "Create AWS Redshift cluster"
 # https://docs.aws.amazon.com/redshift/latest/mgmt/getting-started-cli.html
 aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password "$PASSWORD" --node-type dc2.large --cluster-type single-node --publicly-accessible
 
+function cleanup_cloud_resources {
+  log "Delete AWS Redshift cluster $CLUSTER_NAME"
+  check_if_continue
+  aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot
+  log "Delete security group sg$CLUSTER_NAME, if required"
+  aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
+}
+trap cleanup_cloud_resources EXIT
+
 # Verify AWS Redshift cluster has started within MAX_WAIT seconds
 MAX_WAIT=480
 CUR_WAIT=0

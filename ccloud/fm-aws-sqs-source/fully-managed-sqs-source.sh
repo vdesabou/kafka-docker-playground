@@ -64,6 +64,13 @@ set -e
 log "Create a FIFO queue $QUEUE_NAME"
 aws sqs create-queue --queue-name $QUEUE_NAME
 
+function cleanup_cloud_resources {
+    log "Delete SQS queue ${QUEUE_NAME}"
+    check_if_continue
+    aws sqs delete-queue --queue-url ${QUEUE_URL}
+}
+trap cleanup_cloud_resources EXIT
+
 log "Sending messages to $QUEUE_URL"
 cd ../../ccloud/fm-aws-sqs-source
 aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-message-batch.json
@@ -96,10 +103,6 @@ sleep 10
 
 log "Verify we have received the data in test-sqs-source topic"
 playground topic consume --topic test-sqs-source --min-expected-messages 2 --timeout 60
-
-log "Delete queue ${QUEUE_URL}"
-aws sqs delete-queue --queue-url ${QUEUE_URL}
-check_if_continue
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
