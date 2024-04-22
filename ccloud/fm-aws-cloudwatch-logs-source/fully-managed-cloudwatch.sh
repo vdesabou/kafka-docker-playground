@@ -60,6 +60,14 @@ aws logs create-log-group --log-group-name $LOG_GROUP
 log "Create a log stream in AWS CloudWatch Logs."
 aws logs create-log-stream --log-group-name $LOG_GROUP --log-stream $LOG_STREAM
 
+function cleanup_cloud_resources {
+    log "Do you want to delete the log group $LOG_GROUP ?"
+    check_if_continue
+    aws logs delete-log-stream --log-group-name "$LOG_GROUP" --log-stream-name "$LOG_STREAM"
+    aws logs delete-log-group --log-group-name "$LOG_GROUP"
+}
+trap cleanup_cloud_resources EXIT
+
 log "Insert Records into your log stream."
 # If this is the first time inserting logs into a new log stream, then no sequence token is needed.
 # However, after the first put, there will be a sequence token returned that will be needed as a parameter in the next put.
@@ -103,8 +111,3 @@ log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
 playground connector delete --connector $connector_name
-
-log "Do you want to delete the log group $LOG_GROUP ?"
-check_if_continue
-aws logs delete-log-stream --log-group-name "$LOG_GROUP" --log-stream-name "$LOG_STREAM"
-aws logs delete-log-group --log-group-name "$LOG_GROUP"
