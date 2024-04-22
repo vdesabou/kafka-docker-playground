@@ -98,6 +98,13 @@ sleep 5
 log "Create a Kinesis stream $KINESIS_STREAM_NAME"
 aws kinesis create-stream --stream-name $KINESIS_STREAM_NAME --shard-count 1 --region $AWS_REGION
 
+function cleanup_cloud_resources {
+    log "Delete the Kinesis stream"
+    check_if_continue
+    aws kinesis delete-stream --stream-name $KINESIS_STREAM_NAME --region $AWS_REGION
+}
+trap cleanup_cloud_resources EXIT
+
 log "Sleep 60 seconds to let the Kinesis stream being fully started"
 sleep 60
 
@@ -127,7 +134,3 @@ EOF
 
 log "Verify we have received the data in kinesis_topic topic"
 playground topic consume --topic kinesis_topic --min-expected-messages 1 --timeout 60
-
-log "Delete the stream"
-check_if_continue
-aws kinesis delete-stream --stream-name $KINESIS_STREAM_NAME --region $AWS_REGION

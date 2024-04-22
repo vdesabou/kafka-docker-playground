@@ -64,6 +64,13 @@ cp add.zip /tmp/
 aws lambda create-function --function-name "$LAMBDA_FUNCTION_NAME" --zip-file fileb:///tmp/add.zip --handler add.lambda_handler --runtime python3.8 --role "$LAMBDA_ROLE"
 cd -
 
+function cleanup_cloud_resources {
+  log "Cleanup role and function"
+  check_if_continue
+  aws iam delete-role --role-name $LAMBDA_ROLE_NAME
+  aws lambda delete-function --function-name $LAMBDA_FUNCTION_NAME
+}
+trap cleanup_cloud_resources EXIT
 
 bootstrap_ccloud_environment
 
@@ -127,12 +134,6 @@ playground topic consume --topic success-$connectorId --min-expected-messages 10
 
 playground topic consume --topic error-$connectorId --min-expected-messages 0 --timeout 60
 
-log "Cleanup role and function"
-check_if_continue
-aws iam delete-role --role-name $LAMBDA_ROLE_NAME
-aws lambda delete-function --function-name $LAMBDA_FUNCTION_NAME
-
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
-
 playground connector delete --connector $connector_name
