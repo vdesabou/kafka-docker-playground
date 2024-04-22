@@ -48,6 +48,21 @@ set -e
 log "Create a BigTable Instance and Database"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances create $GCP_BIGTABLE_INSTANCE --project $GCP_PROJECT --cluster-config=id=$GCP_BIGTABLE_INSTANCE,zone=$GCP_BIGTABLE_REGION --display-name="playground-bigtable-instance"
 
+function cleanup_cloud_resources {
+  log "Delete GCP BigTable table kafka_big_query_stats"
+  check_if_continue
+  docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE deletetable kafka_big_query_stats
+
+  log "Delete GCP BigTable instance $GCP_BIGTABLE_INSTANCE"
+  check_if_continue
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances delete $GCP_BIGTABLE_INSTANCE --project $GCP_PROJECT  << EOF
+Y
+EOF
+
+  docker rm -f gcloud-config
+}
+trap cleanup_cloud_resources EXIT
+
 log "Sending messages to topic big_query_stats"
 playground topic produce -t big_query_stats --nb-messages 1 --forced-value '{"users": {"name":"Bob","friends": "1000"}}' --key "simple-key-1" << 'EOF'
 {
@@ -106,15 +121,3 @@ log "Verify data is in GCP BigTable"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE read kafka_big_query_stats > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "Bob" /tmp/result.log
-
-log "Delete table"
-check_if_continue
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE deletetable kafka_big_query_stats
-
-log "Deleting instance"
-check_if_continue
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances delete $GCP_BIGTABLE_INSTANCE --project $GCP_PROJECT  << EOF
-Y
-EOF
-
-docker rm -f gcloud-config
