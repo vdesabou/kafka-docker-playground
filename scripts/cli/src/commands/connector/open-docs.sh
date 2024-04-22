@@ -47,8 +47,7 @@ else
                     open "$short_url"
                 fi
             else
-                logerror "❌ Could not find documentation link in manifest file $manifest_file"
-                exit 1
+                doc_available=0
             fi
         else
             doc_available=0
