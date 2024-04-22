@@ -35,6 +35,12 @@ az group create \
     --name $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
     --tags owner_email=$AZ_USER
+function cleanup_cloud_resources {
+    log "Deleting resource group $AZURE_RESOURCE_GROUP"
+    check_if_continue
+    az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
+}
+trap cleanup_cloud_resources EXIT
 log "Creating Azure Storage Account $AZURE_ACCOUNT_NAME"
 az storage account create \
     --name $AZURE_ACCOUNT_NAME \
@@ -121,7 +127,3 @@ log "Getting one of the avro files locally and displaying content with avro-tool
 az storage blob download --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --name topics/blob_topic/partition=0/blob_topic+0+0000000000.avro --file /tmp/blob_topic+0+0000000000.avro
 
 docker run --quiet --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/blob_topic+0+0000000000.avro
-
-log "Deleting resource group"
-check_if_continue
-az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

@@ -46,6 +46,12 @@ az group create \
     --name $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
     --tags owner_email=$AZ_USER
+function cleanup_cloud_resources {
+    log "Deleting resource group $AZURE_RESOURCE_GROUP"
+    check_if_continue
+    az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
+}
+trap cleanup_cloud_resources EXIT
 log "Creating SQL server instance $AZURE_SQL_NAME"
 az sql server create \
     --name $AZURE_SQL_NAME \
@@ -135,7 +141,3 @@ EOF
 sleep 5
 
 playground topic consume --topic synapse-customers --min-expected-messages 4
-
-log "Deleting resource group"
-check_if_continue
-az group delete --name $AZURE_RESOURCE_GROUP --yes

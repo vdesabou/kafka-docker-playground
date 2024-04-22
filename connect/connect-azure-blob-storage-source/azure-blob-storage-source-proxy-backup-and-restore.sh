@@ -41,6 +41,12 @@ az group create \
     --name $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
     --tags owner_email=$AZ_USER
+function cleanup_cloud_resources {
+    log "Deleting resource group $AZURE_RESOURCE_GROUP"
+    check_if_continue
+    az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
+}
+trap cleanup_cloud_resources EXIT
 log "Creating Azure Storage Account $AZURE_ACCOUNT_NAME"
 az storage account create \
     --name $AZURE_ACCOUNT_NAME \
@@ -161,7 +167,3 @@ sleep 5
 
 log "Verifying topic copy_of_blob_topic"
 playground topic consume --topic copy_of_blob_topic --min-expected-messages 3 --timeout 60
-
-log "Deleting resource group"
-check_if_continue
-az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

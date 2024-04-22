@@ -50,6 +50,12 @@ az group create \
     --name $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
     --tags owner_email=$AZ_USER
+function cleanup_cloud_resources {
+    log "Deleting resource group $AZURE_RESOURCE_GROUP"
+    check_if_continue
+    az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
+}
+trap cleanup_cloud_resources EXIT
 log "Creating Azure Service Bus namespace"
 az servicebus namespace create \
     --name $AZURE_SERVICE_BUS_NAMESPACE \
@@ -107,7 +113,3 @@ sleep 180
 
 log "Verifying topic servicebus-topic"
 playground topic consume --topic servicebus-topic --min-expected-messages 5 --timeout 60
-
-log "Deleting resource group"
-check_if_continue
-az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

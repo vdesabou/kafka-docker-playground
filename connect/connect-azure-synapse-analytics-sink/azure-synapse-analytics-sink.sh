@@ -39,6 +39,12 @@ az group create \
     --name $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
     --tags owner_email=$AZ_USER
+function cleanup_cloud_resources {
+    log "Deleting resource group $AZURE_RESOURCE_GROUP"
+    check_if_continue
+    az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
+}
+trap cleanup_cloud_resources EXIT
 log "Creating SQL server instance $AZURE_SQL_NAME"
 az sql server create \
     --name $AZURE_SQL_NAME \
@@ -154,7 +160,3 @@ log "Check Azure Synapse Analytics for Data"
 docker run -i fabiang/sqlcmd -S "$AZURE_SQL_NAME.database.windows.net,1433" -I -U "myadmin" -P "$PASSWORD" -d "$AZURE_DATA_WAREHOUSE_NAME" -Q "select * from kafka_products;" -s"|"  > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "notebooks" /tmp/result.log
-
-log "Deleting resource group"
-check_if_continue
-az group delete --name $AZURE_RESOURCE_GROUP --yes

@@ -34,6 +34,12 @@ az group create \
     --name $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
     --tags owner_email=$AZ_USER
+function cleanup_cloud_resources {
+    log "Deleting resource group $AZURE_RESOURCE_GROUP"
+    check_if_continue
+    az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
+}
+trap cleanup_cloud_resources EXIT
 log "Creating Azure Search service"
 az search service create \
     --name $AZURE_SEARCH_SERVICE_NAME \
@@ -161,7 +167,3 @@ cat /tmp/result.log
 grep "Marriott" /tmp/result.log
 grep "HolidayInn" /tmp/result.log
 grep "Motel8" /tmp/result.log
-
-log "Deleting resource group"
-check_if_continue
-az group delete --name $AZURE_RESOURCE_GROUP --yes

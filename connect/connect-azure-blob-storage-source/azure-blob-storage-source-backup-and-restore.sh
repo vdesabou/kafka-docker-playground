@@ -41,6 +41,12 @@ az group create \
     --name $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
     --tags owner_email=$AZ_USER
+function cleanup_cloud_resources {
+    log "Deleting resource group $AZURE_RESOURCE_GROUP"
+    check_if_continue
+    az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
+}
+trap cleanup_cloud_resources EXIT
 log "Creating Azure Storage Account $AZURE_ACCOUNT_NAME"
 az storage account create \
     --name $AZURE_ACCOUNT_NAME \
@@ -134,27 +140,23 @@ docker run --quiet --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/blob_topic+
 log "Creating Azure Blob Storage Source connector"
 playground connector create-or-update --connector azure-blob-source  << EOF
 {
-                "connector.class": "io.confluent.connect.azure.blob.storage.AzureBlobStorageSourceConnector",
-                "tasks.max": "1",
-                "azblob.account.name": "\${file:/data:AZURE_ACCOUNT_NAME}",
-                "azblob.account.key": "\${file:/data:AZURE_ACCOUNT_KEY}",
-                "azblob.container.name": "\${file:/data:AZURE_CONTAINER_NAME}",
-                "format.class": "io.confluent.connect.cloud.storage.source.format.CloudStorageAvroFormat",
-                "confluent.license": "",
-                "confluent.topic.bootstrap.servers": "broker:9092",
-                "confluent.topic.replication.factor": "1",
-                "transforms" : "AddPrefix",
-                "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
-                "transforms.AddPrefix.regex" : ".*",
-                "transforms.AddPrefix.replacement" : "copy_of_\$0"
-          }
+    "connector.class": "io.confluent.connect.azure.blob.storage.AzureBlobStorageSourceConnector",
+    "tasks.max": "1",
+    "azblob.account.name": "\${file:/data:AZURE_ACCOUNT_NAME}",
+    "azblob.account.key": "\${file:/data:AZURE_ACCOUNT_KEY}",
+    "azblob.container.name": "\${file:/data:AZURE_CONTAINER_NAME}",
+    "format.class": "io.confluent.connect.cloud.storage.source.format.CloudStorageAvroFormat",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1",
+    "transforms" : "AddPrefix",
+    "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
+    "transforms.AddPrefix.regex" : ".*",
+    "transforms.AddPrefix.replacement" : "copy_of_\$0"
+}
 EOF
 
 sleep 5
 
 log "Verifying topic copy_of_blob_topic"
 playground topic consume --topic copy_of_blob_topic --min-expected-messages 3 --timeout 60
-
-log "Deleting resource group"
-check_if_continue
-az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

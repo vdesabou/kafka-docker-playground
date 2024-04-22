@@ -37,6 +37,13 @@ az group create \
     --location $AZURE_REGION \
     --tags owner_email=$AZ_USER
 
+function cleanup_cloud_resources {
+    log "Deleting resource group $AZURE_RESOURCE_GROUP"
+    check_if_continue
+    az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
+}
+trap cleanup_cloud_resources EXIT
+
 log "Creating storage account $AZURE_STORAGE_NAME in resource $AZURE_RESOURCE_GROUP"
 az storage account create \
     --name $AZURE_STORAGE_NAME \
@@ -127,7 +134,3 @@ sleep 10
 
 log "Confirm that the messages were delivered to the result topic in Kafka"
 playground topic consume --topic test-result --min-expected-messages 3 --timeout 60
-
-log "Deleting resource group"
-check_if_continue
-az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

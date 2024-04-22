@@ -50,6 +50,12 @@ az group create \
     --name $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
     --tags owner_email=$AZ_USER
+function cleanup_cloud_resources {
+    log "Deleting resource group $AZURE_RESOURCE_GROUP"
+    check_if_continue
+    az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
+}
+trap cleanup_cloud_resources EXIT
 log "Creating Azure Event Hubs namespace"
 az eventhubs namespace create \
     --name $AZURE_EVENT_HUBS_NAMESPACE \
@@ -110,7 +116,3 @@ sleep 5
 
 log "Verifying topic event_hub_topic"
 playground topic consume --topic event_hub_topic --min-expected-messages 2 --timeout 60
-
-log "Deleting resource group"
-check_if_continue
-az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

@@ -54,6 +54,17 @@ az cosmosdb create \
     --resource-group $AZURE_RESOURCE_GROUP \
     --locations regionName=$AZURE_REGION
 
+function cleanup_cloud_resources {
+    log "Delete Cosmos DB instance"
+    check_if_continue
+    az cosmosdb delete -g $AZURE_RESOURCE_GROUP -n $AZURE_COSMOSDB_SERVER_NAME --yes
+
+    log "Deleting resource group $AZURE_RESOURCE_GROUP"
+    check_if_continue
+    az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
+}
+trap cleanup_cloud_resources EXIT
+
 log "Create the database"
 az cosmosdb sql database create \
     --name $AZURE_COSMOSDB_DB_NAME \
@@ -122,10 +133,3 @@ cat /tmp/result.log
 grep "Marriott" /tmp/result.log
 grep "HolidayInn" /tmp/result.log
 grep "Motel8" /tmp/result.log
-
-log "Delete Cosmos DB instance"
-check_if_continue
-az cosmosdb delete -g $AZURE_RESOURCE_GROUP -n $AZURE_COSMOSDB_SERVER_NAME --yes
-
-log "Deleting resource group"
-az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

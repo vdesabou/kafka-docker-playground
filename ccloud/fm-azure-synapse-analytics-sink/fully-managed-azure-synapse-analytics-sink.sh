@@ -39,6 +39,13 @@ az group create \
     --name $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
     --tags owner_email=$AZ_USER
+function cleanup_cloud_resources {
+    log "Deleting resource group $AZURE_RESOURCE_GROUP"
+    check_if_continue
+    az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
+}
+trap cleanup_cloud_resources EXIT
+
 log "Creating SQL server instance $AZURE_SQL_NAME"
 az sql server create \
     --name $AZURE_SQL_NAME \
@@ -170,7 +177,3 @@ log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
 playground connector delete --connector $connector_name
-
-log "Deleting resource group"
-check_if_continue
-az group delete --name $AZURE_RESOURCE_GROUP --yes
