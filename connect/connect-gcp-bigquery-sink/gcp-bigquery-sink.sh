@@ -50,6 +50,14 @@ set -e
 log "Create dataset $GCP_PROJECT.$DATASET"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" mk --dataset --description "used by playground" "$DATASET"
 
+function cleanup_cloud_resources {
+  log "Drop GCP BigQuery dataset $DATASET"
+  check_if_continue
+  docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" rm -r -f -d "$DATASET"
+  docker rm -f gcloud-config
+}
+trap cleanup_cloud_resources EXIT
+
 log "Creating GCP BigQuery Sink connector"
 playground connector create-or-update --connector gcp-bigquery-sink  << EOF
 {
@@ -115,8 +123,3 @@ log "Verify data is in GCP BigQuery:"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" query "SELECT * FROM $DATASET.products;" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "notebooks" /tmp/result.log
-
-log "Drop dataset $DATASET"
-check_if_continue
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" rm -r -f -d "$DATASET"
-docker rm -f gcloud-config
