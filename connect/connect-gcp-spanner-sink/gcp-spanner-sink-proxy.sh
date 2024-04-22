@@ -56,6 +56,19 @@ log "Create a Spanner Instance and Database"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances create $GCP_SPANNER_INSTANCE --project $GCP_PROJECT --config=regional-$GCP_SPANNER_REGION --description=playground-spanner-instance --nodes=1
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases create $GCP_SPANNER_DATABASE --instance $GCP_SPANNER_INSTANCE --project $GCP_PROJECT
 
+function cleanup_cloud_resources {
+  log "Deleting GCP Spanner database $GCP_SPANNER_DATABASE"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases delete $GCP_SPANNER_DATABASE --instance $GCP_SPANNER_INSTANCE --project $GCP_PROJECT << EOF
+Y
+EOF
+  log "Deleting GCP Spanner instance $GCP_SPANNER_INSTANCE"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances delete $GCP_SPANNER_INSTANCE --project $GCP_PROJECT  << EOF
+Y
+EOF
+  docker rm -f gcloud-config
+}
+trap cleanup_cloud_resources EXIT
+
 log "Sending messages to topic products"
 playground topic produce -t products --nb-messages 2 << 'EOF'
 {
@@ -127,13 +140,3 @@ log "Verify data is in GCP Spanner"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases execute-sql $GCP_SPANNER_DATABASE --instance $GCP_SPANNER_INSTANCE --project $GCP_PROJECT --sql='select * from kafka_products' > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "notebooks" /tmp/result.log
-
-log "Deleting Database and Instance"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases delete $GCP_SPANNER_DATABASE --instance $GCP_SPANNER_INSTANCE --project $GCP_PROJECT << EOF
-Y
-EOF
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances delete $GCP_SPANNER_INSTANCE --project $GCP_PROJECT  << EOF
-Y
-EOF
-
-docker rm -f gcloud-config
