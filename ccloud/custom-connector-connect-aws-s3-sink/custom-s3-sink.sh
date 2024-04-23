@@ -32,6 +32,16 @@ set -e
 log "Uploading custom plugin $plugin_name"
 confluent connect custom-plugin create $plugin_name --plugin-file confluentinc-kafka-connect-s3-10.5.7.zip --connector-class io.confluent.connect.s3.S3SinkConnector --connector-type SINK --sensitive-properties "aws.secret.access.key"
 ret=$?
+
+function cleanup_resources {
+    log "Do you want to delete the custom plugin $plugin_name ($plugin_id) and custom connector $connector_name ?"
+    check_if_continue
+
+    playground connector delete --connector $connector_name
+    confluent connect custom-plugin delete $plugin_id --force
+}
+trap cleanup_resources EXIT
+
 set -e
 if [ $ret -eq 0 ]
 then
@@ -170,14 +180,15 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-sleep 120
+sleep 10
+
+playground connector show-lag --connector $connector_name
 
 # log "Listing objects of in S3"
 # aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
 
+log "Getting one of the avro files locally and displaying content with avro-tools"
+aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/$TAG/s3_topic/partition=0/s3_topic+0+0000000000.avro s3_topic+0+0000000000.avro
 
-log "Do you want to delete the custom plugin $plugin_name ($plugin_id) and custom connector $connector_name ?"
-check_if_continue
-
-playground connector delete --connector $connector_name
-confluent connect custom-plugin delete $plugin_id --force
+docker run --quiet --rm -v ${DIR}:/tmp vdesabou/avro-tools tojson /tmp/s3_topic+0+0000000000.avro
+rm -f s3_topic+0+0000000000.avro
