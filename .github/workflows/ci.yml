@@ -511,6 +511,7 @@ jobs:
   post-build:
     name: Cleanup resources and Update README
     runs-on: ubuntu-latest
+    if: always()
     needs: [pre-build, build, execute_one_test]
     steps:
       - name: Checkout code
