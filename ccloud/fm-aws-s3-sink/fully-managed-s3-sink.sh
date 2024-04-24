@@ -35,7 +35,11 @@ fi
 
 bootstrap_ccloud_environment
 
-
+set +e
+playground topic delete --topic s3_topic
+sleep 3
+playground topic create --topic s3_topic --nb-partitions 1
+set -e
 
 AWS_BUCKET_NAME=pg-bucket-${USER}
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
@@ -61,7 +65,7 @@ playground topic create --topic s3_topic
 set -e
 
 log "Sending messages to topic s3_topic"
-playground topic produce -t s3_topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+playground topic produce -t s3_topic --nb-messages 1000 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -102,11 +106,17 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-sleep 120
+sleep 10
 
 # log "Listing objects of in S3"
 # aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
 
+log "Getting one of the avro files locally and displaying content with avro-tools"
+aws s3 cp --only-show-errors --recursive s3://$AWS_BUCKET_NAME/$TAG/s3_topic /tmp/s3_topic
+
+cp /tmp/s3_topic/*/*/*/*/s3_topic+0+0000000000.avro /tmp/s3_topic+0+0000000000.avro
+
+docker run --quiet --rm -v /tmp/:/tmp vdesabou/avro-tools tojson /tmp/s3_topic+0+0000000000.avro | grep value999
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
