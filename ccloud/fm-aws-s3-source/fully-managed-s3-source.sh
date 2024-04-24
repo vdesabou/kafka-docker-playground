@@ -37,7 +37,11 @@ fi
 
 bootstrap_ccloud_environment
 
-
+set +e
+playground topic delete --topic quick-start-topic
+sleep 3
+playground topic create --topic quick-start-topic --nb-partitions 1
+set -e
 
 AWS_BUCKET_NAME=pg-bucket-${USER}
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
