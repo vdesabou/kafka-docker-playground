@@ -511,7 +511,6 @@ jobs:
   post-build:
     name: Cleanup resources and Update README
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.test_name == '' }}
     needs: [pre-build, build, execute_one_test]
     steps:
       - name: Checkout code
