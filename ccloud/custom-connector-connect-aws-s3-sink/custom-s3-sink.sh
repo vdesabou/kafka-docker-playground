@@ -131,7 +131,7 @@ playground topic create --topic s3_topic
 set -e
 
 log "Sending messages to topic s3_topic"
-playground topic produce -t s3_topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+playground topic produce -t s3_topic --nb-messages 9 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -181,8 +181,6 @@ EOF
 wait_for_ccloud_connector_up $connector_name 180
 
 sleep 10
-
-playground connector show-lag --connector $connector_name
 
 # log "Listing objects of in S3"
 # aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
