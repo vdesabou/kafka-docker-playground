@@ -20,20 +20,7 @@ create_or_get_oracle_image "linuxx64_12201_database.zip" "../../connect/connect-
 log "Starting up oracle container to get generated cert from oracle server wallet"
 docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.pdb-table-mtls.yml" up -d oracle
 
-# Verify Oracle DB has started within MAX_WAIT seconds
-MAX_WAIT=900
-CUR_WAIT=0
-log "⌛ Waiting up to $MAX_WAIT seconds for Oracle DB to start"
-docker container logs oracle > /tmp/out.txt 2>&1
-while [[ ! $(cat /tmp/out.txt) =~ "DATABASE IS READY TO USE" ]]; do
-sleep 10
-docker container logs oracle > /tmp/out.txt 2>&1
-CUR_WAIT=$(( CUR_WAIT+10 ))
-if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-     logerror "ERROR: The logs in oracle container do not show 'DATABASE IS READY TO USE' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
-     exit 1
-fi
-done
+playground --output-level WARN container logs --container oracle --wait-for-log "DATABASE IS READY TO USE" --max-wait 900
 log "Oracle DB has started!"
 log "Setting up Oracle Database Prerequisites"
 docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
