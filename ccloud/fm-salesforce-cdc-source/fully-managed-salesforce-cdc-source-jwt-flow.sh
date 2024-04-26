@@ -87,8 +87,6 @@ playground connector create-or-update --connector $connector_name << EOF
      "salesforce.grant.type" : "JWT_BEARER",
      "salesforce.instance" : "$SALESFORCE_INSTANCE",
      "salesforce.username": "$SALESFORCE_USERNAME",
-     "salesforce.password": "$SALESFORCE_PASSWORD",
-     "salesforce.password.token": "$SALESFORCE_SECURITY_TOKEN",
 
      "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY_WITH_JWT",
      "salesforce.jwt.keystore.file": "data:text/plain;base64,$base64_truststore",
