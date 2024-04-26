@@ -20,20 +20,7 @@ sleep 3
 playground topic create --topic splunk-qs --nb-partitions 3
 set -e
 
-# Verify SPLUNK has started within MAX_WAIT seconds
-MAX_WAIT=2500
-CUR_WAIT=0
-log "⌛ Waiting up to $MAX_WAIT seconds for SPLUNK to start"
-docker container logs splunk > /tmp/out.txt 2>&1
-while [[ ! $(cat /tmp/out.txt) =~ "Ansible playbook complete, will begin streaming splunkd_stderr.log" ]]; do
-sleep 10
-docker container logs splunk > /tmp/out.txt 2>&1
-CUR_WAIT=$(( CUR_WAIT+10 ))
-if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-     logerror "ERROR: The logs in splunk container do not show 'Ansible playbook complete, will begin streaming splunkd_stderr.log' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
-     exit 1
-fi
-done
+playground --output-level WARN container logs --container splunk --wait-for-log "Ansible playbook complete, will begin streaming splunkd_stderr.log" --max-wait 2500
 log "SPLUNK has started!"
 
 
