@@ -22,20 +22,7 @@ docker compose build
 docker compose down -v --remove-orphans
 docker compose up -d --quiet-pull
 
-# Verify Oracle DB has started within MAX_WAIT seconds
-MAX_WAIT=900
-CUR_WAIT=0
-log "⌛ Waiting up to $MAX_WAIT seconds for Oracle DB to start"
-docker container logs oracle > /tmp/out.txt 2>&1
-while [[ ! $(cat /tmp/out.txt) =~ "Grant succeeded." ]]; do
-sleep 10
-docker container logs oracle > /tmp/out.txt 2>&1
-CUR_WAIT=$(( CUR_WAIT+10 ))
-if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-     logerror "ERROR: The logs in oracle container do not show 'Grant succeeded.' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
-     exit 1
-fi
-done
+playground --output-level WARN container logs --container oracle --wait-for-log "Grant succeeded." --max-wait 900
 log "Oracle DB has started!"
 
 log "create table"
