@@ -18,21 +18,7 @@ fi
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-
-# Verify VERTICA has started within MAX_WAIT seconds
-MAX_WAIT=2500
-CUR_WAIT=0
-log "⌛ Waiting up to $MAX_WAIT seconds for VERTICA to start"
-docker container logs vertica > /tmp/out.txt 2>&1
-while [[ ! $(cat /tmp/out.txt) =~ "Vertica is now running" ]]; do
-sleep 10
-docker container logs vertica > /tmp/out.txt 2>&1
-CUR_WAIT=$(( CUR_WAIT+10 ))
-if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-     logerror "ERROR: The logs in vertica container do not show 'Vertica is now running' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
-     exit 1
-fi
-done
+playground --output-level WARN container logs --container vertica --wait-for-log "Vertica is now running" --max-wait 600
 log "VERTICA has started!"
 
 log "Create the table and insert data."

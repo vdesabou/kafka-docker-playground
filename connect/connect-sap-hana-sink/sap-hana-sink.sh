@@ -45,20 +45,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 
-# Verify SAP HANA has started within MAX_WAIT seconds
-MAX_WAIT=2500
-CUR_WAIT=0
-log "⌛ Waiting up to $MAX_WAIT seconds for SAP HANA to start"
-docker container logs sap > /tmp/out.txt 2>&1
-while [[ ! $(cat /tmp/out.txt) =~ "Startup finished!" ]]; do
-sleep 10
-docker container logs sap > /tmp/out.txt 2>&1
-CUR_WAIT=$(( CUR_WAIT+10 ))
-if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-     logerror "ERROR: The logs in sap container do not show 'Startup finished!' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
-     exit 1
-fi
-done
+playground --output-level WARN container logs --container sap --wait-for-log "Startup finished!" --max-wait 2500
 log "SAP HANA has started!"
 
 log "Creating SAP HANA Sink connector"
