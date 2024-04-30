@@ -2,6 +2,11 @@
 version: '3.5'
 services:
   connect:
+    # build:
+    #   context: ../../connect/connect-filestream-sink/
+    #   args:
+    #     CP_CONNECT_IMAGE: ${CP_CONNECT_IMAGE}
+    #     CONNECT_TAG: ${CONNECT_TAG}
     environment:
       # in newer version, it is located in /usr/share/filestream-connectors
       CONNECT_PLUGIN_PATH: /usr/share/java/,/usr/share/confluent-hub-components/,/usr/share/filestream-connectors

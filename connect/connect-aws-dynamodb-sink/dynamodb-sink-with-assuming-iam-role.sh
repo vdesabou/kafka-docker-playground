@@ -43,6 +43,7 @@ aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION
 set -e
 
 function cleanup_cloud_resources {
+    set +e
     log "Delete table $DYNAMODB_TABLE"
     check_if_continue
     aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION

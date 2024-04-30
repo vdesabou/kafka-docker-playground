@@ -58,6 +58,7 @@ az cosmosdb create \
     --locations regionName=$AZURE_REGION
 
 function cleanup_cloud_resources {
+    set +e
     log "Delete Cosmos DB instance"
     check_if_continue
     az cosmosdb delete -g $AZURE_RESOURCE_GROUP -n $AZURE_COSMOSDB_SERVER_NAME --yes

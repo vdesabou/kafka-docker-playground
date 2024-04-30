@@ -55,6 +55,7 @@ log "Create a FIFO queue $QUEUE_NAME"
 aws sqs create-queue --queue-name $QUEUE_NAME
 
 function cleanup_cloud_resources {
+    set +e
     log "Delete SQS queue ${QUEUE_NAME}"
     check_if_continue
     aws sqs delete-queue --queue-url ${QUEUE_URL}

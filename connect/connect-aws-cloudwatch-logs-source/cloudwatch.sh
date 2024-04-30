@@ -60,6 +60,7 @@ log "Create a log stream in AWS CloudWatch Logs."
 aws logs create-log-stream --log-group-name $LOG_GROUP --log-stream $LOG_STREAM
 
 function cleanup_cloud_resources {
+    set +e
     log "Do you want to delete the log group $LOG_GROUP ?"
     check_if_continue
     aws logs delete-log-stream --log-group-name "$LOG_GROUP" --log-stream-name "$LOG_STREAM"

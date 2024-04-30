@@ -47,6 +47,7 @@ az group create \
     --location $AZURE_REGION \
     --tags owner_email=$AZ_USER
 function cleanup_cloud_resources {
+    set +e
     log "Deleting resource group $AZURE_RESOURCE_GROUP"
     check_if_continue
     az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

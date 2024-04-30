@@ -51,6 +51,7 @@ log "Create a Kinesis stream $KINESIS_STREAM_NAME"
 aws kinesis create-stream --stream-name $KINESIS_STREAM_NAME --shard-count 1 --region $AWS_REGION
 
 function cleanup_cloud_resources {
+    set +e
     log "Delete the Kinesis stream"
     check_if_continue
     aws kinesis delete-stream --stream-name $KINESIS_STREAM_NAME --region $AWS_REGION

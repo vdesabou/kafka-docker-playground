@@ -62,6 +62,7 @@ log "Create a Pub/Sub subscription called subscription-1"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions create --topic topic-1 subscription-1
 
 function cleanup_cloud_resources {
+    set +e
     log "Delete GCP PubSub topic and subscription"
     check_if_continue
     docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics delete topic-1
