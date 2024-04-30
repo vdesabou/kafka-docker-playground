@@ -34,7 +34,7 @@ playground connector create-or-update --connector iceberg-sink  << EOF
 }
 EOF
 
-sleep 10
+sleep 30
 
 playground connector show-lag
 
