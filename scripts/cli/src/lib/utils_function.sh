@@ -1329,7 +1329,12 @@ function get_3rdparty_file () {
   if [ $? -eq 0 ]
   then
       log "Downloading <s3://kafka-docker-playground/$folder/$file> from S3 bucket"
-      aws s3 cp --only-show-errors "s3://kafka-docker-playground/$folder/$file" .
+      if [ ! -z "$GITHUB_RUN_NUMBER" ]
+      then
+        aws s3 cp --only-show-errors "s3://kafka-docker-playground/$folder/$file" .
+      else
+        aws s3 cp "s3://kafka-docker-playground/$folder/$file" .
+      fi
       if [ $? -eq 0 ]; then
         log "📄 <s3://kafka-docker-playground/$folder/$file> was downloaded from S3 bucket"
       fi
@@ -1418,11 +1423,18 @@ function create_or_get_oracle_image() {
   if test -z "$(docker images -q $ORACLE_IMAGE)"
   then
     set +e
-    aws s3 ls s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar > /dev/null 2>&1
+    log "attempting to get the Oracle prebuilt docker image from Confluent S3 bucket (only works for Confluent employees)..."
+    log "command is <aws s3 ls s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar>"
+    aws s3 ls s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar
     if [ $? -eq 0 ]
     then
-        log "Downloading <s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar> from S3 bucket"
-        aws s3 cp --only-show-errors "s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar" .
+        log "Downloading prebuilt image <s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar> from S3 bucket"
+        if [ ! -z "$GITHUB_RUN_NUMBER" ]
+        then
+          aws s3 cp --only-show-errors "s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar" .
+        else
+          aws s3 cp "s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar" .
+        fi
         if [ $? -eq 0 ]
         then
           log "📄 <s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar> was downloaded from S3 bucket"
@@ -1434,15 +1446,16 @@ function create_or_get_oracle_image() {
 
           if [[ "$OSTYPE" == "darwin"* ]]
           then
-            log "🧹 Removing $ORACLE_IMAGE.tar"
+            log "🧹 Removing prebuilt image $ORACLE_IMAGE.tar"
             rm -f $ORACLE_IMAGE.tar
           else
-            log "🧹 Removing $ORACLE_IMAGE.tar with sudo"
+            log "🧹 Removing prebuilt image $ORACLE_IMAGE.tar with sudo"
             sudo rm -f $ORACLE_IMAGE.tar
           fi
         fi
     else
-        logwarn "If you're a Confluent employee, please check this link https://confluent.slack.com/archives/C0116NM415F/p1636391410032900 and also here https://confluent.slack.com/archives/C0116NM415F/p1636389483030900."
+      logwarn "If you're a Confluent employee, please check this link https://confluent.slack.com/archives/C0116NM415F/p1636391410032900 and also here https://confluent.slack.com/archives/C0116NM415F/p1636389483030900"
+      logwarn "re-run with <playground -v (or --vvv) run> to troubleshoot"
     fi
     set -e
   fi
@@ -1462,7 +1475,12 @@ function create_or_get_oracle_image() {
     if [ $? -eq 0 ]
     then
         log "Downloading <s3://kafka-docker-playground/3rdparty/oracle_database_$ORACLE_VERSION.tar> from S3 bucket"
-        aws s3 cp --only-show-errors "s3://kafka-docker-playground/3rdparty/oracle_database_$ORACLE_VERSION.tar" .
+        if [ ! -z "$GITHUB_RUN_NUMBER" ]
+        then
+          aws s3 cp --only-show-errors "s3://kafka-docker-playground/3rdparty/oracle_database_$ORACLE_VERSION.tar" .
+        else
+          aws s3 cp "s3://kafka-docker-playground/3rdparty/oracle_database_$ORACLE_VERSION.tar" .
+        fi
         if [ $? -eq 0 ]
         then
           log "📄 <s3://kafka-docker-playground/3rdparty/oracle_database_$ORACLE_VERSION.tar> was downloaded from S3 bucket"
@@ -1494,9 +1512,16 @@ function create_or_get_oracle_image() {
           if [ $? -eq 0 ]
           then
               log "Downloading <s3://kafka-docker-playground/3rdparty/${ZIP_FILE}> from S3 bucket"
-              aws s3 cp --only-show-errors "s3://kafka-docker-playground/3rdparty/${ZIP_FILE}" .
-              if [ $? -eq 0 ]; then
-                    log "📄 <s3://kafka-docker-playground/3rdparty/${ZIP_FILE}> was downloaded from S3 bucket"
+
+              if [ ! -z "$GITHUB_RUN_NUMBER" ]
+              then
+                aws s3 cp --only-show-errors "s3://kafka-docker-playground/3rdparty/${ZIP_FILE}" .
+              else
+                aws s3 cp "s3://kafka-docker-playground/3rdparty/${ZIP_FILE}" .
+              fi
+              if [ $? -eq 0 ]
+              then
+                log "📄 <s3://kafka-docker-playground/3rdparty/${ZIP_FILE}> was downloaded from S3 bucket"
               fi
           fi
           set -e
