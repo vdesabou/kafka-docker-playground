@@ -18,7 +18,7 @@ services:
             LDAP_DOMAIN: "confluentdemo.io"
             LDAP_BASE_DN: "dc=confluentdemo,dc=io"
         volumes:
-          - ../../environment/ldap-sasl-plain/ldap_users:/container/service/slapd/assets/config/bootstrap/ldif/custom
+            - ../../environment/ldap-sasl-plain/ldap_users:/container/service/slapd/assets/config/bootstrap/ldif/custom
         command: "--copy-service --loglevel debug"
 
     broker:

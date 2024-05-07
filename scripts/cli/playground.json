@@ -141,7 +141,7 @@
             "--enable-multiple-connect-workers"
           ],
           "argument": "",
-          "description": "🥉 Enable multiple connect node\n\nBy default, there is only one connect node enabled\n\nIt only works when plaintext environment is used\n"
+          "description": "🥉 Enable multiple connect node\n\nBy default, there is only one connect node enabled\n"
         },
         {
           "names": [

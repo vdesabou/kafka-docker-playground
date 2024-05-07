@@ -223,27 +223,20 @@ then
     logwarn "❌ --enable-multiple-connect-workers is not supported with ccloud examples"
     exit 1
   fi
-  if [[ $test_file == *"environment"* ]] && [[ $test_file != *"plaintext"* ]]
-  then
-    logwarn "❌ --enable-multiple-connect-workers is only supported with plaintext environment"
-    exit 1
-  fi
 
-  if [ ! -z $PLAYGROUND_ENVIRONMENT ] && [ "$PLAYGROUND_ENVIRONMENT" != "plaintext" ]
-  then
-    logwarn "❌ --enable-multiple-connect-workers is only supported with plaintext environment"
-    exit 1
-  fi
   array_flag_list+=("--enable-multiple-connect-workers")
   export ENABLE_CONNECT_NODES=true
 
   # determining the docker-compose file from from test_file
   docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
   docker_compose_file="${test_file_directory}/${docker_compose_file}"
-  cp $docker_compose_file /tmp/playground-backup-docker-compose.yml
-  yq -i '.services.connect2 = .services.connect' /tmp/playground-backup-docker-compose.yml
-  yq -i '.services.connect3 = .services.connect' /tmp/playground-backup-docker-compose.yml
-  cp /tmp/playground-backup-docker-compose.yml $docker_compose_file
+  if [ -f $docker_compose_file ]
+  then
+    cp $docker_compose_file /tmp/playground-backup-docker-compose.yml
+    yq -i '.services.connect2 = .services.connect' /tmp/playground-backup-docker-compose.yml
+    yq -i '.services.connect3 = .services.connect' /tmp/playground-backup-docker-compose.yml
+    cp /tmp/playground-backup-docker-compose.yml $docker_compose_file
+  fi
 fi
 
 if [[ -n "$enable_jmx_grafana" ]]
@@ -742,21 +735,6 @@ then
     then
       unset 'options[19]'
     fi
-  
-    if ([ ! -z $PLAYGROUND_ENVIRONMENT ] && [ "$PLAYGROUND_ENVIRONMENT" != "plaintext" ]) || ([[ $test_file == *"environment"* ]] && [[ $test_file != *"plaintext"* ]])
-    then
-      # --enable-multiple-connect-workers only for plaintext
-      unset 'options[17]'
-
-      array_flag_list=("${array_flag_list[@]/"--enable-multiple-connect-workers"}")
-      if [ ! -z $ENABLE_CONNECT_NODES ]
-      then
-        unset ENABLE_CONNECT_NODES
-        set +e
-        mv /tmp/playground-backup-docker-compose.yml $docker_compose_file > /dev/null 2>&1
-        set -e
-      fi
-    fi
 
     if [ ! -z $ENABLE_KSQLDB ]
     then
@@ -1083,10 +1061,13 @@ then
       # determining the docker-compose file from from test_file
       docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
       docker_compose_file="${test_file_directory}/${docker_compose_file}"
-      cp $docker_compose_file /tmp/playground-backup-docker-compose.yml
-      yq -i '.services.connect2 = .services.connect' /tmp/playground-backup-docker-compose.yml
-      yq -i '.services.connect3 = .services.connect' /tmp/playground-backup-docker-compose.yml
-      cp /tmp/playground-backup-docker-compose.yml $docker_compose_file
+      if [ -f $docker_compose_file ]
+      then
+        cp $docker_compose_file /tmp/playground-backup-docker-compose.yml
+        yq -i '.services.connect2 = .services.connect' /tmp/playground-backup-docker-compose.yml
+        yq -i '.services.connect3 = .services.connect' /tmp/playground-backup-docker-compose.yml
+        cp /tmp/playground-backup-docker-compose.yml $docker_compose_file
+      fi
     fi
 
     if [[ $res == *"$MENU_DISABLE_CONNECT_WORKERS"* ]]
@@ -1094,7 +1075,10 @@ then
       array_flag_list=("${array_flag_list[@]/"--enable-multiple-connect-workers"}")
       unset ENABLE_CONNECT_NODES
       interactive_enable_connect=""
-      mv /tmp/playground-backup-docker-compose.yml $docker_compose_file
+      if [ -f /tmp/playground-backup-docker-compose.yml ]
+      then
+        mv /tmp/playground-backup-docker-compose.yml $docker_compose_file
+      fi
     fi
 
     if [[ $res == *"$MENU_ENABLE_KCAT"* ]]
@@ -1492,7 +1476,10 @@ cd $test_file_directory
 function cleanup {
   if [[ -n "$enable_multiple_connect_workers" ]]
   then
-    mv /tmp/playground-backup-docker-compose.yml $docker_compose_file
+    if [ -f /tmp/playground-backup-docker-compose.yml ]
+    then
+      mv /tmp/playground-backup-docker-compose.yml $docker_compose_file
+    fi
   fi
   rm /tmp/playground-run-command-used
   echo ""

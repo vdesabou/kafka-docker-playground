@@ -509,8 +509,6 @@ commands:
       🥉 Enable multiple connect node
 
       By default, there is only one connect node enabled
-
-      It only works when plaintext environment is used
   - &enable-jmx-grafana
     long: --enable-jmx-grafana
     required: false

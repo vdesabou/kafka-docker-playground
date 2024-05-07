@@ -23,8 +23,8 @@ services:
 
     broker:
         volumes:
-          - ../../environment/ldap-authorizer-sasl-plain/kafka/users:/service/kafka/users
-          - ../../environment/ldap-authorizer-sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
+            - ../../environment/ldap-authorizer-sasl-plain/kafka/users:/service/kafka/users
+            - ../../environment/ldap-authorizer-sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
         environment:
             # override to add our users
             KAFKA_LISTENER_NAME_BROKER_PLAIN_SASL_JAAS_CONFIG: |
@@ -76,4 +76,12 @@ services:
 
     connect:
         volumes:
-          - ../../environment/ldap-authorizer-sasl-plain/kafka/users:/service/kafka/users
+            - ../../environment/ldap-authorizer-sasl-plain/kafka/users:/service/kafka/users
+
+    connect2:
+        volumes:
+            - ../../environment/ldap-authorizer-sasl-plain/kafka/users:/service/kafka/users
+
+    connect3:
+        volumes:
+            - ../../environment/ldap-authorizer-sasl-plain/kafka/users:/service/kafka/users
