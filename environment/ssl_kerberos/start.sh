@@ -46,6 +46,8 @@ docker exec -i kdc kadmin.local -w password -q "add_principal -randkey kafka/bro
 docker exec -i kdc kadmin.local -w password -q "modprinc -maxlife 11days -maxrenewlife 11days +allow_renewable kafka/broker.kerberos-demo.local@TEST.CONFLUENT.IO"  > /dev/null
 docker exec -i kdc kadmin.local -w password -q "add_principal -randkey kafka/broker2.kerberos-demo.local@TEST.CONFLUENT.IO"  > /dev/null
 docker exec -i kdc kadmin.local -w password -q "modprinc -maxlife 11days -maxrenewlife 11days +allow_renewable kafka/broker2.kerberos-demo.local@TEST.CONFLUENT.IO"  > /dev/null
+docker exec -i kdc kadmin.local -w password -q "add_principal -randkey kafka/broker3.kerberos-demo.local@TEST.CONFLUENT.IO"  > /dev/null
+docker exec -i kdc kadmin.local -w password -q "modprinc -maxlife 11days -maxrenewlife 11days +allow_renewable kafka/broker3.kerberos-demo.local@TEST.CONFLUENT.IO"  > /dev/null
 
 # Zookeeper service principal:
 docker exec -i kdc kadmin.local -w password -q "add_principal -randkey zookeeper/zookeeper.kerberos-demo.local@TEST.CONFLUENT.IO"  > /dev/null
@@ -81,6 +83,8 @@ docker exec -i kdc kadmin.local -w password -q "modprinc -maxlife 11days -maxren
 # Create keytabs to use for Kafka
 log "Create keytabs"
 docker exec -i kdc rm -f /var/lib/secret/broker.key 2>&1 > /dev/null
+docker exec -i kdc rm -f /var/lib/secret/broker2.key 2>&1 > /dev/null
+docker exec -i kdc rm -f /var/lib/secret/broker3.key 2>&1 > /dev/null
 docker exec -i kdc rm -f /var/lib/secret/zookeeper.key 2>&1 > /dev/null
 docker exec -i kdc rm -f /var/lib/secret/zookeeper-client.key 2>&1 > /dev/null
 docker exec -i kdc rm -f /var/lib/secret/kafka-client.key 2>&1 > /dev/null
@@ -92,6 +96,8 @@ docker exec -i kdc rm -f /var/lib/secret/kafka-controlcenter.key 2>&1 > /dev/nul
 docker exec -i kdc rm -f /var/lib/secret/kafka-conduktor.key 2>&1 > /dev/null
 
 docker exec -i kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/broker.key -norandkey kafka/broker.kerberos-demo.local@TEST.CONFLUENT.IO " > /dev/null
+docker exec -i kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/broker2.key -norandkey kafka/broker2.kerberos-demo.local@TEST.CONFLUENT.IO " > /dev/null
+docker exec -i kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/broker3.key -norandkey kafka/broker3.kerberos-demo.local@TEST.CONFLUENT.IO " > /dev/null
 docker exec -i kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/zookeeper.key -norandkey zookeeper/zookeeper.kerberos-demo.local@TEST.CONFLUENT.IO " > /dev/null
 docker exec -i kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/zookeeper-client.key -norandkey zkclient@TEST.CONFLUENT.IO " > /dev/null
 docker exec -i kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-client.key -norandkey kafka_producer@TEST.CONFLUENT.IO " > /dev/null
@@ -110,6 +116,8 @@ then
   # keytabs are created on kdc with root user
   # ubi8 images are using appuser user
   docker exec -i kdc chmod a+r /var/lib/secret/broker.key
+  docker exec -i kdc chmod a+r /var/lib/secret/broker2.key
+  docker exec -i kdc chmod a+r /var/lib/secret/broker3.key
   docker exec -i kdc chmod a+r /var/lib/secret/zookeeper.key
   docker exec -i kdc chmod a+r /var/lib/secret/zookeeper-client.key
   docker exec -i kdc chmod a+r /var/lib/secret/kafka-client.key
@@ -121,9 +129,9 @@ then
   docker exec -i kdc chmod a+r /var/lib/secret/kafka-conduktor.key
 fi
 # Starting zookeeper and kafka now that the keytab has been created with the required credentials and services
-docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_connect_nodes_command} up -d --quiet-pull
+docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_kafka_nodes_command} ${profile_connect_nodes_command} up -d --quiet-pull
 log "📝 To see the actual properties file, use cli command playground container get-properties -c <container>"
-command="source ${DIR}/../../scripts/utils.sh && docker compose -f ${DIR}/../../environment/plaintext/docker-compose.yml -f ${DIR}/../../environment/ssl_kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_connect_nodes_command} up -d --quiet-pull"
+command="source ${DIR}/../../scripts/utils.sh && docker compose -f ${DIR}/../../environment/plaintext/docker-compose.yml -f ${DIR}/../../environment/ssl_kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command}  ${profile_kafka_nodes_command} ${profile_connect_nodes_command} up -d --quiet-pull"
 playground state set run.docker_command "$command"
 playground state set run.environment "ssl_kerberos"
 log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command playground container recreate"

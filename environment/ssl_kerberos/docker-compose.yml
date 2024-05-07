@@ -106,6 +106,115 @@ services:
         keyTab=\"/var/lib/secret/kafka-admin.key\" \
         principal=\"admin/for-kafka@TEST.CONFLUENT.IO\";"
 
+  broker2:
+    hostname: broker2.kerberos-demo.local
+    depends_on:
+      - zookeeper
+      - kdc
+    # Required to wait for the keytab to get generated
+    restart: on-failure
+    volumes:
+      - secret:/var/lib/secret
+      - ../../environment/ssl_kerberos/kdc/krb5.conf:/etc/krb5.conf
+      - ../../environment/ssl_kerberos/kafka/broker2.sasl.jaas.config:/etc/kafka/broker.sasl.jaas.config
+      - ../../environment/ssl_kerberos/security:/etc/kafka/secrets
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL
+      KAFKA_LISTENERS: SASL_SSL://:9092
+      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://broker2.kerberos-demo.local:9092
+      # Kerberos / GSSAPI Authentication mechanism
+      KAFKA_SASL_ENABLED_MECHANISMS: GSSAPI
+      KAFKA_SASL_KERBEROS_SERVICE_NAME: kafka
+      # Configure replication to require Kerberos:
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: GSSAPI
+      # Authorization config:
+      KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
+      KAFKA_ZOOKEEPER_SET_ACL: "true"
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter;User:ksqldb;User:conduktor
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config
+                  # -Djdk.security.allowNonCaAnchor=true
+                  # -Dsun.security.krb5.disableReferrals=true
+      # SSL Additions
+      CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.client.truststore.jks
+      CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_PASSWORD: confluent
+      CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.client.keystore.jks
+      CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_PASSWORD: confluent
+      CONFLUENT_METRICS_REPORTER_SSL_KEY_PASSWORD: confluent
+      # SSL Additions
+      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_SSL
+      KAFKA_SSL_CLIENT_AUTH: "required"
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka.broker2.keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: broker2_keystore_creds
+      KAFKA_SSL_KEY_CREDENTIALS: broker2_sslkey_creds
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.broker2.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: broker2_truststore_creds
+      # Metrics reporter
+      CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: GSSAPI
+      CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_SSL
+      CONFLUENT_METRICS_REPORTER_SASL_KERBEROS_SERVICE_NAME: kafka
+      CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-admin.key\" \
+        principal=\"admin/for-kafka@TEST.CONFLUENT.IO\";"
+
+  broker3:
+    hostname: broker3.kerberos-demo.local
+    depends_on:
+      - zookeeper
+      - kdc
+    # Required to wait for the keytab to get generated
+    restart: on-failure
+    volumes:
+      - secret:/var/lib/secret
+      - ../../environment/ssl_kerberos/kdc/krb5.conf:/etc/krb5.conf
+      - ../../environment/ssl_kerberos/kafka/broker3.sasl.jaas.config:/etc/kafka/broker.sasl.jaas.config
+      - ../../environment/ssl_kerberos/security:/etc/kafka/secrets
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL
+      KAFKA_LISTENERS: SASL_SSL://:9092
+      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://broker3.kerberos-demo.local:9092
+      # Kerberos / GSSAPI Authentication mechanism
+      KAFKA_SASL_ENABLED_MECHANISMS: GSSAPI
+      KAFKA_SASL_KERBEROS_SERVICE_NAME: kafka
+      # Configure replication to require Kerberos:
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: GSSAPI
+      # Authorization config:
+      KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
+      KAFKA_ZOOKEEPER_SET_ACL: "true"
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter;User:ksqldb;User:conduktor
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config
+                  # -Djdk.security.allowNonCaAnchor=true
+                  # -Dsun.security.krb5.disableReferrals=true
+      # SSL Additions
+      CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.client.truststore.jks
+      CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_PASSWORD: confluent
+      CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.client.keystore.jks
+      CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_PASSWORD: confluent
+      CONFLUENT_METRICS_REPORTER_SSL_KEY_PASSWORD: confluent
+      # SSL Additions
+      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_SSL
+      KAFKA_SSL_CLIENT_AUTH: "required"
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka.broker3.keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: broker3_keystore_creds
+      KAFKA_SSL_KEY_CREDENTIALS: broker3_sslkey_creds
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.broker3.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: broker3_truststore_creds
+      # Metrics reporter
+      CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: GSSAPI
+      CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_SSL
+      CONFLUENT_METRICS_REPORTER_SASL_KERBEROS_SERVICE_NAME: kafka
+      CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-admin.key\" \
+        principal=\"admin/for-kafka@TEST.CONFLUENT.IO\";"
+
+
   connect:
     volumes:
       - secret:/var/lib/secret

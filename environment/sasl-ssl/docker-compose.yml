@@ -49,31 +49,14 @@ services:
       KAFKA_SSL_PRINCIPAL_MAPPING_RULES: RULE:^CN=(.*?),OU=TEST.*$$/$$1/,DEFAULT
 
   broker2:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
-    hostname: broker2
-    container_name: broker2
-    depends_on:
-      - zookeeper
-    profiles:
-      - "kafka_nodes"
     volumes:
       - ../../environment/sasl-ssl/security:/etc/kafka/secrets
     environment:
-      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL
       KAFKA_INTER_BROKER_LISTENER_NAME: SASL_SSL
       KAFKA_LISTENERS: SASL_SSL://:9092
       KAFKA_ADVERTISED_LISTENERS: SASL_SSL://broker2:9092
-      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
-      KAFKA_METRIC_REPORTERS: "io.confluent.metrics.reporter.ConfluentMetricsReporter"
-      KAFKA_BROKER_ID: 2
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      # for 5.4.x:
-      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
-      # for 6.0.0
-      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: "broker2:9092"
       CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_SSL
       CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
@@ -85,11 +68,7 @@ services:
       CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.client.keystore.jks
       CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_PASSWORD: confluent
       CONFLUENT_METRICS_REPORTER_SSL_KEY_PASSWORD: confluent
-      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
-      CONFLUENT_METRICS_REPORTER_MAX_REQUEST_SIZE: 10485760
-      # To avoid race condition with control-center
-      # CONFLUENT_METRICS_REPORTER_TOPIC_CREATE: 'false'
-      CONFLUENT_METRICS_REPORTER_TOPIC_CREATE: 'true'
+
       KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
       KAFKA_SSL_KEYSTORE_FILENAME: kafka.broker2.keystore.jks
@@ -104,31 +83,14 @@ services:
       KAFKA_SSL_PRINCIPAL_MAPPING_RULES: RULE:^CN=(.*?),OU=TEST.*$$/$$1/,DEFAULT
 
   broker3:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
-    hostname: broker3
-    container_name: broker3
-    depends_on:
-      - zookeeper
-    profiles:
-      - "kafka_nodes"
     volumes:
       - ../../environment/sasl-ssl/security:/etc/kafka/secrets
     environment:
-      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL
       KAFKA_INTER_BROKER_LISTENER_NAME: SASL_SSL
       KAFKA_LISTENERS: SASL_SSL://:9092
       KAFKA_ADVERTISED_LISTENERS: SASL_SSL://broker3:9092
-      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
       KAFKA_METRIC_REPORTERS: "io.confluent.metrics.reporter.ConfluentMetricsReporter"
-      KAFKA_BROKER_ID: 3
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      # for 5.4.x:
-      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
-      # for 6.0.0
-      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: "broker3:9092"
       CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_SSL
       CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
@@ -140,11 +102,7 @@ services:
       CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.client.keystore.jks
       CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_PASSWORD: confluent
       CONFLUENT_METRICS_REPORTER_SSL_KEY_PASSWORD: confluent
-      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
-      CONFLUENT_METRICS_REPORTER_MAX_REQUEST_SIZE: 10485760
-      # To avoid race condition with control-center
-      # CONFLUENT_METRICS_REPORTER_TOPIC_CREATE: 'false'
-      CONFLUENT_METRICS_REPORTER_TOPIC_CREATE: 'true'
+
       KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
       KAFKA_SSL_KEYSTORE_FILENAME: kafka.broker3.keystore.jks
