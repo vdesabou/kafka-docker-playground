@@ -134,6 +134,171 @@ services:
             KAFKA_LDAP_USER_NAME_ATTRIBUTE: uid
             KAFKA_LDAP_USER_OBJECT_CLASS: inetOrgPerson
 
+    broker2:
+        volumes:
+          - ../../environment/rbac-sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
+          - ../../environment/rbac-sasl-plain/conf:/tmp/conf
+          - ../../environment/rbac-sasl-plain/scripts/helper:/tmp/helper
+          - ../../environment/rbac-sasl-plain/scripts/security/ldap_certs/ldap_truststore.jks:/tmp/ldap_certs/ldap_truststore.jks
+          - ../../environment/rbac-sasl-plain/scripts/security/client_without_interceptors.config:/etc/kafka/secrets/client_without_interceptors.config
+        environment:
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:SASL_PLAINTEXT,TOKEN:SASL_PLAINTEXT
+            KAFKA_LISTENERS: INTERNAL://:9092,TOKEN://:10091
+            KAFKA_ADVERTISED_LISTENERS: INTERNAL://broker2:9092,TOKEN://broker2:10091
+            KAFKA_SASL_ENABLED_MECHANISMS: PLAIN, OAUTHBEARER
+            KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+            KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+            CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: PLAIN
+            CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+                username=\"admin\" \
+                password=\"admin-secret\";"
+            KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
+
+            KAFKA_SUPER_USERS: User:admin;User:mds;User:superUser;User:ANONYMOUS
+            # KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+            KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO,io.confluent.rest-utils=DEBUG,io.confluent.rbacapi=DEBUG,io.confluent.tokenapi=DEBUG,io.confluent.security.auth=DEBUG,io.confluent.security.store=DEBUG,io.confluent.common.security.jetty=DEBUG"
+            KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
+
+            KAFKA_LISTENER_NAME_INTERNAL_PLAIN_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.plain.PlainLoginModule required \
+                    username="admin" \
+                    password="admin-secret" \
+                    user_admin="admin-secret" \
+                    user_mds="mds-secret";
+
+            KAFKA_ZOOKEEPER_SET_ACL: 'true'
+
+            # Configure TOKEN listener for Confluent Platform components and impersonation
+            KAFKA_LISTENER_NAME_TOKEN_OAUTHBEARER_SASL_SERVER_CALLBACK_HANDLER_CLASS: io.confluent.kafka.server.plugins.auth.token.TokenBearerValidatorCallbackHandler
+            KAFKA_LISTENER_NAME_TOKEN_OAUTHBEARER_SASL_LOGIN_CALLBACK_HANDLER_CLASS: io.confluent.kafka.server.plugins.auth.token.TokenBearerServerLoginCallbackHandler
+            KAFKA_LISTENER_NAME_TOKEN_OAUTHBEARER_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+                    publicKeyPath="/tmp/conf/public.pem";
+
+            # MDS
+            KAFKA_CONFLUENT_METADATA_TOPIC_REPLICATION_FACTOR: 1
+            KAFKA_CONFLUENT_METADATA_SERVER_AUTHENTICATION_METHOD: BEARER
+            KAFKA_CONFLUENT_METADATA_SERVER_LISTENERS: http://0.0.0.0:8091
+            KAFKA_CONFLUENT_METADATA_SERVER_ADVERTISED_LISTENERS: http://broker2:8091
+
+            # Configure RBAC token server (authentication)
+            KAFKA_CONFLUENT_METADATA_SERVER_TOKEN_AUTH_ENABLE: 'true'
+            KAFKA_CONFLUENT_METADATA_SERVER_TOKEN_MAX_LIFETIME_MS: 3600000
+            KAFKA_CONFLUENT_METADATA_SERVER_TOKEN_SIGNATURE_ALGORITHM: RS256
+            KAFKA_CONFLUENT_METADATA_SERVER_TOKEN_KEY_PATH: /tmp/conf/keypair.pem
+            KAFKA_CONFLUENT_METADATA_SERVER_PUBLIC_KEY_PATH: /tmp/conf/public.pem
+
+            # Configure Confluent Server Authorizer
+            KAFKA_AUTHORIZER_CLASS_NAME: io.confluent.kafka.security.authorizer.ConfluentServerAuthorizer
+            KAFKA_CONFLUENT_AUTHORIZER_ACCESS_RULE_PROVIDERS: CONFLUENT,ZK_ACL
+            KAFKA_CONFLUENT_AUTHORIZER_GROUP_PROVIDER: RBAC
+
+            # Configure MDS to talk to AD/LDAP
+            KAFKA_LDAP_JAVA_NAMING_FACTORY_INITIAL: com.sun.jndi.ldap.LdapCtxFactory
+            KAFKA_LDAP_COM_SUN_JNDI_LDAP_READ_TIMEOUT: 3000
+            KAFKA_LDAP_JAVA_NAMING_PROVIDER_URL: ldaps://openldap:636
+            KAFKA_LDAP_SSL_TRUSTSTORE_LOCATION: /tmp/ldap_certs/ldap_truststore.jks
+            KAFKA_LDAP_SSL_TRUSTSTORE_PASSWORD: welcome123
+            KAFKA_LDAP_JAVA_NAMING_SECURITY_PROTOCOL: SSL
+
+            # Authenticate to LDAP
+            KAFKA_LDAP_JAVA_NAMING_SECURITY_PRINCIPAL: cn=admin,dc=confluentdemo,dc=io
+            KAFKA_LDAP_JAVA_NAMING_SECURITY_CREDENTIALS: admin
+            KAFKA_LDAP_JAVA_NAMING_SECURITY_AUTHENTICATION: simple
+            # Locate LDAP users and groups
+            KAFKA_LDAP_SEARCH_MODE: GROUPS
+            KAFKA_LDAP_GROUP_SEARCH_BASE: ou=groups,dc=confluentdemo,dc=io
+            KAFKA_LDAP_GROUP_NAME_ATTRIBUTE: cn
+            KAFKA_LDAP_GROUP_MEMBER_ATTRIBUTE: memberUid
+            KAFKA_LDAP_GROUP_OBJECT_CLASS: posixGroup
+            KAFKA_LDAP_GROUP_MEMBER_ATTRIBUTE_PATTERN: cn=(.*),ou=users,dc=confluentdemo,dc=io
+            KAFKA_LDAP_USER_SEARCH_BASE: ou=users,dc=confluentdemo,dc=io
+            KAFKA_LDAP_USER_NAME_ATTRIBUTE: uid
+            KAFKA_LDAP_USER_OBJECT_CLASS: inetOrgPerson
+
+    broker3:
+        volumes:
+          - ../../environment/rbac-sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
+          - ../../environment/rbac-sasl-plain/conf:/tmp/conf
+          - ../../environment/rbac-sasl-plain/scripts/helper:/tmp/helper
+          - ../../environment/rbac-sasl-plain/scripts/security/ldap_certs/ldap_truststore.jks:/tmp/ldap_certs/ldap_truststore.jks
+          - ../../environment/rbac-sasl-plain/scripts/security/client_without_interceptors.config:/etc/kafka/secrets/client_without_interceptors.config
+        environment:
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:SASL_PLAINTEXT,TOKEN:SASL_PLAINTEXT
+            KAFKA_LISTENERS: INTERNAL://:9092,TOKEN://:10091
+            KAFKA_ADVERTISED_LISTENERS: INTERNAL://broker3:9092,TOKEN://broker3:10091
+            KAFKA_SASL_ENABLED_MECHANISMS: PLAIN, OAUTHBEARER
+            KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+            KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+            CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: PLAIN
+            CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+                username=\"admin\" \
+                password=\"admin-secret\";"
+            KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
+
+            KAFKA_SUPER_USERS: User:admin;User:mds;User:superUser;User:ANONYMOUS
+            # KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+            KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO,io.confluent.rest-utils=DEBUG,io.confluent.rbacapi=DEBUG,io.confluent.tokenapi=DEBUG,io.confluent.security.auth=DEBUG,io.confluent.security.store=DEBUG,io.confluent.common.security.jetty=DEBUG"
+            KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
+
+            KAFKA_LISTENER_NAME_INTERNAL_PLAIN_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.plain.PlainLoginModule required \
+                    username="admin" \
+                    password="admin-secret" \
+                    user_admin="admin-secret" \
+                    user_mds="mds-secret";
+
+            KAFKA_ZOOKEEPER_SET_ACL: 'true'
+
+            # Configure TOKEN listener for Confluent Platform components and impersonation
+            KAFKA_LISTENER_NAME_TOKEN_OAUTHBEARER_SASL_SERVER_CALLBACK_HANDLER_CLASS: io.confluent.kafka.server.plugins.auth.token.TokenBearerValidatorCallbackHandler
+            KAFKA_LISTENER_NAME_TOKEN_OAUTHBEARER_SASL_LOGIN_CALLBACK_HANDLER_CLASS: io.confluent.kafka.server.plugins.auth.token.TokenBearerServerLoginCallbackHandler
+            KAFKA_LISTENER_NAME_TOKEN_OAUTHBEARER_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+                    publicKeyPath="/tmp/conf/public.pem";
+
+            # MDS
+            KAFKA_CONFLUENT_METADATA_TOPIC_REPLICATION_FACTOR: 1
+            KAFKA_CONFLUENT_METADATA_SERVER_AUTHENTICATION_METHOD: BEARER
+            KAFKA_CONFLUENT_METADATA_SERVER_LISTENERS: http://0.0.0.0:8091
+            KAFKA_CONFLUENT_METADATA_SERVER_ADVERTISED_LISTENERS: http://broker3:8091
+
+            # Configure RBAC token server (authentication)
+            KAFKA_CONFLUENT_METADATA_SERVER_TOKEN_AUTH_ENABLE: 'true'
+            KAFKA_CONFLUENT_METADATA_SERVER_TOKEN_MAX_LIFETIME_MS: 3600000
+            KAFKA_CONFLUENT_METADATA_SERVER_TOKEN_SIGNATURE_ALGORITHM: RS256
+            KAFKA_CONFLUENT_METADATA_SERVER_TOKEN_KEY_PATH: /tmp/conf/keypair.pem
+            KAFKA_CONFLUENT_METADATA_SERVER_PUBLIC_KEY_PATH: /tmp/conf/public.pem
+
+            # Configure Confluent Server Authorizer
+            KAFKA_AUTHORIZER_CLASS_NAME: io.confluent.kafka.security.authorizer.ConfluentServerAuthorizer
+            KAFKA_CONFLUENT_AUTHORIZER_ACCESS_RULE_PROVIDERS: CONFLUENT,ZK_ACL
+            KAFKA_CONFLUENT_AUTHORIZER_GROUP_PROVIDER: RBAC
+
+            # Configure MDS to talk to AD/LDAP
+            KAFKA_LDAP_JAVA_NAMING_FACTORY_INITIAL: com.sun.jndi.ldap.LdapCtxFactory
+            KAFKA_LDAP_COM_SUN_JNDI_LDAP_READ_TIMEOUT: 3000
+            KAFKA_LDAP_JAVA_NAMING_PROVIDER_URL: ldaps://openldap:636
+            KAFKA_LDAP_SSL_TRUSTSTORE_LOCATION: /tmp/ldap_certs/ldap_truststore.jks
+            KAFKA_LDAP_SSL_TRUSTSTORE_PASSWORD: welcome123
+            KAFKA_LDAP_JAVA_NAMING_SECURITY_PROTOCOL: SSL
+
+            # Authenticate to LDAP
+            KAFKA_LDAP_JAVA_NAMING_SECURITY_PRINCIPAL: cn=admin,dc=confluentdemo,dc=io
+            KAFKA_LDAP_JAVA_NAMING_SECURITY_CREDENTIALS: admin
+            KAFKA_LDAP_JAVA_NAMING_SECURITY_AUTHENTICATION: simple
+            # Locate LDAP users and groups
+            KAFKA_LDAP_SEARCH_MODE: GROUPS
+            KAFKA_LDAP_GROUP_SEARCH_BASE: ou=groups,dc=confluentdemo,dc=io
+            KAFKA_LDAP_GROUP_NAME_ATTRIBUTE: cn
+            KAFKA_LDAP_GROUP_MEMBER_ATTRIBUTE: memberUid
+            KAFKA_LDAP_GROUP_OBJECT_CLASS: posixGroup
+            KAFKA_LDAP_GROUP_MEMBER_ATTRIBUTE_PATTERN: cn=(.*),ou=users,dc=confluentdemo,dc=io
+            KAFKA_LDAP_USER_SEARCH_BASE: ou=users,dc=confluentdemo,dc=io
+            KAFKA_LDAP_USER_NAME_ATTRIBUTE: uid
+            KAFKA_LDAP_USER_OBJECT_CLASS: inetOrgPerson
 
     schema-registry:
         volumes:
