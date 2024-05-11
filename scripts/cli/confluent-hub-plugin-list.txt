@@ -193,7 +193,6 @@ splunk/kafka-connect-splunk
 spoudinc/spoud-agoora
 sqdata/sqdata-connector
 streamsets/streamsets-sdc
-streamthoughts/kafka-connect-file-pulse
 swim/swim-kafka-connect
 symetryml/kafka-connector
 tabular/iceberg-kafka-connect

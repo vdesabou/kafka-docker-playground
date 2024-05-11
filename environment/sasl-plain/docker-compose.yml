@@ -22,8 +22,6 @@ services:
             - ../../environment/sasl-plain/client.properties:/tmp/client.properties
         environment:
             KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:SASL_PLAINTEXT,HOST:SASL_PLAINTEXT
-            KAFKA_LISTENERS: BROKER://:9092,HOST://:29092
-            KAFKA_ADVERTISED_LISTENERS: BROKER://broker:9092,HOST://localhost:29092
             KAFKA_LISTENER_NAME_BROKER_SASL_ENABLED_MECHANISMS: PLAIN
             KAFKA_LISTENER_NAME_BROKER_PLAIN_SASL_JAAS_CONFIG: |
                     org.apache.kafka.common.security.plain.PlainLoginModule required \
@@ -56,6 +54,85 @@ services:
                 username=\"client\" \
                 password=\"client-secret\";"
             KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
+
+    broker2:
+        volumes:
+            - ../../environment/sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
+            - ../../environment/sasl-plain/client.properties:/tmp/client.properties
+        environment:
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:SASL_PLAINTEXT,HOST:SASL_PLAINTEXT
+            KAFKA_LISTENER_NAME_BROKER_SASL_ENABLED_MECHANISMS: PLAIN
+            KAFKA_LISTENER_NAME_BROKER_PLAIN_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.plain.PlainLoginModule required \
+                    username="broker" \
+                    password="broker" \
+                    user_broker="broker" \
+                    user_controlcenter="controlcenter-secret" \
+                    user_schemaregistry="schemaregistry-secret" \
+                    user_ksqldb="ksqldb-secret" \
+                    user_connect="connect-secret" \
+                    user_sftp="sftp-secret" \
+                    user_client="client-secret";
+            KAFKA_LISTENER_NAME_HOST_SASL_ENABLED_MECHANISMS: PLAIN
+            KAFKA_LISTENER_NAME_HOST_PLAIN_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.plain.PlainLoginModule required \
+                    username="broker" \
+                    password="broker" \
+                    user_broker="broker" \
+                    user_controlcenter="controlcenter-secret" \
+                    user_schemaregistry="schemaregistry-secret" \
+                    user_ksqldb="ksqldb-secret" \
+                    user_connect="connect-secret" \
+                    user_sftp="sftp-secret" \
+                    user_client="client-secret";
+            KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+            KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
+            CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: PLAIN
+            CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+                username=\"client\" \
+                password=\"client-secret\";"
+            KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
+
+    broker3:
+        volumes:
+            - ../../environment/sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
+            - ../../environment/sasl-plain/client.properties:/tmp/client.properties
+        environment:
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:SASL_PLAINTEXT,HOST:SASL_PLAINTEXT
+            KAFKA_LISTENER_NAME_BROKER_SASL_ENABLED_MECHANISMS: PLAIN
+            KAFKA_LISTENER_NAME_BROKER_PLAIN_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.plain.PlainLoginModule required \
+                    username="broker" \
+                    password="broker" \
+                    user_broker="broker" \
+                    user_controlcenter="controlcenter-secret" \
+                    user_schemaregistry="schemaregistry-secret" \
+                    user_ksqldb="ksqldb-secret" \
+                    user_connect="connect-secret" \
+                    user_sftp="sftp-secret" \
+                    user_client="client-secret";
+            KAFKA_LISTENER_NAME_HOST_SASL_ENABLED_MECHANISMS: PLAIN
+            KAFKA_LISTENER_NAME_HOST_PLAIN_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.plain.PlainLoginModule required \
+                    username="broker" \
+                    password="broker" \
+                    user_broker="broker" \
+                    user_controlcenter="controlcenter-secret" \
+                    user_schemaregistry="schemaregistry-secret" \
+                    user_ksqldb="ksqldb-secret" \
+                    user_connect="connect-secret" \
+                    user_sftp="sftp-secret" \
+                    user_client="client-secret";
+            KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+            KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
+            CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: PLAIN
+            CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+                username=\"client\" \
+                password=\"client-secret\";"
+            KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
+
 
     connect:
         volumes:

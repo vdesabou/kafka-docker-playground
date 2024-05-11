@@ -74,6 +74,113 @@ services:
             # Regex pattern to obtain user principal from group member attribute
             KAFKA_LDAP_GROUP_MEMBER_ATTRIBUTE_PATTERN: cn=(.*),ou=users,dc=confluent,dc=io
 
+    broker2:
+        volumes:
+            - ../../environment/ldap-authorizer-sasl-plain/kafka/users:/service/kafka/users
+            - ../../environment/ldap-authorizer-sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
+        environment:
+            # override to add our users
+            KAFKA_LISTENER_NAME_BROKER_PLAIN_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.plain.PlainLoginModule required \
+                    username="broker" \
+                    password="broker" \
+                    user_broker="broker" \
+                    user_controlcenter="controlcenter-secret" \
+                    user_schemaregistry="schemaregistry-secret" \
+                    user_ksqldb="ksqldb-secret" \
+                    user_connect="connect-secret" \
+                    user_sftp="sftp-secret" \
+                    user_client="client-secret" \
+                    user_barnie="barnie-secret" \
+                    user_charlie="charlie-secret" \
+                    user_client="client-secret";
+
+            # Configure authorizer
+            KAFKA_AUTHORIZER_CLASS_NAME: io.confluent.kafka.security.ldap.authorizer.LdapAuthorizer
+            KAFKA_ZOOKEEPER_SET_ACL: "true"
+            KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+            KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+            # Set Kafka broker user as super user (alternatively, set ACLs before starting brokers)
+            KAFKA_SUPER_USERS: User:broker;User:client;User:controlcenter;User:connect;User:schemaregistry;User:ksqldb
+
+            # LDAP provider URL
+            KAFKA_LDAP_JAVA_NAMING_PROVIDER_URL: ldap://ldap:389
+            # Refresh interval for LDAP cache. If set to zero, persistent search is used.
+            # Reduced this value from the default 60000ms (60sec) to 10sec to detect
+            # faster the updates done in the LDAP database
+            KAFKA_LDAP_REFRESH_INTERVAL_MS: 10000
+            # Security authentication protocol for LDAP context
+            KAFKA_LDAP_JAVA_NAMING_SECURITY_AUTHENTICATION: SIMPLE
+            KAFKA_LDAP_JAVA_NAMING_SECURITY_PRINCIPAL: cn=admin,dc=confluent,dc=io
+            KAFKA_LDAP_JAVA_NAMING_SECURITY_CREDENTIALS: admin
+            KAFKA_LDAP_GROUP_SEARCH_BASE: ou=groups,dc=confluent,dc=io
+
+            # Object class for groups
+            KAFKA_LDAP_GROUP_OBJECT_CLASS: posixGroup
+            KAFKA_LDAP_GROUP_SEARCH_SCOPE: 2
+            # Name of the attribute from which group name used in ACLs is obtained
+            KAFKA_LDAP_GROUP_NAME_ATTRIBUTE: cn
+            # Regex pattern to obtain group name used in ACLs from the attribute
+            KAFKA_LDAP_GROUP_NAME_ATTRIBUTE_PATTERN:
+            # Name of the attribute from which group members (user principals) are obtained
+            KAFKA_LDAP_GROUP_MEMBER_ATTRIBUTE: memberUid
+            # Regex pattern to obtain user principal from group member attribute
+            KAFKA_LDAP_GROUP_MEMBER_ATTRIBUTE_PATTERN: cn=(.*),ou=users,dc=confluent,dc=io
+
+    broker3:
+        volumes:
+            - ../../environment/ldap-authorizer-sasl-plain/kafka/users:/service/kafka/users
+            - ../../environment/ldap-authorizer-sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
+        environment:
+            # override to add our users
+            KAFKA_LISTENER_NAME_BROKER_PLAIN_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.plain.PlainLoginModule required \
+                    username="broker" \
+                    password="broker" \
+                    user_broker="broker" \
+                    user_controlcenter="controlcenter-secret" \
+                    user_schemaregistry="schemaregistry-secret" \
+                    user_ksqldb="ksqldb-secret" \
+                    user_connect="connect-secret" \
+                    user_sftp="sftp-secret" \
+                    user_client="client-secret" \
+                    user_barnie="barnie-secret" \
+                    user_charlie="charlie-secret" \
+                    user_client="client-secret";
+
+            # Configure authorizer
+            KAFKA_AUTHORIZER_CLASS_NAME: io.confluent.kafka.security.ldap.authorizer.LdapAuthorizer
+            KAFKA_ZOOKEEPER_SET_ACL: "true"
+            KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+            KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+            # Set Kafka broker user as super user (alternatively, set ACLs before starting brokers)
+            KAFKA_SUPER_USERS: User:broker;User:client;User:controlcenter;User:connect;User:schemaregistry;User:ksqldb
+
+            # LDAP provider URL
+            KAFKA_LDAP_JAVA_NAMING_PROVIDER_URL: ldap://ldap:389
+            # Refresh interval for LDAP cache. If set to zero, persistent search is used.
+            # Reduced this value from the default 60000ms (60sec) to 10sec to detect
+            # faster the updates done in the LDAP database
+            KAFKA_LDAP_REFRESH_INTERVAL_MS: 10000
+            # Security authentication protocol for LDAP context
+            KAFKA_LDAP_JAVA_NAMING_SECURITY_AUTHENTICATION: SIMPLE
+            KAFKA_LDAP_JAVA_NAMING_SECURITY_PRINCIPAL: cn=admin,dc=confluent,dc=io
+            KAFKA_LDAP_JAVA_NAMING_SECURITY_CREDENTIALS: admin
+            KAFKA_LDAP_GROUP_SEARCH_BASE: ou=groups,dc=confluent,dc=io
+
+            # Object class for groups
+            KAFKA_LDAP_GROUP_OBJECT_CLASS: posixGroup
+            KAFKA_LDAP_GROUP_SEARCH_SCOPE: 2
+            # Name of the attribute from which group name used in ACLs is obtained
+            KAFKA_LDAP_GROUP_NAME_ATTRIBUTE: cn
+            # Regex pattern to obtain group name used in ACLs from the attribute
+            KAFKA_LDAP_GROUP_NAME_ATTRIBUTE_PATTERN:
+            # Name of the attribute from which group members (user principals) are obtained
+            KAFKA_LDAP_GROUP_MEMBER_ATTRIBUTE: memberUid
+            # Regex pattern to obtain user principal from group member attribute
+            KAFKA_LDAP_GROUP_MEMBER_ATTRIBUTE_PATTERN: cn=(.*),ou=users,dc=confluent,dc=io
+
+
     connect:
         volumes:
             - ../../environment/ldap-authorizer-sasl-plain/kafka/users:/service/kafka/users
