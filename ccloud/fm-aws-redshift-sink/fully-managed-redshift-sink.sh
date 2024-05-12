@@ -82,6 +82,7 @@ log "Create AWS Redshift cluster"
 aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password "$PASSWORD" --node-type dc2.large --cluster-type single-node --publicly-accessible
 
 function cleanup_cloud_resources {
+  set +e
   log "Delete AWS Redshift cluster $CLUSTER_NAME"
   check_if_continue
   aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot
