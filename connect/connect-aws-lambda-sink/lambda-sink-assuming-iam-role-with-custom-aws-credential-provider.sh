@@ -105,7 +105,7 @@ aws lambda create-function --function-name "$LAMBDA_FUNCTION_NAME" --zip-file fi
 cd -
 
 function cleanup_cloud_resources {
-  log "Cleanup role and function"
+  set +e
   check_if_continue
   aws iam delete-role --role-name $LAMBDA_ROLE_NAME
   aws lambda delete-function --function-name $LAMBDA_FUNCTION_NAME
@@ -171,8 +171,3 @@ playground topic consume --topic success-responses --min-expected-messages 10 --
 
 # log "Verify topic error-responses"
 playground topic consume --topic error-responses --min-expected-messages 0 --timeout 60
-
-log "Cleanup role and function"
-check_if_continue
-aws iam delete-role --role-name $LAMBDA_ROLE_NAME
-aws lambda delete-function --function-name $LAMBDA_FUNCTION_NAME

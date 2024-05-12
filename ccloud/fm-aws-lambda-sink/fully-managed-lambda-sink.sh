@@ -65,6 +65,7 @@ aws lambda create-function --function-name "$LAMBDA_FUNCTION_NAME" --zip-file fi
 cd -
 
 function cleanup_cloud_resources {
+  set +e
   log "Cleanup role and function"
   check_if_continue
   aws iam delete-role --role-name $LAMBDA_ROLE_NAME
