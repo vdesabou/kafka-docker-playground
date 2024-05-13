@@ -2518,7 +2518,6 @@ commands:
         help: |-
           🗳 Topic name
       - long: --skip-delete-schema
-        arg: skip-delete-schema
         required: false
         help: |-
           🔰 Do not delete subject/schema

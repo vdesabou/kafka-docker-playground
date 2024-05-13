@@ -1526,7 +1526,7 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-multiple-connect-workers")"
-    printf "    🥉 Enable multiple connect node\n    \n    By default, there is only one connect node enabled\n"
+    printf "    🥉 Enable multiple connect worker node\n    \n    By default, there is only one connect worker node enabled\n"
     echo
 
     # :flag.usage
@@ -4346,7 +4346,7 @@ playground_topic_delete_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--skip-delete-schema SKIP-DELETE-SCHEMA")"
+    printf "  %s\n" "$(magenta "--skip-delete-schema")"
     printf "    🔰 Do not delete subject/schema\n"
     echo
 
@@ -30976,15 +30976,9 @@ playground_topic_delete_parse_requirements() {
       # :flag.case
       --skip-delete-schema)
 
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          args['--skip-delete-schema']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--skip-delete-schema requires an argument: --skip-delete-schema SKIP-DELETE-SCHEMA" >&2
-          exit 1
-        fi
+        # :flag.case_no_arg
+        args['--skip-delete-schema']=1
+        shift
         ;;
 
       -?*)

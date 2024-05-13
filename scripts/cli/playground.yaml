@@ -213,9 +213,9 @@ subcommands:
       - --enable-multiple-connect-workers
       argument: ""
       description: | 
-        🥉 Enable multiple connect node
+        🥉 Enable multiple connect worker node
         
-        By default, there is only one connect node enabled
+        By default, there is only one connect worker node enabled
         
     - names:
       - --enable-jmx-grafana
@@ -1823,7 +1823,7 @@ subcommands:
             
         - names:
           - --skip-delete-schema
-          argument: SKIP-DELETE-SCHEMA
+          argument: ""
           description: | 
             🔰 Do not delete subject/schema
             
