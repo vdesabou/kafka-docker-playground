@@ -278,13 +278,8 @@ function get_ccloud_connect() {
     logerror "Set it with Cloud API secret, see https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys"
     exit 1
   fi
-
-  if [[ "$OSTYPE" == "darwin"* ]]
-  then
-      authorization=$(echo -n "$CLOUD_API_KEY:$CLOUD_API_SECRET" | base64)
-  else
-      authorization=$(echo -n "$CLOUD_API_KEY:$CLOUD_API_SECRET" | base64 -w 0)
-  fi
+  
+  authorization=$(echo -n "$CLOUD_API_KEY:$CLOUD_API_SECRET" | docker run -i --rm ddev/ddev-utilities:latest base64 -w 0)
 }
 
 function get_sr_url_and_security() {
