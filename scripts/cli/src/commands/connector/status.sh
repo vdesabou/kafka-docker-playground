@@ -22,11 +22,15 @@ fi
 for connector in "${items[@]}"
 do
     set +e
-    log "🧩 Displaying $connector_type connector $connector"
+    maybe_id=""
     if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
     then
         get_ccloud_connect
         handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status\" --header \"authorization: Basic $authorization\""
+        connectorId=$(get_ccloud_connector_lcc $connector)
+        maybe_id=" ($connectorId)"
+
+        log "🧩 Displaying status for $connector_type connector $connector${maybe_id}"
 
         printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
         echo "-------------------------------------------------------------------------------------------------------------"
@@ -93,6 +97,7 @@ do
         printf "%-30s %-12s %-30s %-50s\n" "$connector" "$status" "$tasks" "$stacktrace"
         echo "-------------------------------------------------------------------------------------------------------------"
     else
+        log "🧩 Displaying status for $connector_type connector $connector"
         get_connect_url_and_security
         handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\""
 
