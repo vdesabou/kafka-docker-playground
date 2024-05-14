@@ -1559,6 +1559,13 @@
             },
             {
               "names": [
+                "--consume"
+              ],
+              "argument": "",
+              "description": "📥 After producing, directly consume topic.\n"
+            },
+            {
+              "names": [
                 "--reference"
               ],
               "argument": "REFERENCE",

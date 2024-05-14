@@ -1708,6 +1708,12 @@ subcommands:
             N.B: only work with avro and json-schema
             
         - names:
+          - --consume
+          argument: ""
+          description: | 
+            📥 After producing, directly consume topic.
+            
+        - names:
           - --reference
           argument: REFERENCE
           description: | 

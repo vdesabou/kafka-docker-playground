@@ -4221,6 +4221,11 @@ playground_topic_produce_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--consume")"
+    printf "    📥 After producing, directly consume topic.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--validate-config VALIDATE-CONFIG (repeatable)")"
     printf "    🔩 Converter configuration parameters to use \n    \n    See docs:\n    https://docs.confluent.io/platform/current/schema-registry/connect.html#using-kconnect-long-with-sr\n    \n    🎓 Tip: you can pass multiple parameters by specifying --validate-config\n    multiple times\n"
     printf "    Allowed: scrub.invalid.names=true, enhanced.avro.schema.support=true, connect.meta.data=false, object.additional.properties=false, use.optional.for.nonrequired=true, ignore.default.for.nullables=true, generalized.sum.type.support=true, enhanced.protobuf.schema.support=true, generate.index.for.unions=false, int.for.enums=true, optional.for.nullables=true, generate.struct.for.nulls=true, wrapper.for.nullables=true, wrapper.for.raw.primitives=false\n"
@@ -18662,6 +18667,7 @@ playground_topic_produce_command() {
   compression_codec="${args[--compression-codec]}"
   value_schema_id="${args[--value-schema-id]}"
   no_null="${args[--no-null]}"
+  consume="${args[--consume]}"
   # Convert the space delimited string to an array
   eval "validate_config=(${args[--validate-config]})"
   eval "producer_property=(${args[--producer-property]})"
@@ -19836,6 +19842,11 @@ playground_topic_produce_command() {
   ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
   log "📤 produced $nb_messages records to topic $topic, $ELAPSED"
   playground topic get-number-records --topic $topic
+
+  if [[ -n "$consume" ]]
+  then
+      playground topic consume --topic $topic
+  fi
 }
 
 # :command.function
@@ -30636,6 +30647,14 @@ playground_topic_produce_parse_requirements() {
 
         # :flag.case_no_arg
         args['--no-null']=1
+        shift
+        ;;
+
+      # :flag.case
+      --consume)
+
+        # :flag.case_no_arg
+        args['--consume']=1
         shift
         ;;
 

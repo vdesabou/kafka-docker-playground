@@ -20,6 +20,7 @@ sleep_time_between_batch="${args[--sleep-time-between-batch]}"
 compression_codec="${args[--compression-codec]}"
 value_schema_id="${args[--value-schema-id]}"
 no_null="${args[--no-null]}"
+consume="${args[--consume]}"
 # Convert the space delimited string to an array
 eval "validate_config=(${args[--validate-config]})"
 eval "producer_property=(${args[--producer-property]})"
@@ -1188,3 +1189,8 @@ done
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 log "📤 produced $nb_messages records to topic $topic, $ELAPSED"
 playground topic get-number-records --topic $topic
+
+if [[ -n "$consume" ]]
+then
+    playground topic consume --topic $topic
+fi

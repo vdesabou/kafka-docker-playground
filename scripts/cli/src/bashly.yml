@@ -1989,6 +1989,11 @@ commands:
 
           N.B: only work with avro and json-schema
 
+      - long: --consume
+        required: false
+        help: |-
+          📥 After producing, directly consume topic.
+
       - long: --reference
         arg: reference
         private: true
