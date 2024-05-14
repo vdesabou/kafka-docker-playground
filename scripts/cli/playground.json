@@ -1566,6 +1566,13 @@
             },
             {
               "names": [
+                "--delete-topic"
+              ],
+              "argument": "",
+              "description": "❌ Delete topic and associated schema/subject if applicable before producing data.\n"
+            },
+            {
+              "names": [
                 "--reference"
               ],
               "argument": "REFERENCE",

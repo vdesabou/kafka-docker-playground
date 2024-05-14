@@ -10,8 +10,8 @@ set +e
 grep "does not exist" /tmp/result.log > /dev/null 2>&1
 if [ $? == 0 ]
 then
-    logwarn "❌ topic $topic does not exist !"
-    exit 1
+    log "❌ topic $topic does not exist !"
+    exit 0
 fi
 set -e
 

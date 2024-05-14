@@ -1994,6 +1994,11 @@ commands:
         help: |-
           📥 After producing, directly consume topic.
 
+      - long: --delete-topic
+        required: false
+        help: |-
+          ❌ Delete topic and associated schema/subject if applicable before producing data.
+
       - long: --reference
         arg: reference
         private: true

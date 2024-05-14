@@ -21,6 +21,8 @@ compression_codec="${args[--compression-codec]}"
 value_schema_id="${args[--value-schema-id]}"
 no_null="${args[--no-null]}"
 consume="${args[--consume]}"
+delete_topic="${args[--delete-topic]}"
+
 # Convert the space delimited string to an array
 eval "validate_config=(${args[--validate-config]})"
 eval "producer_property=(${args[--producer-property]})"
@@ -117,6 +119,12 @@ then
         logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
         exit 1
     fi
+fi
+
+if [[ -n "$delete_topic" ]]
+then
+    log "❌ --delete-topic is set, delete topic if applicable"
+    playground topic delete --topic $topic
 fi
 
 if [[ -n "$tombstone" ]]

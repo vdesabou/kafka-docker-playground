@@ -4226,6 +4226,11 @@ playground_topic_produce_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--delete-topic")"
+    printf "    ❌ Delete topic and associated schema/subject if applicable before producing\n    data.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--validate-config VALIDATE-CONFIG (repeatable)")"
     printf "    🔩 Converter configuration parameters to use \n    \n    See docs:\n    https://docs.confluent.io/platform/current/schema-registry/connect.html#using-kconnect-long-with-sr\n    \n    🎓 Tip: you can pass multiple parameters by specifying --validate-config\n    multiple times\n"
     printf "    Allowed: scrub.invalid.names=true, enhanced.avro.schema.support=true, connect.meta.data=false, object.additional.properties=false, use.optional.for.nonrequired=true, ignore.default.for.nullables=true, generalized.sum.type.support=true, enhanced.protobuf.schema.support=true, generate.index.for.unions=false, int.for.enums=true, optional.for.nullables=true, generate.struct.for.nulls=true, wrapper.for.nullables=true, wrapper.for.raw.primitives=false\n"
@@ -18668,6 +18673,8 @@ playground_topic_produce_command() {
   value_schema_id="${args[--value-schema-id]}"
   no_null="${args[--no-null]}"
   consume="${args[--consume]}"
+  delete_topic="${args[--delete-topic]}"
+
   # Convert the space delimited string to an array
   eval "validate_config=(${args[--validate-config]})"
   eval "producer_property=(${args[--producer-property]})"
@@ -18764,6 +18771,12 @@ playground_topic_produce_command() {
           logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
           exit 1
       fi
+  fi
+
+  if [[ -n "$delete_topic" ]]
+  then
+      log "❌ --delete-topic is set, delete topic if applicable"
+      playground topic delete --topic $topic
   fi
 
   if [[ -n "$tombstone" ]]
@@ -19919,8 +19932,8 @@ playground_topic_delete_command() {
   grep "does not exist" /tmp/result.log > /dev/null 2>&1
   if [ $? == 0 ]
   then
-      logwarn "❌ topic $topic does not exist !"
-      exit 1
+      log "❌ topic $topic does not exist !"
+      exit 0
   fi
   set -e
 
@@ -30655,6 +30668,14 @@ playground_topic_produce_parse_requirements() {
 
         # :flag.case_no_arg
         args['--consume']=1
+        shift
+        ;;
+
+      # :flag.case
+      --delete-topic)
+
+        # :flag.case_no_arg
+        args['--delete-topic']=1
         shift
         ;;
 

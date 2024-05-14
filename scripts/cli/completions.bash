@@ -853,7 +853,7 @@ _playground_completions() {
       ;;
 
     *'topic produce'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--compatibility --compression-codec --consume --forced-key --forced-value --generate-only --headers --help --key --key-subject-name-strategy --max-nb-messages-per-batch --nb-messages --nb-partitions --no-null --producer-property --record-size --sleep-time-between-batch --tombstone --topic --validate --validate-config --value --value-schema-id --value-subject-name-strategy --verbose -h -t -v")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--compatibility --compression-codec --consume --delete-topic --forced-key --forced-value --generate-only --headers --help --key --key-subject-name-strategy --max-nb-messages-per-batch --nb-messages --nb-partitions --no-null --producer-property --record-size --sleep-time-between-batch --tombstone --topic --validate --validate-config --value --value-schema-id --value-subject-name-strategy --verbose -h -t -v")" -- "$cur" )
       ;;
 
     *'topic consume'*)
