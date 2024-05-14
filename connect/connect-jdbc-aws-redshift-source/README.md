@@ -40,7 +40,7 @@ aws redshift modify-cluster --cluster-identifier $CLUSTER_NAME --vpc-security-gr
 Getting cluster URL
 
 ```bash
-$ CLUSTER=$(aws redshift describe-clusters --cluster-identifier $CLUSTER_NAME | jq -r .Clusters[0].Endpoint.Address)
+$ CLUSTER=$(aws redshift describe-clusters --cluster-identifier $CLUSTER_NAME | jq -r '.Clusters[0].Endpoint.Address')
 ```
 
 Create database in Redshift:
@@ -68,7 +68,7 @@ $ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
                 "tasks.max": "1",
-                "connection.url": "jdbc:postgresql://$CLUSTER:$PORT/dev?user=masteruser&password=myPassword1&ssl=false",
+                "connection.url": "jdbc:redshift://$CLUSTER:$PORT/dev?user=masteruser&password=myPassword1&ssl=false",
                 "table.whitelist": "customers",
                 "mode": "timestamp+incrementing",
                 "timestamp.column.name": "update_ts",
