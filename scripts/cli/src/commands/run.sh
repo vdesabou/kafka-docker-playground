@@ -1228,11 +1228,11 @@ then
       
       if [[ $cluster_environment == *"@"* ]]
       then
-        cluster_environment=$(echo "$cluster_environment" | cut -d "@" -f 2)
+        cluster_environment=$(echo "$cluster_environment" | cut -d "@" -f 1)
       fi
       if [[ $cluster_environment == *"/"* ]]
       then
-        cluster_environment=$(echo "$cluster_environment" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
+        cluster_environment=$(echo "$cluster_environment" | sed 's/[[:blank:]]//g' | cut -d "/" -f 1)
       fi
       array_flag_list+=("--cluster-environment $cluster_environment")
     fi
