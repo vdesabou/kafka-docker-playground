@@ -156,6 +156,11 @@ then
     else
         echo "$key|NULL" | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security --property parse.key=true --property key.separator="|" --property null.marker=NULL
     fi
+
+    if [[ -n "$consume" ]]
+    then
+        playground topic consume --topic $topic
+    fi
     # nothing else to do
     exit 0
 fi
