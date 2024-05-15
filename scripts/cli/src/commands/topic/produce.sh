@@ -745,9 +745,9 @@ then
     set -e
 fi
 
-playground topic get-number-records --topic $topic > $tmp_dir/result.log 2>$tmp_dir/result.log
 set +e
-grep "does not exist" $tmp_dir/result.log > /dev/null 2>&1
+playground topic describe --topic $topic > /tmp/result.log 2>/tmp/result.log
+grep "does not exist" /tmp/result.log > /dev/null 2>&1
 if [ $? == 0 ]
 then
     log "✨ topic $topic does not exist, it will be created.."
@@ -771,9 +771,9 @@ then
         fi
     fi
 else
-    nb=$(playground topic get-number-records -t $topic | tail -1)
     if [ "$nb_partitions" != "1" ]
     then
+        nb=$(playground topic get-number-records -t $topic | tail -1)
         if [ $nb == 0 ]
         then
             log "--nb-partitions is set and topic is empty, re-creating it with $nb_partitions partitions..."
@@ -784,9 +784,6 @@ else
             echo "playground topic delete --topic $topic"
             exit 0
         fi
-    else
-        log "💯 Get number of records in topic $topic"
-        echo $nb
     fi
 fi
 
@@ -1201,7 +1198,6 @@ do
 done
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 log "📤 produced $nb_messages records to topic $topic, $ELAPSED"
-playground topic get-number-records --topic $topic
 
 if [[ -n "$consume" ]]
 then
