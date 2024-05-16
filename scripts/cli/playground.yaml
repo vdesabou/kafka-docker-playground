@@ -1497,11 +1497,11 @@ subcommands:
             
         - names:
           - --max-characters
-          argument: 2500
+          argument: 3000
           description: | 
-            Max characters per message to display (default is 2500)
+            Max characters per message to display (default is 3000)
             
-            Default value: 2500
+            Default value: 3000
             
       - name: produce
         description: | 

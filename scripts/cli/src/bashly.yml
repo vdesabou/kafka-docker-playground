@@ -1783,9 +1783,9 @@ commands:
         arg: max-characters
         validate: integer
         required: false
-        default: "2500"
+        default: "3000"
         help: |-
-          Max characters per message to display (default is 2500)
+          Max characters per message to display (default is 3000)
 
     - name: produce
       filters:

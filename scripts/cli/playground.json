@@ -1383,8 +1383,8 @@
               "names": [
                 "--max-characters"
               ],
-              "argument": 2500,
-              "description": "Max characters per message to display (default is 2500)\n\nDefault value: 2500\n"
+              "argument": 3000,
+              "description": "Max characters per message to display (default is 3000)\n\nDefault value: 3000\n"
             }
           ]
         },

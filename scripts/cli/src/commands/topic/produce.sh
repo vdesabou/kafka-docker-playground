@@ -632,7 +632,7 @@ fi
 
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 
-size_limit_to_show=2500
+size_limit_to_show=3000
 if [ $record_size -gt $size_limit_to_show ]
 then
     log "✨ $nb_generated_messages records were generated$value_str (only showing first 1 as record size is $record_size), $ELAPSED"
@@ -1212,5 +1212,6 @@ log "📤 produced $nb_messages records to topic $topic, $ELAPSED"
 
 if [[ -n "$consume" ]]
 then
+    log "📥 --consume is set, consuming topic $topic"
     playground topic consume --topic $topic
 fi
