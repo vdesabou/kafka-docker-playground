@@ -123,8 +123,11 @@ fi
 
 if [[ -n "$delete_topic" ]]
 then
-    log "❌ --delete-topic is set, delete topic if applicable"
-    playground topic delete --topic $topic
+    if [[ ! -n "$generate_only" ]]
+    then
+        log "❌ --delete-topic is set, delete topic if applicable"
+        playground topic delete --topic $topic
+    fi
 fi
 
 if [[ -n "$tombstone" ]]
