@@ -19025,9 +19025,9 @@ playground_topic_produce_command() {
       then
           nb_max_messages_to_generate=50
       else
-          if [ $record_size != 0 ]
+          if [ $record_size != 0 ] && [ "$type" == "VALUE" ]
           then
-              nb_max_messages_to_generate=10
+              nb_max_messages_to_generate=100
           else
               nb_max_messages_to_generate=500
           fi
@@ -19134,6 +19134,7 @@ playground_topic_produce_command() {
       record_size_temp_file_line=$tmp_dir/line.json
       record_size_temp_file_output=$tmp_dir/output.json
       lines_count=0
+      counter=0
 
       while IFS= read -r line
       do
@@ -19146,7 +19147,7 @@ playground_topic_produce_command() {
                   echo $line > $record_size_temp_file_line
                   new_value="PLACEHOLDER"
 
-                  first_string_field=$(echo "$line" | jq -r 'path(.. | select(type == "string")) | .[-1]' | tail -1)
+                  first_string_field=$(echo "$line" | jq -r 'path(.. | select(type == "string")) | .[-1]' | head -1)
 
                   if [ $lines_count -eq 0 ]
                   then
