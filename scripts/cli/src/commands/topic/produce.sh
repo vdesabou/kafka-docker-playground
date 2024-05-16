@@ -482,7 +482,7 @@ function generate_data() {
 
     while IFS= read -r line
     do
-        if [ $record_size != 0 ]
+        if [ $record_size != 0 ] && [ "$type" == "VALUE" ]
         then
             if ! echo "$line" | jq -e .  > /dev/null 2>&1
             then
