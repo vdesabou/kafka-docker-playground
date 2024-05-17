@@ -2070,6 +2070,7 @@ commands:
 
       - long: --value-schema-id
         arg: value-schema-id
+        private: true
         validate: integer
         required: false
         help: |-

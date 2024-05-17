@@ -4247,11 +4247,6 @@ playground_topic_produce_usage() {
     printf "    Default: 0\n"
     echo
 
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--value-schema-id VALUE-SCHEMA-ID")"
-    printf "    🔰 Do not auto register schema and specify schema id to use. \n    \n    It sets --property value.schema.id=x --property auto.register=false\n    --property use.latest.version=true\n"
-    echo
-
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
