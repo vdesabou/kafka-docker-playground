@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
   # based on https://github.com/Wuerike/kafka-iceberg-streaming/tree/main
   minio:

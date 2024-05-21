@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
   splunk:
     image: splunk/splunk:9.2.0.1

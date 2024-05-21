@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
   umserver:
     image: softwareag/universalmessaging-server:10.11

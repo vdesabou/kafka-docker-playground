@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
   # https://pypi.org/project/azure-cosmos/
   azure-cosmos-client:

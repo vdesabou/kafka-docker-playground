@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
   wiremock:
     image: wiremock/wiremock:2.35.0

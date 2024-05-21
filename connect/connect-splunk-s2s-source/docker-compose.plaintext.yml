@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
   splunk-uf:
     image: splunk/universalforwarder:8.1.2

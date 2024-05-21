@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
   oracle:
     # https://github.com/wnameless/docker-oracle-xe-11g

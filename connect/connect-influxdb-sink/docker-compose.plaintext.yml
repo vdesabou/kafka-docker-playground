@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
   influxdb:
     image: influxdb:1.7.7

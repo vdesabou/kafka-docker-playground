@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
   replicator:
     image: confluentinc/cp-enterprise-replicator-executable:${TAG}

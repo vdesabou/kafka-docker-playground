@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
   # connect-us is used to launch mirrormaker 2 executable
   connect-us:

@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
   # https://docs.influxdata.com/influxdb/v2.0/get-started/
   influxdb2:

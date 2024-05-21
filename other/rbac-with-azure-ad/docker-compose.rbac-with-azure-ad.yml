@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
 
   # this ldap instance is not used by RBAC, it is only used to perform ldapsearch

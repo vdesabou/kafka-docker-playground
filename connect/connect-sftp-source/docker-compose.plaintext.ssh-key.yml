@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
 
   # getting weird "Couldn't create directory: Failure", so created image from this PR https://github.com/atmoz/sftp/pull/164

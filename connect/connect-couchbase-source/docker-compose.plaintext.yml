@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
   couchbase:
     image: couchbase # https://hub.docker.com/_/couchbase

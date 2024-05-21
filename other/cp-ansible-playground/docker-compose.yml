@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
   zookeeper1:
     image: vdesabou/cp-ansible-playground-zookeeper1:${TAG}

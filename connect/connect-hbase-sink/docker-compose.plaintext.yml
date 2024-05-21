@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
   hbase:
     image: daunnc/hbase:2.2.4 # https://github.com/pomadchin/hbase-docker

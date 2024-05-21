@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
   graphdb:
     image: ontotext/graphdb:10.2.0

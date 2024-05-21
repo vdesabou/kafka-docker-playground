@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
   oracle:    
     image: wnameless/oracle-xe-11g-r2

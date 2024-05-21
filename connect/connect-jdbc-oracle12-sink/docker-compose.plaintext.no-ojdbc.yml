@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
   oracle:
     # You need to build this image first, following the instructions at

@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
   omnisci:
     image: omnisci/core-os-cpu:v4.7.0

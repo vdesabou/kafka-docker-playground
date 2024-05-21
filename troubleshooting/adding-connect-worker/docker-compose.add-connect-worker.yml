@@ -1,5 +1,4 @@
 ---
-version: '3.5'
 services:
   connect2:
     image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
