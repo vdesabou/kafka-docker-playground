@@ -767,6 +767,7 @@ function retry() {
           display_docker_container_error_log
         else
           logerror "💀 The test $script (retriable) has failed after $n attempts."
+          display_docker_container_error_log
           return 1
         fi
       else
@@ -778,6 +779,7 @@ function retry() {
           display_docker_container_error_log
         else
           logerror "💀 The test $script (default_retry) has failed after $n attempts."
+          display_docker_container_error_log
           return 1
         fi
       fi
