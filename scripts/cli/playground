@@ -4097,7 +4097,10 @@ playground_topic_consume_usage() {
 # :command.usage
 playground_topic_produce_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground topic produce - 📤 Produce to a topic\n"
+    printf "playground topic produce\n"
+    echo
+
+    printf "  📤 Produce to a topic\n  \n  See video tutorial https://youtu.be/mbzHCewG_XE\n"
     echo
 
   else
@@ -7994,6 +7997,7 @@ function retry() {
           display_docker_container_error_log
         else
           logerror "💀 The test $script (retriable) has failed after $n attempts."
+          display_docker_container_error_log
           return 1
         fi
       else
@@ -8005,6 +8009,7 @@ function retry() {
           display_docker_container_error_log
         else
           logerror "💀 The test $script (default_retry) has failed after $n attempts."
+          display_docker_container_error_log
           return 1
         fi
       fi
@@ -21819,9 +21824,10 @@ playground_connector_show_config_parameters_command() {
 
               class=$(_jq '.class')
 
-              if [ "$class" != "$connector_class" ]
+              if [ "$class" == "$connector_class" ]
               then
                   version=$(_jq '.version')
+                  break
               fi
           done
       fi

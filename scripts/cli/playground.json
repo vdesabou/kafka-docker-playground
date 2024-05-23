@@ -1390,7 +1390,7 @@
         },
         {
           "name": "produce",
-          "description": "📤 Produce to a topic\n",
+          "description": "📤 Produce to a topic\n  \n  See video tutorial https://youtu.be/mbzHCewG_XE\n",
           "usage": "playground topic produce [OPTIONS]",
           "options": [
             {

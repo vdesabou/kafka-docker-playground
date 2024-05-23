@@ -67,9 +67,10 @@ do
 
             class=$(_jq '.class')
 
-            if [ "$class" != "$connector_class" ]
+            if [ "$class" == "$connector_class" ]
             then
                 version=$(_jq '.version')
+                break
             fi
         done
     fi

@@ -1506,6 +1506,8 @@ subcommands:
       - name: produce
         description: | 
           📤 Produce to a topic
+            
+            See video tutorial https://youtu.be/mbzHCewG_XE
         usage: playground topic produce [OPTIONS]
         options:
         - names:
