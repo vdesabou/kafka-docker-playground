@@ -1,5 +1,4 @@
 ---
-  version: '3.5'
   services:
 
     # using https://github.com/big-data-europe/docker-hive

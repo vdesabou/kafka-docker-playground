@@ -199,6 +199,8 @@ commands:
       arg: tags
       help: |-
         💯 list of tags
+    - long: --generate-for-kb
+      required: false
 
 - name: bashly-reload
   private: true

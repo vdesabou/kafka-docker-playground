@@ -30,7 +30,6 @@ else
     log "🐛📂 not deleting tmp dir $tmp_dir"
 fi
 cat << EOF > $tmp_dir/docker-compose-remote-debugging.yml
-version: '3.5'
 services:
   $container:
     environment:

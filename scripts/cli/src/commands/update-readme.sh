@@ -1,4 +1,5 @@
 tags="${args[--tags]}"
+generate_for_kb="${args[--generate-for-kb]}"
 
 set +e
 tmp_dir="/tmp/update-readme"
@@ -235,89 +236,91 @@ do
     done #end image_version
   done #end script
 
-  # GH issues
-  if [ "$html_url" != "" ]
+  if [[ ! -n "$generate_for_kb" ]]
   then
-    t=$(echo ${testdir} | sed 's/-/\//')
-    title="🔥 ${t}"
-    log "Number of successful tests: $nb_success/${nb_tests}"
-    if [ ${nb_fail} -gt 0 ]
+    # GH issues
+    if [ "$html_url" != "" ]
     then
-      gh issue list --limit 500 | grep "$title" > /dev/null
-      if [ $? != 0 ]
+      t=$(echo ${testdir} | sed 's/-/\//')
+      title="🔥 ${t}"
+      log "Number of successful tests: $nb_success/${nb_tests}"
+      if [ ${nb_fail} -gt 0 ]
       then
-        echo -e "🆕💥 New issue !\n" >> ${gh_msg_file_intro}
-        msg=$(cat ${gh_msg_file_intro} ${gh_msg_file})
-        log "Creating GH issue with title $title"
-        gh issue create --title "$title" --body "$msg" --assignee vdesabou --label "new 🆕"
-      else
-        echo -e "🤦‍♂️💥 Still failing !\n" >> ${gh_msg_file_intro}
-        msg=$(cat ${gh_msg_file_intro} ${gh_msg_file})
-        log "GH issue with title $title already exist, adding comment..."
-        issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
-        gh issue comment ${issue_number} --body "$msg"
-        gh issue edit ${issue_number} --add-label "CI failing 🔥" --remove-label "new 🆕"
+        gh issue list --limit 500 | grep "$title" > /dev/null
+        if [ $? != 0 ]
+        then
+          echo -e "🆕💥 New issue !\n" >> ${gh_msg_file_intro}
+          msg=$(cat ${gh_msg_file_intro} ${gh_msg_file})
+          log "Creating GH issue with title $title"
+          gh issue create --title "$title" --body "$msg" --assignee vdesabou --label "new 🆕"
+        else
+          echo -e "🤦‍♂️💥 Still failing !\n" >> ${gh_msg_file_intro}
+          msg=$(cat ${gh_msg_file_intro} ${gh_msg_file})
+          log "GH issue with title $title already exist, adding comment..."
+          issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
+          gh issue comment ${issue_number} --body "$msg"
+          gh issue edit ${issue_number} --add-label "CI failing 🔥" --remove-label "new 🆕"
+        fi
+        gh_issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
       fi
-      gh_issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
-    fi
-    if [ ${nb_success} -eq ${nb_tests} ]
-    then
-      # if all scripts in tests are now successful, close the issue
-      gh issue list --limit 500 | grep "$title" > /dev/null
-      if [ $? = 0 ]
+      if [ ${nb_success} -eq ${nb_tests} ]
       then
-        issue_number=$(gh issue list --limit 500 | grep "$title" | head -1 | awk '{print $1;}')
-        echo -e "👍✅ Issue fixed !\n" >> ${gh_msg_file_intro}
-        msg=$(cat ${gh_msg_file_intro} ${gh_msg_file})
-        gh issue comment ${issue_number} --body "$msg"
-        log "Closing GH issue #${issue_number} with title $title"
-        gh issue close ${issue_number}
+        # if all scripts in tests are now successful, close the issue
+        gh issue list --limit 500 | grep "$title" > /dev/null
+        if [ $? = 0 ]
+        then
+          issue_number=$(gh issue list --limit 500 | grep "$title" | head -1 | awk '{print $1;}')
+          echo -e "👍✅ Issue fixed !\n" >> ${gh_msg_file_intro}
+          msg=$(cat ${gh_msg_file_intro} ${gh_msg_file})
+          gh issue comment ${issue_number} --body "$msg"
+          log "Closing GH issue #${issue_number} with title $title"
+          gh issue close ${issue_number}
+        fi
       fi
     fi
-  fi
 
-  ci=""
-  ci_nb_fail=0
-  ci_nb_skipped=0
-  nb_image_versions=0
-  for image_version in $tags
-  do
-    let "nb_image_versions++"
-    image_version_no_dot=$(echo ${image_version} | sed 's/\.//g')
-    if [ "${TEST_FAILED[$image_version_no_dot]}" != "" ]
-    then
-      gh_issue_number=$(echo $gh_issue_number|tr -d '\n')
-      if [ "${gh_issue_number}" != "" ]
+    ci=""
+    ci_nb_fail=0
+    ci_nb_skipped=0
+    nb_image_versions=0
+    for image_version in $tags
+    do
+      let "nb_image_versions++"
+      image_version_no_dot=$(echo ${image_version} | sed 's/\.//g')
+      if [ "${TEST_FAILED[$image_version_no_dot]}" != "" ]
       then
-        ci="$ci [![issue $gh_issue_number](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-red)](https://github.com/vdesabou/kafka-docker-playground/issues/$gh_issue_number)"
+        gh_issue_number=$(echo $gh_issue_number|tr -d '\n')
+        if [ "${gh_issue_number}" != "" ]
+        then
+          ci="$ci [![issue $gh_issue_number](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-red)](https://github.com/vdesabou/kafka-docker-playground/issues/$gh_issue_number)"
+        else
+          ci="$ci ${TEST_FAILED[$image_version_no_dot]}"
+        fi
+        let "ci_nb_fail++"
+      elif [ "${TEST_SKIPPED[$image_version_no_dot]}" != "" ]
+      then
+        ci="$ci ${TEST_SKIPPED[$image_version_no_dot]}"
+        let "ci_nb_skipped++"
+      elif [ "${TEST_SUCCESS[$image_version_no_dot]}" != "" ]
+      then
+        ci="$ci [![CP $image_version](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-green)](${TEST_SUCCESS[$image_version_no_dot]})"
       else
-        ci="$ci ${TEST_FAILED[$image_version_no_dot]}"
+        logerror "TEST_SUCCESS, TEST_SKIPPED and TEST_FAILED are all empty !"
       fi
-      let "ci_nb_fail++"
-    elif [ "${TEST_SKIPPED[$image_version_no_dot]}" != "" ]
-    then
-      ci="$ci ${TEST_SKIPPED[$image_version_no_dot]}"
-      let "ci_nb_skipped++"
-    elif [ "${TEST_SUCCESS[$image_version_no_dot]}" != "" ]
-    then
-      ci="$ci [![CP $image_version](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-green)](${TEST_SUCCESS[$image_version_no_dot]})"
-    else
-      logerror "TEST_SUCCESS, TEST_SKIPPED and TEST_FAILED are all empty !"
-    fi
-  done
+    done
 
-  if [ ${ci_nb_fail} -eq 0 ] && [ ${ci_nb_skipped} -eq 0 ]
-  then
-      ci="[![CI ok](https://img.shields.io/badge/$nb_success/$nb_tests-ok!-green)]($html_url)"
-  elif [ ${ci_nb_fail} -eq ${nb_image_versions} ]
-  then
-      ci="[![CI fail](https://img.shields.io/badge/$nb_success/$nb_tests-fail!-red)](https://github.com/vdesabou/kafka-docker-playground/issues/$gh_issue_number)"
+    if [ ${ci_nb_fail} -eq 0 ] && [ ${ci_nb_skipped} -eq 0 ]
+    then
+        ci="[![CI ok](https://img.shields.io/badge/$nb_success/$nb_tests-ok!-green)]($html_url)"
+    elif [ ${ci_nb_fail} -eq ${nb_image_versions} ]
+    then
+        ci="[![CI fail](https://img.shields.io/badge/$nb_success/$nb_tests-fail!-red)](https://github.com/vdesabou/kafka-docker-playground/issues/$gh_issue_number)"
+    fi
   fi
 
   if [ "$connector_path" != "" ]
   then
     version=$(grep "$connector_path " $tmp_dir/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
-    license=$(grep "$connector_path " $tmp_dir/README.txt | cut -d "|" -f 4 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
     owner=$(grep "$connector_path " $tmp_dir/README.txt | cut -d "|" -f 5 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
     release_date=$(grep "$connector_path " $tmp_dir/README.txt | cut -d "|" -f 6 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
     documentation_url=$(grep "$connector_path " $tmp_dir/README.txt | cut -d "|" -f 7 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//' | sed 's/.*(\(.*\))/\1/')
@@ -326,18 +329,6 @@ do
       release_date="unknown"
     fi
 
-    # if [ "$license" = "Confluent Software Evaluation License" ]
-    # then
-    #   type="![license](https://img.shields.io/badge/-confluent%20subscription-black)"
-    # elif [ "$license" = "Apache License 2.0" ] || [ "$license" = "Apache 2.0" ] || [ "$license" = "Apache License, Version 2.0" ] || [ "$license" = "The Apache License, Version 2.0" ]
-    # then
-    #   type="![license](https://img.shields.io/badge/-open%20source-black)"
-    # else
-    #   license=$(echo $licence | tr '[:upper:]' '[:lower:]')
-    #   #typeencoded=$(urlencode $license)
-    #   typeencoded=$(echo "$licence" | sed -e 's/ /%20/g')
-    #   type="![license](https://img.shields.io/badge/-$typeencoded-black)"
-    # fi
     owner_badge=""
     if [ "$owner" != "" ]
     then

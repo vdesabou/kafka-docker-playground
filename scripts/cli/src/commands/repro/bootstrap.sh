@@ -301,7 +301,6 @@ then
     log "✨ Creating empty file $docker_compose_test_file"
 
     echo "---" > $docker_compose_test_file
-    echo "version: '3.5'" >> $docker_compose_test_file
     echo "" >> $docker_compose_test_file
     echo "# override the services here, example " >> $docker_compose_test_file
     echo "# services:" >> $docker_compose_test_file
