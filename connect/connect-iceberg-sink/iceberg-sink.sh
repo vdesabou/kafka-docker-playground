@@ -39,11 +39,16 @@ sleep 30
 
 playground connector show-lag
 
-log "You can open the jupyter lab at http://localhost:8888/lab/tree/notebooks and use the sample notebook in notebooks/iceberg.ipynb to query the table"
+if [ -z "$GITHUB_RUN_NUMBER" ]
+then
+  # doesn't work on github actions
+  # not running with github actions
+  log "You can open the jupyter lab at http://localhost:8888/lab/tree/notebooks and use the sample notebook in notebooks/iceberg.ipynb to query the table"
 
-log "Verify data is in Iceberg"
-docker exec -i spark-iceberg spark-sql << EOF
+  log "Verify data is in Iceberg"
+  docker exec -i spark-iceberg spark-sql << EOF
 SELECT *
 FROM orders.payments
 LIMIT 10;
 EOF
+fi
