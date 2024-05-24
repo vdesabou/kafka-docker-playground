@@ -1233,6 +1233,32 @@ subcommands:
             
             Allowed values: bash, sh, ksh, zsh
             
+      - name: change-jdk
+        description: | 
+          🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)
+            
+            PS: It works for UBI8 docker images only
+        usage: playground container change-jdk [OPTIONS]
+        options:
+        - names:
+          - --container
+          - -c
+          argument: connect
+          description: | 
+            🐳 Container name
+            
+            Default value: connect
+            
+        - names:
+          - --version
+          argument: [8, 11, 17, 21, 22]
+          description: | 
+            🤎 JDK version to use
+            
+            Required: ✓ Yes
+            
+            Allowed values: 8, 11, 17, 21, 22
+            
       - name: exec
         description: | 
           🪄  Execute command in a container

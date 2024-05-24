@@ -1583,6 +1583,31 @@ commands:
       - playground ssh -c connect -s sh
       - playground ssh --container connect --shell sh
 
+    - name: change-jdk
+      group: Container
+      help: |-
+        🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)
+
+        PS: It works for UBI8 docker images only
+
+      flags:
+      - *container
+
+      - long: --version
+        required: true
+        arg: version
+        allowed: 
+          - "8"
+          - "11"
+          - "17"
+          - "21"
+          - "22"
+        help: |-
+          🤎 JDK version to use
+
+      examples:
+      - playground change-jdk --container connect --version jdk17-lts
+
     - name: exec
       group: Container
       help: |-

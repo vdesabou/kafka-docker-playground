@@ -1102,6 +1102,34 @@
           ]
         },
         {
+          "name": "change-jdk",
+          "description": "🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)\n  \n  PS: It works for UBI8 docker images only\n",
+          "usage": "playground container change-jdk [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--container",
+                "-c"
+              ],
+              "argument": "connect",
+              "description": "🐳 Container name\n\nDefault value: connect\n"
+            },
+            {
+              "names": [
+                "--version"
+              ],
+              "argument": [
+                8,
+                11,
+                17,
+                21,
+                22
+              ],
+              "description": "🤎 JDK version to use\n\nRequired: ✓ Yes\n\nAllowed values: 8, 11, 17, 21, 22\n"
+            }
+          ]
+        },
+        {
           "name": "exec",
           "description": "🪄  Execute command in a container\n",
           "usage": "playground container exec [OPTIONS]",
