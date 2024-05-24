@@ -32,10 +32,10 @@ set -e
 if [[ -n "$port" ]]
 then
   log "🕵️‍♂️ Taking tcp dump on container ${container} and port ${port} for ${duration} seconds..."
-  docker exec -d --privileged --user root ${container} bash -c "tcpdump -w /tmp/${filename} port ${port}"
+  docker exec -d --privileged --user root ${container} bash -c "tcpdump -w /tmp/${filename} -i any port ${port}"
 else
   log "🕵️‍♂️ Taking tcp dump on container ${container} and all ports for ${duration} seconds..."
-  docker exec -d --privileged --user root ${container} bash -c "tcpdump -w /tmp/${filename}"
+  docker exec -d --privileged --user root ${container} bash -c "tcpdump -w /tmp/${filename} -i any"
 fi
 
 if [ $? -eq 0 ]
