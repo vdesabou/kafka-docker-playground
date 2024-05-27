@@ -974,6 +974,62 @@ subcommands:
           🙅‍♂️ Change whether new connections can be accepted
         usage: playground tcp-proxy toggle-accept-connections
         options: []
+      - name: toggle-reads-client
+        description: | 
+          ✅ Change whether reading data from the client is enabled.
+            
+              See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)
+        usage: playground tcp-proxy toggle-reads-client [OPTIONS]
+        options:
+        - names:
+          - --connection-id
+          argument: CONNECTION-ID
+          description: | 
+            🧲 Zazkia TCP connection id
+                  
+            
+      - name: toggle-reads-service
+        description: | 
+          ✅ Change whether reading data from the service is enabled.
+            
+              See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)
+        usage: playground tcp-proxy toggle-reads-service [OPTIONS]
+        options:
+        - names:
+          - --connection-id
+          argument: CONNECTION-ID
+          description: | 
+            🧲 Zazkia TCP connection id
+                  
+            
+      - name: toggle-writes-client
+        description: | 
+          ✅ Change whether writing data to the client is enabled.
+            
+              See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)
+        usage: playground tcp-proxy toggle-writes-client [OPTIONS]
+        options:
+        - names:
+          - --connection-id
+          argument: CONNECTION-ID
+          description: | 
+            🧲 Zazkia TCP connection id
+                  
+            
+      - name: toggle-writes-service
+        description: | 
+          ✅ Change whether reading data to the service is enabled.
+            
+              See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)
+        usage: playground tcp-proxy toggle-writes-service [OPTIONS]
+        options:
+        - names:
+          - --connection-id
+          argument: CONNECTION-ID
+          description: | 
+            🧲 Zazkia TCP connection id
+                  
+            
   - name: debug
     description: | 
         🐞 Debug commands

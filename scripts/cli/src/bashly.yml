@@ -1361,6 +1361,38 @@ commands:
     help: |-
         🙅‍♂️ Change whether new connections can be accepted
 
+  - name: toggle-reads-client
+    help: |-
+        ✅ Change whether reading data from the client is enabled.
+
+          See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)
+    flags:
+      - *connection-id
+
+  - name: toggle-reads-service
+    help: |-
+        ✅ Change whether reading data from the service is enabled.
+
+          See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)
+    flags:
+      - *connection-id
+
+  - name: toggle-writes-client
+    help: |-
+        ✅ Change whether writing data to the client is enabled.
+
+          See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)
+    flags:
+      - *connection-id
+
+  - name: toggle-writes-service
+    help: |-
+        ✅ Change whether reading data to the service is enabled.
+
+          See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)
+    flags:
+      - *connection-id
+
 - name: debug
   expose: always
   group: Debug
