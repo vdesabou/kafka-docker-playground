@@ -1309,5 +1309,10 @@ function cleanup_confluent_cloud_resources () {
 
 function get_zazkia_id_list () {
   handle_onprem_connect_rest_api "curl -s -X GET -H \"Content-Type: application/json\" \"http://localhost:9191/links/\""
-  echo "$curl_output" | jq -r '.[].links[] | select(.serviceReceiveError != "EOF") | .id' | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
+  if [[ $(echo "$curl_output" | jq -r '.[].links[]') != "" ]]
+  then
+    echo "$curl_output" | jq -r '.[].links[] | select(.serviceReceiveError != "EOF") | .id' | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
+  else
+    echo ""
+  fi
 }

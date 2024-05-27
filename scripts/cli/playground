@@ -7544,7 +7544,12 @@ function cleanup_confluent_cloud_resources () {
 
 function get_zazkia_id_list () {
   handle_onprem_connect_rest_api "curl -s -X GET -H \"Content-Type: application/json\" \"http://localhost:9191/links/\""
-  echo "$curl_output" | jq -r '.[].links[] | select(.serviceReceiveError != "EOF") | .id' | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
+  if [[ $(echo "$curl_output" | jq -r '.[].links[]') != "" ]]
+  then
+    echo "$curl_output" | jq -r '.[].links[] | select(.serviceReceiveError != "EOF") | .id' | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
+  else
+    echo ""
+  fi
 }
 
 # src/lib/colors.sh
@@ -17832,11 +17837,16 @@ playground_tcp_proxy_get_connections_command() {
   connection_id="${args[--connection-id]}"
 
   handle_onprem_connect_rest_api "curl -s -X GET -H \"Content-Type: application/json\" \"http://localhost:9191/links/\""
-  if [[ ! -n "$connection_id" ]]
+  if [[ $(echo "$curl_output" | jq -r '.[].links[]') != "" ]]
   then
-      echo "$curl_output" | jq -r '.[].links[] | select(.serviceReceiveError != "EOF") | {id, state, stats}'
+      if [[ ! -n "$connection_id" ]]
+      then
+          echo "$curl_output" | jq -r '.[].links[] | select(.serviceReceiveError != "EOF") | {id, state, stats}'
+      else
+          echo "$curl_output" | jq -r '.[].links[] | select(.id == '$connection_id' and .serviceReceiveError != "EOF") | {id, state, stats}'
+      fi
   else
-      echo "$curl_output" | jq -r '.[].links[] | select(.id == '$connection_id' and .serviceReceiveError != "EOF") | {id, state, stats}'
+      log "❌ No active Zazkia TCP connection found, make sure that Zazkia is being used!"
   fi
 }
 
@@ -17865,7 +17875,11 @@ playground_tcp_proxy_delay_command() {
   for id in "${items[@]}"
   do
       log "⏲️ Add $delay_service_response milliseconds delay to service response for connection id $id"
-      handle_onprem_connect_rest_api "curl -s -X POST -H \"Content-Type: application/json\"  --header 'Accept: text/plain' \"http://localhost:9191/links/$id/delay-response?ms=$delay_service_response\""
+      handle_onprem_connect_rest_api "curl -s -X POST -H \"Content-Type: application/json\" \"http://localhost:9191/links/$id/delay-response?ms=$delay_service_response\""
+
+      echo "$curl_output"
+
+      sleep 1
 
       playground tcp-proxy get-connections --connection-id $connection_id
   done
@@ -17895,7 +17909,9 @@ playground_tcp_proxy_close_connection_command() {
   for id in "${items[@]}"
   do
       log "❌ closing connection id $id"
-      handle_onprem_connect_rest_api "curl -s -X POST -H \"Content-Type: application/json\"  --header 'Accept: text/plain' \"http://localhost:9191/links/$id/close\""
+      handle_onprem_connect_rest_api "curl -s -X POST -H \"Content-Type: application/json\" \"http://localhost:9191/links/$id/close\""
+
+      echo "$curl_output"
   done
 }
 

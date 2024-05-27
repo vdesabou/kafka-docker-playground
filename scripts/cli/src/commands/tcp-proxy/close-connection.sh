@@ -19,5 +19,7 @@ fi
 for id in "${items[@]}"
 do
     log "❌ closing connection id $id"
-    handle_onprem_connect_rest_api "curl -s -X POST -H \"Content-Type: application/json\"  --header 'Accept: text/plain' \"http://localhost:9191/links/$id/close\""
+    handle_onprem_connect_rest_api "curl -s -X POST -H \"Content-Type: application/json\" \"http://localhost:9191/links/$id/close\""
+
+    echo "$curl_output"
 done

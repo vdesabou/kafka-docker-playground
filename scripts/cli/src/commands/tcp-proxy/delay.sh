@@ -20,7 +20,11 @@ fi
 for id in "${items[@]}"
 do
     log "⏲️ Add $delay_service_response milliseconds delay to service response for connection id $id"
-    handle_onprem_connect_rest_api "curl -s -X POST -H \"Content-Type: application/json\"  --header 'Accept: text/plain' \"http://localhost:9191/links/$id/delay-response?ms=$delay_service_response\""
+    handle_onprem_connect_rest_api "curl -s -X POST -H \"Content-Type: application/json\" \"http://localhost:9191/links/$id/delay-response?ms=$delay_service_response\""
+
+    echo "$curl_output"
+
+    sleep 1
 
     playground tcp-proxy get-connections --connection-id $connection_id
 done
