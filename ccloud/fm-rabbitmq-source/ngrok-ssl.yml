@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  rabbitmq:
+    addr: rabbitmq:5671
+    proto: tcp
