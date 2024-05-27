@@ -1263,7 +1263,36 @@ commands:
       help: |-
         💀 Hard delete (default is soft delete)
     - *verbose
-        
+
+
+- name: tcp-proxy
+  expose: always
+  group: TCP Proxy
+  help: |-
+    🏚 TCP Proxy commands
+
+    emicklei/zazkia (https://github.com/emicklei/zazkia) is a nice tool to simulate a TCP connection issues (reset,delay,throttle,corrupt)
+  commands:
+
+  - name: start
+    help: |-
+      💗 Start the TCP proxy
+    flags:
+      - long: --hostname
+        arg: hostname
+        required: true
+        help: |-
+          Hostname used by the tcp proxy to forward request
+      - long: --port
+        arg: port
+        validate: integer
+        required: true
+        help: |-
+          Port used by the tcp proxy to forward request
+    examples:
+    - playground tcp-proxy start
+
+
 - name: debug
   expose: always
   group: Debug

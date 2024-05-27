@@ -865,6 +865,35 @@ subcommands:
           description: | 
             🐞 Show command being ran.
             
+  - name: tcp-proxy
+    description: | 
+        🏚 TCP Proxy commands
+        
+        emicklei/zazkia (https://github.com/emicklei/zazkia) is a nice tool to simulate a TCP connection issues (reset,delay,throttle,corrupt)
+    usage: playground tcp-proxy COMMAND
+    options: []
+    subcommands:
+      - name: start
+        description: | 
+          💗 Start the TCP proxy
+        usage: playground tcp-proxy start [OPTIONS]
+        options:
+        - names:
+          - --hostname
+          argument: HOSTNAME
+          description: | 
+            Hostname used by the tcp proxy to forward request
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --port
+          argument: PORT
+          description: | 
+            Port used by the tcp proxy to forward request
+            
+            Required: ✓ Yes
+            
   - name: debug
     description: | 
         🐞 Debug commands

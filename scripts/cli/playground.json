@@ -738,6 +738,35 @@
       ]
     },
     {
+      "name": "tcp-proxy",
+      "description": "🏚 TCP Proxy commands\n\nemicklei/zazkia (https://github.com/emicklei/zazkia) is a nice tool to simulate a TCP connection issues (reset,delay,throttle,corrupt)\n",
+      "usage": "playground tcp-proxy COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "start",
+          "description": "💗 Start the TCP proxy\n",
+          "usage": "playground tcp-proxy start [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--hostname"
+              ],
+              "argument": "HOSTNAME",
+              "description": "Hostname used by the tcp proxy to forward request\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--port"
+              ],
+              "argument": "PORT",
+              "description": "Port used by the tcp proxy to forward request\n\nRequired: ✓ Yes\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "debug",
       "description": "🐞 Debug commands\n",
       "usage": "playground debug COMMAND",
