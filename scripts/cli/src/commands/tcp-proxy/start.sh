@@ -62,7 +62,7 @@ sed -i -E -e "s|up -d --quiet-pull|-f /tmp/docker-compose.override.zazkia.yml up
 log "💫 adding container zazkia listening on port 49998"
 bash /tmp/playground-command-zazkia
 
-log "💗 you can now use tcp-proxy using <zazkia:49998>"
+log "💗 you can now use zazkia tcp proxy using <zazkia:49998>"
 log "🌐 zazkia UI is available on http://localhost:9191"
 
 if [[ -n "$skip_automatic_connector_config" ]]

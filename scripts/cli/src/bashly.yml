@@ -1285,6 +1285,8 @@ commands:
       - long: --hostname
         arg: hostname
         required: true
+        completions:
+          - $(docker ps --format '{{.Names}}')
         help: |-
           Hostname used by the tcp proxy to forward request
       - long: --port
