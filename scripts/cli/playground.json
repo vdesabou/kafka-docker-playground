@@ -793,6 +793,20 @@
           ]
         },
         {
+          "name": "get-connections",
+          "description": "🧲 Get Zazkia active TCP connections config and stats\n",
+          "usage": "playground tcp-proxy get-connections [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--connection-id"
+              ],
+              "argument": "CONNECTION-ID",
+              "description": "🧲 Zazkia TCP connection id\n      \n"
+            }
+          ]
+        },
+        {
           "name": "delay",
           "description": "⏲️ Add milliseconds delay to service response.\n  Set it to 0 to remove the delay.\n",
           "usage": "playground tcp-proxy delay [OPTIONS]",
@@ -809,15 +823,9 @@
                 "--connection-id"
               ],
               "argument": "CONNECTION-ID",
-              "description": "🧲 Zazkia TCP connection id\n"
+              "description": "🧲 Zazkia TCP connection id\n      \n"
             }
           ]
-        },
-        {
-          "name": "get-connections",
-          "description": "🧲 Get Zazkia active TCP connections config and stats\n",
-          "usage": "playground tcp-proxy get-connections",
-          "options": []
         }
       ]
     },

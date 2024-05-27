@@ -1320,6 +1320,18 @@ commands:
     examples:
     - playground tcp-proxy start --hostname mysql --port 3306
 
+  - name: get-connections
+    help: |-
+      🧲 Get Zazkia active TCP connections config and stats
+    flags:
+      - &connection-id
+        long: --connection-id
+        arg: connection-id
+        validate: integer
+        required: false
+        help: |-
+          🧲 Zazkia TCP connection id
+                
   - name: delay
     help: |-
         ⏲️ Add milliseconds delay to service response.
@@ -1331,17 +1343,7 @@ commands:
         required: true
         help: |-
           ⏲️ Add milliseconds delay to service response. Default is 0 ms.
-      - &connection-id
-        long: --connection-id
-        arg: connection-id
-        validate: integer
-        required: false
-        help: |-
-          🧲 Zazkia TCP connection id
-
-  - name: get-connections
-    help: |-
-      🧲 Get Zazkia active TCP connections config and stats
+      - *connection-id
 
 - name: debug
   expose: always

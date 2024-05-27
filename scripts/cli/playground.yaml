@@ -924,6 +924,18 @@ subcommands:
           description: | 
             🦹‍♂️ Corrupt service response with random mangled bytes. By default, there is no corruption.
             
+      - name: get-connections
+        description: | 
+          🧲 Get Zazkia active TCP connections config and stats
+        usage: playground tcp-proxy get-connections [OPTIONS]
+        options:
+        - names:
+          - --connection-id
+          argument: CONNECTION-ID
+          description: | 
+            🧲 Zazkia TCP connection id
+                  
+            
       - name: delay
         description: | 
           ⏲️ Add milliseconds delay to service response.
@@ -943,12 +955,8 @@ subcommands:
           argument: CONNECTION-ID
           description: | 
             🧲 Zazkia TCP connection id
+                  
             
-      - name: get-connections
-        description: | 
-          🧲 Get Zazkia active TCP connections config and stats
-        usage: playground tcp-proxy get-connections
-        options: []
   - name: debug
     description: | 
         🐞 Debug commands
