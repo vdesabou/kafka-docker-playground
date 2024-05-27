@@ -1527,6 +1527,31 @@ commands:
     - playground debug block-traffic --destination google.com --action start
     - playground debug block-traffic --container broker --destination zookeeper --action start
 
+  - name: java-debug
+    help: |-
+      🐞 JVM arguments for SSL, Kerberos or Class Loading
+    flags:
+      - *container
+      - long: --type
+        arg: type
+        allowed: [ssl_all, ssl_handshake, class_loading, kerberos]
+        required: true
+        help: |-
+          - ssl_all: Enable all SSL debugging, i.e -Djavax.net.debug=all
+          - ssl_handshake: Enable SSL handshake debugging, i.e -Djavax.net.debug=ssl:handshake
+          - class_loading: Enable class loading debugging, i.e -verbose:class
+          - kerberos: Enable Kerberos debugging, i.e -Dsun.security.krb5.debug=true
+      - long: --action
+        allowed: [enable, disable]
+        arg: action
+        required: false
+        default: "enable"
+        help: |-
+          🟢 enable or disable
+    examples:
+    - playground debug java-debug --type class_loading
+    - playground debug java-debug --container broker --action start
+
   - name: flight-recorder
     help: |-
       🛩️ Record flight recorder

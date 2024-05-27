@@ -6,6 +6,11 @@ break_service_response="${args[--break-service-response]}"
 service_response_corrupt="${args[--service-response-corrupt]}"
 skip_automatic_connector_config=${args[--skip-automatic-connector-config]}
 
+# keep TAG, CONNECT TAG and ORACLE_IMAGE
+export TAG=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
+export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
+
 docker_command=$(playground state get run.docker_command)
 if [ "$docker_command" == "" ]
 then

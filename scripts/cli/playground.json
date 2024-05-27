@@ -1053,6 +1053,40 @@
           ]
         },
         {
+          "name": "java-debug",
+          "description": "🐞 JVM arguments for SSL, Kerberos or Class Loading\n",
+          "usage": "playground debug java-debug [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--container",
+                "-c"
+              ],
+              "argument": "connect",
+              "description": "🐳 Container name\n\nDefault value: connect\n"
+            },
+            {
+              "names": [
+                "--type"
+              ],
+              "argument": [
+                "ssl_all",
+                "ssl_handshake",
+                "class_loading",
+                "kerberos"
+              ],
+              "description": "- ssl_all: Enable all SSL debugging, i.e -Djavax.net.debug=all\n- ssl_handshake: Enable SSL handshake debugging, i.e -Djavax.net.debug=ssl:handshake\n- class_loading: Enable class loading debugging, i.e -verbose:class\n- kerberos: Enable Kerberos debugging, i.e -Dsun.security.krb5.debug=true\n\nRequired: ✓ Yes\n\nAllowed values: ssl_all, ssl_handshake, class_loading, kerberos\n"
+            },
+            {
+              "names": [
+                "--action"
+              ],
+              "argument": "enable",
+              "description": "🟢 enable or disable\n\nDefault value: enable\n\nAllowed values: enable, disable\n"
+            }
+          ]
+        },
+        {
           "name": "flight-recorder",
           "description": "🛩️ Record flight recorder\n  \n  Read more about it at https://www.baeldung.com/java-flight-recorder-monitoring\n  \n  Open the jfr file with JDK Mission Control JMC(https://jdk.java.net/jmc/)\n",
           "usage": "playground debug flight-recorder [OPTIONS]",

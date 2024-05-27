@@ -1185,6 +1185,43 @@ subcommands:
             
             Allowed values: start, stop
             
+      - name: java-debug
+        description: | 
+          🐞 JVM arguments for SSL, Kerberos or Class Loading
+        usage: playground debug java-debug [OPTIONS]
+        options:
+        - names:
+          - --container
+          - -c
+          argument: connect
+          description: | 
+            🐳 Container name
+            
+            Default value: connect
+            
+        - names:
+          - --type
+          argument: [ssl_all, ssl_handshake, class_loading, kerberos]
+          description: | 
+            - ssl_all: Enable all SSL debugging, i.e -Djavax.net.debug=all
+            - ssl_handshake: Enable SSL handshake debugging, i.e -Djavax.net.debug=ssl:handshake
+            - class_loading: Enable class loading debugging, i.e -verbose:class
+            - kerberos: Enable Kerberos debugging, i.e -Dsun.security.krb5.debug=true
+            
+            Required: ✓ Yes
+            
+            Allowed values: ssl_all, ssl_handshake, class_loading, kerberos
+            
+        - names:
+          - --action
+          argument: enable
+          description: | 
+            🟢 enable or disable
+            
+            Default value: enable
+            
+            Allowed values: enable, disable
+            
       - name: flight-recorder
         description: | 
           🛩️ Record flight recorder
