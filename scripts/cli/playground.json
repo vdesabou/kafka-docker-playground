@@ -826,6 +826,26 @@
               "description": "🧲 Zazkia TCP connection id\n      \n"
             }
           ]
+        },
+        {
+          "name": "close-connection",
+          "description": "❌ Close the Zazkia active TCP connections\n",
+          "usage": "playground tcp-proxy close-connection [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--connection-id"
+              ],
+              "argument": "CONNECTION-ID",
+              "description": "🧲 Zazkia TCP connection id\n      \n"
+            }
+          ]
+        },
+        {
+          "name": "toggle-accept-connections",
+          "description": "🙅‍♂️ Change whether new connections can be accepted\n",
+          "usage": "playground tcp-proxy toggle-accept-connections",
+          "options": []
         }
       ]
     },

@@ -957,6 +957,23 @@ subcommands:
             🧲 Zazkia TCP connection id
                   
             
+      - name: close-connection
+        description: | 
+          ❌ Close the Zazkia active TCP connections
+        usage: playground tcp-proxy close-connection [OPTIONS]
+        options:
+        - names:
+          - --connection-id
+          argument: CONNECTION-ID
+          description: | 
+            🧲 Zazkia TCP connection id
+                  
+            
+      - name: toggle-accept-connections
+        description: | 
+          🙅‍♂️ Change whether new connections can be accepted
+        usage: playground tcp-proxy toggle-accept-connections
+        options: []
   - name: debug
     description: | 
         🐞 Debug commands
