@@ -69,7 +69,9 @@ bash /tmp/playground-command-zazkia
 
 log "💗 you can now use zazkia tcp proxy using <zazkia:49998>"
 log "🌐 zazkia UI is available on http://localhost:9191"
+set +e
 open "http://localhost:9191"
+set -e
 
 if [[ -n "$skip_automatic_connector_config" ]]
 then
@@ -104,24 +106,24 @@ else
     fi
 
     if grep -q "\"$hostname\"" "$tmp_dir/create-$connector-config.sh"; then
-      sed -i -E -e "s|\"$hostname\"|\"zazkia\",|g" "$tmp_dir/create-$connector-config.sh"
+      sed -i -E -e "s|\"$hostname\"|\"zazkia\"|g" "$tmp_dir/create-$connector-config.sh"
       log "replacing \"$hostname\" by \"zazkia\""
       is_modified=1
     fi
     if grep -q "$port" "$tmp_dir/create-$connector-config.sh"; then
-      sed -i -E -e "s|$port|49998,|g" "$tmp_dir/create-$connector-config.sh"
+      sed -i -E -e "s|$port|49998|g" "$tmp_dir/create-$connector-config.sh"
       log "replacing $port by 49998"
       is_modified=1
     fi
 
     if [ $is_modified -eq 1 ]
     then
-      log "💫 updating connector $connector configuration with:"
+      log "💫 updating connector $connector configuration with"
       cat "$tmp_dir/create-$connector-config.sh"
       check_if_continue
       bash "$tmp_dir/create-$connector-config.sh"
     else
-      logwarn "Could not replace automatically hostname $hostname and port $port in connector $connector configuration, please do it manually !"
+      logwarn "💅 could not replace automatically hostname $hostname and port $port in connector $connector configuration, please do it manually !"
     fi
   done
 fi
