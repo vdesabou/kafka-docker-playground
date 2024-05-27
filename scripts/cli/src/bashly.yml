@@ -1280,7 +1280,7 @@ commands:
 
   - name: start
     help: |-
-      💗 Start the TCP proxy
+      💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998
     flags:
       - long: --hostname
         arg: hostname
@@ -1321,6 +1321,12 @@ commands:
         required: false
         help: |-
           🦹‍♂️ Corrupt service response with random mangled bytes. By default, there is no corruption.
+      - long: --skip-automatic-connector-config
+        required: false
+        help: |-
+          🤖 By default, script will attempt to modify automatically the running connector config to use Zazkia proxy.
+          
+          This flag allows to skip this automatic configuration (only useful if you want to manually update connector config with zazkia tcp proxy details)
     examples:
     - playground tcp-proxy start --hostname mysql --port 3306
 

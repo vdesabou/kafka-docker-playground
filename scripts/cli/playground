@@ -77,7 +77,7 @@ playground_usage() {
   echo
   printf "%s\n" "$(bold "TCP Proxy commands:")"
   printf "  %s   🏚 Zazkia TCP Proxy commands\n" "$(green "tcp-proxy")                          "
-  printf "  %s   💗 Start the TCP proxy\n" "$(green "tcp-proxy start")                    "
+  printf "  %s   💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998\n" "$(green "tcp-proxy start")                    "
   printf "  %s   🧲 Get Zazkia active TCP connections config and stats\n" "$(green "tcp-proxy get-connections")          "
   printf "  %s   ⏲️ Add milliseconds delay to service response.\n" "$(green "tcp-proxy delay")                    "
   printf "  %s   ❌ Close the Zazkia active TCP connections\n" "$(green "tcp-proxy close-connection")         "
@@ -2727,7 +2727,7 @@ playground_tcp_proxy_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   💗 Start the TCP proxy\n" "$(green "start")                    "
+  printf "  %s   💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998\n" "$(green "start")                    "
   printf "  %s   🧲 Get Zazkia active TCP connections config and stats\n" "$(green "get-connections")          "
   printf "  %s   ⏲️ Add milliseconds delay to service response.\n" "$(green "delay")                    "
   printf "  %s   ❌ Close the Zazkia active TCP connections\n" "$(green "close-connection")         "
@@ -2753,11 +2753,11 @@ playground_tcp_proxy_usage() {
 # :command.usage
 playground_tcp_proxy_start_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground tcp-proxy start - 💗 Start the TCP proxy\n"
+    printf "playground tcp-proxy start - 💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998\n"
     echo
 
   else
-    printf "playground tcp-proxy start - 💗 Start the TCP proxy\n"
+    printf "playground tcp-proxy start - 💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998\n"
     echo
 
   fi
@@ -2803,6 +2803,11 @@ playground_tcp_proxy_start_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--service-response-corrupt")"
     printf "    🦹‍♂️ Corrupt service response with random mangled bytes. By default, there\n    is no corruption.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--skip-automatic-connector-config")"
+    printf "    🤖 By default, script will attempt to modify automatically the running\n    connector config to use Zazkia proxy.\n    \n    This flag allows to skip this automatic configuration (only useful if you\n    want to manually update connector config with zazkia tcp proxy details)\n"
     echo
 
     # :command.usage_fixed_flags
@@ -17703,6 +17708,7 @@ playground_tcp_proxy_start_command() {
   delay_service_response="${args[--delay-service-response]}"
   break_service_response="${args[--break-service-response]}"
   service_response_corrupt="${args[--service-response-corrupt]}"
+  skip_automatic_connector_config=${args[--skip-automatic-connector-config]}
 
   docker_command=$(playground state get run.docker_command)
   if [ "$docker_command" == "" ]
@@ -17762,6 +17768,62 @@ EOF
 
   log "💗 you can now use tcp-proxy using <zazkia:49998>"
   log "🌐 zazkia UI is available on http://localhost:9191"
+
+  if [[ -n "$skip_automatic_connector_config" ]]
+  then
+      log "🤖 --skip-automatic-connector-config is set"
+  else
+    connector=$(playground get-connector-list)
+    if [ "$connector" == "" ]
+    then
+        log "💤 No connector is running, skipping automatic update of connector configuration with tcp proxy"
+        exit 0
+    fi
+
+    tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+    if [ -z "$PG_VERBOSE_MODE" ]
+    then
+        trap 'rm -rf $tmp_dir' EXIT
+    else
+        log "🐛📂 not deleting tmp dir $tmp_dir"
+    fi
+
+    items=($connector)
+    for connector in "${items[@]}"
+    do
+      is_modified=0
+      log "🔮 checking existence of hostname $hostname and port $port in connector $connector configuration to replace with zazkia and port 49998"
+
+      playground --output-level ERROR connector show-config --connector $connector > "$tmp_dir/create-$connector-config.sh"
+
+      if grep -q "$hostname:$port" "$tmp_dir/create-$connector-config.sh"; then
+        sed -i -E -e "s|$hostname:$port|zazkia:49998|g" "$tmp_dir/create-$connector-config.sh"
+        log "replacing $hostname:$port by zazkia:49998"
+        is_modified=1
+      fi
+
+      if grep -q "\"$hostname\"" "$tmp_dir/create-$connector-config.sh"; then
+        sed -i -E -e "s|\"$hostname\"|\"zazkia\",|g" "$tmp_dir/create-$connector-config.sh"
+        log "replacing \"$hostname\" by \"zazkia\""
+        is_modified=1
+      fi
+      if grep -q "$port" "$tmp_dir/create-$connector-config.sh"; then
+        sed -i -E -e "s|$port|49998,|g" "$tmp_dir/create-$connector-config.sh"
+        log "replacing $port by 49998"
+        is_modified=1
+      fi
+
+      if [ $is_modified -eq 1 ]
+      then
+        log "💫 updating connector $connector configuration with:"
+        cat "$tmp_dir/create-$connector-config.sh"
+        check_if_continue
+        bash "$tmp_dir/create-$connector-config.sh"
+      else
+        logwarn "Could not replace automatically hostname $hostname and port $port in connector $connector configuration, please do it manually !"
+      fi
+    done
+  fi
 }
 
 # :command.function
@@ -28873,6 +28935,14 @@ playground_tcp_proxy_start_parse_requirements() {
 
         # :flag.case_no_arg
         args['--service-response-corrupt']=1
+        shift
+        ;;
+
+      # :flag.case
+      --skip-automatic-connector-config)
+
+        # :flag.case_no_arg
+        args['--skip-automatic-connector-config']=1
         shift
         ;;
 

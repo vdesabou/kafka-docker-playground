@@ -745,7 +745,7 @@
       "subcommands": [
         {
           "name": "start",
-          "description": "💗 Start the TCP proxy\n",
+          "description": "💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998\n",
           "usage": "playground tcp-proxy start [OPTIONS]",
           "options": [
             {
@@ -789,6 +789,13 @@
               ],
               "argument": "",
               "description": "🦹‍♂️ Corrupt service response with random mangled bytes. By default, there is no corruption.\n"
+            },
+            {
+              "names": [
+                "--skip-automatic-connector-config"
+              ],
+              "argument": "",
+              "description": "🤖 By default, script will attempt to modify automatically the running connector config to use Zazkia proxy.\n\nThis flag allows to skip this automatic configuration (only useful if you want to manually update connector config with zazkia tcp proxy details)\n"
             }
           ]
         },

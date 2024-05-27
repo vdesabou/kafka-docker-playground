@@ -4,6 +4,7 @@ throttle_service_response="${args[--throttle-service-response]}"
 delay_service_response="${args[--delay-service-response]}"
 break_service_response="${args[--break-service-response]}"
 service_response_corrupt="${args[--service-response-corrupt]}"
+skip_automatic_connector_config=${args[--skip-automatic-connector-config]}
 
 docker_command=$(playground state get run.docker_command)
 if [ "$docker_command" == "" ]
@@ -63,3 +64,58 @@ bash /tmp/playground-command-zazkia
 
 log "💗 you can now use tcp-proxy using <zazkia:49998>"
 log "🌐 zazkia UI is available on http://localhost:9191"
+
+if [[ -n "$skip_automatic_connector_config" ]]
+then
+    log "🤖 --skip-automatic-connector-config is set"
+else
+  connector=$(playground get-connector-list)
+  if [ "$connector" == "" ]
+  then
+      log "💤 No connector is running, skipping automatic update of connector configuration with tcp proxy"
+      exit 0
+  fi
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
+  items=($connector)
+  for connector in "${items[@]}"
+  do
+    is_modified=0
+    log "🔮 checking existence of hostname $hostname and port $port in connector $connector configuration to replace with zazkia and port 49998" 
+    playground --output-level ERROR connector show-config --connector $connector > "$tmp_dir/create-$connector-config.sh"
+
+    if grep -q "$hostname:$port" "$tmp_dir/create-$connector-config.sh"; then
+      sed -i -E -e "s|$hostname:$port|zazkia:49998|g" "$tmp_dir/create-$connector-config.sh"
+      log "replacing $hostname:$port by zazkia:49998"
+      is_modified=1
+    fi
+
+    if grep -q "\"$hostname\"" "$tmp_dir/create-$connector-config.sh"; then
+      sed -i -E -e "s|\"$hostname\"|\"zazkia\",|g" "$tmp_dir/create-$connector-config.sh"
+      log "replacing \"$hostname\" by \"zazkia\""
+      is_modified=1
+    fi
+    if grep -q "$port" "$tmp_dir/create-$connector-config.sh"; then
+      sed -i -E -e "s|$port|49998,|g" "$tmp_dir/create-$connector-config.sh"
+      log "replacing $port by 49998"
+      is_modified=1
+    fi
+
+    if [ $is_modified -eq 1 ]
+    then
+      log "💫 updating connector $connector configuration with:"
+      cat "$tmp_dir/create-$connector-config.sh"
+      check_if_continue
+      bash "$tmp_dir/create-$connector-config.sh"
+    else
+      logwarn "Could not replace automatically hostname $hostname and port $port in connector $connector configuration, please do it manually !"
+    fi
+  done
+fi
