@@ -323,6 +323,22 @@ commands:
     - playground config clipboard false
     - playground config clipboard true
 
+- name: install-vscode-extension
+  help: |-
+    🪄 Install a slightly modified version of "Shell Script Command Completion" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)
+
+    After installation, install "playground" command:
+
+    * Go on a .sh file
+
+    * Type Ctrl+Shift+P (or ⌘+⇧+P on macOS) and choose "Shell Completion: Load Command Spec (experimental)"" and then type "playground"
+    
+    👉 Check documentation https://kafka-docker-playground.io/#/cli?id=%f0%9f%aa%84-setup-shell-script-command-completion-visual-studio-code-extension
+  examples:
+  - playground install-vscode-extension
+  dependencies:
+    code: visit https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line to install
+
 - name: run
   group: Run
   dependencies:
@@ -1254,22 +1270,6 @@ commands:
   help: |-
     🐞 Debug commands
   commands:
-
-  - name: install-vscode-extension
-    help: |-
-      🪄 Install a slightly modified version of "Shell Script Command Completion" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)
-
-      After installation, install "playground" command:
-
-      * Go on a .sh file
-
-      * Type Ctrl+Shift+P (or ⌘+⇧+P on macOS) and choose "Shell Completion: Load Command Spec (experimental)"" and then type "playground"
-      
-      👉 Check documentation https://kafka-docker-playground.io/#/cli?id=%f0%9f%aa%84-setup-shell-script-command-completion-visual-studio-code-extension
-    examples:
-    - playground install-vscode-extension
-    dependencies:
-      code: visit https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line to install
 
   - name: enable-remote-debugging
     help: |-

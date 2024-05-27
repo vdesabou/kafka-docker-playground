@@ -40,6 +40,7 @@ playground_usage() {
   printf "  %s   Show help about a command\n" "$(green "help")                             "
   printf "  %s   🗺️ Show a status\n" "$(green "status")                           "
   printf "  %s   ⚙️ Configure CLI\n" "$(green "config")                           "
+  printf "  %s   🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n" "$(green "install-vscode-extension")         "
   echo
   printf "%s\n" "$(bold "Run commands:")"
   printf "  %s   🕹️ Run any example !\n" "$(green "run")                              "
@@ -76,7 +77,6 @@ playground_usage() {
   echo
   printf "%s\n" "$(bold "Debug commands:")"
   printf "  %s   🐞 Debug commands\n" "$(green "debug")                            "
-  printf "  %s   🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n" "$(green "debug install-vscode-extension")   "
   printf "  %s   ✨ Enable java remote debugging for container\n" "$(green "debug enable-remote-debugging")    "
   printf "  %s   🔐 Testing TLS/SSL encryption using https://testssl.sh/\n" "$(green "debug testssl")                    "
   printf "  %s   ⛑️ Generate a diagnostic bundle with Diagnostics Bundle Tool\n" "$(green "debug generate-diagnostics")       "
@@ -1444,6 +1444,43 @@ playground_config_clipboard_usage() {
 }
 
 # :command.usage
+playground_install_vscode_extension_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground install-vscode-extension\n"
+    echo
+
+    printf "  🪄 Install a slightly modified version of \"Shell Script Command Completion\"\n  Visual Studio Code extension\n  (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n  \n  After installation, install \"playground\" command:\n  \n  * Go on a .sh file\n  \n  * Type Ctrl+Shift+P (or ⌘+⇧+P on macOS) and choose \"Shell Completion: Load\n  Command Spec (experimental)\"\" and then type \"playground\"\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/cli?id=%%f0%%9f%%aa%%84-setup-shell-script-command-completion-visual-studio-code-extension\n"
+    echo
+
+  else
+    printf "playground install-vscode-extension - 🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground install-vscode-extension\n"
+  printf "  playground install-vscode-extension --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground install-vscode-extension\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_run_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground run\n"
@@ -2646,16 +2683,15 @@ playground_debug_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n" "$(green "install-vscode-extension")"
-  printf "  %s   ✨ Enable java remote debugging for container\n" "$(green "enable-remote-debugging") "
-  printf "  %s   🔐 Testing TLS/SSL encryption using https://testssl.sh/\n" "$(green "testssl")                 "
-  printf "  %s   ⛑️ Generate a diagnostic bundle with Diagnostics Bundle Tool\n" "$(green "generate-diagnostics")    "
-  printf "  %s   🎯 Take a java thread dump\n" "$(green "thread-dump")             "
-  printf "  %s   👻 Take a heap dump\n" "$(green "heap-dump")               "
-  printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "tcp-dump")                "
-  printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "block-traffic")           "
-  printf "  %s   🛩️ Record flight recorder\n" "$(green "flight-recorder")         "
-  printf "  %s   🧬 Set log level for any package\n" "$(green "log-level")               "
+  printf "  %s   ✨ Enable java remote debugging for container\n" "$(green "enable-remote-debugging")"
+  printf "  %s   🔐 Testing TLS/SSL encryption using https://testssl.sh/\n" "$(green "testssl")                "
+  printf "  %s   ⛑️ Generate a diagnostic bundle with Diagnostics Bundle Tool\n" "$(green "generate-diagnostics")   "
+  printf "  %s   🎯 Take a java thread dump\n" "$(green "thread-dump")            "
+  printf "  %s   👻 Take a heap dump\n" "$(green "heap-dump")              "
+  printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "tcp-dump")               "
+  printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "block-traffic")          "
+  printf "  %s   🛩️ Record flight recorder\n" "$(green "flight-recorder")        "
+  printf "  %s   🧬 Set log level for any package\n" "$(green "log-level")              "
   echo
 
   # :command.long_usage
@@ -2665,43 +2701,6 @@ playground_debug_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
-    echo
-
-  fi
-}
-
-# :command.usage
-playground_debug_install_vscode_extension_usage() {
-  if [[ -n $long_usage ]]; then
-    printf "playground debug install-vscode-extension\n"
-    echo
-
-    printf "  🪄 Install a slightly modified version of \"Shell Script Command Completion\"\n  Visual Studio Code extension\n  (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n  \n  After installation, install \"playground\" command:\n  \n  * Go on a .sh file\n  \n  * Type Ctrl+Shift+P (or ⌘+⇧+P on macOS) and choose \"Shell Completion: Load\n  Command Spec (experimental)\"\" and then type \"playground\"\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/cli?id=%%f0%%9f%%aa%%84-setup-shell-script-command-completion-visual-studio-code-extension\n"
-    echo
-
-  else
-    printf "playground debug install-vscode-extension - 🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n"
-    echo
-
-  fi
-
-  printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground debug install-vscode-extension\n"
-  printf "  playground debug install-vscode-extension --help | -h\n"
-  echo
-
-  # :command.long_usage
-  if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "== Options ==")"
-
-    # :command.usage_fixed_flags
-    printf "  %s\n" "$(magenta "--help, -h")"
-    printf "    Show this help\n"
-    echo
-
-    # :command.usage_examples
-    printf "%s\n" "$(bold "Examples")"
-    printf "  playground install-vscode-extension\n"
     echo
 
   fi
@@ -12497,6 +12496,55 @@ playground_config_clipboard_command() {
 }
 
 # :command.function
+playground_install_vscode_extension_command() {
+  # src/commands/install-vscode-extension.sh
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
+  extension_dir=$tmp_dir/extension
+
+  mkdir $extension_dir
+  cd $extension_dir
+
+  log "🪄 Installing Shell Script Command Completion extension"
+
+  curl -s -L https://tetradresearch.gallery.vsassets.io/_apis/public/gallery/publisher/tetradresearch/extension//vscode-h2o/latest/assetbyname/Microsoft.VisualStudio.Services.VSIXPackage -o extension.zip
+  unzip extension.zip > /dev/null 2>&1
+
+  if [ ! -f extension/out/cacheFetcher.js ]
+  then
+    logerror "❌ cacheFetcher.js is not present !"
+    exit 1
+  fi
+
+  if grep 'https://raw.githubusercontent.com/yamaton/h2o-curated-data/main/${kind}/json/${name}.json' extension/out/cacheFetcher.js
+  then
+      sed -i -E -e "s|https://raw.githubusercontent.com/yamaton/h2o-curated-data/main/\${kind}/json/\${name}.json|https://raw.githubusercontent.com/vdesabou/kafka-docker-playground/master/scripts/cli/playground.json|g" extension/out/cacheFetcher.js > /dev/null 2>&1
+      zip -r extension.zip extension > /dev/null 2>&1
+      mv extension.zip extension.vsix
+
+      set +e
+      code --uninstall-extension extension.vsix > /dev/null 2>&1
+
+      code --install-extension extension.vsix > /dev/null 2>&1
+      if [ $? -eq 0 ]
+      then
+          log "👏 extension is now installed"
+      else
+          logerror "❌ Failed to install Shell Script Command Completion extension"
+      fi
+  else
+    logerror "❌ cannot retrieve experimental url"
+    exit 1
+  fi
+}
+
+# :command.function
 playground_run_command() {
   # src/commands/run.sh
   DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
@@ -17171,56 +17219,6 @@ playground_schema_delete_command() {
           fi
       fi
   fi
-}
-
-# :command.function
-playground_debug_install_vscode_extension_command() {
-  # src/commands/debug/install-vscode-extension.sh
-  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  if [ -z "$PG_VERBOSE_MODE" ]
-  then
-      trap 'rm -rf $tmp_dir' EXIT
-  else
-      log "🐛📂 not deleting tmp dir $tmp_dir"
-  fi
-
-  extension_dir=$tmp_dir/extension
-
-  mkdir $extension_dir
-  cd $extension_dir
-
-  log "🪄 Installing Shell Script Command Completion extension"
-
-  curl -s -L https://tetradresearch.gallery.vsassets.io/_apis/public/gallery/publisher/tetradresearch/extension//vscode-h2o/latest/assetbyname/Microsoft.VisualStudio.Services.VSIXPackage -o extension.zip
-  unzip extension.zip > /dev/null 2>&1
-
-  if [ ! -f extension/out/cacheFetcher.js ]
-  then
-    logerror "❌ cacheFetcher.js is not present !"
-    exit 1
-  fi
-
-  if grep 'https://raw.githubusercontent.com/yamaton/h2o-curated-data/main/${kind}/json/${name}.json' extension/out/cacheFetcher.js
-  then
-      sed -i -E -e "s|https://raw.githubusercontent.com/yamaton/h2o-curated-data/main/\${kind}/json/\${name}.json|https://raw.githubusercontent.com/vdesabou/kafka-docker-playground/master/scripts/cli/playground.json|g" extension/out/cacheFetcher.js > /dev/null 2>&1
-      zip -r extension.zip extension > /dev/null 2>&1
-      mv extension.zip extension.vsix
-
-      set +e
-      code --uninstall-extension extension.vsix > /dev/null 2>&1
-
-      code --install-extension extension.vsix > /dev/null 2>&1
-      if [ $? -eq 0 ]
-      then
-          log "👏 extension is now installed"
-      else
-          logerror "❌ Failed to install Shell Script Command Completion extension"
-      fi
-  else
-    logerror "❌ cannot retrieve experimental url"
-    exit 1
-  fi
-
 }
 
 # :command.function
@@ -23195,6 +23193,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    install-vscode-extension)
+      action="install-vscode-extension"
+      shift
+      playground_install_vscode_extension_parse_requirements "$@"
+      shift $#
+      ;;
+
     run)
       action="run"
       shift
@@ -25318,6 +25323,59 @@ playground_config_clipboard_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['enabled']:-} ]] || args['enabled']="true"
+
+}
+
+# :command.parse_requirements
+playground_install_vscode_extension_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_install_vscode_extension_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+  if command -v code >/dev/null 2>&1; then
+    deps['code']="$(command -v code | head -n1)"
+  else
+    printf "missing dependency: code\n" >&2
+    printf "%s\n" "visit https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line to install" >&2
+    exit 1
+  fi
+
+  # :command.command_filter
+  action="install-vscode-extension"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -27817,13 +27875,6 @@ playground_debug_parse_requirements() {
   case $action in
     -*) ;;
 
-    install-vscode-extension)
-      action="install-vscode-extension"
-      shift
-      playground_debug_install_vscode_extension_parse_requirements "$@"
-      shift $#
-      ;;
-
     enable-remote-debugging)
       action="enable-remote-debugging"
       shift
@@ -27899,59 +27950,6 @@ playground_debug_parse_requirements() {
       ;;
 
   esac
-
-  # :command.parse_requirements_while
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-
-      -?*)
-        printf "invalid option: %s\n" "$key" >&2
-        exit 1
-        ;;
-
-      *)
-        # :command.parse_requirements_case
-        # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
-
-        ;;
-
-    esac
-  done
-
-}
-
-# :command.parse_requirements
-playground_debug_install_vscode_extension_parse_requirements() {
-  # :command.fixed_flags_filter
-  while [[ $# -gt 0 ]]; do
-    case "${1:-}" in
-      --help | -h)
-        long_usage=yes
-        playground_debug_install_vscode_extension_usage
-        exit
-        ;;
-
-      *)
-        break
-        ;;
-
-    esac
-  done
-
-  # :command.dependencies_filter
-  if command -v code >/dev/null 2>&1; then
-    deps['code']="$(command -v code | head -n1)"
-  else
-    printf "missing dependency: code\n" >&2
-    printf "%s\n" "visit https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line to install" >&2
-    exit 1
-  fi
-
-  # :command.command_filter
-  action="debug install-vscode-extension"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -33583,6 +33581,7 @@ run() {
     "config editor") playground_config_editor_command ;;
     "config folder_zip_or_jar") playground_config_folder_zip_or_jar_command ;;
     "config clipboard") playground_config_clipboard_command ;;
+    "install-vscode-extension") playground_install_vscode_extension_command ;;
     "run") playground_run_command ;;
     "re-run") playground_re_run_command ;;
     "history") playground_history_command ;;
@@ -33609,7 +33608,6 @@ run() {
     "schema set-mode") playground_schema_set_mode_command ;;
     "schema delete") playground_schema_delete_command ;;
     "debug") playground_debug_command ;;
-    "debug install-vscode-extension") playground_debug_install_vscode_extension_command ;;
     "debug enable-remote-debugging") playground_debug_enable_remote_debugging_command ;;
     "debug testssl") playground_debug_testssl_command ;;
     "debug generate-diagnostics") playground_debug_generate_diagnostics_command ;;

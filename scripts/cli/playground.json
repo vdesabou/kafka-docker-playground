@@ -46,6 +46,13 @@
       ]
     },
     {
+      "name": "install-vscode-extension",
+      "description": "🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n\nAfter installation, install \"playground\" command:\n\n* Go on a .sh file\n\n* Type Ctrl+Shift+P (or ⌘+⇧+P on macOS) and choose \"Shell Completion: Load Command Spec (experimental)\"\" and then type \"playground\"\n\n👉 Check documentation https://kafka-docker-playground.io/#/cli?id=%f0%9f%aa%84-setup-shell-script-command-completion-visual-studio-code-extension\n",
+      "usage": "playground install-vscode-extension",
+      "options": [],
+      "subcommands": null
+    },
+    {
       "name": "run",
       "description": "🕹️ Run any example !\n\n🔥 It start an interactive mode where you'll be fully guided !\n\n\n⛅ When running Confluent Cloud (ccloud) example:\n\n  All you have to do is to be already logged in with confluent CLI.\n\n  By default, a new Confluent Cloud environment with a Cluster will be created.\n\n  You can configure the new cluster by setting:\n\n  --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: basic, standard and dedicated, default basic)\n  --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: aws, gcp and azure, default aws)\n  --cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use confluent kafka region list to get the list, default eu-west-2 for aws, westeurope for azure and europe-west2 for gcp)\n  --cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: txxxxx) \n\n  In case you want to use your own existing cluster, you need to setup, in addition to previous ones:\n\n  --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n  --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)\n  --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n",
       "usage": "playground run [OPTIONS]",
@@ -736,12 +743,6 @@
       "usage": "playground debug COMMAND",
       "options": [],
       "subcommands": [
-        {
-          "name": "install-vscode-extension",
-          "description": "🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n  \n  After installation, install \"playground\" command:\n  \n  * Go on a .sh file\n  \n  * Type Ctrl+Shift+P (or ⌘+⇧+P on macOS) and choose \"Shell Completion: Load Command Spec (experimental)\"\" and then type \"playground\"\n  \n  👉 Check documentation https://kafka-docker-playground.io/#/cli?id=%f0%9f%aa%84-setup-shell-script-command-completion-visual-studio-code-extension\n",
-          "usage": "playground debug install-vscode-extension",
-          "options": []
-        },
         {
           "name": "enable-remote-debugging",
           "description": "✨ Enable java remote debugging for container\n  \n  👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%e2%9c%a8-remote-debugging\n",

@@ -42,4 +42,3 @@ else
   logerror "❌ cannot retrieve experimental url"
   exit 1
 fi
-
