@@ -76,7 +76,7 @@ playground_usage() {
   printf "  %s   🧟 Delete schema\n" "$(green "schema delete")                      "
   echo
   printf "%s\n" "$(bold "TCP Proxy commands:")"
-  printf "  %s   🏚 TCP Proxy commands\n" "$(green "tcp-proxy")                          "
+  printf "  %s   🏚 Zazkia TCP Proxy commands\n" "$(green "tcp-proxy")                          "
   printf "  %s   💗 Start the TCP proxy\n" "$(green "tcp-proxy start")                    "
   printf "  %s   🧲 Get Zazkia active TCP connections config and stats\n" "$(green "tcp-proxy get-connections")          "
   printf "  %s   ⏲️ Add milliseconds delay to service response.\n" "$(green "tcp-proxy delay")                    "
@@ -2712,11 +2712,11 @@ playground_tcp_proxy_usage() {
     printf "playground tcp-proxy\n"
     echo
 
-    printf "  🏚 TCP Proxy commands\n  \n  emicklei/zazkia (https://github.com/emicklei/zazkia) is a nice tool to\n  simulate a TCP connection issues (reset,delay,throttle,corrupt)\n"
+    printf "  🏚 Zazkia TCP Proxy commands\n  \n  Simulate TCP connection issues (reset,delay,throttle,corrupt) using\n  emicklei/zazkia (https://github.com/emicklei/zazkia) TCP proxy\n"
     echo
 
   else
-    printf "playground tcp-proxy - 🏚 TCP Proxy commands\n"
+    printf "playground tcp-proxy - 🏚 Zazkia TCP Proxy commands\n"
     echo
 
   fi

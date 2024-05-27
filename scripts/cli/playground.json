@@ -739,7 +739,7 @@
     },
     {
       "name": "tcp-proxy",
-      "description": "🏚 TCP Proxy commands\n\nemicklei/zazkia (https://github.com/emicklei/zazkia) is a nice tool to simulate a TCP connection issues (reset,delay,throttle,corrupt)\n",
+      "description": "🏚 Zazkia TCP Proxy commands\n\nSimulate TCP connection issues (reset,delay,throttle,corrupt) using emicklei/zazkia (https://github.com/emicklei/zazkia) TCP proxy\n",
       "usage": "playground tcp-proxy COMMAND",
       "options": [],
       "subcommands": [
