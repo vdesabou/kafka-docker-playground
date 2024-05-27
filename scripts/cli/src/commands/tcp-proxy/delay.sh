@@ -3,7 +3,7 @@ connection_id="${args[--connection-id]}"
 
 if [[ ! -n "$connection_id" ]]
 then
-    connection_id=$(get_zazkia_id_list)
+    connection_id=$(playground get-zazkia-connection-list)
     if [ "$connection_id" == "" ]
     then
         logerror "❌ No active Zazkia TCP connection found, make sure that Zazkia is being used!"
@@ -20,7 +20,7 @@ fi
 for id in "${items[@]}"
 do
     log "⏲️ Add $delay_service_response milliseconds delay to service response for connection id $id"
-    handle_onprem_connect_rest_api "curl -s -X POST -H \"Content-Type: application/json\"  --header 'Accept: application/json' \"http://localhost:9191/links/$id/delay-response?ms=$delay_service_response\""
+    handle_onprem_connect_rest_api "curl -s -X POST -H \"Content-Type: application/json\"  --header 'Accept: text/plain' \"http://localhost:9191/links/$id/delay-response?ms=$delay_service_response\""
 
     playground tcp-proxy get-connections --connection-id $connection_id
 done

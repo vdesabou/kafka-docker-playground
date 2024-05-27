@@ -43,6 +43,10 @@ commands:
   help: Return some completion for connector list
   private: true
 
+- name: get-zazkia-connection-list
+  help: Return some completion for zazkia connections list
+  private: true
+
 - name: generate-fzf-find-files
   help: force call to generate_fzf_find_files
   private: true
@@ -1326,6 +1330,8 @@ commands:
     flags:
       - &connection-id
         long: --connection-id
+        completions:
+          - $(playground get-zazkia-connection-list)
         arg: connection-id
         validate: integer
         required: false
@@ -1344,6 +1350,16 @@ commands:
         help: |-
           ⏲️ Add milliseconds delay to service response. Default is 0 ms.
       - *connection-id
+
+  - name: close-connection
+    help: |-
+        ❌ Close the Zazkia active TCP connections
+    flags:
+      - *connection-id
+
+  - name: toggle-accept-connections
+    help: |-
+        🙅‍♂️ Change whether new connections can be accepted
 
 - name: debug
   expose: always
