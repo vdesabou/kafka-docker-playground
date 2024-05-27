@@ -1,11 +1,21 @@
 hostname="${args[--hostname]}"
 port="${args[--port]}"
+throttle_service_response="${args[--throttle-service-response]}"
+delay_service_response="${args[--delay-service-response]}"
+break_service_response="${args[--break-service-response]}"
+service_response_corrupt="${args[--service-response-corrupt]}"
 
 docker_command=$(playground state get run.docker_command)
 if [ "$docker_command" == "" ]
 then
   logerror "docker_command retrieved from $root_folder/playground.ini is empty !"
   exit 1
+fi
+
+service_response_corrupt_method=""
+if [[ -n "$service_response_corrupt" ]]
+then
+    service_response_corrupt_method="randomize"
 fi
 
 mkdir -p /tmp/zazkia
@@ -18,10 +28,10 @@ mkdir -p /tmp/zazkia
         "listen-port": 49998,
         "transport": {
             "accept-connections": true,
-            "throttle-service-response": 0,
-            "delay-service-response": 0,
-            "break-service-response": 0,
-            "service-response-corrupt-method": "",
+            "throttle-service-response": $throttle_service_response,
+            "delay-service-response": $delay_service_response,
+            "break-service-response": $break_service_response,
+            "service-response-corrupt-method": "$service_response_corrupt_method",
             "sending-to-client": true,
             "receiving-from-client": true,
             "sending-to-service": true,

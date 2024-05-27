@@ -78,6 +78,8 @@ playground_usage() {
   printf "%s\n" "$(bold "TCP Proxy commands:")"
   printf "  %s   🏚 TCP Proxy commands\n" "$(green "tcp-proxy")                        "
   printf "  %s   💗 Start the TCP proxy\n" "$(green "tcp-proxy start")                  "
+  printf "  %s   ⏲️ Add milliseconds delay to service response.\n" "$(green "tcp-proxy delay")                  "
+  printf "  %s   🧲 Get Zazkia active TCP connections config and stats\n" "$(green "tcp-proxy get-connections")        "
   echo
   printf "%s\n" "$(bold "Debug commands:")"
   printf "  %s   🐞 Debug commands\n" "$(green "debug")                            "
@@ -2690,7 +2692,9 @@ playground_tcp_proxy_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   💗 Start the TCP proxy\n" "$(green "start")"
+  printf "  %s   💗 Start the TCP proxy\n" "$(green "start")          "
+  printf "  %s   ⏲️ Add milliseconds delay to service response.\n" "$(green "delay")          "
+  printf "  %s   🧲 Get Zazkia active TCP connections config and stats\n" "$(green "get-connections")"
   echo
 
   # :command.long_usage
@@ -2737,6 +2741,29 @@ playground_tcp_proxy_start_usage() {
     printf "    Port used by the tcp proxy to forward request\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--throttle-service-response THROTTLE-SERVICE-RESPONSE")"
+    printf "    🐌 Throttle service response. This is bytes per second.\n"
+    printf "    Default: 0\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--delay-service-response DELAY-SERVICE-RESPONSE")"
+    printf "    ⏲️ Add milliseconds delay to service response. Default is 0 ms.\n"
+    printf "    Default: 0\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--break-service-response BREAK-SERVICE-RESPONSE")"
+    printf "    💔 Percentage of broken connections. Default is none.\n"
+    printf "    Default: 0\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--service-response-corrupt")"
+    printf "    🦹‍♂️ Corrupt service response with random mangled bytes. By default, there\n    is no corruption.\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -2744,7 +2771,79 @@ playground_tcp_proxy_start_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground tcp-proxy start\n"
+    printf "  playground tcp-proxy start --hostname mysql --port 3306\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_tcp_proxy_delay_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground tcp-proxy delay\n"
+    echo
+
+    printf "  ⏲️ Add milliseconds delay to service response.\n  Set it to 0 to remove the delay.\n"
+    echo
+
+  else
+    printf "playground tcp-proxy delay - ⏲️ Add milliseconds delay to service response.\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground tcp-proxy delay [OPTIONS]\n"
+  printf "  playground tcp-proxy delay --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--delay-service-response DELAY-SERVICE-RESPONSE (required)")"
+    printf "    ⏲️ Add milliseconds delay to service response. Default is 0 ms.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connection-id CONNECTION-ID")"
+    printf "    🧲 Zazkia TCP connection id\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_tcp_proxy_get_connections_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground tcp-proxy get-connections - 🧲 Get Zazkia active TCP connections config and stats\n"
+    echo
+
+  else
+    printf "playground tcp-proxy get-connections - 🧲 Get Zazkia active TCP connections config and stats\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground tcp-proxy get-connections\n"
+  printf "  playground tcp-proxy get-connections --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
     echo
 
   fi
@@ -7175,6 +7274,11 @@ function cleanup_confluent_cloud_resources () {
   fi
 }
 
+function get_zazkia_id_list () {
+  handle_onprem_connect_rest_api "curl -s -X GET -H \"Content-Type: application/json\" \"http://localhost:9191/links/\""
+  echo "$curl_output" | jq -r '.[].links[] | select(.serviceReceiveError != "EOF") | .id' | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
+}
+
 # src/lib/colors.sh
 print_in_color() {
   local color="$1"
@@ -11560,6 +11664,21 @@ validate_minimal_cp_version() {
 # src/lib/validations/validate_not_empty.sh
 validate_not_empty() {
   [[ -z "$1" ]] && logerror "must not be empty"
+}
+
+# src/lib/validations/validate_percentage.sh
+validate_percentage() {
+  if [[ ! "$1" =~ ^[0-9]+$ ]]
+  then
+    logerror "must be an integer"
+    return 1
+  fi
+
+  if [[ "$1" -lt 0 ]] || [[ "$1" -gt 100 ]]
+  then
+    logerror "must be between 0 and 100"
+    return 1
+  fi
 }
 
 # :command.command_functions
@@ -17311,12 +17430,22 @@ playground_tcp_proxy_start_command() {
   # src/commands/tcp-proxy/start.sh
   hostname="${args[--hostname]}"
   port="${args[--port]}"
+  throttle_service_response="${args[--throttle-service-response]}"
+  delay_service_response="${args[--delay-service-response]}"
+  break_service_response="${args[--break-service-response]}"
+  service_response_corrupt="${args[--service-response-corrupt]}"
 
   docker_command=$(playground state get run.docker_command)
   if [ "$docker_command" == "" ]
   then
     logerror "docker_command retrieved from $root_folder/playground.ini is empty !"
     exit 1
+  fi
+
+  service_response_corrupt_method=""
+  if [[ -n "$service_response_corrupt" ]]
+  then
+      service_response_corrupt_method="randomize"
   fi
 
   mkdir -p /tmp/zazkia
@@ -17329,10 +17458,10 @@ playground_tcp_proxy_start_command() {
         "listen-port": 49998,
         "transport": {
             "accept-connections": true,
-            "throttle-service-response": 0,
-            "delay-service-response": 0,
-            "break-service-response": 0,
-            "service-response-corrupt-method": "",
+            "throttle-service-response": $throttle_service_response,
+            "delay-service-response": $delay_service_response,
+            "break-service-response": $break_service_response,
+            "service-response-corrupt-method": "$service_response_corrupt_method",
             "sending-to-client": true,
             "receiving-from-client": true,
             "sending-to-service": true,
@@ -17363,7 +17492,45 @@ EOF
   bash /tmp/playground-command-zazkia
 
   log "💗 you can now use tcp-proxy using <zazkia:49998>"
-  log "zazkia UI is available on http://localhost:9191"
+  log "🌐 zazkia UI is available on http://localhost:9191"
+}
+
+# :command.function
+playground_tcp_proxy_delay_command() {
+  # src/commands/tcp-proxy/delay.sh
+  delay_service_response="${args[--delay-service-response]}"
+  connection_id="${args[--connection-id]}"
+
+  if [[ ! -n "$connection_id" ]]
+  then
+      connection_id=$(get_zazkia_id_list)
+      if [ "$connection_id" == "" ]
+      then
+          logerror "❌ No active Zazkia TCP connection found, make sure that Zazkia is being used!"
+          exit 1
+      fi
+  fi
+
+  items=($connection_id)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "🧲 --connection-id flag was not provided, applying command to all active Zazkia TCP connections"
+  fi
+  for id in "${items[@]}"
+  do
+      log "⏲️ Add $delay_service_response milliseconds delay to service response for connection id $id"
+      handle_onprem_connect_rest_api "curl -s -X POST -H \"Content-Type: application/json\"  --header 'Accept: application/json' \"http://localhost:9191/links/$id/delay-response?ms=$delay_service_response\""
+  done
+
+  playground tcp-proxy get-connections
+}
+
+# :command.function
+playground_tcp_proxy_get_connections_command() {
+  # src/commands/tcp-proxy/get-connections.sh
+  handle_onprem_connect_rest_api "curl -s -X GET -H \"Content-Type: application/json\" \"http://localhost:9191/links/\""
+  echo "$curl_output" | jq -r '.[].links[] | select(.serviceReceiveError != "EOF") | {id, state, stats}'
 }
 
 # :command.function
@@ -28034,6 +28201,20 @@ playground_tcp_proxy_parse_requirements() {
       shift $#
       ;;
 
+    delay)
+      action="delay"
+      shift
+      playground_tcp_proxy_delay_parse_requirements "$@"
+      shift $#
+      ;;
+
+    get-connections)
+      action="get-connections"
+      shift
+      playground_tcp_proxy_get_connections_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_tcp_proxy_usage >&2
@@ -28123,6 +28304,56 @@ playground_tcp_proxy_start_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --throttle-service-response)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--throttle-service-response']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--throttle-service-response requires an argument: --throttle-service-response THROTTLE-SERVICE-RESPONSE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --delay-service-response)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--delay-service-response']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--delay-service-response requires an argument: --delay-service-response DELAY-SERVICE-RESPONSE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --break-service-response)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--break-service-response']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--break-service-response requires an argument: --break-service-response BREAK-SERVICE-RESPONSE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --service-response-corrupt)
+
+        # :flag.case_no_arg
+        args['--service-response-corrupt']=1
+        shift
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -28149,12 +28380,169 @@ playground_tcp_proxy_start_parse_requirements() {
     exit 1
   fi
 
+  # :command.default_assignments
+  [[ -n ${args['--throttle-service-response']:-} ]] || args['--throttle-service-response']="0"
+  [[ -n ${args['--delay-service-response']:-} ]] || args['--delay-service-response']="0"
+  [[ -n ${args['--break-service-response']:-} ]] || args['--break-service-response']="0"
+
   # :command.validations
   # :flag.validations
   if [[ -v args['--port'] && -n $(validate_integer "${args['--port']:-}") ]]; then
     printf "validation error in %s:\n%s\n" "--port PORT" "$(validate_integer "${args['--port']:-}")" >&2
     exit 1
   fi
+
+  # :flag.validations
+  if [[ -v args['--throttle-service-response'] && -n $(validate_integer "${args['--throttle-service-response']:-}") ]]; then
+    printf "validation error in %s:\n%s\n" "--throttle-service-response THROTTLE-SERVICE-RESPONSE" "$(validate_integer "${args['--throttle-service-response']:-}")" >&2
+    exit 1
+  fi
+
+  # :flag.validations
+  if [[ -v args['--delay-service-response'] && -n $(validate_integer "${args['--delay-service-response']:-}") ]]; then
+    printf "validation error in %s:\n%s\n" "--delay-service-response DELAY-SERVICE-RESPONSE" "$(validate_integer "${args['--delay-service-response']:-}")" >&2
+    exit 1
+  fi
+
+  # :flag.validations
+  if [[ -v args['--break-service-response'] && -n $(validate_percentage "${args['--break-service-response']:-}") ]]; then
+    printf "validation error in %s:\n%s\n" "--break-service-response BREAK-SERVICE-RESPONSE" "$(validate_percentage "${args['--break-service-response']:-}")" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_tcp_proxy_delay_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_tcp_proxy_delay_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="tcp-proxy delay"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --delay-service-response)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--delay-service-response']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--delay-service-response requires an argument: --delay-service-response DELAY-SERVICE-RESPONSE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connection-id)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connection-id']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connection-id requires an argument: --connection-id CONNECTION-ID" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--delay-service-response']+x} ]]; then
+    printf "missing required flag: --delay-service-response DELAY-SERVICE-RESPONSE\n" >&2
+    exit 1
+  fi
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--delay-service-response'] && -n $(validate_integer "${args['--delay-service-response']:-}") ]]; then
+    printf "validation error in %s:\n%s\n" "--delay-service-response DELAY-SERVICE-RESPONSE" "$(validate_integer "${args['--delay-service-response']:-}")" >&2
+    exit 1
+  fi
+
+  # :flag.validations
+  if [[ -v args['--connection-id'] && -n $(validate_integer "${args['--connection-id']:-}") ]]; then
+    printf "validation error in %s:\n%s\n" "--connection-id CONNECTION-ID" "$(validate_integer "${args['--connection-id']:-}")" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_tcp_proxy_get_connections_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_tcp_proxy_get_connections_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="tcp-proxy get-connections"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -33916,6 +34304,8 @@ run() {
     "schema delete") playground_schema_delete_command ;;
     "tcp-proxy") playground_tcp_proxy_command ;;
     "tcp-proxy start") playground_tcp_proxy_start_command ;;
+    "tcp-proxy delay") playground_tcp_proxy_delay_command ;;
+    "tcp-proxy get-connections") playground_tcp_proxy_get_connections_command ;;
     "debug") playground_debug_command ;;
     "debug enable-remote-debugging") playground_debug_enable_remote_debugging_command ;;
     "debug testssl") playground_debug_testssl_command ;;

@@ -1289,9 +1289,59 @@ commands:
         required: true
         help: |-
           Port used by the tcp proxy to forward request
+      - &throttle-service-response
+        long: --throttle-service-response
+        arg: throttle-service-response
+        validate: integer
+        required: false
+        default: "0"
+        help: |-
+          🐌 Throttle service response. This is bytes per second.
+      - long: --delay-service-response
+        arg: delay-service-response
+        validate: integer
+        required: false
+        default: "0"
+        help: |-
+          ⏲️ Add milliseconds delay to service response. Default is 0 ms.
+      - &break-service-response
+        long: --break-service-response
+        arg: break-service-response
+        validate: percentage
+        required: false
+        default: "0"
+        help: |-
+          💔 Percentage of broken connections. Default is none.
+      - &service-response-corrupt
+        long: --service-response-corrupt
+        required: false
+        help: |-
+          🦹‍♂️ Corrupt service response with random mangled bytes. By default, there is no corruption.
     examples:
-    - playground tcp-proxy start
+    - playground tcp-proxy start --hostname mysql --port 3306
 
+  - name: delay
+    help: |-
+        ⏲️ Add milliseconds delay to service response.
+        Set it to 0 to remove the delay.
+    flags:
+      - long: --delay-service-response
+        arg: delay-service-response
+        validate: integer
+        required: true
+        help: |-
+          ⏲️ Add milliseconds delay to service response. Default is 0 ms.
+      - &connection-id
+        long: --connection-id
+        arg: connection-id
+        validate: integer
+        required: false
+        help: |-
+          🧲 Zazkia TCP connection id
+
+  - name: get-connections
+    help: |-
+      🧲 Get Zazkia active TCP connections config and stats
 
 - name: debug
   expose: always

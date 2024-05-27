@@ -894,6 +894,61 @@ subcommands:
             
             Required: ✓ Yes
             
+        - names:
+          - --throttle-service-response
+          argument: 0
+          description: | 
+            🐌 Throttle service response. This is bytes per second.
+            
+            Default value: 0
+            
+        - names:
+          - --delay-service-response
+          argument: 0
+          description: | 
+            ⏲️ Add milliseconds delay to service response. Default is 0 ms.
+            
+            Default value: 0
+            
+        - names:
+          - --break-service-response
+          argument: 0
+          description: | 
+            💔 Percentage of broken connections. Default is none.
+            
+            Default value: 0
+            
+        - names:
+          - --service-response-corrupt
+          argument: ""
+          description: | 
+            🦹‍♂️ Corrupt service response with random mangled bytes. By default, there is no corruption.
+            
+      - name: delay
+        description: | 
+          ⏲️ Add milliseconds delay to service response.
+            Set it to 0 to remove the delay.
+        usage: playground tcp-proxy delay [OPTIONS]
+        options:
+        - names:
+          - --delay-service-response
+          argument: DELAY-SERVICE-RESPONSE
+          description: | 
+            ⏲️ Add milliseconds delay to service response. Default is 0 ms.
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --connection-id
+          argument: CONNECTION-ID
+          description: | 
+            🧲 Zazkia TCP connection id
+            
+      - name: get-connections
+        description: | 
+          🧲 Get Zazkia active TCP connections config and stats
+        usage: playground tcp-proxy get-connections
+        options: []
   - name: debug
     description: | 
         🐞 Debug commands
