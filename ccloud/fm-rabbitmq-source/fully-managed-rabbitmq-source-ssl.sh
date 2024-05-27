@@ -80,9 +80,9 @@ playground connector create-or-update --connector $connector_name << EOF
      "rabbitmq.queue": "myqueue",
 
      "rabbitmq.security.protocol": "SSL",
-     "rabbitmq.https.ssl.truststore.location": "data:text/plain;base64,$base64_truststore",
+     "rabbitmq.https.ssl.truststorefile": "data:text/plain;base64,$base64_truststore",
      "rabbitmq.https.ssl.truststore.password": "confluent",
-     "rabbitmq.https.ssl.keystore.location": "data:text/plain;base64,$base64_keystore",
+     "rabbitmq.https.ssl.keystorefile": "data:text/plain;base64,$base64_keystore",
      "rabbitmq.https.ssl.keystore.password": "confluent",
 
      "tasks.max" : "1"
