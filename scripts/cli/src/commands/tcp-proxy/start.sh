@@ -64,6 +64,7 @@ bash /tmp/playground-command-zazkia
 
 log "💗 you can now use zazkia tcp proxy using <zazkia:49998>"
 log "🌐 zazkia UI is available on http://localhost:9191"
+open "http://localhost:9191"
 
 if [[ -n "$skip_automatic_connector_config" ]]
 then
