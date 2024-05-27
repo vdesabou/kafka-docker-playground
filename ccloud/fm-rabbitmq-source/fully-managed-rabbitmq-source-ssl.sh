@@ -61,8 +61,8 @@ sleep 6
 log "Send message to RabbitMQ in myqueue"
 docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"
 
-base64_truststore=$(cat $PWD/security/kafka.rabbitmq.truststore.jks | base64 | tr -d '\n')
-base64_keystore=$(cat $PWD/security/kafka.rabbitmq.keystore.jks | base64 | tr -d '\n')
+base64_truststore=$(cat $PWD/security/kafka.connect.truststore.jks | base64 | tr -d '\n')
+base64_keystore=$(cat $PWD/security/kafka.connect.keystore.jks | base64 | tr -d '\n')
 
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
