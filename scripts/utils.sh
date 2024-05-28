@@ -1,6 +1,23 @@
 DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR_UTILS}/../scripts/cli/src/lib/utils_function.sh
 
+function cleanup-workaround-file {
+  rm /tmp/without-cli-workaround
+}
+
+if [ ! -f /tmp/playground-run-command-used ]
+then
+  # fm examples not working without using CLI #5635
+  if [ ! -f /tmp/without-cli-workaround ]
+  then
+    trap cleanup-workaround-file EXIT
+    test_file="$PWD/$0"
+    playground state set run.test_file "$test_file"
+    playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
+    touch /tmp/without-cli-workaround
+  fi
+fi
+
 # Setting up TAG environment variable
 #
 if [ -z "$TAG" ]
