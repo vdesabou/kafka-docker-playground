@@ -1359,7 +1359,6 @@ commands:
       - *connection-id
 
   - name: break
-    private: true # FIXTHIS need to build my own fork of zazkia to support this
     help: |-
         💔 Break sending the response to the client.
         Set it to 0% to remove the delay.

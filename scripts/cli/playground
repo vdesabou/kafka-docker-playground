@@ -80,6 +80,7 @@ playground_usage() {
   printf "  %s   💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998\n" "$(green "tcp-proxy start")                    "
   printf "  %s   🧲 Get Zazkia active TCP connections config and stats\n" "$(green "tcp-proxy get-connections")          "
   printf "  %s   ⏲️ Add milliseconds delay to service response.\n" "$(green "tcp-proxy delay")                    "
+  printf "  %s   💔 Break sending the response to the client.\n" "$(green "tcp-proxy break")                    "
   printf "  %s   ❌ Close the Zazkia active TCP connections\n" "$(green "tcp-proxy close-connection")         "
   printf "  %s   🙅‍♂️ Change whether new connections can be accepted\n" "$(green "tcp-proxy toggle-accept-connections")"
   printf "  %s   ✅ Change whether reading data from the client is enabled.\n" "$(green "tcp-proxy toggle-reads-client")      "
@@ -2731,6 +2732,7 @@ playground_tcp_proxy_usage() {
   printf "  %s   💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998\n" "$(green "start")                    "
   printf "  %s   🧲 Get Zazkia active TCP connections config and stats\n" "$(green "get-connections")          "
   printf "  %s   ⏲️ Add milliseconds delay to service response.\n" "$(green "delay")                    "
+  printf "  %s   💔 Break sending the response to the client.\n" "$(green "break")                    "
   printf "  %s   ❌ Close the Zazkia active TCP connections\n" "$(green "close-connection")         "
   printf "  %s   🙅‍♂️ Change whether new connections can be accepted\n" "$(green "toggle-accept-connections")"
   printf "  %s   ✅ Change whether reading data from the client is enabled.\n" "$(green "toggle-reads-client")      "
@@ -17862,7 +17864,8 @@ services:
   zazkia:
     hostname: zazkia
     container_name: zazkia
-    image: emicklei/zazkia
+    # use my own image because of https://github.com/emicklei/zazkia/issues/4
+    image: vdesabou/zazkia:latest
     ports:
       - "9191:9191"
     volumes:
@@ -17989,7 +17992,7 @@ playground_tcp_proxy_delay_command() {
 
       sleep 1
 
-      playground tcp-proxy get-connections --connection-id $connection_id
+      playground tcp-proxy get-connections --connection-id $id
   done
 }
 
@@ -18024,7 +18027,7 @@ playground_tcp_proxy_break_command() {
 
       sleep 1
 
-      playground tcp-proxy get-connections --connection-id $connection_id
+      playground tcp-proxy get-connections --connection-id $id
   done
 }
 

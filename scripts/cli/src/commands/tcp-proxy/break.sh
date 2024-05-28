@@ -26,5 +26,5 @@ do
 
     sleep 1
 
-    playground tcp-proxy get-connections --connection-id $connection_id
+    playground tcp-proxy get-connections --connection-id $id
 done

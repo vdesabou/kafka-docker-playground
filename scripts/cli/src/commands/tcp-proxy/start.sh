@@ -53,7 +53,8 @@ services:
   zazkia:
     hostname: zazkia
     container_name: zazkia
-    image: emicklei/zazkia
+    # use my own image because of https://github.com/emicklei/zazkia/issues/4
+    image: vdesabou/zazkia:latest
     ports:
       - "9191:9191"
     volumes:

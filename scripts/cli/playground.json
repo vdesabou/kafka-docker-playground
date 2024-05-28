@@ -835,6 +835,27 @@
           ]
         },
         {
+          "name": "break",
+          "description": "💔 Break sending the response to the client.\n  Set it to 0% to remove the delay.\n",
+          "usage": "playground tcp-proxy break [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--break-service-response"
+              ],
+              "argument": "BREAK-SERVICE-RESPONSE",
+              "description": "💔 Percentage of broken connections.\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--connection-id"
+              ],
+              "argument": "CONNECTION-ID",
+              "description": "🧲 Zazkia TCP connection id\n      \n"
+            }
+          ]
+        },
+        {
           "name": "close-connection",
           "description": "❌ Close the Zazkia active TCP connections\n",
           "usage": "playground tcp-proxy close-connection [OPTIONS]",

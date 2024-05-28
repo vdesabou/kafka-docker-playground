@@ -965,6 +965,27 @@ subcommands:
             🧲 Zazkia TCP connection id
                   
             
+      - name: break
+        description: | 
+          💔 Break sending the response to the client.
+            Set it to 0% to remove the delay.
+        usage: playground tcp-proxy break [OPTIONS]
+        options:
+        - names:
+          - --break-service-response
+          argument: BREAK-SERVICE-RESPONSE
+          description: | 
+            💔 Percentage of broken connections.
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --connection-id
+          argument: CONNECTION-ID
+          description: | 
+            🧲 Zazkia TCP connection id
+                  
+            
       - name: close-connection
         description: | 
           ❌ Close the Zazkia active TCP connections
