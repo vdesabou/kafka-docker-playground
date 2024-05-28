@@ -1,0 +1,1 @@
+docker ps --format '{{.Ports}}' | tr ',' '\n' | awk -F '->' '{print $1}' | cut -d':' -f2 | tr -d '/tcp' | tr -d ' ' | awk '!/-/' | sort -n | uniq

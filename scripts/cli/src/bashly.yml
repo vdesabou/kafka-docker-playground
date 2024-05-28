@@ -39,6 +39,10 @@ commands:
   help: 🗺️ Show a status
 
 ### private commands for completion
+- name: get-docker-ports
+  help: Return some completion for docker ports
+  private: true
+
 - name: get-connector-list
   help: Return some completion for connector list
   private: true
@@ -1293,6 +1297,8 @@ commands:
         arg: port
         validate: integer
         required: true
+        completions:
+          - $(playground get-docker-ports)
         help: |-
           Port used by the tcp proxy to forward request
       - &throttle-service-response
@@ -1500,6 +1506,8 @@ commands:
         arg: port
         validate: integer
         required: false
+        completions:
+          - $(playground get-docker-ports)
         help: |-
           Port on which tcp dump should be done, if not set sniffing is done on every port
       - long: --duration
@@ -1526,6 +1534,8 @@ commands:
         arg: port
         validate: integer
         required: false
+        completions:
+          - $(playground get-docker-ports)
         help: |-
           Port on which tcp traffic should be blocked
       - &action

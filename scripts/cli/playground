@@ -252,6 +252,35 @@ playground_status_usage() {
 }
 
 # :command.usage
+playground_get_docker_ports_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground get-docker-ports - Return some completion for docker ports\n"
+    echo
+
+  else
+    printf "playground get-docker-ports - Return some completion for docker ports\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground get-docker-ports\n"
+  printf "  playground get-docker-ports --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_get_connector_list_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground get-connector-list - Return some completion for connector list\n"
@@ -12120,6 +12149,12 @@ playground_status_command() {
   playground connector show-config-parameters --only-show-file-path | grep -v "applying command to all connectors"
 
   playground topic list
+}
+
+# :command.function
+playground_get_docker_ports_command() {
+  # src/commands/get-docker-ports.sh
+  docker ps --format '{{.Ports}}' | tr ',' '\n' | awk -F '->' '{print $1}' | cut -d':' -f2 | tr -d '/tcp' | tr -d ' ' | awk '!/-/' | sort -n | uniq
 }
 
 # :command.function
@@ -24066,6 +24101,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    get-docker-ports)
+      action="get-docker-ports"
+      shift
+      playground_get_docker_ports_parse_requirements "$@"
+      shift $#
+      ;;
+
     get-connector-list)
       action="get-connector-list"
       shift
@@ -24500,6 +24542,50 @@ playground_status_parse_requirements() {
 
   # :command.command_filter
   action="status"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_get_docker_ports_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_get_docker_ports_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="get-docker-ports"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -35647,6 +35733,7 @@ run() {
   case "$action" in
     "help") playground_help_command ;;
     "status") playground_status_command ;;
+    "get-docker-ports") playground_get_docker_ports_command ;;
     "get-connector-list") playground_get_connector_list_command ;;
     "get-zazkia-connection-list") playground_get_zazkia_connection_list_command ;;
     "generate-fzf-find-files") playground_generate_fzf_find_files_command ;;
