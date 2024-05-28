@@ -1,0 +1,28 @@
+---
+services:
+
+  rabbitmq:
+    image: rabbitmq:3.8.19-management
+    hostname: rabbitmq
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "8080:8080"
+    volumes:
+      - ../../connect/connect-rabbitmq-sink/ssl/rabbitmq.conf:/etc/rabbitmq/advanced.config
+      - ../../connect/connect-rabbitmq-sink/security/snakeoil-ca-1.crt:/tmp/ca.crt
+      - ../../connect/connect-rabbitmq-sink/security/rabbitmq.certificate.pem:/tmp/server.pem
+      - ../../connect/connect-rabbitmq-sink/security/rabbitmq.key:/tmp/server.key
+    environment:
+      RABBITMQ_DEFAULT_USER: "myuser"
+      RABBITMQ_DEFAULT_PASS: "mypassword"
+
+  connect:
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ../../connect/connect-rabbitmq-sink/security/kafka.connect.truststore.jks:/tmp/truststore.jks
+      - ../../connect/connect-rabbitmq-sink/security/kafka.connect.keystore.jks:/tmp/keystore.jks
+    environment:    
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-rabbitmq-sink
+      CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,com.rabbitmq.client=TRACE
