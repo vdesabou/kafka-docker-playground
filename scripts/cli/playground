@@ -37,125 +37,126 @@ playground_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   Show help about a command\n" "$(green "help")                               "
-  printf "  %s   🗺️ Show a status\n" "$(green "status")                             "
-  printf "  %s   ⚙️ Configure CLI\n" "$(green "config")                             "
-  printf "  %s   🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n" "$(green "install-vscode-extension")           "
+  printf "  %s   Show help about a command\n" "$(green "help")                                     "
+  printf "  %s   🗺️ Show a status\n" "$(green "status")                                   "
+  printf "  %s   ⚙️ Configure CLI\n" "$(green "config")                                   "
+  printf "  %s   🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n" "$(green "install-vscode-extension")                 "
   echo
   printf "%s\n" "$(bold "Run commands:")"
-  printf "  %s   🕹️ Run any example !\n" "$(green "run")                                "
-  printf "  %s   ⚡ Simply re-run last example you ran with <playground run>\n" "$(green "re-run")                             "
-  printf "  %s   🏰 Get an history of the examples which were run with run command and run it again\n" "$(green "history")                            "
-  printf "  %s   🌩️  Switch to ccloud environment.\n" "$(green "switch-ccloud")                      "
-  printf "  %s   💺  Switch back from previous environment before switch-ccloud was called.\n" "$(green "switch-back")                        "
-  printf "  %s   ✨ Update current confluent platform or connector(s) with new version(s)\n" "$(green "update-version")                     "
-  printf "  %s   👐 When --file is not provided, simply open last example you ran with <playground run>\n" "$(green "open")                               "
-  printf "  %s   🛑 Stop currently running example\n" "$(green "stop")                               "
-  printf "  %s   🧨 Remove all docker images (including docker volumes)\n" "$(green "remove-all-docker-images")           "
-  printf "  %s   🧑‍🎓 Open Confluent documentation of currently running example\n" "$(green "open-docs")                          "
-  printf "  %s   🧹 Cleanup cloud resources that were created by running examples from the playground\n" "$(green "cleanup-cloud-resources")            "
+  printf "  %s   🕹️ Run any example !\n" "$(green "run")                                      "
+  printf "  %s   ⚡ Simply re-run last example you ran with <playground run>\n" "$(green "re-run")                                   "
+  printf "  %s   🏰 Get an history of the examples which were run with run command and run it again\n" "$(green "history")                                  "
+  printf "  %s   🌩️  Switch to ccloud environment.\n" "$(green "switch-ccloud")                            "
+  printf "  %s   💺  Switch back from previous environment before switch-ccloud was called.\n" "$(green "switch-back")                              "
+  printf "  %s   ✨ Update current confluent platform or connector(s) with new version(s)\n" "$(green "update-version")                           "
+  printf "  %s   👐 When --file is not provided, simply open last example you ran with <playground run>\n" "$(green "open")                                     "
+  printf "  %s   🛑 Stop currently running example\n" "$(green "stop")                                     "
+  printf "  %s   🧨 Remove all docker images (including docker volumes)\n" "$(green "remove-all-docker-images")                 "
+  printf "  %s   🧑‍🎓 Open Confluent documentation of currently running example\n" "$(green "open-docs")                                "
+  printf "  %s   🧹 Cleanup cloud resources that were created by running examples from the playground\n" "$(green "cleanup-cloud-resources")                  "
   echo
   printf "%s\n" "$(bold "Repro commands:")"
-  printf "  %s   👷‍♂️ Reproduction model commands\n" "$(green "repro")                              "
-  printf "  %s   📤 Export as tgz file uncommitted reproduction models from the folder of current reproduction model\n" "$(green "repro export")                       "
-  printf "  %s   📥 Import tgz file which was created with export command\n" "$(green "repro import")                       "
-  printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "repro bootstrap")                    "
+  printf "  %s   👷‍♂️ Reproduction model commands\n" "$(green "repro")                                    "
+  printf "  %s   📤 Export as tgz file uncommitted reproduction models from the folder of current reproduction model\n" "$(green "repro export")                             "
+  printf "  %s   📥 Import tgz file which was created with export command\n" "$(green "repro import")                             "
+  printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "repro bootstrap")                          "
   echo
   printf "%s\n" "$(bold "Kafka commands:")"
-  printf "  %s   🐋 Get docker-compose\n" "$(green "get-docker-compose")                 "
-  printf "  %s   🔢 Get JMX metrics from a container\n" "$(green "get-jmx-metrics")                    "
+  printf "  %s   🐋 Get docker-compose\n" "$(green "get-docker-compose")                       "
+  printf "  %s   🔢 Get JMX metrics from a container\n" "$(green "get-jmx-metrics")                          "
   echo
   printf "%s\n" "$(bold "Schema commands:")"
-  printf "  %s   🔰 Schema commands\n" "$(green "schema")                             "
-  printf "  %s   🔰 Get all schemas versions for specified subject (if --subject is not specified, all subjects will be used)\n" "$(green "schema get")                         "
-  printf "  %s   ⏺️ Register a schema in specified subject\n" "$(green "schema register")                    "
-  printf "  %s   🛡️ Get subject-level compatibility\n" "$(green "schema get-compatibility")           "
-  printf "  %s   🛡️ Set subject-level compatibility\n" "$(green "schema set-compatibility")           "
-  printf "  %s   🔏 Get subject-level mode\n" "$(green "schema get-mode")                    "
-  printf "  %s   🔏 Set subject-level mode\n" "$(green "schema set-mode")                    "
-  printf "  %s   🧟 Delete schema\n" "$(green "schema delete")                      "
+  printf "  %s   🔰 Schema commands\n" "$(green "schema")                                   "
+  printf "  %s   🔰 Get all schemas versions for specified subject (if --subject is not specified, all subjects will be used)\n" "$(green "schema get")                               "
+  printf "  %s   ⏺️ Register a schema in specified subject\n" "$(green "schema register")                          "
+  printf "  %s   🛡️ Get subject-level compatibility\n" "$(green "schema get-compatibility")                 "
+  printf "  %s   🛡️ Set subject-level compatibility\n" "$(green "schema set-compatibility")                 "
+  printf "  %s   🔏 Get subject-level mode\n" "$(green "schema get-mode")                          "
+  printf "  %s   🔏 Set subject-level mode\n" "$(green "schema set-mode")                          "
+  printf "  %s   🧟 Delete schema\n" "$(green "schema delete")                            "
   echo
   printf "%s\n" "$(bold "TCP Proxy commands:")"
-  printf "  %s   🏚 Zazkia TCP Proxy commands\n" "$(green "tcp-proxy")                          "
-  printf "  %s   💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998\n" "$(green "tcp-proxy start")                    "
-  printf "  %s   🧲 Get Zazkia active TCP connections config and stats\n" "$(green "tcp-proxy get-connections")          "
-  printf "  %s   ⏲️ Add milliseconds delay to service response.\n" "$(green "tcp-proxy delay")                    "
-  printf "  %s   💔 Break sending the response to the client.\n" "$(green "tcp-proxy break")                    "
-  printf "  %s   ❌ Close the Zazkia active TCP connections\n" "$(green "tcp-proxy close-connection")         "
-  printf "  %s   🙅‍♂️ Change whether new connections can be accepted\n" "$(green "tcp-proxy toggle-accept-connections")"
-  printf "  %s   ✅ Change whether reading data from the client is enabled.\n" "$(green "tcp-proxy toggle-reads-client")      "
-  printf "  %s   ✅ Change whether reading data from the service is enabled.\n" "$(green "tcp-proxy toggle-reads-service")     "
-  printf "  %s   ✅ Change whether writing data to the client is enabled.\n" "$(green "tcp-proxy toggle-writes-client")     "
-  printf "  %s   ✅ Change whether reading data to the service is enabled.\n" "$(green "tcp-proxy toggle-writes-service")    "
+  printf "  %s   🏚 Zazkia TCP Proxy commands\n" "$(green "tcp-proxy")                                "
+  printf "  %s   💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998\n" "$(green "tcp-proxy start")                          "
+  printf "  %s   🧲 Get Zazkia active TCP connections config and stats\n" "$(green "tcp-proxy get-connections")                "
+  printf "  %s   ⏲️ Add milliseconds delay to service response.\n" "$(green "tcp-proxy delay")                          "
+  printf "  %s   💔 Break sending the response to the client.\n" "$(green "tcp-proxy break")                          "
+  printf "  %s   ❌ Close the Zazkia active TCP connections\n" "$(green "tcp-proxy close-connection")               "
+  printf "  %s   🧹 Close all Zazkia TCP connections which are in error state (close all with error button in Zazkia UI)\n" "$(green "tcp-proxy close-all-connection-with-error")"
+  printf "  %s   🙅‍♂️ Change whether new connections can be accepted\n" "$(green "tcp-proxy toggle-accept-connections")      "
+  printf "  %s   ✅ Change whether reading data from the client is enabled.\n" "$(green "tcp-proxy toggle-reads-client")            "
+  printf "  %s   ✅ Change whether reading data from the service is enabled.\n" "$(green "tcp-proxy toggle-reads-service")           "
+  printf "  %s   ✅ Change whether writing data to the client is enabled.\n" "$(green "tcp-proxy toggle-writes-client")           "
+  printf "  %s   ✅ Change whether reading data to the service is enabled.\n" "$(green "tcp-proxy toggle-writes-service")          "
   echo
   printf "%s\n" "$(bold "Debug commands:")"
-  printf "  %s   🐞 Debug commands\n" "$(green "debug")                              "
-  printf "  %s   ✨ Enable java remote debugging for container\n" "$(green "debug enable-remote-debugging")      "
-  printf "  %s   🔐 Testing TLS/SSL encryption using https://testssl.sh/\n" "$(green "debug testssl")                      "
-  printf "  %s   ⛑️ Generate a diagnostic bundle with Diagnostics Bundle Tool\n" "$(green "debug generate-diagnostics")         "
-  printf "  %s   🎯 Take a java thread dump\n" "$(green "debug thread-dump")                  "
-  printf "  %s   👻 Take a heap dump\n" "$(green "debug heap-dump")                    "
-  printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "debug tcp-dump")                     "
-  printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "debug block-traffic")                "
-  printf "  %s   🤎 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "debug java-debug")                   "
-  printf "  %s   🛩️ Record flight recorder\n" "$(green "debug flight-recorder")              "
-  printf "  %s   🧬 Set log level for any package\n" "$(green "debug log-level")                    "
+  printf "  %s   🐞 Debug commands\n" "$(green "debug")                                    "
+  printf "  %s   ✨ Enable java remote debugging for container\n" "$(green "debug enable-remote-debugging")            "
+  printf "  %s   🔐 Testing TLS/SSL encryption using https://testssl.sh/\n" "$(green "debug testssl")                            "
+  printf "  %s   ⛑️ Generate a diagnostic bundle with Diagnostics Bundle Tool\n" "$(green "debug generate-diagnostics")               "
+  printf "  %s   🎯 Take a java thread dump\n" "$(green "debug thread-dump")                        "
+  printf "  %s   👻 Take a heap dump\n" "$(green "debug heap-dump")                          "
+  printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "debug tcp-dump")                           "
+  printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "debug block-traffic")                      "
+  printf "  %s   🤎 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "debug java-debug")                         "
+  printf "  %s   🛩️ Record flight recorder\n" "$(green "debug flight-recorder")                    "
+  printf "  %s   🧬 Set log level for any package\n" "$(green "debug log-level")                          "
   echo
   printf "%s\n" "$(bold "Container commands:")"
-  printf "  %s   🐳 Container commands\n" "$(green "container")                          "
-  printf "  %s   📝 Get properties file from a container\n" "$(green "container get-properties")           "
-  printf "  %s   💫 Recreate container(s)\n" "$(green "container recreate")                 "
-  printf "  %s   🖥️  Get ip address of running containers\n" "$(green "container get-ip-addresses")         "
-  printf "  %s   💀 Kill all containers\n" "$(green "container kill-all")                 "
-  printf "  %s   🕵️  Tail and follow container logs\n" "$(green "container logs")                     "
-  printf "  %s   🛬 SSH into container\n" "$(green "container ssh")                      "
-  printf "  %s   🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)\n" "$(green "container change-jdk")               "
-  printf "  %s   🪄  Execute command in a container\n" "$(green "container exec")                     "
-  printf "  %s   🔁 Restart a container\n" "$(green "container restart")                  "
-  printf "  %s   ⏸️  Pause a container\n" "$(green "container pause")                    "
-  printf "  %s   ⏯️  Resume a container\n" "$(green "container resume")                   "
-  printf "  %s   🔫 Kill a container\n" "$(green "container kill")                     "
+  printf "  %s   🐳 Container commands\n" "$(green "container")                                "
+  printf "  %s   📝 Get properties file from a container\n" "$(green "container get-properties")                 "
+  printf "  %s   💫 Recreate container(s)\n" "$(green "container recreate")                       "
+  printf "  %s   🖥️  Get ip address of running containers\n" "$(green "container get-ip-addresses")               "
+  printf "  %s   💀 Kill all containers\n" "$(green "container kill-all")                       "
+  printf "  %s   🕵️  Tail and follow container logs\n" "$(green "container logs")                           "
+  printf "  %s   🛬 SSH into container\n" "$(green "container ssh")                            "
+  printf "  %s   🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)\n" "$(green "container change-jdk")                     "
+  printf "  %s   🪄  Execute command in a container\n" "$(green "container exec")                           "
+  printf "  %s   🔁 Restart a container\n" "$(green "container restart")                        "
+  printf "  %s   ⏸️  Pause a container\n" "$(green "container pause")                          "
+  printf "  %s   ⏯️  Resume a container\n" "$(green "container resume")                         "
+  printf "  %s   🔫 Kill a container\n" "$(green "container kill")                           "
   echo
   printf "%s\n" "$(bold "Topic commands:")"
-  printf "  %s   🗳 Topic commands\n" "$(green "topic")                              "
-  printf "  %s   💯 Get number of records in a topic\n" "$(green "topic get-number-records")           "
-  printf "  %s   📭 Display content of __consumer_offsets topic\n" "$(green "topic display-consumer-offsets")     "
-  printf "  %s   🔘 List topics\n" "$(green "topic list")                         "
-  printf "  %s   🔬 Describe topic\n" "$(green "topic describe")                     "
-  printf "  %s   🛡️ Change topic's schema compatibility\n" "$(green "topic set-schema-compatibility")     "
-  printf "  %s   📥 Consume topic from beginning\n" "$(green "topic consume")                      "
-  printf "  %s   📤 Produce to a topic\n" "$(green "topic produce")                      "
-  printf "  %s   🆕 Create topic\n" "$(green "topic create")                       "
-  printf "  %s   ❌ Delete topic and associated schema/subject if applicable\n" "$(green "topic delete")                       "
-  printf "  %s   🪛 Alter topic config\n" "$(green "topic alter")                        "
+  printf "  %s   🗳 Topic commands\n" "$(green "topic")                                    "
+  printf "  %s   💯 Get number of records in a topic\n" "$(green "topic get-number-records")                 "
+  printf "  %s   📭 Display content of __consumer_offsets topic\n" "$(green "topic display-consumer-offsets")           "
+  printf "  %s   🔘 List topics\n" "$(green "topic list")                               "
+  printf "  %s   🔬 Describe topic\n" "$(green "topic describe")                           "
+  printf "  %s   🛡️ Change topic's schema compatibility\n" "$(green "topic set-schema-compatibility")           "
+  printf "  %s   📥 Consume topic from beginning\n" "$(green "topic consume")                            "
+  printf "  %s   📤 Produce to a topic\n" "$(green "topic produce")                            "
+  printf "  %s   🆕 Create topic\n" "$(green "topic create")                             "
+  printf "  %s   ❌ Delete topic and associated schema/subject if applicable\n" "$(green "topic delete")                             "
+  printf "  %s   🪛 Alter topic config\n" "$(green "topic alter")                              "
   echo
   printf "%s\n" "$(bold "Connector-Plugin commands:")"
-  printf "  %s   🔌 Connector-plugin commands\n" "$(green "connector-plugin")                   "
-  printf "  %s   ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/ Search for specific class and display method signatures\n" "$(green "connector-plugin search-jar")        "
-  printf "  %s   💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "connector-plugin versions")          "
+  printf "  %s   🔌 Connector-plugin commands\n" "$(green "connector-plugin")                         "
+  printf "  %s   ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/ Search for specific class and display method signatures\n" "$(green "connector-plugin search-jar")              "
+  printf "  %s   💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "connector-plugin versions")                "
   echo
   printf "%s\n" "$(bold "Connector commands:")"
-  printf "  %s   🔗 Connector commands\n" "$(green "connector")                          "
-  printf "  %s   🧩 Show status of all connectors\n" "$(green "connector status")                   "
-  printf "  %s   💈 Handle source and sink connectors offsets\n" "$(green "connector offsets")                  "
-  printf "  %s   🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n" "$(green "connector plugins")                  "
-  printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")                    "
-  printf "  %s   🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n" "$(green "connector versions")                 "
-  printf "  %s   ♻️  Restart connector\n" "$(green "connector restart")                  "
-  printf "  %s   🛑 Stop connector (only available if CP > 7.5 )\n" "$(green "connector stop")                     "
-  printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")                   "
-  printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")                   "
-  printf "  %s   🐢 Show lag of sink connector\n" "$(green "connector show-lag")                 "
-  printf "  %s   🧰 Show current connector config that was applied\n" "$(green "connector show-config")              "
-  printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "connector show-config-parameters")   "
-  printf "  %s   🗜️ Easily select config from all possible configuration parameters of connector\n" "$(green "connector select-config")            "
-  printf "  %s   🔌 useful snippets\n" "$(green "connector snippets")                 "
-  printf "  %s   🧑‍🎓 Open connector documentation of currently running conector(s)\n" "$(green "connector open-docs")                "
-  printf "  %s   🧬 Set connect log level\n" "$(green "connector log-level")                "
-  printf "  %s   🕵️  Tail and follow connect logs\n" "$(green "connector logs")                     "
-  printf "  %s   🤖 Open Fully Managed connector in Confluent Cloud dashboard\n" "$(green "connector open-in-confluent-cloud")  "
-  printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "connector create-or-update")         "
-  printf "  %s   🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.\n" "$(green "connector update")                   "
+  printf "  %s   🔗 Connector commands\n" "$(green "connector")                                "
+  printf "  %s   🧩 Show status of all connectors\n" "$(green "connector status")                         "
+  printf "  %s   💈 Handle source and sink connectors offsets\n" "$(green "connector offsets")                        "
+  printf "  %s   🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n" "$(green "connector plugins")                        "
+  printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")                          "
+  printf "  %s   🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n" "$(green "connector versions")                       "
+  printf "  %s   ♻️  Restart connector\n" "$(green "connector restart")                        "
+  printf "  %s   🛑 Stop connector (only available if CP > 7.5 )\n" "$(green "connector stop")                           "
+  printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")                         "
+  printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")                         "
+  printf "  %s   🐢 Show lag of sink connector\n" "$(green "connector show-lag")                       "
+  printf "  %s   🧰 Show current connector config that was applied\n" "$(green "connector show-config")                    "
+  printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "connector show-config-parameters")         "
+  printf "  %s   🗜️ Easily select config from all possible configuration parameters of connector\n" "$(green "connector select-config")                  "
+  printf "  %s   🔌 useful snippets\n" "$(green "connector snippets")                       "
+  printf "  %s   🧑‍🎓 Open connector documentation of currently running conector(s)\n" "$(green "connector open-docs")                      "
+  printf "  %s   🧬 Set connect log level\n" "$(green "connector log-level")                      "
+  printf "  %s   🕵️  Tail and follow connect logs\n" "$(green "connector logs")                           "
+  printf "  %s   🤖 Open Fully Managed connector in Confluent Cloud dashboard\n" "$(green "connector open-in-confluent-cloud")        "
+  printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "connector create-or-update")               "
+  printf "  %s   🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.\n" "$(green "connector update")                         "
   echo
 
   # :command.long_usage
@@ -2758,16 +2759,17 @@ playground_tcp_proxy_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998\n" "$(green "start")                    "
-  printf "  %s   🧲 Get Zazkia active TCP connections config and stats\n" "$(green "get-connections")          "
-  printf "  %s   ⏲️ Add milliseconds delay to service response.\n" "$(green "delay")                    "
-  printf "  %s   💔 Break sending the response to the client.\n" "$(green "break")                    "
-  printf "  %s   ❌ Close the Zazkia active TCP connections\n" "$(green "close-connection")         "
-  printf "  %s   🙅‍♂️ Change whether new connections can be accepted\n" "$(green "toggle-accept-connections")"
-  printf "  %s   ✅ Change whether reading data from the client is enabled.\n" "$(green "toggle-reads-client")      "
-  printf "  %s   ✅ Change whether reading data from the service is enabled.\n" "$(green "toggle-reads-service")     "
-  printf "  %s   ✅ Change whether writing data to the client is enabled.\n" "$(green "toggle-writes-client")     "
-  printf "  %s   ✅ Change whether reading data to the service is enabled.\n" "$(green "toggle-writes-service")    "
+  printf "  %s   💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998\n" "$(green "start")                          "
+  printf "  %s   🧲 Get Zazkia active TCP connections config and stats\n" "$(green "get-connections")                "
+  printf "  %s   ⏲️ Add milliseconds delay to service response.\n" "$(green "delay")                          "
+  printf "  %s   💔 Break sending the response to the client.\n" "$(green "break")                          "
+  printf "  %s   ❌ Close the Zazkia active TCP connections\n" "$(green "close-connection")               "
+  printf "  %s   🧹 Close all Zazkia TCP connections which are in error state (close all with error button in Zazkia UI)\n" "$(green "close-all-connection-with-error")"
+  printf "  %s   🙅‍♂️ Change whether new connections can be accepted\n" "$(green "toggle-accept-connections")      "
+  printf "  %s   ✅ Change whether reading data from the client is enabled.\n" "$(green "toggle-reads-client")            "
+  printf "  %s   ✅ Change whether reading data from the service is enabled.\n" "$(green "toggle-reads-service")           "
+  printf "  %s   ✅ Change whether writing data to the client is enabled.\n" "$(green "toggle-writes-client")           "
+  printf "  %s   ✅ Change whether reading data to the service is enabled.\n" "$(green "toggle-writes-service")          "
   echo
 
   # :command.long_usage
@@ -3002,6 +3004,35 @@ playground_tcp_proxy_close_connection_usage() {
     printf "  %s\n" "$(magenta "--connection-id CONNECTION-ID")"
     printf "    🧲 Zazkia TCP connection id\n"
     echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_tcp_proxy_close_all_connection_with_error_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground tcp-proxy close-all-connection-with-error - 🧹 Close all Zazkia TCP connections which are in error state (close all with error button in Zazkia UI)\n"
+    echo
+
+  else
+    printf "playground tcp-proxy close-all-connection-with-error - 🧹 Close all Zazkia TCP connections which are in error state (close all with error button in Zazkia UI)\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground tcp-proxy close-all-connection-with-error\n"
+  printf "  playground tcp-proxy close-all-connection-with-error --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -18097,6 +18128,14 @@ playground_tcp_proxy_close_connection_command() {
 }
 
 # :command.function
+playground_tcp_proxy_close_all_connection_with_error_command() {
+  # src/commands/tcp-proxy/close-all-connection-with-error.sh
+  log "🧹 Close all Zazkia TCP connections which are in error state"
+  handle_onprem_connect_rest_api "curl -o /dev/null -w '%{http_code}' -s -X POST -H \"Content-Type: application/json\" \"http://localhost:9191/links/closeAllWithError\""
+  echo "$curl_output"
+}
+
+# :command.function
 playground_tcp_proxy_toggle_accept_connections_command() {
   # src/commands/tcp-proxy/toggle-accept-connections.sh
   log "🙅‍♂️ Change whether new connections can be accepted"
@@ -29074,6 +29113,13 @@ playground_tcp_proxy_parse_requirements() {
       shift $#
       ;;
 
+    close-all-connection-with-error)
+      action="close-all-connection-with-error"
+      shift
+      playground_tcp_proxy_close_all_connection_with_error_parse_requirements "$@"
+      shift $#
+      ;;
+
     toggle-accept-connections)
       action="toggle-accept-connections"
       shift
@@ -29619,6 +29665,50 @@ playground_tcp_proxy_close_connection_parse_requirements() {
     printf "validation error in %s:\n%s\n" "--connection-id CONNECTION-ID" "$(validate_integer "${args['--connection-id']:-}")" >&2
     exit 1
   fi
+
+}
+
+# :command.parse_requirements
+playground_tcp_proxy_close_all_connection_with_error_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_tcp_proxy_close_all_connection_with_error_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="tcp-proxy close-all-connection-with-error"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -35798,6 +35888,7 @@ run() {
     "tcp-proxy delay") playground_tcp_proxy_delay_command ;;
     "tcp-proxy break") playground_tcp_proxy_break_command ;;
     "tcp-proxy close-connection") playground_tcp_proxy_close_connection_command ;;
+    "tcp-proxy close-all-connection-with-error") playground_tcp_proxy_close_all_connection_with_error_command ;;
     "tcp-proxy toggle-accept-connections") playground_tcp_proxy_toggle_accept_connections_command ;;
     "tcp-proxy toggle-reads-client") playground_tcp_proxy_toggle_reads_client_command ;;
     "tcp-proxy toggle-reads-service") playground_tcp_proxy_toggle_reads_service_command ;;

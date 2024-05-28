@@ -870,6 +870,12 @@
           ]
         },
         {
+          "name": "close-all-connection-with-error",
+          "description": "🧹 Close all Zazkia TCP connections which are in error state (close all with error button in Zazkia UI)\n",
+          "usage": "playground tcp-proxy close-all-connection-with-error",
+          "options": []
+        },
+        {
           "name": "toggle-accept-connections",
           "description": "🙅‍♂️ Change whether new connections can be accepted\n",
           "usage": "playground tcp-proxy toggle-accept-connections",

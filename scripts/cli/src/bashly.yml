@@ -1383,6 +1383,10 @@ commands:
     flags:
       - *connection-id
 
+  - name: close-all-connection-with-error
+    help: |-
+        🧹 Close all Zazkia TCP connections which are in error state (close all with error button in Zazkia UI)
+
   - name: toggle-accept-connections
     help: |-
         🙅‍♂️ Change whether new connections can be accepted
