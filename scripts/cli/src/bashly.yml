@@ -1310,14 +1310,13 @@ commands:
         default: "0"
         help: |-
           ⏲️ Add milliseconds delay to service response. Default is 0 ms.
-      - &break-service-response
-        long: --break-service-response
+      - long: --break-service-response
         arg: break-service-response
         validate: percentage
         required: false
         default: "0"
         help: |-
-          💔 Percentage of broken connections. Default is none.
+          💔 Percentage of broken connections. Default is 0%.
       - &service-response-corrupt
         long: --service-response-corrupt
         required: false
@@ -1356,7 +1355,21 @@ commands:
         validate: integer
         required: true
         help: |-
-          ⏲️ Add milliseconds delay to service response. Default is 0 ms.
+          ⏲️ Add milliseconds delay to service response.
+      - *connection-id
+
+  - name: break
+    private: true # FIXTHIS need to build my own fork of zazkia to support this
+    help: |-
+        💔 Break sending the response to the client.
+        Set it to 0% to remove the delay.
+    flags:
+      - long: --break-service-response
+        arg: break-service-response
+        validate: percentage
+        required: true
+        help: |-
+          💔 Percentage of broken connections.
       - *connection-id
 
   - name: close-connection

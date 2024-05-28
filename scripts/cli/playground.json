@@ -781,7 +781,7 @@
                 "--break-service-response"
               ],
               "argument": 0,
-              "description": "💔 Percentage of broken connections. Default is none.\n\nDefault value: 0\n"
+              "description": "💔 Percentage of broken connections. Default is 0%.\n\nDefault value: 0\n"
             },
             {
               "names": [
@@ -823,7 +823,7 @@
                 "--delay-service-response"
               ],
               "argument": "DELAY-SERVICE-RESPONSE",
-              "description": "⏲️ Add milliseconds delay to service response. Default is 0 ms.\n\nRequired: ✓ Yes\n"
+              "description": "⏲️ Add milliseconds delay to service response.\n\nRequired: ✓ Yes\n"
             },
             {
               "names": [

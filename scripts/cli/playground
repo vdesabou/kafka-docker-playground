@@ -2797,7 +2797,7 @@ playground_tcp_proxy_start_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--break-service-response BREAK-SERVICE-RESPONSE")"
-    printf "    💔 Percentage of broken connections. Default is none.\n"
+    printf "    💔 Percentage of broken connections. Default is 0%%.\n"
     printf "    Default: 0\n"
     echo
 
@@ -2886,7 +2886,50 @@ playground_tcp_proxy_delay_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--delay-service-response DELAY-SERVICE-RESPONSE (required)")"
-    printf "    ⏲️ Add milliseconds delay to service response. Default is 0 ms.\n"
+    printf "    ⏲️ Add milliseconds delay to service response.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connection-id CONNECTION-ID")"
+    printf "    🧲 Zazkia TCP connection id\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_tcp_proxy_break_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground tcp-proxy break\n"
+    echo
+
+    printf "  💔 Break sending the response to the client.\n  Set it to 0%% to remove the delay.\n"
+    echo
+
+  else
+    printf "playground tcp-proxy break - 💔 Break sending the response to the client.\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground tcp-proxy break [OPTIONS]\n"
+  printf "  playground tcp-proxy break --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--break-service-response BREAK-SERVICE-RESPONSE (required)")"
+    printf "    💔 Percentage of broken connections.\n"
     echo
 
     # :flag.usage
@@ -17951,6 +17994,41 @@ playground_tcp_proxy_delay_command() {
 }
 
 # :command.function
+playground_tcp_proxy_break_command() {
+  # src/commands/tcp-proxy/break.sh
+  break_service_response="${args[--break-service-response]}"
+  connection_id="${args[--connection-id]}"
+
+  if [[ ! -n "$connection_id" ]]
+  then
+      connection_id=$(playground get-zazkia-connection-list)
+      if [ "$connection_id" == "" ]
+      then
+          logerror "❌ No active Zazkia TCP connection found, make sure that Zazkia is being used!"
+          exit 1
+      fi
+  fi
+
+  items=($connection_id)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "🧲 --connection-id flag was not provided, applying command to all active Zazkia TCP connections"
+  fi
+  for id in "${items[@]}"
+  do
+      log "💔 Break sending the response to the client for $break_service_response % for connection id $id"
+      handle_onprem_connect_rest_api "curl -s -X POST -H \"Content-Type: application/json\" \"http://localhost:9191/links/$id/break-response?pct=$break_service_response\""
+
+      echo "$curl_output"
+
+      sleep 1
+
+      playground tcp-proxy get-connections --connection-id $connection_id
+  done
+}
+
+# :command.function
 playground_tcp_proxy_close_connection_command() {
   # src/commands/tcp-proxy/close-connection.sh
    connection_id="${args[--connection-id]}"
@@ -28893,6 +28971,13 @@ playground_tcp_proxy_parse_requirements() {
       shift $#
       ;;
 
+    break)
+      action="break"
+      shift
+      playground_tcp_proxy_break_parse_requirements "$@"
+      shift $#
+      ;;
+
     close-connection)
       action="close-connection"
       shift
@@ -29283,6 +29368,96 @@ playground_tcp_proxy_delay_parse_requirements() {
   # :flag.validations
   if [[ -v args['--delay-service-response'] && -n $(validate_integer "${args['--delay-service-response']:-}") ]]; then
     printf "validation error in %s:\n%s\n" "--delay-service-response DELAY-SERVICE-RESPONSE" "$(validate_integer "${args['--delay-service-response']:-}")" >&2
+    exit 1
+  fi
+
+  # :flag.validations
+  if [[ -v args['--connection-id'] && -n $(validate_integer "${args['--connection-id']:-}") ]]; then
+    printf "validation error in %s:\n%s\n" "--connection-id CONNECTION-ID" "$(validate_integer "${args['--connection-id']:-}")" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_tcp_proxy_break_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_tcp_proxy_break_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="tcp-proxy break"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --break-service-response)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--break-service-response']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--break-service-response requires an argument: --break-service-response BREAK-SERVICE-RESPONSE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connection-id)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connection-id']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connection-id requires an argument: --connection-id CONNECTION-ID" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--break-service-response']+x} ]]; then
+    printf "missing required flag: --break-service-response BREAK-SERVICE-RESPONSE\n" >&2
+    exit 1
+  fi
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--break-service-response'] && -n $(validate_percentage "${args['--break-service-response']:-}") ]]; then
+    printf "validation error in %s:\n%s\n" "--break-service-response BREAK-SERVICE-RESPONSE" "$(validate_percentage "${args['--break-service-response']:-}")" >&2
     exit 1
   fi
 
@@ -35531,6 +35706,7 @@ run() {
     "tcp-proxy start") playground_tcp_proxy_start_command ;;
     "tcp-proxy get-connections") playground_tcp_proxy_get_connections_command ;;
     "tcp-proxy delay") playground_tcp_proxy_delay_command ;;
+    "tcp-proxy break") playground_tcp_proxy_break_command ;;
     "tcp-proxy close-connection") playground_tcp_proxy_close_connection_command ;;
     "tcp-proxy toggle-accept-connections") playground_tcp_proxy_toggle_accept_connections_command ;;
     "tcp-proxy toggle-reads-client") playground_tcp_proxy_toggle_reads_client_command ;;

@@ -914,7 +914,7 @@ subcommands:
           - --break-service-response
           argument: 0
           description: | 
-            💔 Percentage of broken connections. Default is none.
+            💔 Percentage of broken connections. Default is 0%.
             
             Default value: 0
             
@@ -954,7 +954,7 @@ subcommands:
           - --delay-service-response
           argument: DELAY-SERVICE-RESPONSE
           description: | 
-            ⏲️ Add milliseconds delay to service response. Default is 0 ms.
+            ⏲️ Add milliseconds delay to service response.
             
             Required: ✓ Yes
             
