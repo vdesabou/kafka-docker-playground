@@ -67,7 +67,7 @@ playground topic produce -t rabbitmq-messages --nb-messages 10 << 'EOF'
 %g
 EOF
 
-connector_name="RabbitMQSink_$USER"
+connector_name="RabbitMQSinkSSL_$USER"
 set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
