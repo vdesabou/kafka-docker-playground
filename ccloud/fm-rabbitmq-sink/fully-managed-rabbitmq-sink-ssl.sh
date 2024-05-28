@@ -5,6 +5,11 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 NGROK_AUTH_TOKEN=${NGROK_AUTH_TOKEN:-$1}
 
+cd ../../ccloud/fm-rabbitmq-sink/security
+log "🔐 Generate keys and certificates used for SSL"
+docker run -u0 --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "/tmp/certs-create.sh > /dev/null 2>&1 && chown -R $(id -u $USER):$(id -g $USER) /tmp/ && chmod a+r /tmp/*"
+cd -
+
 display_ngrok_warning
 
 bootstrap_ccloud_environment
@@ -16,9 +21,9 @@ sleep 3
 playground topic create --topic rabbitmq-messages
 set -e
 
-docker compose build
-docker compose down -v --remove-orphans
-docker compose up -d --quiet-pull
+docker compose -f docker-compose.ssl.yml build
+docker compose -f docker-compose.ssl.yml down -v --remove-orphans
+docker compose -f docker-compose.ssl.yml up -d --quiet-pull
 
 sleep 5
 
@@ -67,6 +72,8 @@ set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
 
+base64_truststore=$(cat $PWD/security/kafka.connect.truststore.jks | base64 | tr -d '\n')
+base64_keystore=$(cat $PWD/security/kafka.connect.keystore.jks | base64 | tr -d '\n')
 
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
@@ -85,6 +92,13 @@ playground connector create-or-update --connector $connector_name << EOF
   "rabbitmq.routing.key": "rkey1",
   "rabbitmq.delivery.mode": "persistent",
   "topics" : "rabbitmq-messages",
+
+  "rabbitmq.security.protocol": "SSL",
+  "rabbitmq.https.ssl.truststorefile": "data:text/plain;base64,$base64_truststore",
+  "rabbitmq.https.ssl.truststore.password": "confluent",
+  "rabbitmq.https.ssl.keystorefile": "data:text/plain;base64,$base64_keystore",
+  "rabbitmq.https.ssl.keystore.password": "confluent",
+  
   "tasks.max" : "1"
 }
 EOF

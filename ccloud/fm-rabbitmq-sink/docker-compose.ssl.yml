@@ -1,0 +1,40 @@
+---
+services:
+
+  rabbitmq:
+    image: rabbitmq:3.8.19-management
+    hostname: rabbitmq
+    container_name: rabbitmq
+    volumes:
+      - ../../ccloud/fm-rabbitmq-sink/ssl/rabbitmq.conf:/etc/rabbitmq/advanced.config
+      - ../../ccloud/fm-rabbitmq-sink/security/snakeoil-ca-1.crt:/tmp/ca.crt
+      - ../../ccloud/fm-rabbitmq-sink/security/rabbitmq.certificate.pem:/tmp/server.pem
+      - ../../ccloud/fm-rabbitmq-sink/security/rabbitmq.key:/tmp/server.key
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: "myuser"
+      RABBITMQ_DEFAULT_PASS: "mypassword"
+
+
+  # https://ngrok.com/docs/using-ngrok-with/docker/
+  ngrok:
+    image: ngrok/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    ports:
+      - 4040:4040
+    restart: unless-stopped
+    links:
+      - rabbitmq
+    command:
+      - "start"
+      - "--all"
+      - "--log=stdout"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ../../ccloud/fm-rabbitmq-sink/ngrok-ssl.yml:/etc/ngrok.yml
+    environment:
+      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN
