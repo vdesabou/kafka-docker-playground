@@ -142,18 +142,18 @@ EOF
 log "Creating JDBC PostgreSQL source connector"
 playground connector create-or-update --connector postgres-source-mtls  << EOF
 {
-               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-                    "tasks.max": "1",
-                    "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&sslmode=verify-full&sslrootcert=/tmp/ca.crt&sslcert=/tmp/client.crt&sslkey=/tmp/client.key.pk8",
-                    "table.whitelist": "customers",
-                    "mode": "timestamp+incrementing",
-                    "timestamp.column.name": "update_ts",
-                    "incrementing.column.name": "id",
-                    "topic.prefix": "postgres-",
-                    "validate.non.null":"false",
-                    "errors.log.enable": "true",
-                    "errors.log.include.messages": "true"
-          }
+    "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+    "tasks.max": "1",
+    "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&sslmode=verify-full&sslrootcert=/tmp/ca.crt&sslcert=/tmp/client.crt&sslkey=/tmp/client.key.pk8",
+    "table.whitelist": "customers",
+    "mode": "timestamp+incrementing",
+    "timestamp.column.name": "update_ts",
+    "incrementing.column.name": "id",
+    "topic.prefix": "postgres-",
+    "validate.non.null":"false",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
+}
 EOF
 
 
