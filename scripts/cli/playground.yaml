@@ -1187,7 +1187,7 @@ subcommands:
             
       - name: java-debug
         description: | 
-          🐞 JVM arguments for SSL, Kerberos or Class Loading
+          🤎 JVM arguments for SSL, Kerberos or Class Loading
         usage: playground debug java-debug [OPTIONS]
         options:
         - names:

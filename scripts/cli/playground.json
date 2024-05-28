@@ -1054,7 +1054,7 @@
         },
         {
           "name": "java-debug",
-          "description": "🐞 JVM arguments for SSL, Kerberos or Class Loading\n",
+          "description": "🤎 JVM arguments for SSL, Kerberos or Class Loading\n",
           "usage": "playground debug java-debug [OPTIONS]",
           "options": [
             {

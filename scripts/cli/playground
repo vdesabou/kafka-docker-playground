@@ -96,7 +96,7 @@ playground_usage() {
   printf "  %s   👻 Take a heap dump\n" "$(green "debug heap-dump")                    "
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "debug tcp-dump")                     "
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "debug block-traffic")                "
-  printf "  %s   🐞 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "debug java-debug")                   "
+  printf "  %s   🤎 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "debug java-debug")                   "
   printf "  %s   🛩️ Record flight recorder\n" "$(green "debug flight-recorder")              "
   printf "  %s   🧬 Set log level for any package\n" "$(green "debug log-level")                    "
   echo
@@ -3186,7 +3186,7 @@ playground_debug_usage() {
   printf "  %s   👻 Take a heap dump\n" "$(green "heap-dump")              "
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "tcp-dump")               "
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "block-traffic")          "
-  printf "  %s   🐞 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "java-debug")             "
+  printf "  %s   🤎 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "java-debug")             "
   printf "  %s   🛩️ Record flight recorder\n" "$(green "flight-recorder")        "
   printf "  %s   🧬 Set log level for any package\n" "$(green "log-level")              "
   echo
@@ -3543,11 +3543,11 @@ playground_debug_block_traffic_usage() {
 # :command.usage
 playground_debug_java_debug_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground debug java-debug - 🐞 JVM arguments for SSL, Kerberos or Class Loading\n"
+    printf "playground debug java-debug - 🤎 JVM arguments for SSL, Kerberos or Class Loading\n"
     echo
 
   else
-    printf "playground debug java-debug - 🐞 JVM arguments for SSL, Kerberos or Class Loading\n"
+    printf "playground debug java-debug - 🤎 JVM arguments for SSL, Kerberos or Class Loading\n"
     echo
 
   fi
@@ -18610,13 +18610,13 @@ services:
       KAFKA_OPTS: "$OPTS"
       DUMMY: $RANDOM
 EOF
-      log "🟢 enabling container $container with JVM arguments KAFKA_OPTS: $OPTS"
+      log "🤎 enabling container $container with JVM arguments KAFKA_OPTS: $OPTS"
       echo "$docker_command" > /tmp/playground-command-java-debug
       sed -i -E -e "s|up -d --quiet-pull|-f /tmp/docker-compose.override.java.debug.yml up -d --quiet-pull|g" /tmp/playground-command-java-debug
       bash /tmp/playground-command-java-debug
 
   else
-      log "🔴 restoring previous JVM arguments for container $container"
+      log "💚 restoring previous JVM arguments for container $container"
       echo "$docker_command" > /tmp/playground-command
       bash /tmp/playground-command
   fi

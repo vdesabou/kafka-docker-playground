@@ -38,13 +38,13 @@ services:
       KAFKA_OPTS: "$OPTS"
       DUMMY: $RANDOM
 EOF
-    log "🟢 enabling container $container with JVM arguments KAFKA_OPTS: $OPTS"
+    log "🤎 enabling container $container with JVM arguments KAFKA_OPTS: $OPTS"
     echo "$docker_command" > /tmp/playground-command-java-debug
     sed -i -E -e "s|up -d --quiet-pull|-f /tmp/docker-compose.override.java.debug.yml up -d --quiet-pull|g" /tmp/playground-command-java-debug
     bash /tmp/playground-command-java-debug
 
 else
-    log "🔴 restoring previous JVM arguments for container $container"
+    log "💚 restoring previous JVM arguments for container $container"
     echo "$docker_command" > /tmp/playground-command
     bash /tmp/playground-command
 fi
