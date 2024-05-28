@@ -1794,7 +1794,7 @@ commands:
           🤎 JDK version to use
 
       examples:
-      - playground change-jdk --container connect --version jdk17-lts
+      - playground change-jdk --container connect --version 17
 
     - name: exec
       group: Container
