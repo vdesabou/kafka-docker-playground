@@ -43,7 +43,7 @@ docker exec -i --privileged --user root connect  bash -c "chmod a+rw /etc/yum.re
 docker exec -i --privileged --user root connect  bash -c "rpm -i http://mirror.centos.org/centos/7/os/x86_64/Packages/mtools-4.0.18-5.el7.x86_64.rpm"
 docker exec -i --privileged --user root connect  bash -c "rpm -i http://mirror.centos.org/centos/7/os/x86_64/Packages/syslinux-4.05-15.el7.x86_64.rpm"
 
-docker exec -i --privileged --user root connect  bash -c "yum -y install --disablerepo='Confluent*' --disablerepo='mapr*' jre-1.8.0-openjdk hostname findutils net-tools"
+docker exec -i --privileged --user root connect  bash -c "yum -y install --disablerepo='Confluent*' --disablerepo='mapr*' hostname findutils net-tools"
 
 docker exec -i --privileged --user root connect  bash -c "wget --user=$HPE_MAPR_EMAIL --password=$HPE_MAPR_TOKEN -O mapr-pubkey.gpg https://package.ezmeral.hpe.com/releases/pub/maprgpg.key && rpm --import mapr-pubkey.gpg && yum -y update --disablerepo='Confluent*' && yum -y install mapr-client"
 
@@ -62,14 +62,8 @@ EOF
 
 sleep 60
 
+playground container change-jdk --version 8 --container connect
 log "Configure Mapr Client"
-# Mapr sink is failing with CP 6.0 UBI8 #91
-docker exec -i --privileged --user root connect bash -c "ln -sf /usr/lib/jvm/jre-1.8.0-openjdk /usr/lib/jvm/java-8-openjdk"
-set +e
-docker exec -i --privileged --user root connect bash -c "alternatives --remove java /usr/lib/jvm/zulu11/bin/java"
-# with 7.3.3
-docker exec -i --privileged --user root connect bash -c "alternatives --remove java /usr/lib/jvm/java-11-zulu-openjdk/bin/java"
-set -e
 docker exec -i --privileged --user root connect bash -c "chown -R appuser:appuser /opt/mapr"
 set +e
 log "It will fail the first time for some reasons.."
