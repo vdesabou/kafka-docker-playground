@@ -17,12 +17,6 @@ You need to follow these steps to get `HPE_MAPR_EMAIL` and `HPE_MAPR_TOKEN`
 
 ## How to run
 
-**WARNING**: It only works with UBI 8 image, make sure to set environment variable `TAG`:
-
-```bash
-export TAG=6.0.0-1-ubi8
-```
-
 Simply run:
 
 ```
