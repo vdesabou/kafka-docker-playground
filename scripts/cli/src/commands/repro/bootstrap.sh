@@ -353,6 +353,12 @@ then
   echo "# 🔮 ticket: https://confluent.zendesk.com/agent/tickets/$numbers" >> $tmp_dir/intro
 fi
 echo "# 🙋 how to use: https://github.com/confluentinc/kafka-docker-playground-internal/tree/master#how-to-use" >> $tmp_dir/intro
+if [ -z "$OUTPUT_FOLDER" ] || [ "$OUTPUT_FOLDER" == "reproduction-models" ]
+then
+  last_folder=$(basename $(dirname $repro_test_file))
+  f=$(basename $repro_test_file)
+  echo "# 🔗 github file url: https://github.com/confluentinc/kafka-docker-playground-internal/blob/master/$last_folder/$f" >> $tmp_dir/intro
+fi
 string=$(grep "Quickly test " README.md)
 url=$(echo "$string" | grep -oE 'https?://[^ ]+')
 url=${url//)/}
