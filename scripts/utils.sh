@@ -2,7 +2,7 @@ DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR_UTILS}/../scripts/cli/src/lib/utils_function.sh
 
 function cleanup-workaround-file {
-  rm /tmp/without-cli-workaround
+  rm -f /tmp/without-cli-workaround > /dev/null 2>&1
 }
 
 if [ ! -f /tmp/playground-run-command-used ]
@@ -12,9 +12,13 @@ then
   then
     trap cleanup-workaround-file EXIT
     test_file="$PWD/$0"
-    playground state set run.test_file "$test_file"
-    playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
-    touch /tmp/without-cli-workaround
+    filename=$(basename $test_file)
+    if [ "$filename" != "playground-command" ]
+    then
+      playground state set run.test_file "$test_file"
+      playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
+      touch /tmp/without-cli-workaround
+    fi
   fi
 fi
 
