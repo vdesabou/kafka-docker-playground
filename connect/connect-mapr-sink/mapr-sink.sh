@@ -92,6 +92,8 @@ playground topic produce -t maprtopic --nb-messages 3 --key "1" << 'EOF'
 {"schema":{"type":"struct","fields":[{"type":"string","optional":false,"field":"record"}]},"payload":{"record":"record%g"}}
 EOF
 
+sleep 10
+
 log "Creating Mapr sink connector"
 playground connector create-or-update --connector mapr-sink  << EOF
 {
