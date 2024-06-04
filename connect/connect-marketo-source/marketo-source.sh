@@ -57,9 +57,9 @@ docker exec connect \
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
-     SINCE=$(date -v-1H  +%Y-%m-%dT%H:%M:%SZ)
+     SINCE=$(date -v-3H  +%Y-%m-%dT%H:%M:%SZ)
 else
-     SINCE=$(date -d '1 hour ago'  +%Y-%m-%dT%H:%M:%SZ)
+     SINCE=$(date -d '3 hour ago'  +%Y-%m-%dT%H:%M:%SZ)
 fi
 
 log "Creating Marketo Source connector"
