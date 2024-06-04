@@ -109,7 +109,9 @@ playground topic consume --topic success-$connectorId --min-expected-messages 10
 sleep 10
 
 log "Confirm that the data was sent to the HTTP endpoint."
+cd ../../connect/connect-http-sink/
 curl --cert ./security/http-service-mtls-auth.certificate.pem --key ./security/http-service-mtls-auth.key --tlsv1.2 --cacert ./security/snakeoil-ca-1.crt  -X GET https://localhost:8643/api/messages | jq . > /tmp/result.log  2>&1
+cd -
 cat /tmp/result.log
 grep "10" /tmp/result.log
 
