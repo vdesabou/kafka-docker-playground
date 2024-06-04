@@ -28,7 +28,7 @@ $ just use <playground run> command and search for zendesk-source<use tab key to
 
 Note: you can also export these values as environment variable
 
-P.S: `ZENDESK_USERNAME` should have format `email/token`
+P.S: `ZENDESK_USERNAME` should have format `<email>/token` (`foo@gmail.com/token`)
 
 ## Details of what the script is doing
 
