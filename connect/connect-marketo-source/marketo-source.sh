@@ -83,8 +83,7 @@ playground connector create-or-update --connector marketo-source  << EOF
 }
 EOF
 
-log "Sleeping 10 minutes (leads are pulled with a delay of 5 minutes between consecutive pulls)"
-sleep 600
+sleep 10
 
 log "Verify we have received the data in marketo_leads topic"
-playground topic consume --topic marketo_leads --min-expected-messages 1 --timeout 60
+playground topic consume --topic marketo_leads --min-expected-messages 1 --timeout 600
