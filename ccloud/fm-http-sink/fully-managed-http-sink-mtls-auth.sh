@@ -69,8 +69,10 @@ set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
 
+cd ../../connect/connect-http-sink/
 base64_truststore=$(cat $PWD/security/truststore.http-service-mtls-auth.jks | base64 | tr -d '\n')
 base64_keystore=$(cat $PWD/security/keystore.http-service-mtls-auth.jks | base64 | tr -d '\n')
+cd -
 
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
