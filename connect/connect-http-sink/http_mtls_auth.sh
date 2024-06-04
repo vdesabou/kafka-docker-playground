@@ -14,8 +14,6 @@ cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.mtls.yml"
 
-playground debug java-debug --type ssl_handshake
-
 log "Sending messages to topic http-messages"
 playground topic produce -t http-messages --nb-messages 10 << 'EOF'
 %g
