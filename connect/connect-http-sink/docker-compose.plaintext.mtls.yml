@@ -16,3 +16,10 @@ services:
       - "8643:8443"
     environment:
       SPRING_PROFILES_ACTIVE: 'ssl-auth'
+
+
+  testssl:
+    image: drwetter/testssl.sh
+    hostname: testssl
+    container_name: testssl
+    entrypoint: ["sh", "-c", "sleep infinity"]
