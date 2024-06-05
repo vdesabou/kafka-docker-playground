@@ -36,6 +36,7 @@ azure/eastus
 azure/eastus2
 azure/francecentral
 azure/germanywestcentral
+azure/italynorth
 azure/japaneast
 azure/koreacentral
 azure/northeurope
