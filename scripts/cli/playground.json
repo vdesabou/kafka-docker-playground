@@ -959,6 +959,21 @@
               "description": "🔖 Avro file to read\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
             }
           ]
+        },
+        {
+          "name": "read-parquet-file",
+          "description": "🔐 Read provided parquet file\n",
+          "usage": "playground tools read-parquet-file [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--file",
+                "-f"
+              ],
+              "argument": "FILE",
+              "description": "🔖 Parquet file to read\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+            }
+          ]
         }
       ]
     },

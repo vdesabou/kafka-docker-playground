@@ -1086,6 +1086,22 @@ subcommands:
             
             🎓 Tip: use <tab> completion to trigger fzf completion
             
+      - name: read-parquet-file
+        description: | 
+          🔐 Read provided parquet file
+        usage: playground tools read-parquet-file [OPTIONS]
+        options:
+        - names:
+          - --file
+          - -f
+          argument: FILE
+          description: | 
+            🔖 Parquet file to read
+            
+            ❕ It must be absolute full path
+            
+            🎓 Tip: use <tab> completion to trigger fzf completion
+            
   - name: debug
     description: | 
         🐞 Debug commands

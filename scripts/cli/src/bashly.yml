@@ -1459,6 +1459,24 @@ commands:
 
         🎓 Tip: use <tab> completion to trigger fzf completion
 
+  - name: read-parquet-file
+    help: |-
+      🔐 Read provided parquet file
+    flags:
+    - long: --file
+      short: -f
+      required: false
+      completions:
+        - $(playground get-specific-file-extension "$cur" --extension "parquet")
+      validate: file_exists_and_parquet
+      arg: file
+      help: |-
+        🔖 Parquet file to read
+
+        ❕ It must be absolute full path
+
+        🎓 Tip: use <tab> completion to trigger fzf completion
+
 - name: debug
   expose: always
   group: Debug
