@@ -946,7 +946,7 @@
         },
         {
           "name": "read-avro-file",
-          "description": "🔐 Read provided avro file\n",
+          "description": "🔖 Read provided avro file\n",
           "usage": "playground tools read-avro-file [OPTIONS]",
           "options": [
             {
@@ -961,7 +961,7 @@
         },
         {
           "name": "read-parquet-file",
-          "description": "🔐 Read provided parquet file\n",
+          "description": "🔖 Read provided parquet file\n",
           "usage": "playground tools read-parquet-file [OPTIONS]",
           "options": [
             {

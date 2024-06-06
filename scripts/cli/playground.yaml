@@ -1071,7 +1071,7 @@ subcommands:
         options: []
       - name: read-avro-file
         description: | 
-          🔐 Read provided avro file
+          🔖 Read provided avro file
         usage: playground tools read-avro-file [OPTIONS]
         options:
         - names:
@@ -1087,7 +1087,7 @@ subcommands:
             
       - name: read-parquet-file
         description: | 
-          🔐 Read provided parquet file
+          🔖 Read provided parquet file
         usage: playground tools read-parquet-file [OPTIONS]
         options:
         - names:

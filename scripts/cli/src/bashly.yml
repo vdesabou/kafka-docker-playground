@@ -1442,7 +1442,7 @@ commands:
       code: visit https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line to install
   - name: read-avro-file
     help: |-
-      🔐 Read provided avro file
+      🔖 Read provided avro file
     flags:
     - long: --file
       short: -f
@@ -1460,7 +1460,7 @@ commands:
 
   - name: read-parquet-file
     help: |-
-      🔐 Read provided parquet file
+      🔖 Read provided parquet file
     flags:
     - long: --file
       short: -f

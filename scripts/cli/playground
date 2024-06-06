@@ -91,8 +91,8 @@ playground_usage() {
   printf "%s\n" "$(bold "Tools commands:")"
   printf "  %s   🧰 Tools commands\n" "$(green "tools")                                    "
   printf "  %s   🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n" "$(green "tools install-vscode-extension")           "
-  printf "  %s   🔐 Read provided avro file\n" "$(green "tools read-avro-file")                     "
-  printf "  %s   🔐 Read provided parquet file\n" "$(green "tools read-parquet-file")                  "
+  printf "  %s   🔖 Read provided avro file\n" "$(green "tools read-avro-file")                     "
+  printf "  %s   🔖 Read provided parquet file\n" "$(green "tools read-parquet-file")                  "
   echo
   printf "%s\n" "$(bold "Debug commands:")"
   printf "  %s   🐞 Debug commands\n" "$(green "debug")                                    "
@@ -3253,8 +3253,8 @@ playground_tools_usage() {
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n" "$(green "install-vscode-extension")"
-  printf "  %s   🔐 Read provided avro file\n" "$(green "read-avro-file")          "
-  printf "  %s   🔐 Read provided parquet file\n" "$(green "read-parquet-file")       "
+  printf "  %s   🔖 Read provided avro file\n" "$(green "read-avro-file")          "
+  printf "  %s   🔖 Read provided parquet file\n" "$(green "read-parquet-file")       "
   echo
 
   # :command.long_usage
@@ -3309,11 +3309,11 @@ playground_tools_install_vscode_extension_usage() {
 # :command.usage
 playground_tools_read_avro_file_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground tools read-avro-file - 🔐 Read provided avro file\n"
+    printf "playground tools read-avro-file - 🔖 Read provided avro file\n"
     echo
 
   else
-    printf "playground tools read-avro-file - 🔐 Read provided avro file\n"
+    printf "playground tools read-avro-file - 🔖 Read provided avro file\n"
     echo
 
   fi
@@ -3344,11 +3344,11 @@ playground_tools_read_avro_file_usage() {
 # :command.usage
 playground_tools_read_parquet_file_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground tools read-parquet-file - 🔐 Read provided parquet file\n"
+    printf "playground tools read-parquet-file - 🔖 Read provided parquet file\n"
     echo
 
   else
-    printf "playground tools read-parquet-file - 🔐 Read provided parquet file\n"
+    printf "playground tools read-parquet-file - 🔖 Read provided parquet file\n"
     echo
 
   fi
