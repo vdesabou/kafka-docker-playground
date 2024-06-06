@@ -98,7 +98,7 @@ docker exec sftp-server bash -c "ls /home/foo/upload/topics/test_sftp_sink/parti
 
 docker cp sftp-server:/home/foo/upload/topics/test_sftp_sink/partition\=0/test_sftp_sink+0+0000000000.avro /tmp/
 
-docker run --quiet --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/test_sftp_sink+0+0000000000.avro
+playground  tools read-avro-file --file /tmp/test_sftp_sink+0+0000000000.avro
 
 
 log "Remove /usr/share/confluent-hub-components/jcustenborder-kafka-connect-spooldir"

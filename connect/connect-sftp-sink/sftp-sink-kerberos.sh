@@ -95,4 +95,4 @@ docker exec ssh-server bash -c "ls /home/sshuser/upload/topics/test_sftp_sink/pa
 
 docker cp ssh-server:/home/sshuser/upload/topics/test_sftp_sink/partition\=0/test_sftp_sink+0+0000000000.avro /tmp/
 
-docker run --quiet --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/test_sftp_sink+0+0000000000.avro
+playground  tools read-avro-file --file /tmp/test_sftp_sink+0+0000000000.avro

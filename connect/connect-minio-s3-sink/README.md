@@ -83,7 +83,7 @@ Getting one of the avro files locally and displaying content with avro-tools:
 ```bash
 $ docker container restart copy-files
 $ docker container logs --tail=3 copy-files
-$ docker run --quiet --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/minio_topic+0+0000000000.avro
+$ playground  tools read-avro-file --file /tmp/minio_topic+0+0000000000.avro
 ```
 
 ```json

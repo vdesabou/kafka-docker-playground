@@ -95,7 +95,7 @@ log "Listing content of ./upload/topics/test_sftp_sink"
 docker exec sftp-server bash -c "ls /home/foo/upload/topics/test_sftp_sink/*/*/*/*"
 docker exec sftp-server bash -c "cp /home/foo/upload/topics/test_sftp_sink/*/*/*/*/test_sftp_sink+0+0000000000.avro /tmp/"
 docker cp sftp-server:/tmp/test_sftp_sink+0+0000000000.avro /tmp/
-docker run --quiet --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/test_sftp_sink+0+0000000000.avro
+playground  tools read-avro-file --file /tmp/test_sftp_sink+0+0000000000.avro
 
 
 log "Do you want to delete the fully managed connector $connector_name ?"

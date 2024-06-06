@@ -101,7 +101,7 @@ log "Getting one of the avro files locally and displaying content with avro-tool
 docker exec hadoop bash -c "/usr/local/hadoop/bin/hadoop fs -copyToLocal /topics/test_hdfs/f1=value1/test_hdfs+0+0000000000+0000000000.avro /tmp"
 docker cp hadoop:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
 
-docker run --quiet --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro
+playground  tools read-avro-file --file /tmp/test_hdfs+0+0000000000+0000000000.avro
 
 # renew ticket manually:
 # docker exec connect kinit -kt /tmp/connect.keytab connect/connect.kerberos.local

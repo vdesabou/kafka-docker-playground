@@ -149,7 +149,7 @@ az storage fs file list --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}" --file-s
 log "Getting one of the avro files locally and displaying content with avro-tools"
 az storage blob download  --container-name topics --name datalake_topic/partition=0/datalake_topic+0+0000000000.avro --file /tmp/datalake_topic+0+0000000000.avro --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}"
 
-docker run --quiet --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/datalake_topic+0+0000000000.avro
+playground  tools read-avro-file --file /tmp/datalake_topic+0+0000000000.avro
 
 # keep AD app
 # log "Deleting active directory app"

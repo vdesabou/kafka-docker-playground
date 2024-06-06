@@ -61,7 +61,7 @@ log "Getting one of the avro files locally and displaying content with avro-tool
 docker exec namenode bash -c "/opt/hadoop-3.1.3/bin/hadoop fs -copyToLocal /topics/test_hdfs/partition=0/test_hdfs+0+0000000000+0000000002.avro /tmp"
 docker cp namenode:/tmp/test_hdfs+0+0000000000+0000000002.avro /tmp/
 
-docker run --quiet --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000002.avro
+playground  tools read-avro-file --file /tmp/test_hdfs+0+0000000000+0000000002.avro
 
 
 sleep 60

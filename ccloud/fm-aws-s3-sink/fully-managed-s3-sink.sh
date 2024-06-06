@@ -116,7 +116,7 @@ aws s3 cp --only-show-errors --recursive s3://$AWS_BUCKET_NAME/$TAG/s3_topic /tm
 
 cp /tmp/s3_topic/*/*/*/*/s3_topic+0+0000000000.avro /tmp/s3_topic+0+0000000000.avro
 
-docker run --quiet --rm -v /tmp/:/tmp vdesabou/avro-tools tojson /tmp/s3_topic+0+0000000000.avro | grep value999
+playground  tools read-avro-file --file /tmp/s3_topic+0+0000000000.avro | grep value999
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
