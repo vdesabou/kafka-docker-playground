@@ -89,6 +89,10 @@ playground_usage() {
   printf "  %s   ✅ Change whether writing data to the client is enabled.\n" "$(green "tcp-proxy toggle-writes-client")           "
   printf "  %s   ✅ Change whether reading data to the service is enabled.\n" "$(green "tcp-proxy toggle-writes-service")          "
   echo
+  printf "%s\n" "$(bold "Tools commands:")"
+  printf "  %s   🧰 Tools commands\n" "$(green "tools")                                    "
+  printf "  %s   🔐 Read provided avro file\n" "$(green "tools read-avro-file")                     "
+  echo
   printf "%s\n" "$(bold "Debug commands:")"
   printf "  %s   🐞 Debug commands\n" "$(green "debug")                                    "
   printf "  %s   ✨ Enable java remote debugging for container\n" "$(green "debug enable-remote-debugging")            "
@@ -829,6 +833,49 @@ playground_get_zip_or_jar_with_fzf_usage() {
     printf "  %s\n" "$(magenta "--type TYPE")"
     printf "\n"
     printf "    Allowed: zip, jar\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "CUR")"
+    printf "    correspond to completion $cur\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_get_specific_file_extension_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground get-specific-file-extension - Return some completion for extension provided\n"
+    echo
+
+  else
+    printf "playground get-specific-file-extension - Return some completion for extension provided\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground get-specific-file-extension [CUR] [OPTIONS]\n"
+  printf "  playground get-specific-file-extension --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--extension EXTENSION")"
+    printf "\n"
     echo
 
     # :command.usage_fixed_flags
@@ -3213,6 +3260,74 @@ playground_tcp_proxy_toggle_writes_service_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--connection-id CONNECTION-ID")"
     printf "    🧲 Zazkia TCP connection id\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_tools_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground tools - 🧰 Tools commands\n"
+    echo
+
+  else
+    printf "playground tools - 🧰 Tools commands\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground tools COMMAND\n"
+  printf "  playground tools [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🔐 Read provided avro file\n" "$(green "read-avro-file")"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_tools_read_avro_file_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground tools read-avro-file - 🔐 Read provided avro file\n"
+    echo
+
+  else
+    printf "playground tools read-avro-file - 🔐 Read provided avro file\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground tools read-avro-file [OPTIONS]\n"
+  printf "  playground tools read-avro-file --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file, -f FILE")"
+    printf "    🔖 Avro file to read\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :command.usage_fixed_flags
@@ -6774,6 +6889,25 @@ function get_zip_or_jar_with_fzf() {
   res=$(find $folder_zip_or_jar $PWD -name \*.$type ! -path '*/\.*' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🤐" --header="select zip or jar file" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
 }
 
+function get_specific_file_extension() {
+  cur="$1"
+  extension="$2"
+
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
+  then
+    fzf_option_wrap="--preview-window=40%,wrap"
+    fzf_option_pointer="--pointer=👉"
+    fzf_option_rounded="--border=rounded"
+  else
+    fzf_option_wrap=""
+    fzf_option_pointer=""
+    fzf_option_rounded=""
+  fi
+
+  res=$(find $PWD -name \*.$extension ! -path '*/\.*' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔖" --header="select $extension file" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+}
+
 function get_playground_repro_export_with_fzf() {
   cur="$1"
 
@@ -8156,9 +8290,9 @@ function maybe_create_image()
       export CONNECT_USER="appuser"
       if [ `uname -m` = "arm64" ]
       then
-        CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && rpm -i --nosignature https://rpmfind.net/linux/centos/8-stream/AppStream/aarch64/os/Packages/tcpdump-4.9.3-2.el8.aarch64.rpm && touch /tmp/done; fi"
+        CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && rpm -i --nosignature https://koji.mbox.centos.org/kojifiles/packages/tcpdump/4.9.3/3.el8/aarch64/tcpdump-4.9.3-3.el8.aarch64.rpm && touch /tmp/done; fi"
       else
-        CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then curl http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/tcpdump-4.9.3-1.el8.x86_64.rpm -o tcpdump-4.9.3-1.el8.x86_64.rpm && rpm -Uvh tcpdump-4.9.3-1.el8.x86_64.rpm && yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && touch /tmp/done; fi"
+        CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then curl https://download.rockylinux.org/pub/rocky/8/AppStream/x86_64/kickstart/Packages/t/tcpdump-4.9.3-5.el8.x86_64.rpm -o tcpdump-4.9.3-1.el8.x86_64.rpm && rpm -Uvh tcpdump-4.9.3-1.el8.x86_64.rpm && yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && touch /tmp/done; fi"
       fi
     else
       export CONNECT_USER="root"
@@ -12063,6 +12197,20 @@ validate_file_exists() {
   [[ -f "$1" ]] || logerror "<$file> does not correspond to the path of an existing file, please make sure to use absolute full path or correct relative path !"
 }
 
+# src/lib/validations/validate_file_exists_and_avro.sh
+validate_file_exists_and_avro() {
+  file="$1"
+
+  real_file=$file
+  if [[ $file == *"@"* ]]
+  then
+    real_file=$(echo "$file" | cut -d "@" -f 2)
+  fi
+
+  [[ -f "$real_file" ]] || logerror "<$real_file> does not correspond to the path of an existing file, please make sure to use absolute full path or correct relative path !"
+  [[ "$real_file" == *.avro ]] || logerror "<$real_file> is not an Avro file. Please provide a file with .avro extension."
+}
+
 # src/lib/validations/validate_file_exists_with_trick.sh
 validate_file_exists_with_trick() {
   file="$1"
@@ -12502,6 +12650,15 @@ playground_get_zip_or_jar_with_fzf_command() {
   type="${args[--type]}"
 
   get_zip_or_jar_with_fzf "$cur" "$type"
+}
+
+# :command.function
+playground_get_specific_file_extension_command() {
+  # src/commands/get-specific-file-extension.sh
+  cur="${args[cur]}"
+  extension="${args[--extension]}"
+
+  get_specific_file_extension "$cur" "$extension"
 }
 
 # :command.function
@@ -18264,6 +18421,26 @@ playground_tcp_proxy_toggle_writes_service_command() {
       handle_onprem_connect_rest_api "curl -o /dev/null -w '%{http_code}' -s -X POST -H \"Content-Type: application/json\" \"http://localhost:9191/links/$id/toggle-writes-service\""
       echo "$curl_output"
   done
+}
+
+# :command.function
+playground_tools_read_avro_file_command() {
+  # src/commands/tools/read-avro-file.sh
+  file="${args[--file]}"
+
+  if [[ $file == *"@"* ]]
+  then
+    file=$(echo "$file" | cut -d "@" -f 2)
+  fi
+
+  filename=$(basename $file)
+
+  log "🔖 ${filename}.avro schema"
+  docker run --quiet --rm -v ${file}:/tmp/${filename} vdesabou/avro-tools getschema /tmp/${filename}
+
+  log "🔖 ${filename}.avro content"
+  docker run --quiet --rm -v ${file}:/tmp/${filename} vdesabou/avro-tools tojson /tmp/${filename}
+
 }
 
 # :command.function
@@ -24258,6 +24435,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    get-specific-file-extension)
+      action="get-specific-file-extension"
+      shift
+      playground_get_specific_file_extension_parse_requirements "$@"
+      shift $#
+      ;;
+
     get-any-file-with-fzf)
       action="get-any-file-with-fzf"
       shift
@@ -24423,6 +24607,13 @@ parse_requirements() {
       action="tcp-proxy"
       shift
       playground_tcp_proxy_parse_requirements "$@"
+      shift $#
+      ;;
+
+    tools)
+      action="tools"
+      shift
+      playground_tools_parse_requirements "$@"
       shift $#
       ;;
 
@@ -25492,6 +25683,69 @@ playground_get_zip_or_jar_with_fzf_parse_requirements() {
     printf "%s\n" "--type must be one of: zip, jar" >&2
     exit 1
   fi
+
+}
+
+# :command.parse_requirements
+playground_get_specific_file_extension_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_get_specific_file_extension_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="get-specific-file-extension"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --extension)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--extension']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--extension requires an argument: --extension EXTENSION" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['cur']+x} ]]; then
+          args['cur']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -30013,6 +30267,137 @@ playground_tcp_proxy_toggle_writes_service_parse_requirements() {
   # :flag.validations
   if [[ -v args['--connection-id'] && -n $(validate_integer "${args['--connection-id']:-}") ]]; then
     printf "validation error in %s:\n%s\n" "--connection-id CONNECTION-ID" "$(validate_integer "${args['--connection-id']:-}")" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_tools_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_tools_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    read-avro-file)
+      action="read-avro-file"
+      shift
+      playground_tools_read_avro_file_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_tools_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_tools_read_avro_file_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_tools_read_avro_file_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="tools read-avro-file"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --file | -f)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--file'] && -n $(validate_file_exists_and_avro "${args['--file']:-}") ]]; then
+    printf "validation error in %s:\n%s\n" "--file, -f FILE" "$(validate_file_exists_and_avro "${args['--file']:-}")" >&2
     exit 1
   fi
 
@@ -35845,6 +36230,7 @@ run() {
     "get-subject-list") playground_get_subject_list_command ;;
     "get-examples-list-with-fzf") playground_get_examples_list_with_fzf_command ;;
     "get-zip-or-jar-with-fzf") playground_get_zip_or_jar_with_fzf_command ;;
+    "get-specific-file-extension") playground_get_specific_file_extension_command ;;
     "get-any-file-with-fzf") playground_get_any_file_with_fzf_command ;;
     "get-playground-repro-export-with-fzf") playground_get_playground_repro_export_with_fzf_command ;;
     "get-predefined-schemas") playground_get_predefined_schemas_command ;;
@@ -35900,6 +36286,8 @@ run() {
     "tcp-proxy toggle-reads-service") playground_tcp_proxy_toggle_reads_service_command ;;
     "tcp-proxy toggle-writes-client") playground_tcp_proxy_toggle_writes_client_command ;;
     "tcp-proxy toggle-writes-service") playground_tcp_proxy_toggle_writes_service_command ;;
+    "tools") playground_tools_command ;;
+    "tools read-avro-file") playground_tools_read_avro_file_command ;;
     "debug") playground_debug_command ;;
     "debug enable-remote-debugging") playground_debug_enable_remote_debugging_command ;;
     "debug testssl") playground_debug_testssl_command ;;

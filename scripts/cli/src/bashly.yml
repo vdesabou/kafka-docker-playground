@@ -171,6 +171,18 @@ commands:
     arg: type
     allowed: [zip, jar]
 
+- name: get-specific-file-extension
+  help: Return some completion for extension provided
+  private: true
+  args:
+  - name: cur
+    required: false
+    help: correspond to completion $cur
+  flags:
+  - long: --extension
+    required: false
+    arg: extension
+
 - name: get-any-file-with-fzf
   help: Return some completion for any files
   private: true
@@ -1422,6 +1434,30 @@ commands:
           See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)
     flags:
       - *connection-id
+
+- name: tools
+  expose: always
+  group: Tools
+  help: |-
+    🧰 Tools commands
+  commands:
+  - name: read-avro-file
+    help: |-
+      🔐 Read provided avro file
+    flags:
+    - long: --file
+      short: -f
+      required: false
+      completions:
+        - $(playground get-specific-file-extension "$cur" --extension "avro")
+      validate: file_exists_and_avro
+      arg: file
+      help: |-
+        🔖 Avro file to read
+
+        ❕ It must be absolute full path
+
+        🎓 Tip: use <tab> completion to trigger fzf completion
 
 - name: debug
   expose: always

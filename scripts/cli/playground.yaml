@@ -1064,6 +1064,28 @@ subcommands:
             🧲 Zazkia TCP connection id
                   
             
+  - name: tools
+    description: | 
+        🧰 Tools commands
+    usage: playground tools COMMAND
+    options: []
+    subcommands:
+      - name: read-avro-file
+        description: | 
+          🔐 Read provided avro file
+        usage: playground tools read-avro-file [OPTIONS]
+        options:
+        - names:
+          - --file
+          - -f
+          argument: FILE
+          description: | 
+            🔖 Avro file to read
+            
+            ❕ It must be absolute full path
+            
+            🎓 Tip: use <tab> completion to trigger fzf completion
+            
   - name: debug
     description: | 
         🐞 Debug commands
