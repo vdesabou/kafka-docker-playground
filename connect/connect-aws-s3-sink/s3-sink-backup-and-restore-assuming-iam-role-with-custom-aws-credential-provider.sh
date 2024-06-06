@@ -155,5 +155,5 @@ sleep 10
 log "Getting one of the avro files locally and displaying content with avro-tools"
 aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/$TAG/s3_topic/partition=0/s3_topic+0+0000000000.avro s3_topic+0+0000000000.avro
 
-docker run --quiet --rm -v ${DIR}:/tmp vdesabou/avro-tools tojson /tmp/s3_topic+0+0000000000.avro
+playground tools read-avro-file --file $PWD/s3_topic+0+0000000000.avro
 rm -f s3_topic+0+0000000000.avro
