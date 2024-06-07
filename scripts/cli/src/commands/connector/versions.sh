@@ -31,7 +31,7 @@ else
         if [ "$owner" == "java" ] || [ "$name" == "hub-components" ] || [ "$owner" == "filestream" ]
         then
             # happens when plugin is not coming from confluent hub
-            logwarn "skipping as plugin $owner/$name does not appear to be coming from confluent hub"
+            # logwarn "skipping as plugin $owner/$name does not appear to be coming from confluent hub"
             continue
         fi
 
