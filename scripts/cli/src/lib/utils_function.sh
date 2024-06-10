@@ -80,6 +80,10 @@ function urlencode() {
   LC_COLLATE=$old_lc_collate
 }
 
+function base64() {
+  docker run -i --rm ddev/ddev-utilities:latest base64 -w 0
+}
+
 function jq() {
   verbose_begin
   if [[ $(type -f jq 2>&1) =~ "not found" ]]

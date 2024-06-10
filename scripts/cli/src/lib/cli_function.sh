@@ -279,7 +279,7 @@ function get_ccloud_connect() {
     exit 1
   fi
   
-  authorization=$(echo -n "$CLOUD_API_KEY:$CLOUD_API_SECRET" | docker run -i --rm ddev/ddev-utilities:latest base64 -w 0)
+  authorization=$(echo -n "$CLOUD_API_KEY:$CLOUD_API_SECRET" | base64)
 }
 
 function get_sr_url_and_security() {
