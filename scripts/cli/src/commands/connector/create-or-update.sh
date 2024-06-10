@@ -154,7 +154,7 @@ then
     is_valid=1
     for row in $(echo "$curl_output" | jq -r '.configs[] | @base64'); do
         _jq() {
-            echo ${row} | base64 --decode | jq -r ${1}
+            echo ${row} | base64 -d | jq -r ${1}
         }
 
         name=$(_jq '.value.name')

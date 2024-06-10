@@ -15,7 +15,7 @@ plugin_name="pg_${USER}_s3_sink_10_5_7"
 set +e
 for row in $(confluent connect custom-plugin list --output json | jq -r '.[] | @base64'); do
     _jq() {
-    echo ${row} | base64 --decode | jq -r ${1}
+    echo ${row} | base64 -d | jq -r ${1}
     }
     
     id=$(echo $(_jq '.id'))
@@ -49,7 +49,7 @@ then
     set +e
     for row in $(confluent connect custom-plugin list --output json | jq -r '.[] | @base64'); do
         _jq() {
-        echo ${row} | base64 --decode | jq -r ${1}
+        echo ${row} | base64 -d | jq -r ${1}
         }
         
         id=$(echo $(_jq '.id'))

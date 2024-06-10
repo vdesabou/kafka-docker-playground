@@ -7804,7 +7804,7 @@ function cleanup_confluent_cloud_resources () {
 
   # for row in $(confluent api-key list --output json | jq -r '.[] | @base64'); do
   #     _jq() {
-  #     echo ${row} | base64 --decode | jq -r ${1}
+  #     echo ${row} | base64 -d | jq -r ${1}
   #     }
 
   #     key=$(echo $(_jq '.key'))
@@ -7819,7 +7819,7 @@ function cleanup_confluent_cloud_resources () {
 
   for row in $(confluent connect cluster list --output json | jq -r '.[] | @base64'); do
       _jq() {
-      echo ${row} | base64 --decode | jq -r ${1}
+      echo ${row} | base64 -d | jq -r ${1}
       }
 
       id=$(echo $(_jq '.id'))
@@ -7834,7 +7834,7 @@ function cleanup_confluent_cloud_resources () {
 
   for row in $(confluent environment list --output json | jq -r '.[] | @base64'); do
       _jq() {
-      echo ${row} | base64 --decode | jq -r ${1}
+      echo ${row} | base64 -d | jq -r ${1}
       }
 
       id=$(echo $(_jq '.id'))
@@ -7863,7 +7863,7 @@ function cleanup_confluent_cloud_resources () {
 
     for row in $(confluent iam service-account list --output json | jq -r '.[] | @base64'); do
         _jq() {
-        echo ${row} | base64 --decode | jq -r ${1}
+        echo ${row} | base64 -d | jq -r ${1}
         }
 
         description=$(echo $(_jq '.description'))
@@ -8165,7 +8165,7 @@ function urlencode() {
 }
 
 function base64() {
-  docker run -i --rm ddev/ddev-utilities:latest base64 -w 0
+  docker run -i --rm ddev/ddev-utilities:latest base64 -w 0 "$@"
 }
 
 function jq() {
@@ -9981,7 +9981,7 @@ function bootstrap_ccloud_environment () {
 
     for row in $(confluent kafka cluster list --output json | jq -r '.[] | @base64'); do
         _jq() {
-        echo ${row} | base64 --decode | jq -r ${1}
+        echo ${row} | base64 -d | jq -r ${1}
         }
 
         is_current=$(echo $(_jq '.is_current'))
@@ -14925,7 +14925,7 @@ playground_re_run_command() {
 
   declare -a array_flag_list=()
   encoded_array="$(playground state get run.array_flag_list_base64)"
-  eval "$(echo "$encoded_array" | base64 --decode)"
+  eval "$(echo "$encoded_array" | base64 -d)"
   IFS=' ' flag_list="${array_flag_list[*]}"
 
   log "⚡ re-run with playground run -f \"$test_file\" $flag_list"
@@ -19935,7 +19935,7 @@ playground_topic_consume_command() {
           then
             # check if it is base64 encoded
             set +e
-            base64=$(echo "$payload" | tr -d '"' | base64 --decode 2>/dev/null)
+            base64=$(echo "$payload" | tr -d '"' | base64 -d 2>/dev/null)
             if [ $? -eq 0 ]
             then
               if [ "$base64" != "" ]
@@ -19956,7 +19956,7 @@ playground_topic_consume_command() {
 
         if [ $is_base64 -eq 1 ]
         then
-          base64=$(echo "$payload" | tr -d '"' | base64 --decode)
+          base64=$(echo "$payload" | tr -d '"' | base64 -d)
           line_with_date=$(echo "$line_with_date" | awk -v new_value="$base64" 'BEGIN {FS=OFS="|"} {$6=new_value}1')
         fi
 
@@ -23243,7 +23243,7 @@ playground_connector_show_config_parameters_command() {
           handle_onprem_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" $connect_url/connector-plugins/"
           for row in $(echo "$curl_output" | jq -r '.[] | @base64'); do
               _jq() {
-                  echo ${row} | base64 --decode | jq -r ${1}
+                  echo ${row} | base64 -d | jq -r ${1}
               }
 
               class=$(_jq '.class')
@@ -24096,7 +24096,7 @@ playground_connector_create_or_update_command() {
       is_valid=1
       for row in $(echo "$curl_output" | jq -r '.configs[] | @base64'); do
           _jq() {
-              echo ${row} | base64 --decode | jq -r ${1}
+              echo ${row} | base64 -d | jq -r ${1}
           }
 
           name=$(_jq '.value.name')

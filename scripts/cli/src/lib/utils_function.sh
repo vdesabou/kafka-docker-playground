@@ -81,7 +81,7 @@ function urlencode() {
 }
 
 function base64() {
-  docker run -i --rm ddev/ddev-utilities:latest base64 -w 0
+  docker run -i --rm ddev/ddev-utilities:latest base64 -w 0 "$@"
 }
 
 function jq() {
@@ -1899,7 +1899,7 @@ function bootstrap_ccloud_environment () {
 
     for row in $(confluent kafka cluster list --output json | jq -r '.[] | @base64'); do
         _jq() {
-        echo ${row} | base64 --decode | jq -r ${1}
+        echo ${row} | base64 -d | jq -r ${1}
         }
         
         is_current=$(echo $(_jq '.is_current'))

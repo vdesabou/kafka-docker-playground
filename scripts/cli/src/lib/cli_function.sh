@@ -1254,7 +1254,7 @@ function cleanup_confluent_cloud_resources () {
 
   # for row in $(confluent api-key list --output json | jq -r '.[] | @base64'); do
   #     _jq() {
-  #     echo ${row} | base64 --decode | jq -r ${1}
+  #     echo ${row} | base64 -d | jq -r ${1}
   #     }
       
   #     key=$(echo $(_jq '.key'))
@@ -1269,7 +1269,7 @@ function cleanup_confluent_cloud_resources () {
 
   for row in $(confluent connect cluster list --output json | jq -r '.[] | @base64'); do
       _jq() {
-      echo ${row} | base64 --decode | jq -r ${1}
+      echo ${row} | base64 -d | jq -r ${1}
       }
       
       id=$(echo $(_jq '.id'))
@@ -1284,7 +1284,7 @@ function cleanup_confluent_cloud_resources () {
 
   for row in $(confluent environment list --output json | jq -r '.[] | @base64'); do
       _jq() {
-      echo ${row} | base64 --decode | jq -r ${1}
+      echo ${row} | base64 -d | jq -r ${1}
       }
       
       id=$(echo $(_jq '.id'))
@@ -1313,7 +1313,7 @@ function cleanup_confluent_cloud_resources () {
 
     for row in $(confluent iam service-account list --output json | jq -r '.[] | @base64'); do
         _jq() {
-        echo ${row} | base64 --decode | jq -r ${1}
+        echo ${row} | base64 -d | jq -r ${1}
         }
         
         description=$(echo $(_jq '.description'))

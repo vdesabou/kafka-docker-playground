@@ -378,7 +378,7 @@ fi
         then
           # check if it is base64 encoded
           set +e
-          base64=$(echo "$payload" | tr -d '"' | base64 --decode 2>/dev/null)
+          base64=$(echo "$payload" | tr -d '"' | base64 -d 2>/dev/null)
           if [ $? -eq 0 ]
           then
             if [ "$base64" != "" ]
@@ -399,7 +399,7 @@ fi
 
       if [ $is_base64 -eq 1 ]
       then
-        base64=$(echo "$payload" | tr -d '"' | base64 --decode)
+        base64=$(echo "$payload" | tr -d '"' | base64 -d)
         line_with_date=$(echo "$line_with_date" | awk -v new_value="$base64" 'BEGIN {FS=OFS="|"} {$6=new_value}1')
       fi
 

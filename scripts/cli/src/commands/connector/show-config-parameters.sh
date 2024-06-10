@@ -62,7 +62,7 @@ do
         handle_onprem_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" $connect_url/connector-plugins/"
         for row in $(echo "$curl_output" | jq -r '.[] | @base64'); do
             _jq() {
-                echo ${row} | base64 --decode | jq -r ${1}
+                echo ${row} | base64 -d | jq -r ${1}
             }
 
             class=$(_jq '.class')
