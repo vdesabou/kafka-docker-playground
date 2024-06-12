@@ -37,7 +37,7 @@ EOF
 
 sleep 30
 
-playground connector show-lag
+playground connector show-lag --max-wait 300
 
 if [ -z "$GITHUB_RUN_NUMBER" ]
 then
