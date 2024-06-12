@@ -5961,6 +5961,12 @@ playground_connector_show_lag_usage() {
     printf "    Default: 20\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-wait MAX_WAIT")"
+    printf "    ⏳ Max time in seconds to wait for lag to become 0. If set to 0 (default), it\n    will run until all lag becomes 0.\n"
+    printf "    Default: 0\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -22761,6 +22767,7 @@ playground_connector_show_lag_command() {
   connector="${args[--connector]}"
   verbose="${args[--verbose]}"
   interval="${args[--interval]}"
+  max_wait="${args[--max-wait]}"
 
   connector_type=$(playground state get run.connector_type)
 
@@ -22960,6 +22967,7 @@ playground_connector_show_lag_command() {
     SECONDS=0
     prev_lag=0
     stop=0
+    cur_wait=0
 
     get_environment_used
     while [ $stop != 1 ]
@@ -22986,6 +22994,12 @@ playground_connector_show_lag_command() {
         logwarn "🐢 consumer group for $connector_type connector ${connector}${maybe_id} is rebalancing"
         cat $lag_output
         sleep $interval
+        cur_wait=$(( cur_wait+interval ))
+        if [ "$max_wait" != "0" ] && [[ "$cur_wait" -gt "$max_wait" ]]
+        then
+          log "🐢 the consumer lag is still not 0 after $max_wait seconds."
+          exit 0
+        fi
         continue
       fi
 
@@ -22997,6 +23011,12 @@ playground_connector_show_lag_command() {
         logwarn "🐢 consumer lag for $connector_type connector ${connector}${maybe_id} is not available"
         show_output
         sleep $interval
+        cur_wait=$(( cur_wait+interval ))
+        if [ "$max_wait" != "0" ] && [[ "$cur_wait" -gt "$max_wait" ]]
+        then
+          log "🐢 the consumer lag is still not 0 after $max_wait seconds."
+          exit 0
+        fi
       else
         total_lag=$(cat "$lag_output" | grep -v "PARTITION" | awk -F" " '{sum+=$6;} END{print sum;}')
 
@@ -23043,6 +23063,12 @@ playground_connector_show_lag_command() {
             show_output
             prev_lag=$total_lag
             sleep $interval
+            cur_wait=$(( cur_wait+interval ))
+            if [ "$max_wait" != "0" ] && [[ "$cur_wait" -gt "$max_wait" ]]
+            then
+              log "🐢 the consumer lag is still not 0 after $max_wait seconds."
+              exit 0
+            fi
           else
             ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
             log "🏁 consumer lag for $connector_type connector ${connector}${maybe_id} is 0 ! $ELAPSED"
@@ -35433,6 +35459,20 @@ playground_connector_show_lag_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --max-wait)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-wait']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-wait requires an argument: --max-wait MAX_WAIT" >&2
+          exit 1
+        fi
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -35451,11 +35491,18 @@ playground_connector_show_lag_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['--interval']:-} ]] || args['--interval']="20"
+  [[ -n ${args['--max-wait']:-} ]] || args['--max-wait']="0"
 
   # :command.validations
   # :flag.validations
   if [[ -v args['--interval'] && -n $(validate_integer "${args['--interval']:-}") ]]; then
     printf "validation error in %s:\n%s\n" "--interval INTERVAL" "$(validate_integer "${args['--interval']:-}")" >&2
+    exit 1
+  fi
+
+  # :flag.validations
+  if [[ -v args['--max-wait'] && -n $(validate_integer "${args['--max-wait']:-}") ]]; then
+    printf "validation error in %s:\n%s\n" "--max-wait MAX_WAIT" "$(validate_integer "${args['--max-wait']:-}")" >&2
     exit 1
   fi
 

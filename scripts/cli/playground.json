@@ -2281,6 +2281,13 @@
               ],
               "argument": 20,
               "description": "Interval between lag checks (default is 20 seconds).\n\nDefault value: 20\n"
+            },
+            {
+              "names": [
+                "--max-wait"
+              ],
+              "argument": 0,
+              "description": "⏳ Max time in seconds to wait for lag to become 0. If set to 0 (default), it will run until all lag becomes 0.\n\nDefault value: 0\n"
             }
           ]
         },

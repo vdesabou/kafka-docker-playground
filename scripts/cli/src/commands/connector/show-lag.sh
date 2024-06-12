@@ -1,6 +1,7 @@
 connector="${args[--connector]}"
 verbose="${args[--verbose]}"
 interval="${args[--interval]}"
+max_wait="${args[--max-wait]}"
 
 connector_type=$(playground state get run.connector_type)
 
@@ -199,6 +200,7 @@ do
   SECONDS=0
   prev_lag=0
   stop=0
+  cur_wait=0
 
   get_environment_used
   while [ $stop != 1 ]
@@ -224,6 +226,12 @@ do
       logwarn "🐢 consumer group for $connector_type connector ${connector}${maybe_id} is rebalancing"
       cat $lag_output
       sleep $interval
+      cur_wait=$(( cur_wait+interval ))
+      if [ "$max_wait" != "0" ] && [[ "$cur_wait" -gt "$max_wait" ]]
+      then
+        log "🐢 the consumer lag is still not 0 after $max_wait seconds."
+        exit 0
+      fi
       continue
     fi
 
@@ -235,6 +243,12 @@ do
       logwarn "🐢 consumer lag for $connector_type connector ${connector}${maybe_id} is not available"
       show_output
       sleep $interval
+      cur_wait=$(( cur_wait+interval ))
+      if [ "$max_wait" != "0" ] && [[ "$cur_wait" -gt "$max_wait" ]]
+      then
+        log "🐢 the consumer lag is still not 0 after $max_wait seconds."
+        exit 0
+      fi
     else
       total_lag=$(cat "$lag_output" | grep -v "PARTITION" | awk -F" " '{sum+=$6;} END{print sum;}')
 
@@ -281,6 +295,12 @@ do
           show_output
           prev_lag=$total_lag
           sleep $interval
+          cur_wait=$(( cur_wait+interval ))
+          if [ "$max_wait" != "0" ] && [[ "$cur_wait" -gt "$max_wait" ]]
+          then
+            log "🐢 the consumer lag is still not 0 after $max_wait seconds."
+            exit 0
+          fi
         else
           ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
           log "🏁 consumer lag for $connector_type connector ${connector}${maybe_id} is 0 ! $ELAPSED"

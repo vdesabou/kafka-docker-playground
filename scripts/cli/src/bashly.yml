@@ -2992,6 +2992,12 @@ commands:
       default: "20"
       help: |-
         Interval between lag checks (default is 20 seconds).
+    - long: --max-wait
+      arg: max_wait
+      validate: integer
+      default: "0"
+      help: |- 
+        ⏳ Max time in seconds to wait for lag to become 0. If set to 0 (default), it will run until all lag becomes 0.
 
   - name: show-config
     help:  |

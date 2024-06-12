@@ -2428,6 +2428,14 @@ subcommands:
             
             Default value: 20
             
+        - names:
+          - --max-wait
+          argument: 0
+          description: | 
+            ⏳ Max time in seconds to wait for lag to become 0. If set to 0 (default), it will run until all lag becomes 0.
+            
+            Default value: 0
+            
       - name: show-config
         description: | 
           🧰 Show current connector config that was applied
