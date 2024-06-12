@@ -2630,7 +2630,7 @@
       "subcommands": [
         {
           "name": "get",
-          "description": "🏹 Get current offsets for source and sink connectors\n  \n  ⚠️ Available for ccloud source connectors as EA (see https://docs.confluent.io/cloud/current/connectors/offsets.html)\n  \n",
+          "description": "🏹 Get current offsets for source and sink connectors\n  \n  ⚠️ Available for ccloud source connectors (see https://docs.confluent.io/cloud/current/connectors/offsets.html)\n  \n",
           "usage": "playground connector offsets get [OPTIONS]",
           "options": [
             {
@@ -2653,7 +2653,7 @@
         },
         {
           "name": "reset",
-          "description": "🆕 Reset offsets for source and sink connectors\n  \n  ⚠️ Available for ccloud connectors as EA (see https://docs.confluent.io/cloud/current/connectors/offsets.html)\n  \n",
+          "description": "🆕 Reset offsets for source and sink connectors\n  \n  ⚠️ Available for ccloud connectors (see https://docs.confluent.io/cloud/current/connectors/offsets.html)\n  \n",
           "usage": "playground connector offsets reset [OPTIONS]",
           "options": [
             {
@@ -2676,8 +2676,31 @@
         },
         {
           "name": "alter",
-          "description": "⛏️ Alter offsets for source and sink connectors\n  \n  ⚠️ Available for ccloud connectors as EA (see https://docs.confluent.io/cloud/current/connectors/offsets.html)\n  \n",
+          "description": "⛏️ Alter offsets for source and sink connectors\n  \n  ⚠️ Available for ccloud connectors (see https://docs.confluent.io/cloud/current/connectors/offsets.html)\n  \n",
           "usage": "playground connector offsets alter [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
+                "--connector",
+                "-c"
+              ],
+              "argument": "CONNECTOR",
+              "description": "🔗 Connector name\n\n🎓 Tip: If not specified, the command will apply to all connectors\n"
+            }
+          ]
+        },
+        {
+          "name": "get-offsets-request-status",
+          "description": "👁️‍🗨️ Get the status of the previous offset request\n  \n  ⚠️ Available for ccloud source connectors (see https://docs.confluent.io/cloud/current/connectors/offsets.html)\n  \n",
+          "usage": "playground connector offsets get-offsets-request-status [OPTIONS]",
           "options": [
             {
               "names": [

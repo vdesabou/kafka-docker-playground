@@ -159,7 +159,7 @@ do
     fi
 
     type=$(echo "$curl_output" | jq -r '.type')
-    log "⛏️ Altering offsets for $connector_type connector $connector"
+    log "⛏️ Altering offsets for $connector_type connector $connector${maybe_id}"
 
     if [ "$type" == "source" ]
     then
@@ -172,10 +172,7 @@ do
             continue
         fi
         sleep 5
-        get_ccloud_connect
-        log "🎯 get the status of the last offset request"
-        handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request/status\" --header \"authorization: Basic $authorization\""
-        echo "$curl_output" | jq .
+        playground connector offsets get-offsets-request-status --connector $connector
         sleep 20
         playground connector offsets get --connector $connector
     else
@@ -190,10 +187,7 @@ do
                 continue
             fi
             sleep 5
-            get_ccloud_connect
-            log "🎯 get the status of the last offset request"
-            handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request/status\" --header \"authorization: Basic $authorization\""
-            echo "$curl_output" | jq .
+            playground connector offsets get-offsets-request-status --connector $connector
             sleep 20
             playground connector offsets get --connector $connector
         else

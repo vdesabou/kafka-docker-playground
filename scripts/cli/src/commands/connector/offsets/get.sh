@@ -82,7 +82,7 @@ do
         get_connect_url_and_security
         handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\""
     fi
-    log "🏹 Getting offsets for $connector_type $type connector $connector"
+    log "🏹 Getting offsets for $connector_type $type connector $connector${maybe_id}"
     type=$(echo "$curl_output" | jq -r '.type')
     if [ "$type" == "source" ]
     then

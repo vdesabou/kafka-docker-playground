@@ -5499,9 +5499,10 @@ playground_connector_offsets_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   🏹 Get current offsets for source and sink connectors\n" "$(green "get")  "
-  printf "  %s   🆕 Reset offsets for source and sink connectors\n" "$(green "reset")"
-  printf "  %s   ⛏️ Alter offsets for source and sink connectors\n" "$(green "alter")"
+  printf "  %s   🏹 Get current offsets for source and sink connectors\n" "$(green "get")                       "
+  printf "  %s   🆕 Reset offsets for source and sink connectors\n" "$(green "reset")                     "
+  printf "  %s   ⛏️ Alter offsets for source and sink connectors\n" "$(green "alter")                     "
+  printf "  %s   👁️‍🗨️ Get the status of the previous offset request\n" "$(green "get-offsets-request-status")"
   echo
 
   # :command.long_usage
@@ -5522,7 +5523,7 @@ playground_connector_offsets_get_usage() {
     printf "playground connector offsets get\n"
     echo
 
-    printf "  🏹 Get current offsets for source and sink connectors\n  \n  ⚠️ Available for ccloud source connectors as EA (see\n  https://docs.confluent.io/cloud/current/connectors/offsets.html)\n"
+    printf "  🏹 Get current offsets for source and sink connectors\n  \n  ⚠️ Available for ccloud source connectors (see\n  https://docs.confluent.io/cloud/current/connectors/offsets.html)\n"
     echo
 
   else
@@ -5565,7 +5566,7 @@ playground_connector_offsets_reset_usage() {
     printf "playground connector offsets reset\n"
     echo
 
-    printf "  🆕 Reset offsets for source and sink connectors\n  \n  ⚠️ Available for ccloud connectors as EA (see\n  https://docs.confluent.io/cloud/current/connectors/offsets.html)\n"
+    printf "  🆕 Reset offsets for source and sink connectors\n  \n  ⚠️ Available for ccloud connectors (see\n  https://docs.confluent.io/cloud/current/connectors/offsets.html)\n"
     echo
 
   else
@@ -5608,7 +5609,7 @@ playground_connector_offsets_alter_usage() {
     printf "playground connector offsets alter\n"
     echo
 
-    printf "  ⛏️ Alter offsets for source and sink connectors\n  \n  ⚠️ Available for ccloud connectors as EA (see\n  https://docs.confluent.io/cloud/current/connectors/offsets.html)\n"
+    printf "  ⛏️ Alter offsets for source and sink connectors\n  \n  ⚠️ Available for ccloud connectors (see\n  https://docs.confluent.io/cloud/current/connectors/offsets.html)\n"
     echo
 
   else
@@ -5620,6 +5621,49 @@ playground_connector_offsets_alter_usage() {
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground connector offsets alter [OPTIONS]\n"
   printf "  playground connector offsets alter --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_offsets_get_offsets_request_status_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector offsets get-offsets-request-status\n"
+    echo
+
+    printf "  👁️‍🗨️ Get the status of the previous offset request\n  \n  ⚠️ Available for ccloud source connectors (see\n  https://docs.confluent.io/cloud/current/connectors/offsets.html)\n"
+    echo
+
+  else
+    printf "playground connector offsets get-offsets-request-status - 👁️‍🗨️ Get the status of the previous offset request\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector offsets get-offsets-request-status [OPTIONS]\n"
+  printf "  playground connector offsets get-offsets-request-status --help | -h\n"
   echo
 
   # :command.long_usage
@@ -21962,7 +22006,7 @@ playground_connector_offsets_get_command() {
           get_connect_url_and_security
           handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\""
       fi
-      log "🏹 Getting offsets for $connector_type $type connector $connector"
+      log "🏹 Getting offsets for $connector_type $type connector $connector${maybe_id}"
       type=$(echo "$curl_output" | jq -r '.type')
       if [ "$type" == "source" ]
       then
@@ -22113,10 +22157,7 @@ playground_connector_offsets_reset_command() {
               continue
           fi
           sleep 5
-          get_ccloud_connect
-          log "🎯 get the status of the last offset request"
-          handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request/status\" --header \"authorization: Basic $authorization\""
-          echo "$curl_output" | jq .
+          playground connector offsets get-offsets-request-status --connector $connector
           sleep 20
           playground connector offsets get --connector $connector
       else
@@ -22128,10 +22169,7 @@ playground_connector_offsets_reset_command() {
                   continue
               fi
               sleep 5
-              get_ccloud_connect
-              log "🎯 get the status of the last offset request"
-              handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request/status\" --header \"authorization: Basic $authorization\""
-              echo "$curl_output" | jq .
+              playground connector offsets get-offsets-request-status --connector $connector
               sleep 20
               playground connector offsets get --connector $connector
               exit 0
@@ -22334,7 +22372,7 @@ playground_connector_offsets_alter_command() {
       fi
 
       type=$(echo "$curl_output" | jq -r '.type')
-      log "⛏️ Altering offsets for $connector_type connector $connector"
+      log "⛏️ Altering offsets for $connector_type connector $connector${maybe_id}"
 
       if [ "$type" == "source" ]
       then
@@ -22345,10 +22383,7 @@ playground_connector_offsets_alter_command() {
               continue
           fi
           sleep 5
-          get_ccloud_connect
-          log "🎯 get the status of the last offset request"
-          handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request/status\" --header \"authorization: Basic $authorization\""
-          echo "$curl_output" | jq .
+          playground connector offsets get-offsets-request-status --connector $connector
           sleep 20
           playground connector offsets get --connector $connector
       else
@@ -22361,10 +22396,7 @@ playground_connector_offsets_alter_command() {
                   continue
               fi
               sleep 5
-              get_ccloud_connect
-              log "🎯 get the status of the last offset request"
-              handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request/status\" --header \"authorization: Basic $authorization\""
-              echo "$curl_output" | jq .
+              playground connector offsets get-offsets-request-status --connector $connector
               sleep 20
               playground connector offsets get --connector $connector
           else
@@ -22440,6 +22472,68 @@ playground_connector_offsets_alter_command() {
               fi
           fi
       fi
+  done
+}
+
+# :command.function
+playground_connector_offsets_get_offsets_request_status_command() {
+  # src/commands/connector/offsets/get-offsets-request-status.sh
+  connector="${args[--connector]}"
+  verbose="${args[--verbose]}"
+
+  connector_type=$(playground state get run.connector_type)
+
+  if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+      log "connector offset get-offsets-request-status command is not supported with $connector_type connector"
+      exit 0
+  fi
+
+  if [[ ! -n "$connector" ]]
+  then
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          log "💤 No $connector_type connector is running !"
+          exit 1
+      fi
+  fi
+
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+    get_ccloud_connect
+    get_kafka_docker_playground_dir
+    DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
+
+    if [ -f $DELTA_CONFIGS_ENV ]
+    then
+        source $DELTA_CONFIGS_ENV
+    else
+        logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+        exit 1
+    fi
+    if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
+    then
+        logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
+        exit 1
+    fi
+  fi
+
+  items=($connector)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "✨ --connector flag was not provided, applying command to all connectors"
+  fi
+  for connector in "${items[@]}"
+  do
+      maybe_id=""
+      connectorId=$(get_ccloud_connector_lcc $connector)
+      maybe_id=" ($connectorId)"
+      log "👁️‍🗨️ Getting status of the previous offset request for $connector_type connector $connector${maybe_id}"
+      get_ccloud_connect
+      handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request/status\" --header \"authorization: Basic $authorization\""
+      echo "$curl_output" | jq .
   done
 }
 
@@ -34806,6 +34900,13 @@ playground_connector_offsets_parse_requirements() {
       shift $#
       ;;
 
+    get-offsets-request-status)
+      action="get-offsets-request-status"
+      shift
+      playground_connector_offsets_get_offsets_request_status_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_connector_offsets_usage >&2
@@ -34992,6 +35093,71 @@ playground_connector_offsets_alter_parse_requirements() {
 
   # :command.command_filter
   action="connector offsets alter"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_connector_offsets_get_offsets_request_status_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_offsets_get_offsets_request_status_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector offsets get-offsets-request-status"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -36617,6 +36783,7 @@ run() {
     "connector offsets get") playground_connector_offsets_get_command ;;
     "connector offsets reset") playground_connector_offsets_reset_command ;;
     "connector offsets alter") playground_connector_offsets_alter_command ;;
+    "connector offsets get-offsets-request-status") playground_connector_offsets_get_offsets_request_status_command ;;
     "connector plugins") playground_connector_plugins_command ;;
     "connector pause") playground_connector_pause_command ;;
     "connector versions") playground_connector_versions_command ;;
