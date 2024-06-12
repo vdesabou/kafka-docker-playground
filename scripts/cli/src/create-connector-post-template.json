@@ -1,0 +1,5 @@
+{
+  "name": ":CONNECTOR_NAME:",
+  "config": :CONNECTOR_CONFIG:,
+  "offsets": :CONNECTOR_OFFSETS:
+}

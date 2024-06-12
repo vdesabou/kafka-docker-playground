@@ -7,6 +7,7 @@ wait_for_zero_lag=${args[--wait-for-zero-lag]}
 skip_automatic_connector_config=${args[--skip-automatic-connector-config]}
 verbose="${args[--verbose]}"
 no_clipboard="${args[--no-clipboard]}"
+offsets=${args[--offsets]}
 
 connector_type=$(playground state get run.connector_type)
 
@@ -53,6 +54,7 @@ else
 fi
 json_file=$tmp_dir/connector.json
 new_json_file=$tmp_dir/connector_new.json
+connector_with_offsets_file=$tmp_dir/connector_with_offsets.json
 json_validate_file=$tmp_dir/json_validate_file
 
 echo "$json_content" > $json_file
@@ -217,9 +219,34 @@ fi
 
 if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
 then
+    if [[ -n "$offsets" ]] && [ $is_create == 0 ]
+    then
+        logerror "❌ --offsets is set but $connector_type connector $connector already exists"
+        exit 1
+    fi
+
     get_ccloud_connect
-    handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config"
+    if [[ -n "$offsets" ]]
+    then
+        log "📍 creating $connector_type connector $connector with offsets: $offsets" 
+        # add mandatory name field
+        new_json_content=$(echo $json_content | jq -c ". + {\"name\": \"$connector\"}")
+
+        sed -e "s|:CONNECTOR_NAME:|$connector|g" \
+            -e "s|:CONNECTOR_CONFIG:|$new_json_content|g" \
+            -e "s|:CONNECTOR_OFFSETS:|$offsets|g" \
+            $root_folder/scripts/cli/src/create-connector-post-template.json > ${connector_with_offsets_file}
+
+        handle_ccloud_connect_rest_api "curl $security -s -X POST -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$connector_with_offsets_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors"
+    else
+        handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config"
+    fi
 else
+    if [[ -n "$offsets" ]]
+    then
+        logerror "❌ --offsets is set but not supported with $connector_type connector"
+        exit 1
+    fi
     get_connect_url_and_security
     if [[ -n "$skip_automatic_connector_config" ]]
     then

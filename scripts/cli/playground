@@ -6388,6 +6388,11 @@ playground_connector_create_or_update_usage() {
     printf "    🤖 If example is run (playground run) with --environment flag, automatic\n    configuration to adapt to the environment is added.\n    \n    This flag allows to skip this automatic configuration (only useful to\n    reproduce issues)\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--offsets OFFSETS")"
+    printf "    📍 Create connector with offsets\n    (https://docs.confluent.io/cloud/current/connectors/offsets.html#create-connectors-with-offsets)\n    \n    ⚠️ Only available for ccloud connectors, the connector should not really\n    exists\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -6404,7 +6409,7 @@ playground_connector_create_or_update_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground connector create-or-update -c filestream-sink << EOF\n{\n    \"tasks.max\": \"1\",\n    \"connector.class\":\n\"org.apache.kafka.connect.file.FileStreamSinkConnector\",\n    \"topics\": \"filestream\",\n    \"file\": \"/tmp/output.json\",\n    \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\",\n    \"value.converter\": \"org.apache.kafka.connect.json.JsonConverter\",\n    \"value.converter.schemas.enable\": \"false\"\n}\nEOF\n"
+    printf "  playground connector create-or-update -c filestream-sink << EOF\n{\n    \"tasks.max\": \"1\",\n    \"connector.class\":\n\"org.apache.kafka.connect.file.FileStreamSinkConnector\",\n    \"topics\": \"filestream\",\n    \"file\": \"/tmp/output.json\",\n    \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\",\n    \"value.converter\": \"org.apache.kafka.connect.json.JsonConverter\",\n    \"value.converter.schemas.enable\": \"false\"\n}\nEOF\n  \n  playground connector create-or-update -c filestream-sink --offsets\n  '[{\"partition\":{\"kafka_topic\":\"filestream\",\"kafka_partition\":0},\"offset\":{\"kafka_offset\":8}}]'\n  << EOF\n{\n    \"tasks.max\": \"1\",\n    \"connector.class\":\n\"org.apache.kafka.connect.file.FileStreamSinkConnector\",\n    \"topics\": \"filestream\",\n    \"file\": \"/tmp/output.json\",\n    \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\",\n    \"value.converter\": \"org.apache.kafka.connect.json.JsonConverter\",\n    \"value.converter.schemas.enable\": \"false\"\n}\nEOF\n"
 echo
 
 fi
@@ -12294,6 +12299,40 @@ validate_integer() {
   else
     logerror "must be an integer"
     return 1
+  fi
+}
+
+# src/lib/validations/validate_json.sh
+validate_json() {
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
+  json_file=$tmp_dir/connector.json
+
+  echo "$1" > $json_file
+
+  # JSON is invalid
+  if ! echo "$1" | jq -e .  > /dev/null 2>&1
+  then
+      set +e
+      jq_output=$(jq . "$json_file" 2>&1)
+      error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
+
+      if [[ -n "$error_line" ]]; then
+          logerror "❌ Invalid JSON at line $error_line"
+      fi
+      set -e
+
+      if [ -z "$GITHUB_RUN_NUMBER" ]
+      then
+          if [[ $(type -f bat 2>&1) =~ "not found" ]]
+          then
+              cat -n $json_file
+          else
+              bat $json_file --highlight-line $error_line
+          fi
+      fi
+      exit 1
   fi
 }
 
@@ -23975,6 +24014,7 @@ playground_connector_create_or_update_command() {
   skip_automatic_connector_config=${args[--skip-automatic-connector-config]}
   verbose="${args[--verbose]}"
   no_clipboard="${args[--no-clipboard]}"
+  offsets=${args[--offsets]}
 
   connector_type=$(playground state get run.connector_type)
 
@@ -24021,6 +24061,7 @@ playground_connector_create_or_update_command() {
   fi
   json_file=$tmp_dir/connector.json
   new_json_file=$tmp_dir/connector_new.json
+  connector_with_offsets_file=$tmp_dir/connector_with_offsets.json
   json_validate_file=$tmp_dir/json_validate_file
 
   echo "$json_content" > $json_file
@@ -24187,9 +24228,35 @@ fi
 
 if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
 then
+    if [[ -n "$offsets" ]] && [ $is_create == 0 ]
+    then
+        logerror "❌ --offsets is set but $connector_type connector $connector already exists"
+        exit 1
+    fi
+
     get_ccloud_connect
-    handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config"
+    if [[ -n "$offsets" ]]
+    then
+        log "📍 creating $connector_type connector $connector with offsets: $offsets"
+
+        # add mandatory name field
+        new_json_content=$(echo $json_content | jq -c ". + {\"name\": \"$connector\"}")
+
+        sed -e "s|:CONNECTOR_NAME:|$connector|g" \
+            -e "s|:CONNECTOR_CONFIG:|$new_json_content|g" \
+            -e "s|:CONNECTOR_OFFSETS:|$offsets|g" \
+            $root_folder/scripts/cli/src/create-connector-post-template.json > ${connector_with_offsets_file}
+
+        handle_ccloud_connect_rest_api "curl $security -s -X POST -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$connector_with_offsets_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors"
+    else
+        handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config"
+    fi
 else
+    if [[ -n "$offsets" ]]
+    then
+        logerror "❌ --offsets is set but not supported with $connector_type connector"
+        exit 1
+    fi
     get_connect_url_and_security
     if [[ -n "$skip_automatic_connector_config" ]]
     then
@@ -36253,6 +36320,20 @@ playground_connector_create_or_update_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --offsets)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--offsets']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--offsets requires an argument: --offsets OFFSETS" >&2
+          exit 1
+        fi
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -36288,6 +36369,12 @@ playground_connector_create_or_update_parse_requirements() {
   # :flag.validations
   if [[ -v args['--package'] && -n $(validate_not_empty "${args['--package']:-}") ]]; then
     printf "validation error in %s:\n%s\n" "--package, -p PACKAGE" "$(validate_not_empty "${args['--package']:-}")" >&2
+    exit 1
+  fi
+
+  # :flag.validations
+  if [[ -v args['--offsets'] && -n $(validate_json "${args['--offsets']:-}") ]]; then
+    printf "validation error in %s:\n%s\n" "--offsets OFFSETS" "$(validate_json "${args['--offsets']:-}")" >&2
     exit 1
   fi
 

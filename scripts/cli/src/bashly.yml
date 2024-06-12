@@ -3166,9 +3166,29 @@ commands:
         🤖 If example is run (playground run) with --environment flag, automatic configuration to adapt to the environment is added. 
         
         This flag allows to skip this automatic configuration (only useful to reproduce issues)
+    - long: --offsets
+      arg: offsets
+      validate: json
+      required: false
+      help: |-
+        📍 Create connector with offsets (https://docs.confluent.io/cloud/current/connectors/offsets.html#create-connectors-with-offsets)
+
+        ⚠️ Only available for ccloud connectors, the connector should not really exists
 
     examples: |
       playground connector create-or-update -c filestream-sink << EOF
+      {
+          "tasks.max": "1",
+          "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+          "topics": "filestream",
+          "file": "/tmp/output.json",
+          "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+          "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+          "value.converter.schemas.enable": "false"
+      }
+      EOF
+
+      playground connector create-or-update -c filestream-sink --offsets '[{"partition":{"kafka_topic":"filestream","kafka_partition":0},"offset":{"kafka_offset":8}}]' << EOF
       {
           "tasks.max": "1",
           "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",

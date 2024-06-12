@@ -2721,6 +2721,14 @@ subcommands:
             
             This flag allows to skip this automatic configuration (only useful to reproduce issues)
             
+        - names:
+          - --offsets
+          argument: OFFSETS
+          description: | 
+            📍 Create connector with offsets (https://docs.confluent.io/cloud/current/connectors/offsets.html#create-connectors-with-offsets)
+            
+            ⚠️ Only available for ccloud connectors, the connector should not really exists
+            
       - name: update
         description: | 
           🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.
