@@ -6,6 +6,8 @@ source ${DIR}/../../scripts/utils.sh
 
 logwarn "⚠️ This example and associated custom code is not supported, use at your own risks !"
 
+logwarn "Since 2.5.1, S3 source has its own AwsAssumeRoleCredentialsProvider shipped with the connector, this example is only useful if you want to set aws key and secret in connector config"
+
 if ! version_gt $TAG_BASE "5.9.99" && version_gt $CONNECTOR_TAG "1.9.9"
 then
     logwarn "WARN: connector version >= 2.0.0 do not support CP versions < 6.0.0"
