@@ -1972,12 +1972,13 @@ function validate_ccloud_connector_up() {
   if [ -f "/tmp/config-$connector" ]
   then
     set +e
-    playground connector create-or-update --connector "$connector" --no-clipboard < "/tmp/config-$connector" > /dev/null 2>&1
+    playground connector create-or-update --connector "$connector" --no-clipboard < "/tmp/config-$connector" > /tmp/output.log 2>&1
     if [ $? -ne 0 ]
     then
       echo "💀"
     else
       echo "🔁"
+      cat /tmp/output.log | grep "$connector" | grep -v "\"name\"" | grep -v "ℹ️"
     fi
   else
     echo "❌"
