@@ -61,8 +61,10 @@ set +e
 aws s3 rm s3://$AWS_BUCKET_NAME/quickstart --recursive --region $AWS_REGION
 set -e
 
+cd ../../ccloud/fm-aws-s3-source
 log "Copy generalized.quickstart.json to bucket $AWS_BUCKET_NAME/quickstart"
 aws s3 cp generalized.quickstart.json s3://$AWS_BUCKET_NAME/quickstart/generalized.quickstart.json
+cd -
 
 connector_name="S3Source_$USER"
 set +e
