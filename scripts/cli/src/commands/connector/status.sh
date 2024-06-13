@@ -69,6 +69,9 @@ do
         elif [[ "$tasks" == *"FAILED"* ]]
         then
             tasks="${tasks//FAILED/🛑 FAILED}"
+        elif [[ "$tasks" == *"USER_ACTIONABLE_ERROR"* ]]
+        then
+            tasks="${tasks//USER_ACTIONABLE_ERROR/💪 USER_ACTIONABLE_ERROR}"
         else
             tasks="🤔 N/A"
         fi
