@@ -48,6 +48,9 @@ do
         elif [ "$status" == "STOPPED" ]
         then
             status="🛑 STOPPED"
+        elif [ "$status" == "PROVISIONING" ]
+        then
+            status="🏭 PROVISIONING"
         else
             status="🤔 UNKNOWN"
         fi
