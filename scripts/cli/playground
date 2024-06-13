@@ -51,6 +51,7 @@ playground_usage() {
   printf "  %s   👐 When --file is not provided, simply open last example you ran with <playground run>\n" "$(green "open")                                     "
   printf "  %s   🛑 Stop currently running example\n" "$(green "stop")                                     "
   printf "  %s   🧨 Remove all docker images (including docker volumes)\n" "$(green "remove-all-docker-images")                 "
+  printf "  %s   🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%8c%%a4%%ef%%b8%%8f-confluent-cloud-examples)\n" "$(green "cleanup-cloud-details")                    "
   printf "  %s   🧑‍🎓 Open Confluent documentation of currently running example\n" "$(green "open-docs")                                "
   printf "  %s   🧹 Cleanup cloud resources that were created by running examples from the playground\n" "$(green "cleanup-cloud-resources")                  "
   echo
@@ -2039,6 +2040,38 @@ playground_remove_all_docker_images_usage() {
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground remove-all-docker-images\n"
   printf "  playground remove-all-docker-images --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_cleanup_cloud_details_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground cleanup-cloud-details\n"
+    echo
+
+    printf "  🧼 playground is actively caching ccloud details\n  (https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%8c%%a4%%ef%%b8%%8f-confluent-cloud-examples)\n     use this command if you notice that the playground is using unexpected\n  ccloud details\n"
+    echo
+
+  else
+    printf "playground cleanup-cloud-details - 🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%8c%%a4%%ef%%b8%%8f-confluent-cloud-examples)\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground cleanup-cloud-details\n"
+  printf "  playground cleanup-cloud-details --help | -h\n"
   echo
 
   # :command.long_usage
@@ -15701,6 +15734,24 @@ playground_remove_all_docker_images_command() {
 }
 
 # :command.function
+playground_cleanup_cloud_details_command() {
+  # src/commands/cleanup-cloud-details.sh
+  if [ -d $root_folder/.ccloud ]
+  then
+      log "🧼 removing folder $root_folder/.ccloud"
+      rm -rf $root_folder/.ccloud
+  fi
+
+  playground state del ccloud.ENVIRONMENT
+  playground state del ccloud.CLUSTER_NAME
+  playground state del ccloud.CLUSTER_CLOUD
+  playground state del ccloud.CLUSTER_REGION
+  playground state del ccloud.CLUSTER_CREDS
+  playground state del ccloud.SCHEMA_REGISTRY_CREDS
+  playground state del ccloud.suggest_use_previous_example_ccloud
+}
+
+# :command.function
 playground_open_docs_command() {
   # src/commands/open-docs.sh
   only_show_url="${args[--only-show-url]}"
@@ -24824,6 +24875,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    cleanup-cloud-details)
+      action="cleanup-cloud-details"
+      shift
+      playground_cleanup_cloud_details_parse_requirements "$@"
+      shift $#
+      ;;
+
     open-docs)
       action="open-docs"
       shift
@@ -28002,6 +28060,50 @@ playground_remove_all_docker_images_parse_requirements() {
 
   # :command.command_filter
   action="remove-all-docker-images"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_cleanup_cloud_details_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_cleanup_cloud_details_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="cleanup-cloud-details"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -36705,6 +36807,7 @@ run() {
     "open") playground_open_command ;;
     "stop") playground_stop_command ;;
     "remove-all-docker-images") playground_remove_all_docker_images_command ;;
+    "cleanup-cloud-details") playground_cleanup_cloud_details_command ;;
     "open-docs") playground_open_docs_command ;;
     "cleanup-cloud-resources") playground_cleanup_cloud_resources_command ;;
     "repro") playground_repro_command ;;

@@ -442,6 +442,13 @@ subcommands:
     usage: playground remove-all-docker-images
     options: []
     subcommands:
+  - name: cleanup-cloud-details
+    description: | 
+        🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)
+           use this command if you notice that the playground is using unexpected ccloud details
+    usage: playground cleanup-cloud-details
+    options: []
+    subcommands:
   - name: open-docs
     description: | 
         🧑‍🎓 Open Confluent documentation of currently running example

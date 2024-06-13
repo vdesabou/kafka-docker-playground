@@ -333,6 +333,13 @@
       "subcommands": null
     },
     {
+      "name": "cleanup-cloud-details",
+      "description": "🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)\n   use this command if you notice that the playground is using unexpected ccloud details\n",
+      "usage": "playground cleanup-cloud-details",
+      "options": [],
+      "subcommands": null
+    },
+    {
       "name": "open-docs",
       "description": "🧑‍🎓 Open Confluent documentation of currently running example\n",
       "usage": "playground open-docs [OPTIONS]",
