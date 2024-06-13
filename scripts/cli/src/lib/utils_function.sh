@@ -1978,7 +1978,7 @@ function validate_ccloud_connector_up() {
       echo "💀"
     else
       echo "🔁"
-      cat /tmp/output.log | grep "$connector" | grep -v "\"name\"" | grep -v "ℹ️"
+      cat /tmp/output.log | grep "$connector" | grep -v "\"name\"" | grep -v "ℹ️" | grep -v "playground connector create-or-update"
     fi
   else
     echo "❌"
