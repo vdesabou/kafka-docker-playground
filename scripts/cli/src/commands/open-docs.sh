@@ -10,8 +10,8 @@ fi
 readme_file="$(dirname $test_file)/README.md"
 if [ ! -f $readme_file ]
 then 
-    logerror "README file $readme_file does not exist"
-    exit 1
+    logwarn "README file $readme_file does not exist, ignoring"
+    exit 0
 fi
 
 string=$(grep "Quickly test " $readme_file)

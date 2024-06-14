@@ -10148,7 +10148,7 @@ function validate_ccloud_connector_up() {
       echo "💀"
     else
       echo "🔁"
-      cat /tmp/output.log | grep "$connector" | grep -v "\"name\"" | grep -v "ℹ️"
+      cat /tmp/output.log | grep "$connector" | grep -v "\"name\"" | grep -v "ℹ️" | grep -v "playground connector create-or-update"
     fi
   else
     echo "❌"
@@ -15769,8 +15769,8 @@ playground_open_docs_command() {
   if [ ! -f $readme_file ]
   then
 
-      logerror "README file $readme_file does not exist"
-      exit 1
+      logwarn "README file $readme_file does not exist, ignoring"
+      exit 0
   fi
 
   string=$(grep "Quickly test " $readme_file)
