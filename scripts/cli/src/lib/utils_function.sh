@@ -2967,6 +2967,7 @@ function ccloud::create_ccloud_stack() {
   fi
 
   NEED_ACLS=0
+  NEED_SR_PERMISSION=0
   # VINC: added
   if [[ -z "$CLUSTER_CREDS" ]]
   then
@@ -2996,6 +2997,7 @@ function ccloud::create_ccloud_stack() {
   # VINC: added
   if [[ -z "$SCHEMA_REGISTRY_CREDS" ]]
   then
+    NEED_SR_PERMISSION=1
     if [[ -z "$SERVICE_ACCOUNT_ID" ]]; then
       # Service Account is not received so it will be created
       local RANDOM_NUM=$((1 + RANDOM % 1000000))
@@ -3007,7 +3009,7 @@ function ccloud::create_ccloud_stack() {
 
   SCHEMA_REGISTRY_ENDPOINT=$(confluent schema-registry cluster describe -o json | jq -r ".endpoint_url")
 
-  if [[ $NEED_ACLS -eq 1 ]]
+  if [[ $NEED_ACLS -eq 1 ]] || [[ $NEED_SR_PERMISSION -eq 1 ]]
   then
     # VINC
     set +e
