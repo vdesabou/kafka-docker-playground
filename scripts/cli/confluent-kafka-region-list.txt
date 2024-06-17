@@ -39,6 +39,7 @@ azure/germanywestcentral
 azure/italynorth
 azure/japaneast
 azure/koreacentral
+azure/mexicocentral
 azure/northeurope
 azure/norwayeast
 azure/qatarcentral
