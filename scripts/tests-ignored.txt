@@ -1,7 +1,5 @@
 # scripts to ignore
 01-create-table.sh
-# cp-ansible-playground
-upgrade-test.sh
 # https://github.com/vdesabou/kafka-docker-playground/issues/833 :
 cdc-oracle12-pdb-table-mtls-db-auth.sh
 cdc-oracle18-pdb-table-mtls-db-auth.sh

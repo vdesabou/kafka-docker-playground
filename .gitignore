@@ -35,10 +35,6 @@ connect/connect-sftp-sink/upload/
 connect/connect-sftp-source/upload/
 other/connect-override-policy-sftp-source/upload/
 other/connect-override-policy-sftp-sink/upload/
-other/cp-ansible-playground/cp-ansible/
-other/cp-ansible-playground/id_rsa.pub
-other/cp-ansible-playground/cp_ansible_playground_id_rsa
-other/cp-ansible-playground/cp_ansible_playground_id_rsa.pub
 aws_credentials
 aws_credentials_with_assuming_iam_role
 aws_credentials_aws_account_with_assume_role

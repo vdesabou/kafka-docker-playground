@@ -131,7 +131,6 @@ jobs:
                       "🚀 connect/connect-cdc-oracle19-source",
                       "🚀 connect/connect-cdc-oracle18-source",
                       "🚀 connect/connect-cdc-oracle21-source",
-                      "🚀 other/cp-ansible-playground",
                       "🚀 connect/connect-weblogic-source connect/connect-jms-weblogic-sink connect/connect-jms-weblogic-source",
                       "🚀 connect/connect-azure-cosmosdb-source connect/connect-azure-cosmosdb-sink connect/connect-jdbc-cockroachdb-source connect/connect-jdbc-ibmdb2-source connect/connect-jdbc-ibmdb2-sink connect/connect-jdbc-sybase-source connect/connect-jdbc-sybase-sink",
                       "🚀 environment/plaintext environment/2way-ssl environment/kerberos environment/ldap-authorizer-sasl-plain environment/ldap-sasl-plain environment/mdc-kerberos environment/mdc-plaintext environment/mdc-sasl-plain environment/rbac-sasl-plain environment/sasl-plain environment/sasl-scram environment/sasl-ssl environment/ssl_kerberos environment/kraft-plaintext connect/connect-snowflake-sink",

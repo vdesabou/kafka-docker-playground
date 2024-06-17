@@ -357,14 +357,6 @@ Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 - 🤿 [Anonymous SR-example with RBAC](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rbac-with-anonymous-sr) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 🖇️ [Monitoring cluster linking](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/monitoring-cluster-linking) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 
-## 🪄 [CP-Ansible Playground](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cp-ansible-playground)
-
-:other/cp-ansible-playground:
-
-Easily play with Confluent Platform Ansible playbooks by using Ubuntu based Docker images generated daily from this [cp-ansible-playground](https://github.com/vdesabou/cp-ansible-playground) repository
-
-There is also a Confluent Cloud version available [here](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/cp-ansible-playground/)
-
 ## 🎏 KSQL
 - [Quickstart example](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/quickstart-example) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [Simple examples using a vanilla Java producer/consumer (JSON, Avro, Proto, JSON_SR)](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/simple-example-vanilla-producer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)

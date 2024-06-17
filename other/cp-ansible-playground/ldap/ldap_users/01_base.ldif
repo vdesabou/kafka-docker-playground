@@ -1,3 +1,0 @@
-dn: ou=users,{{ LDAP_BASE_DN }}
-objectClass: organizationalUnit
-ou: Users
