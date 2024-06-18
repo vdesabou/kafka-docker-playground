@@ -254,7 +254,8 @@ playground connector create-or-update --connector cdc-oracle-source-pdb --packag
      "topic.creation.redo.retention.ms": 1209600000,
      "topic.creation.default.replication.factor": 1,
      "topic.creation.default.partitions": 1,
-     "topic.creation.default.cleanup.policy": "delete"
+     "topic.creation.default.cleanup.policy": "delete",
+     "use.transaction.begin.for.mining.session": "true"
 }
 EOF
 
