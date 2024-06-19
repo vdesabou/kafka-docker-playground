@@ -73,3 +73,5 @@ playground.ini
 playground_config.ini
 .ccloud
 .connector_config
+hsperfdata_appuser
+*.lck
