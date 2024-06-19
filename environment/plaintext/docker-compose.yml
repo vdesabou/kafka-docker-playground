@@ -597,6 +597,7 @@ services:
 
   pyroscope:
     hostname: pyroscope
+    container_name: pyroscope
     image: pyroscope/pyroscope:0.37.2
     profiles:
       - "grafana"
