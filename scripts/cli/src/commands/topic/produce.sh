@@ -366,7 +366,7 @@ function generate_data() {
     type="$4"
     input_file=""
 
-    if [ "$value_schema_type" == "protobuf" ]
+    if [ "$schema_type" == "protobuf" ]
     then
         nb_max_messages_to_generate=50
     else
