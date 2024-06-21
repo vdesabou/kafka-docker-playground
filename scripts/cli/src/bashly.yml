@@ -1924,6 +1924,31 @@ commands:
       flags:
       - *container
 
+    - name: set-enviroment-variables
+      group: Container
+      help: |-
+        📦  Resume a container
+
+      flags:
+      - *container
+      - long: --env
+        required: false
+        repeatable: true
+        conflicts:
+          - --restore-original-values
+        arg: env
+        help: |-
+          📦 Environment variables to set
+          🎓 Tip: you can pass multiple environment variables by specifying --env multiple times
+
+          Example: --env "KAFKA_OPTS: -verbose:class" --env "CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR"
+      - long: --restore-original-values
+        conflicts:
+          - --env
+        required: false
+        help: |-
+          🧽 Restore back original values before any changes was made
+
 - name: topic
   expose: always
   group: Topic

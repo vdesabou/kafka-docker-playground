@@ -122,6 +122,7 @@ playground_usage() {
   printf "  %s   ⏸️  Pause a container\n" "$(green "container pause")                          "
   printf "  %s   ⏯️  Resume a container\n" "$(green "container resume")                         "
   printf "  %s   🔫 Kill a container\n" "$(green "container kill")                           "
+  printf "  %s   📦  Resume a container\n" "$(green "container set-enviroment-variables")       "
   echo
   printf "%s\n" "$(bold "Topic commands:")"
   printf "  %s   🗳 Topic commands\n" "$(green "topic")                                    "
@@ -4086,20 +4087,21 @@ playground_container_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   📝 Get properties file from a container\n" "$(green "get-properties")  "
+  printf "  %s   📝 Get properties file from a container\n" "$(green "get-properties")          "
   echo
   printf "%s\n" "$(bold "Container commands:")"
-  printf "  %s   💫 Recreate container(s)\n" "$(green "recreate")        "
-  printf "  %s   🖥️  Get ip address of running containers\n" "$(green "get-ip-addresses")"
-  printf "  %s   💀 Kill all containers\n" "$(green "kill-all")        "
-  printf "  %s   🕵️  Tail and follow container logs\n" "$(green "logs")            "
-  printf "  %s   🛬 SSH into container\n" "$(green "ssh")             "
-  printf "  %s   🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)\n" "$(green "change-jdk")      "
-  printf "  %s   🪄  Execute command in a container\n" "$(green "exec")            "
-  printf "  %s   🔁 Restart a container\n" "$(green "restart")         "
-  printf "  %s   ⏸️  Pause a container\n" "$(green "pause")           "
-  printf "  %s   ⏯️  Resume a container\n" "$(green "resume")          "
-  printf "  %s   🔫 Kill a container\n" "$(green "kill")            "
+  printf "  %s   💫 Recreate container(s)\n" "$(green "recreate")                "
+  printf "  %s   🖥️  Get ip address of running containers\n" "$(green "get-ip-addresses")        "
+  printf "  %s   💀 Kill all containers\n" "$(green "kill-all")                "
+  printf "  %s   🕵️  Tail and follow container logs\n" "$(green "logs")                    "
+  printf "  %s   🛬 SSH into container\n" "$(green "ssh")                     "
+  printf "  %s   🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)\n" "$(green "change-jdk")              "
+  printf "  %s   🪄  Execute command in a container\n" "$(green "exec")                    "
+  printf "  %s   🔁 Restart a container\n" "$(green "restart")                 "
+  printf "  %s   ⏸️  Pause a container\n" "$(green "pause")                   "
+  printf "  %s   ⏯️  Resume a container\n" "$(green "resume")                  "
+  printf "  %s   🔫 Kill a container\n" "$(green "kill")                    "
+  printf "  %s   📦  Resume a container\n" "$(green "set-enviroment-variables")"
   echo
 
   # :command.long_usage
@@ -4617,6 +4619,52 @@ playground_container_kill_usage() {
     printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
     printf "    🐳 Container name\n"
     printf "    Default: connect\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_container_set_enviroment_variables_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground container set-enviroment-variables - 📦  Resume a container\n"
+    echo
+
+  else
+    printf "playground container set-enviroment-variables - 📦  Resume a container\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground container set-enviroment-variables [OPTIONS]\n"
+  printf "  playground container set-enviroment-variables --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
+    printf "    🐳 Container name\n"
+    printf "    Default: connect\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--env ENV (repeatable)")"
+    printf "    📦 Environment variables to set\n    🎓 Tip: you can pass multiple environment variables by specifying --env\n    multiple times\n    \n    Example: --env \"KAFKA_OPTS: -verbose:class\" --env \"CONNECT_LOG4J_LOGGERS:\n    org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR\"\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--restore-original-values")"
+    printf "    🧽 Restore back original values before any changes was made\n"
     echo
 
     # :command.usage_fixed_flags
@@ -9862,6 +9910,7 @@ function maybe_delete_ccloud_environment () {
 }
 
 function bootstrap_ccloud_environment () {
+
   DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
   get_kafka_docker_playground_dir
   DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
@@ -12089,15 +12138,19 @@ function load_env_variables () {
 
 function get_connector_paths () {
     # determining the docker-compose file from from test_file
-    docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
-    test_file_directory="$(dirname "${test_file}")"
-    docker_compose_file="${test_file_directory}/${docker_compose_file}"
-
-    if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
+    docker_compose_file=""
+    if [ -f "$test_file" ]
     then
-      echo ""
-    else
+      docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
+      test_file_directory="$(dirname "${test_file}")"
+      docker_compose_file="${test_file_directory}/${docker_compose_file}"
+    fi
+
+    if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
+    then
       connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
+    else
+      echo ""
     fi
 }
 
@@ -18664,52 +18717,10 @@ playground_tools_read_parquet_file_command() {
 # :command.function
 playground_debug_enable_remote_debugging_command() {
   # src/commands/debug/enable-remote-debugging.sh
-  IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-
   container="${args[--container]}"
 
-  log "Enable remote debugging for $container"
-
-  # For ccloud case
-  if [ -f $root_folder/.ccloud/env.delta ]
-  then
-       source $root_folder/.ccloud/env.delta
-  fi
-
-  # keep TAG, CONNECT TAG and ORACLE_IMAGE
-  export TAG=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
-  export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
-  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
-
-  docker_command=$(playground state get run.docker_command)
-  if [ "$docker_command" == "" ]
-  then
-    logerror "docker_command retrieved from $root_folder/playground.ini is empty !"
-    exit 1
-  fi
-  echo "$docker_command" > /tmp/tmp
-  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  if [ -z "$PG_VERBOSE_MODE" ]
-  then
-      trap 'rm -rf $tmp_dir' EXIT
-  else
-      log "🐛📂 not deleting tmp dir $tmp_dir"
-  fi
-  cat << EOF > $tmp_dir/docker-compose-remote-debugging.yml
-services:
-  $container:
-    environment:
-      # https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging
-      KAFKA_DEBUG: 'true'
-      # With JDK9+, need to specify address=*:5005, see https://www.baeldung.com/java-application-remote-debugging#from-java9
-      JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
-EOF
-
-  sed -e "s|up -d|-f $tmp_dir/docker-compose-remote-debugging.yml up -d|g" \
-      /tmp/tmp > /tmp/playground-command-debugging
-
-  load_env_variables
-  bash /tmp/playground-command-debugging
+  log "✨ enable remote debugging for $container"
+  playground container set-enviroment-variables --container "${container}" --env "KAFKA_DEBUG: 'true'" --env "JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'"
 
   log "If you use Visual Studio Code:"
   log "Edit .vscode/launch.json with"
@@ -19052,18 +19063,6 @@ playground_debug_java_debug_command() {
   type="${args[--type]}"
   action="${args[--action]}"
 
-  # keep TAG, CONNECT TAG and ORACLE_IMAGE
-  export TAG=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
-  export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
-  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
-
-  docker_command=$(playground state get run.docker_command)
-  if [ "$docker_command" == "" ]
-  then
-    logerror "docker_command retrieved from $root_folder/playground.ini is empty !"
-    exit 1
-  fi
-
   if [[ "$action" == "enable" ]]
   then
       case "${type}" in
@@ -19081,22 +19080,9 @@ playground_debug_java_debug_command() {
           ;;
       esac
 
-      cat << EOF > /tmp/docker-compose.override.java.debug.yml
-services:
-  $container:
-    environment:
-      KAFKA_OPTS: "$OPTS"
-      DUMMY: $RANDOM
-EOF
-      log "🤎 enabling container $container with JVM arguments KAFKA_OPTS: $OPTS"
-      echo "$docker_command" > /tmp/playground-command-java-debug
-      sed -i -E -e "s|up -d --quiet-pull|-f /tmp/docker-compose.override.java.debug.yml up -d --quiet-pull|g" /tmp/playground-command-java-debug
-      bash /tmp/playground-command-java-debug
-
+      playground container set-enviroment-variables --container "${container}" --env "KAFKA_OPTS: ${OPTS}"
   else
-      log "💚 restoring previous JVM arguments for container $container"
-      echo "$docker_command" > /tmp/playground-command
-      bash /tmp/playground-command
+      playground container set-enviroment-variables --container "${container}" --restore-original-values
   fi
 }
 
@@ -19453,6 +19439,82 @@ playground_container_kill_command() {
 
   log "Killing docker container ${container}"
   docker kill ${container}
+}
+
+# :command.function
+playground_container_set_enviroment_variables_command() {
+  # src/commands/container/set-enviroment-variables.sh
+  container="${args[--container]}"
+  restore_original_values="${args[--restore-original-values]}"
+
+  # Convert the space delimited string to an array
+  eval "env_array=(${args[--env]})"
+
+  if [[ ! -n "$restore_original_values" ]]
+  then
+      # check if ebv_arrya is empty
+      if [ ${#env_array[@]} -eq 0 ]
+      then
+          logerror "❌ No environment variables provided with --env option"
+          exit 1
+      fi
+  fi
+
+  # For ccloud case
+  if [ -f $root_folder/.ccloud/env.delta ]
+  then
+       source $root_folder/.ccloud/env.delta
+  fi
+
+  # keep TAG, CONNECT TAG and ORACLE_IMAGE
+  export TAG=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
+  export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
+
+  docker_command=$(playground state get run.docker_command)
+  if [ "$docker_command" == "" ]
+  then
+    logerror "docker_command retrieved from $root_folder/playground.ini is empty !"
+    exit 1
+  fi
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
+  if [[ ! -n "$restore_original_values" ]]
+  then
+      cat << EOF > $tmp_dir/docker-compose.override.java.env.yml
+services:
+  $container:
+    environment:
+      DUMMY: $RANDOM
+EOF
+
+      for env_variable in "${env_array[@]}"
+      do
+      env_list="$env_list $env_variable"
+      cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
+      $env_variable
+EOF
+
+      done
+
+      log "📦 enabling container $container with environment variables $env_list"
+      echo "$docker_command" > $tmp_dir/playground-command-java-env
+      sed -i -E -e "s|up -d --quiet-pull|-f $tmp_dir/docker-compose.override.java.env.yml up -d --quiet-pull|g" $tmp_dir/playground-command-java-env
+      load_env_variables
+      bash $tmp_dir/playground-command-java-env
+  else
+      log "🧽 restore back original values before any changes was made for container $container"
+      echo "$docker_command" > $tmp_dir/playground-command
+      load_env_variables
+      bash $tmp_dir/playground-command
+  fi
 }
 
 # :command.function
@@ -20587,7 +20649,7 @@ playground_topic_produce_command() {
       type="$4"
       input_file=""
 
-      if [ "$value_schema_type" == "protobuf" ]
+      if [ "$schema_type" == "protobuf" ]
       then
           nb_max_messages_to_generate=50
       else
@@ -32123,6 +32185,13 @@ playground_container_parse_requirements() {
       shift $#
       ;;
 
+    set-enviroment-variables)
+      action="set-enviroment-variables"
+      shift
+      playground_container_set_enviroment_variables_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_container_usage >&2
@@ -32983,6 +33052,103 @@ playground_container_kill_parse_requirements() {
           printf "%s\n" "--container requires an argument: --container, -c CONTAINER" >&2
           exit 1
         fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--container']:-} ]] || args['--container']="connect"
+
+}
+
+# :command.parse_requirements
+playground_container_set_enviroment_variables_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_container_set_enviroment_variables_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="container set-enviroment-variables"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --container | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--container']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--container requires an argument: --container, -c CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --env)
+        # :flag.conflicts
+        if [[ -n "${args['--restore-original-values']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--restore-original-values" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--env']+x} ]]; then
+            args['--env']="$escaped"
+          else
+            args['--env']="${args['--env']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--env requires an argument: --env ENV" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --restore-original-values)
+        # :flag.conflicts
+        if [[ -n "${args['--env']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--env" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--restore-original-values']=1
+        shift
         ;;
 
       -?*)
@@ -36874,6 +37040,7 @@ run() {
     "container pause") playground_container_pause_command ;;
     "container resume") playground_container_resume_command ;;
     "container kill") playground_container_kill_command ;;
+    "container set-enviroment-variables") playground_container_set_enviroment_variables_command ;;
     "topic") playground_topic_command ;;
     "topic get-number-records") playground_topic_get_number_records_command ;;
     "topic display-consumer-offsets") playground_topic_display_consumer_offsets_command ;;

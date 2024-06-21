@@ -1505,6 +1505,35 @@
               "description": "🐳 Container name\n\nDefault value: connect\n"
             }
           ]
+        },
+        {
+          "name": "set-enviroment-variables",
+          "description": "📦  Resume a container\n",
+          "usage": "playground container set-enviroment-variables [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--container",
+                "-c"
+              ],
+              "argument": "connect",
+              "description": "🐳 Container name\n\nDefault value: connect\n"
+            },
+            {
+              "names": [
+                "--env"
+              ],
+              "argument": "ENV",
+              "description": "📦 Environment variables to set\n🎓 Tip: you can pass multiple environment variables by specifying --env multiple times\n\nExample: --env \"KAFKA_OPTS: -verbose:class\" --env \"CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR\"\n\nRepeatable: ✓ Yes\n\nConflicts with: --restore-original-values\n"
+            },
+            {
+              "names": [
+                "--restore-original-values"
+              ],
+              "argument": "",
+              "description": "🧽 Restore back original values before any changes was made\n\nConflicts with: --env\n"
+            }
+          ]
         }
       ]
     },

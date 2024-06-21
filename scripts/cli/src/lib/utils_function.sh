@@ -3989,15 +3989,19 @@ function load_env_variables () {
 
 function get_connector_paths () {
     # determining the docker-compose file from from test_file
-    docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
-    test_file_directory="$(dirname "${test_file}")"
-    docker_compose_file="${test_file_directory}/${docker_compose_file}"
-
-    if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
+    docker_compose_file=""
+    if [ -f "$test_file" ]
     then
-      echo ""
-    else
+      docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
+      test_file_directory="$(dirname "${test_file}")"
+      docker_compose_file="${test_file_directory}/${docker_compose_file}"
+    fi
+
+    if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
+    then
       connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
+    else
+      echo ""
     fi
 }
 

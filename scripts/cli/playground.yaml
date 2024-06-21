@@ -1634,6 +1634,41 @@ subcommands:
             
             Default value: connect
             
+      - name: set-enviroment-variables
+        description: | 
+          📦  Resume a container
+        usage: playground container set-enviroment-variables [OPTIONS]
+        options:
+        - names:
+          - --container
+          - -c
+          argument: connect
+          description: | 
+            🐳 Container name
+            
+            Default value: connect
+            
+        - names:
+          - --env
+          argument: ENV
+          description: | 
+            📦 Environment variables to set
+            🎓 Tip: you can pass multiple environment variables by specifying --env multiple times
+            
+            Example: --env "KAFKA_OPTS: -verbose:class" --env "CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR"
+            
+            Repeatable: ✓ Yes
+            
+            Conflicts with: --restore-original-values
+            
+        - names:
+          - --restore-original-values
+          argument: ""
+          description: | 
+            🧽 Restore back original values before any changes was made
+            
+            Conflicts with: --env
+            
   - name: topic
     description: | 
         🗳 Topic commands
