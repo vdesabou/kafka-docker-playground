@@ -1927,7 +1927,7 @@ commands:
     - name: set-environment-variables
       group: Container
       help: |-
-        📦  Set set-enviroment-variables
+        📦  Set environment variable(s) for a container
 
         🎓 Tip: you can pass multiple environment variables by specifying --env multiple times
 
