@@ -19,7 +19,7 @@ then
         ;;
     esac
     
-    playground container set-enviroment-variables --container "${container}" --env "KAFKA_OPTS: ${OPTS}"
+    playground container set-environment-variables --container "${container}" --env "KAFKA_OPTS: ${OPTS}"
 else
-    playground container set-enviroment-variables --container "${container}" --restore-original-values
+    playground container set-environment-variables --container "${container}" --restore-original-values
 fi

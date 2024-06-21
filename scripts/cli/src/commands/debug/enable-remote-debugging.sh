@@ -1,7 +1,7 @@
 container="${args[--container]}"
 
 log "✨ enable remote debugging for $container"
-playground container set-enviroment-variables --container "${container}" --env "KAFKA_DEBUG: 'true'" --env "JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'"
+playground container set-environment-variables --container "${container}" --env "KAFKA_DEBUG: 'true'" --env "JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'"
 
 log "If you use Visual Studio Code:"
 log "Edit .vscode/launch.json with"
@@ -23,4 +23,4 @@ log "
 }
 "
 
-log "See https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging"
+log "See https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging"environment

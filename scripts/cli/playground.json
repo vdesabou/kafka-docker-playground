@@ -1507,9 +1507,9 @@
           ]
         },
         {
-          "name": "set-enviroment-variables",
-          "description": "📦  Resume a container\n",
-          "usage": "playground container set-enviroment-variables [OPTIONS]",
+          "name": "set-environment-variables",
+          "description": "📦  Change\n",
+          "usage": "playground container set-environment-variables [OPTIONS]",
           "options": [
             {
               "names": [

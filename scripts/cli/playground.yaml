@@ -1634,10 +1634,10 @@ subcommands:
             
             Default value: connect
             
-      - name: set-enviroment-variables
+      - name: set-environment-variables
         description: | 
-          📦  Resume a container
-        usage: playground container set-enviroment-variables [OPTIONS]
+          📦  Change
+        usage: playground container set-environment-variables [OPTIONS]
         options:
         - names:
           - --container
