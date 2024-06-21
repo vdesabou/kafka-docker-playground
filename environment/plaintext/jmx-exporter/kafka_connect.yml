@@ -26,6 +26,7 @@ whitelistObjectNames:
   - "kafka.producer:*"
   - "kafka.secret.registry:*"
   - "kafka.connect.oracle.cdc:*"
+  - "com.mongodb.kafka.connect:*"
 blacklistObjectNames:
   # This will ignore the admin client metrics from KSQL server and will blacklist certain metrics
   # that do not make sense for ingestion.
@@ -76,6 +77,13 @@ rules:
       connector: $1
       $2: $3
     type: UNTYPED
+  # mbean = com.mongodb.kafka.connect:connector=mongodb-source,task=source-task-0,type=source-task-metrics:
+  - pattern: "com.mongodb.kafka.connect<type=(.+)-task-metrics, connector=(.+), task=(.+)><>(.+): (.+)"
+    name: kafka_connect_mongodb_$1_task_metrics_$4
+    cache: true
+    labels:
+      connector: "$2"
+      task: "$3"
   # kafka.connect:type=*-task-metrics,*
   # kafka.connect:type=source-task-metrics,connector=*,task=*
   # kafka.connect:type=sink-task-metrics,connector=*,task=*
