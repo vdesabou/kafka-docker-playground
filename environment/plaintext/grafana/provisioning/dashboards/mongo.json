@@ -25,8 +25,8 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 15,
-  "iteration": 1718982158252,
+  "id": 2,
+  "iteration": 1719072851356,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -64,7 +64,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -163,7 +164,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -257,7 +259,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -266,8 +269,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
-        "w": 4,
+        "h": 6,
+        "w": 7,
         "x": 0,
         "y": 8
       },
@@ -328,7 +331,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -337,9 +341,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 6,
         "w": 4,
-        "x": 4,
+        "x": 7,
         "y": 8
       },
       "id": 238,
@@ -399,7 +403,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -408,9 +413,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
-        "w": 4,
-        "x": 8,
+        "h": 6,
+        "w": 5,
+        "x": 11,
         "y": 8
       },
       "id": 239,
@@ -458,7 +463,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "records\nThe total number of records a MongoDB source task passed to the Kafka Connect framework.\n\nrecords-filtered\nThe number of records a MongoDB source task passed to the Kafka Connect framework that were then filtered by the framework. A filtered record is not written to Kafka.\n\nrecords-acknowledged\nThe total number of records a MongoDB source task passed to the Kafka Connect framework that were then successfully written to Kafka.",
+      "description": "The total number of milliseconds the Kafka Connect framework spent executing the poll() method of a MongoDB source task.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -498,7 +503,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -508,9 +514,9 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 20,
-        "x": 1,
-        "y": 15
+        "w": 12,
+        "x": 0,
+        "y": 14
       },
       "id": 240,
       "links": [],
@@ -538,13 +544,113 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "kafka_connect_mongodb_source_task_metrics_in_task_poll{job=\"kafka-connect\", env=\"$env\",instance=~\"$instance\",kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\",connector=~\"$connector\",task=~\"source-task-0\"}",
+          "expr": "rate(kafka_connect_mongodb_source_task_metrics_in_task_poll_duration_ms{job=\"kafka-connect\", env=\"$env\",instance=~\"$instance\",kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\",connector=~\"$connector\",task=~\"source-task-0\"}[5m])",
           "format": "time_series",
           "hide": false,
           "instant": false,
           "interval": "",
           "intervalFactor": 1,
           "legendFormat": "total - {{connector}}-{{task}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "in Task poll duration",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "The total number of milliseconds the Kafka Connect framework spent executing the poll() method of a MongoDB source task.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "id": 242,
+      "links": [],
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "8.1.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "rate(kafka_connect_mongodb_source_task_metrics_in_task_poll_duration_over_1_ms{job=\"kafka-connect\", env=\"$env\",instance=~\"$instance\",kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\",connector=~\"$connector\",task=~\"source-task-0\"}[5m])",
+          "format": "time_series",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "> 1ms - {{connector}}-{{task}}",
           "range": true,
           "refId": "A"
         },
@@ -554,9 +660,14 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "kafka_connect_mongodb_source_task_metrics_in_task_poll_duration_over_10_ms{job=\"kafka-connect\", env=\"$env\",instance=~\"$instance\",kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\",connector=~\"$connector\",task=~\"source-task-0\"}",
+          "exemplar": false,
+          "expr": "rate(kafka_connect_mongodb_source_task_metrics_in_task_poll_duration_over_10_ms{job=\"kafka-connect\", env=\"$env\",instance=~\"$instance\",kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\",connector=~\"$connector\",task=~\"source-task-0\"}[5m])",
+          "format": "time_series",
           "hide": false,
-          "legendFormat": "acknowledged - {{connector}}-{{task}}",
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "> 10ms - {{connector}}-{{task}}",
           "range": true,
           "refId": "B"
         },
@@ -566,9 +677,14 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "kafka_connect_mongodb_source_task_metrics_in_task_poll_duration_over_100_ms{job=\"kafka-connect\", env=\"$env\",instance=~\"$instance\",kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\",connector=~\"$connector\",task=~\"source-task-0\"}",
+          "exemplar": false,
+          "expr": "rate(kafka_connect_mongodb_source_task_metrics_in_task_poll_duration_over_100_ms{job=\"kafka-connect\", env=\"$env\",instance=~\"$instance\",kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\",connector=~\"$connector\",task=~\"source-task-0\"}[5m])",
+          "format": "time_series",
           "hide": false,
-          "legendFormat": "filtered - {{connector}}-{{task}}",
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "> 100ms - {{connector}}-{{task}}",
           "range": true,
           "refId": "C"
         },
@@ -578,14 +694,36 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "kafka_connect_mongodb_source_task_metrics_in_task_poll_duration_over_1000_ms{job=\"kafka-connect\", env=\"$env\",instance=~\"$instance\",kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\",connector=~\"$connector\",task=~\"source-task-0\"}",
+          "exemplar": false,
+          "expr": "rate(kafka_connect_mongodb_source_task_metrics_in_task_poll_duration_over_1000_ms{job=\"kafka-connect\", env=\"$env\",instance=~\"$instance\",kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\",connector=~\"$connector\",task=~\"source-task-0\"}[5m])",
+          "format": "time_series",
           "hide": false,
-          "legendFormat": "filtered - {{connector}}-{{task}}",
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "> 1000ms - {{connector}}-{{task}}",
           "range": true,
           "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "rate(kafka_connect_mongodb_source_task_metrics_in_task_poll_duration_over_10000_ms{job=\"kafka-connect\", env=\"$env\",instance=~\"$instance\",kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\",connector=~\"$connector\",task=~\"source-task-0\"}[5m])",
+          "format": "time_series",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "> 10000ms - {{connector}}-{{task}}",
+          "range": true,
+          "refId": "E"
         }
       ],
-      "title": "in-task",
+      "title": "in Task poll duration by range",
       "type": "timeseries"
     },
     {
@@ -593,7 +731,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "",
+      "description": "The total number of milliseconds spent executing code in the Kafka Connect framework since the framework first invoked the poll() method of the MongoDB source task. This metric does not count time executing code in the MongoDB sink task towards the total.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -604,7 +742,7 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 0,
+            "fillOpacity": 10,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -617,8 +755,8 @@
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "auto",
-            "spanNulls": false,
+            "showPoints": "never",
+            "spanNulls": true,
             "stacking": {
               "group": "A",
               "mode": "none"
@@ -633,25 +771,30 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
-          "unit": "none"
+          "unit": "ms"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 7,
-        "w": 20,
-        "x": 4,
-        "y": 22
+        "w": 12,
+        "x": 0,
+        "y": 21
       },
-      "id": 235,
+      "id": 241,
       "links": [],
       "options": {
         "legend": {
-          "calcs": [],
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max"
+          ],
           "displayMode": "list",
           "placement": "bottom"
         },
@@ -661,97 +804,34 @@
         }
       },
       "pluginVersion": "8.1.3",
-      "targets": [
-        {
-          "exemplar": true,
-          "expr": "sum(kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"current-scn\"}) by (connector) - sum(kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"offset-scn\"}) by (connector)",
-          "hide": false,
-          "instant": false,
-          "interval": "",
-          "legendFormat": "{{connector}}",
-          "refId": "A"
-        }
-      ],
-      "title": "current-scn - offset-scn",
-      "transformations": [],
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "links": [],
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 4,
-        "x": 11,
-        "y": 29
-      },
-      "id": 232,
-      "links": [],
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.5.27",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "exemplar": true,
-          "expr": "sum(kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"logmining-session-end-scn\"}) by (connector) - sum(kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"logmining-session-start-scn\"}) by (connector)",
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "rate(kafka_connect_mongodb_source_task_metrics_in_connect_framework_duration_ms{job=\"kafka-connect\", env=\"$env\",instance=~\"$instance\",kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\",connector=~\"$connector\",task=~\"source-task-0\"}[5m])",
           "format": "time_series",
           "hide": false,
           "instant": false,
           "interval": "",
           "intervalFactor": 1,
-          "legendFormat": "{{connector}}",
+          "legendFormat": "total - {{connector}}-{{task}}",
+          "range": true,
           "refId": "A"
         }
       ],
-      "title": "Current Log Mining Range (mining_end_scn - mining_start_scn)",
-      "transformations": [],
-      "type": "stat"
+      "title": "in Connect Framework poll duration",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "",
+      "description": "The total number of milliseconds spent executing code in the Kafka Connect framework since the framework first invoked the poll() method of the MongoDB source task. This metric does not count time executing code in the MongoDB sink task towards the total.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -762,7 +842,7 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 0,
+            "fillOpacity": 10,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -775,8 +855,8 @@
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "auto",
-            "spanNulls": false,
+            "showPoints": "never",
+            "spanNulls": true,
             "stacking": {
               "group": "A",
               "mode": "none"
@@ -791,7 +871,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -801,15 +882,19 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 9,
-        "x": 15,
-        "y": 29
+        "w": 12,
+        "x": 12,
+        "y": 21
       },
-      "id": 236,
+      "id": 243,
       "links": [],
       "options": {
         "legend": {
-          "calcs": [],
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max"
+          ],
           "displayMode": "list",
           "placement": "bottom"
         },
@@ -821,19 +906,92 @@
       "pluginVersion": "8.1.3",
       "targets": [
         {
-          "exemplar": true,
-          "expr": "sum(kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"logmining-session-end-scn\"}) by (connector) - sum(kafka_connect_oracle_cdc_source_task_metrics_context_streaming_number{client_type=\"connect.oracle.cdc\", connector=~\"$connector\", kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\", env=~\"$env\", instance=~\"$instance\", job=\"kafka-connect\", name=\"logmining-session-start-scn\"}) by (connector)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "rate(kafka_connect_mongodb_source_task_metrics_in_connect_framework_duration_over_1_ms{job=\"kafka-connect\", env=\"$env\",instance=~\"$instance\",kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\",connector=~\"$connector\",task=~\"source-task-0\"}[5m])",
           "format": "time_series",
           "hide": false,
           "instant": false,
           "interval": "",
           "intervalFactor": 1,
-          "legendFormat": "{{connector}}",
+          "legendFormat": "> 1ms - {{connector}}-{{task}}",
+          "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "rate(kafka_connect_mongodb_source_task_metrics_in_connect_framework_duration_over_10_ms{job=\"kafka-connect\", env=\"$env\",instance=~\"$instance\",kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\",connector=~\"$connector\",task=~\"source-task-0\"}[5m])",
+          "format": "time_series",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "> 10ms - {{connector}}-{{task}}",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "rate(kafka_connect_mongodb_source_task_metrics_in_connect_framework_duration_over_100_ms{job=\"kafka-connect\", env=\"$env\",instance=~\"$instance\",kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\",connector=~\"$connector\",task=~\"source-task-0\"}[5m])",
+          "format": "time_series",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "> 100ms - {{connector}}-{{task}}",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "rate(kafka_connect_mongodb_source_task_metrics_in_connect_framework_duration_over_1000_ms{job=\"kafka-connect\", env=\"$env\",instance=~\"$instance\",kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\",connector=~\"$connector\",task=~\"source-task-0\"}[5m])",
+          "format": "time_series",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "> 1000ms - {{connector}}-{{task}}",
+          "range": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "rate(kafka_connect_mongodb_source_task_metrics_in_connect_framework_duration_over_10000_ms{job=\"kafka-connect\", env=\"$env\",instance=~\"$instance\",kafka_connect_cluster_id=~\"$kafka_connect_cluster_id\",connector=~\"$connector\",task=~\"source-task-0\"}[5m])",
+          "format": "time_series",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "> 10000ms - {{connector}}-{{task}}",
+          "range": true,
+          "refId": "E"
         }
       ],
-      "title": "Log Mining Range (mining_end_scn - mining_start_scn)",
-      "transformations": [],
+      "title": "in Connect Framework poll duration by range",
       "type": "timeseries"
     },
     {
@@ -846,7 +1004,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 36
+        "y": 28
       },
       "id": 221,
       "panels": [
@@ -1299,8 +1457,8 @@
     ]
   },
   "timezone": "",
-  "title": "Mongo",
+  "title": "Mongo connector",
   "uid": "caR2dgQIk",
-  "version": 9,
+  "version": 3,
   "weekStart": ""
 }
