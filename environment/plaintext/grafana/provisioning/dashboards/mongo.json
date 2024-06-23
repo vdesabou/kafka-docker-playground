@@ -25,8 +25,8 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 2,
-  "iteration": 1719072851356,
+  "id": 12,
+  "iteration": 1719155173710,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -44,7 +44,7 @@
       },
       "id": 139,
       "panels": [],
-      "title": "Mongo",
+      "title": "Mongo Source",
       "type": "row"
     },
     {
@@ -169,7 +169,7 @@
               }
             ]
           },
-          "unit": "ms"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -183,12 +183,8 @@
       "links": [],
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "list",
+          "calcs": [],
+          "displayMode": "table",
           "placement": "bottom"
         },
         "tooltip": {
@@ -522,11 +518,7 @@
       "links": [],
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "lastNotNull",
-            "max"
-          ],
+          "calcs": [],
           "displayMode": "list",
           "placement": "bottom"
         },
@@ -622,11 +614,7 @@
       "links": [],
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "lastNotNull",
-            "max"
-          ],
+          "calcs": [],
           "displayMode": "list",
           "placement": "bottom"
         },
@@ -790,11 +778,7 @@
       "links": [],
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "lastNotNull",
-            "max"
-          ],
+          "calcs": [],
           "displayMode": "list",
           "placement": "bottom"
         },
@@ -890,11 +874,7 @@
       "links": [],
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "lastNotNull",
-            "max"
-          ],
+          "calcs": [],
           "displayMode": "list",
           "placement": "bottom"
         },
@@ -1459,6 +1439,6 @@
   "timezone": "",
   "title": "Mongo connector",
   "uid": "caR2dgQIk",
-  "version": 3,
+  "version": 2,
   "weekStart": ""
 }
