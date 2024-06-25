@@ -62,6 +62,7 @@ confluentinc/kafka-connect-hdfs2-source
 confluentinc/kafka-connect-hdfs3
 confluentinc/kafka-connect-hdfs3-source
 confluentinc/kafka-connect-http
+confluentinc/kafka-connect-http-source
 confluentinc/kafka-connect-ibmmq
 confluentinc/kafka-connect-ibmmq-sink
 confluentinc/kafka-connect-ibmmq-zos
