@@ -1,9 +1,5 @@
 # HTTP Source connector
 
-## ❗ WARNING ❗
-
-This is a Fully Managed connector only. Running it locally is only possible for Confluent employees.
-
 ## Objective
 
 Quickly test [HTTP Source](https://docs.confluent.io/cloud/current/connectors/cc-http-source.html) connector using self-managed version.
