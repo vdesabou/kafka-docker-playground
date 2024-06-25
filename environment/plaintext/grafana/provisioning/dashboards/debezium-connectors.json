@@ -26,724 +26,10 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": 18,
-  "iteration": 1719355191209,
+  "iteration": 1719355191223,
   "links": [],
   "liveNow": false,
   "panels": [
-    {
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
-      "id": 90,
-      "title": "Snapshot",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "N/A"
-                }
-              },
-              "type": "special"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 2,
-        "w": 3,
-        "x": 0,
-        "y": 1
-      },
-      "id": 92,
-      "links": [],
-      "maxDataPoints": 100,
-      "options": {
-        "colorMode": "none",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "mean"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.5.27",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "debezium_metrics_TotalTableCount{plugin=\"$plugin\",name=\"$name\",context=\"snapshot\"}",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "Total",
-          "refId": "A"
-        }
-      ],
-      "title": "Table count",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "N/A"
-                }
-              },
-              "type": "special"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 2,
-        "w": 3,
-        "x": 3,
-        "y": 1
-      },
-      "id": 94,
-      "links": [],
-      "maxDataPoints": 100,
-      "options": {
-        "colorMode": "none",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "mean"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.5.27",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "debezium_metrics_RemainingTableCount{plugin=\"$plugin\",name=\"$name\",context=\"snapshot\"}",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "Remaining",
-          "refId": "B"
-        }
-      ],
-      "title": "Remaining tables",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "options": {
-                "0": {
-                  "text": "No"
-                },
-                "1": {
-                  "text": "Yes"
-                }
-              },
-              "type": "value"
-            },
-            {
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "N/A"
-                }
-              },
-              "type": "special"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 2,
-        "w": 3,
-        "x": 6,
-        "y": 1
-      },
-      "id": 96,
-      "links": [],
-      "maxDataPoints": 100,
-      "options": {
-        "colorMode": "none",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "mean"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.5.27",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "debezium_metrics_SnapshotRunning{plugin=\"$plugin\",name=\"$name\",context=\"snapshot\"}",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "refId": "A"
-        }
-      ],
-      "title": "Running",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "options": {
-                "0": {
-                  "text": "No"
-                },
-                "1": {
-                  "text": "Yes"
-                }
-              },
-              "type": "value"
-            },
-            {
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "N/A"
-                }
-              },
-              "type": "special"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 2,
-        "w": 3,
-        "x": 9,
-        "y": 1
-      },
-      "id": 97,
-      "links": [],
-      "maxDataPoints": 100,
-      "options": {
-        "colorMode": "none",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "mean"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.5.27",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "debezium_metrics_SnapshotCompleted{plugin=\"$plugin\",name=\"$name\",context=\"snapshot\"}",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "refId": "A"
-        }
-      ],
-      "title": "Completed",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "options": {
-                "0": {
-                  "text": "No"
-                },
-                "1": {
-                  "text": "Yes"
-                }
-              },
-              "type": "value"
-            },
-            {
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "N/A"
-                }
-              },
-              "type": "special"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 2,
-        "w": 3,
-        "x": 12,
-        "y": 1
-      },
-      "id": 98,
-      "links": [],
-      "maxDataPoints": 100,
-      "options": {
-        "colorMode": "none",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "mean"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.5.27",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "debezium_metrics_SnapshotAborted{plugin=\"$plugin\",name=\"$name\",context=\"snapshot\"}",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "refId": "A"
-        }
-      ],
-      "title": "Aborted",
-      "type": "stat"
-    },
-    {
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 3
-      },
-      "id": 84,
-      "title": "Generic",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "N/A"
-                }
-              },
-              "type": "special"
-            }
-          ],
-          "max": 100,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#299c46",
-                "value": null
-              },
-              {
-                "color": "rgba(237, 129, 40, 0.89)",
-                "value": 10000
-              },
-              {
-                "color": "#d44a3a",
-                "value": 60000
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 3,
-        "x": 0,
-        "y": 4
-      },
-      "id": 82,
-      "links": [],
-      "maxDataPoints": 100,
-      "options": {
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
-      },
-      "pluginVersion": "8.5.27",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "debezium_metrics_MilliSecondsSinceLastEvent{plugin=\"$plugin\",name=\"$name\",context=~\"(binlog|streaming)\"}",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "refId": "A"
-        }
-      ],
-      "title": "Time since last event",
-      "type": "gauge"
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 3,
-        "y": 4
-      },
-      "hiddenSeries": false,
-      "id": 88,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "8.5.27",
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "debezium_metrics_TotalNumberOfEventsSeen{plugin=\"$plugin\",name=\"$name\",context=~\"(binlog|streaming)\"}",
-          "format": "time_series",
-          "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "Total events received",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "debezium_metrics_NumberOfEventsSkipped{plugin=\"$plugin\",name=\"$name\",context=~\"(binlog|streaming)\"}",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "Events skipped",
-          "refId": "B"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Event count",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "options": {
-                "0": {
-                  "text": "No"
-                },
-                "1": {
-                  "text": "Yes"
-                }
-              },
-              "type": "value"
-            },
-            {
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "N/A"
-                }
-              },
-              "type": "special"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#d44a3a",
-                "value": null
-              },
-              {
-                "color": "rgba(237, 129, 40, 0.89)",
-                "value": 0
-              },
-              {
-                "color": "#299c46",
-                "value": 1
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 3,
-        "x": 0,
-        "y": 9
-      },
-      "id": 86,
-      "links": [],
-      "maxDataPoints": 100,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "mean"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.5.27",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "debezium_metrics_Connected{plugin=\"$plugin\",name=\"$name\",context=~\"(binlog|streaming)\"}",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "refId": "A"
-        }
-      ],
-      "title": "Connected",
-      "type": "stat"
-    },
     {
       "collapsed": false,
       "datasource": {
@@ -754,11 +40,11 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 13
+        "y": 0
       },
       "id": 6,
       "panels": [],
-      "title": "Binlog Metrics",
+      "title": "Streaming Metrics",
       "type": "row"
     },
     {
@@ -770,7 +56,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 14
+        "y": 1
       },
       "id": 76,
       "options": {
@@ -826,7 +112,7 @@
         "h": 4,
         "w": 4,
         "x": 12,
-        "y": 14
+        "y": 1
       },
       "id": 48,
       "links": [],
@@ -848,7 +134,11 @@
       "pluginVersion": "8.5.27",
       "targets": [
         {
-          "expr": "debezium_metrics_Connected{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_Connected{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
@@ -897,7 +187,7 @@
         "h": 4,
         "w": 4,
         "x": 16,
-        "y": 14
+        "y": 1
       },
       "id": 50,
       "links": [],
@@ -919,7 +209,11 @@
       "pluginVersion": "8.5.27",
       "targets": [
         {
-          "expr": "debezium_metrics_BinlogPosition{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_BinlogPosition{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
@@ -970,7 +264,7 @@
         "h": 4,
         "w": 4,
         "x": 20,
-        "y": 14
+        "y": 1
       },
       "id": 52,
       "links": [],
@@ -992,7 +286,11 @@
       "pluginVersion": "8.5.27",
       "targets": [
         {
-          "expr": "debezium_metrics_IsGtidModeEnabled{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_IsGtidModeEnabled{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
@@ -1041,7 +339,7 @@
         "h": 4,
         "w": 4,
         "x": 12,
-        "y": 18
+        "y": 5
       },
       "id": 68,
       "links": [],
@@ -1063,11 +361,15 @@
       "pluginVersion": "8.5.27",
       "targets": [
         {
-          "expr": "debezium_metrics_NumberOfCommittedTransactions{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_NumberOfCommittedTransactions{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
-      "title": "NumberOf Committed Transactions",
+      "title": "Committed Transactions",
       "type": "stat"
     },
     {
@@ -1112,7 +414,7 @@
         "h": 4,
         "w": 4,
         "x": 16,
-        "y": 18
+        "y": 5
       },
       "id": 70,
       "links": [],
@@ -1134,11 +436,15 @@
       "pluginVersion": "8.5.27",
       "targets": [
         {
-          "expr": "debezium_metrics_NumberOfRolledBackTransactions{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_NumberOfRolledBackTransactions{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
-      "title": "NumberOf RolledBack Transactions",
+      "title": "RolledBack Transactions",
       "type": "stat"
     },
     {
@@ -1183,7 +489,7 @@
         "h": 4,
         "w": 4,
         "x": 20,
-        "y": 18
+        "y": 5
       },
       "id": 72,
       "links": [],
@@ -1205,11 +511,15 @@
       "pluginVersion": "8.5.27",
       "targets": [
         {
-          "expr": "debezium_metrics_NumberOfNotWellFormedTransactions{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_NumberOfNotWellFormedTransactions{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\r\n",
           "refId": "A"
         }
       ],
-      "title": "NumberOf Not WellFormed Transactions",
+      "title": "Not WellFormed Transactions",
       "type": "stat"
     },
     {
@@ -1254,7 +564,7 @@
         "h": 4,
         "w": 4,
         "x": 0,
-        "y": 22
+        "y": 9
       },
       "id": 60,
       "links": [],
@@ -1280,11 +590,11 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "debezium_metrics_TotalNumberOfEventsSeen{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
+          "expr": "debezium_metrics_TotalNumberOfEventsSeen{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
-      "title": "Total NumberOf EventsSeen",
+      "title": "Total Number Of Events Seen",
       "type": "stat"
     },
     {
@@ -1324,7 +634,7 @@
         "h": 4,
         "w": 4,
         "x": 4,
-        "y": 22
+        "y": 9
       },
       "id": 62,
       "options": {
@@ -1342,11 +652,15 @@
       "pluginVersion": "8.5.27",
       "targets": [
         {
-          "expr": "debezium_metrics_NumberOfSkippedEvents{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_NumberOfSkippedEvents{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
-      "title": "NumberOf Skipped Events",
+      "title": "Skipped Events",
       "type": "gauge"
     },
     {
@@ -1391,7 +705,7 @@
         "h": 8,
         "w": 4,
         "x": 8,
-        "y": 22
+        "y": 9
       },
       "id": 64,
       "links": [],
@@ -1413,11 +727,15 @@
       "pluginVersion": "8.5.27",
       "targets": [
         {
-          "expr": "debezium_metrics_NumberOfEventsFiltered{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_NumberOfEventsFiltered{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
-      "title": "NumberOf Events Filtered",
+      "title": "Events Filtered",
       "type": "stat"
     },
     {
@@ -1446,7 +764,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 22
+        "y": 9
       },
       "hiddenSeries": false,
       "id": 54,
@@ -1482,13 +800,13 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "debezium_metrics_MilliSecondsSinceLastEvent{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
+          "expr": "debezium_metrics_MilliSecondsSinceLastEvent{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "Seconds Since LastEvent",
+      "title": "Seconds Since Last Event",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1558,7 +876,7 @@
         "h": 4,
         "w": 4,
         "x": 0,
-        "y": 26
+        "y": 13
       },
       "id": 78,
       "links": [],
@@ -1584,7 +902,7 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "debezium_metrics_QueueTotalCapacity{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
+          "expr": "debezium_metrics_QueueTotalCapacity{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
@@ -1633,7 +951,7 @@
         "h": 4,
         "w": 4,
         "x": 4,
-        "y": 26
+        "y": 13
       },
       "id": 80,
       "links": [],
@@ -1655,7 +973,11 @@
       "pluginVersion": "8.5.27",
       "targets": [
         {
-          "expr": "debezium_metrics_QueueRemainingCapacity{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_QueueRemainingCapacity{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
@@ -1687,7 +1009,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 30
+        "y": 17
       },
       "hiddenSeries": false,
       "id": 56,
@@ -1722,7 +1044,7 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "debezium_metrics_SecondsBehindMaster{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}",
+          "expr": "debezium_metrics_SecondsBehindMaster{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}",
           "refId": "A"
         }
       ],
@@ -1781,7 +1103,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 30
+        "y": 17
       },
       "hiddenSeries": false,
       "id": 58,
@@ -1811,7 +1133,11 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "debezium_metrics_MilliSecondsBehindSource{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_MilliSecondsBehindSource{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
@@ -1870,7 +1196,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 38
+        "y": 25
       },
       "hiddenSeries": false,
       "id": 66,
@@ -1900,13 +1226,17 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "debezium_metrics_NumberOfDisconnects{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_NumberOfDisconnects{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "NumberOf Disconnects",
+      "title": "Disconnects",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1959,7 +1289,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 38
+        "y": 25
       },
       "hiddenSeries": false,
       "id": 74,
@@ -1989,13 +1319,17 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "debezium_metrics_NumberOfLargeTransactions{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_NumberOfLargeTransactions{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "NumberOf Large Transactions",
+      "title": "Large Transactions",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2025,17 +1359,13 @@
     },
     {
       "collapsed": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 46
+        "y": 33
       },
-      "id": 2,
+      "id": 90,
       "panels": [],
       "title": "Snapshot Metrics",
       "type": "row"
@@ -2082,7 +1412,7 @@
         "h": 4,
         "w": 4,
         "x": 0,
-        "y": 47
+        "y": 34
       },
       "id": 22,
       "links": [],
@@ -2104,11 +1434,15 @@
       "pluginVersion": "8.5.27",
       "targets": [
         {
-          "expr": "debezium_metrics_TotalTableCount{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_TotalTableCount{context=\"snapshot\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}",
           "refId": "A"
         }
       ],
-      "title": "Total Tablecount",
+      "title": "Table count",
       "type": "stat"
     },
     {
@@ -2157,7 +1491,7 @@
         "h": 4,
         "w": 4,
         "x": 4,
-        "y": 47
+        "y": 34
       },
       "id": 24,
       "links": [],
@@ -2176,11 +1510,15 @@
       "pluginVersion": "8.5.27",
       "targets": [
         {
-          "expr": "debezium_metrics_RemainingTableCount{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_RemainingTableCount{context=\"snapshot\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}",
           "refId": "A"
         }
       ],
-      "title": "Remaining Tales",
+      "title": "Remaining Tables",
       "type": "gauge"
     },
     {
@@ -2227,7 +1565,7 @@
         "h": 4,
         "w": 4,
         "x": 8,
-        "y": 47
+        "y": 34
       },
       "id": 26,
       "links": [],
@@ -2249,7 +1587,11 @@
       "pluginVersion": "8.5.27",
       "targets": [
         {
-          "expr": "debezium_metrics_HoldingGlobalLock{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_HoldingGlobalLock{context=\"snapshot\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}",
           "refId": "A"
         }
       ],
@@ -2300,7 +1642,7 @@
         "h": 4,
         "w": 4,
         "x": 12,
-        "y": 47
+        "y": 34
       },
       "id": 28,
       "links": [],
@@ -2322,7 +1664,11 @@
       "pluginVersion": "8.5.27",
       "targets": [
         {
-          "expr": "debezium_metrics_SnapshotRunning{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_SnapshotRunning{context=\"snapshot\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}",
           "refId": "A"
         }
       ],
@@ -2373,7 +1719,7 @@
         "h": 4,
         "w": 4,
         "x": 16,
-        "y": 47
+        "y": 34
       },
       "id": 30,
       "links": [],
@@ -2395,7 +1741,11 @@
       "pluginVersion": "8.5.27",
       "targets": [
         {
-          "expr": "debezium_metrics_SnapshotAborted{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_SnapshotAborted{context=\"snapshot\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
@@ -2446,7 +1796,7 @@
         "h": 4,
         "w": 4,
         "x": 20,
-        "y": 47
+        "y": 34
       },
       "id": 32,
       "links": [],
@@ -2468,7 +1818,11 @@
       "pluginVersion": "8.5.27",
       "targets": [
         {
-          "expr": "debezium_metrics_SnapshotCompleted{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_SnapshotCompleted{context=\"snapshot\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}",
           "refId": "A"
         }
       ],
@@ -2513,7 +1867,7 @@
         "h": 4,
         "w": 12,
         "x": 0,
-        "y": 51
+        "y": 38
       },
       "id": 34,
       "links": [],
@@ -2534,7 +1888,11 @@
       "pluginVersion": "8.5.27",
       "targets": [
         {
-          "expr": "debezium_metrics_SnapshotDurationInSeconds{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_SnapshotDurationInSeconds{context=\"snapshot\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
@@ -2566,7 +1924,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 51
+        "y": 38
       },
       "hiddenSeries": false,
       "id": 38,
@@ -2596,13 +1954,17 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "debezium_metrics_NumberOfEventsFiltered{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_NumberOfEventsFiltered{context=\"snapshot\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "NumberOf Events Filtered",
+      "title": "Events Filtered",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2672,7 +2034,7 @@
         "h": 4,
         "w": 4,
         "x": 0,
-        "y": 55
+        "y": 42
       },
       "id": 36,
       "links": [],
@@ -2694,11 +2056,15 @@
       "pluginVersion": "8.5.27",
       "targets": [
         {
-          "expr": "debezium_metrics_MilliSecondsSinceLastEvent{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_MilliSecondsSinceLastEvent{context=\"snapshot\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\r\n",
           "refId": "A"
         }
       ],
-      "title": "MilliSeconds Since LastEvent",
+      "title": "Time Since Last Event",
       "type": "stat"
     },
     {
@@ -2743,7 +2109,7 @@
         "h": 4,
         "w": 4,
         "x": 4,
-        "y": 55
+        "y": 42
       },
       "id": 42,
       "links": [],
@@ -2765,7 +2131,11 @@
       "pluginVersion": "8.5.27",
       "targets": [
         {
-          "expr": "debezium_metrics_QueueTotalCapacity{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_QueueTotalCapacity{context=\"snapshot\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
@@ -2809,7 +2179,7 @@
         "h": 4,
         "w": 4,
         "x": 8,
-        "y": 55
+        "y": 42
       },
       "id": 44,
       "options": {
@@ -2827,7 +2197,11 @@
       "pluginVersion": "8.5.27",
       "targets": [
         {
-          "expr": "debezium_metrics_QueueRemainingCapacity{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_QueueRemainingCapacity{context=\"snapshot\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
@@ -2859,7 +2233,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 59
+        "y": 46
       },
       "hiddenSeries": false,
       "id": 40,
@@ -2889,13 +2263,17 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "debezium_metrics_NumberOfErroneousEvents{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_NumberOfErroneousEvents{context=\"snapshot\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\r\n",
           "refId": "A"
         }
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "NumberOf Erroneous Events",
+      "title": "Erroneous Events",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2948,7 +2326,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 59
+        "y": 46
       },
       "hiddenSeries": false,
       "id": 46,
@@ -2978,13 +2356,17 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "debezium_metrics_TotalNumberOfEventsSeen{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_TotalNumberOfEventsSeen{context=\"snapshot\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "Total NumberOf Events Seen",
+      "title": "Events Seen",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -3022,7 +2404,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 67
+        "y": 54
       },
       "id": 8,
       "panels": [],
@@ -3038,7 +2420,7 @@
         "h": 5,
         "w": 12,
         "x": 0,
-        "y": 68
+        "y": 55
       },
       "id": 20,
       "options": {
@@ -3092,7 +2474,7 @@
         "h": 5,
         "w": 4,
         "x": 12,
-        "y": 68
+        "y": 55
       },
       "id": 10,
       "links": [],
@@ -3166,7 +2548,7 @@
         "h": 5,
         "w": 4,
         "x": 16,
-        "y": 68
+        "y": 55
       },
       "id": 16,
       "links": [],
@@ -3192,7 +2574,7 @@
           "refId": "A"
         }
       ],
-      "title": "Since Last AppliedChange",
+      "title": "Since Last Applied Change",
       "type": "stat"
     },
     {
@@ -3237,7 +2619,7 @@
         "h": 5,
         "w": 4,
         "x": 20,
-        "y": 68
+        "y": 55
       },
       "id": 18,
       "links": [],
@@ -3290,7 +2672,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 73
+        "y": 60
       },
       "hiddenSeries": false,
       "id": 12,
@@ -3378,7 +2760,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 73
+        "y": 60
       },
       "hiddenSeries": false,
       "id": 14,
@@ -3517,36 +2899,6 @@
       },
       {
         "current": {
-          "selected": true,
-          "text": "snapshot",
-          "value": "snapshot"
-        },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "PBFA97CFB590B2093"
-        },
-        "definition": "debezium_metrics_MilliSecondsSinceLastEvent",
-        "hide": 0,
-        "includeAll": false,
-        "label": "context",
-        "multi": false,
-        "name": "context",
-        "options": [],
-        "query": {
-          "query": "debezium_metrics_MilliSecondsSinceLastEvent",
-          "refId": "StandardVariableQuery"
-        },
-        "refresh": 1,
-        "regex": "/.*context=\"([^\"]+)\".*/",
-        "skipUrlSync": false,
-        "sort": 0,
-        "tagValuesQuery": "",
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
-      },
-      {
-        "current": {
           "selected": false,
           "text": "mysql",
           "value": "mysql"
@@ -3578,7 +2930,7 @@
     ]
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-3h",
     "to": "now"
   },
   "timepicker": {
@@ -3598,6 +2950,6 @@
   "timezone": "browser",
   "title": "Debezium Connectors",
   "uid": "Ro1hBYYZz",
-  "version": 8,
+  "version": 14,
   "weekStart": ""
 }
