@@ -47,7 +47,7 @@
     },
     {
       "name": "run",
-      "description": "🕹️ Run any example !\n\n🔥 It start an interactive mode where you'll be fully guided !\n\n\n⛅ When running Confluent Cloud (ccloud) example:\n\n  All you have to do is to be already logged in with confluent CLI.\n\n  By default, a new Confluent Cloud environment with a Cluster will be created.\n\n  You can configure the new cluster by setting:\n\n  --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: basic, standard and dedicated, default basic)\n  --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: aws, gcp and azure, default aws)\n  --cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use confluent kafka region list to get the list, default eu-west-2 for aws, westeurope for azure and europe-west2 for gcp)\n  --cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: txxxxx) \n\n  In case you want to use your own existing cluster, you need to setup, in addition to previous ones:\n\n  --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n  --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)\n  --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n",
+      "description": "🕹️ Run any example !\n\n🔥 It start an interactive mode where you'll be fully guided !\n\n\n⛅ When running Confluent Cloud (ccloud) example:\n\n  All you have to do is to be already logged in with confluent CLI.\n\n  By default, a new Confluent Cloud environment with a Cluster will be created.\n\n  You can configure the new cluster by setting:\n\n  --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: basic, standard and dedicated, default basic)\n  --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: aws, gcp and azure, default aws)\n  --cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use confluent kafka region list to get the list, default eu-west-2 for aws, westeurope for azure and europe-west2 for gcp)\n  --cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: txxxxx) \n\n  In case you want to use your own existing cluster, you need to setup, in addition to previous ones:\n\n  --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n  --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)\n  --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n\n❗ this command will kill all containers using playground container kill-all\n",
       "usage": "playground run [OPTIONS]",
       "options": [
         {
@@ -1508,7 +1508,7 @@
         },
         {
           "name": "set-environment-variables",
-          "description": "📦  Change\n",
+          "description": "📦  Set environment variable(s) for a container\n  \n  🎓 Tip: you can pass multiple environment variables by specifying --env multiple times\n  \n  Example: --env \"KAFKA_OPTS: -verbose:class\" --env \"CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR\"\n",
           "usage": "playground container set-environment-variables [OPTIONS]",
           "options": [
             {
@@ -1524,7 +1524,7 @@
                 "--env"
               ],
               "argument": "ENV",
-              "description": "📦 Environment variables to set\n🎓 Tip: you can pass multiple environment variables by specifying --env multiple times\n\nExample: --env \"KAFKA_OPTS: -verbose:class\" --env \"CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR\"\n\nRepeatable: ✓ Yes\n\nConflicts with: --restore-original-values\n"
+              "description": "📦 Environment variables to set\n\n🎓 Tip: you can pass multiple environment variables by specifying --env multiple times\n\nRepeatable: ✓ Yes\n\nConflicts with: --restore-original-values\n"
             },
             {
               "names": [
@@ -1665,8 +1665,8 @@
               "names": [
                 "--max-messages"
               ],
-              "argument": 10,
-              "description": "Max number of messages to display (default is 10)\n\nDefault value: 10\n"
+              "argument": 100,
+              "description": "Max number of messages to display (default is 100)\n\nDefault value: 100\n"
             },
             {
               "names": [

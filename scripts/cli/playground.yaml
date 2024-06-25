@@ -68,6 +68,8 @@ subcommands:
           --cluster-name (or CLUSTER_NAME environment variable): The cluster name
           --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)
           --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)
+        
+        ❗ this command will kill all containers using playground container kill-all
     usage: playground run [OPTIONS]
     options:
     - names:
@@ -1636,7 +1638,11 @@ subcommands:
             
       - name: set-environment-variables
         description: | 
-          📦  Change
+          📦  Set environment variable(s) for a container
+            
+            🎓 Tip: you can pass multiple environment variables by specifying --env multiple times
+            
+            Example: --env "KAFKA_OPTS: -verbose:class" --env "CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR"
         usage: playground container set-environment-variables [OPTIONS]
         options:
         - names:
@@ -1653,9 +1659,8 @@ subcommands:
           argument: ENV
           description: | 
             📦 Environment variables to set
-            🎓 Tip: you can pass multiple environment variables by specifying --env multiple times
             
-            Example: --env "KAFKA_OPTS: -verbose:class" --env "CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR"
+            🎓 Tip: you can pass multiple environment variables by specifying --env multiple times
             
             Repeatable: ✓ Yes
             
@@ -1773,11 +1778,11 @@ subcommands:
             
         - names:
           - --max-messages
-          argument: 10
+          argument: 100
           description: | 
-            Max number of messages to display (default is 10)
+            Max number of messages to display (default is 100)
             
-            Default value: 10
+            Default value: 100
             
         - names:
           - --min-expected-messages
