@@ -21,12 +21,12 @@
       }
     ]
   },
-  "description": "Monitoring Dashboard for Debezium MySQL connector",
+  "description": "Monitoring Dashboard for Debezium connector",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": 8,
-  "iteration": 1719344355721,
+  "iteration": 1719354226453,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -60,7 +60,7 @@
       },
       "id": 76,
       "options": {
-        "content": "\n# Debezium MySQL Connector Metrics\n\nThe Debezium MySQL connector has three metric types in addition to the built-in support for JMX metrics that Zookeeper, Kafka, and Kafka Connect have.\n\n* snapshot metrics\n\n* binlog metrics\n\n* schema history metrics\n\nFor more detailed informarion about the metrics please visit the Debezium documentation page\n\n[Click here to visit](https://debezium.io/documentation/reference/stable/connectors/mysql.html#mysql-monitoring)\n\n\n\n",
+        "content": "\n# Debezium Connector Metrics\n\nThe Debezium connectors has three metric types:\n\n* snapshot metrics\n\n* binlog metrics (MySql)\n\n* schema history metrics (MySql and SQLServer)\n\nFor more detailed informarion about the metrics please visit the Debezium documentation page\n\n[Click here to visit](https://debezium.io/documentation/reference/stable/operations/monitoring.html)\n\n\n\n",
         "mode": "markdown"
       },
       "pluginVersion": "8.5.27",
@@ -562,7 +562,11 @@
       "pluginVersion": "8.5.27",
       "targets": [
         {
-          "expr": "debezium_metrics_TotalNumberOfEventsSeen{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "debezium_metrics_TotalNumberOfEventsSeen{context=\"$context\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
           "refId": "A"
         }
       ],
@@ -1334,8 +1338,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1405,8 +1408,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "semi-dark-blue",
-                "value": null
+                "color": "semi-dark-blue"
               },
               {
                 "color": "semi-dark-purple",
@@ -1479,8 +1481,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1552,8 +1553,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1625,8 +1625,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1698,8 +1697,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1761,8 +1759,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "semi-dark-blue",
-                "value": null
+                "color": "semi-dark-blue"
               },
               {
                 "color": "semi-dark-purple",
@@ -1924,8 +1921,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1995,8 +1991,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2058,8 +2053,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "semi-dark-blue",
-                "value": null
+                "color": "semi-dark-blue"
               },
               {
                 "color": "dark-purple",
@@ -2315,7 +2309,7 @@
         "mode": "markdown"
       },
       "pluginVersion": "8.5.27",
-      "title": "Metric Title",
+      "title": "Schema Changes info",
       "transparent": true,
       "type": "text"
     },
@@ -2344,8 +2338,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2418,8 +2411,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2489,8 +2481,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2712,35 +2703,38 @@
       }
     }
   ],
-  "refresh": "5s",
+  "refresh": "10s",
   "schemaVersion": 36,
   "style": "dark",
   "tags": [
     "mysql",
-    "debezium"
+    "debezium",
+    "postgres",
+    "mongodb",
+    "sqlserver"
   ],
   "templating": {
     "list": [
       {
         "current": {
           "selected": false,
-          "text": "",
-          "value": ""
+          "text": "server1",
+          "value": "server1"
         },
         "datasource": {
           "type": "prometheus",
           "uid": "PBFA97CFB590B2093"
         },
-        "definition": "debezium_metrics_BinlogPosition",
+        "definition": "debezium_metrics_MilliSecondsSinceLastEvent",
         "hide": 0,
         "includeAll": true,
-        "label": "MySQL Node",
+        "label": "Server",
         "multi": false,
         "name": "name",
         "options": [],
         "query": {
-          "query": "debezium_metrics_BinlogPosition",
-          "refId": "Prometheus-name-Variable-Query"
+          "query": "debezium_metrics_MilliSecondsSinceLastEvent",
+          "refId": "StandardVariableQuery"
         },
         "refresh": 1,
         "regex": "/.*[,\\(]name=\"([^\"]+)\".*/",
@@ -2754,14 +2748,14 @@
       {
         "current": {
           "selected": false,
-          "text": "",
-          "value": ""
+          "text": "connect:1234",
+          "value": "connect:1234"
         },
         "datasource": {
           "type": "prometheus",
           "uid": "PBFA97CFB590B2093"
         },
-        "definition": "debezium_metrics_BinlogPosition",
+        "definition": "debezium_metrics_MilliSecondsSinceLastEvent",
         "hide": 0,
         "includeAll": false,
         "label": "Connector Node",
@@ -2769,8 +2763,8 @@
         "name": "instance",
         "options": [],
         "query": {
-          "query": "debezium_metrics_BinlogPosition",
-          "refId": "Prometheus-instance-Variable-Query"
+          "query": "debezium_metrics_MilliSecondsSinceLastEvent",
+          "refId": "StandardVariableQuery"
         },
         "refresh": 1,
         "regex": "/.*instance=\"([^\"]+)\".*/",
@@ -2783,9 +2777,9 @@
       },
       {
         "current": {
-          "selected": false,
-          "text": "",
-          "value": ""
+          "selected": true,
+          "text": "streaming",
+          "value": "streaming"
         },
         "datasource": {
           "type": "prometheus",
@@ -2800,7 +2794,7 @@
         "options": [],
         "query": {
           "query": "debezium_metrics_MilliSecondsSinceLastEvent",
-          "refId": "Prometheus-context-Variable-Query"
+          "refId": "StandardVariableQuery"
         },
         "refresh": 1,
         "regex": "/.*context=\"([^\"]+)\".*/",
@@ -2814,14 +2808,14 @@
       {
         "current": {
           "selected": false,
-          "text": "",
-          "value": ""
+          "text": "mysql",
+          "value": "mysql"
         },
         "datasource": {
           "type": "prometheus",
           "uid": "PBFA97CFB590B2093"
         },
-        "definition": "debezium_metrics_BinlogPosition",
+        "definition": "debezium_metrics_MilliSecondsSinceLastEvent",
         "hide": 0,
         "includeAll": false,
         "label": "plugin",
@@ -2829,8 +2823,8 @@
         "name": "plugin",
         "options": [],
         "query": {
-          "query": "debezium_metrics_BinlogPosition",
-          "refId": "Prometheus-plugin-Variable-Query"
+          "query": "debezium_metrics_MilliSecondsSinceLastEvent",
+          "refId": "StandardVariableQuery"
         },
         "refresh": 1,
         "regex": "/.*plugin=\"([^\"]+)\".*/",
@@ -2862,8 +2856,8 @@
     ]
   },
   "timezone": "browser",
-  "title": "Debezium MySQL Connector",
+  "title": "Debezium Connectors",
   "uid": "Ro1hBYYZz",
-  "version": 4,
+  "version": 7,
   "weekStart": ""
 }
