@@ -800,7 +800,10 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
+          "editorMode": "code",
           "expr": "debezium_metrics_MilliSecondsSinceLastEvent{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
+          "legendFormat": "{{name}} ({{plugin}})",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -985,98 +988,143 @@
       "type": "stat"
     },
     {
-      "aliasColors": {
-        "debezium_metrics_SecondsBehindMaster{context=\"binlog\",instance=\"192.168.11.182:7071\",job=\"kafka-connect\",name=\"prod-aurora-cluster\",plugin=\"mysql\"}": "semi-dark-blue",
-        "debezium_metrics_SecondsBehindMaster{context=\"binlog\",instance=\"192.168.11.182:7071\",job=\"kafka-connect\",name=\"snapshot-prod-aurora-cluster-cluster\",plugin=\"mysql\"}": "semi-dark-purple",
-        "debezium_metrics_SecondsBehindMaster{context=\"binlog\",instance=\"192.168.13.124:7071\",job=\"kafka-connect\",name=\"prod-aurora-cluster\",plugin=\"mysql\"}": "semi-dark-blue"
-      },
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
       "datasource": {
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
       "fieldConfig": {
         "defaults": {
-          "links": []
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "debezium_metrics_SecondsBehindMaster{context=\"binlog\",instance=\"192.168.11.182:7071\",job=\"kafka-connect\",name=\"prod-aurora-cluster\",plugin=\"mysql\"}"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "semi-dark-blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "debezium_metrics_SecondsBehindMaster{context=\"binlog\",instance=\"192.168.11.182:7071\",job=\"kafka-connect\",name=\"snapshot-prod-aurora-cluster-cluster\",plugin=\"mysql\"}"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "semi-dark-purple",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "debezium_metrics_SecondsBehindMaster{context=\"binlog\",instance=\"192.168.13.124:7071\",job=\"kafka-connect\",name=\"prod-aurora-cluster\",plugin=\"mysql\"}"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "semi-dark-blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
       },
-      "fill": 1,
-      "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
         "y": 17
       },
-      "hiddenSeries": false,
       "id": 56,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
       "links": [],
-      "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
       },
-      "percentage": false,
       "pluginVersion": "8.5.27",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
+          "editorMode": "code",
           "expr": "debezium_metrics_SecondsBehindMaster{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}",
+          "legendFormat": "{{name}} ({{plugin}})",
+          "range": true,
           "refId": "A"
         }
       ],
-      "thresholds": [],
-      "timeRegions": [],
       "title": "Seconds Behind Master",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "none",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "format": "s",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
+      "type": "timeseries"
     },
     {
       "aliasColors": {
@@ -1137,7 +1185,10 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
+          "editorMode": "code",
           "expr": "debezium_metrics_MilliSecondsBehindSource{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
+          "legendFormat": "{{name}} ({{plugin}})",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -1230,7 +1281,10 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
+          "editorMode": "code",
           "expr": "debezium_metrics_NumberOfDisconnects{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
+          "legendFormat": "{{name}} ({{plugin}})",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -1323,7 +1377,10 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
+          "editorMode": "code",
           "expr": "debezium_metrics_NumberOfLargeTransactions{context=\"streaming\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
+          "legendFormat": "{{name}} ({{plugin}})",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -1958,7 +2015,10 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
+          "editorMode": "code",
           "expr": "debezium_metrics_NumberOfEventsFiltered{context=\"snapshot\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
+          "legendFormat": "{{name}} ({{plugin}})",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -2267,7 +2327,10 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
+          "editorMode": "code",
           "expr": "debezium_metrics_NumberOfErroneousEvents{context=\"snapshot\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\r\n",
+          "legendFormat": "{{name}} ({{plugin}})",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -2360,7 +2423,10 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
+          "editorMode": "code",
           "expr": "debezium_metrics_TotalNumberOfEventsSeen{context=\"snapshot\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r\n",
+          "legendFormat": "{{name}} ({{plugin}})",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -2702,7 +2768,14 @@
       "steppedLine": false,
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
           "expr": "debezium_metrics_ChangesRecovered{context=\"schema-history\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r",
+          "legendFormat": "{{name}} ({{plugin}})",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -2790,7 +2863,14 @@
       "steppedLine": false,
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
           "expr": "debezium_metrics_ChangesApplied{context=\"schema-history\",instance=\"$instance\",job=\"kafka-connect\",name=\"$name\",plugin=\"$plugin\"}\t\r",
+          "legendFormat": "{{name}} ({{plugin}})",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -2930,7 +3010,7 @@
     ]
   },
   "time": {
-    "from": "now-3h",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {
@@ -2950,6 +3030,6 @@
   "timezone": "browser",
   "title": "Debezium Connectors",
   "uid": "Ro1hBYYZz",
-  "version": 14,
+  "version": 15,
   "weekStart": ""
 }
