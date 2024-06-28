@@ -225,4 +225,8 @@ To check events on Salesforce side, you can use [workbench](https://workbench.de
 
 ![workbench](Screenshot11.jpg)
 
+I was recently getting `Could not load Push Topics. Ensure the both the REST and Streaming APIs are enabled for this organization.`
+So I used this [Chrome extension](https://chromewebstore.google.com/detail/maven-tools-for-salesforc/kgookdjjmmekebgdecakmblghjgiaoem) instead.
+
+
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
