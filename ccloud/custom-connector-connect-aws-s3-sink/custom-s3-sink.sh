@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -f confluentinc-kafka-connect-s3-10.5.7.zip ]
 then
     log "Downloading confluentinc-kafka-connect-s3-10.5.7.zip from confluent hub"
-    wget -q https://d1i4a15mxbxib1.cloudfront.net/api/plugins/confluentinc/kafka-connect-s3/versions/10.5.7/confluentinc-kafka-connect-s3-10.5.7.zip
+    wget -q https://d2p6pa21dvn84.cloudfront.net/api/plugins/confluentinc/kafka-connect-s3/versions/10.5.13/confluentinc-kafka-connect-s3-10.5.13.zip
 fi
 
 plugin_name="pg_${USER}_s3_sink_10_5_7"
@@ -144,6 +144,10 @@ playground topic produce -t s3_topic --nb-messages 9 --forced-value '{"f1":"valu
 }
 EOF
 
+playground topic produce -t s3_topic --nb-messages 9 << 'EOF'
+this is bad record
+EOF
+
 connector_name="S3_SINK_CUSTOM_$USER"
 set +e
 log "Deleting confluent cloud custom connector $connector_name, it might fail..."
@@ -175,7 +179,14 @@ playground connector create-or-update --connector $connector_name << EOF
 
     "confluent.custom.schema.registry.auto": "true",
     "key.converter": "io.confluent.connect.avro.AvroConverter",
-    "value.converter": "io.confluent.connect.avro.AvroConverter"
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+
+    "errors.tolerance": "all",
+    "errors.deadletterqueue.topic.name": "dlq",
+    "errors.deadletterqueue.topic.replication.factor": "3",
+    "errors.deadletterqueue.context.headers.enable": "true",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 180
