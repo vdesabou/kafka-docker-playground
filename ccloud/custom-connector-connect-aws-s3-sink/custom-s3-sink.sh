@@ -4,13 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f confluentinc-kafka-connect-s3-10.5.7.zip ]
+if [ ! -f confluentinc-kafka-connect-s3-10.5.13.zip ]
 then
-    log "Downloading confluentinc-kafka-connect-s3-10.5.7.zip from confluent hub"
+    log "Downloading confluentinc-kafka-connect-s3-10.5.13.zip from confluent hub"
     wget -q https://d2p6pa21dvn84.cloudfront.net/api/plugins/confluentinc/kafka-connect-s3/versions/10.5.13/confluentinc-kafka-connect-s3-10.5.13.zip
 fi
 
-plugin_name="pg_${USER}_s3_sink_10_5_7"
+plugin_name="pg_${USER}_s3_sink_10_5_13"
 
 set +e
 for row in $(confluent connect custom-plugin list --output json | jq -r '.[] | @base64'); do
@@ -30,7 +30,7 @@ done
 set -e
 
 log "Uploading custom plugin $plugin_name"
-confluent connect custom-plugin create $plugin_name --plugin-file confluentinc-kafka-connect-s3-10.5.7.zip --connector-class io.confluent.connect.s3.S3SinkConnector --connector-type SINK --sensitive-properties "aws.secret.access.key"
+confluent connect custom-plugin create $plugin_name --plugin-file confluentinc-kafka-connect-s3-10.5.13.zip --connector-class io.confluent.connect.s3.S3SinkConnector --connector-type SINK --sensitive-properties "aws.secret.access.key"
 ret=$?
 
 function cleanup_resources {
