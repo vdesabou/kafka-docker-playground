@@ -1,5 +1,5 @@
 # Kerberos server
 
-This is a wrapper over `sequenceiq/kerberos:1.1`.
+This is a wrapper over `vdesabou/kerberos:latest`.
 
 The main intention is to generate users for hbase dev cluster.
