@@ -5,10 +5,10 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 cd ../../connect/connect-jdbc-mysql-source
-if [ ! -f ${PWD}/mysql-connector-java-5.1.45.jar ]
+if [ ! -f ${PWD}/mysql-connector-j-8.4.0.jar ]
 then
-     log "Downloading mysql-connector-java-5.1.45.jar"
-     wget -q https://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.45/mysql-connector-java-5.1.45.jar
+     log "Downloading mysql-connector-j-8.4.0.jar"
+     wget -q https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.4.0/mysql-connector-j-8.4.0.jar
 fi
 
 if [ ! -z "$SQL_DATAGEN" ]
@@ -83,7 +83,7 @@ log "Show content of team table:"
 docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
 
 log "Creating MySQL source connector"
-playground connector create-or-update --connector mysql-source  << EOF
+playground connector create-or-update --connector mysql-source --level TRACE << EOF
 {
      "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
      "tasks.max":"1",
@@ -92,7 +92,8 @@ playground connector create-or-update --connector mysql-source  << EOF
      "mode":"timestamp+incrementing",
      "timestamp.column.name":"last_modified",
      "incrementing.column.name":"id",
-     "topic.prefix":"mysql-"
+     "topic.prefix":"mysql-",
+     "query": ""
 }
 EOF
 
