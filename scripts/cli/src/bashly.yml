@@ -3277,7 +3277,7 @@ commands:
 
 - name: ec2
   expose: always
-  group: ec2
+  group: EC2
   help: |-
     😶‍🌫️ AWS EC2 instance (using Cloud Formation)
 

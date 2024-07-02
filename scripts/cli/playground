@@ -165,7 +165,7 @@ playground_usage() {
   printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "connector create-or-update")               "
   printf "  %s   🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.\n" "$(green "connector update")                         "
   echo
-  printf "%s\n" "$(bold "ec2 commands:")"
+  printf "%s\n" "$(bold "EC2 commands:")"
   printf "  %s   😶‍🌫️ AWS EC2 instance (using Cloud Formation)\n" "$(green "ec2")                                      "
   printf "  %s   🏭 Create an EC2 instance using Cloud Formation\n" "$(green "ec2 create")                               "
   printf "  %s   ❌ Delete an EC2 instance created with Cloud Formation\n" "$(green "ec2 delete")                               "
