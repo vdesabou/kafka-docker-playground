@@ -1,4 +1,4 @@
-FROM vdesabou/kerberos:latest
+FROM sequenceiq/kerberos:1.1
 
 ADD ./entrypoint.sh /entrypoint.sh
 

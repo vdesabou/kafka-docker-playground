@@ -3,7 +3,7 @@
 services:
   # https://github.com/Knappek/docker-hadoop-secure
   kdc:
-    image: vdesabou/kerberos:latest
+    image: sequenceiq/kerberos:1.1
     hostname: kdc.kerberos.local
     container_name: kdc
     restart: always
