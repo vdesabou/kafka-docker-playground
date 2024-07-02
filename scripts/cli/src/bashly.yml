@@ -3258,3 +3258,136 @@ commands:
   - playground connector resume --connector <connector-name>
   - playground connector pause -c <connector-name>
   - playground connector delete -c <connector-name>
+
+- name: ec2
+  expose: always
+  group: ec2
+  help: |-
+    😶‍🌫️ AWS EC2 instance (using Cloud Formation)
+
+    ✨ Create and manage AWS EC2 instances to run kafka-docker-playground
+
+    🪄 Open EC2 instances directly in Visual Studio code using Remote Development (over SSH)
+
+  commands:
+  - name: create
+    help: 🏭 Create an EC2 instance using Cloud Formation
+    flags:
+    - long: --pem-file
+      required: false
+      
+      validate: file_exists_with_trick
+      arg: pem-file
+      completions:
+        - $(playground get-specific-file-extension "$cur" --extension "pem")
+      help: |-
+        🔐 AWS EC2 pem file
+
+        ❕ It must be absolute full path
+
+        You can also specify it with EC2_CLOUD_FORMATION_PEM_FILE environment variable
+
+        🎓 Tip: use <tab> completion to trigger fzf completion
+
+    - long: --cloud-formation-yml-file
+      required: false
+      
+      validate: file_exists_with_trick
+      arg: cloud-formation-yml-file
+      completions:
+        - $(playground get-specific-file-extension "$cur" --extension "yml")
+      help: |-
+        🌀 Cloud Formation yml file
+
+        ❕ It must be absolute full path
+
+        If not set default is used https://github.com/vdesabou/kafka-docker-playground/blob/master/cloudformation/alfred-aws-vscode-workflow/kafka-docker-playground.yml
+
+        You can also specify it with EC2_CLOUD_FORMATION_YML_FILE environment variable
+
+        🎓 Tip: use <tab> completion to trigger fzf completion
+
+    - long: --instance-type
+      required: false
+      arg: instance-type
+      default: t3.2xlarge
+      allowed: 
+        - c1.medium
+        - c1.xlarge
+        - c3.2xlarge
+        - c3.4xlarge
+        - c3.8xlarge
+        - c3.large
+        - c3.xlarge
+        - c4.2xlarge
+        - c4.4xlarge
+        - c4.large
+        - c4.xlarge
+        - m1.large
+        - m1.medium
+        - m1.small
+        - m1.xlarge
+        - m2.2xlarge
+        - m2.4xlarge
+        - m2.xlarge
+        - m3.2xlarge
+        - m3.large
+        - m3.medium
+        - m3.xlarge
+        - m4.10xlarge
+        - m4.2xlarge
+        - m4.4xlarge
+        - m4.large
+        - m4.xlarge
+        - t1.micro
+        - t2.large
+        - t2.medium
+        - t2.micro
+        - t2.nano
+        - t2.small
+        - t3.2xlarge
+      help: |-
+        🧑‍💻 instance type. default is t3.2xlarge
+
+    - long: --region
+      required: false
+      arg: region
+      default: eu-west-3
+      allowed: 
+        - ap-northeast-1
+        - ap-northeast-2
+        - ap-northeast-3
+        - ap-south-1
+        - ap-southeast-1
+        - ap-southeast-2
+        - ca-central-1
+        - cn-north-1
+        - cn-northwest-1
+        - eu-central-1
+        - eu-north-1
+        - eu-west-1
+        - eu-west-2
+        - eu-west-3
+        - sa-east-1
+        - us-east-1
+        - us-east-2
+        - us-west-1
+        - us-west-2
+      help: |-
+        🌍 instance region. default is eu-west-3
+
+    - long: --size
+      required: false
+      arg: size
+      default: "1000"
+      validate: integer
+      help: |-
+        💾 instance size in Gb. default is 1000 Gb
+
+    - long: --suffix
+      required: false
+      arg: suffix
+      help: |-
+        📮 suffix to add to instance name kafka-docker-playground-${username}-${suffix} 
+        
+        If not set, default is kafka-docker-playground-${username}-${current-date}
