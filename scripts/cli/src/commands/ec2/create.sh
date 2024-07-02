@@ -75,7 +75,7 @@ log "🏭 creating ${instance_type} instance $name in $aws_region region (${ec2_
 log "🌀 cloud formation file used: $cloud_formation_yml_file"
 log "🔐 ec2 pem file used: $pem_file"
 aws cloudformation create-stack --stack-name $name --template-body "file://tmp.yml" --region ${aws_region} --parameters ParameterKey=InstanceType,ParameterValue=${instance_type} ParameterKey=Ec2RootVolumeSize,ParameterValue=${ec2_size} ParameterKey=KeyName,ParameterValue=${key_name} ParameterKey=InstanceName,ParameterValue=$name ParameterKey=IPAddressRange,ParameterValue=${myip}/32 ParameterKey=SecretsEncryptionPassword,ParameterValue="${SECRETS_ENCRYPTION_PASSWORD}" ParameterKey=LinuxUserName,ParameterValue="${username}"
-cd -
+cd - > /dev/null
 
 # ParameterKey=GithubSshKeyFile,ParameterValue="${github_ssh_key_file_content}"
 

@@ -7673,15 +7673,15 @@ function ec2_instance_list() {
 
       if [ "$State" = "stopped" ]
       then
-          echo -n "$Name|$EC2_INSTANCE_STATE_STOPPED|$PublicDnsName|$InstanceId"
+          echo "$Name|$EC2_INSTANCE_STATE_STOPPED|$PublicDnsName|$InstanceId"
       elif [ "$State" = "stopping" ]
       then
-          echo -n "$Name|$EC2_INSTANCE_STATE_STOPPING"
+          echo "$Name|$EC2_INSTANCE_STATE_STOPPING"
       elif [ "$State" = "pending" ]
       then
-          echo -n "$Name|$EC2_INSTANCE_STATE_PENDING"
+          echo "$Name|$EC2_INSTANCE_STATE_PENDING"
       else
-          echo -n "$Name|$EC2_INSTANCE_STATE_RUNNING|$PublicDnsName|$InstanceId"
+          echo "$Name|$EC2_INSTANCE_STATE_RUNNING|$PublicDnsName|$InstanceId"
       fi
   done
 }
@@ -7720,7 +7720,7 @@ function ec2_cloudformation_list() {
           continue
       fi
 
-      echo -n "$StackName"
+      echo "$StackName"
   done
 }
 
@@ -25331,7 +25331,7 @@ playground_ec2_create_command() {
   log "🌀 cloud formation file used: $cloud_formation_yml_file"
   log "🔐 ec2 pem file used: $pem_file"
   aws cloudformation create-stack --stack-name $name --template-body "file://tmp.yml" --region ${aws_region} --parameters ParameterKey=InstanceType,ParameterValue=${instance_type} ParameterKey=Ec2RootVolumeSize,ParameterValue=${ec2_size} ParameterKey=KeyName,ParameterValue=${key_name} ParameterKey=InstanceName,ParameterValue=$name ParameterKey=IPAddressRange,ParameterValue=${myip}/32 ParameterKey=SecretsEncryptionPassword,ParameterValue="${SECRETS_ENCRYPTION_PASSWORD}" ParameterKey=LinuxUserName,ParameterValue="${username}"
-  cd -
+  cd - > /dev/null
 
   # ParameterKey=GithubSshKeyFile,ParameterValue="${github_ssh_key_file_content}"
 
