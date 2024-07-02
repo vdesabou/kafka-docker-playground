@@ -2834,6 +2834,92 @@
               "description": "🖥️ EC2 instance (need to use completion to get all required details)\n\nRequired: ✓ Yes\n"
             }
           ]
+        },
+        {
+          "name": "list",
+          "description": "🔘 List all EC2 instance\n",
+          "usage": "playground ec2 list [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--pem-file"
+              ],
+              "argument": "PEM-FILE",
+              "description": "🔐 AWS EC2 pem file\n\n❕ It must be absolute full path\n\nYou can also specify it with EC2_CLOUD_FORMATION_PEM_FILE environment variable\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+            }
+          ]
+        },
+        {
+          "name": "stop",
+          "description": "🔴 Stop an EC2 instance\n",
+          "usage": "playground ec2 stop [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--pem-file"
+              ],
+              "argument": "PEM-FILE",
+              "description": "🔐 AWS EC2 pem file\n\n❕ It must be absolute full path\n\nYou can also specify it with EC2_CLOUD_FORMATION_PEM_FILE environment variable\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+            },
+            {
+              "names": [
+                "--instance",
+                "-i"
+              ],
+              "argument": "INSTANCE",
+              "description": "🖥️ EC2 instance (need to use completion to get all required details)\n\nRequired: ✓ Yes\n"
+            }
+          ]
+        },
+        {
+          "name": "start",
+          "description": "🟢 Start an EC2 instance\n",
+          "usage": "playground ec2 start [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--pem-file"
+              ],
+              "argument": "PEM-FILE",
+              "description": "🔐 AWS EC2 pem file\n\n❕ It must be absolute full path\n\nYou can also specify it with EC2_CLOUD_FORMATION_PEM_FILE environment variable\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+            },
+            {
+              "names": [
+                "--instance",
+                "-i"
+              ],
+              "argument": "INSTANCE",
+              "description": "🖥️ EC2 instance (need to use completion to get all required details)\n\nRequired: ✓ Yes\n"
+            }
+          ]
+        },
+        {
+          "name": "stop-all",
+          "description": "🔴 Stop all your EC2 instance(s)\n",
+          "usage": "playground ec2 stop-all [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--pem-file"
+              ],
+              "argument": "PEM-FILE",
+              "description": "🔐 AWS EC2 pem file\n\n❕ It must be absolute full path\n\nYou can also specify it with EC2_CLOUD_FORMATION_PEM_FILE environment variable\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+            }
+          ]
+        },
+        {
+          "name": "start-all",
+          "description": "🟢 Start all your EC2 instance(s)\n",
+          "usage": "playground ec2 start-all [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--pem-file"
+              ],
+              "argument": "PEM-FILE",
+              "description": "🔐 AWS EC2 pem file\n\n❕ It must be absolute full path\n\nYou can also specify it with EC2_CLOUD_FORMATION_PEM_FILE environment variable\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+            }
+          ]
         }
       ]
     }

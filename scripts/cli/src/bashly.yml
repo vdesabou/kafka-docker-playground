@@ -3416,3 +3416,30 @@ commands:
           - $(playground get-ec2-instance-list $cur)
         help: |-
           🖥️ EC2 instance (need to use completion to get all required details)
+
+  - name: list
+    help: 🔘 List all EC2 instance
+    flags:
+      - *pemfile
+
+  - name: stop
+    help: 🔴 Stop an EC2 instance
+    flags:
+      - *pemfile
+      - *instance
+
+  - name: start
+    help: 🟢 Start an EC2 instance
+    flags:
+      - *pemfile
+      - *instance
+
+  - name: stop-all
+    help: 🔴 Stop all your EC2 instance(s)
+    flags:
+      - *pemfile
+
+  - name: start-all
+    help: 🟢 Start all your EC2 instance(s)
+    flags:
+      - *pemfile

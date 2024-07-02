@@ -2998,3 +2998,106 @@ subcommands:
             
             Required: ✓ Yes
             
+      - name: list
+        description: | 
+          🔘 List all EC2 instance
+        usage: playground ec2 list [OPTIONS]
+        options:
+        - names:
+          - --pem-file
+          argument: PEM-FILE
+          description: | 
+            🔐 AWS EC2 pem file
+            
+            ❕ It must be absolute full path
+            
+            You can also specify it with EC2_CLOUD_FORMATION_PEM_FILE environment variable
+            
+            🎓 Tip: use <tab> completion to trigger fzf completion
+            
+      - name: stop
+        description: | 
+          🔴 Stop an EC2 instance
+        usage: playground ec2 stop [OPTIONS]
+        options:
+        - names:
+          - --pem-file
+          argument: PEM-FILE
+          description: | 
+            🔐 AWS EC2 pem file
+            
+            ❕ It must be absolute full path
+            
+            You can also specify it with EC2_CLOUD_FORMATION_PEM_FILE environment variable
+            
+            🎓 Tip: use <tab> completion to trigger fzf completion
+            
+        - names:
+          - --instance
+          - -i
+          argument: INSTANCE
+          description: | 
+            🖥️ EC2 instance (need to use completion to get all required details)
+            
+            Required: ✓ Yes
+            
+      - name: start
+        description: | 
+          🟢 Start an EC2 instance
+        usage: playground ec2 start [OPTIONS]
+        options:
+        - names:
+          - --pem-file
+          argument: PEM-FILE
+          description: | 
+            🔐 AWS EC2 pem file
+            
+            ❕ It must be absolute full path
+            
+            You can also specify it with EC2_CLOUD_FORMATION_PEM_FILE environment variable
+            
+            🎓 Tip: use <tab> completion to trigger fzf completion
+            
+        - names:
+          - --instance
+          - -i
+          argument: INSTANCE
+          description: | 
+            🖥️ EC2 instance (need to use completion to get all required details)
+            
+            Required: ✓ Yes
+            
+      - name: stop-all
+        description: | 
+          🔴 Stop all your EC2 instance(s)
+        usage: playground ec2 stop-all [OPTIONS]
+        options:
+        - names:
+          - --pem-file
+          argument: PEM-FILE
+          description: | 
+            🔐 AWS EC2 pem file
+            
+            ❕ It must be absolute full path
+            
+            You can also specify it with EC2_CLOUD_FORMATION_PEM_FILE environment variable
+            
+            🎓 Tip: use <tab> completion to trigger fzf completion
+            
+      - name: start-all
+        description: | 
+          🟢 Start all your EC2 instance(s)
+        usage: playground ec2 start-all [OPTIONS]
+        options:
+        - names:
+          - --pem-file
+          argument: PEM-FILE
+          description: | 
+            🔐 AWS EC2 pem file
+            
+            ❕ It must be absolute full path
+            
+            You can also specify it with EC2_CLOUD_FORMATION_PEM_FILE environment variable
+            
+            🎓 Tip: use <tab> completion to trigger fzf completion
+            
