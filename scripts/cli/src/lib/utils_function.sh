@@ -4034,6 +4034,11 @@ readonly CONNECTOR_TYPE_CUSTOM="🌤️🛃custom"
 readonly CONNECTOR_TYPE_SELF_MANAGED="⛈️👷self managed"
 readonly CONNECTOR_TYPE_ONPREM="🌎onprem"
 
+readonly EC2_INSTANCE_STATE_STOPPED="🛑stopped"
+readonly EC2_INSTANCE_STATE_RUNNING="✅running"
+readonly EC2_INSTANCE_STATE_STOPPING="⌛stopping"
+readonly EC2_INSTANCE_STATE_PENDING="⌛pending"
+
 function get_connector_type () {
   get_connector_paths
   if [ "$connector_paths" == "" ]

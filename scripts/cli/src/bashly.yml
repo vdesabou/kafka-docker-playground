@@ -47,6 +47,14 @@ commands:
   help: Return some completion for connector list
   private: true
 
+- name: get-ec2-instance-list
+  help: Return some completion for ec2 instance list
+  private: true
+  args:
+  - name: cur
+    required: false
+    help: correspond to completion $cur
+
 - name: get-zazkia-connection-list
   help: Return some completion for zazkia connections list
   private: true
@@ -3273,7 +3281,8 @@ commands:
   - name: create
     help: 🏭 Create an EC2 instance using Cloud Formation
     flags:
-    - long: --pem-file
+    - &pemfile
+      long: --pem-file
       required: false
       
       validate: file_exists_with_trick
@@ -3391,3 +3400,19 @@ commands:
         📮 suffix to add to instance name kafka-docker-playground-${username}-${suffix} 
         
         If not set, default is kafka-docker-playground-${username}-${current-date}
+
+
+  - name: open
+    help: 👨‍💻 Open an EC2 instance using Visual Studio code
+    flags:
+      - *pemfile
+      - &instance
+        long: --instance
+        short: -i
+        required: true
+        arg: instance
+        validate: not_empty
+        completions:
+          - $(playground get-ec2-instance-list $cur)
+        help: |-
+          🖥️ EC2 instance (need to use completion to get all required details)

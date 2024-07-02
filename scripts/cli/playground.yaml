@@ -2972,3 +2972,29 @@ subcommands:
             
             If not set, default is kafka-docker-playground-${username}-${current-date}
             
+      - name: open
+        description: | 
+          👨‍💻 Open an EC2 instance using Visual Studio code
+        usage: playground ec2 open [OPTIONS]
+        options:
+        - names:
+          - --pem-file
+          argument: PEM-FILE
+          description: | 
+            🔐 AWS EC2 pem file
+            
+            ❕ It must be absolute full path
+            
+            You can also specify it with EC2_CLOUD_FORMATION_PEM_FILE environment variable
+            
+            🎓 Tip: use <tab> completion to trigger fzf completion
+            
+        - names:
+          - --instance
+          - -i
+          argument: INSTANCE
+          description: | 
+            🖥️ EC2 instance (need to use completion to get all required details)
+            
+            Required: ✓ Yes
+            

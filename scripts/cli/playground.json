@@ -2812,6 +2812,28 @@
               "description": "📮 suffix to add to instance name kafka-docker-playground-${username}-${suffix} \n\nIf not set, default is kafka-docker-playground-${username}-${current-date}\n"
             }
           ]
+        },
+        {
+          "name": "open",
+          "description": "👨‍💻 Open an EC2 instance using Visual Studio code\n",
+          "usage": "playground ec2 open [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--pem-file"
+              ],
+              "argument": "PEM-FILE",
+              "description": "🔐 AWS EC2 pem file\n\n❕ It must be absolute full path\n\nYou can also specify it with EC2_CLOUD_FORMATION_PEM_FILE environment variable\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+            },
+            {
+              "names": [
+                "--instance",
+                "-i"
+              ],
+              "argument": "INSTANCE",
+              "description": "🖥️ EC2 instance (need to use completion to get all required details)\n\nRequired: ✓ Yes\n"
+            }
+          ]
         }
       ]
     }

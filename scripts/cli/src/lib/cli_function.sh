@@ -511,6 +511,60 @@ function get_confluent_kafka_region_list_with_fzf() {
   res=$(cat $root_folder/scripts/cli/confluent-kafka-region-list.txt | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🌍" --header="select region" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
 }
 
+function ec2_instance_list() {
+  username=$(whoami)
+  name="kafka-docker-playground-${username}"
+
+  for row in $(aws ec2 describe-instances | jq '[.Reservations | .[] | .Instances | .[] | select(.State.Name!="terminated") | {KeyName: .KeyName, LaunchTime: .LaunchTime, PublicDnsName: .PublicDnsName, InstanceId: .InstanceId, InstanceType: .InstanceType,State: .State.Name, Name: (.Tags[]|select(.Key=="Name")|.Value)}]' | jq -r '.[] | @base64'); do
+      _jq() {
+      echo ${row} | base64 -d | jq -r ${1}
+      }
+
+      Name=$(echo $(_jq '.Name'))
+      if [[ $Name != $name* ]]
+      then
+          continue
+      fi
+    # KeyName=$(echo $(_jq '.KeyName'))
+    # LaunchTime=$(echo $(_jq '.LaunchTime'))
+      PublicDnsName=$(echo $(_jq '.PublicDnsName'))
+      InstanceId=$(echo $(_jq '.InstanceId'))
+    # InstanceType=$(echo $(_jq '.InstanceType'))
+      State=$(echo $(_jq '.State'))
+
+      if [ "$State" = "stopped" ]
+      then
+          echo -n "$Name|$EC2_INSTANCE_STATE_STOPPED|$PublicDnsName|$InstanceId"
+      elif [ "$State" = "stopping" ]
+      then
+          echo -n "$Name|$EC2_INSTANCE_STATE_STOPPING"
+      elif [ "$State" = "pending" ]
+      then
+          echo -n "$Name|$EC2_INSTANCE_STATE_PENDING"
+      else
+          echo -n "$Name|$EC2_INSTANCE_STATE_RUNNING|$PublicDnsName|$InstanceId"
+      fi
+  done
+}
+
+function get_ec2_instance_list_with_fzf() {
+  cur="$1"
+
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
+  then
+    fzf_option_wrap="--preview-window=40%,wrap"
+    fzf_option_pointer="--pointer=👉"
+    fzf_option_rounded="--border=rounded"
+  else
+    fzf_option_wrap=""
+    fzf_option_pointer=""
+    fzf_option_rounded=""
+  fi
+
+  res=$(ec2_instance_list | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🖥️" --header="select ec2 instance (wait for it)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+}
+
 function get_tag_list_with_fzf() {
   cur="$1"
 
