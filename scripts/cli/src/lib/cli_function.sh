@@ -515,7 +515,7 @@ function ec2_instance_list() {
   username=$(whoami)
   name="kafka-docker-playground-${username}"
 
-  for row in $(aws ec2 describe-instances | jq '[.Reservations | .[] | .Instances | .[] | select(.State.Name!="terminated") | {KeyName: .KeyName, LaunchTime: .LaunchTime, PublicDnsName: .PublicDnsName, InstanceId: .InstanceId, InstanceType: .InstanceType,State: .State.Name, Name: (.Tags[]|select(.Key=="Name")|.Value)}]' | jq -r '.[] | @base64'); do
+  for row in $(aws ec2 describe-instances | jq '[.Reservations | .[] | .Instances | .[] | select(.State.Name!="terminated") | {PublicDnsName: .PublicDnsName, InstanceId: .InstanceId,State: .State.Name, Name: (.Tags[]|select(.Key=="Name")|.Value)}]' | jq -r '.[] | @base64'); do
       _jq() {
       echo ${row} | base64 -d | jq -r ${1}
       }
@@ -525,11 +525,8 @@ function ec2_instance_list() {
       then
           continue
       fi
-    # KeyName=$(echo $(_jq '.KeyName'))
-    # LaunchTime=$(echo $(_jq '.LaunchTime'))
       PublicDnsName=$(echo $(_jq '.PublicDnsName'))
       InstanceId=$(echo $(_jq '.InstanceId'))
-    # InstanceType=$(echo $(_jq '.InstanceType'))
       State=$(echo $(_jq '.State'))
 
       if [ "$State" = "stopped" ]
@@ -563,6 +560,44 @@ function get_ec2_instance_list_with_fzf() {
   fi
 
   res=$(ec2_instance_list | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🖥️" --header="select ec2 instance (wait for it)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+}
+
+function ec2_cloudformation_list() {
+  username=$(whoami)
+  name="kafka-docker-playground-${username}"
+
+  for row in $(aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE | jq '[.StackSummaries | .[] | {StackName: .StackName }]' | jq -r '.[] | @base64'); do
+      _jq() {
+      echo ${row} | base64 -d | jq -r ${1}
+      }
+
+      StackName=$(echo $(_jq '.StackName'))
+
+      if [[ $StackName != $name* ]]
+      then
+          continue
+      fi
+
+      echo -n "$StackName"
+  done
+}
+
+function get_ec2_cloudformation_list_with_fzf() {
+  cur="$1"
+
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
+  then
+    fzf_option_wrap="--preview-window=40%,wrap"
+    fzf_option_pointer="--pointer=👉"
+    fzf_option_rounded="--border=rounded"
+  else
+    fzf_option_wrap=""
+    fzf_option_pointer=""
+    fzf_option_rounded=""
+  fi
+
+  res=$(ec2_cloudformation_list | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🌀" --header="select ec2 cloudformation (wait for it)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
 }
 
 function get_tag_list_with_fzf() {
@@ -1388,4 +1423,24 @@ function get_zazkia_id_list () {
   else
     echo ""
   fi
+}
+
+function wait_for_ec2_instance_to_be_running () {
+  instance="$1"
+  max_wait=${2:-300}
+  cur_wait=0
+  log "⌛ Waiting up to $max_wait seconds for ec2 instance $instance to be running"
+  playground ec2 status --instance $instance > /tmp/out.txt 2>&1
+  while ! grep "running" /tmp/out.txt > /dev/null;
+  do
+    sleep 10
+    playground ec2 status --instance $instance > /tmp/out.txt 2>&1
+    cur_wait=$(( cur_wait+10 ))
+    if [[ "$cur_wait" -gt "$max_wait" ]]
+    then
+      logerror "❌ ec2 instance $instance is still not running after $max_wait seconds"
+      return 1
+    fi
+  done
+  log "ec2 instance $instance is running"
 }

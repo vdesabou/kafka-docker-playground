@@ -55,6 +55,14 @@ commands:
     required: false
     help: correspond to completion $cur
 
+- name: get-ec2-cloudformation-list
+  help: Return some completion for ec2 cloudformation list
+  private: true
+  args:
+  - name: cur
+    required: false
+    help: correspond to completion $cur
+
 - name: get-zazkia-connection-list
   help: Return some completion for zazkia connections list
   private: true
@@ -3280,6 +3288,11 @@ commands:
   commands:
   - name: create
     help: 🏭 Create an EC2 instance using Cloud Formation
+    environment_variables:
+    - name: EC2_CLOUD_FORMATION_PEM_FILE
+      help: 🔐 AWS EC2 pem file
+    - name: EC2_CLOUD_FORMATION_YML_FILE
+      help: 🌀 Cloud Formation yml file
     flags:
     - &pemfile
       long: --pem-file
@@ -3401,9 +3414,24 @@ commands:
         
         If not set, default is kafka-docker-playground-${username}-${current-date}
 
+  - name: delete
+    help: ❌ Delete an EC2 instance created with Cloud Formation
+    flags:
+      - long: --instance
+        short: -i
+        required: true
+        arg: instance
+        validate: not_empty
+        completions:
+          - $(playground get-ec2-cloudformation-list $cur)
+        help: |-
+          🌀 EC2 instance cloudformation (need to use completion to get all required details)
 
   - name: open
     help: 👨‍💻 Open an EC2 instance using Visual Studio code
+    environment_variables:
+    - name: EC2_CLOUD_FORMATION_PEM_FILE
+      help: 🔐 AWS EC2 pem file
     flags:
       - *pemfile
       - &instance
@@ -3419,27 +3447,34 @@ commands:
 
   - name: list
     help: 🔘 List all EC2 instance
-    flags:
-      - *pemfile
 
   - name: stop
     help: 🔴 Stop an EC2 instance
     flags:
-      - *pemfile
       - *instance
 
   - name: start
     help: 🟢 Start an EC2 instance
     flags:
-      - *pemfile
       - *instance
 
   - name: stop-all
     help: 🔴 Stop all your EC2 instance(s)
-    flags:
-      - *pemfile
 
   - name: start-all
     help: 🟢 Start all your EC2 instance(s)
+
+  - name: status
+    help: 🗺️ Show a status
+    private: true
     flags:
-      - *pemfile
+      - long: --instance
+        short: -i
+        required: true
+        arg: instance
+        validate: not_empty
+        help: |-
+          🖥️ EC2 instance name
+      - long: --all
+        help: |- 
+          return all details

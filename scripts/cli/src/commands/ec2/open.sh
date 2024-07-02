@@ -54,7 +54,6 @@ fi
 
 mkdir -p $HOME/.ssh
 SSH_CONFIG_FILE=$HOME/.ssh/config
-
 username=$(whoami)
 
 set +e
