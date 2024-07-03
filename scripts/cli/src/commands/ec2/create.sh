@@ -81,4 +81,11 @@ cd - > /dev/null
 
 wait_for_ec2_instance_to_be_running "$name"
 
-playground ec2 open --instance "$(playground ec2 status --instance $name --all)"
+instance="$(playground ec2 status --instance "$name" --all)"
+if [ $? != 0 ] || [ -z "$instance" ]
+then
+    logerror "❌ failed to get instance with name $name"
+    playground ec2 status --instance "$name" --all
+    exit 1
+fi
+playground ec2 open --instance "$instance"

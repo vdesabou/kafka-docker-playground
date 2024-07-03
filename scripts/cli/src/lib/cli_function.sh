@@ -1435,6 +1435,8 @@ function wait_for_ec2_instance_to_be_running () {
   do
     sleep 10
     playground ec2 status --instance $instance > /tmp/out.txt 2>&1
+    status=$(cat /tmp/out.txt)
+    log "⌛ current status: $status"
     cur_wait=$(( cur_wait+10 ))
     if [[ "$cur_wait" -gt "$max_wait" ]]
     then
@@ -1442,5 +1444,5 @@ function wait_for_ec2_instance_to_be_running () {
       return 1
     fi
   done
-  log "ec2 instance $instance is running"
+  log "🟢 ec2 instance $instance is running"
 }
