@@ -141,6 +141,8 @@ Resources:
                       echo 'export PATH=$HOME/kafka-docker-playground/scripts/cli:$PATH' >> ~/.zshrc
                       echo 'source HOME/kafka-docker-playground/scripts/cli/completions.bash' >> ~/.zshrc
 
+                      curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
+
                       echo 'eval "\$(starship init zsh)"' >> ~/.zshrc
 
                       sudo chsh -s /bin/zsh
