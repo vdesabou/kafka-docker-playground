@@ -8628,6 +8628,31 @@ function wait_for_ec2_instance_to_be_running () {
   log "🟢 ec2 instance $instance is running"
 }
 
+function wait_for_ec2_cloudformation_to_be_completed () {
+  stack_name="$1"
+  max_wait=${2:-900}
+  cur_wait=0
+  log "⌛ Waiting up to $max_wait seconds for ec2 cloudformation stack $stack_name to be in status CREATE_COMPLETE"
+  log "⌛ You can check progress by checking log file output.log in root folder of ec2 instance"
+
+  aws cloudformation describe-stacks --output text --query "Stacks[?StackName==\`$stack_name\`].StackStatus" > /tmp/out.txt 2>&1
+  while ! grep "CREATE_COMPLETE" /tmp/out.txt > /dev/null;
+  do
+    sleep 10
+    aws cloudformation describe-stacks --output text --query "Stacks[?StackName==\`$stack_name\`].StackStatus" > /tmp/out.txt 2>&1
+    status=$(cat /tmp/out.txt)
+    log "⌛ current status: $status"
+    cur_wait=$(( cur_wait+10 ))
+    if [[ "$cur_wait" -gt "$max_wait" ]]
+    then
+      logerror "❌ ec2 cloudformation $stack_name is still not in status CREATE_COMPLETE after $max_wait seconds"
+      logerror "❌ check log file output.log in root folder of ec2 instance for troubleshooting the issue"
+      return 1
+    fi
+  done
+  log "🟢 ec2 cloudformation $stack_name is in status CREATE_COMPLETE"
+}
+
 # src/lib/colors.sh
 print_in_color() {
   local color="$1"
@@ -25362,7 +25387,14 @@ playground_ec2_create_command() {
       playground ec2 status --instance "$name" --all
       exit 1
   fi
+  log "👷 ec2 instance $name is created and accesible via SSH, it will be opened with visual studio code in 5 minutes..."
+  log "🌀 cloud formation is still in progress and can be reverted (i.e removing ec2 instance) in case of issue"
+  sleep 300
   playground ec2 open --instance "$instance"
+
+  wait_for_ec2_cloudformation_to_be_completed "$name"
+
+  log "🎉 ec2 instance $name is ready!"
 }
 
 # :command.function

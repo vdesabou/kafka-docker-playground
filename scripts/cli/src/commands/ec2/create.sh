@@ -88,4 +88,11 @@ then
     playground ec2 status --instance "$name" --all
     exit 1
 fi
+log "👷 ec2 instance $name is created and accesible via SSH, it will be opened with visual studio code in 5 minutes..."
+log "🌀 cloud formation is still in progress and can be reverted (i.e removing ec2 instance) in case of issue"
+sleep 300
 playground ec2 open --instance "$instance"
+
+wait_for_ec2_cloudformation_to_be_completed "$name"
+
+log "🎉 ec2 instance $name is ready!"

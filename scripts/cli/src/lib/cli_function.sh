@@ -1446,3 +1446,28 @@ function wait_for_ec2_instance_to_be_running () {
   done
   log "🟢 ec2 instance $instance is running"
 }
+
+function wait_for_ec2_cloudformation_to_be_completed () {
+  stack_name="$1"
+  max_wait=${2:-900}
+  cur_wait=0
+  log "⌛ Waiting up to $max_wait seconds for ec2 cloudformation stack $stack_name to be in status CREATE_COMPLETE"
+  log "⌛ You can check progress by checking log file output.log in root folder of ec2 instance"
+
+  aws cloudformation describe-stacks --output text --query "Stacks[?StackName==\`$stack_name\`].StackStatus" > /tmp/out.txt 2>&1
+  while ! grep "CREATE_COMPLETE" /tmp/out.txt > /dev/null;
+  do
+    sleep 10
+    aws cloudformation describe-stacks --output text --query "Stacks[?StackName==\`$stack_name\`].StackStatus" > /tmp/out.txt 2>&1
+    status=$(cat /tmp/out.txt)
+    log "⌛ current status: $status"
+    cur_wait=$(( cur_wait+10 ))
+    if [[ "$cur_wait" -gt "$max_wait" ]]
+    then
+      logerror "❌ ec2 cloudformation $stack_name is still not in status CREATE_COMPLETE after $max_wait seconds"
+      logerror "❌ check log file output.log in root folder of ec2 instance for troubleshooting the issue"
+      return 1
+    fi
+  done
+  log "🟢 ec2 cloudformation $stack_name is in status CREATE_COMPLETE"
+}
