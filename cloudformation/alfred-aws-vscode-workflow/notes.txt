@@ -1,3 +1,0 @@
-cdd
-cd cloudformation/alfred-aws-vscode-workflow
-zip -r ../aws-ec2-kafka-docker-playground.alfred5workflow * -x \*.git\* -x \prefs.plist\* 
