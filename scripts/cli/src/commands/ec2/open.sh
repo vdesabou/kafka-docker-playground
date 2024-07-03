@@ -48,7 +48,7 @@ if [ "$state" = "$EC2_INSTANCE_STATE_STOPPED" ]
 then
     log "🚀 starting the ec2 instance $name with id $id"
     aws ec2 start-instances --instance-ids "$id"
-    sleep 15
+    wait_for_ec2_instance_to_be_running "$name"
     ip=$(aws ec2 describe-instances --instance-ids "$id" | jq ".Reservations[0].Instances[0].PublicDnsName" | tr -d '"')
 fi
 
@@ -75,5 +75,6 @@ EOF
 
 fi
 set -e
+
 log "👨‍💻 Open EC2 instance $name using Visual Studio code (only your ip $myip is allowed to connect)"
 code --folder-uri "vscode-remote://ssh-remote+$name/home/$username"
