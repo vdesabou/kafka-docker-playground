@@ -39,7 +39,7 @@ then
         exit 1
     fi
 else
-    cloud_formation_yml_file="$root_folder/cloudformation/alfred-aws-vscode-workflow/kafka-docker-playground.yml"
+    cloud_formation_yml_file="$root_folder/cloudformation/kafka-docker-playground.yml"
     if [ ! -f "$cloud_formation_yml_file" ]
     then
         logerror "❌ cloud_formation_yml_file is set with $cloud_formation_yml_file but the file does not exist"
@@ -71,7 +71,7 @@ fi
 cd $tmp_dir
 cp "$cloud_formation_yml_file" tmp.yml
 
-log "🏭 creating ${instance_type} instance $name in $aws_region region (${ec2_size} Gb)"
+log "👷 creating ${instance_type} instance $name in $aws_region region (${ec2_size} Gb)"
 log "🌀 cloud formation file used: $cloud_formation_yml_file"
 log "🔐 ec2 pem file used: $pem_file"
 aws cloudformation create-stack --stack-name $name --template-body "file://tmp.yml" --region ${aws_region} --parameters ParameterKey=InstanceType,ParameterValue=${instance_type} ParameterKey=Ec2RootVolumeSize,ParameterValue=${ec2_size} ParameterKey=KeyName,ParameterValue=${key_name} ParameterKey=InstanceName,ParameterValue=$name ParameterKey=IPAddressRange,ParameterValue=${myip}/32 ParameterKey=SecretsEncryptionPassword,ParameterValue="${SECRETS_ENCRYPTION_PASSWORD}" ParameterKey=LinuxUserName,ParameterValue="${username}"

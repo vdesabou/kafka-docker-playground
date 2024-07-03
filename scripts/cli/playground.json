@@ -2760,13 +2760,13 @@
     },
     {
       "name": "ec2",
-      "description": "😶‍🌫️ AWS EC2 instance (using Cloud Formation)\n\n✨ Create and manage AWS EC2 instances to run kafka-docker-playground\n\n🪄 Open EC2 instances directly in Visual Studio code using Remote Development (over SSH)\n",
+      "description": "✨ Create and manage AWS EC2 instances (using Cloud Formation) to run kafka-docker-playground\n\n🪄 Open EC2 instances directly in Visual Studio code using Remote Development (over SSH)\n",
       "usage": "playground ec2 COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "create",
-          "description": "🏭 Create an EC2 instance using Cloud Formation\n",
+          "description": "👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation\n",
           "usage": "playground ec2 create [OPTIONS]",
           "options": [
             {
@@ -2781,7 +2781,7 @@
                 "--cloud-formation-yml-file"
               ],
               "argument": "CLOUD-FORMATION-YML-FILE",
-              "description": "🌀 Cloud Formation yml file\n\n❕ It must be absolute full path\n\nIf not set default is used https://github.com/vdesabou/kafka-docker-playground/blob/master/cloudformation/alfred-aws-vscode-workflow/kafka-docker-playground.yml\n\nYou can also specify it with EC2_CLOUD_FORMATION_YML_FILE environment variable\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+              "description": "🌀 Cloud Formation yml file\n\n❕ It must be absolute full path\n\nIf not set default is used https://github.com/vdesabou/kafka-docker-playground/blob/master/cloudformation/kafka-docker-playground.yml\n\nYou can also specify it with EC2_CLOUD_FORMATION_YML_FILE environment variable\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
             },
             {
               "names": [
@@ -2815,7 +2815,7 @@
         },
         {
           "name": "delete",
-          "description": "❌ Delete an EC2 instance created with Cloud Formation\n",
+          "description": "❌ Delete an EC2 instance created with Cloud Formation\n  \n  WARNING:  This will delete your cloud formation and associated EC2 instance\n",
           "usage": "playground ec2 delete [OPTIONS]",
           "options": [
             {
@@ -2830,7 +2830,7 @@
         },
         {
           "name": "open",
-          "description": "👨‍💻 Open an EC2 instance using Visual Studio code\n",
+          "description": "👨‍💻 Open an EC2 instance using Visual Studio code\n  \n  🔐 Only your current ip address will be allowed to connect\n",
           "usage": "playground ec2 open [OPTIONS]",
           "options": [
             {

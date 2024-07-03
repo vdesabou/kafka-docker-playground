@@ -3279,15 +3279,14 @@ commands:
   expose: always
   group: EC2
   help: |-
-    😶‍🌫️ AWS EC2 instance (using Cloud Formation)
-
-    ✨ Create and manage AWS EC2 instances to run kafka-docker-playground
+    ✨ Create and manage AWS EC2 instances (using Cloud Formation) to run kafka-docker-playground
 
     🪄 Open EC2 instances directly in Visual Studio code using Remote Development (over SSH)
 
   commands:
   - name: create
-    help: 🏭 Create an EC2 instance using Cloud Formation
+    help: |-
+      👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation
     environment_variables:
     - name: EC2_CLOUD_FORMATION_PEM_FILE
       help: 🔐 AWS EC2 pem file
@@ -3323,7 +3322,7 @@ commands:
 
         ❕ It must be absolute full path
 
-        If not set default is used https://github.com/vdesabou/kafka-docker-playground/blob/master/cloudformation/alfred-aws-vscode-workflow/kafka-docker-playground.yml
+        If not set default is used https://github.com/vdesabou/kafka-docker-playground/blob/master/cloudformation/kafka-docker-playground.yml
 
         You can also specify it with EC2_CLOUD_FORMATION_YML_FILE environment variable
 
@@ -3415,7 +3414,10 @@ commands:
         If not set, default is kafka-docker-playground-${username}-${current-date}
 
   - name: delete
-    help: ❌ Delete an EC2 instance created with Cloud Formation
+    help: |- 
+      ❌ Delete an EC2 instance created with Cloud Formation
+
+      WARNING:  This will delete your cloud formation and associated EC2 instance
     flags:
       - long: --instance
         short: -i
@@ -3428,7 +3430,11 @@ commands:
           🌀 EC2 instance cloudformation (need to use completion to get all required details)
 
   - name: open
-    help: 👨‍💻 Open an EC2 instance using Visual Studio code
+    help: |-
+      👨‍💻 Open an EC2 instance using Visual Studio code
+
+      🔐 Only your current ip address will be allowed to connect
+
     environment_variables:
     - name: EC2_CLOUD_FORMATION_PEM_FILE
       help: 🔐 AWS EC2 pem file

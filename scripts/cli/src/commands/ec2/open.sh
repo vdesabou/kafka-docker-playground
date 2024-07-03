@@ -75,4 +75,5 @@ EOF
 
 fi
 set -e
+log "👨‍💻 Open EC2 instance $name using Visual Studio code (only your ip $myip is allowed to connect)"
 code --folder-uri "vscode-remote://ssh-remote+$name/home/$username"
