@@ -4,7 +4,7 @@ If you don't want to run the playground locally, you can run it easily on a EC2 
 
 ## Using AWS console
 
-* Create stack in AWS CloudFormation and upload [this](https://raw.githubusercontent.com/vdesabou/kafka-docker-playground/master/cloudformation/alfred-aws-vscode-workflow/kafka-docker-playground.yml) template file:
+* Create stack in AWS CloudFormation and upload [this](https://raw.githubusercontent.com/vdesabou/kafka-docker-playground/master/cloudformation/kafka-docker-playground.yml) template file:
 
 ![AWS CloudFormation](./Screenshot1.png)
 
@@ -21,7 +21,7 @@ If you don't want to run the playground locally, you can run it easily on a EC2 
 For example, this is how I start it using aws CLI:
 
 ```bash
-$ cp kafka-docker-playground/cloudformation/alfred-aws-vscode-workflow/kafka-docker-playground.yml tmp.yml
+$ cp kafka-docker-playground/cloudformation/kafka-docker-playground.yml tmp.yml
 $ aws cloudformation create-stack  --stack-name kafka-docker-playground-$USER \
     --template-body file://tmp.yml --region eu-west-3 \ 
     --parameters ParameterKey=KeyName,ParameterValue=$KEY_NAME \
@@ -29,6 +29,6 @@ $ aws cloudformation create-stack  --stack-name kafka-docker-playground-$USER \
     ParameterKey=LinuxUserName,ParameterValue="$USER"
 ```
 
-## Using AWS EC2 Alfred workflow
+## Using playground CLI
 
-See [here](https://kafka-docker-playground.io/#/how-to-use?id=🎩-aws-ec2-alfred-workflow) for all details.
+See [here](https://kafka-docker-playground.io/#/playground%20ec2) for all details.

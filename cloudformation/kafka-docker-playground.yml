@@ -1,0 +1,279 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  kafka-docker-playground using Ubuntu 20 EC2 instance.
+Parameters:
+  LatestUbuntuFocalAMI:
+    # https://ubuntu.com/server/docs/cloud-images/amazon-ec2
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: "/aws/service/canonical/ubuntu/server/focal/stable/current/amd64/hvm/ebs-gp2/ami-id"
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  InstanceType:
+    Description: EC2 instance type
+    Type: String
+    Default: t3.2xlarge
+    AllowedValues:
+      - t1.micro
+      - t2.nano
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - t3.2xlarge
+      - m1.small
+      - m1.medium
+      - m1.large
+      - m1.xlarge
+      - m2.xlarge
+      - m2.2xlarge
+      - m2.4xlarge
+      - m3.medium
+      - m3.large
+      - m3.xlarge
+      - m3.2xlarge
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - c1.medium
+      - c1.xlarge
+      - c3.large
+      - c3.xlarge
+      - c3.2xlarge
+      - c3.4xlarge
+      - c3.8xlarge
+      - c4.large
+      - c4.xlarge
+      - c4.2xlarge
+      - c4.4xlarge
+      - c4.8xlarge
+      - g2.2xlarge
+      - g2.8xlarge
+      - r3.large
+      - r3.xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i2.xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+      - d2.xlarge
+      - d2.2xlarge
+      - d2.4xlarge
+      - d2.8xlarge
+      - hi1.4xlarge
+      - hs1.8xlarge
+      - cr1.8xlarge
+      - cc2.8xlarge
+      - cg1.4xlarge
+    ConstraintDescription: must be a valid EC2 instance type.
+  Ec2RootVolumeSize:
+    Description: Ec2 root volume size
+    Type: String
+    Default: '500'
+  InstanceName:
+    Description: Instance Name
+    Type: String
+    Default: kafka-docker-playground
+  LinuxUserName:
+    Description: Linux User Name
+    Type: String
+    Default: ubuntu
+  IPAddressRange:
+    Description: 'The IP address range that can be used to connect to the EC2 instances'
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: 0.0.0.0/0
+    AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+  GithubSshKeyFile:
+    Description: github_ssh_key_file
+    Type: String
+    Default: ''
+    NoEcho: 'true'
+  SecretsEncryptionPassword:
+    Description: SECRETS_ENCRYPTION_PASSWORD
+    Type: String
+    Default: ''
+    NoEcho: 'true'
+
+Resources:
+  AWSInstance:
+    Type: 'AWS::EC2::Instance'
+    Metadata:
+      'AWS::CloudFormation::Init':
+        configSets:
+          InstallAndRun:
+            - Install
+            - Configure
+        Install:
+          files:
+            /tmp/clone.sh:
+              content:
+                'Fn::Join':
+                  - ''
+                  - - >-
+                      #!/bin/bash
+
+                      set -e
+
+                      cat << EOF | su "
+                    - Ref: LinuxUserName
+                    - >-
+                      "
+
+                      cd 
+
+                      git clone https://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
+
+                      cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc
+
+                      curl -fsSL https://starship.rs/install.sh -o install.sh 
+
+                      sudo sh ./install.sh -y 
+
+                      echo 'export PATH=$HOME/bin:/usr/local/bin:$PATH' >> ~/.zshrc
+                      echo 'export PATH=$HOME/kafka-docker-playground/scripts/cli:$PATH' >> ~/.zshrc
+                      echo 'source HOME/kafka-docker-playground/scripts/cli/completions.bash' >> ~/.zshrc
+
+                      echo 'eval "\$(starship init zsh)"' >> ~/.zshrc
+
+                      sudo chsh -s /bin/zsh
+                      
+                      mkdir -p ~/.confluent
+                      
+                      curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+                      mkdir -p ~/.local/bin
+                      
+                      ln -s /usr/bin/batcat ~/.local/bin/bat
+
+                      git clone https://github.com/vdesabou/kafka-docker-playground.git
+
+                      EOF
+              mode: '000744'
+              owner: !Ref LinuxUserName
+              group: !Ref LinuxUserName
+
+        Configure:
+          packages:
+            apt:
+              ca-certificates: []
+              curl: []
+              gnupg: []
+              lsb-release: []
+              php-mysql: []
+              zip: []
+              zsh: []
+              jq: []
+              expect: []
+              awscli: []
+              fzf: []
+              bat: []
+          commands:
+            01_add_repo_gpg_key:
+              command: |
+                curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+                | sudo gpg --dearmor -o \
+                /usr/share/keyrings/docker-archive-keyring.gpg
+            02_add_docker_repo:
+              command: |
+                echo "deb [arch=$(dpkg --print-architecture) \
+                signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] \
+                https://download.docker.com/linux/ubuntu $(lsb_release -cs) \
+                stable" | sudo tee /etc/apt/sources.list.d/docker.list \
+                > /dev/null
+            03_install_docker:
+              command: |
+                sudo apt-get update \
+                && sudo apt-get install -y docker-ce docker-ce-cli \
+                containerd.io
+                sudo curl -SL https://github.com/docker/compose/releases/download/v2.13.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+                sudo chmod a+x /usr/local/bin/docker-compose
+            04_enable_and_start_docker:
+              command: |
+                sudo systemctl enable docker && sudo systemctl start docker
+            05_add_user_to_docker_group:
+              command: |
+                sudo chmod 666 /var/run/docker.sock
+            06_install_ansible:
+              command: |
+                sudo apt-add-repository ppa:ansible/ansible -y
+                sudo apt-get update -y
+                sudo apt-get install ansible -y
+            07_clone_repo:
+              command: !Sub "sudo /tmp/clone.sh > /home/${LinuxUserName}/output.log 2>&1"
+    Properties:
+      ImageId: !Ref LatestUbuntuFocalAMI
+      InstanceType:
+        Ref: InstanceType
+      Tags:
+        - Key: Name
+          Value:
+            Ref: InstanceName
+      SecurityGroups:
+        - Ref: KafkaDockerPlaygroundSecurityGroup
+      KeyName:
+        Ref: KeyName
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeType: gp2
+            DeleteOnTermination: 'true'
+            VolumeSize:
+              Ref: Ec2RootVolumeSize
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          if [ "${LinuxUserName}" != "ubuntu" ]; then sudo adduser --disabled-password --gecos 'my user' --home /home/${LinuxUserName} ${LinuxUserName};fi
+          if [ "${LinuxUserName}" != "ubuntu" ]; then sudo usermod -aG sudo ${LinuxUserName};fi
+          if [ "${LinuxUserName}" != "ubuntu" ]; then echo "${LinuxUserName} ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/${LinuxUserName};fi
+          mkdir -p /home/${LinuxUserName}/.ssh
+          if [ "${LinuxUserName}" != "ubuntu" ]; then sudo cp /home/ubuntu/.ssh/authorized_keys /home/${LinuxUserName}/.ssh/;fi
+          echo "${GithubSshKeyFile}" > /home/${LinuxUserName}/.ssh/id_rsa
+          chmod 600 /home/${LinuxUserName}/.ssh/id_rsa
+          if [ "${LinuxUserName}" != "ubuntu" ]; then sudo chown ${LinuxUserName} /home/${LinuxUserName}/.ssh/*;fi
+          ssh-keyscan -t rsa github.com >> /home/${LinuxUserName}/.ssh/known_hosts
+          sudo groupadd docker
+          sudo usermod -aG docker ${LinuxUserName}
+          apt-get update -y
+          mkdir -p /opt/aws/bin
+          wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+          python3 -m easy_install --script-dir /opt/aws/bin aws-cfn-bootstrap-py3-latest.tar.gz
+          /opt/aws/bin/cfn-init -v \
+            --stack ${AWS::StackName} \
+            --resource AWSInstance \
+            --configsets InstallAndRun \
+            --region ${AWS::Region}
+          /opt/aws/bin/cfn-signal -e $? \
+            --stack ${AWS::StackName} \
+            --resource AWSInstance \
+            --region ${AWS::Region}
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT30M
+  KafkaDockerPlaygroundSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Enable SSH access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp:
+            Ref: IPAddressRange
+Outputs:
+  PublicIP:
+    Description: Public IP
+    Value:
+      'Fn::Join':
+        - ''
+        - - ''
+          - 'Fn::GetAtt':
+              - AWSInstance
+              - PublicDnsName
