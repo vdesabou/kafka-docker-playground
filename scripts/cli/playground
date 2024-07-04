@@ -7900,7 +7900,7 @@ function filter_docker_running() {
 
 function filter_aws_ec2_permissions() {
   aws ec2 describe-instances --dry-run > /tmp/output_ec2_describe_instance.log 2>&1
-  if [ $? != 0 ]
+  if ! grep -q "DryRunOperation" /tmp/output_ec2_describe_instance.log
   then
     logerror "aws ec2 describe-instances command got an error"
     logerror "please make sure to have AdministratorAccess in aws"
