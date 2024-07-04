@@ -81,8 +81,16 @@ wait_for_ccloud_connector_up $connector_name 180
 
 sleep 5
 
+log "Insert another record"
+docker run --quiet --rm -i mongo:latest mongosh "mongodb+srv://$MONGODB_ATLAS_HOST/" --apiVersion 1 --username $MONGODB_ATLAS_USER --password $MONGODB_ATLAS_PASSWORD << EOF
+use inventory
+db.customers.insert([
+{ _id : 2, first_name : 'Robert', last_name : 'DeNiro', email : 'robert@example.com' }
+]);
+EOF
+
 log "Verifying topic mongo.inventory.customers"
-playground topic consume --topic mongo.inventory.customers --min-expected-messages 1 --timeout 60
+playground topic consume --topic mongo.inventory.customers --min-expected-messages 2 --timeout 60
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
