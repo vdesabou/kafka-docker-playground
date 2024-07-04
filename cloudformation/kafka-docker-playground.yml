@@ -149,15 +149,9 @@ Resources:
 
                       git clone https://github.com/vdesabou/kafka-docker-playground.git
                       
-                      mkdir -p ~/.local/bin
+                      wget -q https://github.com/vdesabou/kafka-docker-playground-ec2-cloudformation-dotfiles/raw/main/starship.toml -o ~/.config/starship.toml
                       
-                      ln -s /usr/bin/batcat ~/.local/bin/bat
-
-                      mkdir -p ~/.confluent
-                      
-                      wget https://github.com/vdesabou/kafka-docker-playground-ec2-cloudformation-dotfiles/raw/main/starship.toml -o ~/.config/starship.toml
-                      
-                      wget https://github.com/vdesabou/kafka-docker-playground-ec2-cloudformation-dotfiles/raw/main/zshrc ~/.zshrc
+                      wget -q https://github.com/vdesabou/kafka-docker-playground-ec2-cloudformation-dotfiles/raw/main/zshrc ~/.zshrc
 
                       git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 
