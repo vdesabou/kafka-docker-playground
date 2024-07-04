@@ -3278,6 +3278,8 @@ commands:
 - name: ec2
   expose: always
   group: EC2
+  filters:
+    - aws_ec2_permissions
   help: |-
     ✨ Create and manage AWS EC2 instances (using Cloud Formation) to run kafka-docker-playground
 

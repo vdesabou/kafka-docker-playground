@@ -722,7 +722,7 @@ function filter_not_mdc_environment() {
 
   if [[ "$environment" == "mdc"* ]]
   then
-    echo "$environment is not supported with this command !"
+    logerror "$environment is not supported with this command !"
   fi
 }
 
@@ -731,7 +731,7 @@ function filter_ccloud_environment() {
 
   if [[ "$environment" != "ccloud" ]]
   then
-    echo "environment should be ccloud with this command (it is $environment)!"
+    logerror "environment should be ccloud with this command (it is $environment)!"
   fi
 }
 
@@ -741,7 +741,7 @@ function filter_schema_registry_running() {
   curl $sr_security -s "${sr_url}/config" > /dev/null 2>&1
   if [ $? != 0 ]
   then
-    echo "schema registry rest api should be running to run this command"
+    logerror "schema registry rest api should be running to run this command"
   fi
 }
 
@@ -751,12 +751,22 @@ function filter_connect_running() {
   curl $security -s "${connect_url}" > /dev/null 2>&1
   if [ $? != 0 ]
   then
-    echo "connect rest api should be running to run this command"
+    logerror "connect rest api should be running to run this command"
   fi
 }
 
 function filter_docker_running() {
-  docker info >/dev/null 2>&1 || echo "Docker must be running"
+  docker info >/dev/null 2>&1 || logerror "docker must be running"
+}
+
+function filter_aws_ec2_permissions() {
+  aws ec2 describe-instances --dry-run > /tmp/output_ec2_describe_instance.log 2>&1
+  if [ $? != 0 ]
+  then
+    logerror "aws ec2 describe-instances command got an error"
+    logerror "please make sure to have AdministratorAccess in aws"
+    cat /tmp/output_ec2_describe_instance.log
+  fi
 }
 
 function increment_cli_metric() {
