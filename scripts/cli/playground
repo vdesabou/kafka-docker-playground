@@ -6714,7 +6714,10 @@ playground_ec2_usage() {
 # :command.usage
 playground_ec2_create_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground ec2 create - 👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation\n"
+    printf "playground ec2 create\n"
+    echo
+
+    printf "  👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation\n  \n  🔐 AWS EC2 pem file for the ec2 instance will be created and stored in root\n  folder (make sure to do backup). If you already created instance before, you\n  can force the PEM using EC2_CLOUD_FORMATION_PEM_FILE environment variable.\n"
     echo
 
   else
@@ -6733,11 +6736,6 @@ playground_ec2_create_usage() {
     printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--pem-file PEM-FILE")"
-    printf "    🔐 AWS EC2 pem file\n    \n    ❕ It must be absolute full path\n    \n    You can also specify it with EC2_CLOUD_FORMATION_PEM_FILE environment\n    variable\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
-    echo
-
     # :flag.usage
     printf "  %s\n" "$(magenta "--cloud-formation-yml-file CLOUD-FORMATION-YML-FILE")"
     printf "    🌀 Cloud Formation yml file\n    \n    ❕ It must be absolute full path\n    \n    If not set default is used\n    https://github.com/vdesabou/kafka-docker-playground/blob/master/cloudformation/kafka-docker-playground.yml\n    \n    You can also specify it with EC2_CLOUD_FORMATION_YML_FILE environment\n    variable\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
@@ -6778,7 +6776,7 @@ playground_ec2_create_usage() {
 
     # :environment_variable.usage
     printf "  %s\n" "$(cyan "EC2_CLOUD_FORMATION_PEM_FILE")"
-    printf "    🔐 AWS EC2 pem file\n"
+    printf "    🔐 AWS EC2 pem file (only required if you already created instance before,\n    otherwise pem files are created automatically)\n"
     echo
 
     # :environment_variable.usage
@@ -6852,11 +6850,6 @@ playground_ec2_open_usage() {
     printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--pem-file PEM-FILE")"
-    printf "    🔐 AWS EC2 pem file\n    \n    ❕ It must be absolute full path\n    \n    You can also specify it with EC2_CLOUD_FORMATION_PEM_FILE environment\n    variable\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
-    echo
-
     # :flag.usage
     printf "  %s\n" "$(magenta "--instance, -i INSTANCE (required)")"
     printf "    🖥️ EC2 instance (need to use completion to get all required details)\n"
@@ -25298,20 +25291,33 @@ playground_connector_update_command() {
 # :command.function
 playground_ec2_create_command() {
   # src/commands/ec2/create.sh
-  pem_file="${args[--pem-file]}"
   cloud_formation_yml_file="${args[--cloud-formation-yml-file]}"
   suffix="${args[--suffix]}"
   aws_region="${args[--region]}"
   instance_type="${args[--instance-type]}"
   ec2_size="${args[--size]}"
 
-  if [[ -n "$pem_file" ]]
+  username=$(whoami)
+  if [[ -n "$suffix" ]]
   then
-      if [[ $pem_file == *"@"* ]]
-      then
-          pem_file=$(echo "$pem_file" | cut -d "@" -f 2)
-      fi
-  elif [[ -n "$EC2_CLOUD_FORMATION_PEM_FILE" ]]
+      suffix_kebab="${suffix// /-}"
+      suffix_kebab=$(echo "$suffix_kebab" | tr '[:upper:]' '[:lower:]')
+  else
+      suffix_kebab=$(date +%F)
+  fi
+  name="kafka-docker-playground-${username}-${suffix_kebab}"
+  pem_file="$root_folder/$name.pem"
+
+  # check if instance already exists
+  res=$(playground ec2 status --instance "$name" --all)
+  if [ "$res" != "" ]
+  then
+      logerror "❌ ec2 instance $name already exists"
+      logerror "use playground ec2 delete --instance $name to delete it"
+      exit 1
+  fi
+
+  if [[ -n "$EC2_CLOUD_FORMATION_PEM_FILE" ]]
   then
       pem_file="$EC2_CLOUD_FORMATION_PEM_FILE"
       if [ ! -f "$EC2_CLOUD_FORMATION_PEM_FILE" ]
@@ -25320,8 +25326,9 @@ playground_ec2_create_command() {
           exit 1
       fi
   else
-      logerror "❌ --pem-file or EC2_CLOUD_FORMATION_PEM_FILE is required"
-      exit 1
+      log "🔐 creating pem file $pem_file (make sure to create backup)"
+      aws ec2 create-key-pair --key-name "$name" --key-type rsa --key-format pem --query "KeyMaterial" --output text > $pem_file
+      chmod 400 $pem_file
   fi
 
   if [[ -n "$cloud_formation_yml_file" ]]
@@ -25347,15 +25354,6 @@ playground_ec2_create_command() {
       fi
   fi
 
-  username=$(whoami)
-  if [[ -n "$suffix" ]]
-  then
-      suffix_kebab="${suffix// /-}"
-      suffix_kebab=$(echo "$suffix_kebab" | tr '[:upper:]' '[:lower:]')
-  else
-      suffix_kebab=$(date +%F)
-  fi
-  name="kafka-docker-playground-${username}-${suffix_kebab}"
   myip=$(dig @resolver4.opendns.com myip.opendns.com +short)
   key_name=$(basename $pem_file .pem)
 
@@ -25375,8 +25373,6 @@ playground_ec2_create_command() {
   log "🔐 ec2 pem file used: $pem_file"
   aws cloudformation create-stack --stack-name $name --template-body "file://tmp.yml" --region ${aws_region} --parameters ParameterKey=InstanceType,ParameterValue=${instance_type} ParameterKey=Ec2RootVolumeSize,ParameterValue=${ec2_size} ParameterKey=KeyName,ParameterValue=${key_name} ParameterKey=InstanceName,ParameterValue=$name ParameterKey=IPAddressRange,ParameterValue=${myip}/32 ParameterKey=SecretsEncryptionPassword,ParameterValue="${SECRETS_ENCRYPTION_PASSWORD}" ParameterKey=LinuxUserName,ParameterValue="${username}"
   cd - > /dev/null
-
-  # ParameterKey=GithubSshKeyFile,ParameterValue="${github_ssh_key_file_content}"
 
   wait_for_ec2_instance_to_be_running "$name"
 
@@ -25408,36 +25404,27 @@ playground_ec2_delete_command() {
   fi
   log "❌ deleting ec2 cloudformation $instance"
   aws cloudformation delete-stack --stack-name $instance
+
+  name="$instance"
+  pem_file="$root_folder/$name.pem"
+
+  if [ -f "$pem_file" ]
+  then
+      log "🔐 deleting pem file $pem_file"
+      rm -f "$pem_file"
+      log "🔐 deleting pem $name on aws"
+      aws ec2 delete-key-pair --key-name "$name"
+  fi
 }
 
 # :command.function
 playground_ec2_open_command() {
   # src/commands/ec2/open.sh
   instance="${args[--instance]}"
-  pem_file="${args[--pem-file]}"
 
   if [[ $(type code 2>&1) =~ "not found" ]]
   then
       logerror "❌ code command is not found - this command requires vscode to be installed"
-      exit 1
-  fi
-
-  if [[ -n "$pem_file" ]]
-  then
-      if [[ $pem_file == *"@"* ]]
-      then
-          pem_file=$(echo "$pem_file" | cut -d "@" -f 2)
-      fi
-  elif [[ -n "$EC2_CLOUD_FORMATION_PEM_FILE" ]]
-  then
-      pem_file="$EC2_CLOUD_FORMATION_PEM_FILE"
-      if [ ! -f "$EC2_CLOUD_FORMATION_PEM_FILE" ]
-      then
-          logerror "❌ EC2_CLOUD_FORMATION_PEM_FILE is set with $EC2_CLOUD_FORMATION_PEM_FILE but the file does not exist"
-          exit 1
-      fi
-  else
-      logerror "❌ --pem-file or EC2_CLOUD_FORMATION_PEM_FILE is required"
       exit 1
   fi
 
@@ -25449,6 +25436,24 @@ playground_ec2_open_command() {
   state=$(echo "${instance}" | cut -d "|" -f 2)
   ip=$(echo "${instance}" | cut -d "|" -f 3)
   id=$(echo "${instance}" | cut -d "|" -f 4)
+
+  pem_file="$root_folder/$name.pem"
+
+  if [[ -n "$EC2_CLOUD_FORMATION_PEM_FILE" ]]
+  then
+      pem_file="$EC2_CLOUD_FORMATION_PEM_FILE"
+      if [ ! -f "$EC2_CLOUD_FORMATION_PEM_FILE" ]
+      then
+          logerror "❌ EC2_CLOUD_FORMATION_PEM_FILE is set with $EC2_CLOUD_FORMATION_PEM_FILE but the file does not exist"
+          exit 1
+      fi
+  else
+      if [ ! -f "$pem_file" ]
+      then
+          logerror "❌ AWS EC2 pem file $pem_file file does not exist"
+          exit 1
+      fi
+  fi
 
   group=$(aws ec2 describe-instances --instance-id $id --output=json | jq '.Reservations[] | .Instances[] | {SecurityGroups: .SecurityGroups}' | jq -r '.SecurityGroups[0] | .GroupName')
 
@@ -38140,20 +38145,6 @@ playground_ec2_create_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
-      --pem-file)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          args['--pem-file']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--pem-file requires an argument: --pem-file PEM-FILE" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
       --cloud-formation-yml-file)
 
         # :flag.case_arg
@@ -38245,12 +38236,6 @@ playground_ec2_create_parse_requirements() {
   [[ -n ${args['--size']:-} ]] || args['--size']="1000"
 
   # :command.validations
-  # :flag.validations
-  if [[ -v args['--pem-file'] && -n $(validate_file_exists_with_trick "${args['--pem-file']:-}") ]]; then
-    printf "validation error in %s:\n%s\n" "--pem-file PEM-FILE" "$(validate_file_exists_with_trick "${args['--pem-file']:-}")" >&2
-    exit 1
-  fi
-
   # :flag.validations
   if [[ -v args['--cloud-formation-yml-file'] && -n $(validate_file_exists_with_trick "${args['--cloud-formation-yml-file']:-}") ]]; then
     printf "validation error in %s:\n%s\n" "--cloud-formation-yml-file CLOUD-FORMATION-YML-FILE" "$(validate_file_exists_with_trick "${args['--cloud-formation-yml-file']:-}")" >&2
@@ -38375,20 +38360,6 @@ playground_ec2_open_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
-      --pem-file)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          args['--pem-file']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--pem-file requires an argument: --pem-file PEM-FILE" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
       --instance | -i)
 
         # :flag.case_arg
@@ -38425,12 +38396,6 @@ playground_ec2_open_parse_requirements() {
   fi
 
   # :command.validations
-  # :flag.validations
-  if [[ -v args['--pem-file'] && -n $(validate_file_exists_with_trick "${args['--pem-file']:-}") ]]; then
-    printf "validation error in %s:\n%s\n" "--pem-file PEM-FILE" "$(validate_file_exists_with_trick "${args['--pem-file']:-}")" >&2
-    exit 1
-  fi
-
   # :flag.validations
   if [[ -v args['--instance'] && -n $(validate_not_empty "${args['--instance']:-}") ]]; then
     printf "validation error in %s:\n%s\n" "--instance, -i INSTANCE" "$(validate_not_empty "${args['--instance']:-}")" >&2
