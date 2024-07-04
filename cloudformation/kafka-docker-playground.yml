@@ -160,6 +160,7 @@ Resources:
                       git clone https://github.com/akarzim/zsh-docker-aliases.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-docker-aliases
 
                       git clone https://github.com/agkozak/zsh-z ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-z
+
                       EOF
               mode: '000744'
               owner: !Ref LinuxUserName
@@ -206,11 +207,11 @@ Resources:
             05_add_user_to_docker_group:
               command: |
                 sudo chmod 666 /var/run/docker.sock
-            06_install_ansible:
-              command: |
-                sudo apt-add-repository ppa:ansible/ansible -y
-                sudo apt-get update -y
-                sudo apt-get install ansible -y
+            # 06_install_ansible:
+            #   command: |
+            #     sudo apt-add-repository ppa:ansible/ansible -y
+            #     sudo apt-get update -y
+            #     sudo apt-get install ansible -y
             07_clone_repo:
               command: !Sub "sudo /tmp/clone.sh > /home/${LinuxUserName}/output.log 2>&1"
     Properties:
