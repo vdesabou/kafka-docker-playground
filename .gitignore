@@ -60,6 +60,7 @@ myenv
 ._aws_credentials
 *.jar
 *.log
+._secrets.properties
 secrets.properties
 secrets.tar
 *.hprof
