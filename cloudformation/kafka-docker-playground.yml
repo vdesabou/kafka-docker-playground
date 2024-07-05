@@ -262,7 +262,7 @@ Resources:
             --region ${AWS::Region}
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT30M
+        Timeout: PT15M
   KafkaDockerPlaygroundSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
