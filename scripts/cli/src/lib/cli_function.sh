@@ -1440,7 +1440,7 @@ function wait_for_ec2_instance_to_be_running () {
   instance="$1"
   max_wait=${2:-300}
   cur_wait=0
-  log "⌛ Waiting up to $max_wait seconds for ec2 instance $instance to be running"
+  log "⌛ waiting up to $max_wait seconds for ec2 instance $instance to be running"
   playground ec2 status --instance $instance > /tmp/out.txt 2>&1
   while ! grep "running" /tmp/out.txt > /dev/null;
   do
@@ -1462,8 +1462,8 @@ function wait_for_ec2_cloudformation_to_be_completed () {
   stack_name="$1"
   max_wait=${2:-900}
   cur_wait=0
-  log "⌛ Waiting up to $max_wait seconds for ec2 cloudformation stack $stack_name to be in status CREATE_COMPLETE"
-  log "⌛ You can check progress by checking log file output.log in root folder of ec2 instance"
+  log "⌛ waiting up to $max_wait seconds for ec2 cloudformation stack $stack_name to be in status CREATE_COMPLETE"
+  log "⌛ you can check progress by checking log file output.log in root folder of ec2 instance"
 
   aws cloudformation describe-stacks --output text --query "Stacks[?StackName==\`$stack_name\`].StackStatus" > /tmp/out.txt 2>&1
   while ! grep "CREATE_COMPLETE" /tmp/out.txt > /dev/null;

@@ -3431,6 +3431,11 @@ commands:
         help: |-
           🖥️ EC2 instance (need to use completion to get all required details)
 
+  - name: allow-my-ip
+    help: 🛂 Allow your current ip to connect to ec2 instance via ssh
+    flags:
+      - *instance
+      
   - name: list
     help: 🔘 List all EC2 instance
 
