@@ -6717,7 +6717,7 @@ playground_ec2_create_usage() {
     printf "playground ec2 create\n"
     echo
 
-    printf "  👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation\n  \n  🔐 AWS EC2 pem file for the ec2 instance will be created and stored in root\n  folder (make sure to do backup). If you already created instance before, you\n  can force the PEM using EC2_CLOUD_FORMATION_PEM_FILE environment variable.\n"
+    printf "  👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation\n  \n  🔐 AWS EC2 pem file for the ec2 instance will be created and stored in root\n  folder (make sure to do backup)\n"
     echo
 
   else
@@ -6773,11 +6773,6 @@ playground_ec2_create_usage() {
 
     # :command.usage_environment_variables
     printf "%s\n" "$(bold "Environment Variables:")"
-
-    # :environment_variable.usage
-    printf "  %s\n" "$(cyan "EC2_CLOUD_FORMATION_PEM_FILE")"
-    printf "    🔐 AWS EC2 pem file (only required if you already created instance before,\n    otherwise pem files are created automatically)\n"
-    echo
 
     # :environment_variable.usage
     printf "  %s\n" "$(cyan "EC2_CLOUD_FORMATION_YML_FILE")"
@@ -6858,14 +6853,6 @@ playground_ec2_open_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
-    echo
-
-    # :command.usage_environment_variables
-    printf "%s\n" "$(bold "Environment Variables:")"
-
-    # :environment_variable.usage
-    printf "  %s\n" "$(cyan "EC2_CLOUD_FORMATION_PEM_FILE")"
-    printf "    🔐 AWS EC2 pem file\n"
     echo
 
   fi
@@ -25328,19 +25315,9 @@ playground_ec2_create_command() {
       exit 1
   fi
 
-  if [[ -n "$EC2_CLOUD_FORMATION_PEM_FILE" ]]
-  then
-      pem_file="$EC2_CLOUD_FORMATION_PEM_FILE"
-      if [ ! -f "$EC2_CLOUD_FORMATION_PEM_FILE" ]
-      then
-          logerror "❌ EC2_CLOUD_FORMATION_PEM_FILE is set with $EC2_CLOUD_FORMATION_PEM_FILE but the file does not exist"
-          exit 1
-      fi
-  else
-      log "🔐 creating pem file $pem_file (make sure to create backup)"
-      aws ec2 create-key-pair --key-name "$name" --key-type rsa --key-format pem --query "KeyMaterial" --output text > $pem_file
-      chmod 400 $pem_file
-  fi
+  log "🔐 creating pem file $pem_file (make sure to create backup)"
+  aws ec2 create-key-pair --key-name "$name" --key-type rsa --key-format pem --query "KeyMaterial" --output text > $pem_file
+  chmod 400 $pem_file
 
   if [[ -n "$cloud_formation_yml_file" ]]
   then
@@ -25452,20 +25429,10 @@ playground_ec2_open_command() {
 
   pem_file="$root_folder/$name.pem"
 
-  if [[ -n "$EC2_CLOUD_FORMATION_PEM_FILE" ]]
+  if [ ! -f "$pem_file" ]
   then
-      pem_file="$EC2_CLOUD_FORMATION_PEM_FILE"
-      if [ ! -f "$EC2_CLOUD_FORMATION_PEM_FILE" ]
-      then
-          logerror "❌ EC2_CLOUD_FORMATION_PEM_FILE is set with $EC2_CLOUD_FORMATION_PEM_FILE but the file does not exist"
-          exit 1
-      fi
-  else
-      if [ ! -f "$pem_file" ]
-      then
-          logerror "❌ AWS EC2 pem file $pem_file file does not exist"
-          exit 1
-      fi
+      logerror "❌ AWS EC2 pem file $pem_file file does not exist"
+      exit 1
   fi
 
   group=$(aws ec2 describe-instances --instance-id $id --output=json | jq '.Reservations[] | .Instances[] | {SecurityGroups: .SecurityGroups}' | jq -r '.SecurityGroups[0] | .GroupName')
@@ -38154,7 +38121,6 @@ playground_ec2_create_parse_requirements() {
 
   # :command.environment_variables_filter
 
-  env_var_names+=("EC2_CLOUD_FORMATION_PEM_FILE")
   env_var_names+=("EC2_CLOUD_FORMATION_YML_FILE")
 
   # :command.command_filter
@@ -38367,10 +38333,6 @@ playground_ec2_open_parse_requirements() {
 
     esac
   done
-
-  # :command.environment_variables_filter
-
-  env_var_names+=("EC2_CLOUD_FORMATION_PEM_FILE")
 
   # :command.command_filter
   action="ec2 open"

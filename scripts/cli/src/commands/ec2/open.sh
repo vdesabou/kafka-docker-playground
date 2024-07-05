@@ -17,20 +17,10 @@ id=$(echo "${instance}" | cut -d "|" -f 4)
 
 pem_file="$root_folder/$name.pem"
 
-if [[ -n "$EC2_CLOUD_FORMATION_PEM_FILE" ]]
+if [ ! -f "$pem_file" ]
 then
-    pem_file="$EC2_CLOUD_FORMATION_PEM_FILE"
-    if [ ! -f "$EC2_CLOUD_FORMATION_PEM_FILE" ]
-    then
-        logerror "❌ EC2_CLOUD_FORMATION_PEM_FILE is set with $EC2_CLOUD_FORMATION_PEM_FILE but the file does not exist"
-        exit 1
-    fi
-else
-    if [ ! -f "$pem_file" ]
-    then
-        logerror "❌ AWS EC2 pem file $pem_file file does not exist"
-        exit 1
-    fi
+    logerror "❌ AWS EC2 pem file $pem_file file does not exist"
+    exit 1
 fi
 
 group=$(aws ec2 describe-instances --instance-id $id --output=json | jq '.Reservations[] | .Instances[] | {SecurityGroups: .SecurityGroups}' | jq -r '.SecurityGroups[0] | .GroupName')

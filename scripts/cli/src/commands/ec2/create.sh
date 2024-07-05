@@ -24,19 +24,9 @@ then
     exit 1
 fi
 
-if [[ -n "$EC2_CLOUD_FORMATION_PEM_FILE" ]]
-then
-    pem_file="$EC2_CLOUD_FORMATION_PEM_FILE"
-    if [ ! -f "$EC2_CLOUD_FORMATION_PEM_FILE" ]
-    then
-        logerror "❌ EC2_CLOUD_FORMATION_PEM_FILE is set with $EC2_CLOUD_FORMATION_PEM_FILE but the file does not exist"
-        exit 1
-    fi
-else
-    log "🔐 creating pem file $pem_file (make sure to create backup)"
-    aws ec2 create-key-pair --key-name "$name" --key-type rsa --key-format pem --query "KeyMaterial" --output text > $pem_file
-    chmod 400 $pem_file
-fi
+log "🔐 creating pem file $pem_file (make sure to create backup)"
+aws ec2 create-key-pair --key-name "$name" --key-type rsa --key-format pem --query "KeyMaterial" --output text > $pem_file
+chmod 400 $pem_file
 
 if [[ -n "$cloud_formation_yml_file" ]]
 then
