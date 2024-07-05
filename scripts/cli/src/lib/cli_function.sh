@@ -539,7 +539,7 @@ function ec2_instance_list() {
       then
           echo "$Name/$EC2_INSTANCE_STATE_PENDING"
       else
-          echo "$Name/$EC2_INSTANCE_STATE_RUNNING/$PublicDnsName|$InstanceId"
+          echo "$Name/$EC2_INSTANCE_STATE_RUNNING/$PublicDnsName/$InstanceId"
       fi
   done
 }
