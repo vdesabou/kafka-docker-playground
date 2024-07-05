@@ -531,15 +531,15 @@ function ec2_instance_list() {
 
       if [ "$State" = "stopped" ]
       then
-          echo "$Name|$EC2_INSTANCE_STATE_STOPPED|$PublicDnsName|$InstanceId"
+          echo "$Name/$EC2_INSTANCE_STATE_STOPPED/$PublicDnsName/$InstanceId"
       elif [ "$State" = "stopping" ]
       then
-          echo "$Name|$EC2_INSTANCE_STATE_STOPPING"
+          echo "$Name/$EC2_INSTANCE_STATE_STOPPING"
       elif [ "$State" = "pending" ]
       then
-          echo "$Name|$EC2_INSTANCE_STATE_PENDING"
+          echo "$Name/$EC2_INSTANCE_STATE_PENDING"
       else
-          echo "$Name|$EC2_INSTANCE_STATE_RUNNING|$PublicDnsName|$InstanceId"
+          echo "$Name/$EC2_INSTANCE_STATE_RUNNING/$PublicDnsName|$InstanceId"
       fi
   done
 }
@@ -579,7 +579,7 @@ function ec2_cloudformation_list() {
           continue
       fi
 
-      echo "$StackName|$StackStatus"
+      echo "$StackName/$StackStatus"
   done
 }
 

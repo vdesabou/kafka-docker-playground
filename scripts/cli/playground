@@ -7659,15 +7659,15 @@ function ec2_instance_list() {
 
       if [ "$State" = "stopped" ]
       then
-          echo "$Name|$EC2_INSTANCE_STATE_STOPPED|$PublicDnsName|$InstanceId"
+          echo "$Name/$EC2_INSTANCE_STATE_STOPPED/$PublicDnsName/$InstanceId"
       elif [ "$State" = "stopping" ]
       then
-          echo "$Name|$EC2_INSTANCE_STATE_STOPPING"
+          echo "$Name/$EC2_INSTANCE_STATE_STOPPING"
       elif [ "$State" = "pending" ]
       then
-          echo "$Name|$EC2_INSTANCE_STATE_PENDING"
+          echo "$Name/$EC2_INSTANCE_STATE_PENDING"
       else
-          echo "$Name|$EC2_INSTANCE_STATE_RUNNING|$PublicDnsName|$InstanceId"
+          echo "$Name/$EC2_INSTANCE_STATE_RUNNING/$PublicDnsName|$InstanceId"
       fi
   done
 }
@@ -7707,7 +7707,7 @@ function ec2_cloudformation_list() {
           continue
       fi
 
-      echo "$StackName|$StackStatus"
+      echo "$StackName/$StackStatus"
   done
 }
 
@@ -25390,8 +25390,8 @@ playground_ec2_delete_command() {
   then
       instance=$(echo "$instance" | cut -d "@" -f 2)
   fi
-  name=$(echo "${instance}" | cut -d "|" -f 1)
-  state=$(echo "${instance}" | cut -d "|" -f 2)
+  name=$(echo "${instance}" | cut -d "/" -f 1)
+  state=$(echo "${instance}" | cut -d "/" -f 2)
 
   log "❌ deleting ec2 cloudformation $name in state $state"
   aws cloudformation delete-stack --stack-name $name
@@ -25496,10 +25496,9 @@ playground_ec2_stop_command() {
   then
       instance=$(echo "$instance" | cut -d "@" -f 2)
   fi
-  name=$(echo "${instance}" | cut -d "|" -f 1)
-  state=$(echo "${instance}" | cut -d "|" -f 2)
-  #ip=$(echo "${instance}" | cut -d "|" -f 3)
-  id=$(echo "${instance}" | cut -d "|" -f 4)
+  name=$(echo "${instance}" | cut -d "/" -f 1)
+  state=$(echo "${instance}" | cut -d "/" -f 2)
+  id=$(echo "${instance}" | cut -d "/" -f 4)
 
   if [ "$state" != "$EC2_INSTANCE_STATE_STOPPED" ]
   then
@@ -25519,10 +25518,9 @@ playground_ec2_start_command() {
   then
       instance=$(echo "$instance" | cut -d "@" -f 2)
   fi
-  name=$(echo "${instance}" | cut -d "|" -f 1)
-  state=$(echo "${instance}" | cut -d "|" -f 2)
-  #ip=$(echo "${instance}" | cut -d "|" -f 3)
-  id=$(echo "${instance}" | cut -d "|" -f 4)
+  name=$(echo "${instance}" | cut -d "/" -f 1)
+  state=$(echo "${instance}" | cut -d "/" -f 2)
+  id=$(echo "${instance}" | cut -d "/" -f 4)
 
   if [ "$state" != "$EC2_INSTANCE_STATE_RUNNING" ]
   then
@@ -25538,10 +25536,9 @@ playground_ec2_stop_all_command() {
   # src/commands/ec2/stop-all.sh
   for instance in $(ec2_instance_list)
   do
-      name=$(echo "${instance}" | cut -d "|" -f 1)
-      state=$(echo "${instance}" | cut -d "|" -f 2)
-      #ip=$(echo "${instance}" | cut -d "|" -f 3)
-      id=$(echo "${instance}" | cut -d "|" -f 4)
+      name=$(echo "${instance}" | cut -d "/" -f 1)
+      state=$(echo "${instance}" | cut -d "/" -f 2)
+      id=$(echo "${instance}" | cut -d "/" -f 4)
 
       if [ "$state" != "$EC2_INSTANCE_STATE_STOPPED" ]
       then
@@ -25558,10 +25555,9 @@ playground_ec2_start_all_command() {
   # src/commands/ec2/start-all.sh
   for instance in $(ec2_instance_list)
   do
-      name=$(echo "${instance}" | cut -d "|" -f 1)
-      state=$(echo "${instance}" | cut -d "|" -f 2)
-      #ip=$(echo "${instance}" | cut -d "|" -f 3)
-      id=$(echo "${instance}" | cut -d "|" -f 4)
+      name=$(echo "${instance}" | cut -d "/" -f 1)
+      state=$(echo "${instance}" | cut -d "/" -f 2)
+      id=$(echo "${instance}" | cut -d "/" -f 4)
 
       if [ "$state" != "$EC2_INSTANCE_STATE_RUNNING" ]
       then
@@ -25581,16 +25577,16 @@ playground_ec2_status_command() {
 
   for instance in $(ec2_instance_list)
   do
-      name=$(echo "${instance}" | cut -d "|" -f 1)
-      state=$(echo "${instance}" | cut -d "|" -f 2)
-      ip=$(echo "${instance}" | cut -d "|" -f 3)
-      id=$(echo "${instance}" | cut -d "|" -f 4)
+      name=$(echo "${instance}" | cut -d "/" -f 1)
+      state=$(echo "${instance}" | cut -d "/" -f 2)
+      ip=$(echo "${instance}" | cut -d "/" -f 3)
+      id=$(echo "${instance}" | cut -d "/" -f 4)
 
       if [ "$name" = "$instance_name" ]
       then
           if [[ -n "$all" ]]
           then
-              echo "$name|$state|$ip|$id"
+              echo "$name/$state/$ip/$id"
           else
               echo "$state"
           fi
