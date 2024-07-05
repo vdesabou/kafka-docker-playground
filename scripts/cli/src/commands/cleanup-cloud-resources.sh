@@ -106,7 +106,7 @@ function cleanup_aws () {
     log "Cleanup AWS Redshift clusters"
     for cluster in $(aws redshift describe-clusters --region $AWS_REGION | jq '.Clusters[].ClusterIdentifier' -r)
     do
-        if [[ $cluster = pg${user}redshift* ]]
+        if [[ $cluster = pg${user}redshift* ]] || [[ $cluster = pg${user}jdbcredshift* ]]
         then
             log "Delete AWS Redshift $cluster"
             check_if_skip "aws redshift delete-cluster --cluster-identifier $cluster --skip-final-cluster-snapshot --region $AWS_REGION"
