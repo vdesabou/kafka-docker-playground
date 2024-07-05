@@ -14,6 +14,8 @@ source_dir: src
 
 commands_dir: commands
 
+show_examples_on_error: true
+
 # Tha path to bashly.yml
 config_path: "%{source_dir}/bashly.yml"
 

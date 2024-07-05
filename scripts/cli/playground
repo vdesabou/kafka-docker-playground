@@ -26557,6 +26557,10 @@ playground_state_get_parse_requirements() {
   # :command.required_args_filter
   if [[ -z ${args['key']+x} ]]; then
     printf "missing required argument: KEY\nusage: playground state get KEY\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground state get hello\n" >&2
+    printf "  playground state get user.name\n" >&2
 
     exit 1
   fi
@@ -26618,11 +26622,19 @@ playground_state_set_parse_requirements() {
   # :command.required_args_filter
   if [[ -z ${args['key']+x} ]]; then
     printf "missing required argument: KEY\nusage: playground state set KEY VALUE\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground state set hello world\n" >&2
+    printf "  playground state set user.email me@example.com\n" >&2
 
     exit 1
   fi
   if [[ -z ${args['value']+x} ]]; then
     printf "missing required argument: VALUE\nusage: playground state set KEY VALUE\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground state set hello world\n" >&2
+    printf "  playground state set user.email me@example.com\n" >&2
 
     exit 1
   fi
@@ -26680,6 +26692,10 @@ playground_state_del_parse_requirements() {
   # :command.required_args_filter
   if [[ -z ${args['key']+x} ]]; then
     printf "missing required argument: KEY\nusage: playground state del KEY\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground state del hello\n" >&2
+    printf "  playground state del user.name\n" >&2
 
     exit 1
   fi
@@ -26883,6 +26899,10 @@ playground_config_get_parse_requirements() {
   # :command.required_args_filter
   if [[ -z ${args['key']+x} ]]; then
     printf "missing required argument: KEY\nusage: playground config get KEY\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground config get hello\n" >&2
+    printf "  playground config get user.name\n" >&2
 
     exit 1
   fi
@@ -26944,11 +26964,19 @@ playground_config_set_parse_requirements() {
   # :command.required_args_filter
   if [[ -z ${args['key']+x} ]]; then
     printf "missing required argument: KEY\nusage: playground config set KEY VALUE\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground config set hello world\n" >&2
+    printf "  playground config set user.email me@example.com\n" >&2
 
     exit 1
   fi
   if [[ -z ${args['value']+x} ]]; then
     printf "missing required argument: VALUE\nusage: playground config set KEY VALUE\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground config set hello world\n" >&2
+    printf "  playground config set user.email me@example.com\n" >&2
 
     exit 1
   fi
@@ -27006,6 +27034,10 @@ playground_config_editor_parse_requirements() {
   # :command.required_args_filter
   if [[ -z ${args['editor']+x} ]]; then
     printf "missing required argument: EDITOR\nusage: playground config editor EDITOR\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground config editor vi\n" >&2
+    printf "  playground config editor code\n" >&2
 
     exit 1
   fi
@@ -27073,6 +27105,10 @@ playground_config_folder_zip_or_jar_parse_requirements() {
   # :command.required_args_filter
   if [[ -z ${args['folder']+x} ]]; then
     printf "missing required argument: FOLDER\nusage: playground config folder_zip_or_jar FOLDER...\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground config folder_zip_or_jar ~/Downloads\n  ~/Documents/github/kafka-connect-*\n" >&2
+    printf "  playground config folder_zip_or_jar ~/Downloads\n" >&2
 
     exit 1
   fi
