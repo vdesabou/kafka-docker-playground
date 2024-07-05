@@ -1,0 +1,111 @@
+# https://starship.rs/config/#prompt
+[gcloud]
+disabled = true
+
+[aws]
+disabled = true
+
+[directory]
+truncation_length = 8
+truncate_to_repo = true
+style="bold #66ffff"
+
+[git_status]
+conflicted = "🏳 "
+ahead = "🏎💨 "
+behind = "😰 "
+diverged = "😵 "
+untracked = "🤷‍ "
+stashed = "📦 "
+modified = "📝 "
+staged = "➕ "
+renamed = "👅 "
+deleted = "🗑 "
+style = "bold yellow"
+
+[time]
+disabled = false
+format = '🕙[\[ $time \]]($style) '
+time_format = "%T"
+utc_time_offset = "+2"
+
+[git_branch]
+symbol = "🌱 "
+style = "bold yellow"
+
+[battery]
+full_symbol = "🔋"
+charging_symbol = "⚡️"
+discharging_symbol = "💀"
+
+[java]
+symbol = "☕ "
+style = "blue"
+
+[character]
+success_symbol = "[➜](bold green) "
+error_symbol = "[✗](bold red) "
+
+[custom.ccloud]
+command = "cat $HOME/.confluent/current | tr '[:upper:]' '[:lower:]'"
+when = "echo 0"
+
+[custom.cloudformation]
+command = "cat $HOME/.confluent/cloudformation"
+when = "echo 0"
+
+[custom.disablec3]
+command = "echo 🛑 control-center"
+when = "[ ! -z $DISABLE_CONTROL_CENTER ]"
+style = "purple"
+
+[custom.grafana]
+command = "echo 📊 grafana"
+when = "[ ! -z $ENABLE_JMX_GRAFANA ]"
+style = "purple"
+
+[custom.kcat]
+command = "echo 🐈 kcat"
+when = "[ ! -z $ENABLE_KCAT ]"
+style = "purple"
+
+# [custom.connector_info]
+# command = "cat /tmp/connector_info"
+# when = "echo 0"
+# format = "[$output](yellow)"
+
+[custom.tag]
+command = "echo 🚀 CP $TAG"
+when = "[ ! -z $TAG ]"
+style = "purple"
+
+[custom.currentconnectortag]
+command = "echo 🚀 CURRENT_CONNECTOR_TAG $CURRENT_CONNECTOR_TAG"
+when = "[ ! -z $CURRENT_CONNECTOR_TAG ]"
+style = "green"
+
+[custom.connectortag]
+command = "echo 🚀 CONNECTOR_TAG $CONNECTOR_TAG"
+when = "[ ! -z $CONNECTOR_TAG ]"
+style = "purple"
+
+[custom.connectorzip]
+command = "echo 👷 CONNECTOR_ZIP $CONNECTOR_ZIP"
+when = "[ ! -z $CONNECTOR_ZIP ]"
+style = "purple"
+
+[custom.connectorjar]
+command = "echo 👷 CONNECTOR_JAR $CONNECTOR_JAR"
+when = "[ ! -z $CONNECTOR_JAR ]"
+style = "purple"
+
+[status]
+style = "bold red"
+symbol = "🔴"
+format = '[\[$symbol $common_meaning$signal_name$maybe_int\]]($style) '
+map_symbol = true
+disabled = false
+
+[env_var]
+variable = "SHELL"
+default = "unknown shell"
