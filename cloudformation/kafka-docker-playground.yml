@@ -149,9 +149,9 @@ Resources:
 
                       git clone https://github.com/vdesabou/kafka-docker-playground.git
                       
-                      wget -q https://github.com/vdesabou/kafka-docker-playground-ec2-cloudformation-dotfiles/raw/main/starship.toml -o ~/.config/starship.toml
+                      wget -q https://github.com/vdesabou/kafka-docker-playground/raw/master/cloudformation/dotfiles/starship.toml -o ~/.config/starship.toml
                       
-                      wget -q https://github.com/vdesabou/kafka-docker-playground-ec2-cloudformation-dotfiles/raw/main/zshrc ~/.zshrc
+                      wget -q https://github.com/vdesabou/kafka-docker-playground/raw/master/cloudformation/dotfiles/zshrc ~/.zshrc
 
                       git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 
@@ -262,7 +262,7 @@ Resources:
             --region ${AWS::Region}
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: PT20M
   KafkaDockerPlaygroundSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
