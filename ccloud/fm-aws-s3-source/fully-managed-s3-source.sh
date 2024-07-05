@@ -87,9 +87,6 @@ playground connector create-or-update --connector $connector_name << EOF
     "input.data.format": "JSON",
     "output.data.format": "JSON",
     "s3.bucket.name": "$AWS_BUCKET_NAME",
-    "time.interval" : "HOURLY",
-    "flush.size": "1000",
-    "schema.compatibility": "NONE",
     "tasks.max" : "1"
 }
 EOF
