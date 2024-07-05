@@ -24525,8 +24525,7 @@ playground_ec2_sync_repro_folder_to_ec2_command() {
       exit 1
   fi
 
-  rsync -Pcauv -e "ssh -i $pem_file" $root_folder/reproduction-models $username@$ip:/home/$username/kafka-docker-playground/reproduction-models
-
+  rsync -cau --filter=':- .gitignore' -e "ssh -i $pem_file" "$root_folder/reproduction-models" "$username@$ip:/home/$username/kafka-docker-playground"
 }
 
 # :command.parse_requirements
