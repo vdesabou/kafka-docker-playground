@@ -151,7 +151,9 @@ Resources:
                       
                       wget -q https://github.com/vdesabou/kafka-docker-playground/raw/master/cloudformation/dotfiles/starship.toml -o ~/.config/starship.toml
                       
-                      wget -q https://github.com/vdesabou/kafka-docker-playground/raw/master/cloudformation/dotfiles/zshrc ~/.zshrc
+                      wget -q https://github.com/vdesabou/kafka-docker-playground/raw/master/cloudformation/dotfiles/zshrc ~/zshrc
+
+                      mv ~/zshrc ~/.zshrc
 
                       git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 
