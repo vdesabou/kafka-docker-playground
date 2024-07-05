@@ -91,7 +91,7 @@ then
     exit 1
 fi
 log "👷 ec2 instance $name is created and accesible via SSH, it will be opened with visual studio code in 5 minutes..."
-log "🌀 cloud formation is still in progress and can be reverted (i.e removing ec2 instance) in case of issue"
+log "🌀 cloud formation is still in progress (installing docker, etc...) and can be reverted after 20 minutes (i.e removing ec2 instance) in case of issue. You can check progress by checking log file output.log in root folder of ec2 instance"
 sleep 300
 playground ec2 open --instance "$instance"
 
