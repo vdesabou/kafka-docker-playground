@@ -157,6 +157,30 @@ Resources:
 
                       mv ~/zshrc ~/.zshrc
 
+                      if [ "$(whoami)" = "vsaboulin" ]
+                      then
+                      export SECRETS_ENCRYPTION_PASSWORD="
+                    - Ref: SecretsEncryptionPassword
+                    - >+
+                      "
+
+                        cd kafka-docker-playground
+
+                        ./.github/scripts/decrypt_secret.sh
+
+                        tar xvf secrets.tar
+
+                        set -o allexport;source secrets.properties;set +o allexport
+
+                        mkdir -p ~/.aws
+
+                        cp aws_credentials_with_assuming_iam_role ~/.aws/credentials-with-assuming-iam-role
+
+                        cp aws_credentials_aws_account_with_assume_role ~/.aws/credentials_aws_account_with_assume_role
+
+                        chmod -R a+rw ~/.aws
+                      fi
+
                       git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 
                       git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
