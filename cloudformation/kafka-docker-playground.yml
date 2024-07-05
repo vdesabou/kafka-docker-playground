@@ -148,6 +148,8 @@ Resources:
                       ln -s /usr/bin/batcat ~/.local/bin/bat
 
                       git clone https://github.com/vdesabou/kafka-docker-playground.git
+
+                      mkdir -p ~/.config/
                       
                       wget -q https://github.com/vdesabou/kafka-docker-playground/raw/master/cloudformation/dotfiles/starship.toml -o ~/.config/starship.toml
                       
