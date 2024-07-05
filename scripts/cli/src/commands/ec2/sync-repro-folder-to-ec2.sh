@@ -18,4 +18,4 @@ then
     exit 1
 fi
 
-rsync -Pcauv -e "ssh -i $pem_file" $root_folder/reproduction-models $username@$ip:/home/$username/kafka-docker-playground/reproduction-models
+rsync -Pcauv -e "ssh -i $pem_file" "$root_folder/reproduction-models" "$username@$ip:/home/$username/kafka-docker-playground/reproduction-models"
