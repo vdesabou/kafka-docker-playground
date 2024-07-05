@@ -4,10 +4,12 @@ if [[ $instance == *"@"* ]]
 then
     instance=$(echo "$instance" | cut -d "@" -f 2)
 fi
-log "❌ deleting ec2 cloudformation $instance"
-aws cloudformation delete-stack --stack-name $instance
+name=$(echo "${instance}" | cut -d "|" -f 1)
+state=$(echo "${instance}" | cut -d "|" -f 2)
 
-name="$instance"
+log "❌ deleting ec2 cloudformation $name in state $state"
+aws cloudformation delete-stack --stack-name $name
+
 pem_file="$root_folder/$name.pem"
 
 if [ -f "$pem_file" ]

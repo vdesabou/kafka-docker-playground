@@ -566,19 +566,20 @@ function ec2_cloudformation_list() {
   username=$(whoami)
   name="kafka-docker-playground-${username}"
 
-  for row in $(aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE | jq '[.StackSummaries | .[] | {StackName: .StackName }]' | jq -r '.[] | @base64'); do
+  for row in $(aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE ROLLBACK_COMPLETE | jq '[.StackSummaries | .[] | {StackName: .StackName,StackStatus: .StackStatus }]' | jq -r '.[] | @base64'); do
       _jq() {
       echo ${row} | base64 -d | jq -r ${1}
       }
 
       StackName=$(echo $(_jq '.StackName'))
+      StackStatus=$(echo $(_jq '.StackStatus'))
 
       if [[ $StackName != $name* ]]
       then
           continue
       fi
 
-      echo "$StackName"
+      echo "$StackName|$StackStatus"
   done
 }
 

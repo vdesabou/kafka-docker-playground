@@ -7707,19 +7707,20 @@ function ec2_cloudformation_list() {
   username=$(whoami)
   name="kafka-docker-playground-${username}"
 
-  for row in $(aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE | jq '[.StackSummaries | .[] | {StackName: .StackName }]' | jq -r '.[] | @base64'); do
+  for row in $(aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE ROLLBACK_COMPLETE | jq '[.StackSummaries | .[] | {StackName: .StackName,StackStatus: .StackStatus }]' | jq -r '.[] | @base64'); do
       _jq() {
       echo ${row} | base64 -d | jq -r ${1}
       }
 
       StackName=$(echo $(_jq '.StackName'))
+      StackStatus=$(echo $(_jq '.StackStatus'))
 
       if [[ $StackName != $name* ]]
       then
           continue
       fi
 
-      echo "$StackName"
+      echo "$StackName|$StackStatus"
   done
 }
 
@@ -25394,7 +25395,7 @@ playground_ec2_create_command() {
       exit 1
   fi
   log "👷 ec2 instance $name is created and accesible via SSH, it will be opened with visual studio code in 5 minutes..."
-  log "🌀 cloud formation is still in progress and can be reverted (i.e removing ec2 instance) in case of issue"
+  log "🌀 cloud formation is still in progress (installing docker, etc...) and can be reverted after 20 minutes (i.e removing ec2 instance) in case of issue. You can check progress by checking log file output.log in root folder of ec2 instance"
   sleep 300
   playground ec2 open --instance "$instance"
 
@@ -25412,10 +25413,12 @@ playground_ec2_delete_command() {
   then
       instance=$(echo "$instance" | cut -d "@" -f 2)
   fi
-  log "❌ deleting ec2 cloudformation $instance"
-  aws cloudformation delete-stack --stack-name $instance
+  name=$(echo "${instance}" | cut -d "|" -f 1)
+  state=$(echo "${instance}" | cut -d "|" -f 2)
 
-  name="$instance"
+  log "❌ deleting ec2 cloudformation $name in state $state"
+  aws cloudformation delete-stack --stack-name $name
+
   pem_file="$root_folder/$name.pem"
 
   if [ -f "$pem_file" ]
