@@ -32,7 +32,7 @@ then
      OLDDIR=$PWD
      cd ${DIR}/docker-amps
      gunzip -k -f AMPS.tar.gz
-     docker build --platform=linux/amd64 -t amps:latest .
+     docker build --platform=linux/amd64 -t amps:latest . > /dev/null 2>&1
      cd ${OLDDIR}
 fi
 
