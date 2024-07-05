@@ -3464,3 +3464,10 @@ commands:
       - long: --all
         help: |- 
           return all details
+
+  - name: sync-repro-folder-to-ec2
+    dependencies:
+      rsync: rsync needs to be installed
+    help: 🛸 Sync local reproduction-models folder to ec2 instance using rsync
+    flags:
+      - *instance
