@@ -17,4 +17,4 @@ then
 fi
 
 log "👉 Sync local reproduction-models folder to ec2 instance $name"
-rsync -cau --filter=':- .gitignore' -e "ssh -i $pem_file" "$root_folder/reproduction-models" "$username@$ip:/home/$username/kafka-docker-playground"
+rsync -cauv --filter=':- .gitignore' -e "ssh -i $pem_file" "$root_folder/reproduction-models" "$username@$ip:/home/$username/kafka-docker-playground"
