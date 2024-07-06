@@ -252,6 +252,8 @@ function cleanup_ccloud () {
 }
 
 function cleanup_salesforce () {
+    
+    SALESFORCE_INSTANCE=${SALESFORCE_INSTANCE:-"https://login.salesforce.com"}
     if [ ! -z $SALESFORCE_USERNAME ]
     then
         log "Cleanup Salesforce Leads on account with $SALESFORCE_USERNAME"
@@ -261,6 +263,7 @@ function cleanup_salesforce () {
         docker run -i --rm vdesabou/sfdx-cli:latest sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\" && sfdx data:query --target-org \"$SALESFORCE_USERNAME\" -q \"SELECT Id FROM Contact\" --result-format csv > /tmp/out.csv && sfdx force:data:bulk:delete --target-org \"$SALESFORCE_USERNAME\" -s Contact -f /tmp/out.csv"
     fi
 
+    SALESFORCE_INSTANCE_ACCOUNT2=${SALESFORCE_INSTANCE_ACCOUNT2:-"https://login.salesforce.com"}
     if [ ! -z $SALESFORCE_USERNAME_ACCOUNT2 ]
     then
         log "Cleanup Salesforce Leads on account with $SALESFORCE_USERNAME_ACCOUNT2"
