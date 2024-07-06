@@ -2900,9 +2900,38 @@
           "options": []
         },
         {
-          "name": "sync-repro-folder-to-ec2",
-          "description": "🛸 Sync local reproduction-models folder to ec2 instance using rsync\n",
-          "usage": "playground ec2 sync-repro-folder-to-ec2 [OPTIONS]",
+          "name": "sync-repro-folder",
+          "description": "↔️ Synchronize reproduction-models folder bewteen local and ec2 instance\n  \n  Note: rsync needs to be installed\n  \n",
+          "usage": "playground ec2 sync-repro-folder COMMAND",
+          "options": []
+        }
+      ]
+    },
+    {
+      "name": "sync-repro-folder",
+      "description": "↔️ Synchronize reproduction-models folder bewteen local and ec2 instance\n\nNote: rsync needs to be installed\n",
+      "usage": "playground ec2 sync-repro-folder COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "local-to-ec2",
+          "description": "👉 Sync local reproduction-models folder to ec2 instance\n",
+          "usage": "playground ec2 sync-repro-folder local-to-ec2 [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--instance",
+                "-i"
+              ],
+              "argument": "INSTANCE",
+              "description": "🖥️ EC2 instance (need to use completion to get all required details)\n\nRequired: ✓ Yes\n"
+            }
+          ]
+        },
+        {
+          "name": "ec2-to-local",
+          "description": "👈 Sync ec2 instance reproduction-models folder to local\n",
+          "usage": "playground ec2 sync-repro-folder ec2-to-local [OPTIONS]",
           "options": [
             {
               "names": [

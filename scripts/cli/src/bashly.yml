@@ -3470,9 +3470,20 @@ commands:
         help: |- 
           return all details
 
-  - name: sync-repro-folder-to-ec2
+  - name: sync-repro-folder
     dependencies:
       rsync: rsync needs to be installed
-    help: 🛸 Sync local reproduction-models folder to ec2 instance using rsync
-    flags:
-      - *instance
+    help: |
+        ↔️ Synchronize reproduction-models folder bewteen local and ec2 instance
+
+        Note: rsync needs to be installed
+    commands:
+    - name: local-to-ec2
+      help: 👉 Sync local reproduction-models folder to ec2 instance
+      flags:
+        - *instance
+
+    - name: ec2-to-local
+      help: 👈 Sync ec2 instance reproduction-models folder to local
+      flags:
+        - *instance

@@ -3049,10 +3049,41 @@ subcommands:
           🟢 Start all your EC2 instance(s)
         usage: playground ec2 start-all
         options: []
-      - name: sync-repro-folder-to-ec2
+      - name: sync-repro-folder
         description: | 
-          🛸 Sync local reproduction-models folder to ec2 instance using rsync
-        usage: playground ec2 sync-repro-folder-to-ec2 [OPTIONS]
+          ↔️ Synchronize reproduction-models folder bewteen local and ec2 instance
+            
+            Note: rsync needs to be installed
+            
+        usage: playground ec2 sync-repro-folder COMMAND
+        options: []
+  - name: sync-repro-folder
+    description: | 
+        ↔️ Synchronize reproduction-models folder bewteen local and ec2 instance
+        
+        Note: rsync needs to be installed
+        
+    usage: playground ec2 sync-repro-folder COMMAND
+    options: []
+    subcommands:
+      - name: local-to-ec2
+        description: | 
+          👉 Sync local reproduction-models folder to ec2 instance
+        usage: playground ec2 sync-repro-folder local-to-ec2 [OPTIONS]
+        options:
+        - names:
+          - --instance
+          - -i
+          argument: INSTANCE
+          description: | 
+            🖥️ EC2 instance (need to use completion to get all required details)
+            
+            Required: ✓ Yes
+            
+      - name: ec2-to-local
+        description: | 
+          👈 Sync ec2 instance reproduction-models folder to local
+        usage: playground ec2 sync-repro-folder ec2-to-local [OPTIONS]
         options:
         - names:
           - --instance
