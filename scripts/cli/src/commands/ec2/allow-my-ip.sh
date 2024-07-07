@@ -62,7 +62,7 @@ do
         if grep "Host $name" -A 1 "$ssh_config_file" | grep "$ip" > /dev/null
         then
             log "🛂 ip $myip is now allowed to connect to ec2 instance $name"
-            exit 0
+            continue
         fi
     fi
 
