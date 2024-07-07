@@ -3936,6 +3936,7 @@ function check_arm64_support() {
     if [ $? = 0 ]
     then
         logerror "🖥️ This example is not working with ARM64 !"
+        log "It is highly recommended to use playground ec2 command (https://kafka-docker-playground.io/#/playground%20ec2) to run the example on ubuntu ec2 instance"
         log "Do you want to start test anyway ?"
         check_if_continue
         return
