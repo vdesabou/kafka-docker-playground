@@ -2911,20 +2911,6 @@ subcommands:
         usage: playground ec2 create [OPTIONS]
         options:
         - names:
-          - --cloud-formation-yml-file
-          argument: CLOUD-FORMATION-YML-FILE
-          description: | 
-            🌀 Cloud Formation yml file
-            
-            ❕ It must be absolute full path
-            
-            If not set default is used https://github.com/vdesabou/kafka-docker-playground/blob/master/cloudformation/kafka-docker-playground.yml
-            
-            You can also specify it with EC2_CLOUD_FORMATION_YML_FILE environment variable
-            
-            🎓 Tip: use <tab> completion to trigger fzf completion
-            
-        - names:
           - --instance-type
           argument: t3.2xlarge
           description: | 

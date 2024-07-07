@@ -5619,11 +5619,6 @@ playground_ec2_create_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--cloud-formation-yml-file CLOUD-FORMATION-YML-FILE")"
-    printf "    🌀 Cloud Formation yml file\n    \n    ❕ It must be absolute full path\n    \n    If not set default is used\n    https://github.com/vdesabou/kafka-docker-playground/blob/master/cloudformation/kafka-docker-playground.yml\n    \n    You can also specify it with EC2_CLOUD_FORMATION_YML_FILE environment\n    variable\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
-    echo
-
-    # :flag.usage
     printf "  %s\n" "$(magenta "--instance-type INSTANCE-TYPE")"
     printf "    🧑‍💻 instance type. default is t3.2xlarge\n"
     printf "    Allowed: c1.medium, c1.xlarge, c3.2xlarge, c3.4xlarge, c3.8xlarge, c3.large, c3.xlarge, c4.2xlarge, c4.4xlarge, c4.large, c4.xlarge, m1.large, m1.medium, m1.small, m1.xlarge, m2.2xlarge, m2.4xlarge, m2.xlarge, m3.2xlarge, m3.large, m3.medium, m3.xlarge, m4.10xlarge, m4.2xlarge, m4.4xlarge, m4.large, m4.xlarge, t1.micro, t2.large, t2.medium, t2.micro, t2.nano, t2.small, t3.2xlarge\n"
@@ -5651,14 +5646,6 @@ playground_ec2_create_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
-    echo
-
-    # :command.usage_environment_variables
-    printf "%s\n" "$(bold "Environment Variables:")"
-
-    # :environment_variable.usage
-    printf "  %s\n" "$(cyan "EC2_CLOUD_FORMATION_YML_FILE")"
-    printf "    🌀 Cloud Formation yml file\n"
     echo
 
   fi
@@ -24184,7 +24171,6 @@ playground_connector_update_command() {
 # :command.function
 playground_ec2_create_command() {
   # src/commands/ec2/create.sh
-  cloud_formation_yml_file="${args[--cloud-formation-yml-file]}"
   suffix="${args[--suffix]}"
   aws_region="${args[--region]}"
   instance_type="${args[--instance-type]}"
@@ -24214,29 +24200,7 @@ playground_ec2_create_command() {
   aws ec2 create-key-pair --key-name "$name" --key-type rsa --key-format pem --query "KeyMaterial" --output text > $pem_file
   chmod 400 $pem_file
 
-  if [[ -n "$cloud_formation_yml_file" ]]
-  then
-      if [[ $cloud_formation_yml_file == *"@"* ]]
-      then
-          cloud_formation_yml_file=$(echo "$cloud_formation_yml_file" | cut -d "@" -f 2)
-      fi
-  elif [[ -n "$EC2_CLOUD_FORMATION_YML_FILE" ]]
-  then
-      cloud_formation_yml_file="$EC2_CLOUD_FORMATION_YML_FILE"
-      if [ ! -f "$cloud_formation_yml_file" ]
-      then
-          logerror "❌ EC2_CLOUD_FORMATION_YML_FILE is set with $EC2_CLOUD_FORMATION_YML_FILE but the file does not exist"
-          exit 1
-      fi
-  else
-      cloud_formation_yml_file="$root_folder/cloudformation/kafka-docker-playground.yml"
-      if [ ! -f "$cloud_formation_yml_file" ]
-      then
-          logerror "❌ cloud_formation_yml_file is set with $cloud_formation_yml_file but the file does not exist"
-          exit 1
-      fi
-  fi
-
+  cloud_formation_yml_file="$root_folder/cloudformation/kafka-docker-playground.yml"
   myip=$(dig @resolver4.opendns.com myip.opendns.com +short)
   key_name=$(basename $pem_file .pem)
 
@@ -24444,7 +24408,7 @@ playground_ec2_allow_my_ip_command() {
           if grep "Host $name" -A 1 "$ssh_config_file" | grep "$ip" > /dev/null
           then
               log "🛂 ip $myip is now allowed to connect to ec2 instance $name"
-              exit 0
+              continue
           fi
       fi
 
@@ -37277,10 +37241,6 @@ playground_ec2_create_parse_requirements() {
     esac
   done
 
-  # :command.environment_variables_filter
-
-  env_var_names+=("EC2_CLOUD_FORMATION_YML_FILE")
-
   # :command.command_filter
   action="ec2 create"
 
@@ -37288,20 +37248,6 @@ playground_ec2_create_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
-      # :flag.case
-      --cloud-formation-yml-file)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          args['--cloud-formation-yml-file']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--cloud-formation-yml-file requires an argument: --cloud-formation-yml-file CLOUD-FORMATION-YML-FILE" >&2
-          exit 1
-        fi
-        ;;
-
       # :flag.case
       --instance-type)
 
@@ -37380,12 +37326,6 @@ playground_ec2_create_parse_requirements() {
   [[ -n ${args['--size']:-} ]] || args['--size']="1000"
 
   # :command.validations
-  # :flag.validations
-  if [[ -v args['--cloud-formation-yml-file'] && -n $(validate_file_exists_with_trick "${args['--cloud-formation-yml-file']:-}") ]]; then
-    printf "validation error in %s:\n%s\n" "--cloud-formation-yml-file CLOUD-FORMATION-YML-FILE" "$(validate_file_exists_with_trick "${args['--cloud-formation-yml-file']:-}")" >&2
-    exit 1
-  fi
-
   # :flag.validations
   if [[ -v args['--size'] && -n $(validate_integer "${args['--size']:-}") ]]; then
     printf "validation error in %s:\n%s\n" "--size SIZE" "$(validate_integer "${args['--size']:-}")" >&2

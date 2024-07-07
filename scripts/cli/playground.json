@@ -2771,13 +2771,6 @@
           "options": [
             {
               "names": [
-                "--cloud-formation-yml-file"
-              ],
-              "argument": "CLOUD-FORMATION-YML-FILE",
-              "description": "🌀 Cloud Formation yml file\n\n❕ It must be absolute full path\n\nIf not set default is used https://github.com/vdesabou/kafka-docker-playground/blob/master/cloudformation/kafka-docker-playground.yml\n\nYou can also specify it with EC2_CLOUD_FORMATION_YML_FILE environment variable\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
-            },
-            {
-              "names": [
                 "--instance-type"
               ],
               "argument": "t3.2xlarge",

@@ -1,4 +1,3 @@
-cloud_formation_yml_file="${args[--cloud-formation-yml-file]}"
 suffix="${args[--suffix]}"
 aws_region="${args[--region]}"
 instance_type="${args[--instance-type]}"
@@ -28,29 +27,7 @@ log "🔐 creating pem file $pem_file (make sure to create backup)"
 aws ec2 create-key-pair --key-name "$name" --key-type rsa --key-format pem --query "KeyMaterial" --output text > $pem_file
 chmod 400 $pem_file
 
-if [[ -n "$cloud_formation_yml_file" ]]
-then
-    if [[ $cloud_formation_yml_file == *"@"* ]]
-    then
-        cloud_formation_yml_file=$(echo "$cloud_formation_yml_file" | cut -d "@" -f 2)
-    fi
-elif [[ -n "$EC2_CLOUD_FORMATION_YML_FILE" ]]
-then
-    cloud_formation_yml_file="$EC2_CLOUD_FORMATION_YML_FILE"
-    if [ ! -f "$cloud_formation_yml_file" ]
-    then
-        logerror "❌ EC2_CLOUD_FORMATION_YML_FILE is set with $EC2_CLOUD_FORMATION_YML_FILE but the file does not exist"
-        exit 1
-    fi
-else
-    cloud_formation_yml_file="$root_folder/cloudformation/kafka-docker-playground.yml"
-    if [ ! -f "$cloud_formation_yml_file" ]
-    then
-        logerror "❌ cloud_formation_yml_file is set with $cloud_formation_yml_file but the file does not exist"
-        exit 1
-    fi
-fi
-
+cloud_formation_yml_file="$root_folder/cloudformation/kafka-docker-playground.yml"
 myip=$(dig @resolver4.opendns.com myip.opendns.com +short)
 key_name=$(basename $pem_file .pem)
 
