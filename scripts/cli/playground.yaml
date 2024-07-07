@@ -2972,9 +2972,9 @@ subcommands:
           - -i
           argument: INSTANCE
           description: | 
-            🌀 EC2 instance cloudformation (need to use completion to get all required details)
+            🌀 ec2 instance cloudformation (need to use completion to get all required details)
             
-            Required: ✓ Yes
+            🎓 Tip: If not specified, the command will apply to all ec2 instances
             
       - name: open
         description: | 
@@ -2988,9 +2988,9 @@ subcommands:
           - -i
           argument: INSTANCE
           description: | 
-            🖥️ EC2 instance (need to use completion to get all required details)
+            🖥️ ec2 instance (need to use completion to get all required details)
             
-            Required: ✓ Yes
+            🎓 Tip: If not specified, the command will apply to all ec2 instances
             
       - name: allow-my-ip
         description: | 
@@ -3002,9 +3002,9 @@ subcommands:
           - -i
           argument: INSTANCE
           description: | 
-            🖥️ EC2 instance (need to use completion to get all required details)
+            🖥️ ec2 instance (need to use completion to get all required details)
             
-            Required: ✓ Yes
+            🎓 Tip: If not specified, the command will apply to all ec2 instances
             
       - name: list
         description: | 
@@ -3021,9 +3021,9 @@ subcommands:
           - -i
           argument: INSTANCE
           description: | 
-            🖥️ EC2 instance (need to use completion to get all required details)
+            🖥️ ec2 instance (need to use completion to get all required details)
             
-            Required: ✓ Yes
+            🎓 Tip: If not specified, the command will apply to all ec2 instances
             
       - name: start
         description: | 
@@ -3035,20 +3035,10 @@ subcommands:
           - -i
           argument: INSTANCE
           description: | 
-            🖥️ EC2 instance (need to use completion to get all required details)
+            🖥️ ec2 instance (need to use completion to get all required details)
             
-            Required: ✓ Yes
+            🎓 Tip: If not specified, the command will apply to all ec2 instances
             
-      - name: stop-all
-        description: | 
-          🔴 Stop all your EC2 instance(s)
-        usage: playground ec2 stop-all
-        options: []
-      - name: start-all
-        description: | 
-          🟢 Start all your EC2 instance(s)
-        usage: playground ec2 start-all
-        options: []
       - name: sync-repro-folder
         description: | 
           ↔️ Synchronize reproduction-models folder bewteen local and ec2 instance
@@ -3076,9 +3066,9 @@ subcommands:
           - -i
           argument: INSTANCE
           description: | 
-            🖥️ EC2 instance (need to use completion to get all required details)
+            🖥️ ec2 instance (need to use completion to get all required details)
             
-            Required: ✓ Yes
+            🎓 Tip: If not specified, the command will apply to all ec2 instances
             
       - name: ec2-to-local
         description: | 
@@ -3090,7 +3080,7 @@ subcommands:
           - -i
           argument: INSTANCE
           description: | 
-            🖥️ EC2 instance (need to use completion to get all required details)
+            🖥️ ec2 instance (need to use completion to get all required details)
             
-            Required: ✓ Yes
+            🎓 Tip: If not specified, the command will apply to all ec2 instances
             

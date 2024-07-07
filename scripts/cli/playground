@@ -168,8 +168,6 @@ playground_usage() {
   printf "  %s   🔘 List all EC2 instance\n" "$(green "ec2 list")                                 "
   printf "  %s   🔴 Stop an EC2 instance\n" "$(green "ec2 stop")                                 "
   printf "  %s   🟢 Start an EC2 instance\n" "$(green "ec2 start")                                "
-  printf "  %s   🔴 Stop all your EC2 instance(s)\n" "$(green "ec2 stop-all")                             "
-  printf "  %s   🟢 Start all your EC2 instance(s)\n" "$(green "ec2 start-all")                            "
   printf "  %s   ↔️ Synchronize reproduction-models folder bewteen local and ec2 instance\n" "$(green "ec2 sync-repro-folder")                    "
   echo
 
@@ -5588,8 +5586,6 @@ playground_ec2_usage() {
   printf "  %s   🔘 List all EC2 instance\n" "$(green "list")             "
   printf "  %s   🔴 Stop an EC2 instance\n" "$(green "stop")             "
   printf "  %s   🟢 Start an EC2 instance\n" "$(green "start")            "
-  printf "  %s   🔴 Stop all your EC2 instance(s)\n" "$(green "stop-all")         "
-  printf "  %s   🟢 Start all your EC2 instance(s)\n" "$(green "start-all")        "
   printf "  %s   ↔️ Synchronize reproduction-models folder bewteen local and ec2 instance\n" "$(green "sync-repro-folder")"
   echo
 
@@ -5690,8 +5686,8 @@ playground_ec2_delete_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--instance, -i INSTANCE (required)")"
-    printf "    🌀 EC2 instance cloudformation (need to use completion to get all required\n    details)\n"
+    printf "  %s\n" "$(magenta "--instance, -i INSTANCE")"
+    printf "    🌀 ec2 instance cloudformation (need to use completion to get all required\n    details)\n    \n    🎓 Tip: If not specified, the command will apply to all ec2 instances\n"
     echo
 
     # :command.usage_fixed_flags
@@ -5722,8 +5718,8 @@ playground_ec2_open_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--instance, -i INSTANCE (required)")"
-    printf "    🖥️ EC2 instance (need to use completion to get all required details)\n"
+    printf "  %s\n" "$(magenta "--instance, -i INSTANCE")"
+    printf "    🖥️ ec2 instance (need to use completion to get all required details)\n    \n    🎓 Tip: If not specified, the command will apply to all ec2 instances\n"
     echo
 
     # :command.usage_fixed_flags
@@ -5749,8 +5745,8 @@ playground_ec2_allow_my_ip_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--instance, -i INSTANCE (required)")"
-    printf "    🖥️ EC2 instance (need to use completion to get all required details)\n"
+    printf "  %s\n" "$(magenta "--instance, -i INSTANCE")"
+    printf "    🖥️ ec2 instance (need to use completion to get all required details)\n    \n    🎓 Tip: If not specified, the command will apply to all ec2 instances\n"
     echo
 
     # :command.usage_fixed_flags
@@ -5797,8 +5793,8 @@ playground_ec2_stop_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--instance, -i INSTANCE (required)")"
-    printf "    🖥️ EC2 instance (need to use completion to get all required details)\n"
+    printf "  %s\n" "$(magenta "--instance, -i INSTANCE")"
+    printf "    🖥️ ec2 instance (need to use completion to get all required details)\n    \n    🎓 Tip: If not specified, the command will apply to all ec2 instances\n"
     echo
 
     # :command.usage_fixed_flags
@@ -5824,51 +5820,9 @@ playground_ec2_start_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--instance, -i INSTANCE (required)")"
-    printf "    🖥️ EC2 instance (need to use completion to get all required details)\n"
+    printf "  %s\n" "$(magenta "--instance, -i INSTANCE")"
+    printf "    🖥️ ec2 instance (need to use completion to get all required details)\n    \n    🎓 Tip: If not specified, the command will apply to all ec2 instances\n"
     echo
-
-    # :command.usage_fixed_flags
-    printf "  %s\n" "$(magenta "--help, -h")"
-    printf "    Show this help\n"
-    echo
-
-  fi
-}
-
-# :command.usage
-playground_ec2_stop_all_usage() {
-  printf "playground ec2 stop-all - 🔴 Stop all your EC2 instance(s)\n\n"
-
-  printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground ec2 stop-all\n"
-  printf "  playground ec2 stop-all --help | -h\n"
-  echo
-
-  # :command.long_usage
-  if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "== Options ==")"
-
-    # :command.usage_fixed_flags
-    printf "  %s\n" "$(magenta "--help, -h")"
-    printf "    Show this help\n"
-    echo
-
-  fi
-}
-
-# :command.usage
-playground_ec2_start_all_usage() {
-  printf "playground ec2 start-all - 🟢 Start all your EC2 instance(s)\n\n"
-
-  printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground ec2 start-all\n"
-  printf "  playground ec2 start-all --help | -h\n"
-  echo
-
-  # :command.long_usage
-  if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -5956,8 +5910,8 @@ playground_ec2_sync_repro_folder_local_to_ec2_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--instance, -i INSTANCE (required)")"
-    printf "    🖥️ EC2 instance (need to use completion to get all required details)\n"
+    printf "  %s\n" "$(magenta "--instance, -i INSTANCE")"
+    printf "    🖥️ ec2 instance (need to use completion to get all required details)\n    \n    🎓 Tip: If not specified, the command will apply to all ec2 instances\n"
     echo
 
     # :command.usage_fixed_flags
@@ -5983,8 +5937,8 @@ playground_ec2_sync_repro_folder_ec2_to_local_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--instance, -i INSTANCE (required)")"
-    printf "    🖥️ EC2 instance (need to use completion to get all required details)\n"
+    printf "  %s\n" "$(magenta "--instance, -i INSTANCE")"
+    printf "    🖥️ ec2 instance (need to use completion to get all required details)\n    \n    🎓 Tip: If not specified, the command will apply to all ec2 instances\n"
     echo
 
     # :command.usage_fixed_flags
@@ -15699,6 +15653,8 @@ EOF
   }
 
   function cleanup_salesforce () {
+
+      SALESFORCE_INSTANCE=${SALESFORCE_INSTANCE:-"https://login.salesforce.com"}
       if [ ! -z $SALESFORCE_USERNAME ]
       then
           log "Cleanup Salesforce Leads on account with $SALESFORCE_USERNAME"
@@ -15708,6 +15664,7 @@ EOF
           docker run -i --rm vdesabou/sfdx-cli:latest sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\" && sfdx data:query --target-org \"$SALESFORCE_USERNAME\" -q \"SELECT Id FROM Contact\" --result-format csv > /tmp/out.csv && sfdx force:data:bulk:delete --target-org \"$SALESFORCE_USERNAME\" -s Contact -f /tmp/out.csv"
       fi
 
+      SALESFORCE_INSTANCE_ACCOUNT2=${SALESFORCE_INSTANCE_ACCOUNT2:-"https://login.salesforce.com"}
       if [ ! -z $SALESFORCE_USERNAME_ACCOUNT2 ]
       then
           log "Cleanup Salesforce Leads on account with $SALESFORCE_USERNAME_ACCOUNT2"
@@ -24330,21 +24287,42 @@ playground_ec2_delete_command() {
   then
       instance=$(echo "$instance" | cut -d "@" -f 2)
   fi
-  name=$(echo "${instance}" | cut -d "/" -f 1)
-  state=$(echo "${instance}" | cut -d "/" -f 2)
 
-  log "❌ deleting ec2 cloudformation $name in state $state"
-  aws cloudformation delete-stack --stack-name $name
-
-  pem_file="$root_folder/$name.pem"
-
-  if [ -f "$pem_file" ]
+  if [[ ! -n "$instance" ]]
   then
-      log "🔐 deleting pem file $pem_file"
-      rm -f "$pem_file"
-      log "🔐 deleting pem $name on aws"
-      aws ec2 delete-key-pair --key-name "$name"
+      instance=$(playground --output-level WARN ec2 list)
+      if [ "$instance" == "" ]
+      then
+          log "💤 No ec2 instance was found !"
+          exit 1
+      fi
   fi
+
+  items=($instance)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "✨ --instance flag was not provided, applying command to all ec2 instances"
+      check_if_continue
+  fi
+  for instance in "${items[@]}"
+  do
+      name=$(echo "${instance}" | cut -d "/" -f 1)
+      state=$(echo "${instance}" | cut -d "/" -f 2)
+
+      log "❌ deleting ec2 cloudformation $name in state $state"
+      aws cloudformation delete-stack --stack-name $name
+
+      pem_file="$root_folder/$name.pem"
+
+      if [ -f "$pem_file" ]
+      then
+          log "🔐 deleting pem file $pem_file"
+          rm -f "$pem_file"
+          log "🔐 deleting pem $name on aws"
+          aws ec2 delete-key-pair --key-name "$name"
+      fi
+  done
 }
 
 # :command.function
@@ -24362,13 +24340,33 @@ playground_ec2_open_command() {
   then
       instance=$(echo "$instance" | cut -d "@" -f 2)
   fi
-  name=$(echo "${instance}" | cut -d "/" -f 1)
+
+  if [[ ! -n "$instance" ]]
+  then
+      instance=$(playground --output-level WARN ec2 list)
+      if [ "$instance" == "" ]
+      then
+          log "💤 No ec2 instance was found !"
+          exit 1
+      fi
+  fi
+
   username=$(whoami)
+  items=($instance)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "✨ --instance flag was not provided, applying command to all ec2 instances"
+  fi
+  for instance in "${items[@]}"
+  do
+      name=$(echo "${instance}" | cut -d "/" -f 1)
 
-  playground ec2 allow-my-ip --instance "$instance"
+      playground ec2 allow-my-ip --instance "$instance"
 
-  log "👨‍💻 Open EC2 instance $name using Visual Studio code"
-  code --folder-uri "vscode-remote://ssh-remote+$name/home/$username"
+      log "👨‍💻 Open EC2 instance $name using Visual Studio code"
+      code --folder-uri "vscode-remote://ssh-remote+$name/home/$username"
+  done
 }
 
 # :command.function
@@ -24380,70 +24378,90 @@ playground_ec2_allow_my_ip_command() {
   then
       instance=$(echo "$instance" | cut -d "@" -f 2)
   fi
-  name=$(echo "${instance}" | cut -d "/" -f 1)
-  state=$(echo "${instance}" | cut -d "/" -f 2)
-  ip=$(echo "${instance}" | cut -d "/" -f 3)
-  id=$(echo "${instance}" | cut -d "/" -f 4)
 
-  pem_file="$root_folder/$name.pem"
-
-  if [ ! -f "$pem_file" ]
+  if [[ ! -n "$instance" ]]
   then
-      logerror "❌ aws ec2 pem file $pem_file file does not exist"
-      exit 1
-  fi
-
-  group=$(aws ec2 describe-instances --instance-id "$id" --output=json | jq '.Reservations[] | .Instances[] | {SecurityGroups: .SecurityGroups}' | jq -r '.SecurityGroups[0] | .GroupName')
-
-  # delete all rules
-  aws ec2 revoke-security-group-ingress --group-name "$group" \
-    --ip-permissions \
-    "$(aws ec2 describe-security-groups --output json --group-name "$group" --query "SecurityGroups[0].IpPermissions")" > /dev/null
-
-  myip=$(dig @resolver4.opendns.com myip.opendns.com +short)
-  aws ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 22 --cidr "$myip/32" > /dev/null 2>&1 &
-  if [ "$state" = "$EC2_INSTANCE_STATE_STOPPED" ]
-  then
-      log "🚀 starting the ec2 instance $name with id $id"
-      aws ec2 start-instances --instance-ids "$id"
-      wait_for_ec2_instance_to_be_running "$name"
-      ip=$(aws ec2 describe-instances --instance-ids "$id" | jq ".Reservations[0].Instances[0].PublicDnsName" | tr -d '"')
-  fi
-
-  mkdir -p $HOME/.ssh
-  username=$(whoami)
-  ssh_config_file=$HOME/.ssh/config
-
-  if [ -f "$ssh_config_file" ]
-  then
-      if grep "Host $name" -A 1 "$ssh_config_file" | grep "$ip" > /dev/null
+      instance=$(playground --output-level WARN ec2 list)
+      if [ "$instance" == "" ]
       then
-          log "🛂 ip $myip is now allowed to connect to ec2 instance $name"
-          exit 0
+          log "💤 No ec2 instance was found !"
+          exit 1
       fi
   fi
 
-  set +e
-  grep "$name" "$ssh_config_file" > /dev/null
-  if [ $? = 0 ]
+  items=($instance)
+  length=${#items[@]}
+  if ((length > 1))
   then
-      old_ip=$(grep -w $name -A 1 ${ssh_config_file} | awk '/HostName/ {print $2}')
-      sed -e "s/$old_ip/$ip/g" ${ssh_config_file} > /tmp/tmp_file
-      mv /tmp/tmp_file "${ssh_config_file}"
-  else
-  cat << EOF >> "${ssh_config_file}"
+      log "✨ --instance flag was not provided, applying command to all ec2 instances"
+  fi
+  for instance in "${items[@]}"
+  do
+      name=$(echo "${instance}" | cut -d "/" -f 1)
+      state=$(echo "${instance}" | cut -d "/" -f 2)
+      ip=$(echo "${instance}" | cut -d "/" -f 3)
+      id=$(echo "${instance}" | cut -d "/" -f 4)
 
-Host $name
-  HostName $ip
-  IdentityFile $pem_file
-  User $username
-  StrictHostKeyChecking no
+      pem_file="$root_folder/$name.pem"
+
+      if [ ! -f "$pem_file" ]
+      then
+          logerror "❌ aws ec2 pem file $pem_file file does not exist"
+          exit 1
+      fi
+
+      group=$(aws ec2 describe-instances --instance-id "$id" --output=json | jq '.Reservations[] | .Instances[] | {SecurityGroups: .SecurityGroups}' | jq -r '.SecurityGroups[0] | .GroupName')
+
+      # delete all rules
+      aws ec2 revoke-security-group-ingress --group-name "$group" \
+      --ip-permissions \
+      "$(aws ec2 describe-security-groups --output json --group-name "$group" --query "SecurityGroups[0].IpPermissions")" > /dev/null
+
+      myip=$(dig @resolver4.opendns.com myip.opendns.com +short)
+      aws ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 22 --cidr "$myip/32" > /dev/null 2>&1 &
+      if [ "$state" = "$EC2_INSTANCE_STATE_STOPPED" ]
+      then
+          log "🚀 starting the ec2 instance $name with id $id"
+          aws ec2 start-instances --instance-ids "$id"
+          wait_for_ec2_instance_to_be_running "$name"
+          ip=$(aws ec2 describe-instances --instance-ids "$id" | jq ".Reservations[0].Instances[0].PublicDnsName" | tr -d '"')
+      fi
+
+      mkdir -p $HOME/.ssh
+      username=$(whoami)
+      ssh_config_file=$HOME/.ssh/config
+
+      if [ -f "$ssh_config_file" ]
+      then
+          if grep "Host $name" -A 1 "$ssh_config_file" | grep "$ip" > /dev/null
+          then
+              log "🛂 ip $myip is now allowed to connect to ec2 instance $name"
+              exit 0
+          fi
+      fi
+
+      set +e
+      grep "$name" "$ssh_config_file" > /dev/null
+      if [ $? = 0 ]
+      then
+          old_ip=$(grep -w $name -A 1 ${ssh_config_file} | awk '/HostName/ {print $2}')
+          sed -e "s/$old_ip/$ip/g" ${ssh_config_file} > /tmp/tmp_file
+          mv /tmp/tmp_file "${ssh_config_file}"
+      else
+      cat << EOF >> "${ssh_config_file}"
+
+    Host $name
+    HostName $ip
+    IdentityFile $pem_file
+    User $username
+    StrictHostKeyChecking no
 EOF
 
-  fi
-  set -e
+      fi
+      set -e
 
-  log "🛂 ip $myip is now allowed to connect to ec2 instance $name"
+      log "🛂 ip $myip is now allowed to connect to ec2 instance $name"
+  done
 }
 
 # :command.function
@@ -24462,45 +24480,24 @@ playground_ec2_stop_command() {
   then
       instance=$(echo "$instance" | cut -d "@" -f 2)
   fi
-  name=$(echo "${instance}" | cut -d "/" -f 1)
-  state=$(echo "${instance}" | cut -d "/" -f 2)
-  id=$(echo "${instance}" | cut -d "/" -f 4)
 
-  if [ "$state" != "$EC2_INSTANCE_STATE_STOPPED" ]
+  if [[ ! -n "$instance" ]]
   then
-      log "🔴 stopping ec2 instance $name"
-      aws ec2 stop-instances --instance-ids $id
-  else
-      log "ec2 instance $name is already stopped"
+      instance=$(playground --output-level WARN ec2 list)
+      if [ "$instance" == "" ]
+      then
+          log "💤 No ec2 instance was found !"
+          exit 1
+      fi
   fi
-}
 
-# :command.function
-playground_ec2_start_command() {
-  # src/commands/ec2/start.sh
-  instance="${args[--instance]}"
-
-  if [[ $instance == *"@"* ]]
+  items=($instance)
+  length=${#items[@]}
+  if ((length > 1))
   then
-      instance=$(echo "$instance" | cut -d "@" -f 2)
+      log "✨ --instance flag was not provided, applying command to all ec2 instances"
   fi
-  name=$(echo "${instance}" | cut -d "/" -f 1)
-  state=$(echo "${instance}" | cut -d "/" -f 2)
-  id=$(echo "${instance}" | cut -d "/" -f 4)
-
-  if [ "$state" != "$EC2_INSTANCE_STATE_RUNNING" ]
-  then
-      log "🟢 starting ec2 instance $name"
-      aws ec2 start-instances --instance-ids $id
-  else
-      log "ec2 instance $name is already running"
-  fi
-}
-
-# :command.function
-playground_ec2_stop_all_command() {
-  # src/commands/ec2/stop-all.sh
-  for instance in $(ec2_instance_list)
+  for instance in "${items[@]}"
   do
       name=$(echo "${instance}" | cut -d "/" -f 1)
       state=$(echo "${instance}" | cut -d "/" -f 2)
@@ -24517,9 +24514,32 @@ playground_ec2_stop_all_command() {
 }
 
 # :command.function
-playground_ec2_start_all_command() {
-  # src/commands/ec2/start-all.sh
-  for instance in $(ec2_instance_list)
+playground_ec2_start_command() {
+  # src/commands/ec2/start.sh
+  instance="${args[--instance]}"
+
+  if [[ $instance == *"@"* ]]
+  then
+      instance=$(echo "$instance" | cut -d "@" -f 2)
+  fi
+
+  if [[ ! -n "$instance" ]]
+  then
+      instance=$(playground --output-level WARN ec2 list)
+      if [ "$instance" == "" ]
+      then
+          log "💤 No ec2 instance was found !"
+          exit 1
+      fi
+  fi
+
+  items=($instance)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "✨ --instance flag was not provided, applying command to all ec2 instances"
+  fi
+  for instance in "${items[@]}"
   do
       name=$(echo "${instance}" | cut -d "/" -f 1)
       state=$(echo "${instance}" | cut -d "/" -f 2)
@@ -24569,20 +24589,40 @@ playground_ec2_sync_repro_folder_local_to_ec2_command() {
   then
       instance=$(echo "$instance" | cut -d "@" -f 2)
   fi
-  name=$(echo "${instance}" | cut -d "/" -f 1)
-  ip=$(echo "${instance}" | cut -d "/" -f 3)
 
-  pem_file="$root_folder/$name.pem"
-  username=$(whoami)
-
-  if [ ! -f "$pem_file" ]
+  if [[ ! -n "$instance" ]]
   then
-      logerror "❌ aws ec2 pem file $pem_file file does not exist"
-      exit 1
+      instance=$(playground --output-level WARN ec2 list)
+      if [ "$instance" == "" ]
+      then
+          log "💤 No ec2 instance was found !"
+          exit 1
+      fi
   fi
 
-  log "👉 Sync local reproduction-models folder to ec2 instance $name"
-  rsync -cauv --filter=':- .gitignore' -e "ssh -i $pem_file" "$root_folder/reproduction-models" "$username@$ip:/home/$username/kafka-docker-playground"
+  items=($instance)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "✨ --instance flag was not provided, applying command to all ec2 instances"
+  fi
+  for instance in "${items[@]}"
+  do
+      name=$(echo "${instance}" | cut -d "/" -f 1)
+      ip=$(echo "${instance}" | cut -d "/" -f 3)
+
+      pem_file="$root_folder/$name.pem"
+      username=$(whoami)
+
+      if [ ! -f "$pem_file" ]
+      then
+          logerror "❌ aws ec2 pem file $pem_file file does not exist"
+          exit 1
+      fi
+
+      log "👉 Sync local reproduction-models folder to ec2 instance $name"
+      rsync -cauv --filter=':- .gitignore' -e "ssh -i $pem_file" "$root_folder/reproduction-models" "$username@$ip:/home/$username/kafka-docker-playground"
+  done
 }
 
 # :command.function
@@ -24594,21 +24634,40 @@ playground_ec2_sync_repro_folder_ec2_to_local_command() {
   then
       instance=$(echo "$instance" | cut -d "@" -f 2)
   fi
-  name=$(echo "${instance}" | cut -d "/" -f 1)
-  ip=$(echo "${instance}" | cut -d "/" -f 3)
 
-  pem_file="$root_folder/$name.pem"
-  username=$(whoami)
-
-  if [ ! -f "$pem_file" ]
+  if [[ ! -n "$instance" ]]
   then
-      logerror "❌ aws ec2 pem file $pem_file file does not exist"
-      exit 1
+      instance=$(playground --output-level WARN ec2 list)
+      if [ "$instance" == "" ]
+      then
+          log "💤 No ec2 instance was found !"
+          exit 1
+      fi
   fi
 
-  log "👈 Sync ec2 instance $name reproduction-models folder to local"
-  rsync -cauv --filter=':- .gitignore' -e "ssh -i $pem_file" "$username@$ip:/home/$username/kafka-docker-playground/reproduction-models" "$root_folder"
+  items=($instance)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "✨ --instance flag was not provided, applying command to all ec2 instances"
+  fi
+  for instance in "${items[@]}"
+  do
+      name=$(echo "${instance}" | cut -d "/" -f 1)
+      ip=$(echo "${instance}" | cut -d "/" -f 3)
 
+      pem_file="$root_folder/$name.pem"
+      username=$(whoami)
+
+      if [ ! -f "$pem_file" ]
+      then
+          logerror "❌ aws ec2 pem file $pem_file file does not exist"
+          exit 1
+      fi
+
+      log "👈 Sync ec2 instance $name reproduction-models folder to local"
+      rsync -cauv --filter=':- .gitignore' -e "ssh -i $pem_file" "$username@$ip:/home/$username/kafka-docker-playground/reproduction-models" "$root_folder"
+  done
 }
 
 # :command.parse_requirements
@@ -37102,20 +37161,6 @@ playground_ec2_parse_requirements() {
       shift $#
       ;;
 
-    stop-all)
-      action="stop-all"
-      shift
-      playground_ec2_stop_all_parse_requirements "$@"
-      shift $#
-      ;;
-
-    start-all)
-      action="start-all"
-      shift
-      playground_ec2_start_all_parse_requirements "$@"
-      shift $#
-      ;;
-
     status)
       action="status"
       shift
@@ -37373,12 +37418,6 @@ playground_ec2_delete_parse_requirements() {
     esac
   done
 
-  # :command.required_flags_filter
-  if [[ -z ${args['--instance']+x} ]]; then
-    printf "missing required flag: --instance, -i INSTANCE\n" >&2
-    exit 1
-  fi
-
   # :command.validations
   # :flag.validations
   if [[ -v args['--instance'] && -n $(validate_not_empty "${args['--instance']:-}") ]]; then
@@ -37443,12 +37482,6 @@ playground_ec2_open_parse_requirements() {
     esac
   done
 
-  # :command.required_flags_filter
-  if [[ -z ${args['--instance']+x} ]]; then
-    printf "missing required flag: --instance, -i INSTANCE\n" >&2
-    exit 1
-  fi
-
   # :command.validations
   # :flag.validations
   if [[ -v args['--instance'] && -n $(validate_not_empty "${args['--instance']:-}") ]]; then
@@ -37512,12 +37545,6 @@ playground_ec2_allow_my_ip_parse_requirements() {
 
     esac
   done
-
-  # :command.required_flags_filter
-  if [[ -z ${args['--instance']+x} ]]; then
-    printf "missing required flag: --instance, -i INSTANCE\n" >&2
-    exit 1
-  fi
 
   # :command.validations
   # :flag.validations
@@ -37627,12 +37654,6 @@ playground_ec2_stop_parse_requirements() {
     esac
   done
 
-  # :command.required_flags_filter
-  if [[ -z ${args['--instance']+x} ]]; then
-    printf "missing required flag: --instance, -i INSTANCE\n" >&2
-    exit 1
-  fi
-
   # :command.validations
   # :flag.validations
   if [[ -v args['--instance'] && -n $(validate_not_empty "${args['--instance']:-}") ]]; then
@@ -37697,106 +37718,12 @@ playground_ec2_start_parse_requirements() {
     esac
   done
 
-  # :command.required_flags_filter
-  if [[ -z ${args['--instance']+x} ]]; then
-    printf "missing required flag: --instance, -i INSTANCE\n" >&2
-    exit 1
-  fi
-
   # :command.validations
   # :flag.validations
   if [[ -v args['--instance'] && -n $(validate_not_empty "${args['--instance']:-}") ]]; then
     printf "validation error in %s:\n%s\n" "--instance, -i INSTANCE" "$(validate_not_empty "${args['--instance']:-}")" >&2
     exit 1
   fi
-
-}
-
-# :command.parse_requirements
-playground_ec2_stop_all_parse_requirements() {
-  # :command.fixed_flags_filter
-  while [[ $# -gt 0 ]]; do
-    case "${1:-}" in
-      --help | -h)
-        long_usage=yes
-        playground_ec2_stop_all_usage
-        exit
-        ;;
-
-      *)
-        break
-        ;;
-
-    esac
-  done
-
-  # :command.command_filter
-  action="ec2 stop-all"
-
-  # :command.parse_requirements_while
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-
-      -?*)
-        printf "invalid option: %s\n" "$key" >&2
-        exit 1
-        ;;
-
-      *)
-        # :command.parse_requirements_case
-        # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
-
-        ;;
-
-    esac
-  done
-
-}
-
-# :command.parse_requirements
-playground_ec2_start_all_parse_requirements() {
-  # :command.fixed_flags_filter
-  while [[ $# -gt 0 ]]; do
-    case "${1:-}" in
-      --help | -h)
-        long_usage=yes
-        playground_ec2_start_all_usage
-        exit
-        ;;
-
-      *)
-        break
-        ;;
-
-    esac
-  done
-
-  # :command.command_filter
-  action="ec2 start-all"
-
-  # :command.parse_requirements_while
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-
-      -?*)
-        printf "invalid option: %s\n" "$key" >&2
-        exit 1
-        ;;
-
-      *)
-        # :command.parse_requirements_case
-        # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
-
-        ;;
-
-    esac
-  done
 
 }
 
@@ -38016,12 +37943,6 @@ playground_ec2_sync_repro_folder_local_to_ec2_parse_requirements() {
     esac
   done
 
-  # :command.required_flags_filter
-  if [[ -z ${args['--instance']+x} ]]; then
-    printf "missing required flag: --instance, -i INSTANCE\n" >&2
-    exit 1
-  fi
-
   # :command.validations
   # :flag.validations
   if [[ -v args['--instance'] && -n $(validate_not_empty "${args['--instance']:-}") ]]; then
@@ -38085,12 +38006,6 @@ playground_ec2_sync_repro_folder_ec2_to_local_parse_requirements() {
 
     esac
   done
-
-  # :command.required_flags_filter
-  if [[ -z ${args['--instance']+x} ]]; then
-    printf "missing required flag: --instance, -i INSTANCE\n" >&2
-    exit 1
-  fi
 
   # :command.validations
   # :flag.validations
@@ -38306,8 +38221,6 @@ run() {
     "ec2 list") playground_ec2_list_command ;;
     "ec2 stop") playground_ec2_stop_command ;;
     "ec2 start") playground_ec2_start_command ;;
-    "ec2 stop-all") playground_ec2_stop_all_command ;;
-    "ec2 start-all") playground_ec2_start_all_command ;;
     "ec2 status") playground_ec2_status_command ;;
     "ec2 sync-repro-folder") playground_ec2_sync_repro_folder_command ;;
     "ec2 sync-repro-folder local-to-ec2") playground_ec2_sync_repro_folder_local_to_ec2_command ;;

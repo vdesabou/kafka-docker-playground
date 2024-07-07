@@ -2817,7 +2817,7 @@
                 "-i"
               ],
               "argument": "INSTANCE",
-              "description": "🌀 EC2 instance cloudformation (need to use completion to get all required details)\n\nRequired: ✓ Yes\n"
+              "description": "🌀 ec2 instance cloudformation (need to use completion to get all required details)\n\n🎓 Tip: If not specified, the command will apply to all ec2 instances\n"
             }
           ]
         },
@@ -2832,7 +2832,7 @@
                 "-i"
               ],
               "argument": "INSTANCE",
-              "description": "🖥️ EC2 instance (need to use completion to get all required details)\n\nRequired: ✓ Yes\n"
+              "description": "🖥️ ec2 instance (need to use completion to get all required details)\n\n🎓 Tip: If not specified, the command will apply to all ec2 instances\n"
             }
           ]
         },
@@ -2847,7 +2847,7 @@
                 "-i"
               ],
               "argument": "INSTANCE",
-              "description": "🖥️ EC2 instance (need to use completion to get all required details)\n\nRequired: ✓ Yes\n"
+              "description": "🖥️ ec2 instance (need to use completion to get all required details)\n\n🎓 Tip: If not specified, the command will apply to all ec2 instances\n"
             }
           ]
         },
@@ -2868,7 +2868,7 @@
                 "-i"
               ],
               "argument": "INSTANCE",
-              "description": "🖥️ EC2 instance (need to use completion to get all required details)\n\nRequired: ✓ Yes\n"
+              "description": "🖥️ ec2 instance (need to use completion to get all required details)\n\n🎓 Tip: If not specified, the command will apply to all ec2 instances\n"
             }
           ]
         },
@@ -2883,21 +2883,9 @@
                 "-i"
               ],
               "argument": "INSTANCE",
-              "description": "🖥️ EC2 instance (need to use completion to get all required details)\n\nRequired: ✓ Yes\n"
+              "description": "🖥️ ec2 instance (need to use completion to get all required details)\n\n🎓 Tip: If not specified, the command will apply to all ec2 instances\n"
             }
           ]
-        },
-        {
-          "name": "stop-all",
-          "description": "🔴 Stop all your EC2 instance(s)\n",
-          "usage": "playground ec2 stop-all",
-          "options": []
-        },
-        {
-          "name": "start-all",
-          "description": "🟢 Start all your EC2 instance(s)\n",
-          "usage": "playground ec2 start-all",
-          "options": []
         },
         {
           "name": "sync-repro-folder",
@@ -2924,7 +2912,7 @@
                 "-i"
               ],
               "argument": "INSTANCE",
-              "description": "🖥️ EC2 instance (need to use completion to get all required details)\n\nRequired: ✓ Yes\n"
+              "description": "🖥️ ec2 instance (need to use completion to get all required details)\n\n🎓 Tip: If not specified, the command will apply to all ec2 instances\n"
             }
           ]
         },
@@ -2939,7 +2927,7 @@
                 "-i"
               ],
               "argument": "INSTANCE",
-              "description": "🖥️ EC2 instance (need to use completion to get all required details)\n\nRequired: ✓ Yes\n"
+              "description": "🖥️ ec2 instance (need to use completion to get all required details)\n\n🎓 Tip: If not specified, the command will apply to all ec2 instances\n"
             }
           ]
         }
