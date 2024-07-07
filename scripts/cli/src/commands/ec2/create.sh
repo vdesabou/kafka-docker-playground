@@ -64,5 +64,5 @@ playground ec2 open --instance "$instance" --disable-sync-repro-folder
 
 wait_for_ec2_cloudformation_to_be_completed "$name"
 
-playground ec2 sync-repro-folder local-to-ec2 --instance "$instance"
+playground ec2 sync-repro-folder local-to-ec2 --instance "$instance" > /dev/null
 log "🎉 ec2 instance $name is ready!"
