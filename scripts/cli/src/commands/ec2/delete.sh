@@ -29,7 +29,8 @@ do
 
     log "❌ deleting ec2 cloudformation $name in state $state"
     aws cloudformation delete-stack --stack-name $name
-
+    remove_ec2_instance_from_running_list "$name"
+    
     pem_file="$root_folder/$name.pem"
 
     if [ -f "$pem_file" ]

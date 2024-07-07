@@ -1497,3 +1497,47 @@ function wait_for_ec2_cloudformation_to_be_completed () {
   done
   log "🟢 ec2 cloudformation $stack_name is in status CREATE_COMPLETE"
 }
+
+function add_ec2_instance_to_running_list() {
+  instance="$1"
+  current_list=$(playground state get "ec2.running_list")
+  # list can be separated with |
+  if [[ "$current_list" == "" ]]
+  then
+    playground state set "ec2.running_list" "$instance"
+  else
+    # make sure insance is not already in the list
+    if [[ "$current_list" != *"$instance"* ]]
+    then
+      playground state set "ec2.running_list" "$current_list|$instance"
+    fi
+  fi
+}
+
+function remove_ec2_instance_from_running_list() {
+  instance="$1"
+  current_list=$(playground state get "ec2.running_list")
+  # list can be separated with |
+  if [[ "$current_list" != "" ]]
+  then
+    # make sure insance is not already in the list
+    if [[ "$current_list" == *"$instance"* ]]
+    then
+      new_list=$(echo "$current_list" | sed -e "s/$instance//g" | sed -e 's/||/|/g' | sed -e 's/|$//')
+      playground state set "ec2.running_list" "$new_list"
+    fi
+  fi
+}
+
+function check_for_ec2_instance_running() {
+  # echo the name of ec2 instance running
+  current_list=$(playground state get "ec2.running_list")
+  if [[ "$current_list" != "" ]]
+  then
+    # loop through the list
+    for instance in $(echo $current_list | tr "|" "\n")
+    do
+      log "🤑👛 you have an ec2 instance $instance running"
+    done
+  fi
+}

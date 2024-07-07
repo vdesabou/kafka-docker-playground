@@ -25,7 +25,6 @@ for instance in "${items[@]}"
 do
     name=$(echo "${instance}" | cut -d "/" -f 1)
     state=$(echo "${instance}" | cut -d "/" -f 2)
-    id=$(echo "${instance}" | cut -d "/" -f 4)
 
     if [ "$state" != "$EC2_INSTANCE_STATE_STOPPED" ] && [ "$state" != "$EC2_INSTANCE_STATE_RUNNING" ]
     then

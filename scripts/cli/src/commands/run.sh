@@ -1535,3 +1535,4 @@ else
 
     display_docker_container_error_log
 fi
+check_for_ec2_instance_running

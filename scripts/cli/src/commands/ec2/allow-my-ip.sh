@@ -87,4 +87,5 @@ EOF
     set -e
 
     log "🛂 ip $myip is now allowed to connect to ec2 instance $name"
+    add_ec2_instance_to_running_list "$name"
 done

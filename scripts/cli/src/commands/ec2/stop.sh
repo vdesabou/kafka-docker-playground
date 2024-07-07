@@ -36,7 +36,8 @@ do
     if [ "$state" != "$EC2_INSTANCE_STATE_STOPPED" ]
     then
         log "🔴 stopping ec2 instance $name"
-        aws ec2 stop-instances --instance-ids $id
+        aws ec2 stop-instances --instance-ids "$id"
+        remove_ec2_instance_from_running_list "$name"
     else
         log "ec2 instance $name is already stopped"
     fi

@@ -7543,6 +7543,50 @@ function wait_for_ec2_cloudformation_to_be_completed () {
   log "🟢 ec2 cloudformation $stack_name is in status CREATE_COMPLETE"
 }
 
+function add_ec2_instance_to_running_list() {
+  instance="$1"
+  current_list=$(playground state get "ec2.running_list")
+  # list can be separated with |
+  if [[ "$current_list" == "" ]]
+  then
+    playground state set "ec2.running_list" "$instance"
+  else
+    # make sure insance is not already in the list
+    if [[ "$current_list" != *"$instance"* ]]
+    then
+      playground state set "ec2.running_list" "$current_list|$instance"
+    fi
+  fi
+}
+
+function remove_ec2_instance_from_running_list() {
+  instance="$1"
+  current_list=$(playground state get "ec2.running_list")
+  # list can be separated with |
+  if [[ "$current_list" != "" ]]
+  then
+    # make sure insance is not already in the list
+    if [[ "$current_list" == *"$instance"* ]]
+    then
+      new_list=$(echo "$current_list" | sed -e "s/$instance//g" | sed -e 's/||/|/g' | sed -e 's/|$//')
+      playground state set "ec2.running_list" "$new_list"
+    fi
+  fi
+}
+
+function check_for_ec2_instance_running() {
+  # echo the name of ec2 instance running
+  current_list=$(playground state get "ec2.running_list")
+  if [[ "$current_list" != "" ]]
+  then
+    # loop through the list
+    for instance in $(echo $current_list | tr "|" "\n")
+    do
+      log "🤑👛 you have an ec2 instance $instance running"
+    done
+  fi
+}
+
 # src/lib/colors.sh
 print_in_color() {
   local color="$1"
@@ -12098,6 +12142,8 @@ playground_status_command() {
   playground connector show-config-parameters --only-show-file-path | grep -v "applying command to all connectors"
 
   playground topic list
+
+  check_for_ec2_instance_running
 }
 
 # :command.function
@@ -14640,6 +14686,7 @@ playground_run_command() {
 
       display_docker_container_error_log
   fi
+  check_for_ec2_instance_running
 }
 
 # :command.function
@@ -24258,7 +24305,7 @@ playground_ec2_create_command() {
 
   wait_for_ec2_cloudformation_to_be_completed "$name"
 
-  playground ec2 sync-repro-folder local-to-ec2 --instance "$instance"
+  playground ec2 sync-repro-folder local-to-ec2 --instance "$instance" > /dev/null
   log "🎉 ec2 instance $name is ready!"
 }
 
@@ -24296,6 +24343,7 @@ playground_ec2_delete_command() {
 
       log "❌ deleting ec2 cloudformation $name in state $state"
       aws cloudformation delete-stack --stack-name $name
+      remove_ec2_instance_from_running_list "$name"
 
       pem_file="$root_folder/$name.pem"
 
@@ -24460,6 +24508,7 @@ EOF
       set -e
 
       log "🛂 ip $myip is now allowed to connect to ec2 instance $name"
+      add_ec2_instance_to_running_list "$name"
   done
 }
 
@@ -24511,7 +24560,8 @@ playground_ec2_stop_command() {
       if [ "$state" != "$EC2_INSTANCE_STATE_STOPPED" ]
       then
           log "🔴 stopping ec2 instance $name"
-          aws ec2 stop-instances --instance-ids $id
+          aws ec2 stop-instances --instance-ids "$id"
+          remove_ec2_instance_from_running_list "$name"
       else
           log "ec2 instance $name is already stopped"
       fi
@@ -24548,7 +24598,6 @@ playground_ec2_start_command() {
   do
       name=$(echo "${instance}" | cut -d "/" -f 1)
       state=$(echo "${instance}" | cut -d "/" -f 2)
-      id=$(echo "${instance}" | cut -d "/" -f 4)
 
       if [ "$state" != "$EC2_INSTANCE_STATE_STOPPED" ] && [ "$state" != "$EC2_INSTANCE_STATE_RUNNING" ]
       then
