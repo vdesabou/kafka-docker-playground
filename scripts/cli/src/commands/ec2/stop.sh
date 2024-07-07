@@ -29,7 +29,7 @@ do
 
     if [ "$state" != "$EC2_INSTANCE_STATE_STOPPED" ] && [ "$state" != "$EC2_INSTANCE_STATE_RUNNING" ]
     then
-        log "ec2 instance $name is state is $state (not stopped and not running), skipping it"
+        log "ec2 instance $name is in state $state (not stopped and not running), skipping it"
         continue
     fi
     
