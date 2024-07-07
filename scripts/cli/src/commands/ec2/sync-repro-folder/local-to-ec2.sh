@@ -24,6 +24,7 @@ fi
 for instance in "${items[@]}"
 do
     name=$(echo "${instance}" | cut -d "/" -f 1)
+    state=$(echo "${instance}" | cut -d "/" -f 2)
     ip=$(echo "${instance}" | cut -d "/" -f 3)
 
     pem_file="$root_folder/$name.pem"
@@ -35,6 +36,16 @@ do
         exit 1
     fi
 
+    if [ "$state" != "$EC2_INSTANCE_STATE_STOPPED" ] && [ "$state" != "$EC2_INSTANCE_STATE_RUNNING" ]
+    then
+        log "ec2 instance $name is in state $state (not stopped and not running), skipping it"
+        continue
+    fi
+
+    playground ec2 allow-my-ip --instance "$instance"
+    instance="$(playground ec2 status --instance "$name" --all)"
+    ip=$(echo "${instance}" | cut -d "/" -f 3)
+
     log "👉 Sync local reproduction-models folder to ec2 instance $name"
-    rsync -cauv --filter=':- .gitignore' -e "ssh -i $pem_file -o StrictHostKeyChecking=no" "$root_folder/reproduction-models" "$username@$ip:/home/$username/kafka-docker-playground"
+    rsync -cauv --filter=':- .gitignore' -e "ssh -i $pem_file -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" "$root_folder/reproduction-models" "$username@$ip:/home/$username/kafka-docker-playground"
 done
