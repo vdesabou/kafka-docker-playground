@@ -9,9 +9,9 @@ then
     suffix_kebab="${suffix// /-}"
     suffix_kebab=$(echo "$suffix_kebab" | tr '[:upper:]' '[:lower:]')
 else
-    suffix_kebab=$(date +%F)
+    suffix_kebab=$(LC_ALL=C tr -dc 'a-z0-9' < /dev/urandom | fold -w 6 | head -n 1)
 fi
-name="kafka-docker-playground-${username}-${suffix_kebab}"
+name="pg-${username}-${suffix_kebab}"
 pem_file="$root_folder/$name.pem"
 
 # check if instance already exists
@@ -57,9 +57,9 @@ then
     playground ec2 status --instance "$name" --all
     exit 1
 fi
-log "👷 ec2 instance $name is created and accesible via SSH, it will be opened with visual studio code in 5 minutes..."
-log "🌀 cloud formation is still in progress (installing docker, etc...) and can be reverted after 20 minutes (i.e removing ec2 instance) in case of issue. You can check progress by checking log file output.log in root folder of ec2 instance"
-sleep 300
+log "👷 ec2 instance $name is created and accesible via SSH, it will be opened with visual studio code in 3 minutes..."
+log "🌀 cloud formation is still in progress (installing docker, etc...) and can be reverted after 10 minutes (i.e removing ec2 instance) in case of issue. You can check progress by checking log file output.log in root folder of ec2 instance"
+sleep 180
 playground ec2 open --instance "$instance"
 
 wait_for_ec2_cloudformation_to_be_completed "$name"

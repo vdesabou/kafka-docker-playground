@@ -3291,7 +3291,7 @@ commands:
       👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation
 
       🔐 AWS EC2 pem file for the ec2 instance will be created and stored in root folder (make sure to do backup)
-      
+
     flags:
     - long: --instance-type
       required: false
@@ -3374,9 +3374,9 @@ commands:
       required: false
       arg: suffix
       help: |-
-        📮 suffix to add to instance name kafka-docker-playground-${username}-${suffix} 
+        📮 suffix to add to instance name pg-${username}-${suffix} 
         
-        If not set, default is kafka-docker-playground-${username}-${current-date}
+        if not set, default is pg-${username}-${6-chars-random-string}
 
   - name: delete
     help: |- 

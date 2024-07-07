@@ -5640,7 +5640,7 @@ playground_ec2_create_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--suffix SUFFIX")"
-    printf "    📮 suffix to add to instance name\n    kafka-docker-playground-${username}-${suffix}\n    \n    If not set, default is kafka-docker-playground-${username}-${current-date}\n"
+    printf "    📮 suffix to add to instance name pg-${username}-${suffix} \n    \n    if not set, default is pg-${username}-${6-chars-random-string}\n"
     echo
 
     # :command.usage_fixed_flags
@@ -6520,7 +6520,7 @@ function get_confluent_kafka_region_list_with_fzf() {
 
 function ec2_instance_list() {
   username=$(whoami)
-  name="kafka-docker-playground-${username}"
+  name="pg-${username}"
 
   for row in $(aws ec2 describe-instances --filters "Name=tag:Name,Values=$name-*" | jq '[.Reservations | .[] | .Instances | .[] | select(.State.Name!="terminated") | {PublicDnsName: .PublicDnsName, InstanceId: .InstanceId,State: .State.Name, Name: (.Tags[]|select(.Key=="Name")|.Value)}]' | jq -r '.[] | @base64'); do
       _jq() {
@@ -6571,7 +6571,7 @@ function get_ec2_instance_list_with_fzf() {
 
 function ec2_cloudformation_list() {
   username=$(whoami)
-  name="kafka-docker-playground-${username}"
+  name="pg-${username}"
 
   for row in $(aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE ROLLBACK_COMPLETE | jq '[.StackSummaries | .[] | {StackName: .StackName,StackStatus: .StackStatus }]' | jq -r '.[] | @base64'); do
       _jq() {
@@ -7512,6 +7512,21 @@ function wait_for_ec2_cloudformation_to_be_completed () {
     aws cloudformation describe-stacks --output text --query "Stacks[?StackName==\`$stack_name\`].StackStatus" > /tmp/out.txt 2>&1
     status=$(cat /tmp/out.txt)
     log "⌛ current status: $status"
+
+    if grep "CREATE_FAILED" /tmp/out.txt > /dev/null;
+    then
+      logerror "❌ ec2 cloudformation stack $stack_name is in state $status"
+      logerror "❌ check log file output.log in root folder of ec2 instance for troubleshooting the issue"
+      return 1
+    fi
+
+    if grep "ROLLBACK_" /tmp/out.txt > /dev/null;
+    then
+      logerror "❌ ec2 cloudformation stack $stack_name is in state $status"
+      logerror "❌ check log file output.log in root folder of ec2 instance for troubleshooting the issue"
+      return 1
+    fi
+
     cur_wait=$(( cur_wait+10 ))
     if [[ "$cur_wait" -gt "$max_wait" ]]
     then
@@ -24182,9 +24197,9 @@ playground_ec2_create_command() {
       suffix_kebab="${suffix// /-}"
       suffix_kebab=$(echo "$suffix_kebab" | tr '[:upper:]' '[:lower:]')
   else
-      suffix_kebab=$(date +%F)
+      suffix_kebab=$(LC_ALL=C tr -dc 'a-z0-9' < /dev/urandom | fold -w 6 | head -n 1)
   fi
-  name="kafka-docker-playground-${username}-${suffix_kebab}"
+  name="pg-${username}-${suffix_kebab}"
   pem_file="$root_folder/$name.pem"
 
   # check if instance already exists
@@ -24230,9 +24245,9 @@ playground_ec2_create_command() {
       playground ec2 status --instance "$name" --all
       exit 1
   fi
-  log "👷 ec2 instance $name is created and accesible via SSH, it will be opened with visual studio code in 5 minutes..."
-  log "🌀 cloud formation is still in progress (installing docker, etc...) and can be reverted after 20 minutes (i.e removing ec2 instance) in case of issue. You can check progress by checking log file output.log in root folder of ec2 instance"
-  sleep 300
+  log "👷 ec2 instance $name is created and accesible via SSH, it will be opened with visual studio code in 3 minutes..."
+  log "🌀 cloud formation is still in progress (installing docker, etc...) and can be reverted after 10 minutes (i.e removing ec2 instance) in case of issue. You can check progress by checking log file output.log in root folder of ec2 instance"
+  sleep 180
   playground ec2 open --instance "$instance"
 
   wait_for_ec2_cloudformation_to_be_completed "$name"

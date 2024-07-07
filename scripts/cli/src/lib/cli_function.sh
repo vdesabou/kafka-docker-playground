@@ -513,7 +513,7 @@ function get_confluent_kafka_region_list_with_fzf() {
 
 function ec2_instance_list() {
   username=$(whoami)
-  name="kafka-docker-playground-${username}"
+  name="pg-${username}"
 
   for row in $(aws ec2 describe-instances --filters "Name=tag:Name,Values=$name-*" | jq '[.Reservations | .[] | .Instances | .[] | select(.State.Name!="terminated") | {PublicDnsName: .PublicDnsName, InstanceId: .InstanceId,State: .State.Name, Name: (.Tags[]|select(.Key=="Name")|.Value)}]' | jq -r '.[] | @base64'); do
       _jq() {
@@ -564,7 +564,7 @@ function get_ec2_instance_list_with_fzf() {
 
 function ec2_cloudformation_list() {
   username=$(whoami)
-  name="kafka-docker-playground-${username}"
+  name="pg-${username}"
 
   for row in $(aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE ROLLBACK_COMPLETE | jq '[.StackSummaries | .[] | {StackName: .StackName,StackStatus: .StackStatus }]' | jq -r '.[] | @base64'); do
       _jq() {
@@ -1472,6 +1472,21 @@ function wait_for_ec2_cloudformation_to_be_completed () {
     aws cloudformation describe-stacks --output text --query "Stacks[?StackName==\`$stack_name\`].StackStatus" > /tmp/out.txt 2>&1
     status=$(cat /tmp/out.txt)
     log "⌛ current status: $status"
+
+    if grep "CREATE_FAILED" /tmp/out.txt > /dev/null;
+    then
+      logerror "❌ ec2 cloudformation stack $stack_name is in state $status"
+      logerror "❌ check log file output.log in root folder of ec2 instance for troubleshooting the issue"
+      return 1
+    fi
+
+    if grep "ROLLBACK_" /tmp/out.txt > /dev/null;
+    then
+      logerror "❌ ec2 cloudformation stack $stack_name is in state $status"
+      logerror "❌ check log file output.log in root folder of ec2 instance for troubleshooting the issue"
+      return 1
+    fi
+
     cur_wait=$(( cur_wait+10 ))
     if [[ "$cur_wait" -gt "$max_wait" ]]
     then

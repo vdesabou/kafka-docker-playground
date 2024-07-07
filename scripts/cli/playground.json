@@ -2795,7 +2795,7 @@
                 "--suffix"
               ],
               "argument": "SUFFIX",
-              "description": "📮 suffix to add to instance name kafka-docker-playground-${username}-${suffix} \n\nIf not set, default is kafka-docker-playground-${username}-${current-date}\n"
+              "description": "📮 suffix to add to instance name pg-${username}-${suffix} \n\nif not set, default is pg-${username}-${6-chars-random-string}\n"
             }
           ]
         },
