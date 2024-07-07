@@ -27,10 +27,15 @@ do
     state=$(echo "${instance}" | cut -d "/" -f 2)
     id=$(echo "${instance}" | cut -d "/" -f 4)
 
+    if [ "$state" != "$EC2_INSTANCE_STATE_STOPPED" ] && [ "$state" != "$EC2_INSTANCE_STATE_RUNNING" ]
+    then
+        log "ec2 instance $name is state is $state (not stopped and not running), skipping it"
+        continue
+    fi
+
     if [ "$state" != "$EC2_INSTANCE_STATE_RUNNING" ]
     then
-        log "🟢 starting ec2 instance $name"
-        aws ec2 start-instances --instance-ids $id
+        playground ec2 allow-my-ip --instance "$instance"
     else
         log "ec2 instance $name is already running"
     fi

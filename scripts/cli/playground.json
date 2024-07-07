@@ -2837,21 +2837,6 @@
           ]
         },
         {
-          "name": "allow-my-ip",
-          "description": "🛂 Allow your current ip to connect to ec2 instance via ssh\n",
-          "usage": "playground ec2 allow-my-ip [OPTIONS]",
-          "options": [
-            {
-              "names": [
-                "--instance",
-                "-i"
-              ],
-              "argument": "INSTANCE",
-              "description": "🖥️ ec2 instance (need to use completion to get all required details)\n\n🎓 Tip: If not specified, the command will apply to all ec2 instances\n"
-            }
-          ]
-        },
-        {
           "name": "list",
           "description": "🔘 List all EC2 instance\n",
           "usage": "playground ec2 list",

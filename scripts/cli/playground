@@ -164,7 +164,6 @@ playground_usage() {
   printf "  %s   👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation\n" "$(green "ec2 create")                               "
   printf "  %s   ❌ Delete an EC2 instance created with Cloud Formation\n" "$(green "ec2 delete")                               "
   printf "  %s   👨‍💻 Open an EC2 instance using Visual Studio code\n" "$(green "ec2 open")                                 "
-  printf "  %s   🛂 Allow your current ip to connect to ec2 instance via ssh\n" "$(green "ec2 allow-my-ip")                          "
   printf "  %s   🔘 List all EC2 instance\n" "$(green "ec2 list")                                 "
   printf "  %s   🔴 Stop an EC2 instance\n" "$(green "ec2 stop")                                 "
   printf "  %s   🟢 Start an EC2 instance\n" "$(green "ec2 start")                                "
@@ -5582,7 +5581,6 @@ playground_ec2_usage() {
   printf "  %s   👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation\n" "$(green "create")           "
   printf "  %s   ❌ Delete an EC2 instance created with Cloud Formation\n" "$(green "delete")           "
   printf "  %s   👨‍💻 Open an EC2 instance using Visual Studio code\n" "$(green "open")             "
-  printf "  %s   🛂 Allow your current ip to connect to ec2 instance via ssh\n" "$(green "allow-my-ip")      "
   printf "  %s   🔘 List all EC2 instance\n" "$(green "list")             "
   printf "  %s   🔴 Stop an EC2 instance\n" "$(green "stop")             "
   printf "  %s   🟢 Start an EC2 instance\n" "$(green "start")            "
@@ -24275,6 +24273,7 @@ playground_ec2_create_command() {
 
   wait_for_ec2_cloudformation_to_be_completed "$name"
 
+  playground ec2 sync-repro-folder local-to-ec2 --instance "$instance"
   log "🎉 ec2 instance $name is ready!"
 }
 
@@ -24361,8 +24360,17 @@ playground_ec2_open_command() {
   for instance in "${items[@]}"
   do
       name=$(echo "${instance}" | cut -d "/" -f 1)
+      state=$(echo "${instance}" | cut -d "/" -f 2)
+
+      if [ "$state" != "$EC2_INSTANCE_STATE_STOPPED" ] && [ "$state" != "$EC2_INSTANCE_STATE_RUNNING" ]
+      then
+          log "ec2 instance $name is state is $state (not stopped and not running), skipping it"
+          continue
+      fi
 
       playground ec2 allow-my-ip --instance "$instance"
+      instance="$(playground ec2 status --instance "$name" --all)"
+      playground ec2 sync-repro-folder local-to-ec2 --instance "$instance"
 
       log "👨‍💻 Open EC2 instance $name using Visual Studio code"
       code --folder-uri "vscode-remote://ssh-remote+$name/home/$username"
@@ -24421,7 +24429,7 @@ playground_ec2_allow_my_ip_command() {
       aws ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 22 --cidr "$myip/32" > /dev/null 2>&1 &
       if [ "$state" = "$EC2_INSTANCE_STATE_STOPPED" ]
       then
-          log "🚀 starting the ec2 instance $name with id $id"
+          log "🟢 starting the ec2 instance $name"
           aws ec2 start-instances --instance-ids "$id"
           wait_for_ec2_instance_to_be_running "$name"
           ip=$(aws ec2 describe-instances --instance-ids "$id" | jq ".Reservations[0].Instances[0].PublicDnsName" | tr -d '"')
@@ -24503,6 +24511,12 @@ playground_ec2_stop_command() {
       state=$(echo "${instance}" | cut -d "/" -f 2)
       id=$(echo "${instance}" | cut -d "/" -f 4)
 
+      if [ "$state" != "$EC2_INSTANCE_STATE_STOPPED" ] && [ "$state" != "$EC2_INSTANCE_STATE_RUNNING" ]
+      then
+          log "ec2 instance $name is state is $state (not stopped and not running), skipping it"
+          continue
+      fi
+
       if [ "$state" != "$EC2_INSTANCE_STATE_STOPPED" ]
       then
           log "🔴 stopping ec2 instance $name"
@@ -24545,10 +24559,15 @@ playground_ec2_start_command() {
       state=$(echo "${instance}" | cut -d "/" -f 2)
       id=$(echo "${instance}" | cut -d "/" -f 4)
 
+      if [ "$state" != "$EC2_INSTANCE_STATE_STOPPED" ] && [ "$state" != "$EC2_INSTANCE_STATE_RUNNING" ]
+      then
+          log "ec2 instance $name is state is $state (not stopped and not running), skipping it"
+          continue
+      fi
+
       if [ "$state" != "$EC2_INSTANCE_STATE_RUNNING" ]
       then
-          log "🟢 starting ec2 instance $name"
-          aws ec2 start-instances --instance-ids $id
+          playground ec2 allow-my-ip --instance "$instance"
       else
           log "ec2 instance $name is already running"
       fi
@@ -24621,7 +24640,7 @@ playground_ec2_sync_repro_folder_local_to_ec2_command() {
       fi
 
       log "👉 Sync local reproduction-models folder to ec2 instance $name"
-      rsync -cauv --filter=':- .gitignore' -e "ssh -i $pem_file" "$root_folder/reproduction-models" "$username@$ip:/home/$username/kafka-docker-playground"
+      rsync -cauv --filter=':- .gitignore' -e "ssh -i $pem_file -o StrictHostKeyChecking=no" "$root_folder/reproduction-models" "$username@$ip:/home/$username/kafka-docker-playground"
   done
 }
 
@@ -24666,7 +24685,7 @@ playground_ec2_sync_repro_folder_ec2_to_local_command() {
       fi
 
       log "👈 Sync ec2 instance $name reproduction-models folder to local"
-      rsync -cauv --filter=':- .gitignore' -e "ssh -i $pem_file" "$username@$ip:/home/$username/kafka-docker-playground/reproduction-models" "$root_folder"
+      rsync -cauv --filter=':- .gitignore' -e "ssh -i $pem_file -o StrictHostKeyChecking=no" "$username@$ip:/home/$username/kafka-docker-playground/reproduction-models" "$root_folder"
   done
 }
 

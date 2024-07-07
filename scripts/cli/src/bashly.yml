@@ -3436,6 +3436,7 @@ commands:
           🎓 Tip: If not specified, the command will apply to all ec2 instances
 
   - name: allow-my-ip
+    private: true
     help: 🛂 Allow your current ip to connect to ec2 instance via ssh
     flags:
       - *instance

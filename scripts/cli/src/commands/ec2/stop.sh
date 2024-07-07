@@ -27,6 +27,12 @@ do
     state=$(echo "${instance}" | cut -d "/" -f 2)
     id=$(echo "${instance}" | cut -d "/" -f 4)
 
+    if [ "$state" != "$EC2_INSTANCE_STATE_STOPPED" ] && [ "$state" != "$EC2_INSTANCE_STATE_RUNNING" ]
+    then
+        log "ec2 instance $name is state is $state (not stopped and not running), skipping it"
+        continue
+    fi
+    
     if [ "$state" != "$EC2_INSTANCE_STATE_STOPPED" ]
     then
         log "🔴 stopping ec2 instance $name"
