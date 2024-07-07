@@ -2826,6 +2826,13 @@
               ],
               "argument": "INSTANCE",
               "description": "🖥️ ec2 instance (need to use completion to get all required details)\n\n🎓 Tip: If not specified, the command will apply to all ec2 instances\n"
+            },
+            {
+              "names": [
+                "--disable-sync-repro-folder"
+              ],
+              "argument": "",
+              "description": "🚫 Disable sync reproduction-models folder between local and ec2 instance\n"
             }
           ]
         },

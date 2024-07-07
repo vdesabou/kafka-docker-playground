@@ -5707,6 +5707,11 @@ playground_ec2_open_usage() {
     printf "    🖥️ ec2 instance (need to use completion to get all required details)\n    \n    🎓 Tip: If not specified, the command will apply to all ec2 instances\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--disable-sync-repro-folder")"
+    printf "    🚫 Disable sync reproduction-models folder between local and ec2 instance\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -11601,6 +11606,7 @@ function check_arm64_support() {
     if [ $? = 0 ]
     then
         logerror "🖥️ This example is not working with ARM64 !"
+        log "It is highly recommended to use playground ec2 command (https://kafka-docker-playground.io/#/playground%20ec2) to run the example on ubuntu ec2 instance"
         log "Do you want to start test anyway ?"
         check_if_continue
         return
@@ -24248,7 +24254,7 @@ playground_ec2_create_command() {
   log "👷 ec2 instance $name is created and accesible via SSH, it will be opened with visual studio code in 3 minutes..."
   log "🌀 cloud formation is still in progress (installing docker, etc...) and can be reverted after 10 minutes (i.e removing ec2 instance) in case of issue. You can check progress by checking log file output.log in root folder of ec2 instance"
   sleep 180
-  playground ec2 open --instance "$instance"
+  playground ec2 open --instance "$instance" --disable-sync-repro-folder
 
   wait_for_ec2_cloudformation_to_be_completed "$name"
 
@@ -24307,6 +24313,7 @@ playground_ec2_delete_command() {
 playground_ec2_open_command() {
   # src/commands/ec2/open.sh
   instance="${args[--instance]}"
+  disable_sync_repro_folder="${args[--disable-sync-repro-folder]}"
 
   if [[ $(type code 2>&1) =~ "not found" ]]
   then
@@ -24348,8 +24355,13 @@ playground_ec2_open_command() {
       fi
 
       playground ec2 allow-my-ip --instance "$instance"
-      instance="$(playground ec2 status --instance "$name" --all)"
-      playground ec2 sync-repro-folder local-to-ec2 --instance "$instance"
+
+      if [[ ! -n "$disable_sync_repro_folder" ]]
+      then
+          instance="$(playground ec2 status --instance "$name" --all)"
+          playground ec2 sync-repro-folder local-to-ec2 --instance "$instance"
+
+      fi
 
       log "👨‍💻 Open EC2 instance $name using Visual Studio code"
       code --folder-uri "vscode-remote://ssh-remote+$name/home/$username"
@@ -37460,6 +37472,14 @@ playground_ec2_open_parse_requirements() {
           printf "%s\n" "--instance requires an argument: --instance, -i INSTANCE" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --disable-sync-repro-folder)
+
+        # :flag.case_no_arg
+        args['--disable-sync-repro-folder']=1
+        shift
         ;;
 
       -?*)

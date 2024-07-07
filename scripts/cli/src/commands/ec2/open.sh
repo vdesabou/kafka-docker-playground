@@ -1,4 +1,5 @@
 instance="${args[--instance]}"
+disable_sync_repro_folder="${args[--disable-sync-repro-folder]}"
 
 if [[ $(type code 2>&1) =~ "not found" ]]
 then
@@ -40,8 +41,12 @@ do
     fi
 
     playground ec2 allow-my-ip --instance "$instance"
-    instance="$(playground ec2 status --instance "$name" --all)"
-    playground ec2 sync-repro-folder local-to-ec2 --instance "$instance"
+
+    if [[ ! -n "$disable_sync_repro_folder" ]]
+    then
+        instance="$(playground ec2 status --instance "$name" --all)"
+        playground ec2 sync-repro-folder local-to-ec2 --instance "$instance" 
+    fi
 
     log "👨‍💻 Open EC2 instance $name using Visual Studio code"
     code --folder-uri "vscode-remote://ssh-remote+$name/home/$username"
