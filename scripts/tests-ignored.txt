@@ -13,9 +13,6 @@ get_logminer_memory_stats.sh
 s3-csv.sh
 s3-json.sh
 
-# failing too often due to https://github.com/Knappek/docker-hadoop-secure#unable-to-obtain-kerberos-password
-hdfs2-sink-kerberos.sh
-hdfs2-source-kerberos.sh
 # getting same issue as https://github.com/confluentinc/kafka-connect-jdbc/issues/1140
 redshift-jdbc-sink.sh
 
