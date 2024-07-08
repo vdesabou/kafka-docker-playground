@@ -10,6 +10,7 @@ then
      log "Downloading mysql-connector-j-8.4.0.jar"
      wget -q https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.4.0/mysql-connector-j-8.4.0.jar
 fi
+cd -
 
 if [ ! -z "$SQL_DATAGEN" ]
 then
@@ -32,7 +33,6 @@ then
 else
      log "🛑 SQL_DATAGEN is not set"
 fi
-cd -
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
@@ -79,20 +79,26 @@ INSERT INTO team (
 );
 EOF
 
+if [ ! -z "$SQL_DATAGEN" ]
+then
+     DURATION=1
+     log "Injecting data for $DURATION minutes"
+     docker exec -d sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --connectionUrl 'jdbc:mysql://mysql:3306/mydb?user=user&password=password&useSSL=false' --maxPoolSize 10 --durationTimeMin $DURATION"
+fi
+
 log "Show content of team table:"
-docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
+docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select coun(*) from team'"
 
 log "Creating MySQL source connector"
-playground connector create-or-update --connector mysql-source  << EOF
+playground connector create-or-update --connector mysql-source --level TRACE << EOF
 {
      "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
      "tasks.max":"1",
      "connection.url":"jdbc:mysql://mysql:3306/mydb?user=user&password=password&useSSL=false",
      "table.whitelist":"team",
-     "mode":"timestamp+incrementing",
-     "timestamp.column.name":"last_modified",
-     "incrementing.column.name":"id",
-     "topic.prefix":"mysql-"
+     "mode":"bulk",
+     "topic.prefix":"mysql-",
+     "poll.interval.ms":10
 }
 EOF
 
@@ -101,9 +107,4 @@ sleep 5
 log "Verifying topic mysql-team"
 playground topic consume --topic mysql-team --min-expected-messages 2 --timeout 60
 
-if [ ! -z "$SQL_DATAGEN" ]
-then
-     DURATION=10
-     log "Injecting data for $DURATION minutes"
-     docker exec -d sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --connectionUrl 'jdbc:mysql://mysql:3306/mydb?user=user&password=password&useSSL=false' --maxPoolSize 10 --durationTimeMin $DURATION"
-fi
+
