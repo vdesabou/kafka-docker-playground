@@ -87,7 +87,7 @@ then
 fi
 
 log "Show content of team table:"
-docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select coun(*) from team'"
+docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
 
 log "Creating MySQL source connector"
 playground connector create-or-update --connector mysql-source --level TRACE << EOF
