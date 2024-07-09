@@ -1441,11 +1441,11 @@ function wait_for_ec2_instance_to_be_running () {
   max_wait=${2:-300}
   cur_wait=0
   log "⌛ waiting up to $max_wait seconds for ec2 instance $instance to be running"
-  playground ec2 status --instance $instance > /tmp/out.txt 2>&1
+  playground ec2 status --instance "$instance" > /tmp/out.txt 2>&1
   while ! grep "running" /tmp/out.txt > /dev/null;
   do
     sleep 10
-    playground ec2 status --instance $instance > /tmp/out.txt 2>&1
+    playground ec2 status --instance "$instance" > /tmp/out.txt 2>&1
     status=$(cat /tmp/out.txt)
     log "⌛ current status: $status"
     cur_wait=$(( cur_wait+10 ))

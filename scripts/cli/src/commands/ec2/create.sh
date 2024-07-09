@@ -25,6 +25,13 @@ fi
 
 log "🔐 creating pem file $pem_file (make sure to create backup)"
 aws ec2 create-key-pair --key-name "$name" --key-type rsa --key-format pem --query "KeyMaterial" --output text > $pem_file
+
+if ! grep "BEGIN RSA PRIVATE KEY" $pem_file > /dev/null
+then
+    logerror "❌ failed to create pem file $pem_file"
+    cat $pem_file
+    exit 1
+fi
 chmod 400 $pem_file
 
 cloud_formation_yml_file="$root_folder/cloudformation/kafka-docker-playground.yml"
