@@ -716,6 +716,11 @@ playground_get_examples_list_with_fzf_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--academy-only")"
+    printf "\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--other-playgrounds-only")"
     printf "\n"
     echo
@@ -6091,6 +6096,7 @@ function generate_fzf_find_files() {
   generate_get_examples_list_with_fzf_fully_managed_connector_only
   generate_get_examples_list_with_fzf_schema_registry_only
   generate_get_examples_list_with_fzf_rest_proxy_only
+  generate_get_examples_list_with_fzf_academy_only
   generate_get_examples_list_with_fzf_other_playgrounds_only
 }
 
@@ -6180,6 +6186,20 @@ function generate_get_examples_list_with_fzf_rest_proxy_only () {
   output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_rest_proxy_only"
   rm -f $output_file
   find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/rest-proxy/*' ! -path '*/scripts/*' ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' | while read file_path
+  do
+    if grep -q "scripts/utils.sh" "$file_path"; then
+      generate_get_examples_add_emoji
+    fi
+  done
+  if [ -s "$output_file" ]; then
+    sort -o $output_file $output_file
+  fi
+}
+
+function generate_get_examples_list_with_fzf_academy_only () {
+  output_file="$root_folder/scripts/cli/get_examples_list_with_fzf_academy_only"
+  rm -f $output_file
+  find $root_folder -name \*.sh ! -name 'stop.sh' -path '*/academy/*' ! -path '*/scripts/*' ! -path '*/security/*' ! -path '*/reproduction-models/*'  ! -path '*/ccloud/*' | while read file_path
   do
     if grep -q "scripts/utils.sh" "$file_path"; then
       generate_get_examples_add_emoji
@@ -7303,6 +7323,7 @@ function display_interactive_menu_categories () {
   MENU_KSQL="🎏 ksqlDB $(printf '%*s' $((${MAX_LENGTH}-9-${#MENU_KSQL})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_ksql_only | awk '{print $1}') examples"
   MENU_SR="🔰 Schema registry $(printf '%*s' $((${MAX_LENGTH}-18-${#MENU_SR})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_schema_registry_only | awk '{print $1}') examples"
   MENU_RP="🧲 Rest proxy $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_RP})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_rest_proxy_only | awk '{print $1}') examples"
+  MENU_ACADEMY="🧑‍🎓 Academy $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_RP})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_academy_only | awk '{print $1}') examples"
 
   if [ "$repro" == 1 ]
   then
@@ -7329,12 +7350,12 @@ function display_interactive_menu_categories () {
     if [ $propose_current_example -eq 1 ]
     then
       MENU_CURRENT_EXAMPLE="🕹️  Current example $(printf '%*s' $((${MAX_LENGTH}-18-${#MENU_CURRENT_EXAMPLE})) ' ') $current_file"
-      options=("$MENU_CURRENT_EXAMPLE" "$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_OTHER" "$MENU_ENVIRONMENTS" "$MENU_ALL" "$MENU_KSQL" "$MENU_SR" "$MENU_RP")
+      options=("$MENU_CURRENT_EXAMPLE" "$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_OTHER" "$MENU_ENVIRONMENTS" "$MENU_ALL" "$MENU_KSQL" "$MENU_SR" "$MENU_RP" "$MENU_ACADEMY")
     else
-      options=("$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_OTHER" "$MENU_ENVIRONMENTS" "$MENU_ALL" "$MENU_KSQL" "$MENU_SR" "$MENU_RP")
+      options=("$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_OTHER" "$MENU_ENVIRONMENTS" "$MENU_ALL" "$MENU_KSQL" "$MENU_SR" "$MENU_RP" "$MENU_ACADEMY")
     fi
   else
-    options=("$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_REPRO" "$MENU_OTHER" "$MENU_ENVIRONMENTS" "$MENU_ALL" "$MENU_KSQL" "$MENU_SR" "$MENU_RP")
+    options=("$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_REPRO" "$MENU_OTHER" "$MENU_ENVIRONMENTS" "$MENU_ALL" "$MENU_KSQL" "$MENU_SR" "$MENU_RP" "$MENU_ACADEMY")
   fi
 
   res=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🚀" --header="select a category (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_pointer)
@@ -7371,6 +7392,9 @@ function display_interactive_menu_categories () {
     ;;
     "$MENU_RP")
       test_file=$(playground get-examples-list-with-fzf --rest-proxy-only)
+    ;;
+    "$MENU_ACADEMY")
+      test_file=$(playground get-examples-list-with-fzf --academy-only)
     ;;
     "$MENU_OTHER")
       test_file=$(playground get-examples-list-with-fzf --other-playgrounds-only)
@@ -12347,6 +12371,7 @@ playground_get_examples_list_with_fzf_command() {
   ksql_only="${args[--ksql-only]}"
   schema_registry_only="${args[--schema-registry-only]}"
   rest_proxy_only="${args[--rest-proxy-only]}"
+  academy_only="${args[--academy-only]}"
   other_playgrounds_only="${args[--other-playgrounds-only]}"
 
   cur="${args[cur]}"
@@ -12448,6 +12473,16 @@ playground_get_examples_list_with_fzf_command() {
           generate_get_examples_list_with_fzf_rest_proxy_only
       fi
       get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf_rest_proxy_only"
+      return
+  fi
+
+  if [[ -n "$academy_only" ]]
+  then
+      if [ ! -f $root_folder/scripts/cli/get_examples_list_with_fzf_academy_only ]
+      then
+          generate_get_examples_list_with_fzf_academy_only
+      fi
+      get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf_academy_only"
       return
   fi
 
@@ -26216,6 +26251,14 @@ playground_get_examples_list_with_fzf_parse_requirements() {
 
         # :flag.case_no_arg
         args['--rest-proxy-only']=1
+        shift
+        ;;
+
+      # :flag.case
+      --academy-only)
+
+        # :flag.case_no_arg
+        args['--academy-only']=1
         shift
         ;;
 

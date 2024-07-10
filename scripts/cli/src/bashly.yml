@@ -171,6 +171,8 @@ commands:
     required: false
   - long: --rest-proxy-only
     required: false
+  - long: --academy-only
+    required: false
   - long: --other-playgrounds-only
     required: false
 

@@ -9,6 +9,7 @@ fully_managed_connector_only="${args[--fully-managed-connector-only]}"
 ksql_only="${args[--ksql-only]}"
 schema_registry_only="${args[--schema-registry-only]}"
 rest_proxy_only="${args[--rest-proxy-only]}"
+academy_only="${args[--academy-only]}"
 other_playgrounds_only="${args[--other-playgrounds-only]}"
 
 cur="${args[cur]}"
@@ -110,6 +111,16 @@ then
         generate_get_examples_list_with_fzf_rest_proxy_only
     fi
     get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf_rest_proxy_only"
+    return
+fi
+
+if [[ -n "$academy_only" ]]
+then
+    if [ ! -f $root_folder/scripts/cli/get_examples_list_with_fzf_academy_only ]
+    then
+        generate_get_examples_list_with_fzf_academy_only
+    fi
+    get_examples_list_with_fzf "$cur" "$root_folder/scripts/cli/get_examples_list_with_fzf_academy_only"
     return
 fi
 
