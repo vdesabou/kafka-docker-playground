@@ -9,7 +9,7 @@ docker compose down -v --remove-orphans
 
 maybe_delete_ccloud_environment
 
-AZURE_NAME=pg${USER}eh${GITHUB_RUN_NUMBER}${TAG}
+AZURE_NAME=pg${USER}feh${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 AZURE_RESOURCE_GROUP=$AZURE_NAME
 
