@@ -356,10 +356,31 @@ commands:
     - name: enabled
       required: false
       default: "true"
-      help: editor
     examples:
     - playground config clipboard false
     - playground config clipboard true
+
+  - name: open-ccloud-connector-in-browser
+    help: |
+      when running a fully managed connector example, it opens the connector in browser
+    commands:
+      - name: automatically
+        help: automatically open the connector in browser
+        args:
+        - name: automatically
+          required: false
+          default: "true"
+        examples:
+        - playground config open-ccloud-connector-in-browser automatically false
+        - playground config open-ccloud-connector-in-browser automatically true
+      - name: browser
+        help: browser to use
+        args:
+        - name: browser
+          required: false
+          default: ""
+        examples:
+        - playground config open-ccloud-connector-in-browser browser Safari
 
 - name: run
   group: Run
@@ -3179,12 +3200,19 @@ commands:
       help: |-
         ☁️ Fully Managed lcc id (only for Confluent employees)
 
-  - name: open-in-confluent-cloud
+  - name: open-ccloud-connector-in-browser
     group: Connect
     help: |-
-      🤖 Open Fully Managed connector in Confluent Cloud dashboard
+      🤖 Open Fully Managed connector in browser (Confluent Cloud dashboard)
     flags:
     - *connector
+    - long: --browser
+      required: false
+      arg: browser
+      help: |-
+        🌎 browser name
+
+        Default browser from your system if not set
 
   - name: create-or-update
     help: 🧑‍🎨  Create or update connector

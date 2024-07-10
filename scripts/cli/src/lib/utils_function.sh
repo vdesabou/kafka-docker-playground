@@ -2033,7 +2033,29 @@ function wait_for_ccloud_connector_up() {
 
   if [ -z "$GITHUB_RUN_NUMBER" ]
   then
-    playground connector open-in-confluent-cloud --connector $connectorName
+    automatically=$(playground config get open-ccloud-connector-in-browser.automatically)
+    if [ "$automatically" == "" ]
+    then
+        playground config set open-ccloud-connector-in-browser.automatically true
+    fi
+
+    browser=$(playground config get open-ccloud-connector-in-browser.browser)
+    if [ "$browser" == "" ]
+    then
+        playground config set open-ccloud-connector-in-browser.browser ""
+    fi
+
+    if [ "$automatically" == "true" ] || [ "$automatically" == "" ]
+    then
+      if [ "$browser" != "" ]
+      then
+        log "🤖 automatically (disable with 'playground config open-ccloud-connector-in-browser automatically false') open fully managed connector $connectorName in browser $browser (you can change browser with 'playground config open-ccloud-connector-in-browser browser <browser>')"
+        playground connector open-ccloud-connector-in-browser --connector $connectorName --browser $browser
+      else
+        log "🤖 automatically (disable with 'playground config open-ccloud-connector-in-browser automatically false') open fully managed connector $connectorName in default browser (you can set browser with 'playground config open-ccloud-connector-in-browser browser <browser>')"
+        playground connector open-ccloud-connector-in-browser --connector $connectorName
+      fi
+    fi
   fi
 
   return 0

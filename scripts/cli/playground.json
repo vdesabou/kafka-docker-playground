@@ -42,6 +42,32 @@
           "description": "copy to clipboard connector config (only working on MacOS)\n",
           "usage": "playground config clipboard [ENABLED]",
           "options": []
+        },
+        {
+          "name": "open-ccloud-connector-in-browser",
+          "description": "when running a fully managed connector example, it opens the connector in browser\n  \n",
+          "usage": "playground config open-ccloud-connector-in-browser COMMAND",
+          "options": []
+        }
+      ]
+    },
+    {
+      "name": "open-ccloud-connector-in-browser",
+      "description": "when running a fully managed connector example, it opens the connector in browser\n",
+      "usage": "playground config open-ccloud-connector-in-browser COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "automatically",
+          "description": "automatically open the connector in browser\n",
+          "usage": "playground config open-ccloud-connector-in-browser automatically [AUTOMATICALLY]",
+          "options": []
+        },
+        {
+          "name": "browser",
+          "description": "browser to use\n",
+          "usage": "playground config open-ccloud-connector-in-browser browser [BROWSER]",
+          "options": []
         }
       ]
     },
@@ -2548,9 +2574,9 @@
           ]
         },
         {
-          "name": "open-in-confluent-cloud",
-          "description": "🤖 Open Fully Managed connector in Confluent Cloud dashboard\n",
-          "usage": "playground connector open-in-confluent-cloud [OPTIONS]",
+          "name": "open-ccloud-connector-in-browser",
+          "description": "🤖 Open Fully Managed connector in browser (Confluent Cloud dashboard)\n",
+          "usage": "playground connector open-ccloud-connector-in-browser [OPTIONS]",
           "options": [
             {
               "names": [
@@ -2559,6 +2585,13 @@
               ],
               "argument": "CONNECTOR",
               "description": "🔗 Connector name\n\n🎓 Tip: If not specified, the command will apply to all connectors\n"
+            },
+            {
+              "names": [
+                "--browser"
+              ],
+              "argument": "BROWSER",
+              "description": "🌎 browser name\n\nDefault browser from your system if not set\n"
             }
           ]
         },

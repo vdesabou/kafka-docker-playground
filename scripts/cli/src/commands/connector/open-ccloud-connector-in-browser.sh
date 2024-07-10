@@ -1,10 +1,11 @@
 connector="${args[--connector]}"
+browser="${args[--browser]}"
 
 connector_type=$(playground state get run.connector_type)
 
 if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
 then
-    log "connector open-in-confluent-cloud command is not supported with $connector_type connector"
+    log "connector open-ccloud-connector-in-browser command is not supported with $connector_type connector"
     exit 0
 fi
 
@@ -40,6 +41,12 @@ do
         TYPE="sources"
     fi
 
-    log "🤖 Open $connector_type connector $connector ($connectorId) in Confluent Cloud dashboard"
-    open "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
+    if [[ -n "$browser" ]]
+    then
+        log "🤖 Open $connector_type connector $connector ($connectorId) in Confluent Cloud dashboard with browser $browser"
+        open -a "$browser" "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
+    else
+        log "🤖 Open $connector_type connector $connector ($connectorId) in Confluent Cloud dashboard"
+        open "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
+    fi
 done

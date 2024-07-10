@@ -43,6 +43,29 @@ subcommands:
           copy to clipboard connector config (only working on MacOS)
         usage: playground config clipboard [ENABLED]
         options: []
+      - name: open-ccloud-connector-in-browser
+        description: | 
+          when running a fully managed connector example, it opens the connector in browser
+            
+        usage: playground config open-ccloud-connector-in-browser COMMAND
+        options: []
+  - name: open-ccloud-connector-in-browser
+    description: | 
+        when running a fully managed connector example, it opens the connector in browser
+        
+    usage: playground config open-ccloud-connector-in-browser COMMAND
+    options: []
+    subcommands:
+      - name: automatically
+        description: | 
+          automatically open the connector in browser
+        usage: playground config open-ccloud-connector-in-browser automatically [AUTOMATICALLY]
+        options: []
+      - name: browser
+        description: | 
+          browser to use
+        usage: playground config open-ccloud-connector-in-browser browser [BROWSER]
+        options: []
   - name: run
     description: | 
         🕹️ Run any example !
@@ -2689,10 +2712,10 @@ subcommands:
           description: | 
             ☁️ Fully Managed lcc id (only for Confluent employees)
             
-      - name: open-in-confluent-cloud
+      - name: open-ccloud-connector-in-browser
         description: | 
-          🤖 Open Fully Managed connector in Confluent Cloud dashboard
-        usage: playground connector open-in-confluent-cloud [OPTIONS]
+          🤖 Open Fully Managed connector in browser (Confluent Cloud dashboard)
+        usage: playground connector open-ccloud-connector-in-browser [OPTIONS]
         options:
         - names:
           - --connector
@@ -2702,6 +2725,14 @@ subcommands:
             🔗 Connector name
             
             🎓 Tip: If not specified, the command will apply to all connectors
+            
+        - names:
+          - --browser
+          argument: BROWSER
+          description: | 
+            🌎 browser name
+            
+            Default browser from your system if not set
             
       - name: create-or-update
         description: | 

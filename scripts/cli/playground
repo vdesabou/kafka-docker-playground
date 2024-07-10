@@ -31,143 +31,143 @@ playground_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   Show help about a command\n" "$(green "help")                                     "
-  printf "  %s   🗺️ Show a status\n" "$(green "status")                                   "
-  printf "  %s   ⚙️ Configure CLI\n" "$(green "config")                                   "
+  printf "  %s   Show help about a command\n" "$(green "help")                                      "
+  printf "  %s   🗺️ Show a status\n" "$(green "status")                                    "
+  printf "  %s   ⚙️ Configure CLI\n" "$(green "config")                                    "
   echo
   printf "%s\n" "$(bold "Run commands:")"
-  printf "  %s   🕹️ Run any example !\n" "$(green "run")                                      "
-  printf "  %s   ⚡ Simply re-run last example you ran with <playground run>\n" "$(green "re-run")                                   "
-  printf "  %s   🏰 Get an history of the examples which were run with run command and run it again\n" "$(green "history")                                  "
-  printf "  %s   🌩️  Switch to ccloud environment.\n" "$(green "switch-ccloud")                            "
-  printf "  %s   💺  Switch back from previous environment before switch-ccloud was called.\n" "$(green "switch-back")                              "
-  printf "  %s   ✨ Update current confluent platform or connector(s) with new version(s)\n" "$(green "update-version")                           "
-  printf "  %s   👐 When --file is not provided, simply open last example you ran with <playground run>\n" "$(green "open")                                     "
-  printf "  %s   🛑 Stop currently running example\n" "$(green "stop")                                     "
-  printf "  %s   🧨 Remove all docker images (including docker volumes)\n" "$(green "remove-all-docker-images")                 "
-  printf "  %s   🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%8c%%a4%%ef%%b8%%8f-confluent-cloud-examples)\n" "$(green "cleanup-cloud-details")                    "
-  printf "  %s   🧑‍🎓 Open Confluent documentation of currently running example\n" "$(green "open-docs")                                "
-  printf "  %s   🧹 Cleanup cloud resources that were created by running examples from the playground\n" "$(green "cleanup-cloud-resources")                  "
+  printf "  %s   🕹️ Run any example !\n" "$(green "run")                                       "
+  printf "  %s   ⚡ Simply re-run last example you ran with <playground run>\n" "$(green "re-run")                                    "
+  printf "  %s   🏰 Get an history of the examples which were run with run command and run it again\n" "$(green "history")                                   "
+  printf "  %s   🌩️  Switch to ccloud environment.\n" "$(green "switch-ccloud")                             "
+  printf "  %s   💺  Switch back from previous environment before switch-ccloud was called.\n" "$(green "switch-back")                               "
+  printf "  %s   ✨ Update current confluent platform or connector(s) with new version(s)\n" "$(green "update-version")                            "
+  printf "  %s   👐 When --file is not provided, simply open last example you ran with <playground run>\n" "$(green "open")                                      "
+  printf "  %s   🛑 Stop currently running example\n" "$(green "stop")                                      "
+  printf "  %s   🧨 Remove all docker images (including docker volumes)\n" "$(green "remove-all-docker-images")                  "
+  printf "  %s   🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%8c%%a4%%ef%%b8%%8f-confluent-cloud-examples)\n" "$(green "cleanup-cloud-details")                     "
+  printf "  %s   🧑‍🎓 Open Confluent documentation of currently running example\n" "$(green "open-docs")                                 "
+  printf "  %s   🧹 Cleanup cloud resources that were created by running examples from the playground\n" "$(green "cleanup-cloud-resources")                   "
   echo
   printf "%s\n" "$(bold "Repro commands:")"
-  printf "  %s   👷‍♂️ Reproduction model commands\n" "$(green "repro")                                    "
-  printf "  %s   📤 Export as tgz file uncommitted reproduction models from the folder of current reproduction model\n" "$(green "repro export")                             "
-  printf "  %s   📥 Import tgz file which was created with export command\n" "$(green "repro import")                             "
-  printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "repro bootstrap")                          "
+  printf "  %s   👷‍♂️ Reproduction model commands\n" "$(green "repro")                                     "
+  printf "  %s   📤 Export as tgz file uncommitted reproduction models from the folder of current reproduction model\n" "$(green "repro export")                              "
+  printf "  %s   📥 Import tgz file which was created with export command\n" "$(green "repro import")                              "
+  printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "repro bootstrap")                           "
   echo
   printf "%s\n" "$(bold "Kafka commands:")"
-  printf "  %s   🐋 Get docker-compose\n" "$(green "get-docker-compose")                       "
-  printf "  %s   🔢 Get JMX metrics from a container\n" "$(green "get-jmx-metrics")                          "
+  printf "  %s   🐋 Get docker-compose\n" "$(green "get-docker-compose")                        "
+  printf "  %s   🔢 Get JMX metrics from a container\n" "$(green "get-jmx-metrics")                           "
   echo
   printf "%s\n" "$(bold "Schema commands:")"
-  printf "  %s   🔰 Schema commands\n" "$(green "schema")                                   "
-  printf "  %s   🔰 Get all schemas versions for specified subject (if --subject is not specified, all subjects will be used)\n" "$(green "schema get")                               "
-  printf "  %s   ⏺️ Register a schema in specified subject\n" "$(green "schema register")                          "
-  printf "  %s   🛡️ Get subject-level compatibility\n" "$(green "schema get-compatibility")                 "
-  printf "  %s   🛡️ Set subject-level compatibility\n" "$(green "schema set-compatibility")                 "
-  printf "  %s   🔏 Get subject-level mode\n" "$(green "schema get-mode")                          "
-  printf "  %s   🔏 Set subject-level mode\n" "$(green "schema set-mode")                          "
-  printf "  %s   🧟 Delete schema\n" "$(green "schema delete")                            "
+  printf "  %s   🔰 Schema commands\n" "$(green "schema")                                    "
+  printf "  %s   🔰 Get all schemas versions for specified subject (if --subject is not specified, all subjects will be used)\n" "$(green "schema get")                                "
+  printf "  %s   ⏺️ Register a schema in specified subject\n" "$(green "schema register")                           "
+  printf "  %s   🛡️ Get subject-level compatibility\n" "$(green "schema get-compatibility")                  "
+  printf "  %s   🛡️ Set subject-level compatibility\n" "$(green "schema set-compatibility")                  "
+  printf "  %s   🔏 Get subject-level mode\n" "$(green "schema get-mode")                           "
+  printf "  %s   🔏 Set subject-level mode\n" "$(green "schema set-mode")                           "
+  printf "  %s   🧟 Delete schema\n" "$(green "schema delete")                             "
   echo
   printf "%s\n" "$(bold "TCP Proxy commands:")"
-  printf "  %s   🏚 Zazkia TCP Proxy commands\n" "$(green "tcp-proxy")                                "
-  printf "  %s   💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998\n" "$(green "tcp-proxy start")                          "
-  printf "  %s   🧲 Get Zazkia active TCP connections config and stats\n" "$(green "tcp-proxy get-connections")                "
-  printf "  %s   ⏲️ Add milliseconds delay to service response.\n" "$(green "tcp-proxy delay")                          "
-  printf "  %s   💔 Break sending the response to the client.\n" "$(green "tcp-proxy break")                          "
-  printf "  %s   ❌ Close the Zazkia active TCP connections\n" "$(green "tcp-proxy close-connection")               "
-  printf "  %s   🧹 Close all Zazkia TCP connections which are in error state (close all with error button in Zazkia UI)\n" "$(green "tcp-proxy close-all-connection-with-error")"
-  printf "  %s   🙅‍♂️ Change whether new connections can be accepted\n" "$(green "tcp-proxy toggle-accept-connections")      "
-  printf "  %s   ✅ Change whether reading data from the client is enabled.\n" "$(green "tcp-proxy toggle-reads-client")            "
-  printf "  %s   ✅ Change whether reading data from the service is enabled.\n" "$(green "tcp-proxy toggle-reads-service")           "
-  printf "  %s   ✅ Change whether writing data to the client is enabled.\n" "$(green "tcp-proxy toggle-writes-client")           "
-  printf "  %s   ✅ Change whether reading data to the service is enabled.\n" "$(green "tcp-proxy toggle-writes-service")          "
+  printf "  %s   🏚 Zazkia TCP Proxy commands\n" "$(green "tcp-proxy")                                 "
+  printf "  %s   💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998\n" "$(green "tcp-proxy start")                           "
+  printf "  %s   🧲 Get Zazkia active TCP connections config and stats\n" "$(green "tcp-proxy get-connections")                 "
+  printf "  %s   ⏲️ Add milliseconds delay to service response.\n" "$(green "tcp-proxy delay")                           "
+  printf "  %s   💔 Break sending the response to the client.\n" "$(green "tcp-proxy break")                           "
+  printf "  %s   ❌ Close the Zazkia active TCP connections\n" "$(green "tcp-proxy close-connection")                "
+  printf "  %s   🧹 Close all Zazkia TCP connections which are in error state (close all with error button in Zazkia UI)\n" "$(green "tcp-proxy close-all-connection-with-error") "
+  printf "  %s   🙅‍♂️ Change whether new connections can be accepted\n" "$(green "tcp-proxy toggle-accept-connections")       "
+  printf "  %s   ✅ Change whether reading data from the client is enabled.\n" "$(green "tcp-proxy toggle-reads-client")             "
+  printf "  %s   ✅ Change whether reading data from the service is enabled.\n" "$(green "tcp-proxy toggle-reads-service")            "
+  printf "  %s   ✅ Change whether writing data to the client is enabled.\n" "$(green "tcp-proxy toggle-writes-client")            "
+  printf "  %s   ✅ Change whether reading data to the service is enabled.\n" "$(green "tcp-proxy toggle-writes-service")           "
   echo
   printf "%s\n" "$(bold "Tools commands:")"
-  printf "  %s   🧰 Tools commands\n" "$(green "tools")                                    "
-  printf "  %s   🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n" "$(green "tools install-vscode-extension")           "
-  printf "  %s   🔖 Read provided avro file\n" "$(green "tools read-avro-file")                     "
-  printf "  %s   🔖 Read provided parquet file\n" "$(green "tools read-parquet-file")                  "
+  printf "  %s   🧰 Tools commands\n" "$(green "tools")                                     "
+  printf "  %s   🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n" "$(green "tools install-vscode-extension")            "
+  printf "  %s   🔖 Read provided avro file\n" "$(green "tools read-avro-file")                      "
+  printf "  %s   🔖 Read provided parquet file\n" "$(green "tools read-parquet-file")                   "
   echo
   printf "%s\n" "$(bold "Debug commands:")"
-  printf "  %s   🐞 Debug commands\n" "$(green "debug")                                    "
-  printf "  %s   ✨ Enable java remote debugging for container\n" "$(green "debug enable-remote-debugging")            "
-  printf "  %s   🔐 Testing TLS/SSL encryption using https://testssl.sh/\n" "$(green "debug testssl")                            "
-  printf "  %s   ⛑️ Generate a diagnostic bundle with Diagnostics Bundle Tool\n" "$(green "debug generate-diagnostics")               "
-  printf "  %s   🎯 Take a java thread dump\n" "$(green "debug thread-dump")                        "
-  printf "  %s   👻 Take a heap dump\n" "$(green "debug heap-dump")                          "
-  printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "debug tcp-dump")                           "
-  printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "debug block-traffic")                      "
-  printf "  %s   🤎 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "debug java-debug")                         "
-  printf "  %s   🛩️ Record flight recorder\n" "$(green "debug flight-recorder")                    "
-  printf "  %s   🧬 Set log level for any package\n" "$(green "debug log-level")                          "
+  printf "  %s   🐞 Debug commands\n" "$(green "debug")                                     "
+  printf "  %s   ✨ Enable java remote debugging for container\n" "$(green "debug enable-remote-debugging")             "
+  printf "  %s   🔐 Testing TLS/SSL encryption using https://testssl.sh/\n" "$(green "debug testssl")                             "
+  printf "  %s   ⛑️ Generate a diagnostic bundle with Diagnostics Bundle Tool\n" "$(green "debug generate-diagnostics")                "
+  printf "  %s   🎯 Take a java thread dump\n" "$(green "debug thread-dump")                         "
+  printf "  %s   👻 Take a heap dump\n" "$(green "debug heap-dump")                           "
+  printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "debug tcp-dump")                            "
+  printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "debug block-traffic")                       "
+  printf "  %s   🤎 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "debug java-debug")                          "
+  printf "  %s   🛩️ Record flight recorder\n" "$(green "debug flight-recorder")                     "
+  printf "  %s   🧬 Set log level for any package\n" "$(green "debug log-level")                           "
   echo
   printf "%s\n" "$(bold "Container commands:")"
-  printf "  %s   🐳 Container commands\n" "$(green "container")                                "
-  printf "  %s   📝 Get properties file from a container\n" "$(green "container get-properties")                 "
-  printf "  %s   💫 Recreate container(s)\n" "$(green "container recreate")                       "
-  printf "  %s   🖥️  Get ip address of running containers\n" "$(green "container get-ip-addresses")               "
-  printf "  %s   💀 Kill all containers\n" "$(green "container kill-all")                       "
-  printf "  %s   🕵️  Tail and follow container logs\n" "$(green "container logs")                           "
-  printf "  %s   🛬 SSH into container\n" "$(green "container ssh")                            "
-  printf "  %s   🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)\n" "$(green "container change-jdk")                     "
-  printf "  %s   🪄  Execute command in a container\n" "$(green "container exec")                           "
-  printf "  %s   🔁 Restart a container\n" "$(green "container restart")                        "
-  printf "  %s   ⏸️  Pause a container\n" "$(green "container pause")                          "
-  printf "  %s   ⏯️  Resume a container\n" "$(green "container resume")                         "
-  printf "  %s   🔫 Kill a container\n" "$(green "container kill")                           "
-  printf "  %s   📦  Set environment variable(s) for a container\n" "$(green "container set-environment-variables")      "
+  printf "  %s   🐳 Container commands\n" "$(green "container")                                 "
+  printf "  %s   📝 Get properties file from a container\n" "$(green "container get-properties")                  "
+  printf "  %s   💫 Recreate container(s)\n" "$(green "container recreate")                        "
+  printf "  %s   🖥️  Get ip address of running containers\n" "$(green "container get-ip-addresses")                "
+  printf "  %s   💀 Kill all containers\n" "$(green "container kill-all")                        "
+  printf "  %s   🕵️  Tail and follow container logs\n" "$(green "container logs")                            "
+  printf "  %s   🛬 SSH into container\n" "$(green "container ssh")                             "
+  printf "  %s   🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)\n" "$(green "container change-jdk")                      "
+  printf "  %s   🪄  Execute command in a container\n" "$(green "container exec")                            "
+  printf "  %s   🔁 Restart a container\n" "$(green "container restart")                         "
+  printf "  %s   ⏸️  Pause a container\n" "$(green "container pause")                           "
+  printf "  %s   ⏯️  Resume a container\n" "$(green "container resume")                          "
+  printf "  %s   🔫 Kill a container\n" "$(green "container kill")                            "
+  printf "  %s   📦  Set environment variable(s) for a container\n" "$(green "container set-environment-variables")       "
   echo
   printf "%s\n" "$(bold "Topic commands:")"
-  printf "  %s   🗳 Topic commands\n" "$(green "topic")                                    "
-  printf "  %s   💯 Get number of records in a topic\n" "$(green "topic get-number-records")                 "
-  printf "  %s   📭 Display content of __consumer_offsets topic\n" "$(green "topic display-consumer-offsets")           "
-  printf "  %s   🔘 List topics\n" "$(green "topic list")                               "
-  printf "  %s   🔬 Describe topic\n" "$(green "topic describe")                           "
-  printf "  %s   🛡️ Change topic's schema compatibility\n" "$(green "topic set-schema-compatibility")           "
-  printf "  %s   📥 Consume topic from beginning\n" "$(green "topic consume")                            "
-  printf "  %s   📤 Produce to a topic\n" "$(green "topic produce")                            "
-  printf "  %s   🆕 Create topic\n" "$(green "topic create")                             "
-  printf "  %s   ❌ Delete topic and associated schema/subject if applicable\n" "$(green "topic delete")                             "
-  printf "  %s   🪛 Alter topic config\n" "$(green "topic alter")                              "
+  printf "  %s   🗳 Topic commands\n" "$(green "topic")                                     "
+  printf "  %s   💯 Get number of records in a topic\n" "$(green "topic get-number-records")                  "
+  printf "  %s   📭 Display content of __consumer_offsets topic\n" "$(green "topic display-consumer-offsets")            "
+  printf "  %s   🔘 List topics\n" "$(green "topic list")                                "
+  printf "  %s   🔬 Describe topic\n" "$(green "topic describe")                            "
+  printf "  %s   🛡️ Change topic's schema compatibility\n" "$(green "topic set-schema-compatibility")            "
+  printf "  %s   📥 Consume topic from beginning\n" "$(green "topic consume")                             "
+  printf "  %s   📤 Produce to a topic\n" "$(green "topic produce")                             "
+  printf "  %s   🆕 Create topic\n" "$(green "topic create")                              "
+  printf "  %s   ❌ Delete topic and associated schema/subject if applicable\n" "$(green "topic delete")                              "
+  printf "  %s   🪛 Alter topic config\n" "$(green "topic alter")                               "
   echo
   printf "%s\n" "$(bold "Connector-Plugin commands:")"
-  printf "  %s   🔌 Connector-plugin commands\n" "$(green "connector-plugin")                         "
-  printf "  %s   ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/ Search for specific class and display method signatures\n" "$(green "connector-plugin search-jar")              "
-  printf "  %s   💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "connector-plugin versions")                "
+  printf "  %s   🔌 Connector-plugin commands\n" "$(green "connector-plugin")                          "
+  printf "  %s   ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/ Search for specific class and display method signatures\n" "$(green "connector-plugin search-jar")               "
+  printf "  %s   💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "connector-plugin versions")                 "
   echo
   printf "%s\n" "$(bold "Connector commands:")"
-  printf "  %s   🔗 Connector commands\n" "$(green "connector")                                "
-  printf "  %s   🧩 Show status of all connectors\n" "$(green "connector status")                         "
-  printf "  %s   💈 Handle source and sink connectors offsets\n" "$(green "connector offsets")                        "
-  printf "  %s   🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n" "$(green "connector plugins")                        "
-  printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")                          "
-  printf "  %s   🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n" "$(green "connector versions")                       "
-  printf "  %s   ♻️  Restart connector\n" "$(green "connector restart")                        "
-  printf "  %s   🛑 Stop connector (only available if CP > 7.5 )\n" "$(green "connector stop")                           "
-  printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")                         "
-  printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")                         "
-  printf "  %s   🐢 Show lag of sink connector\n" "$(green "connector show-lag")                       "
-  printf "  %s   🧰 Show current connector config that was applied\n" "$(green "connector show-config")                    "
-  printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "connector show-config-parameters")         "
-  printf "  %s   🗜️ Easily select config from all possible configuration parameters of connector\n" "$(green "connector select-config")                  "
-  printf "  %s   🔌 useful snippets\n" "$(green "connector snippets")                       "
-  printf "  %s   🧑‍🎓 Open connector documentation of currently running conector(s)\n" "$(green "connector open-docs")                      "
-  printf "  %s   🧬 Set connect log level\n" "$(green "connector log-level")                      "
-  printf "  %s   🕵️  Tail and follow connect logs\n" "$(green "connector logs")                           "
-  printf "  %s   🤖 Open Fully Managed connector in Confluent Cloud dashboard\n" "$(green "connector open-in-confluent-cloud")        "
-  printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "connector create-or-update")               "
-  printf "  %s   🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.\n" "$(green "connector update")                         "
+  printf "  %s   🔗 Connector commands\n" "$(green "connector")                                 "
+  printf "  %s   🧩 Show status of all connectors\n" "$(green "connector status")                          "
+  printf "  %s   💈 Handle source and sink connectors offsets\n" "$(green "connector offsets")                         "
+  printf "  %s   🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n" "$(green "connector plugins")                         "
+  printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")                           "
+  printf "  %s   🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n" "$(green "connector versions")                        "
+  printf "  %s   ♻️  Restart connector\n" "$(green "connector restart")                         "
+  printf "  %s   🛑 Stop connector (only available if CP > 7.5 )\n" "$(green "connector stop")                            "
+  printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")                          "
+  printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")                          "
+  printf "  %s   🐢 Show lag of sink connector\n" "$(green "connector show-lag")                        "
+  printf "  %s   🧰 Show current connector config that was applied\n" "$(green "connector show-config")                     "
+  printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "connector show-config-parameters")          "
+  printf "  %s   🗜️ Easily select config from all possible configuration parameters of connector\n" "$(green "connector select-config")                   "
+  printf "  %s   🔌 useful snippets\n" "$(green "connector snippets")                        "
+  printf "  %s   🧑‍🎓 Open connector documentation of currently running conector(s)\n" "$(green "connector open-docs")                       "
+  printf "  %s   🧬 Set connect log level\n" "$(green "connector log-level")                       "
+  printf "  %s   🕵️  Tail and follow connect logs\n" "$(green "connector logs")                            "
+  printf "  %s   🤖 Open Fully Managed connector in browser (Confluent Cloud dashboard)\n" "$(green "connector open-ccloud-connector-in-browser")"
+  printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "connector create-or-update")                "
+  printf "  %s   🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.\n" "$(green "connector update")                          "
   echo
   printf "%s\n" "$(bold "EC2 commands:")"
-  printf "  %s   ✨ Create and manage AWS EC2 instances (using Cloud Formation) to run kafka-docker-playground\n" "$(green "ec2")                                      "
-  printf "  %s   👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation\n" "$(green "ec2 create")                               "
-  printf "  %s   ❌ Delete an EC2 instance created with Cloud Formation\n" "$(green "ec2 delete")                               "
-  printf "  %s   👨‍💻 Open an EC2 instance using Visual Studio code\n" "$(green "ec2 open")                                 "
-  printf "  %s   🔘 List all EC2 instance\n" "$(green "ec2 list")                                 "
-  printf "  %s   🔴 Stop an EC2 instance\n" "$(green "ec2 stop")                                 "
-  printf "  %s   🟢 Start an EC2 instance\n" "$(green "ec2 start")                                "
-  printf "  %s   ↔️ Synchronize reproduction-models folder bewteen local and ec2 instance\n" "$(green "ec2 sync-repro-folder")                    "
+  printf "  %s   ✨ Create and manage AWS EC2 instances (using Cloud Formation) to run kafka-docker-playground\n" "$(green "ec2")                                       "
+  printf "  %s   👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation\n" "$(green "ec2 create")                                "
+  printf "  %s   ❌ Delete an EC2 instance created with Cloud Formation\n" "$(green "ec2 delete")                                "
+  printf "  %s   👨‍💻 Open an EC2 instance using Visual Studio code\n" "$(green "ec2 open")                                  "
+  printf "  %s   🔘 List all EC2 instance\n" "$(green "ec2 list")                                  "
+  printf "  %s   🔴 Stop an EC2 instance\n" "$(green "ec2 stop")                                  "
+  printf "  %s   🟢 Start an EC2 instance\n" "$(green "ec2 start")                                 "
+  printf "  %s   ↔️ Synchronize reproduction-models folder bewteen local and ec2 instance\n" "$(green "ec2 sync-repro-folder")                     "
   echo
 
   # :command.long_usage
@@ -1123,9 +1123,10 @@ playground_config_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   editor to use to open files\n" "$(green "editor")           "
-  printf "  %s   📂 list of folders where to search for zip or jar\n" "$(green "folder_zip_or_jar")"
-  printf "  %s   copy to clipboard connector config (only working on MacOS)\n" "$(green "clipboard")        "
+  printf "  %s   editor to use to open files\n" "$(green "editor")                          "
+  printf "  %s   📂 list of folders where to search for zip or jar\n" "$(green "folder_zip_or_jar")               "
+  printf "  %s   copy to clipboard connector config (only working on MacOS)\n" "$(green "clipboard")                       "
+  printf "  %s   when running a fully managed connector example, it opens the connector in browser\n" "$(green "open-ccloud-connector-in-browser")"
   echo
 
   # :command.long_usage
@@ -1334,7 +1335,7 @@ playground_config_clipboard_usage() {
 
     # :argument.usage
     printf "  %s\n" "$(blue "ENABLED")"
-    printf "    editor\n"
+    printf "\n"
     printf "    Default: true\n"
     echo
 
@@ -1342,6 +1343,108 @@ playground_config_clipboard_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground config clipboard false\n"
     printf "  playground config clipboard true\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_config_open_ccloud_connector_in_browser_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground config open-ccloud-connector-in-browser\n\n"
+    printf "  when running a fully managed connector example, it opens the connector in\n  browser\n\n"
+  else
+    printf "playground config open-ccloud-connector-in-browser - when running a fully managed connector example, it opens the connector in browser\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground config open-ccloud-connector-in-browser COMMAND\n"
+  printf "  playground config open-ccloud-connector-in-browser [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   automatically open the connector in browser\n" "$(green "automatically")"
+  printf "  %s   browser to use\n" "$(green "browser")      "
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_config_open_ccloud_connector_in_browser_automatically_usage() {
+  printf "playground config open-ccloud-connector-in-browser automatically - automatically open the connector in browser\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground config open-ccloud-connector-in-browser automatically [AUTOMATICALLY]\n"
+  printf "  playground config open-ccloud-connector-in-browser automatically --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "AUTOMATICALLY")"
+    printf "\n"
+    printf "    Default: true\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground config open-ccloud-connector-in-browser automatically false\n"
+    printf "  playground config open-ccloud-connector-in-browser automatically true\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_config_open_ccloud_connector_in_browser_browser_usage() {
+  printf "playground config open-ccloud-connector-in-browser browser - browser to use\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground config open-ccloud-connector-in-browser browser [BROWSER]\n"
+  printf "  playground config open-ccloud-connector-in-browser browser --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "BROWSER")"
+    printf "\n"
+    printf "    Default: \n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground config open-ccloud-connector-in-browser browser Safari\n"
     echo
 
   fi
@@ -4633,28 +4736,28 @@ playground_connector_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   🧩 Show status of all connectors\n" "$(green "status")                 "
-  printf "  %s   💈 Handle source and sink connectors offsets\n" "$(green "offsets")                "
-  printf "  %s   🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n" "$(green "plugins")                "
-  printf "  %s   ⏸️  Pause connector\n" "$(green "pause")                  "
-  printf "  %s   🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n" "$(green "versions")               "
-  printf "  %s   ♻️  Restart connector\n" "$(green "restart")                "
-  printf "  %s   🛑 Stop connector (only available if CP > 7.5 )\n" "$(green "stop")                   "
-  printf "  %s   ⏯️  Resume connector\n" "$(green "resume")                 "
-  printf "  %s   🗑️  Delete connector\n" "$(green "delete")                 "
-  printf "  %s   🐢 Show lag of sink connector\n" "$(green "show-lag")               "
-  printf "  %s   🧰 Show current connector config that was applied\n" "$(green "show-config")            "
-  printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "show-config-parameters") "
-  printf "  %s   🗜️ Easily select config from all possible configuration parameters of connector\n" "$(green "select-config")          "
-  printf "  %s   🔌 useful snippets\n" "$(green "snippets")               "
-  printf "  %s   🧑‍🎓 Open connector documentation of currently running conector(s)\n" "$(green "open-docs")              "
-  printf "  %s   🧬 Set connect log level\n" "$(green "log-level")              "
-  printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "create-or-update")       "
-  printf "  %s   🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.\n" "$(green "update")                 "
+  printf "  %s   🧩 Show status of all connectors\n" "$(green "status")                          "
+  printf "  %s   💈 Handle source and sink connectors offsets\n" "$(green "offsets")                         "
+  printf "  %s   🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n" "$(green "plugins")                         "
+  printf "  %s   ⏸️  Pause connector\n" "$(green "pause")                           "
+  printf "  %s   🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n" "$(green "versions")                        "
+  printf "  %s   ♻️  Restart connector\n" "$(green "restart")                         "
+  printf "  %s   🛑 Stop connector (only available if CP > 7.5 )\n" "$(green "stop")                            "
+  printf "  %s   ⏯️  Resume connector\n" "$(green "resume")                          "
+  printf "  %s   🗑️  Delete connector\n" "$(green "delete")                          "
+  printf "  %s   🐢 Show lag of sink connector\n" "$(green "show-lag")                        "
+  printf "  %s   🧰 Show current connector config that was applied\n" "$(green "show-config")                     "
+  printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "show-config-parameters")          "
+  printf "  %s   🗜️ Easily select config from all possible configuration parameters of connector\n" "$(green "select-config")                   "
+  printf "  %s   🔌 useful snippets\n" "$(green "snippets")                        "
+  printf "  %s   🧑‍🎓 Open connector documentation of currently running conector(s)\n" "$(green "open-docs")                       "
+  printf "  %s   🧬 Set connect log level\n" "$(green "log-level")                       "
+  printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "create-or-update")                "
+  printf "  %s   🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.\n" "$(green "update")                          "
   echo
   printf "%s\n" "$(bold "Connect commands:")"
-  printf "  %s   🕵️  Tail and follow connect logs\n" "$(green "logs")                   "
-  printf "  %s   🤖 Open Fully Managed connector in Confluent Cloud dashboard\n" "$(green "open-in-confluent-cloud")"
+  printf "  %s   🕵️  Tail and follow connect logs\n" "$(green "logs")                            "
+  printf "  %s   🤖 Open Fully Managed connector in browser (Confluent Cloud dashboard)\n" "$(green "open-ccloud-connector-in-browser")"
   echo
 
   # :command.long_usage
@@ -5433,12 +5536,12 @@ playground_connector_logs_usage() {
 }
 
 # :command.usage
-playground_connector_open_in_confluent_cloud_usage() {
-  printf "playground connector open-in-confluent-cloud - 🤖 Open Fully Managed connector in Confluent Cloud dashboard\n\n"
+playground_connector_open_ccloud_connector_in_browser_usage() {
+  printf "playground connector open-ccloud-connector-in-browser - 🤖 Open Fully Managed connector in browser (Confluent Cloud dashboard)\n\n"
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground connector open-in-confluent-cloud [OPTIONS]\n"
-  printf "  playground connector open-in-confluent-cloud --help | -h\n"
+  printf "  playground connector open-ccloud-connector-in-browser [OPTIONS]\n"
+  printf "  playground connector open-ccloud-connector-in-browser --help | -h\n"
   echo
 
   # :command.long_usage
@@ -5449,6 +5552,11 @@ playground_connector_open_in_confluent_cloud_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--browser BROWSER")"
+    printf "    🌎 browser name\n    \n    Default browser from your system if not set\n"
     echo
 
     # :command.usage_fixed_flags
@@ -9833,7 +9941,29 @@ function wait_for_ccloud_connector_up() {
 
   if [ -z "$GITHUB_RUN_NUMBER" ]
   then
-    playground connector open-in-confluent-cloud --connector $connectorName
+    automatically=$(playground config get open-ccloud-connector-in-browser.automatically)
+    if [ "$automatically" == "" ]
+    then
+        playground config set open-ccloud-connector-in-browser.automatically true
+    fi
+
+    browser=$(playground config get open-ccloud-connector-in-browser.browser)
+    if [ "$browser" == "" ]
+    then
+        playground config set open-ccloud-connector-in-browser.browser ""
+    fi
+
+    if [ "$automatically" == "true" ] || [ "$automatically" == "" ]
+    then
+      if [ "$browser" != "" ]
+      then
+        log "🤖 automatically (disable with 'playground config open-ccloud-connector-in-browser automatically false') open fully managed connector $connectorName in browser $browser (you can change browser with 'playground config open-ccloud-connector-in-browser browser <browser>')"
+        playground connector open-ccloud-connector-in-browser --connector $connectorName --browser $browser
+      else
+        log "🤖 automatically (disable with 'playground config open-ccloud-connector-in-browser automatically false') open fully managed connector $connectorName in default browser (you can set browser with 'playground config open-ccloud-connector-in-browser browser <browser>')"
+        playground connector open-ccloud-connector-in-browser --connector $connectorName
+      fi
+    fi
   fi
 
   return 0
@@ -13161,6 +13291,20 @@ playground_config_clipboard_command() {
 
   log "📋 configuring clipboard with ${args[enabled]}"
   playground config set clipboard "${args[enabled]}"
+}
+
+# :command.function
+playground_config_open_ccloud_connector_in_browser_automatically_command() {
+  # src/commands/config/open-ccloud-connector-in-browser/automatically.sh
+  log "📋 configuring automatically with ${args[automatically]}"
+  playground config set open-ccloud-connector-in-browser.automatically "${args[automatically]}"
+}
+
+# :command.function
+playground_config_open_ccloud_connector_in_browser_browser_command() {
+  # src/commands/config/open-ccloud-connector-in-browser/browser.sh
+  log "🔖 configuring browser for open-ccloud-connector-in-browser with ${args[browser]}"
+  playground config set open-ccloud-connector-in-browser.browser "${args[browser]}"
 }
 
 # :command.function
@@ -23799,15 +23943,16 @@ playground_connector_logs_command() {
 }
 
 # :command.function
-playground_connector_open_in_confluent_cloud_command() {
-  # src/commands/connector/open-in-confluent-cloud.sh
+playground_connector_open_ccloud_connector_in_browser_command() {
+  # src/commands/connector/open-ccloud-connector-in-browser.sh
   connector="${args[--connector]}"
+  browser="${args[--browser]}"
 
   connector_type=$(playground state get run.connector_type)
 
   if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
   then
-      log "connector open-in-confluent-cloud command is not supported with $connector_type connector"
+      log "connector open-ccloud-connector-in-browser command is not supported with $connector_type connector"
       exit 0
   fi
 
@@ -23843,8 +23988,14 @@ playground_connector_open_in_confluent_cloud_command() {
           TYPE="sources"
       fi
 
-      log "🤖 Open $connector_type connector $connector ($connectorId) in Confluent Cloud dashboard"
-      open "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
+      if [[ -n "$browser" ]]
+      then
+          log "🤖 Open $connector_type connector $connector ($connectorId) in Confluent Cloud dashboard with browser $browser"
+          open -a "$browser" "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
+      else
+          log "🤖 Open $connector_type connector $connector ($connectorId) in Confluent Cloud dashboard"
+          open "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
+      fi
   done
 }
 
@@ -27099,6 +27250,13 @@ playground_config_parse_requirements() {
       shift $#
       ;;
 
+    open-ccloud-connector-in-browser)
+      action="open-ccloud-connector-in-browser"
+      shift
+      playground_config_open_ccloud_connector_in_browser_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_config_usage >&2
@@ -27508,6 +27666,186 @@ playground_config_clipboard_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['enabled']:-} ]] || args['enabled']="true"
+
+}
+
+# :command.parse_requirements
+playground_config_open_ccloud_connector_in_browser_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_config_open_ccloud_connector_in_browser_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    automatically)
+      action="automatically"
+      shift
+      playground_config_open_ccloud_connector_in_browser_automatically_parse_requirements "$@"
+      shift $#
+      ;;
+
+    browser)
+      action="browser"
+      shift
+      playground_config_open_ccloud_connector_in_browser_browser_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_config_open_ccloud_connector_in_browser_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_config_open_ccloud_connector_in_browser_automatically_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_config_open_ccloud_connector_in_browser_automatically_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="config open-ccloud-connector-in-browser automatically"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['automatically']+x} ]]; then
+          args['automatically']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['automatically']:-} ]] || args['automatically']="true"
+
+}
+
+# :command.parse_requirements
+playground_config_open_ccloud_connector_in_browser_browser_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_config_open_ccloud_connector_in_browser_browser_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="config open-ccloud-connector-in-browser browser"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['browser']+x} ]]; then
+          args['browser']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['browser']:-} ]] || args['browser']=""
 
 }
 
@@ -35340,10 +35678,10 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
-    open-in-confluent-cloud)
-      action="open-in-confluent-cloud"
+    open-ccloud-connector-in-browser)
+      action="open-ccloud-connector-in-browser"
       shift
-      playground_connector_open_in_confluent_cloud_parse_requirements "$@"
+      playground_connector_open_ccloud_connector_in_browser_parse_requirements "$@"
       shift $#
       ;;
 
@@ -36937,13 +37275,13 @@ playground_connector_logs_parse_requirements() {
 }
 
 # :command.parse_requirements
-playground_connector_open_in_confluent_cloud_parse_requirements() {
+playground_connector_open_ccloud_connector_in_browser_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
     case "${1:-}" in
       --help | -h)
         long_usage=yes
-        playground_connector_open_in_confluent_cloud_usage
+        playground_connector_open_ccloud_connector_in_browser_usage
         exit
         ;;
 
@@ -36955,7 +37293,7 @@ playground_connector_open_in_confluent_cloud_parse_requirements() {
   done
 
   # :command.command_filter
-  action="connector open-in-confluent-cloud"
+  action="connector open-ccloud-connector-in-browser"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -36971,6 +37309,20 @@ playground_connector_open_in_confluent_cloud_parse_requirements() {
           shift
         else
           printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --browser)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--browser']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--browser requires an argument: --browser BROWSER" >&2
           exit 1
         fi
         ;;
@@ -38204,6 +38556,9 @@ run() {
     "config editor") playground_config_editor_command ;;
     "config folder_zip_or_jar") playground_config_folder_zip_or_jar_command ;;
     "config clipboard") playground_config_clipboard_command ;;
+    "config open-ccloud-connector-in-browser") playground_config_open_ccloud_connector_in_browser_command ;;
+    "config open-ccloud-connector-in-browser automatically") playground_config_open_ccloud_connector_in_browser_automatically_command ;;
+    "config open-ccloud-connector-in-browser browser") playground_config_open_ccloud_connector_in_browser_browser_command ;;
     "run") playground_run_command ;;
     "re-run") playground_re_run_command ;;
     "history") playground_history_command ;;
@@ -38310,7 +38665,7 @@ run() {
     "connector open-docs") playground_connector_open_docs_command ;;
     "connector log-level") playground_connector_log_level_command ;;
     "connector logs") playground_connector_logs_command ;;
-    "connector open-in-confluent-cloud") playground_connector_open_in_confluent_cloud_command ;;
+    "connector open-ccloud-connector-in-browser") playground_connector_open_ccloud_connector_in_browser_command ;;
     "connector create-or-update") playground_connector_create_or_update_command ;;
     "connector update") playground_connector_update_command ;;
     "ec2") playground_ec2_command ;;
