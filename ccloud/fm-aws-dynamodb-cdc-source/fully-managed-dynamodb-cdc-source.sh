@@ -136,7 +136,7 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-sleep 10
+sleep 30
 
 log "Verify data is in DynamoDB"
 aws dynamodb scan --table-name $DYNAMODB_TABLE --region $AWS_REGION  > /tmp/result.log  2>&1
