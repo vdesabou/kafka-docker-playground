@@ -1,0 +1,24 @@
+---
+services:
+
+  nginx-proxy:
+    image: reiz/nginx_proxy:latest
+    hostname: nginx-proxy
+    container_name: nginx-proxy
+    ports:
+      - "8888:8888"
+    volumes:
+      - ../../connect/connect-http-source/nginx-proxy/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
+
+  connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-http-source
+
+  httpserver:
+    image: vdesabou/http-sink-demo
+    hostname: httpserver
+    container_name: httpserver
+    ports:
+      - "18080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: 'simple-auth'
