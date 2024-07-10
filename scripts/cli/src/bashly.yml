@@ -3292,6 +3292,7 @@ commands:
 
       🔐 AWS EC2 pem file for the ec2 instance will be created and stored in root folder (make sure to do backup)
 
+      🌍 Region being used will be the one set in your environment (`aws configure get region`) either by AWS_REGION environment variable or ~/.aws/config
     flags:
     - long: --instance-type
       required: false
@@ -3334,33 +3335,6 @@ commands:
         - t3.2xlarge
       help: |-
         🧑‍💻 instance type. default is t3.2xlarge
-
-    - long: --region
-      required: false
-      arg: region
-      default: eu-west-3
-      allowed: 
-        - ap-northeast-1
-        - ap-northeast-2
-        - ap-northeast-3
-        - ap-south-1
-        - ap-southeast-1
-        - ap-southeast-2
-        - ca-central-1
-        - cn-north-1
-        - cn-northwest-1
-        - eu-central-1
-        - eu-north-1
-        - eu-west-1
-        - eu-west-2
-        - eu-west-3
-        - sa-east-1
-        - us-east-1
-        - us-east-2
-        - us-west-1
-        - us-west-2
-      help: |-
-        🌍 instance region. default is eu-west-3
 
     - long: --size
       required: false

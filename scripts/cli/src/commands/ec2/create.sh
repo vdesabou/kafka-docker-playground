@@ -1,5 +1,4 @@
 suffix="${args[--suffix]}"
-aws_region="${args[--region]}"
 instance_type="${args[--instance-type]}"
 ec2_size="${args[--size]}"
 
@@ -13,6 +12,17 @@ else
 fi
 name="pg-${username}-${suffix_kebab}"
 pem_file="$root_folder/$name.pem"
+
+
+if [ -z "$AWS_REGION" ]
+then
+    AWS_REGION=$(aws configure get region | tr '\r' '\n')
+    if [ "$AWS_REGION" == "" ]
+    then
+        logerror "❌ either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+        exit 1
+    fi
+fi
 
 # check if instance already exists
 res=$(playground ec2 status --instance "$name" --all)
@@ -49,10 +59,10 @@ fi
 cd $tmp_dir
 cp "$cloud_formation_yml_file" tmp.yml
 
-log "👷 creating ${instance_type} instance $name in $aws_region region (${ec2_size} Gb)"
+log "👷 creating ${instance_type} instance $name in $AWS_REGION region (${ec2_size} Gb)"
 log "🌀 cloud formation file used: $cloud_formation_yml_file"
 log "🔐 ec2 pem file used: $pem_file"
-aws cloudformation create-stack --stack-name $name --template-body "file://tmp.yml" --region ${aws_region} --parameters ParameterKey=InstanceType,ParameterValue=${instance_type} ParameterKey=Ec2RootVolumeSize,ParameterValue=${ec2_size} ParameterKey=KeyName,ParameterValue=${key_name} ParameterKey=InstanceName,ParameterValue=$name ParameterKey=IPAddressRange,ParameterValue=${myip}/32 ParameterKey=SecretsEncryptionPassword,ParameterValue="${SECRETS_ENCRYPTION_PASSWORD}" ParameterKey=LinuxUserName,ParameterValue="${username}"
+aws cloudformation create-stack --stack-name $name --template-body "file://tmp.yml" --region ${AWS_REGION} --parameters ParameterKey=InstanceType,ParameterValue=${instance_type} ParameterKey=Ec2RootVolumeSize,ParameterValue=${ec2_size} ParameterKey=KeyName,ParameterValue=${key_name} ParameterKey=InstanceName,ParameterValue=$name ParameterKey=IPAddressRange,ParameterValue=${myip}/32 ParameterKey=SecretsEncryptionPassword,ParameterValue="${SECRETS_ENCRYPTION_PASSWORD}" ParameterKey=LinuxUserName,ParameterValue="${username}"
 cd - > /dev/null
 
 wait_for_ec2_instance_to_be_running "$name"

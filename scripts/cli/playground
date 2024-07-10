@@ -5603,7 +5603,7 @@ playground_ec2_usage() {
 playground_ec2_create_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground ec2 create\n\n"
-    printf "  👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation\n  \n  🔐 AWS EC2 pem file for the ec2 instance will be created and stored in root\n  folder (make sure to do backup)\n\n"
+    printf "  👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation\n  \n  🔐 AWS EC2 pem file for the ec2 instance will be created and stored in root\n  folder (make sure to do backup)\n  \n  🌍 Region being used will be the one set in your environment (\`aws configure\n  get region\`) either by AWS_REGION environment variable or ~/.aws/config\n\n"
   else
     printf "playground ec2 create - 👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation\n\n"
   fi
@@ -5623,13 +5623,6 @@ playground_ec2_create_usage() {
     printf "    🧑‍💻 instance type. default is t3.2xlarge\n"
     printf "    Allowed: c1.medium, c1.xlarge, c3.2xlarge, c3.4xlarge, c3.8xlarge, c3.large, c3.xlarge, c4.2xlarge, c4.4xlarge, c4.large, c4.xlarge, m1.large, m1.medium, m1.small, m1.xlarge, m2.2xlarge, m2.4xlarge, m2.xlarge, m3.2xlarge, m3.large, m3.medium, m3.xlarge, m4.10xlarge, m4.2xlarge, m4.4xlarge, m4.large, m4.xlarge, t1.micro, t2.large, t2.medium, t2.micro, t2.nano, t2.small, t3.2xlarge\n"
     printf "    Default: t3.2xlarge\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--region REGION")"
-    printf "    🌍 instance region. default is eu-west-3\n"
-    printf "    Allowed: ap-northeast-1, ap-northeast-2, ap-northeast-3, ap-south-1, ap-southeast-1, ap-southeast-2, ca-central-1, cn-north-1, cn-northwest-1, eu-central-1, eu-north-1, eu-west-1, eu-west-2, eu-west-3, sa-east-1, us-east-1, us-east-2, us-west-1, us-west-2\n"
-    printf "    Default: eu-west-3\n"
     echo
 
     # :flag.usage
@@ -24240,7 +24233,6 @@ playground_connector_update_command() {
 playground_ec2_create_command() {
   # src/commands/ec2/create.sh
   suffix="${args[--suffix]}"
-  aws_region="${args[--region]}"
   instance_type="${args[--instance-type]}"
   ec2_size="${args[--size]}"
 
@@ -24254,6 +24246,16 @@ playground_ec2_create_command() {
   fi
   name="pg-${username}-${suffix_kebab}"
   pem_file="$root_folder/$name.pem"
+
+  if [ -z "$AWS_REGION" ]
+  then
+      AWS_REGION=$(aws configure get region | tr '\r' '\n')
+      if [ "$AWS_REGION" == "" ]
+      then
+          logerror "❌ either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+          exit 1
+      fi
+  fi
 
   # check if instance already exists
   res=$(playground ec2 status --instance "$name" --all)
@@ -24290,10 +24292,10 @@ playground_ec2_create_command() {
   cd $tmp_dir
   cp "$cloud_formation_yml_file" tmp.yml
 
-  log "👷 creating ${instance_type} instance $name in $aws_region region (${ec2_size} Gb)"
+  log "👷 creating ${instance_type} instance $name in $AWS_REGION region (${ec2_size} Gb)"
   log "🌀 cloud formation file used: $cloud_formation_yml_file"
   log "🔐 ec2 pem file used: $pem_file"
-  aws cloudformation create-stack --stack-name $name --template-body "file://tmp.yml" --region ${aws_region} --parameters ParameterKey=InstanceType,ParameterValue=${instance_type} ParameterKey=Ec2RootVolumeSize,ParameterValue=${ec2_size} ParameterKey=KeyName,ParameterValue=${key_name} ParameterKey=InstanceName,ParameterValue=$name ParameterKey=IPAddressRange,ParameterValue=${myip}/32 ParameterKey=SecretsEncryptionPassword,ParameterValue="${SECRETS_ENCRYPTION_PASSWORD}" ParameterKey=LinuxUserName,ParameterValue="${username}"
+  aws cloudformation create-stack --stack-name $name --template-body "file://tmp.yml" --region ${AWS_REGION} --parameters ParameterKey=InstanceType,ParameterValue=${instance_type} ParameterKey=Ec2RootVolumeSize,ParameterValue=${ec2_size} ParameterKey=KeyName,ParameterValue=${key_name} ParameterKey=InstanceName,ParameterValue=$name ParameterKey=IPAddressRange,ParameterValue=${myip}/32 ParameterKey=SecretsEncryptionPassword,ParameterValue="${SECRETS_ENCRYPTION_PASSWORD}" ParameterKey=LinuxUserName,ParameterValue="${username}"
   cd - > /dev/null
 
   wait_for_ec2_instance_to_be_running "$name"
@@ -37346,20 +37348,6 @@ playground_ec2_create_parse_requirements() {
         ;;
 
       # :flag.case
-      --region)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          args['--region']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--region requires an argument: --region REGION" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
       --size)
 
         # :flag.case_arg
@@ -37405,7 +37393,6 @@ playground_ec2_create_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['--instance-type']:-} ]] || args['--instance-type']="t3.2xlarge"
-  [[ -n ${args['--region']:-} ]] || args['--region']="eu-west-3"
   [[ -n ${args['--size']:-} ]] || args['--size']="1000"
 
   # :command.validations
@@ -37418,10 +37405,6 @@ playground_ec2_create_parse_requirements() {
   # :command.whitelist_filter
   if [[ ${args['--instance-type']:-} ]] && [[ ! ${args['--instance-type']:-} =~ ^(c1.medium|c1.xlarge|c3.2xlarge|c3.4xlarge|c3.8xlarge|c3.large|c3.xlarge|c4.2xlarge|c4.4xlarge|c4.large|c4.xlarge|m1.large|m1.medium|m1.small|m1.xlarge|m2.2xlarge|m2.4xlarge|m2.xlarge|m3.2xlarge|m3.large|m3.medium|m3.xlarge|m4.10xlarge|m4.2xlarge|m4.4xlarge|m4.large|m4.xlarge|t1.micro|t2.large|t2.medium|t2.micro|t2.nano|t2.small|t3.2xlarge)$ ]]; then
     printf "%s\n" "--instance-type must be one of: c1.medium, c1.xlarge, c3.2xlarge, c3.4xlarge, c3.8xlarge, c3.large, c3.xlarge, c4.2xlarge, c4.4xlarge, c4.large, c4.xlarge, m1.large, m1.medium, m1.small, m1.xlarge, m2.2xlarge, m2.4xlarge, m2.xlarge, m3.2xlarge, m3.large, m3.medium, m3.xlarge, m4.10xlarge, m4.2xlarge, m4.4xlarge, m4.large, m4.xlarge, t1.micro, t2.large, t2.medium, t2.micro, t2.nano, t2.small, t3.2xlarge" >&2
-    exit 1
-  fi
-  if [[ ${args['--region']:-} ]] && [[ ! ${args['--region']:-} =~ ^(ap-northeast-1|ap-northeast-2|ap-northeast-3|ap-south-1|ap-southeast-1|ap-southeast-2|ca-central-1|cn-north-1|cn-northwest-1|eu-central-1|eu-north-1|eu-west-1|eu-west-2|eu-west-3|sa-east-1|us-east-1|us-east-2|us-west-1|us-west-2)$ ]]; then
-    printf "%s\n" "--region must be one of: ap-northeast-1, ap-northeast-2, ap-northeast-3, ap-south-1, ap-southeast-1, ap-southeast-2, ca-central-1, cn-north-1, cn-northwest-1, eu-central-1, eu-north-1, eu-west-1, eu-west-2, eu-west-3, sa-east-1, us-east-1, us-east-2, us-west-1, us-west-2" >&2
     exit 1
   fi
 
