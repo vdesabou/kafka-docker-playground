@@ -24316,6 +24316,7 @@ playground_ec2_create_command() {
 
   playground ec2 sync-repro-folder local-to-ec2 --instance "$instance" > /dev/null
   log "🎉 ec2 instance $name is ready!"
+  log "🐚 make sure to use zsh in order to have everything working out of the box"
 }
 
 # :command.function
@@ -24421,6 +24422,7 @@ playground_ec2_open_command() {
       fi
 
       log "👨‍💻 Open EC2 instance $name using Visual Studio code"
+      log "🐚 make sure to use zsh in order to have everything working out of the box"
       code --folder-uri "vscode-remote://ssh-remote+$name/home/$username"
   done
 }

@@ -83,3 +83,4 @@ wait_for_ec2_cloudformation_to_be_completed "$name"
 
 playground ec2 sync-repro-folder local-to-ec2 --instance "$instance" > /dev/null
 log "🎉 ec2 instance $name is ready!"
+log "🐚 make sure to use zsh in order to have everything working out of the box"

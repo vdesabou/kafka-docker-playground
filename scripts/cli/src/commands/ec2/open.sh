@@ -49,5 +49,6 @@ do
     fi
 
     log "👨‍💻 Open EC2 instance $name using Visual Studio code"
+    log "🐚 make sure to use zsh in order to have everything working out of the box"
     code --folder-uri "vscode-remote://ssh-remote+$name/home/$username"
 done
