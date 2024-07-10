@@ -81,7 +81,7 @@ set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
 
-log "Creating AWS CloudWatch Logs Source connector"
+log "Creating AWS DynamoDB sink connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
     "connector.class": "DynamoDbSink",
