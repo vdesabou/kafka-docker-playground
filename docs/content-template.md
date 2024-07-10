@@ -405,7 +405,7 @@ Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 - 📉 [Monitoring Demo](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/monitoring-demo) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 🕵️‍♀️ [Kafka Connect Sink Monitoring Demo](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/monitoring-sink-latency) Showcase different Kafka Connect Sink troubleshooting scenarios ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 👊 [Integrate syslogs to detect SSH failure connections](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/syslog-logstash-ksqldb) using Syslog source connector, LogStash and ksqlDB :other/syslog-logstash-ksqldb:
-- 📶 [How to ensure high availability of LDAP using DNS SRV Records](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/ldap-authorizer-with-ldap-failover) :other/ldap-authorizer-with-ldap-failover:
+- 📶 [How to ensure high availability of LDAP using DNS SRV Records](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/ldap-authorizer-with-ldap-failover) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 🕹 [AVRO examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-format-avro) including a JAVA producer :other/schema-format-avro:
 - 🧩 [Protobuf examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-format-protobuf) including a JAVA producer :other/schema-format-protobuf:
 - 🎱 [JSON Schema examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-format-json-schema) including a JAVA producer :other/schema-format-json-schema:
