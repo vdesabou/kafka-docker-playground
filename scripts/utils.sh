@@ -27,7 +27,7 @@ fi
 if [ -z "$TAG" ]
 then
     # TAG is not set, use default:
-    export TAG=7.6.1 # default tag
+    export TAG=7.7.0 # default tag
     # to handle ubi8 images
     export TAG_BASE=$TAG
     if [ -z "$CP_KAFKA_IMAGE" ]
