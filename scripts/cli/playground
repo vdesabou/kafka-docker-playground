@@ -3186,7 +3186,7 @@ playground_debug_thread_dump_usage() {
 playground_debug_heap_dump_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground debug heap-dump\n\n"
-    printf "  👻 Take a heap dump\n  \n  🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/)\n  or MAT (https://www.eclipse.org/mat/) can be used to read the file.\n\n"
+    printf "  👻 Take a heap dump\n  \n  🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/)\n  or MAT (https://www.eclipse.org/mat/) can be used to read the file.\n  \n  It will run a full gc first. If you don't want this, use\n\n"
   else
     printf "playground debug heap-dump - 👻 Take a heap dump\n\n"
   fi
@@ -3205,6 +3205,16 @@ playground_debug_heap_dump_usage() {
     printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
     printf "    🐳 Container name\n"
     printf "    Default: connect\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--live")"
+    printf "    🧬 dump only live objects; if not specified, all objects in the heap are\n    dumped\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--histo")"
+    printf "    📊 print histogram of java object heap\n"
     echo
 
     # :command.usage_fixed_flags
@@ -6956,7 +6966,7 @@ function add_connector_config_based_on_environment () {
           # log "replacing $prefix config for environment $environment"
 
           echo "$json_content" > $tmp_dir/input.json
-          jq ".[\"$prefix.bootstrap.servers\"] = \"\${file:/data:bootstrap.servers}\" | .[\"$prefix.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"$prefix.security.protocol\"] = \"SASL_SSL\" | .[\"$prefix.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
+          jq ".[\"$prefix.bootstrap.servers\"] = \"\${file:/datacloud:bootstrap.servers}\" | .[\"$prefix.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"$prefix.security.protocol\"] = \"SASL_SSL\" | .[\"$prefix.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
           json_content=$(cat $tmp_dir/output.json)
 
           if [ "$prefix" == "confluent.topic" ]
@@ -6976,7 +6986,7 @@ function add_connector_config_based_on_environment () {
           # log "replacing $prefix.converter.schema.registry.url config for environment $environment"
 
           echo "$json_content" > $tmp_dir/input.json
-          jq ".[\"$prefix.converter.schema.registry.url\"] = \"$SCHEMA_REGISTRY_URL\" | .[\"$prefix.converter.basic.auth.user.info\"] = \"\${file:/data:schema.registry.basic.auth.user.info}\" | .[\"$prefix.converter.basic.auth.credentials.source\"] = \"USER_INFO\"" $tmp_dir/input.json > $tmp_dir/output.json
+          jq ".[\"$prefix.converter.schema.registry.url\"] = \"$SCHEMA_REGISTRY_URL\" | .[\"$prefix.converter.basic.auth.user.info\"] = \"\${file:/datacloud:schema.registry.basic.auth.user.info}\" | .[\"$prefix.converter.basic.auth.credentials.source\"] = \"USER_INFO\"" $tmp_dir/input.json > $tmp_dir/output.json
           json_content=$(cat $tmp_dir/output.json)
         fi
       done
@@ -6987,7 +6997,7 @@ function add_connector_config_based_on_environment () {
         # log "replacing database.history.kafka.bootstrap.servers config for environment $environment"
 
         echo "$json_content" > $tmp_dir/input.json
-        jq ".[\"database.history.kafka.bootstrap.servers\"] = \"\${file:/data:bootstrap.servers}\" | .[\"database.history.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"database.history.producer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.producer.sasl.mechanism\"] = \"PLAIN\" | .[\"database.history.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"database.history.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.consumer.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
+        jq ".[\"database.history.kafka.bootstrap.servers\"] = \"\${file:/datacloud:bootstrap.servers}\" | .[\"database.history.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"database.history.producer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.producer.sasl.mechanism\"] = \"PLAIN\" | .[\"database.history.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"database.history.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.consumer.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
         json_content=$(cat $tmp_dir/output.json)
       fi
 
@@ -6997,7 +7007,7 @@ function add_connector_config_based_on_environment () {
         # log "replacing schema.history.internal.kafka.bootstrap.servers config for environment $environment"
 
         echo "$json_content" > $tmp_dir/input.json
-        jq ".[\"schema.history.internal.kafka.bootstrap.servers\"] = \"\${file:/data:bootstrap.servers}\" | .[\"schema.history.internal.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"schema.history.internal.producer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.producer.sasl.mechanism\"] = \"PLAIN\" | .[\"schema.history.internal.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"schema.history.internal.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.consumer.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
+        jq ".[\"schema.history.internal.kafka.bootstrap.servers\"] = \"\${file:/datacloud:bootstrap.servers}\" | .[\"schema.history.internal.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"schema.history.internal.producer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.producer.sasl.mechanism\"] = \"PLAIN\" | .[\"schema.history.internal.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"schema.history.internal.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.consumer.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
         json_content=$(cat $tmp_dir/output.json)
       fi
 
@@ -7007,7 +7017,7 @@ function add_connector_config_based_on_environment () {
         # log "replacing reporter.bootstrap.servers config for environment $environment"
 
         echo "$json_content" > $tmp_dir/input.json
-        jq ".[\"reporter.bootstrap.servers\"] = \"\${file:/data:bootstrap.servers}\" | .[\"reporter.result.topic.replication.factor\"] = \"3\" | .[\"reporter.error.topic.replication.factor\"] = \"3\" | .[\"reporter.admin.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"reporter.admin.security.protocol\"] = \"SASL_SSL\" | .[\"reporter.admin.sasl.mechanism\"] = \"PLAIN\" | .[\"reporter.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"reporter.producer.security.protocol\"] = \"SASL_SSL\" | .[\"reporter.producer.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
+        jq ".[\"reporter.bootstrap.servers\"] = \"\${file:/datacloud:bootstrap.servers}\" | .[\"reporter.result.topic.replication.factor\"] = \"3\" | .[\"reporter.error.topic.replication.factor\"] = \"3\" | .[\"reporter.admin.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"reporter.admin.security.protocol\"] = \"SASL_SSL\" | .[\"reporter.admin.sasl.mechanism\"] = \"PLAIN\" | .[\"reporter.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"reporter.producer.security.protocol\"] = \"SASL_SSL\" | .[\"reporter.producer.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
         json_content=$(cat $tmp_dir/output.json)
       fi
     ;;
@@ -8555,23 +8565,16 @@ function aws() {
       return 1
     fi
 
-    if [ -z "$AWS_REGION" ]
+    if [ ! -z "$AWS_REGION" ]
     then
-        AWS_REGION=$(aws configure get region | tr '\r' '\n')
-        if [ "$AWS_REGION" == "" ]
-        then
-            logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
-            exit 1
-        fi
-    fi
-
-    if [ ! -f $HOME/.aws/config ]
-    then
-      aws_tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+      if [ ! -f $HOME/.aws/config ]
+      then
+        aws_tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 cat << EOF > $aws_tmp_dir/config
 [default]
 region = $AWS_REGION
 EOF
+      fi
     fi
 
     if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
@@ -8634,7 +8637,7 @@ function get_connect_image() {
 }
 
 function az() {
-  docker run --quiet --rm -v /tmp:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli az "$@"
+  docker run --quiet --rm -v /tmp:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli:cbl-mariner2.0 az "$@"
 }
 
 function display_docker_container_error_log() {
@@ -9619,7 +9622,7 @@ function bootstrap_ccloud_environment () {
   then
     # not running with CI
     verify_installed "confluent"
-    check_confluent_version 3.0.0 || exit 1
+    check_confluent_version 4.0.0 || exit 1
     verify_confluent_login  "confluent kafka cluster list"
   else
     if [ ! -f /usr/local/bin/confluent ]
@@ -10258,7 +10261,7 @@ function ccloud::get_environment_id_from_service_id() {
 function ccloud::create_and_use_environment() {
   ENVIRONMENT_NAME=$1
 
-  OUTPUT=$(confluent environment create $ENVIRONMENT_NAME -o json)
+  OUTPUT=$(confluent environment create $ENVIRONMENT_NAME --governance-package essentials -o json)
   (($? != 0)) && { echo "ERROR: Failed to create environment $ENVIRONMENT_NAME. Please troubleshoot and run again"; exit 1; }
   ENVIRONMENT=$(echo "$OUTPUT" | jq -r ".id")
   confluent environment use $ENVIRONMENT &>/dev/null
@@ -10273,7 +10276,7 @@ function ccloud::find_cluster() {
   CLUSTER_CLOUD=$2
   CLUSTER_REGION=$3
 
-  local FOUND_CLUSTER=$(confluent kafka cluster list -o json | jq -c -r '.[] | select((.name == "'"$CLUSTER_NAME"'") and (.provider == "'"$CLUSTER_CLOUD"'") and (.region == "'"$CLUSTER_REGION"'"))')
+  local FOUND_CLUSTER=$(confluent kafka cluster list -o json | jq -c -r '.[] | select((.name == "'"$CLUSTER_NAME"'") and (.cloud == "'"$CLUSTER_CLOUD"'") and (.region == "'"$CLUSTER_REGION"'"))')
   [[ ! -z "$FOUND_CLUSTER" ]] && {
       echo "$FOUND_CLUSTER" | jq -r .id
       return 0
@@ -10354,12 +10357,9 @@ function ccloud:get_service_account_from_current_cluster_name() {
   return 0
 }
 
-function ccloud::enable_schema_registry() {
-  SCHEMA_REGISTRY_CLOUD=$1
-  SCHEMA_REGISTRY_GEO=$2
-
-  OUTPUT=$(confluent schema-registry cluster enable --cloud $SCHEMA_REGISTRY_CLOUD --geo $SCHEMA_REGISTRY_GEO -o json)
-  SCHEMA_REGISTRY=$(echo "$OUTPUT" | jq -r ".id")
+function ccloud::get_schema_registry() {
+  OUTPUT=$(confluent schema-registry cluster describe -o json)
+  SCHEMA_REGISTRY=$(echo "$OUTPUT" | jq -r ".cluster")
 
   echo $SCHEMA_REGISTRY
 
@@ -10916,8 +10916,7 @@ function ccloud::create_ccloud_stack() {
     ccloud::create_acls_all_resources_full_access $SERVICE_ACCOUNT_ID
   fi
 
-  SCHEMA_REGISTRY_GEO="${SCHEMA_REGISTRY_GEO:-us}"
-  SCHEMA_REGISTRY=$(ccloud::enable_schema_registry $CLUSTER_CLOUD $SCHEMA_REGISTRY_GEO)
+  SCHEMA_REGISTRY=$(ccloud::get_schema_registry)
 
   # VINC: added
   if [[ -z "$SCHEMA_REGISTRY_CREDS" ]]
@@ -18621,7 +18620,8 @@ playground_debug_thread_dump_command() {
 playground_debug_heap_dump_command() {
   # src/commands/debug/heap-dump.sh
   container="${args[--container]}"
-  filename="heap-dump-$container-`date '+%Y-%m-%d-%H-%M-%S'`.hprof"
+  live="${args[--live]}"
+  histo="${args[--histo]}"
 
   set +e
   docker exec $container type jmap > /dev/null 2>&1
@@ -18630,26 +18630,44 @@ playground_debug_heap_dump_command() {
       logerror "❌ jmap is not installed on container $container"
       exit 1
   fi
-  set -e
-  log "🎯 Taking heap dump on container ${container} for pid 1"
-  docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
-  if [ $? -eq 0 ]
+
+  if [[ -n "$histo" ]]
   then
-      log "👻 heap dump is available at ${filename}"
-      docker cp ${container}:/tmp/${filename} ${filename}
-      # if [[ $(type -f wireshark 2>&1) =~ "not found" ]]
-      # then
-      #     logwarn "🦈 wireshark is not installed, grab it at https://www.wireshark.org/"
-      #     exit 0
-      # else
-      #     log "🦈 Opening ${filename} with wireshark"
-      #     wireshark ${filename}
-      # fi
-
+      filename="heap-dump-$container-histo-`date '+%Y-%m-%d-%H-%M-%S'`.txt"
+      set -e
+      if [[ -n "$live" ]]
+      then
+          log "📊 Taking histo (with live option) heap dump on container ${container}"
+          docker exec $container jmap -histo:live 1 > /tmp/${filename}
+      else
+          log "📊 Taking histo (without live option) heap dump on container ${container}"
+          docker exec $container jmap -histo 1 > /tmp/${filename}
+      fi
+      if [ $? -eq 0 ]
+      then
+          log "👻 heap dump is available at /tmp/${filename}"
+      else
+          logerror "❌ Failed to take heap dump"
+      fi
   else
-      logerror "❌ Failed to take heap dump"
+      filename="heap-dump-$container-`date '+%Y-%m-%d-%H-%M-%S'`.hprof"
+      set -e
+      if [[ -n "$live" ]]
+      then
+          log "🎯 Taking heap dump (with live option) on container ${container}"
+          docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
+      else
+          log "🎯 Taking heap dump (without live option) on container ${container}"
+          docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
+      fi
+      if [ $? -eq 0 ]
+      then
+          log "👻 heap dump is available at ${filename}"
+          docker cp ${container}:/tmp/${filename} ${filename}
+      else
+          logerror "❌ Failed to take heap dump"
+      fi
   fi
-
 }
 
 # :command.function
@@ -19398,7 +19416,12 @@ playground_topic_get_number_records_command() {
               docker exec $container timeout 15 kafka-console-consumer --bootstrap-server broker:9092 --topic $topic $security --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
               set -e
           else
-              docker exec $container kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 $security --topic $topic --time -1 | awk -F ":" '{sum += $3} END {print sum}'
+              class_name="kafka.tools.GetOffsetShell"
+              if version_gt $tag "7.6.9"
+              then
+                  class_name="org.apache.kafka.tools.GetOffsetShell"
+              fi
+              docker exec $container kafka-run-class $class_name --broker-list broker:9092 $security --topic $topic --time -1 | awk -F ":" '{sum += $3} END {print sum}'
           fi
       fi
   done
@@ -23651,11 +23674,11 @@ playground_connector_snippets_command() {
                   echo -e "    \"key.converter\": \"$converter_class\"," >> $converter_file
                   echo -e "    \"key.converter.schema.registry.url\": \"$SCHEMA_REGISTRY_URL\"," >> $converter_file
                   echo -e "    \"key.converter.basic.auth.credentials.source\": \"USER_INFO\"," >> $converter_file
-                  echo -e "    \"key.converter.basic.auth.user.info\": \"\${file:/data:schema.registry.basic.auth.user.info}\"," >> $converter_file
+                  echo -e "    \"key.converter.basic.auth.user.info\": \"\${file:/datacloud:schema.registry.basic.auth.user.info}\"," >> $converter_file
                   echo -e "    \"value.converter\": \"$converter_class\"," >> $converter_file
                   echo -e "    \"value.converter.schema.registry.url\": \"$SCHEMA_REGISTRY_URL\"," >> $converter_file
                   echo -e "    \"value.converter.basic.auth.credentials.source\": \"USER_INFO\"," >> $converter_file
-                  echo -e "    \"value.converter.basic.auth.user.info\": \"\${file:/data:schema.registry.basic.auth.user.info}\"," >> $converter_file
+                  echo -e "    \"value.converter.basic.auth.user.info\": \"\${file:/datacloud:schema.registry.basic.auth.user.info}\"," >> $converter_file
                   ;;
 
               sasl-ssl|2way-ssl)
@@ -24157,31 +24180,17 @@ playground_connector_create_or_update_command() {
           exit 1
       fi
 
-      is_valid=1
-      for row in $(echo "$curl_output" | jq -r '.configs[] | @base64'); do
-          _jq() {
-              echo ${row} | base64 -d | jq -r ${1}
-          }
+      # Check if there were any errors
+      has_errors=$(echo "$curl_output" | jq '.configs[] | select(.value.errors | length > 0) | length' | tr -d '\n')
 
-          name=$(_jq '.value.name')
-          value=$(_jq '.value.value')
-          errors=$(_jq '.value.errors')
-
-          if [ "$(echo "$errors" | jq 'length')" -gt 0 ]
-          then
-              is_valid=0
-              logerror "❌ validation error for config <$name=$value>"
-
-              echo "$errors" | jq .
-          fi
-      done
-
-      if [ $is_valid -eq 1 ]
+      if [[ "$has_errors" -gt 0 ]]
       then
-          log "✅ $connector_type connector config is valid !"
+          output=$(echo "$curl_output" | jq -r '.configs[] | select(.value.errors | length > 0) | .value.name + " ->> " + (.value.errors | to_entries | map("\(.value|tostring)") | join(", "))')
+          logerror "❌ Validation errors found in connector config\n$output"
 
-      else
           exit 1
+      else
+          log "✅ $connector_type connector config is valid !"
       fi
   fi
 
@@ -31982,6 +31991,22 @@ playground_debug_heap_dump_parse_requirements() {
           printf "%s\n" "--container requires an argument: --container, -c CONTAINER" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --live)
+
+        # :flag.case_no_arg
+        args['--live']=1
+        shift
+        ;;
+
+      # :flag.case
+      --histo)
+
+        # :flag.case_no_arg
+        args['--histo']=1
+        shift
         ;;
 
       -?*)
