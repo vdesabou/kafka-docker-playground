@@ -647,23 +647,16 @@ function aws() {
       return 1
     fi
 
-    if [ -z "$AWS_REGION" ]
+    if [ ! -z "$AWS_REGION" ]
     then
-        AWS_REGION=$(aws configure get region | tr '\r' '\n')
-        if [ "$AWS_REGION" == "" ]
-        then
-            logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
-            exit 1
-        fi
-    fi
-    
-    if [ ! -f $HOME/.aws/config ]
-    then
-      aws_tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+      if [ ! -f $HOME/.aws/config ]
+      then
+        aws_tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 cat << EOF > $aws_tmp_dir/config
 [default]
 region = $AWS_REGION
 EOF
+      fi
     fi
 
     if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
@@ -726,7 +719,7 @@ function get_connect_image() {
 }
 
 function az() {
-  docker run --quiet --rm -v /tmp:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli az "$@"
+  docker run --quiet --rm -v /tmp:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli:cbl-mariner2.0 az "$@"
 }
 
 function display_docker_container_error_log() {
@@ -1714,7 +1707,7 @@ function bootstrap_ccloud_environment () {
   then
     # not running with CI
     verify_installed "confluent"
-    check_confluent_version 3.0.0 || exit 1
+    check_confluent_version 4.0.0 || exit 1
     verify_confluent_login  "confluent kafka cluster list"
   else
     if [ ! -f /usr/local/bin/confluent ]
@@ -2358,7 +2351,7 @@ function ccloud::get_environment_id_from_service_id() {
 function ccloud::create_and_use_environment() {
   ENVIRONMENT_NAME=$1
 
-  OUTPUT=$(confluent environment create $ENVIRONMENT_NAME -o json)
+  OUTPUT=$(confluent environment create $ENVIRONMENT_NAME --governance-package essentials -o json)
   (($? != 0)) && { echo "ERROR: Failed to create environment $ENVIRONMENT_NAME. Please troubleshoot and run again"; exit 1; }
   ENVIRONMENT=$(echo "$OUTPUT" | jq -r ".id")
   confluent environment use $ENVIRONMENT &>/dev/null
@@ -2373,7 +2366,7 @@ function ccloud::find_cluster() {
   CLUSTER_CLOUD=$2
   CLUSTER_REGION=$3
 
-  local FOUND_CLUSTER=$(confluent kafka cluster list -o json | jq -c -r '.[] | select((.name == "'"$CLUSTER_NAME"'") and (.provider == "'"$CLUSTER_CLOUD"'") and (.region == "'"$CLUSTER_REGION"'"))')
+  local FOUND_CLUSTER=$(confluent kafka cluster list -o json | jq -c -r '.[] | select((.name == "'"$CLUSTER_NAME"'") and (.cloud == "'"$CLUSTER_CLOUD"'") and (.region == "'"$CLUSTER_REGION"'"))')
   [[ ! -z "$FOUND_CLUSTER" ]] && {
       echo "$FOUND_CLUSTER" | jq -r .id
       return 0
@@ -2454,12 +2447,9 @@ function ccloud:get_service_account_from_current_cluster_name() {
   return 0
 }
 
-function ccloud::enable_schema_registry() {
-  SCHEMA_REGISTRY_CLOUD=$1
-  SCHEMA_REGISTRY_GEO=$2
-
-  OUTPUT=$(confluent schema-registry cluster enable --cloud $SCHEMA_REGISTRY_CLOUD --geo $SCHEMA_REGISTRY_GEO -o json)
-  SCHEMA_REGISTRY=$(echo "$OUTPUT" | jq -r ".id")
+function ccloud::get_schema_registry() {
+  OUTPUT=$(confluent schema-registry cluster describe -o json)
+  SCHEMA_REGISTRY=$(echo "$OUTPUT" | jq -r ".cluster")
 
   echo $SCHEMA_REGISTRY
 
@@ -3023,8 +3013,7 @@ function ccloud::create_ccloud_stack() {
     ccloud::create_acls_all_resources_full_access $SERVICE_ACCOUNT_ID
   fi
 
-  SCHEMA_REGISTRY_GEO="${SCHEMA_REGISTRY_GEO:-us}"
-  SCHEMA_REGISTRY=$(ccloud::enable_schema_registry $CLUSTER_CLOUD $SCHEMA_REGISTRY_GEO)
+  SCHEMA_REGISTRY=$(ccloud::get_schema_registry)
 
   # VINC: added
   if [[ -z "$SCHEMA_REGISTRY_CREDS" ]]
