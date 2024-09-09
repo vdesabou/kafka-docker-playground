@@ -1,5 +1,6 @@
 container="${args[--container]}"
-filename="heap-dump-$container-`date '+%Y-%m-%d-%H-%M-%S'`.hprof"
+live="${args[--live]}"
+histo="${args[--histo]}"
 
 set +e
 docker exec $container type jmap > /dev/null 2>&1
@@ -8,23 +9,41 @@ then
     logerror "❌ jmap is not installed on container $container"
     exit 1
 fi
-set -e
-log "🎯 Taking heap dump on container ${container} for pid 1"
-docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
-if [ $? -eq 0 ]
+
+if [[ -n "$histo" ]]
 then
-    log "👻 heap dump is available at ${filename}"
-    docker cp ${container}:/tmp/${filename} ${filename}
-    # if [[ $(type -f wireshark 2>&1) =~ "not found" ]]
-    # then
-    #     logwarn "🦈 wireshark is not installed, grab it at https://www.wireshark.org/"
-    #     exit 0
-    # else
-    #     log "🦈 Opening ${filename} with wireshark"
-    #     wireshark ${filename}
-    # fi 
+    filename="heap-dump-$container-histo-`date '+%Y-%m-%d-%H-%M-%S'`.txt"
+    set -e
+    if [[ -n "$live" ]]
+    then
+        log "📊 Taking histo (with live option) heap dump on container ${container}"
+        docker exec $container jmap -histo:live 1 > /tmp/${filename}
+    else
+        log "📊 Taking histo (without live option) heap dump on container ${container}"
+        docker exec $container jmap -histo 1 > /tmp/${filename}
+    fi
+    if [ $? -eq 0 ]
+    then
+        log "👻 heap dump is available at /tmp/${filename}"
+    else
+        logerror "❌ Failed to take heap dump"
+    fi
 else
-    logerror "❌ Failed to take heap dump"
+    filename="heap-dump-$container-`date '+%Y-%m-%d-%H-%M-%S'`.hprof"
+    set -e
+    if [[ -n "$live" ]]
+    then
+        log "🎯 Taking heap dump (with live option) on container ${container}"
+        docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
+    else
+        log "🎯 Taking heap dump (without live option) on container ${container}"
+        docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
+    fi
+    if [ $? -eq 0 ]
+    then
+        log "👻 heap dump is available at ${filename}"
+        docker cp ${container}:/tmp/${filename} ${filename}
+    else
+        logerror "❌ Failed to take heap dump"
+    fi
 fi
-
-
