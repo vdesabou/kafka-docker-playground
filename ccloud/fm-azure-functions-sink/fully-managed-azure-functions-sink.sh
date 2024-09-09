@@ -19,7 +19,7 @@ fi
 # when AZURE_SUBSCRIPTION_NAME env var is set, we need to set the correct subscription
 maybe_set_azure_subscription
 
-AZURE_NAME=pg${USER}f${GITHUB_RUN_NUMBER}${TAG}
+AZURE_NAME=pg${USER}fm${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 AZURE_RESOURCE_GROUP=$AZURE_NAME
 AZURE_STORAGE_NAME=$AZURE_NAME
@@ -68,7 +68,7 @@ log "Creating local functions project with HTTP trigger"
 docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node14-core-tools bash -c "func init LocalFunctionProj --javascript && cd LocalFunctionProj && func new --name HttpExample --template \"HTTP trigger\" --authlevel \"anonymous\""
 
 log "Creating functions app $AZURE_FUNCTIONS_NAME"
-az functionapp create --consumption-plan-location $AZURE_REGION --name $AZURE_FUNCTIONS_NAME --resource-group $AZURE_RESOURCE_GROUP --runtime node --storage-account $AZURE_STORAGE_NAME --runtime-version 20 --functions-version 4 --tags owner_email=$AZ_USER --disable-app-insights true
+az functionapp create --consumption-plan-location $AZURE_REGION --name $AZURE_FUNCTIONS_NAME --resource-group $AZURE_RESOURCE_GROUP --runtime node --storage-account $AZURE_STORAGE_NAME --runtime-version 18 --functions-version 4 --tags owner_email=$AZ_USER --disable-app-insights true
 
 log "Publishing functions app, it will take a while"
 max_attempts="10"

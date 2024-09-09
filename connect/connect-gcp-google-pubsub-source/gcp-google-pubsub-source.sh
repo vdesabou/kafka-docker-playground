@@ -22,6 +22,11 @@ then
      wget -q https://repo1.maven.org/maven2/io/grpc/grpc-netty/1.54.0/grpc-netty-1.54.0.jar
 fi
 
+if [ ! -f ${DIR}/grpc-rls-1.55.3.jar ]
+then
+     wget -q https://repo1.maven.org/maven2/io/grpc/grpc-rls/1.55.3/grpc-rls-1.55.3.jar
+fi
+
 GCP_KEYFILE="${PWD}/keyfile.json"
 if [ ! -f ${GCP_KEYFILE} ] && [ -z "$GCP_KEYFILE_CONTENT" ]
 then

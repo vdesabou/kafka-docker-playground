@@ -21,7 +21,10 @@ app.use((req, res, next) => {
 });
 
 app.get('/', (req, res) => {
-  res.status(errorCode).json(responseBody);
+  res.status(errorCode)
+    .set('Content-Type', 'application/json')
+    .set('Custom-Header', 'Hello')
+    .json(responseBody);
   console.log("headers:");
   console.log(req.headers);
   console.log("body:");
@@ -30,7 +33,10 @@ app.get('/', (req, res) => {
 });
 
 app.post('/', (req, res) => {
-  res.status(errorCode).json(responseBody);
+  res.status(errorCode)
+    .set('Content-Type', 'application/json')
+    .set('Custom-Header', 'Hello')
+    .json(responseBody);
   console.log("headers:");
   console.log(req.headers);
   console.log("body:");
@@ -39,7 +45,10 @@ app.post('/', (req, res) => {
 });
 
 app.put('/', (req, res) => {
-  res.status(errorCode).json(responseBody);
+  res.status(errorCode)
+    .set('Content-Type', 'application/json')
+    .set('Custom-Header', 'Hello')
+    .json(responseBody);
   console.log("headers:");
   console.log(req.headers);
   console.log("body:");
@@ -48,7 +57,10 @@ app.put('/', (req, res) => {
 });
 
 app.delete('/', (req, res) => {
-  res.status(errorCode).json(responseBody);
+  res.status(errorCode)
+    .set('Content-Type', 'application/json')
+    .set('Custom-Header', 'Hello')
+    .json(responseBody);
   console.log("headers:");
   console.log(req.headers);
   console.log("body:");

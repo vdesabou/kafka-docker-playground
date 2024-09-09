@@ -40,6 +40,8 @@ services:
     hostname: connect.kerberos-demo.local
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hbase
+      # JDK 17
+      KAFKA_OPTS: --add-opens=java.security.jgss/sun.security.krb5=ALL-UNNAMED
     volumes:
       - ../../connect/connect-hbase-sink/kerberos/krb5.conf:/etc/krb5.conf
       - krb-server:/opt/keytabs/

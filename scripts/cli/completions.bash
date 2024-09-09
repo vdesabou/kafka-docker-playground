@@ -1001,7 +1001,7 @@ _playground_completions() {
       ;;
 
     *'debug heap-dump'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help --histo --live -c -h")" -- "$cur")
       ;;
 
     *'debug log-level'*)

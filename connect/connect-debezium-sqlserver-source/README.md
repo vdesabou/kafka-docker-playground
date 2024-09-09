@@ -24,7 +24,7 @@ $ just use <playground run> command and search for debezium-sqlserver-source.sh 
 Load inventory.sql to SQL Server
 
 ```bash
-$ cat ../../connect/connect-debezium-sqlserver-source/inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
+$ cat ../../connect/connect-debezium-sqlserver-source/inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools18/bin/sqlcmd -No -U sa -P Password!'
 ```
 
 
@@ -58,7 +58,7 @@ $ curl -X PUT \
 Insert one more row:
 
 ```bash
-$ docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
+$ docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -No -U sa -P Password! << EOF
 USE testDB;
 INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@office.com');
 GO

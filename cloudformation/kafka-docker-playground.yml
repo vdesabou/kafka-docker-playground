@@ -149,6 +149,8 @@ Resources:
 
                       git clone https://github.com/vdesabou/kafka-docker-playground.git
 
+                      rm -rf ~/kafka-docker-playground/reproduction-models/.git
+
                       mkdir -p ~/.config/
                       
                       wget -q https://github.com/vdesabou/kafka-docker-playground/raw/master/cloudformation/dotfiles/starship.toml -o ~/.config/starship.toml
