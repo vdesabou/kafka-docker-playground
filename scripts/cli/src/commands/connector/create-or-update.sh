@@ -153,29 +153,17 @@ then
         exit 1
     fi
 
-    is_valid=1
-    for row in $(echo "$curl_output" | jq -r '.configs[] | @base64'); do
-        _jq() {
-            echo ${row} | base64 -d | jq -r ${1}
-        }
+    # Check if there were any errors
+    has_errors=$(echo "$curl_output" | jq '.configs[] | select(.value.errors | length > 0) | length' | tr -d '\n')
 
-        name=$(_jq '.value.name')
-        value=$(_jq '.value.value')
-        errors=$(_jq '.value.errors')
-
-        if [ "$(echo "$errors" | jq 'length')" -gt 0 ]
-        then
-            is_valid=0
-            logerror "❌ validation error for config <$name=$value>" 
-            echo "$errors" | jq .
-        fi
-    done
-
-    if [ $is_valid -eq 1 ]
+    if [[ "$has_errors" -gt 0 ]]
     then
-        log "✅ $connector_type connector config is valid !" 
-    else
+        output=$(echo "$curl_output" | jq -r '.configs[] | select(.value.errors | length > 0) | .value.name + " ->> " + (.value.errors | to_entries | map("\(.value|tostring)") | join(", "))')
+        logerror "❌ Validation errors found in connector config\n$output"
+
         exit 1
+    else
+        log "✅ $connector_type connector config is valid !"
     fi
 fi
 
