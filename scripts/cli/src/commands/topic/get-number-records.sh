@@ -101,7 +101,12 @@ do
             docker exec $container timeout 15 kafka-console-consumer --bootstrap-server broker:9092 --topic $topic $security --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
             set -e
         else
-            docker exec $container kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 $security --topic $topic --time -1 | awk -F ":" '{sum += $3} END {print sum}'
+            class_name="kafka.tools.GetOffsetShell"
+            if version_gt $tag "7.6.9"
+            then
+                class_name="org.apache.kafka.tools.GetOffsetShell"
+            fi
+            docker exec $container kafka-run-class $class_name --broker-list broker:9092 $security --topic $topic --time -1 | awk -F ":" '{sum += $3} END {print sum}'
         fi
     fi
 done
