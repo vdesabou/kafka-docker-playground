@@ -91,11 +91,11 @@ then
                 echo -e "    \"key.converter\": \"$converter_class\"," >> $converter_file
                 echo -e "    \"key.converter.schema.registry.url\": \"$SCHEMA_REGISTRY_URL\"," >> $converter_file
                 echo -e "    \"key.converter.basic.auth.credentials.source\": \"USER_INFO\"," >> $converter_file
-                echo -e "    \"key.converter.basic.auth.user.info\": \"\${file:/data:schema.registry.basic.auth.user.info}\"," >> $converter_file
+                echo -e "    \"key.converter.basic.auth.user.info\": \"\${file:/datacloud:schema.registry.basic.auth.user.info}\"," >> $converter_file
                 echo -e "    \"value.converter\": \"$converter_class\"," >> $converter_file
                 echo -e "    \"value.converter.schema.registry.url\": \"$SCHEMA_REGISTRY_URL\"," >> $converter_file
                 echo -e "    \"value.converter.basic.auth.credentials.source\": \"USER_INFO\"," >> $converter_file
-                echo -e "    \"value.converter.basic.auth.user.info\": \"\${file:/data:schema.registry.basic.auth.user.info}\"," >> $converter_file
+                echo -e "    \"value.converter.basic.auth.user.info\": \"\${file:/datacloud:schema.registry.basic.auth.user.info}\"," >> $converter_file
                 ;;
 
             sasl-ssl|2way-ssl)
