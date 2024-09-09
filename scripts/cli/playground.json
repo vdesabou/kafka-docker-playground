@@ -1068,7 +1068,7 @@
         },
         {
           "name": "heap-dump",
-          "description": "👻 Take a heap dump\n  \n  🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/) can be used to read the file.\n",
+          "description": "👻 Take a heap dump\n  \n  🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/) can be used to read the file.\n  \n  It will run a full gc first. If you don't want this, use \n",
           "usage": "playground debug heap-dump [OPTIONS]",
           "options": [
             {
@@ -1078,6 +1078,20 @@
               ],
               "argument": "connect",
               "description": "🐳 Container name\n\nDefault value: connect\n"
+            },
+            {
+              "names": [
+                "--live"
+              ],
+              "argument": "",
+              "description": "🧬 dump only live objects; if not specified, all objects in the heap are dumped\n"
+            },
+            {
+              "names": [
+                "--histo"
+              ],
+              "argument": "",
+              "description": "📊 print histogram of java object heap\n"
             }
           ]
         },

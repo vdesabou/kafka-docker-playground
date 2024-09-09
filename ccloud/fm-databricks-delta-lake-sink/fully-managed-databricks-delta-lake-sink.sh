@@ -87,17 +87,17 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-connector_name="DatabricksDeltaLakeSink_$USER"
+connector_name2="DatabricksDeltaLakeSink_$USER"
 set +e
-playground connector delete --connector $connector_name > /dev/null 2>&1
+playground connector delete --connector $connector_name2 > /dev/null 2>&1
 set -e
 
 log "Creating fully managed connector"
-playground connector create-or-update --connector $connector_name << EOF
+playground connector create-or-update --connector $connector_name2 << EOF
 {
      "topics": "pageviews",
      "input.data.format": "AVRO",
-     "name": "$connector_name",
+     "name": "$connector_name2",
      "connector.class": "DatabricksDeltaLakeSink",
      "kafka.auth.mode": "KAFKA_API_KEY",
      "kafka.api.key": "$CLOUD_KEY",
@@ -114,7 +114,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "tasks.max": "1"
 }
 EOF
-wait_for_ccloud_connector_up $connector_name 180
+wait_for_ccloud_connector_up $connector_name2 180
 
 sleep 90
 
@@ -144,3 +144,8 @@ log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
 playground connector delete --connector $connector_name
+
+log "Do you want to delete the fully managed connector $connector_name2 ?"
+check_if_continue
+
+playground connector delete --connector $connector_name2

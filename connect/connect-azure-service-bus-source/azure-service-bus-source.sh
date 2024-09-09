@@ -4,6 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+cd ../../connect/connect-azure-service-bus-source
 # https://docs.microsoft.com/en-us/azure/service-bus-messaging/service-bus-quickstart-cli#send-and-receive-messages
 for component in QueuesGettingStarted
 do
@@ -18,6 +19,7 @@ do
      fi
      set -e
 done
+cd -
 
 if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
 then

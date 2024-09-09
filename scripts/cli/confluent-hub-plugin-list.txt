@@ -126,7 +126,6 @@ gridgain/ignite-connector
 hazelcast/hazelcast-jet-kafka
 hazelcast/kafka-connector
 hivemq/enterprise-extension
-hvr/hvr-cdc
 ibm/data-replication
 imply/druid-kafka-indexing-service
 infoviewsystems/kafka-connect-as400
@@ -173,10 +172,12 @@ pivotal/greenplum-integration
 precisely/connect
 privitar/privitar-kafka-connector
 push/diffusion-connector
+qdrant/qdrant-kafka
 qlik/qlik-cdc
 questdb/kafka-questdb-connector
 rahulbats/kafka-connect-odpsapsource
 rapidapi/rapidapi-enterprise-hub
+rayokota/kafka-connect-jsonata
 redhatinsights/expandjsonsmt
 redis/redis-enterprise-kafka
 redis/redis-kafka-connect
@@ -193,9 +194,12 @@ snowflakeinc/snowflake-kafka-connector
 splunk/kafka-connect-splunk
 spoudinc/spoud-agoora
 sqdata/sqdata-connector
+streamsendio/file-chunk-sink
+streamsendio/file-chunk-source
 streamsets/streamsets-sdc
 swim/swim-kafka-connect
 symetryml/kafka-connector
+synthesis/synthesis-fix-connector
 tabular/iceberg-kafka-connect
 thomaskwscott/kafka-connect-shell-sink
 thomaskwscott/kafka-connect-shell-source

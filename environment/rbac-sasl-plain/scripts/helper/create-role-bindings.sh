@@ -123,6 +123,20 @@ do
         --kafka-cluster-id $KAFKA_CLUSTER_ID
 done
 
+# in case EOS is used https://cwiki.apache.org/confluence/display/KAFKA/KIP-618%3A+Exactly-Once+Support+for+Source+Connectors
+confluent iam rolebinding create \
+    --principal $CONNECT_ADMIN \
+    --role ResourceOwner \
+    --resource TransactionalId:connect-cluster-connect-cluster \
+    --kafka-cluster-id $KAFKA_CLUSTER_ID
+
+# enable.idempotence=true requires IdempotentWrite
+confluent iam rolebinding create \
+    --principal $CONNECT_ADMIN \
+    --role DeveloperWrite \
+    --resource Cluster:kafka-cluster \
+    --kafka-cluster-id $KAFKA_CLUSTER_ID
+
 ################################### Connectors ###################################
 echo "Creating role bindings for any connector"
 
@@ -158,6 +172,13 @@ confluent iam rolebinding create \
     --resource Subject:* \
     --kafka-cluster-id $KAFKA_CLUSTER_ID \
     --schema-registry-cluster-id $SR
+
+# in case EOS is used https://cwiki.apache.org/confluence/display/KAFKA/KIP-618%3A+Exactly-Once+Support+for+Source+Connectors
+confluent iam rolebinding create \
+    --principal $CONNECTOR_PRINCIPAL \
+    --role ResourceOwner \
+    --resource TransactionalId:* \
+    --kafka-cluster-id $KAFKA_CLUSTER_ID
 
 ################################### ksqlDB Admin ###################################
 echo "Creating role bindings for ksqlDB Admin"

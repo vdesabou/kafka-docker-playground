@@ -6,5 +6,6 @@ services:
         - ../../connect/connect-gcp-google-pubsub-sink/pubsub-group-kafka-connector-1.2.0.jar:/usr/share/confluent-hub-components/pubsub-group-kafka-connector/pubsub-group-kafka-connector-1.2.0.jar
 
         - ../../connect/connect-gcp-google-pubsub-sink/grpc-netty-1.54.0.jar:/usr/share/confluent-hub-components/pubsub-group-kafka-connector/grpc-netty-1.54.0.jar
+        - ../../connect/connect-gcp-google-pubsub-sink/grpc-rls-1.55.3.jar:/usr/share/confluent-hub-components/pubsub-group-kafka-connector/grpc-rls-1.55.3.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/java/,/usr/share/confluent-hub-components/

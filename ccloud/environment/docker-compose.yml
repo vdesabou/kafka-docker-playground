@@ -8,7 +8,7 @@ services:
       - "8083:8083"
       - "5005:5005"
     volumes:
-      - ../../ccloud/environment/data:/data
+      - ../../ccloud/environment/data:/datacloud
       - ../../confluent-hub:/usr/share/confluent-hub-components
     environment:
       CONNECT_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS

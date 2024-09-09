@@ -1203,6 +1203,8 @@ subcommands:
           👻 Take a heap dump
             
             🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/) can be used to read the file.
+            
+            It will run a full gc first. If you don't want this, use 
         usage: playground debug heap-dump [OPTIONS]
         options:
         - names:
@@ -1213,6 +1215,18 @@ subcommands:
             🐳 Container name
             
             Default value: connect
+            
+        - names:
+          - --live
+          argument: ""
+          description: | 
+            🧬 dump only live objects; if not specified, all objects in the heap are dumped
+            
+        - names:
+          - --histo
+          argument: ""
+          description: | 
+            📊 print histogram of java object heap
             
       - name: tcp-dump
         description: | 
