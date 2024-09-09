@@ -1596,8 +1596,18 @@ commands:
       👻 Take a heap dump
 
       🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/) can be used to read the file.
+
+      It will run a full gc first. If you don't want this, use 
     flags:
       - *container
+      - long: --live
+        required: false
+        help: |-
+          🧬 dump only live objects; if not specified, all objects in the heap are dumped
+      - long: --histo
+        required: false
+        help: |-
+          📊 print histogram of java object heap
     examples:
     - playground debug heap-dump
     - playground debug heap-dump --container broker
