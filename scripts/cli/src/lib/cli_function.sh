@@ -839,7 +839,7 @@ function add_connector_config_based_on_environment () {
           # log "replacing $prefix config for environment $environment"
 
           echo "$json_content" > $tmp_dir/input.json
-          jq ".[\"$prefix.bootstrap.servers\"] = \"\${file:/data:bootstrap.servers}\" | .[\"$prefix.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"$prefix.security.protocol\"] = \"SASL_SSL\" | .[\"$prefix.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
+          jq ".[\"$prefix.bootstrap.servers\"] = \"\${file:/datacloud:bootstrap.servers}\" | .[\"$prefix.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"$prefix.security.protocol\"] = \"SASL_SSL\" | .[\"$prefix.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
           json_content=$(cat $tmp_dir/output.json)
 
           if [ "$prefix" == "confluent.topic" ]
@@ -858,7 +858,7 @@ function add_connector_config_based_on_environment () {
           # log "replacing $prefix.converter.schema.registry.url config for environment $environment"
 
           echo "$json_content" > $tmp_dir/input.json
-          jq ".[\"$prefix.converter.schema.registry.url\"] = \"$SCHEMA_REGISTRY_URL\" | .[\"$prefix.converter.basic.auth.user.info\"] = \"\${file:/data:schema.registry.basic.auth.user.info}\" | .[\"$prefix.converter.basic.auth.credentials.source\"] = \"USER_INFO\"" $tmp_dir/input.json > $tmp_dir/output.json
+          jq ".[\"$prefix.converter.schema.registry.url\"] = \"$SCHEMA_REGISTRY_URL\" | .[\"$prefix.converter.basic.auth.user.info\"] = \"\${file:/datacloud:schema.registry.basic.auth.user.info}\" | .[\"$prefix.converter.basic.auth.credentials.source\"] = \"USER_INFO\"" $tmp_dir/input.json > $tmp_dir/output.json
           json_content=$(cat $tmp_dir/output.json)
         fi
       done
@@ -868,7 +868,7 @@ function add_connector_config_based_on_environment () {
         # log "replacing database.history.kafka.bootstrap.servers config for environment $environment"
 
         echo "$json_content" > $tmp_dir/input.json
-        jq ".[\"database.history.kafka.bootstrap.servers\"] = \"\${file:/data:bootstrap.servers}\" | .[\"database.history.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"database.history.producer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.producer.sasl.mechanism\"] = \"PLAIN\" | .[\"database.history.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"database.history.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.consumer.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
+        jq ".[\"database.history.kafka.bootstrap.servers\"] = \"\${file:/datacloud:bootstrap.servers}\" | .[\"database.history.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"database.history.producer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.producer.sasl.mechanism\"] = \"PLAIN\" | .[\"database.history.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"database.history.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.consumer.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
         json_content=$(cat $tmp_dir/output.json)
       fi
 
@@ -877,7 +877,7 @@ function add_connector_config_based_on_environment () {
         # log "replacing schema.history.internal.kafka.bootstrap.servers config for environment $environment"
 
         echo "$json_content" > $tmp_dir/input.json
-        jq ".[\"schema.history.internal.kafka.bootstrap.servers\"] = \"\${file:/data:bootstrap.servers}\" | .[\"schema.history.internal.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"schema.history.internal.producer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.producer.sasl.mechanism\"] = \"PLAIN\" | .[\"schema.history.internal.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"schema.history.internal.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.consumer.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
+        jq ".[\"schema.history.internal.kafka.bootstrap.servers\"] = \"\${file:/datacloud:bootstrap.servers}\" | .[\"schema.history.internal.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"schema.history.internal.producer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.producer.sasl.mechanism\"] = \"PLAIN\" | .[\"schema.history.internal.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"schema.history.internal.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.consumer.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
         json_content=$(cat $tmp_dir/output.json)
       fi
 
@@ -886,7 +886,7 @@ function add_connector_config_based_on_environment () {
         # log "replacing reporter.bootstrap.servers config for environment $environment"
 
         echo "$json_content" > $tmp_dir/input.json
-        jq ".[\"reporter.bootstrap.servers\"] = \"\${file:/data:bootstrap.servers}\" | .[\"reporter.result.topic.replication.factor\"] = \"3\" | .[\"reporter.error.topic.replication.factor\"] = \"3\" | .[\"reporter.admin.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"reporter.admin.security.protocol\"] = \"SASL_SSL\" | .[\"reporter.admin.sasl.mechanism\"] = \"PLAIN\" | .[\"reporter.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"reporter.producer.security.protocol\"] = \"SASL_SSL\" | .[\"reporter.producer.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
+        jq ".[\"reporter.bootstrap.servers\"] = \"\${file:/datacloud:bootstrap.servers}\" | .[\"reporter.result.topic.replication.factor\"] = \"3\" | .[\"reporter.error.topic.replication.factor\"] = \"3\" | .[\"reporter.admin.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"reporter.admin.security.protocol\"] = \"SASL_SSL\" | .[\"reporter.admin.sasl.mechanism\"] = \"PLAIN\" | .[\"reporter.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"reporter.producer.security.protocol\"] = \"SASL_SSL\" | .[\"reporter.producer.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
         json_content=$(cat $tmp_dir/output.json)
       fi
     ;;
