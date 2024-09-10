@@ -163,7 +163,7 @@ EOF
 Show content of `orders` table:
 
 ```bash
-$ ocker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -No -U sa -P Password! << EOF
+$ ocker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
 select * from orders
 GO
 EOF

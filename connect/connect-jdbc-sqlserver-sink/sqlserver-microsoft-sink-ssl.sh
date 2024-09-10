@@ -134,7 +134,7 @@ EOF
 sleep 5
 
 log "Show content of orders table:"
-docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -No -U sa -P Password! > /tmp/result.log  2>&1 <<-EOF
+docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! > /tmp/result.log  2>&1 <<-EOF
 select * from orders
 GO
 EOF

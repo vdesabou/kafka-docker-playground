@@ -76,3 +76,4 @@ playground_config.ini
 .connector_config
 hsperfdata_appuser
 *.lck
+reproduction-models

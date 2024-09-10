@@ -15,7 +15,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 
 log "Create table"
-docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -No -U sa -P Password! << EOF
+docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
 -- Create the test database
 CREATE DATABASE testDB;
 GO
@@ -43,7 +43,7 @@ EOF
 
 # https://debezium.io/documentation/reference/1.9/configuration/signalling.html#sending-signals-to-a-debezium-connector
 log "Creating a signaling data collection"
-docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -No -U sa -P Password! << EOF
+docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
 USE testDB;
 CREATE TABLE debezium_signal (id VARCHAR(42) PRIMARY KEY, type VARCHAR(32) NOT NULL, data VARCHAR(2048) NULL);
 EXEC sys.sp_cdc_enable_table @source_schema = 'dbo', @source_name = 'debezium_signal', @role_name = NULL, @supports_net_changes = 0;
@@ -79,7 +79,7 @@ EOF
 sleep 5
 
 log "Insert another row"
-docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -No -U sa -P Password! << EOF
+docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
 USE testDB;
 INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@office.com');
 GO
@@ -90,7 +90,7 @@ playground topic consume --topic server1.testDB.dbo.customers --min-expected-mes
 
 
 log "Add another table customers2"
-docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -No -U sa -P Password! << EOF
+docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
 USE testDB;
 CREATE TABLE customers2 (
   id INTEGER IDENTITY(1001,1) NOT NULL PRIMARY KEY,
@@ -142,7 +142,7 @@ playground connector create-or-update --connector debezium-sqlserver-source  << 
 EOF
 
 log "Add another table customers2"
-docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -No -U sa -P Password! << EOF
+docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
 USE testDB;
 INSERT INTO customers2(first_name,last_name,email)
   VALUES ('Anne2','Kretchmar2','annek2@noanswer.org');
@@ -155,7 +155,7 @@ log "Verifying topic server1.testDB.dbo.customers2 : there will be only the new 
 playground topic consume --topic server1.testDB.dbo.customers2 --min-expected-messages 1 --timeout 60
 
 log "Trigger Ad hoc snapshot"
-docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -No -U sa -P Password! << EOF
+docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
 USE testDB;
 INSERT INTO debezium_signal (id, type, data) VALUES('captain adhoc $RANDOM', 'execute-snapshot', '{"data-collections": ["testDB.dbo.customers2"], "type":"incremental"}');
 GO
