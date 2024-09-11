@@ -152,6 +152,7 @@ kategmbh/kafka-adapter-for-sap-process-orchestration
 kinetica/kinetica-connector
 konghq/kong-kafka-upstream-plugin
 levyx/xenon-connector
+lightstreamer/kafka-connect-lightstreamer
 llofberg/kafka-connect-aws-lambda
 marklogic/kafka-marklogic-connector
 markteehan/file-chunk-sink

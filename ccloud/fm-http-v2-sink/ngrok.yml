@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  httpserver:
+    addr: httpserver:9006
+    proto: tcp

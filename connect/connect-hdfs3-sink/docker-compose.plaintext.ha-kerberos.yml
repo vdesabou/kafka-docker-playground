@@ -132,6 +132,8 @@ services:
       - ../../connect/connect-hdfs3-sink/ha-kerberos/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs3
+      # JDK 17
+      KAFKA_OPTS: --add-opens=java.security.jgss/sun.security.krb5=ALL-UNNAMED
 
 networks:
   default:

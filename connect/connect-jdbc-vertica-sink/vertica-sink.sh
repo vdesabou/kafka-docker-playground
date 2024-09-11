@@ -23,7 +23,8 @@ log "VERTICA has started!"
 
 log "Create the table and insert data."
 docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-create table mytable(f1 varchar(20));
+CREATE SCHEMA docker.docker;
+create table docker.mytable(f1 varchar(20));
 EOF
 
 sleep 2
