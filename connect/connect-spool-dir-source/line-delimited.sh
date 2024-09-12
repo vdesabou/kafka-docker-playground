@@ -13,16 +13,16 @@ docker exec -i connect bash -c 'mkdir -p /tmp/data/input/ && mkdir -p /tmp/data/
 log "Creating Line Delimited Spool Dir Source connector"
 playground connector create-or-update --connector spool-dir  << EOF
 {
-               "tasks.max": "1",
-               "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirLineDelimitedSourceConnector",
-               "input.file.pattern": ".*\\\\.json",
-               "input.path": "/tmp/data/input",
-               "error.path": "/tmp/data/error",
-               "finished.path": "/tmp/data/finished",
-               "halt.on.error": "false",
-               "topic": "fix-topic",
-               "schema.generation.enabled": "true"
-          }
+     "tasks.max": "1",
+     "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirLineDelimitedSourceConnector",
+     "input.file.pattern": ".*\\\\.json",
+     "input.path": "/tmp/data/input",
+     "error.path": "/tmp/data/error",
+     "finished.path": "/tmp/data/finished",
+     "halt.on.error": "false",
+     "topic": "fix-topic",
+     "schema.generation.enabled": "true"
+}
 EOF
 
 
