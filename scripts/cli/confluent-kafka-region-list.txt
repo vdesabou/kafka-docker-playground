@@ -73,6 +73,7 @@ Singapore(ap-southeast-1)/ap-southeast-1
 Singapore(asia-southeast1)/asia-southeast1
 Singapore(southeastasia)/southeastasia
 Spain(eu-south-2)/eu-south-2
+Spain(spaincentral)/spaincentral
 Stockholm(eu-north-1)/eu-north-1
 Sydney(ap-southeast-2)/ap-southeast-2
 Sydney(australia-southeast1)/australia-southeast1

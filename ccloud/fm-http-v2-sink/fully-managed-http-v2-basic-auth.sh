@@ -43,6 +43,10 @@ do
   sleep 5
 done
 
+set +e
+playground topic delete --topic http-topic
+set -e
+
 log "Creating http-topic topic in Confluent Cloud"
 set +e
 playground topic create --topic http-topic

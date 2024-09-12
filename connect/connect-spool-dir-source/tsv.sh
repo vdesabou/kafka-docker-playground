@@ -13,18 +13,18 @@ docker exec -i connect bash -c 'mkdir -p /tmp/data/input/ && mkdir -p /tmp/data/
 log "Creating TSV Spool Dir Source connector"
 playground connector create-or-update --connector TsvSpoolDir  << EOF
 {
-               "tasks.max": "1",
-               "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirCsvSourceConnector",
-               "input.file.pattern": "tsv-spooldir-source.tsv",
-               "input.path": "/tmp/data/input",
-               "error.path": "/tmp/data/error",
-               "finished.path": "/tmp/data/finished",
-               "halt.on.error": "false",
-               "topic": "spooldir-tsv-topic",
-               "schema.generation.enabled": "true",
-               "csv.first.row.as.header": "true",
-               "csv.separator.char": "9"
-          }
+     "tasks.max": "1",
+     "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirCsvSourceConnector",
+     "input.file.pattern": "tsv-spooldir-source.tsv",
+     "input.path": "/tmp/data/input",
+     "error.path": "/tmp/data/error",
+     "finished.path": "/tmp/data/finished",
+     "halt.on.error": "false",
+     "topic": "spooldir-tsv-topic",
+     "schema.generation.enabled": "true",
+     "csv.first.row.as.header": "true",
+     "csv.separator.char": "9"
+}
 EOF
 
 
