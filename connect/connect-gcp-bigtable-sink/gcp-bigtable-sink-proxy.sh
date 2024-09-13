@@ -121,7 +121,7 @@ playground connector create-or-update --connector gcp-bigtable-sink  << EOF
 }
 EOF
 
-sleep 60
+playground connector show-lag --connector gcp-bigtable-sink --max-wait 360
 
 log "Verify data is in GCP BigTable"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE read kafka_big_query_stats > /tmp/result.log  2>&1
