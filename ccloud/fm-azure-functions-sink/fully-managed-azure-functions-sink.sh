@@ -90,7 +90,7 @@ done
 
 
 output=$(docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node14-core-tools bash -c "az login -u \"$AZ_USER\" -p \"$AZ_PASS\" > /dev/null 2>&1 && cd LocalFunctionProj && func azure functionapp list-functions $AZURE_FUNCTIONS_NAME --show-keys")
-FUNCTIONS_URL=$(echo $output | grep -Eo 'https://[^ >]+'|head -1)
+FUNCTIONS_URL=$(echo "$output" | grep "Invoke url" | grep -Eo 'https://[^ >]+'|head -1)
 
 if [ -z "$GITHUB_RUN_NUMBER" ]
 then
