@@ -416,3 +416,4 @@ Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 - 🪦 [Recovery from schema hard deletion](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/recover-from-schema-hard-deletion) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 🔍 [ksqlDB Schema Inference with ID](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/schema-inference-with-id) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 💬 [MQTT Proxy](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/mqtt-proxy) :other/mqtt-proxy:
+- 💱 [Kafka Connect JSONata Transform](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/kafka-connect-jsonata) :other/kafka-connect-jsonata:

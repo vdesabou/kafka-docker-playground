@@ -136,7 +136,7 @@ jobs:
                       "🚀 environment/plaintext environment/2way-ssl environment/kerberos environment/ldap-authorizer-sasl-plain environment/ldap-sasl-plain environment/mdc-kerberos environment/mdc-plaintext environment/mdc-sasl-plain environment/rbac-sasl-plain environment/sasl-plain environment/sasl-scram environment/sasl-ssl environment/ssl_kerberos environment/kraft-plaintext connect/connect-snowflake-sink",
                       "🚀 connect/connect-mapr-sink",
                       "🚀 other/syslog-logstash-ksqldb other/mqtt-proxy connect/connect-jdbc-snowflake-source connect/connect-jdbc-snowflake-sink connect/connect-filestream-source connect/connect-filestream-sink connect/connect-filepulse-source connect/connect-jdbc-mariadb-source connect/connect-jdbc-mariadb-sink",
-                      "🚀 connect/connect-jdbc-sap-hana-sink connect/connect-jdbc-sap-hana-source connect/connect-sap-hana-sink",
+                      "🚀 connect/connect-jdbc-sap-hana-sink connect/connect-jdbc-sap-hana-source connect/connect-sap-hana-sink other/kafka-connect-jsonata",
 
                       # requiring ngrok
                       "🚀2️⃣ ccloud/fm-influxdb2-sink ccloud/fm-influxdb2-source ccloud/fm-jdbc-oracle19-source ccloud/fm-jdbc-oracle19-sink ccloud/fm-cdc-oracle19-source ccloud/fm-rabbitmq-source ccloud/fm-zendesk-source ccloud/fm-splunk-sink ccloud/fm-rabbitmq-sink ccloud/fm-jdbc-mysql-sink ccloud/fm-sftp-source ccloud/fm-http-sink ccloud/fm-http-v2-sink ccloud/fm-http-source ccloud/fm-http-v2-source",

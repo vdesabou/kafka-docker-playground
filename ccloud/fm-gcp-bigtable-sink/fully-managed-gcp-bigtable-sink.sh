@@ -134,16 +134,20 @@ wait_for_ccloud_connector_up $connector_name 180
 
 playground connector show-lag --connector $connector_name --max-wait 360
 
-log "Doing gsutil authentication"
-set +e
-docker rm -f gcloud-config
-set -e
-docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --project ${GCP_PROJECT} --key-file /tmp/keyfile.json
+if [ -z "$GITHUB_RUN_NUMBER" ]
+then
+  # not running with github actions
+  log "Doing gsutil authentication"
+  set +e
+  docker rm -f gcloud-config
+  set -e
+  docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --project ${GCP_PROJECT} --key-file /tmp/keyfile.json
 
-log "Verify data is in GCP BigTable"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE read kafka_big_query_stats > /tmp/result.log  2>&1
-cat /tmp/result.log
-grep "Bob" /tmp/result.log
+  log "Verify data is in GCP BigTable"
+  docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE read kafka_big_query_stats > /tmp/result.log  2>&1
+  cat /tmp/result.log
+  grep "Bob" /tmp/result.log
+fi
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
