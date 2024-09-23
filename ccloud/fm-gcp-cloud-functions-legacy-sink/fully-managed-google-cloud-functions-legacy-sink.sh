@@ -12,6 +12,7 @@ fi
 GCP_FUNCTION_REGION=${1:-europe-west2}
 GCP_FUNCTION_FUNCTION=${2:-function-1}
 
+cd ../../ccloud/fm-gcp-cloud-functions-legacy-sink
 GCP_KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${GCP_KEYFILE} ] && [ -z "$GCP_KEYFILE_CONTENT" ]
 then
@@ -26,6 +27,7 @@ else
         echo -e "$GCP_KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${GCP_KEYFILE}
     fi
 fi
+cd -
 
 bootstrap_ccloud_environment
 

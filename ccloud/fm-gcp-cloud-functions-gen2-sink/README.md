@@ -1,10 +1,10 @@
-# Fully Managed Google Cloud Functions Sink connector
+# Fully Managed Google Cloud Functions Gen 2 Sink connector
 
 
 
 ## Objective
 
-Quickly test [Fully Managed Google Cloud Functions Sink](https://docs.confluent.io/cloud/current/connectors/cc-google-functions-sink.html#google-cloud-functions-sink-connector-for-ccloud) connector.
+Quickly test [Fully Managed Google Cloud Functions Gen 2 Sink](https://docs.confluent.io/cloud/current/connectors/cc-google-cloud-functions-gen2-sink.html) connector.
 
 
 * Active Google Cloud Platform (GCP) account with authorization to create resources
@@ -22,6 +22,8 @@ Quickly test [Fully Managed Google Cloud Functions Sink](https://docs.confluent.
 ![Cloud functions setup](Screenshot2.png)
 
 Note down the project id, the region (example `us-central1`), and the function name (example `function-1`) as they will be used later.
+
+N.B: make sure service account has `Cloud Run Invoker` role.
 
 ## Prerequisites
 
