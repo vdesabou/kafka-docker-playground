@@ -12,6 +12,8 @@ playground start-environment --environment ccloud --docker-compose-override-file
 
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
+playground topic delete --topic products-avro
+sleep 3
 playground topic create --topic products-avro
 set -e
 
