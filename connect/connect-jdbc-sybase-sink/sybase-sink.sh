@@ -16,7 +16,8 @@ playground connector create-or-update --connector sybase-sink  << EOF
   "connection.user": "sa",
   "connection.password": "password",
   "topics": "orders",
-  "auto.create": "true"
+  "auto.create": "true",
+  "table.name.format": "master.dbo.orders"
 }
 EOF
 

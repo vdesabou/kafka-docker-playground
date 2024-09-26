@@ -163,7 +163,7 @@ then
         if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
         then
             cat $clipboard_file | pbcopy
-            log "📋 config has been copied to the clipboard (disable with 'playground config set clipboard false')"
+            log "📋 config has been copied to the clipboard (disable with 'playground config clipboard false')"
         fi
     fi
 fi

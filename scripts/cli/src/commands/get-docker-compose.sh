@@ -11,6 +11,7 @@ then
 fi
 echo "$docker_command" > /tmp/tmp
 sed -e "s|up -d|config|g" \
+    -e "s|--quiet-pull||g" \
     /tmp/tmp > /tmp/playground-command-config
 
 bash /tmp/playground-command-config 

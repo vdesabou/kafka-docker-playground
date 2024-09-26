@@ -1129,6 +1129,8 @@ playground_config_usage() {
   printf "  %s   📂 list of folders where to search for zip or jar\n" "$(green "folder_zip_or_jar")               "
   printf "  %s   copy to clipboard connector config (only working on MacOS)\n" "$(green "clipboard")                       "
   printf "  %s   when running a fully managed connector example, it opens the connector in browser\n" "$(green "open-ccloud-connector-in-browser")"
+  printf "  %s   when running an example, always call playground container kill-all first. If not set, it will call playground stop instead.\n" "$(green "container-kill-all-before-run")   "
+  printf "  %s   when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.\n" "$(green "check-repo-version")              "
   echo
 
   # :command.long_usage
@@ -1453,10 +1455,92 @@ playground_config_open_ccloud_connector_in_browser_browser_usage() {
 }
 
 # :command.usage
+playground_config_container_kill_all_before_run_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground config container-kill-all-before-run\n\n"
+    printf "  when running an example, always call playground container kill-all first. If\n  not set, it will call playground stop instead.\n\n"
+  else
+    printf "playground config container-kill-all-before-run - when running an example, always call playground container kill-all first. If not set, it will call playground stop instead.\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground config container-kill-all-before-run [ENABLED]\n"
+  printf "  playground config container-kill-all-before-run --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "ENABLED")"
+    printf "\n"
+    printf "    %s\n" "Default: true"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground config container-kill-all-before-run false\n"
+    printf "  playground config container-kill-all-before-run true\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_config_check_repo_version_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground config check-repo-version\n\n"
+    printf "  when running an example, always check if repo version is older than 3 days, if\n  disabled, it will skip this check.\n\n"
+  else
+    printf "playground config check-repo-version - when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground config check-repo-version [ENABLED]\n"
+  printf "  playground config check-repo-version --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "ENABLED")"
+    printf "\n"
+    printf "    %s\n" "Default: true"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground config check-repo-version false\n"
+    printf "  playground config check-repo-version true\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_run_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground run\n\n"
-    printf "  🕹️ Run any example !\n  \n  🔥 It start an interactive mode where you'll be fully guided !\n  \n  \n  ⛅ When running Confluent Cloud (ccloud) example:\n  \n    All you have to do is to be already logged in with confluent CLI.\n  \n    By default, a new Confluent Cloud environment with a Cluster will be\n  created.\n  \n    You can configure the new cluster by setting:\n  \n    --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster\n  (possible values: basic, standard and dedicated, default basic)\n    --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider\n  (possible values: aws, gcp and azure, default aws)\n    --cluster-region (or CLUSTER_REGION environment variable): The Cloud region\n  (use confluent kafka region list to get the list, default eu-west-2 for aws,\n  westeurope for azure and europe-west2 for gcp)\n    --cluster-environment (or ENVIRONMENT environment variable) (optional): The\n  environment id where want your new cluster (example: txxxxx)\n  \n    In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n    --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n    --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key\n  and secret to use, it should be separated with colon (example:\n  <API_KEY>:<API_KEY_SECRET>)\n    --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable) (optional, if not set, new one will be created): The Schema Registry\n  api key and secret to use, it should be separated with colon (example:\n  <SR_API_KEY>:<SR_API_KEY_SECRET>)\n  \n  ❗ this command will kill all containers using playground container kill-all\n\n"
+    printf "  🕹️ Run any example !\n  \n  🔥 It start an interactive mode where you'll be fully guided !\n  \n  \n  ⛅ When running Confluent Cloud (ccloud) example:\n  \n    All you have to do is to be already logged in with confluent CLI.\n  \n    By default, a new Confluent Cloud environment with a Cluster will be\n  created.\n  \n    You can configure the new cluster by setting:\n  \n    --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster\n  (possible values: basic, standard and dedicated, default basic)\n    --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider\n  (possible values: aws, gcp and azure, default aws)\n    --cluster-region (or CLUSTER_REGION environment variable): The Cloud region\n  (use confluent kafka region list to get the list, default eu-west-2 for aws,\n  westeurope for azure and europe-west2 for gcp)\n    --cluster-environment (or ENVIRONMENT environment variable) (optional): The\n  environment id where want your new cluster (example: txxxxx)\n  \n    In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n    --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n    --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key\n  and secret to use, it should be separated with colon (example:\n  <API_KEY>:<API_KEY_SECRET>)\n    --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable) (optional, if not set, new one will be created): The Schema Registry\n  api key and secret to use, it should be separated with colon (example:\n  <SR_API_KEY>:<SR_API_KEY_SECRET>)\n  \n  ❗ this command will kill all containers using \"playground container kill-all\",\n  you can disable this by running \"playground config\n  container-kill-all-before-run false\"\n\n"
   else
     printf "playground run - 🕹️ Run any example !\n\n"
   fi
@@ -8196,7 +8280,7 @@ function maybe_create_image()
       export CONNECT_USER="appuser"
       if [ `uname -m` = "arm64" ]
       then
-        CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && rpm -i --nosignature https://koji.mbox.centos.org/kojifiles/packages/tcpdump/4.9.3/3.el8/aarch64/tcpdump-4.9.3-3.el8.aarch64.rpm && touch /tmp/done; fi"
+        CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && rpm -i --nosignature https://yum.oracle.com/repo/OracleLinux/OL8/appstream/aarch64/getPackage/tcpdump-4.9.3-3.el8.aarch64.rpm && touch /tmp/done; fi"
       else
         CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then curl https://download.rockylinux.org/pub/rocky/8/AppStream/x86_64/kickstart/Packages/t/tcpdump-4.9.3-5.el8.x86_64.rpm -o tcpdump-4.9.3-1.el8.x86_64.rpm && rpm -Uvh tcpdump-4.9.3-1.el8.x86_64.rpm && yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && touch /tmp/done; fi"
       fi
@@ -8386,29 +8470,38 @@ function check_bash_version() {
 }
 
 function check_playground_version() {
-  set +e
-  X=3
-  git fetch
-  latest_commit_date=$(git log -1 --format=%cd --date=short)
-  remote_commit_date=$(git log -1 --format=%cd --date=short origin/master)
-
-  if [[ "$OSTYPE" == "darwin"* ]]
+  check_repo_version=$(playground config get check-repo-version)
+  if [ "$check_repo_version" == "" ]
   then
-    latest_commit_date_seconds=$(date -j -f "%Y-%m-%d" "$latest_commit_date" +%s)
-    remote_commit_date_seconds=$(date -j -f "%Y-%m-%d" "$remote_commit_date" +%s)
-  else
-    latest_commit_date_seconds=$(date -d "$latest_commit_date" +%s)
-    remote_commit_date_seconds=$(date -d "$remote_commit_date" +%s)
+      playground config set check-repo-version true
   fi
 
-  difference=$(( (remote_commit_date_seconds - latest_commit_date_seconds) / (60*60*24) ))
-
-  if [ $difference -gt $X ]
+  if [ "$check_repo_version" == "true" ] || [ "$check_repo_version" == "" ]
   then
-      logwarn "🥶 The current repo version is older than $X days ($difference days), please refresh your version using git pull !"
-      check_if_continue
+    set +e
+    X=3
+    git fetch
+    latest_commit_date=$(git log -1 --format=%cd --date=short)
+    remote_commit_date=$(git log -1 --format=%cd --date=short origin/master)
+
+    if [[ "$OSTYPE" == "darwin"* ]]
+    then
+      latest_commit_date_seconds=$(date -j -f "%Y-%m-%d" "$latest_commit_date" +%s)
+      remote_commit_date_seconds=$(date -j -f "%Y-%m-%d" "$remote_commit_date" +%s)
+    else
+      latest_commit_date_seconds=$(date -d "$latest_commit_date" +%s)
+      remote_commit_date_seconds=$(date -d "$remote_commit_date" +%s)
+    fi
+
+    difference=$(( (remote_commit_date_seconds - latest_commit_date_seconds) / (60*60*24) ))
+
+    if [ $difference -gt $X ]
+    then
+        logwarn "🥶 The current repo version is older than $X days ($difference days), please refresh your version using git pull ! (disable with 'playground config check-repo-version false')"
+        check_if_continue
+    fi
+    set -e
   fi
-  set -e
 }
 
 function set_profiles() {
@@ -13335,6 +13428,20 @@ playground_config_open_ccloud_connector_in_browser_browser_command() {
 }
 
 # :command.function
+playground_config_container_kill_all_before_run_command() {
+  # src/commands/config/container-kill-all-before-run.sh
+  log "📋 configuring container-kill-all-before-run with ${args[enabled]}"
+  playground config set container-kill-all-before-run "${args[enabled]}"
+}
+
+# :command.function
+playground_config_check_repo_version_command() {
+  # src/commands/config/check-repo-version.sh
+  log "📋 configuring check-repo-version with ${args[enabled]}"
+  playground config set check-repo-version "${args[enabled]}"
+}
+
+# :command.function
 playground_run_command() {
   # src/commands/run.sh
   DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
@@ -13409,6 +13516,22 @@ playground_run_command() {
   then
     verify_installed "confluent"
   fi
+
+  set +e
+  container_kill_all_before_run=$(playground config get container-kill-all-before-run)
+  if [ "$container_kill_all_before_run" == "" ]
+  then
+      playground config set container-kill-all-before-run true
+  fi
+
+  if [ "$container_kill_all_before_run" == "true" ] || [ "$container_kill_all_before_run" == "" ]
+  then
+    log "💀 kill all docker containers (disable with 'playground config container-kill-all-before-run false')"
+    playground container kill-all
+  else
+    playground stop
+  fi
+  set -e
 
   playground state set run.test_file "$test_file"
   test_file_directory="$(dirname "${test_file}")"
@@ -14792,9 +14915,7 @@ playground_run_command() {
       log "🚀 Running example without any flags"
     fi
   fi
-  set +e
-  playground container kill-all
-  set -e
+
   playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
   playground state set run.test_file "$test_file"
   echo "" >> "$root_folder/playground-run-history"
@@ -14811,7 +14932,7 @@ playground_run_command() {
       if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
       then
           echo "playground run -f $test_file $flag_list" | pbcopy
-          log "📋 command to run again example has been copied to the clipboard (disable with 'playground config set clipboard false')"
+          log "📋 command to run again example has been copied to the clipboard (disable with 'playground config clipboard false')"
       fi
   fi
 
@@ -14965,7 +15086,19 @@ playground_start_environment_command() {
   test_file_directory="$(dirname "${test_file}")"
 
   set +e
-  playground container kill-all
+  container_kill_all_before_run=$(playground config get container-kill-all-before-run)
+  if [ "$container_kill_all_before_run" == "" ]
+  then
+      playground config set container-kill-all-before-run true
+  fi
+
+  if [ "$container_kill_all_before_run" == "true" ] || [ "$container_kill_all_before_run" == "" ]
+  then
+    log "💀 kill all docker containers (disable with 'playground config container-kill-all-before-run false')"
+    playground container kill-all
+  else
+    playground stop
+  fi
   set -e
 
   if [[ -n "$wait_for_control_center" ]]
@@ -17412,7 +17545,7 @@ EOF
       if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
       then
           echo "playground run -f $repro_dir/$repro_test_filename"| pbcopy
-          log "📋 command to run generated example has been copied to the clipboard (disable with 'playground config set clipboard false')"
+          log "📋 command to run generated example has been copied to the clipboard (disable with 'playground config clipboard false')"
       fi
   fi
 
@@ -17463,6 +17596,7 @@ playground_get_docker_compose_command() {
   fi
   echo "$docker_command" > /tmp/tmp
   sed -e "s|up -d|config|g" \
+      -e "s|--quiet-pull||g" \
       /tmp/tmp > /tmp/playground-command-config
 
   bash /tmp/playground-command-config
@@ -19140,7 +19274,7 @@ playground_container_get_ip_addresses_command() {
 # :command.function
 playground_container_kill_all_command() {
   # src/commands/container/kill-all.sh
-  log "💀 Kill all docker containers"
+  log "💀 kill all docker containers"
   docker rm -f $(docker ps -qa) > /dev/null 2>&1
 }
 
@@ -23243,7 +23377,7 @@ playground_connector_show_config_command() {
                 echo "EOF" >> $tmp_dir/tmp
 
                 cat $tmp_dir/tmp | pbcopy
-                log "📋 $connector_type connector config has been copied to the clipboard (disable with 'playground config set clipboard false')"
+                log "📋 $connector_type connector config has been copied to the clipboard (disable with 'playground config clipboard false')"
             fi
         fi
     else
@@ -23289,7 +23423,7 @@ playground_connector_show_config_command() {
                 echo "EOF" >> $tmp_dir/tmp
 
                 cat $tmp_dir/tmp | pbcopy
-                log "📋 $connector_type connector config has been copied to the clipboard (disable with 'playground config set clipboard false')"
+                log "📋 $connector_type connector config has been copied to the clipboard (disable with 'playground config clipboard false')"
             fi
         fi
     fi
@@ -23614,7 +23748,7 @@ playground_connector_select_config_command() {
               echo "$res" > $tmp_dir/tmp
 
               cat $tmp_dir/tmp | pbcopy
-              log "📋 config has been copied to the clipboard (disable with 'playground config set clipboard false')"
+              log "📋 config has been copied to the clipboard (disable with 'playground config clipboard false')"
           fi
       fi
   done
@@ -23788,7 +23922,7 @@ playground_connector_snippets_command() {
           if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
           then
               cat $clipboard_file | pbcopy
-              log "📋 config has been copied to the clipboard (disable with 'playground config set clipboard false')"
+              log "📋 config has been copied to the clipboard (disable with 'playground config clipboard false')"
           fi
       fi
   fi
@@ -24270,7 +24404,7 @@ playground_connector_create_or_update_command() {
             echo "EOF" >> $tmp_dir_clipboard/tmp
 
             cat $tmp_dir_clipboard/tmp | pbcopy
-            log "📋 $connector_type connector config has been copied to the clipboard (disable with 'playground config set clipboard false')"
+            log "📋 $connector_type connector config has been copied to the clipboard (disable with 'playground config clipboard false')"
         fi
     fi
 fi
@@ -27310,6 +27444,20 @@ playground_config_parse_requirements() {
       shift $#
       ;;
 
+    container-kill-all-before-run)
+      action="container-kill-all-before-run"
+      shift
+      playground_config_container_kill_all_before_run_parse_requirements "$@"
+      shift $#
+      ;;
+
+    check-repo-version)
+      action="check-repo-version"
+      shift
+      playground_config_check_repo_version_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_config_usage >&2
@@ -27900,6 +28048,112 @@ playground_config_open_ccloud_connector_in_browser_browser_parse_requirements() 
 
   # :command.default_assignments
   [[ -n ${args['browser']:-} ]] || args['browser']=""
+
+}
+
+# :command.parse_requirements
+playground_config_container_kill_all_before_run_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_config_container_kill_all_before_run_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="config container-kill-all-before-run"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['enabled']+x} ]]; then
+          args['enabled']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['enabled']:-} ]] || args['enabled']="true"
+
+}
+
+# :command.parse_requirements
+playground_config_check_repo_version_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_config_check_repo_version_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="config check-repo-version"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['enabled']+x} ]]; then
+          args['enabled']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['enabled']:-} ]] || args['enabled']="true"
 
 }
 
@@ -38632,6 +38886,8 @@ run() {
     "config open-ccloud-connector-in-browser") playground_config_open_ccloud_connector_in_browser_command ;;
     "config open-ccloud-connector-in-browser automatically") playground_config_open_ccloud_connector_in_browser_automatically_command ;;
     "config open-ccloud-connector-in-browser browser") playground_config_open_ccloud_connector_in_browser_browser_command ;;
+    "config container-kill-all-before-run") playground_config_container_kill_all_before_run_command ;;
+    "config check-repo-version") playground_config_check_repo_version_command ;;
     "run") playground_run_command ;;
     "re-run") playground_re_run_command ;;
     "history") playground_history_command ;;

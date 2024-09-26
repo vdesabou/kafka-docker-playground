@@ -146,6 +146,7 @@ jcustenborder/kafka-connect-redis
 jcustenborder/kafka-connect-spooldir
 jcustenborder/kafka-connect-transform-common
 jcustenborder/kafka-connect-twitter
+jrndio/jr-source-connector
 juxt/kafka-connect-crux
 kaliy/kafka-connect-rss
 kategmbh/kafka-adapter-for-sap-process-orchestration
