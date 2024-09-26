@@ -200,7 +200,7 @@ then
             echo "EOF" >> $tmp_dir_clipboard/tmp
 
             cat $tmp_dir_clipboard/tmp | pbcopy
-            log "📋 $connector_type connector config has been copied to the clipboard (disable with 'playground config set clipboard false')"
+            log "📋 $connector_type connector config has been copied to the clipboard (disable with 'playground config clipboard false')"
         fi
     fi
 fi

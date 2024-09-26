@@ -67,7 +67,7 @@ do
             echo "$res" > $tmp_dir/tmp
 
             cat $tmp_dir/tmp | pbcopy
-            log "📋 config has been copied to the clipboard (disable with 'playground config set clipboard false')"
+            log "📋 config has been copied to the clipboard (disable with 'playground config clipboard false')"
         fi
     fi
 done

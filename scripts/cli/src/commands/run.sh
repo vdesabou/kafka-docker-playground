@@ -71,6 +71,22 @@ then
   verify_installed "confluent"
 fi
 
+set +e
+container_kill_all_before_run=$(playground config get container-kill-all-before-run)
+if [ "$container_kill_all_before_run" == "" ]
+then
+    playground config set container-kill-all-before-run true
+fi
+
+if [ "$container_kill_all_before_run" == "true" ] || [ "$container_kill_all_before_run" == "" ]
+then
+  log "💀 kill all docker containers (disable with 'playground config container-kill-all-before-run false')"
+  playground container kill-all
+else
+  playground stop
+fi
+set -e
+
 playground state set run.test_file "$test_file"
 test_file_directory="$(dirname "${test_file}")"
 filename=$(basename -- "$test_file")
@@ -1442,9 +1458,7 @@ else
     log "🚀 Running example without any flags"
   fi
 fi
-set +e
-playground container kill-all
-set -e
+
 playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
 playground state set run.test_file "$test_file"
 echo "" >> "$root_folder/playground-run-history"
@@ -1461,7 +1475,7 @@ then
     if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
     then
         echo "playground run -f $test_file $flag_list" | pbcopy
-        log "📋 command to run again example has been copied to the clipboard (disable with 'playground config set clipboard false')"
+        log "📋 command to run again example has been copied to the clipboard (disable with 'playground config clipboard false')"
     fi
 fi
 

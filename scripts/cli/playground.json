@@ -48,6 +48,18 @@
           "description": "when running a fully managed connector example, it opens the connector in browser\n  \n",
           "usage": "playground config open-ccloud-connector-in-browser COMMAND",
           "options": []
+        },
+        {
+          "name": "container-kill-all-before-run",
+          "description": "when running an example, always call playground container kill-all first. If not set, it will call playground stop instead.\n  \n",
+          "usage": "playground config container-kill-all-before-run [ENABLED]",
+          "options": []
+        },
+        {
+          "name": "check-repo-version",
+          "description": "when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.\n  \n",
+          "usage": "playground config check-repo-version [ENABLED]",
+          "options": []
         }
       ]
     },
@@ -73,7 +85,7 @@
     },
     {
       "name": "run",
-      "description": "🕹️ Run any example !\n\n🔥 It start an interactive mode where you'll be fully guided !\n\n\n⛅ When running Confluent Cloud (ccloud) example:\n\n  All you have to do is to be already logged in with confluent CLI.\n\n  By default, a new Confluent Cloud environment with a Cluster will be created.\n\n  You can configure the new cluster by setting:\n\n  --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: basic, standard and dedicated, default basic)\n  --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: aws, gcp and azure, default aws)\n  --cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use confluent kafka region list to get the list, default eu-west-2 for aws, westeurope for azure and europe-west2 for gcp)\n  --cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: txxxxx) \n\n  In case you want to use your own existing cluster, you need to setup, in addition to previous ones:\n\n  --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n  --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)\n  --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n\n❗ this command will kill all containers using playground container kill-all\n",
+      "description": "🕹️ Run any example !\n\n🔥 It start an interactive mode where you'll be fully guided !\n\n\n⛅ When running Confluent Cloud (ccloud) example:\n\n  All you have to do is to be already logged in with confluent CLI.\n\n  By default, a new Confluent Cloud environment with a Cluster will be created.\n\n  You can configure the new cluster by setting:\n\n  --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: basic, standard and dedicated, default basic)\n  --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: aws, gcp and azure, default aws)\n  --cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use confluent kafka region list to get the list, default eu-west-2 for aws, westeurope for azure and europe-west2 for gcp)\n  --cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: txxxxx) \n\n  In case you want to use your own existing cluster, you need to setup, in addition to previous ones:\n\n  --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n  --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)\n  --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n\n❗ this command will kill all containers using \"playground container kill-all\", you can disable this by running \"playground config container-kill-all-before-run false\"\n",
       "usage": "playground run [OPTIONS]",
       "options": [
         {

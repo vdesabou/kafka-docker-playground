@@ -1290,7 +1290,7 @@ then
     if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
     then
         echo "playground run -f $repro_dir/$repro_test_filename"| pbcopy
-        log "📋 command to run generated example has been copied to the clipboard (disable with 'playground config set clipboard false')"
+        log "📋 command to run generated example has been copied to the clipboard (disable with 'playground config clipboard false')"
     fi
 fi
 

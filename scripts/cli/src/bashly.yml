@@ -382,6 +382,29 @@ commands:
         examples:
         - playground config open-ccloud-connector-in-browser browser Safari
 
+  - name: container-kill-all-before-run
+    help: |
+      when running an example, always call playground container kill-all first. If not set, it will call playground stop instead.
+    args:
+    - name: enabled
+      required: false
+      default: "true"
+    examples:
+    - playground config container-kill-all-before-run false
+    - playground config container-kill-all-before-run true
+
+  - name: check-repo-version
+    help: |
+      when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.
+    args:
+    - name: enabled
+      required: false
+      default: "true"
+    examples:
+    - playground config check-repo-version false
+    - playground config check-repo-version true
+
+
 - name: run
   group: Run
   dependencies:
@@ -411,7 +434,7 @@ commands:
       --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)
       --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)
 
-    ❗ this command will kill all containers using playground container kill-all
+    ❗ this command will kill all containers using "playground container kill-all", you can disable this by running "playground config container-kill-all-before-run false"
 
   flags:
   - &environment-run
