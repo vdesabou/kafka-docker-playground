@@ -32,7 +32,7 @@ playground topic produce -t http-messages --nb-messages 10 << 'EOF'
     "email": "faker.internet.exampleEmail()",
     "phone": "faker.phone.imei()",
     "website": "faker.internet.domainName()",
-    "city": "faker.address.city()",
+    "city": "faker.location.city()",
     "company": "faker.company.name()"
 }
 EOF

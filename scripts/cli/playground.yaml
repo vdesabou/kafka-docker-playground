@@ -2431,7 +2431,7 @@ subcommands:
             
       - name: stop
         description: | 
-          🛑 Stop connector (only available if CP > 7.5 )
+          🛑 Stop connector (only available if CP > 7.5)
         usage: playground connector stop [OPTIONS]
         options:
         - names:
@@ -2832,6 +2832,18 @@ subcommands:
             📍 Create connector with offsets (https://docs.confluent.io/cloud/current/connectors/offsets.html#create-connectors-with-offsets)
             
             ⚠️ Only available for ccloud connectors, the connector should not really exists
+            
+        - names:
+          - --initial-state
+          argument: [RUNNING, PAUSED, STOPPED]
+          description: | 
+            🪵 Create connector with specific status (https://cwiki.apache.org/confluence/display/KAFKA/KIP-980%3A+Allow+creating+connectors+in+a+stopped+state)
+            
+            Only available if CP > 7.7
+            
+            ⚠️ not available for ccloud connectors
+            
+            Allowed values: RUNNING, PAUSED, STOPPED
             
       - name: update
         description: | 

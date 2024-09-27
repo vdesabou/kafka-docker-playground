@@ -8,6 +8,7 @@ skip_automatic_connector_config=${args[--skip-automatic-connector-config]}
 verbose="${args[--verbose]}"
 no_clipboard="${args[--no-clipboard]}"
 offsets=${args[--offsets]}
+initial_state=${args[--initial-state]}
 
 connector_type=$(playground state get run.connector_type)
 
@@ -22,6 +23,21 @@ then
     if [[ -n "$package" ]]
     then
         logerror "❌ --package is set but not supported with $connector_type connector"
+        exit 1
+    fi
+fi
+
+if [[ -n "$initial_state" ]]
+then
+    tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+    if [ $? != 0 ] || [ "$tag" == "" ]
+    then
+        logerror "❌ could not find current CP version from docker ps"
+        exit 1
+    fi
+
+    if ! version_gt $tag "7.6.99"; then
+        logerror "❌ --initial-state is available since CP 7.7 only"
         exit 1
     fi
 fi
@@ -55,6 +71,7 @@ fi
 json_file=$tmp_dir/connector.json
 new_json_file=$tmp_dir/connector_new.json
 connector_with_offsets_file=$tmp_dir/connector_with_offsets.json
+connector_with_initial_state_file=$tmp_dir/connector_with_initial_state.json
 json_validate_file=$tmp_dir/json_validate_file
 
 echo "$json_content" > $json_file
@@ -213,6 +230,12 @@ then
         exit 1
     fi
 
+    if [[ -n "$initial_state" ]]
+    then
+        logerror "❌ --initial-state is set but not supported with $connector_type connector"
+        exit 1
+    fi
+
     get_ccloud_connect
     if [[ -n "$offsets" ]]
     then
@@ -235,6 +258,11 @@ else
         logerror "❌ --offsets is set but not supported with $connector_type connector"
         exit 1
     fi
+    if [[ -n "$initial_state" ]] && [ $is_create == 0 ]
+    then
+        logerror "❌ --initial-state is set but $connector_type connector $connector already exists"
+        exit 1
+    fi
     get_connect_url_and_security
     if [[ -n "$skip_automatic_connector_config" ]]
     then
@@ -242,8 +270,23 @@ else
     else
         add_connector_config_based_on_environment "$environment" "$json_content"
     fi
-    echo "$json_content" > $new_json_file
-    handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$new_json_file $connect_url/connectors/$connector/config"
+
+    if [[ -n "$initial_state" ]]
+    then
+        log "🪵 creating $connector_type connector $connector with --initial-state: $initial_state" 
+        # add mandatory name field
+        new_json_content=$(echo $json_content | jq -c ". + {\"name\": \"$connector\"}")
+
+        sed -e "s|:CONNECTOR_NAME:|$connector|g" \
+            -e "s|:CONNECTOR_CONFIG:|$new_json_content|g" \
+            -e "s|:CONNECTOR_INITIAL_STATE:|$initial_state|g" \
+            $root_folder/scripts/cli/src/create-connector-post-template-initial-state.json > ${connector_with_initial_state_file}
+
+        handle_onprem_connect_rest_api "curl $security -s -X POST -H \"Content-Type: application/json\" --data @$connector_with_initial_state_file $connect_url/connectors"
+    else
+        echo "$json_content" > $new_json_file
+        handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$new_json_file $connect_url/connectors/$connector/config"
+    fi
 fi
 
 if [[ -n "$level" ]]
