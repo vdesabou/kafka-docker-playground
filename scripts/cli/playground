@@ -144,7 +144,7 @@ playground_usage() {
   printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")                           "
   printf "  %s   🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n" "$(green "connector versions")                        "
   printf "  %s   ♻️  Restart connector\n" "$(green "connector restart")                         "
-  printf "  %s   🛑 Stop connector (only available if CP > 7.5 )\n" "$(green "connector stop")                            "
+  printf "  %s   🛑 Stop connector (only available if CP > 7.5)\n" "$(green "connector stop")                            "
   printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")                          "
   printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")                          "
   printf "  %s   🐢 Show lag of sink connector\n" "$(green "connector show-lag")                        "
@@ -4591,7 +4591,7 @@ playground_topic_produce_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground topic produce --tombstone --topic a-topic --key mykey\n  \n  playground topic produce -t topic-json --nb-messages 10 << 'EOF'\n  {\n      \"_meta\": {\n          \"topic\": \"\",\n          \"key\": \"\",\n          \"relationships\": []\n      },\n      \"nested\": {\n          \"phone\": \"faker.phone.imei()\",\n          \"website\": \"faker.internet.domainName()\"\n      },\n      \"id\": \"iteration.index\",\n      \"name\": \"faker.internet.userName()\",\n      \"email\": \"faker.internet.exampleEmail()\",\n      \"phone\": \"faker.phone.imei()\",\n      \"website\": \"faker.internet.domainName()\",\n      \"city\": \"faker.address.city()\",\n      \"company\": \"faker.company.name()\"\n  }\n  EOF\n  \n  playground topic produce -t topic-avro --nb-messages 10 << 'EOF'\n  {\n    \"fields\": [\n      {\n        \"name\": \"count\",\n        \"type\": \"long\"\n      },\n      {\n        \"name\": \"first_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"name\": \"last_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"default\": null,\n        \"name\": \"address\",\n        \"type\": [\n          \"null\",\n          \"string\"\n        ]\n      },\n      {\n        \"name\": \"last_sale_date\",\n        \"type\": {\n          \"logicalType\": \"timestamp-millis\",\n          \"type\": \"long\"\n        }\n      },\n      {\n        \"name\": \"last_sale_price\",\n        \"type\": {\n          \"logicalType\": \"decimal\",\n          \"precision\": 15,\n          \"scale\": 2,\n          \"type\": \"bytes\"\n        }\n      },\n      {\n        \"name\": \"last_connection\",\n        \"type\": {\n          \"logicalType\": \"date\",\n          \"type\": \"int\"\n        }\n      }\n    ],\n    \"name\": \"Customer\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  EOF\n  \n  playground topic produce -t topic-json-schema --nb-messages 3 << 'EOF'\n  {\n    \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n    \"additionalProperties\": false,\n    \"$id\": \"http://lh.test/Customer.schema.json\",\n    \"title\": \"Customer\",\n    \"description\": \"Customer description\",\n    \"type\": \"object\",\n    \"properties\": {\n      \"name\": {\n        \"description\": \"Customer name\",\n        \"type\": \"string\",\n        \"maxLength\": 25\n      },\n      \"surname\": {\n        \"description\": \"Customer surname\",\n        \"type\": \"string\",\n        \"minLength\": 2\n      },\n      \"email\": {\n        \"description\": \"Email\",\n        \"type\": \"string\",\n        \"pattern\": \"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\"\n      }\n    },\n    \"required\": [\n      \"name\",\n      \"surname\"\n    ]\n  }\n  EOF\n  \n  \n  playground topic produce -t topic-proto --nb-messages 1 << 'EOF'\n  syntax = \"proto3\";\n  \n  package com.github.vdesabou;\n  \n  message Customer {\n      int64 count = 1;\n      string first_name = 2;\n      string last_name = 3;\n      string address = 4;\n  }\n  EOF\n  \n  playground topic produce -t topic-jsql --nb-messages 10 << 'EOF'\n  CREATE TABLE \"notused\".\"notused\" (\n    \"id\" int PRIMARY KEY,\n    \"name\" varchar COMMENT 'faker.internet.userName()',\n    \"merchant_id\" int NOT NULL COMMENT 'faker.datatype.number()',\n    \"price\" int COMMENT 'faker.datatype.number()',\n    \"status\" int COMMENT 'faker.datatype.boolean()',\n    \"created_at\" datetime DEFAULT (now())\n  );\n  EOF\n  \n  playground topic produce -t topic-json --nb-messages 1 --producer-property\n  \"max.request.size=990485760\" < bigjson.json\n  \n  playground topic produce -t topic-string --nb-messages 5000 << 'EOF'\n  Ad et ut pariatur officia eos.\n  Nesciunt fugit nam libero ut qui itaque sed earum at itaque nesciunt eveniet\n  atque.\n  Quidem libero quis quod et illum excepturi voluptas et in perspiciatis iusto\n  neque.\n  Quibusdam commodi explicabo dolores molestiae qui delectus dolorum fugiat\n  molestiae natus assumenda omnis expedita.\n  Et sunt aut architecto suscipit fugiat qui voluptate iure vel doloremque eum\n  culpa.\n  Qui enim facilis eos similique aperiam totam eius et at dolor dolores.\n  Ut sunt quia qui quia consectetur aut reiciendis.\n  Modi adipisci iusto aut voluptatem dolores laudantium.\n  Sequi sint quia quibusdam molestias minus et aliquid voluptatum aliquam.\n  Rerum aut amet quo possimus nihil velit quisquam ut cumque.\n  Pariatur ad officiis voluptatibus quia vel corporis ea fugit adipisci porro.\n  EOF\n  \n  # key and headers\n  # mykey1 %%g can also be used\n  playground topic produce -t topic-json-multiple-lines --nb-messages 10 --key\n  \"mykey1\" --headers \"header1:value1,header2:value2\" << 'EOF'\n  {\"u_name\": \"scissors\", \"u_price\": 2.75, \"u_quantity\": 3}\n  {\"u_name\": \"tape\", \"u_price\": 0.99, \"u_quantity\": 10}\n  {\"u_name\": \"notebooks\", \"u_price\": 1.99, \"u_quantity\": 5}\n  EOF\n  \n  # avro key\n  playground topic produce -t topic-avro-with-key --nb-messages 10 --key '\n  {\n    \"fields\": [\n      {\n        \"name\": \"id\",\n        \"type\": \"long\"\n      }\n    ],\n    \"name\": \"Key\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  ' << 'EOF'\n  {\n    \"fields\": [\n      {\n        \"doc\": \"count\",\n        \"name\": \"count\",\n        \"type\": \"long\"\n      },\n      {\n        \"doc\": \"First Name of Customer\",\n        \"name\": \"first_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Last Name of Customer\",\n        \"name\": \"last_name\",\n        \"type\": \"string\"\n      }\n    ],\n    \"name\": \"Customer\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  EOF\n  \n  # tombstone\n  playground topic produce -t topic-json-multiple-lines --tombstone --key\n  \"mykey1\"\n  \n  # input file\n  playground topic produce -t topic-avro-example3 < avro-schema.avsc\n  \n  # record-size\n  playground topic produce -t topic-avro-example-big-size --nb-messages 3\n  --record-size 10000000 << 'EOF'\n  {\n    \"fields\": [\n      {\n        \"doc\": \"count\",\n        \"name\": \"count\",\n        \"type\": \"long\"\n      },\n      {\n        \"doc\": \"First Name of Customer\",\n        \"name\": \"first_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Last Name of Customer\",\n        \"name\": \"last_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Address of Customer\",\n        \"name\": \"address\",\n        \"type\": \"string\"\n      }\n    ],\n    \"name\": \"Customer\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  EOF\n  \n  # validate\n  playground topic produce -t topic-json-schema-validate --nb-messages 3\n  --validate << 'EOF'\n  {\n    \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n    \"additionalProperties\": false,\n    \"$id\": \"http://lh.test/Customer.schema.json\",\n    \"title\": \"Customer\",\n    \"description\": \"Customer description\",\n    \"type\": \"object\",\n    \"properties\": {\n      \"name\": {\n        \"description\": \"Customer name\",\n        \"type\": \"string\",\n        \"maxLength\": 25\n      },\n      \"surname\": {\n        \"description\": \"Customer surname\",\n        \"type\": \"string\",\n        \"minLength\": 2\n      },\n      \"email\": {\n        \"description\": \"Email\",\n        \"type\": \"string\",\n        \"pattern\": \"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\"\n      },\n      \"holiday\": {\n        \"oneOf\": [\n          {\n            \"title\": \"Not included\",\n            \"type\": \"null\"\n          },\n          {}\n        ]\n      },\n      \"f2\": {}\n    },\n    \"required\": [\n      \"name\",\n      \"surname\"\n    ]\n  }\n  EOF\n  \n  #  --value-subject-name-strategy\n  playground topic produce -t topic-avro-example-value-subject-name-strategy\n  --nb-messages 10 --value-subject-name-strategy TopicRecordNameStrategy <<\n  'EOF'\n  {\n    \"fields\": [\n      {\n        \"doc\": \"count\",\n        \"name\": \"count\",\n        \"type\": \"long\"\n      },\n      {\n        \"doc\": \"First Name of Customer\",\n        \"name\": \"first_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Last Name of Customer\",\n        \"name\": \"last_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Address of Customer\",\n        \"name\": \"address\",\n        \"type\": \"string\"\n      }\n    ],\n    \"name\": \"Customer\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  EOF\n  \n  # --generate-only\n  playground topic produce -t topic-avro-example-forced-value --nb-messages 10 \n  --generate-only << 'EOF'\n  {\n    \"fields\": [\n      {\n        \"doc\": \"count\",\n        \"name\": \"count\",\n        \"type\": \"long\"\n      },\n      {\n        \"doc\": \"First Name of Customer\",\n        \"name\": \"first_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Last Name of Customer\",\n        \"name\": \"last_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Address of Customer\",\n        \"name\": \"address\",\n        \"type\": \"string\"\n      },\n      {\n        \"name\": \"createdDate\",\n        \"type\": {\n          \"logicalType\": \"timestamp-millis\",\n          \"type\": \"long\"\n        }\n      },\n      {\n        \"default\": null,\n        \"name\": \"warranty_expiration\",\n        \"type\": [\n          \"null\",\n          {\n            \"logicalType\": \"date\",\n            \"type\": \"int\"\n          }\n        ]\n      }\n    ],\n    \"name\": \"Customer\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  EOF\n  \n  # --forced-value\n  playground topic produce -t topic-avro-example-forced-value --nb-messages 1\n  --forced-value '{\"count\":4,\"first_name\":\"Vincent\",\"last_name\":\"de\n  Saboulin\",\"address\":\"xxx\",\"createdDate\":1697852606000,\"warranty_expiration\":{\"int\":19653}}'\n  << 'EOF'\n  {\n    \"fields\": [\n      {\n        \"doc\": \"count\",\n        \"name\": \"count\",\n        \"type\": \"long\"\n      },\n      {\n        \"doc\": \"First Name of Customer\",\n        \"name\": \"first_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Last Name of Customer\",\n        \"name\": \"last_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Address of Customer\",\n        \"name\": \"address\",\n        \"type\": \"string\"\n      },\n      {\n        \"name\": \"createdDate\",\n        \"type\": {\n          \"logicalType\": \"timestamp-millis\",\n          \"type\": \"long\"\n        }\n      },\n      {\n        \"default\": null,\n        \"name\": \"warranty_expiration\",\n        \"type\": [\n          \"null\",\n          {\n            \"logicalType\": \"date\",\n            \"type\": \"int\"\n          }\n        ]\n      }\n    ],\n    \"name\": \"Customer\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  EOF\n  \n  # json schema references\n  playground topic produce --value\n  /path/to/scripts/cli/predefined-schemas/json-schema/schema-reference/customer.json\n  --reference\n  /path/to/scripts/cli/predefined-schemas/json-schema/schema-reference/address.json\n  --reference\n  /path/to/scripts/cli/predefined-schemas/json-schema/schema-reference/email.json\n  --topic customers\n"
+    printf "  playground topic produce --tombstone --topic a-topic --key mykey\n  \n  playground topic produce -t topic-json --nb-messages 10 << 'EOF'\n  {\n      \"_meta\": {\n          \"topic\": \"\",\n          \"key\": \"\",\n          \"relationships\": []\n      },\n      \"nested\": {\n          \"phone\": \"faker.phone.imei()\",\n          \"website\": \"faker.internet.domainName()\"\n      },\n      \"id\": \"iteration.index\",\n      \"name\": \"faker.internet.userName()\",\n      \"email\": \"faker.internet.exampleEmail()\",\n      \"phone\": \"faker.phone.imei()\",\n      \"website\": \"faker.internet.domainName()\",\n      \"city\": \"faker.location.city()\",\n      \"company\": \"faker.company.name()\"\n  }\n  EOF\n  \n  playground topic produce -t topic-avro --nb-messages 10 << 'EOF'\n  {\n    \"fields\": [\n      {\n        \"name\": \"count\",\n        \"type\": \"long\"\n      },\n      {\n        \"name\": \"first_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"name\": \"last_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"default\": null,\n        \"name\": \"address\",\n        \"type\": [\n          \"null\",\n          \"string\"\n        ]\n      },\n      {\n        \"name\": \"last_sale_date\",\n        \"type\": {\n          \"logicalType\": \"timestamp-millis\",\n          \"type\": \"long\"\n        }\n      },\n      {\n        \"name\": \"last_sale_price\",\n        \"type\": {\n          \"logicalType\": \"decimal\",\n          \"precision\": 15,\n          \"scale\": 2,\n          \"type\": \"bytes\"\n        }\n      },\n      {\n        \"name\": \"last_connection\",\n        \"type\": {\n          \"logicalType\": \"date\",\n          \"type\": \"int\"\n        }\n      }\n    ],\n    \"name\": \"Customer\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  EOF\n  \n  playground topic produce -t topic-json-schema --nb-messages 3 << 'EOF'\n  {\n    \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n    \"additionalProperties\": false,\n    \"$id\": \"http://lh.test/Customer.schema.json\",\n    \"title\": \"Customer\",\n    \"description\": \"Customer description\",\n    \"type\": \"object\",\n    \"properties\": {\n      \"name\": {\n        \"description\": \"Customer name\",\n        \"type\": \"string\",\n        \"maxLength\": 25\n      },\n      \"surname\": {\n        \"description\": \"Customer surname\",\n        \"type\": \"string\",\n        \"minLength\": 2\n      },\n      \"email\": {\n        \"description\": \"Email\",\n        \"type\": \"string\",\n        \"pattern\": \"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\"\n      }\n    },\n    \"required\": [\n      \"name\",\n      \"surname\"\n    ]\n  }\n  EOF\n  \n  \n  playground topic produce -t topic-proto --nb-messages 1 << 'EOF'\n  syntax = \"proto3\";\n  \n  package com.github.vdesabou;\n  \n  message Customer {\n      int64 count = 1;\n      string first_name = 2;\n      string last_name = 3;\n      string address = 4;\n  }\n  EOF\n  \n  playground topic produce -t topic-jsql --nb-messages 10 << 'EOF'\n  CREATE TABLE \"notused\".\"notused\" (\n    \"id\" int PRIMARY KEY,\n    \"name\" varchar COMMENT 'faker.internet.userName()',\n    \"merchant_id\" int NOT NULL COMMENT 'faker.datatype.number()',\n    \"price\" int COMMENT 'faker.datatype.number()',\n    \"status\" int COMMENT 'faker.datatype.boolean()',\n    \"created_at\" datetime DEFAULT (now())\n  );\n  EOF\n  \n  playground topic produce -t topic-json --nb-messages 1 --producer-property\n  \"max.request.size=990485760\" < bigjson.json\n  \n  playground topic produce -t topic-string --nb-messages 5000 << 'EOF'\n  Ad et ut pariatur officia eos.\n  Nesciunt fugit nam libero ut qui itaque sed earum at itaque nesciunt eveniet\n  atque.\n  Quidem libero quis quod et illum excepturi voluptas et in perspiciatis iusto\n  neque.\n  Quibusdam commodi explicabo dolores molestiae qui delectus dolorum fugiat\n  molestiae natus assumenda omnis expedita.\n  Et sunt aut architecto suscipit fugiat qui voluptate iure vel doloremque eum\n  culpa.\n  Qui enim facilis eos similique aperiam totam eius et at dolor dolores.\n  Ut sunt quia qui quia consectetur aut reiciendis.\n  Modi adipisci iusto aut voluptatem dolores laudantium.\n  Sequi sint quia quibusdam molestias minus et aliquid voluptatum aliquam.\n  Rerum aut amet quo possimus nihil velit quisquam ut cumque.\n  Pariatur ad officiis voluptatibus quia vel corporis ea fugit adipisci porro.\n  EOF\n  \n  # key and headers\n  # mykey1 %%g can also be used\n  playground topic produce -t topic-json-multiple-lines --nb-messages 10 --key\n  \"mykey1\" --headers \"header1:value1,header2:value2\" << 'EOF'\n  {\"u_name\": \"scissors\", \"u_price\": 2.75, \"u_quantity\": 3}\n  {\"u_name\": \"tape\", \"u_price\": 0.99, \"u_quantity\": 10}\n  {\"u_name\": \"notebooks\", \"u_price\": 1.99, \"u_quantity\": 5}\n  EOF\n  \n  # avro key\n  playground topic produce -t topic-avro-with-key --nb-messages 10 --key '\n  {\n    \"fields\": [\n      {\n        \"name\": \"id\",\n        \"type\": \"long\"\n      }\n    ],\n    \"name\": \"Key\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  ' << 'EOF'\n  {\n    \"fields\": [\n      {\n        \"doc\": \"count\",\n        \"name\": \"count\",\n        \"type\": \"long\"\n      },\n      {\n        \"doc\": \"First Name of Customer\",\n        \"name\": \"first_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Last Name of Customer\",\n        \"name\": \"last_name\",\n        \"type\": \"string\"\n      }\n    ],\n    \"name\": \"Customer\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  EOF\n  \n  # tombstone\n  playground topic produce -t topic-json-multiple-lines --tombstone --key\n  \"mykey1\"\n  \n  # input file\n  playground topic produce -t topic-avro-example3 < avro-schema.avsc\n  \n  # record-size\n  playground topic produce -t topic-avro-example-big-size --nb-messages 3\n  --record-size 10000000 << 'EOF'\n  {\n    \"fields\": [\n      {\n        \"doc\": \"count\",\n        \"name\": \"count\",\n        \"type\": \"long\"\n      },\n      {\n        \"doc\": \"First Name of Customer\",\n        \"name\": \"first_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Last Name of Customer\",\n        \"name\": \"last_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Address of Customer\",\n        \"name\": \"address\",\n        \"type\": \"string\"\n      }\n    ],\n    \"name\": \"Customer\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  EOF\n  \n  # validate\n  playground topic produce -t topic-json-schema-validate --nb-messages 3\n  --validate << 'EOF'\n  {\n    \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n    \"additionalProperties\": false,\n    \"$id\": \"http://lh.test/Customer.schema.json\",\n    \"title\": \"Customer\",\n    \"description\": \"Customer description\",\n    \"type\": \"object\",\n    \"properties\": {\n      \"name\": {\n        \"description\": \"Customer name\",\n        \"type\": \"string\",\n        \"maxLength\": 25\n      },\n      \"surname\": {\n        \"description\": \"Customer surname\",\n        \"type\": \"string\",\n        \"minLength\": 2\n      },\n      \"email\": {\n        \"description\": \"Email\",\n        \"type\": \"string\",\n        \"pattern\": \"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\"\n      },\n      \"holiday\": {\n        \"oneOf\": [\n          {\n            \"title\": \"Not included\",\n            \"type\": \"null\"\n          },\n          {}\n        ]\n      },\n      \"f2\": {}\n    },\n    \"required\": [\n      \"name\",\n      \"surname\"\n    ]\n  }\n  EOF\n  \n  #  --value-subject-name-strategy\n  playground topic produce -t topic-avro-example-value-subject-name-strategy\n  --nb-messages 10 --value-subject-name-strategy TopicRecordNameStrategy <<\n  'EOF'\n  {\n    \"fields\": [\n      {\n        \"doc\": \"count\",\n        \"name\": \"count\",\n        \"type\": \"long\"\n      },\n      {\n        \"doc\": \"First Name of Customer\",\n        \"name\": \"first_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Last Name of Customer\",\n        \"name\": \"last_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Address of Customer\",\n        \"name\": \"address\",\n        \"type\": \"string\"\n      }\n    ],\n    \"name\": \"Customer\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  EOF\n  \n  # --generate-only\n  playground topic produce -t topic-avro-example-forced-value --nb-messages 10 \n  --generate-only << 'EOF'\n  {\n    \"fields\": [\n      {\n        \"doc\": \"count\",\n        \"name\": \"count\",\n        \"type\": \"long\"\n      },\n      {\n        \"doc\": \"First Name of Customer\",\n        \"name\": \"first_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Last Name of Customer\",\n        \"name\": \"last_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Address of Customer\",\n        \"name\": \"address\",\n        \"type\": \"string\"\n      },\n      {\n        \"name\": \"createdDate\",\n        \"type\": {\n          \"logicalType\": \"timestamp-millis\",\n          \"type\": \"long\"\n        }\n      },\n      {\n        \"default\": null,\n        \"name\": \"warranty_expiration\",\n        \"type\": [\n          \"null\",\n          {\n            \"logicalType\": \"date\",\n            \"type\": \"int\"\n          }\n        ]\n      }\n    ],\n    \"name\": \"Customer\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  EOF\n  \n  # --forced-value\n  playground topic produce -t topic-avro-example-forced-value --nb-messages 1\n  --forced-value '{\"count\":4,\"first_name\":\"Vincent\",\"last_name\":\"de\n  Saboulin\",\"address\":\"xxx\",\"createdDate\":1697852606000,\"warranty_expiration\":{\"int\":19653}}'\n  << 'EOF'\n  {\n    \"fields\": [\n      {\n        \"doc\": \"count\",\n        \"name\": \"count\",\n        \"type\": \"long\"\n      },\n      {\n        \"doc\": \"First Name of Customer\",\n        \"name\": \"first_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Last Name of Customer\",\n        \"name\": \"last_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Address of Customer\",\n        \"name\": \"address\",\n        \"type\": \"string\"\n      },\n      {\n        \"name\": \"createdDate\",\n        \"type\": {\n          \"logicalType\": \"timestamp-millis\",\n          \"type\": \"long\"\n        }\n      },\n      {\n        \"default\": null,\n        \"name\": \"warranty_expiration\",\n        \"type\": [\n          \"null\",\n          {\n            \"logicalType\": \"date\",\n            \"type\": \"int\"\n          }\n        ]\n      }\n    ],\n    \"name\": \"Customer\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  EOF\n  \n  # json schema references\n  playground topic produce --value\n  /path/to/scripts/cli/predefined-schemas/json-schema/schema-reference/customer.json\n  --reference\n  /path/to/scripts/cli/predefined-schemas/json-schema/schema-reference/address.json\n  --reference\n  /path/to/scripts/cli/predefined-schemas/json-schema/schema-reference/email.json\n  --topic customers\n"
     echo
 
   fi
@@ -4856,7 +4856,7 @@ playground_connector_usage() {
   printf "  %s   ⏸️  Pause connector\n" "$(green "pause")                           "
   printf "  %s   🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n" "$(green "versions")                        "
   printf "  %s   ♻️  Restart connector\n" "$(green "restart")                         "
-  printf "  %s   🛑 Stop connector (only available if CP > 7.5 )\n" "$(green "stop")                            "
+  printf "  %s   🛑 Stop connector (only available if CP > 7.5)\n" "$(green "stop")                            "
   printf "  %s   ⏯️  Resume connector\n" "$(green "resume")                          "
   printf "  %s   🗑️  Delete connector\n" "$(green "delete")                          "
   printf "  %s   🐢 Show lag of sink connector\n" "$(green "show-lag")                        "
@@ -5232,7 +5232,7 @@ playground_connector_restart_usage() {
 
 # :command.usage
 playground_connector_stop_usage() {
-  printf "playground connector stop - 🛑 Stop connector (only available if CP > 7.5 )\n\n"
+  printf "playground connector stop - 🛑 Stop connector (only available if CP > 7.5)\n\n"
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground connector stop [OPTIONS]\n"
@@ -5737,6 +5737,12 @@ playground_connector_create_or_update_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--offsets OFFSETS")"
     printf "    📍 Create connector with offsets\n    (https://docs.confluent.io/cloud/current/connectors/offsets.html#create-connectors-with-offsets)\n    \n    ⚠️ Only available for ccloud connectors, the connector should not really\n    exists\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--initial-state INITIAL-STATE")"
+    printf "    🪵 Create connector with specific status\n    (https://cwiki.apache.org/confluence/display/KAFKA/KIP-980%%3A+Allow+creating+connectors+in+a+stopped+state)\n    \n    Only available if CP > 7.7\n    \n    ⚠️ not available for ccloud connectors\n"
+    printf "    %s\n" "Allowed: RUNNING, PAUSED, STOPPED"
     echo
 
     # :command.usage_fixed_flags
@@ -24212,6 +24218,7 @@ playground_connector_create_or_update_command() {
   verbose="${args[--verbose]}"
   no_clipboard="${args[--no-clipboard]}"
   offsets=${args[--offsets]}
+  initial_state=${args[--initial-state]}
 
   connector_type=$(playground state get run.connector_type)
 
@@ -24226,6 +24233,21 @@ playground_connector_create_or_update_command() {
       if [[ -n "$package" ]]
       then
           logerror "❌ --package is set but not supported with $connector_type connector"
+          exit 1
+      fi
+  fi
+
+  if [[ -n "$initial_state" ]]
+  then
+      tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+      if [ $? != 0 ] || [ "$tag" == "" ]
+      then
+          logerror "❌ could not find current CP version from docker ps"
+          exit 1
+      fi
+
+      if ! version_gt $tag "7.6.99"; then
+          logerror "❌ --initial-state is available since CP 7.7 only"
           exit 1
       fi
   fi
@@ -24259,6 +24281,7 @@ playground_connector_create_or_update_command() {
   json_file=$tmp_dir/connector.json
   new_json_file=$tmp_dir/connector_new.json
   connector_with_offsets_file=$tmp_dir/connector_with_offsets.json
+  connector_with_initial_state_file=$tmp_dir/connector_with_initial_state.json
   json_validate_file=$tmp_dir/json_validate_file
 
   echo "$json_content" > $json_file
@@ -24417,6 +24440,12 @@ then
         exit 1
     fi
 
+    if [[ -n "$initial_state" ]]
+    then
+        logerror "❌ --initial-state is set but not supported with $connector_type connector"
+        exit 1
+    fi
+
     get_ccloud_connect
     if [[ -n "$offsets" ]]
     then
@@ -24440,6 +24469,11 @@ else
         logerror "❌ --offsets is set but not supported with $connector_type connector"
         exit 1
     fi
+    if [[ -n "$initial_state" ]] && [ $is_create == 0 ]
+    then
+        logerror "❌ --initial-state is set but $connector_type connector $connector already exists"
+        exit 1
+    fi
     get_connect_url_and_security
     if [[ -n "$skip_automatic_connector_config" ]]
     then
@@ -24447,8 +24481,24 @@ else
     else
         add_connector_config_based_on_environment "$environment" "$json_content"
     fi
-    echo "$json_content" > $new_json_file
-    handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$new_json_file $connect_url/connectors/$connector/config"
+
+    if [[ -n "$initial_state" ]]
+    then
+        log "🪵 creating $connector_type connector $connector with --initial-state: $initial_state"
+
+        # add mandatory name field
+        new_json_content=$(echo $json_content | jq -c ". + {\"name\": \"$connector\"}")
+
+        sed -e "s|:CONNECTOR_NAME:|$connector|g" \
+            -e "s|:CONNECTOR_CONFIG:|$new_json_content|g" \
+            -e "s|:CONNECTOR_INITIAL_STATE:|$initial_state|g" \
+            $root_folder/scripts/cli/src/create-connector-post-template-initial-state.json > ${connector_with_initial_state_file}
+
+        handle_onprem_connect_rest_api "curl $security -s -X POST -H \"Content-Type: application/json\" --data @$connector_with_initial_state_file $connect_url/connectors"
+    else
+        echo "$json_content" > $new_json_file
+        handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$new_json_file $connect_url/connectors/$connector/config"
+    fi
 fi
 
 if [[ -n "$level" ]]
@@ -37793,6 +37843,20 @@ playground_connector_create_or_update_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --initial-state)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--initial-state']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--initial-state requires an argument: --initial-state INITIAL-STATE" >&2
+          exit 1
+        fi
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -37840,6 +37904,10 @@ playground_connector_create_or_update_parse_requirements() {
   # :command.whitelist_filter
   if [[ ${args['--level']:-} ]] && [[ ! ${args['--level']:-} =~ ^(INFO|WARN|DEBUG|TRACE)$ ]]; then
     printf "%s\n" "--level must be one of: INFO, WARN, DEBUG, TRACE" >&2
+    exit 1
+  fi
+  if [[ ${args['--initial-state']:-} ]] && [[ ! ${args['--initial-state']:-} =~ ^(RUNNING|PAUSED|STOPPED)$ ]]; then
+    printf "%s\n" "--initial-state must be one of: RUNNING, PAUSED, STOPPED" >&2
     exit 1
   fi
 

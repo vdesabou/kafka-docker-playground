@@ -2477,7 +2477,7 @@ commands:
             "email": "faker.internet.exampleEmail()",
             "phone": "faker.phone.imei()",
             "website": "faker.internet.domainName()",
-            "city": "faker.address.city()",
+            "city": "faker.location.city()",
             "company": "faker.company.name()"
         }
         EOF
@@ -3076,7 +3076,7 @@ commands:
     - *connector
 
   - name: stop
-    help: 🛑 Stop connector (only available if CP > 7.5 )
+    help: 🛑 Stop connector (only available if CP > 7.5)
     flags:
     - *verbose
     - *connector
@@ -3298,6 +3298,20 @@ commands:
         📍 Create connector with offsets (https://docs.confluent.io/cloud/current/connectors/offsets.html#create-connectors-with-offsets)
 
         ⚠️ Only available for ccloud connectors, the connector should not really exists
+
+    - long: --initial-state
+      arg: initial-state
+      allowed: 
+        - RUNNING
+        - PAUSED
+        - STOPPED
+      required: false
+      help: |-
+        🪵 Create connector with specific status (https://cwiki.apache.org/confluence/display/KAFKA/KIP-980%3A+Allow+creating+connectors+in+a+stopped+state)
+
+        Only available if CP > 7.7
+
+        ⚠️ not available for ccloud connectors
 
     examples: |
       playground connector create-or-update -c filestream-sink << EOF

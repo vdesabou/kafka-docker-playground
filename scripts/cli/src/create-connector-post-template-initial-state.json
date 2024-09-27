@@ -1,0 +1,5 @@
+{
+  "name": ":CONNECTOR_NAME:",
+  "config": :CONNECTOR_CONFIG:,
+  "initial_state": ":CONNECTOR_INITIAL_STATE:"
+}
