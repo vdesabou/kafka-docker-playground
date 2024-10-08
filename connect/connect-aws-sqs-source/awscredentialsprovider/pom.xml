@@ -11,7 +11,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <kafka.tag>6.2.0</kafka.tag>
-        <kafka.client.tag>2.8.0</kafka.client.tag>
+        <kafka.client.tag>5.3.0-ccs</kafka.client.tag>
         <aws.sdk.version>1.12.735</aws.sdk.version>
     </properties>
     <repositories>
