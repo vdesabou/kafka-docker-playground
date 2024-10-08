@@ -22,8 +22,6 @@ connect/connect-jdbc-snowflake-source
 connect/connect-jdbc-sqlserver-sink
 connect/connect-jdbc-sqlserver-source
 connect/connect-jms-active-mq-sink
-connect/connect-jms-sag-um-sink
-connect/connect-jms-sag-um-source
 connect/connect-jms-tibco-sink
 connect/connect-jms-tibco-source
 connect/connect-tibco-sink
