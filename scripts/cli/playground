@@ -22027,6 +22027,7 @@ playground_connector_offsets_get_command() {
   verbose="${args[--verbose]}"
 
   connector_type=$(playground state get run.connector_type)
+  get_environment_used
 
   if [[ ! -n "$connector" ]]
   then
@@ -22038,7 +22039,7 @@ playground_connector_offsets_get_command() {
       fi
   fi
 
-  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [ "$environment" == "ccloud" ]
   then
     get_ccloud_connect
     get_kafka_docker_playground_dir
@@ -22165,7 +22166,7 @@ playground_connector_offsets_reset_command() {
       fi
   fi
 
-  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [ "$environment" == "ccloud" ]
   then
     get_ccloud_connect
     get_kafka_docker_playground_dir
@@ -22316,6 +22317,7 @@ playground_connector_offsets_alter_command() {
   verbose="${args[--verbose]}"
 
   connector_type=$(playground state get run.connector_type)
+  get_environment_used
 
   if [[ ! -n "$connector" ]]
   then
@@ -22327,7 +22329,7 @@ playground_connector_offsets_alter_command() {
       fi
   fi
 
-  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [ "$environment" == "ccloud" ]
   then
     get_ccloud_connect
     get_kafka_docker_playground_dir
@@ -23004,6 +23006,7 @@ playground_connector_show_lag_command() {
   max_wait="${args[--max-wait]}"
 
   connector_type=$(playground state get run.connector_type)
+  get_environment_used
 
   if [[ ! -n "$connector" ]]
   then
@@ -23015,7 +23018,7 @@ playground_connector_show_lag_command() {
       fi
   fi
 
-  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [ "$environment" == "ccloud" ]
   then
     get_ccloud_connect
     get_kafka_docker_playground_dir

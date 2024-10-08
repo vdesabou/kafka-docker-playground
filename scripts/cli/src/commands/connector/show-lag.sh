@@ -4,6 +4,7 @@ interval="${args[--interval]}"
 max_wait="${args[--max-wait]}"
 
 connector_type=$(playground state get run.connector_type)
+get_environment_used
 
 if [[ ! -n "$connector" ]]
 then
@@ -15,7 +16,7 @@ then
     fi
 fi
 
-if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [ "$environment" == "ccloud" ]
 then
   get_ccloud_connect
   get_kafka_docker_playground_dir
