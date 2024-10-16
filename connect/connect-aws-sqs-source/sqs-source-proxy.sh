@@ -60,6 +60,7 @@ then
      # You must wait 60 seconds after deleting a queue before you can create another with the same name
      log "Sleeping 60 seconds"
      sleep 60
+     aws sqs delete-queue --queue-url ${QUEUE_URL}
 fi
 set -e
 
