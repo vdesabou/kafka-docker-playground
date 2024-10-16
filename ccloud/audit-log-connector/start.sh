@@ -34,6 +34,7 @@ sed -e "s|:AUDIT_LOG_CLUSTER_BOOTSTRAP_SERVERS:|$AUDIT_LOG_CLUSTER_BOOTSTRAP_SER
     -e "s|:AUDIT_LOG_CLUSTER_API_SECRET:|$AUDIT_LOG_CLUSTER_API_SECRET|g" \
     ../../ccloud/audit-log-connector/data_audit_cluster.template > ../../ccloud/audit-log-connector/data_audit_cluster
 
+
 playground start-environment --environment ccloud --docker-compose-override-file "${PWD}/docker-compose.yml"
 
 log "Creating FileStream Sink connector reading confluent-audit-log-events from the audit log cluster"
