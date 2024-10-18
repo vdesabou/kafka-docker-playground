@@ -2256,6 +2256,16 @@ commands:
           🔼 Max number of messages to send per batch when --nb-messages > --max-nb-messages-per-batch
              if --nb-messages is set to -1, this is the number of messages sent per batch
              default is 300000
+      - long: --max-nb-messages-to-generate
+        arg: max-nb-messages-to-generate
+        validate: integer
+        required: false
+        help: |-
+          🔨 Max number of different messages to generate.
+
+             - when protobuf is used, default is 50 as protobuf generation is really slow
+             - when --record-size is set, default is 100
+             - otherwise default is 100000
       - long: --sleep-time-between-batch
         arg: sleep-time-between-batch
         validate: integer

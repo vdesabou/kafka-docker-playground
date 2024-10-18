@@ -1996,6 +1996,16 @@ subcommands:
             Default value: 300000
             
         - names:
+          - --max-nb-messages-to-generate
+          argument: MAX-NB-MESSAGES-TO-GENERATE
+          description: | 
+            🔨 Max number of different messages to generate.
+            
+               - when protobuf is used, default is 50 as protobuf generation is really slow
+               - when --record-size is set, default is 100
+               - otherwise default is 100000
+            
+        - names:
           - --sleep-time-between-batch
           argument: 0
           description: | 

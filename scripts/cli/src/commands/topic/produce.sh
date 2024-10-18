@@ -16,6 +16,7 @@ value_subject_name_strategy="${args[--value-subject-name-strategy]}"
 validate="${args[--validate]}"
 record_size="${args[--record-size]}"
 max_nb_messages_per_batch="${args[--max-nb-messages-per-batch]}"
+max_nb_messages_to_generate="${args[--max-nb-messages-to-generate]}"
 sleep_time_between_batch="${args[--sleep-time-between-batch]}"
 compression_codec="${args[--compression-codec]}"
 value_schema_id="${args[--value-schema-id]}"
@@ -366,15 +367,21 @@ function generate_data() {
     type="$4"
     input_file=""
 
-    if [ "$schema_type" == "protobuf" ]
+    if [[ -n "$max_nb_messages_to_generate" ]]
     then
-        nb_max_messages_to_generate=50
-    else
-        if [ $record_size != 0 ] && [ "$type" == "VALUE" ]
+        log "🔨 --max-nb-messages-to-generate is set with $max_nb_messages_to_generate (it can be slow if number is high)"
+        nb_max_messages_to_generate=$max_nb_messages_to_generate
+    else 
+        if [ "$schema_type" == "protobuf" ]
         then
-            nb_max_messages_to_generate=100
+            nb_max_messages_to_generate=50
         else
-            nb_max_messages_to_generate=500
+            if [ "$record_size" != 0 ] && [ "$type" == "VALUE" ]
+            then
+                nb_max_messages_to_generate=100
+            else
+                nb_max_messages_to_generate=100000
+            fi
         fi
     fi
     if [ $nb_messages = -1 ]
