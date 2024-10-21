@@ -9,9 +9,10 @@ log "🔐 Generate keys and certificates used for SSL"
 docker run -u0 --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "/tmp/certs-create.sh > /dev/null 2>&1 && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
 cd ${DIR}
 
-if [ ! -z "$GITHUB_RUN_NUMBER" ]
+
+if [[ "$(uname)" != "Darwin" ]]
 then
-     # running with github actions
+     # Linux
      sudo chown root ${DIR}/config/vsftpd.conf
      sudo chown root ${DIR}/security/vsftpd.pem
 fi
