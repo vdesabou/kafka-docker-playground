@@ -32,7 +32,7 @@ display_ngrok_warning
 
 bootstrap_ccloud_environment
 
-
+set_profiles
 
 set +e
 playground topic delete --topic dbserver1.mydb.team
@@ -40,7 +40,7 @@ set -e
 
 docker compose build
 docker compose down -v --remove-orphans
-docker compose up -d --quiet-pull
+docker compose ${profile_sql_datagen_command} up -d --quiet-pull
 
 sleep 30
 
