@@ -28,6 +28,9 @@ then
      # WARN JDBC type 2014 (TIMESTAMPIZ) not currently supported
      log "Downloading snowflake-jdbc-3.13.16.jar"
      wget -q https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/3.13.16/snowflake-jdbc-3.13.16.jar
+
+     # Any client driver version lower than what is listed below will be out of support as of February 1, 2024 based on the Snowflake Support policy https://go.snowflake.net/MjUyLVJGTy0yMjcAAAGWh1BWRfzuIKlEygL2SdqHsjvjZNQtWweD5pNexBO1BjoOYgzGFPj8zryM-ZcQLWuqmjI6kY4=
+     # Snowflake JDBC Driver 3.13.27
 fi
 cd -
 
