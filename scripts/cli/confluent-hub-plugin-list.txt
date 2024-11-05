@@ -196,6 +196,7 @@ snowflakeinc/snowflake-kafka-connector
 splunk/kafka-connect-splunk
 spoudinc/spoud-agoora
 sqdata/sqdata-connector
+startree/startree-native-integration
 streamsendio/file-chunk-sink
 streamsendio/file-chunk-source
 streamsets/streamsets-sdc
