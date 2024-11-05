@@ -8,16 +8,21 @@ source ${DIR}/../../scripts/utils.sh
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.no-auth.yml"
 
+log "Set webserver to reply with 200"
+curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006/set-response-error-code
+curl -X PUT -H "Content-Type: application/json" --data '{"store":{"book":[{"category":"reference","sold":false,"author":"Nigel Rees","title":"Sayings of the Century","price":8.95}],"bicycle":{"color":"red","price":19.95}}}' http://localhost:9006/set-response-body
+
 log "Creating http-source connector"
 playground connector create-or-update --connector http-source  << EOF
 {
      "tasks.max": "1",
      "connector.class": "io.confluent.connect.http.HttpSourceConnector",
      "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "io.confluent.connect.avro.AvroConverter",
+     "value.converter.schema.registry.url": "http://schema-registry:8081",
      "confluent.topic.bootstrap.servers": "broker:9092",
      "confluent.topic.replication.factor": "1",
-     "url": "http://httpserver:8080/api/messages",
+     "url": "http://httpserver:9006/",
      "topic.name.pattern":"http-topic-\${entityName}",
      "entity.names": "messages",
      "http.offset.mode": "SIMPLE_INCREMENTING",
