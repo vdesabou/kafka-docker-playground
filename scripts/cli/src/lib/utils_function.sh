@@ -493,6 +493,18 @@ function set_profiles() {
     playground state set flags.ENABLE_CONTROL_CENTER 1
   fi
 
+  # Check if ENABLE_FLINK is set to true
+  profile_flink=""
+  if [ -z "$ENABLE_FLINK" ] 
+  then
+    log "Starting services without Flink..."
+    playground state del flags.ENABLE_FLINK
+  else
+    log "🐿️ Starting services with Flink..."
+    profile_flink="--profile flink"
+    playground state set flags.ENABLE_FLINK 1
+  fi
+
   profile_ksqldb_command=""
   if [ -z "$ENABLE_KSQLDB" ]
   then
@@ -531,7 +543,7 @@ function set_profiles() {
   profile_kcat_command=""
   if [ -z "$ENABLE_KCAT" ]
   then
-    log "🛑 kcat is disabled"
+    log "🛑 kcat is disabled3"
     playground state del flags.ENABLE_KCAT
   else
     log "🧰 kcat is enabled"
@@ -4012,7 +4024,7 @@ fi
 }
 
 function load_env_variables () {
-  for item in {ENABLE_CONTROL_CENTER,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,SQL_DATAGEN,ENABLE_KAFKA_NODES,ENABLE_CONNECT_NODES}
+  for item in {ENABLE_CONTROL_CENTER,ENABLE_FLINK,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,SQL_DATAGEN,ENABLE_KAFKA_NODES,ENABLE_CONNECT_NODES}
   do
     i=$(playground state get "flags.${item}")
     if [ "$i" != "" ]

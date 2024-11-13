@@ -8529,6 +8529,18 @@ function set_profiles() {
     playground state set flags.ENABLE_CONTROL_CENTER 1
   fi
 
+  # Check if ENABLE_FLINK is set to true
+  profile_flink=""
+  if [ -z "$ENABLE_FLINK" ] 
+  then
+    log "Starting services without Flink..."
+    playground state del flags.ENABLE_FLINK
+  else
+    log "🐿️ Starting services with Flink..."
+    profile_flink="--profile flink"
+    playground state set flags.ENABLE_FLINK 1
+  fi
+
   profile_ksqldb_command=""
   if [ -z "$ENABLE_KSQLDB" ]
   then
@@ -11979,7 +11991,7 @@ fi
 }
 
 function load_env_variables () {
-  for item in {ENABLE_CONTROL_CENTER,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,SQL_DATAGEN,ENABLE_KAFKA_NODES,ENABLE_CONNECT_NODES}
+  for item in {ENABLE_CONTROL_CENTER,ENABLE_FLINK,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,SQL_DATAGEN,ENABLE_KAFKA_NODES,ENABLE_CONNECT_NODES}
   do
     i=$(playground state get "flags.${item}")
     if [ "$i" != "" ]
@@ -13672,6 +13684,12 @@ playground_run_command() {
     export ENABLE_CONTROL_CENTER=true
   fi
 
+  if [[ -n "$enable_flink" ]]
+  then
+    array_flag_list+=("--enable-flink")
+    export ENABLE_FLINK=true
+  fi
+
   if [[ -n "$enable_conduktor" ]]
   then
     array_flag_list+=("--enable-conduktor")
@@ -14272,6 +14290,13 @@ playground_run_command() {
       else
         unset 'options[28]'
       fi
+      if [ ! -z $ENABLE_FLINK ]
+      then
+        unset 'options[20]'
+      else
+        unset 'options[29]'
+      fi
+
 
       missing_env=""
       declare -a missing_env_list=()
@@ -14478,6 +14503,19 @@ playground_run_command() {
         array_flag_list=("${array_flag_list[@]/"--enable-control-center"}")
         unset ENABLE_CONTROL_CENTER
         interactive_enable_c3=""
+      fi
+
+      if [[ $res == *"$MENU_ENABLE_FL"* ]]
+      then
+        array_flag_list+=("--enable-flink")
+        export ENABLE_FLINK=true
+        interactive_enable_flink="true"
+      fi
+      if [[ $res == *"$MENU_DISABLE_FL"* ]]
+      then
+        array_flag_list=("${array_flag_list[@]/"--enable-flink"}")
+        unset ENABLE_FLINK
+        interactive_enable_flink=""
       fi
 
       if [[ $res == *"$MENU_ENABLE_RP"* ]]
@@ -14777,6 +14815,14 @@ playground_run_command() {
       if [[ -n "$force_interactive_repro" ]]
       then
         force_enable --enable-control-center ENABLE_CONTROL_CENTER
+      fi
+    fi
+
+    if [ "$interactive_enable_flink" == "true" ]
+    then
+      if [[ -n "$force_interactive_repro" ]]
+      then
+        force_enable --enable-flink ENABLE_FLINK
       fi
     fi
 
