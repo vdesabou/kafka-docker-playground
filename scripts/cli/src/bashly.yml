@@ -1295,6 +1295,26 @@ commands:
       help: |-
         Schema Registry mode
 
+  - name: set-normalize
+    filters:
+    - not_mdc_environment
+    - schema_registry_running
+    group: Schema
+    help: |-
+      🧽 Set normalize at schema registry level
+
+      See https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#schema-normalization
+    flags:
+    - *verbose
+    - long: --value
+      arg: value
+      allowed: 
+        - "true"
+        - "false"
+      required: true
+      help: |-
+        true or false
+
   - name: delete
     filters:
     - not_mdc_environment
