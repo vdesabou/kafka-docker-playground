@@ -497,10 +497,10 @@ function set_profiles() {
   profile_flink=""
   if [ -z "$ENABLE_FLINK" ] 
   then
-    log "Starting services without Flink..."
+    log "🛑 Starting services without Flink"
     playground state del flags.ENABLE_FLINK
   else
-    log "🐿️ Starting services with Flink..."
+    log "🐿️ Starting services with Flink"
     profile_flink="--profile flink"
     playground state set flags.ENABLE_FLINK 1
   fi
@@ -543,7 +543,7 @@ function set_profiles() {
   profile_kcat_command=""
   if [ -z "$ENABLE_KCAT" ]
   then
-    log "🛑 kcat is disabled3"
+    log "🛑 kcat is disabled"
     playground state del flags.ENABLE_KCAT
   else
     log "🧰 kcat is enabled"

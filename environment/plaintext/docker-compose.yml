@@ -609,42 +609,57 @@ services:
 
   # Flink JobManager
   jobmanager:
-    image: flink:1.20.0-scala_2.12
+    image: flink:${FLINK_TAG}
+    hostname: jobmanager
+    container_name: jobmanager
     profiles:
       - flink
     ports:
-      - "8081:8081"
+      - "18081:18081"  # Expose port 18081 for REST API and Web UI
     command: jobmanager
     environment:
       - |
         FLINK_PROPERTIES=
-        jobmanager.rpc.address: jobmanager        
+        jobmanager.rpc.address: jobmanager
+        rest.port: 18081
+        taskmanager.numberOfTaskSlots: 4
 
   # Flink TaskManager
   taskmanager:
-    image: flink:1.20.0-scala_2.12
+    image: flink:${FLINK_TAG}
+    hostname: taskmanager
+    container_name: taskmanager
     profiles:
       - flink
     depends_on:
       - jobmanager
     command: taskmanager
-    scale: 1
     environment:
       - |
         FLINK_PROPERTIES=
         jobmanager.rpc.address: jobmanager
-        taskmanager.numberOfTaskSlots: 2     
+        rest.address: jobmanager
+        rest.port: 18081
+        taskmanager.numberOfTaskSlots: 4
 
-  # Flink SQL Client   
+  # Flink SQL Client
   sql-client:
-    image: flink:1.20.0-scala_2.12
+    image: flink:${FLINK_TAG}
+    hostname: sql-client
+    container_name: sql-client
     profiles:
       - flink
-    command: bin/sql-client.sh
+    
     depends_on:
       - jobmanager
+    stdin_open: true
+    tty: true
+    command: bin/sql-client.sh
     environment:
       - |
         FLINK_PROPERTIES=
         jobmanager.rpc.address: jobmanager
-        rest.address: jobmanager   
+        rest.address: jobmanager
+        rest.port: 18081
+        deployment.gateway-address: jobmanager
+        deployment.gateway-port: 18081

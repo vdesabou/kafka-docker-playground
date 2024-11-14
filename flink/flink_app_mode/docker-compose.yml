@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  jobmanager:
+    image: flink:latest
+    command: jobmanager
+    ports:
+      - "8081:8081"
+    volumes:
+      - ${FLINK_JAR_PATH}:/opt/flink/job.jar
+    environment:
+      - FLINK_PROPERTIES=

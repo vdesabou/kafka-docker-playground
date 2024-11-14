@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Flink JobManager
+  jobmanager:
+    image: flink:${FLINK_TAG}
+    hostname: jobmanager
+    container_name: jobmanager
+    ports:
+      - "8081:8081"
+    command: jobmanager
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+
+  # Flink TaskManager
+  taskmanager:
+    image: flink:${FLINK_TAG}
+    hostname: taskmanager
+    container_name: taskmanager
+    depends_on:
+      - jobmanager
+    command: taskmanager
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        rest.address: jobmanager
+        taskmanager.numberOfTaskSlots: 4
+
+  # Flink SQL Client
+  sql-client:
+    image: flink:${FLINK_TAG}
+    hostname: sql-client
+    container_name: sql-client
+    depends_on:
+      - jobmanager
+    stdin_open: true
+    tty: true
+    command: bin/sql-client.sh
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        rest.address: jobmanager
+        deployment.gateway-address: jobmanager

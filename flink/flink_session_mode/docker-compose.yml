@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  jobmanager:
+    image: flink:${FLINK_TAG}
+    command: jobmanager
+    ports:
+      - "8081:8081"
+
+  taskmanager:
+    image: flink:${FLINK_TAG}
+    command: taskmanager
+    scale: 2
+    depends_on:
+      - jobmanager
