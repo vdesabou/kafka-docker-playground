@@ -9,7 +9,7 @@ services:
     ports:
       - "8081:8081"
     entrypoint: >
-      sh -c "$flink_connectors && exec /docker-entrypoint.sh jobmanager"
+      sh -c "$flink_connectors exec /docker-entrypoint.sh jobmanager"
     environment:
       - |
         FLINK_PROPERTIES=
@@ -23,7 +23,7 @@ services:
     depends_on:
       - jobmanager
     entrypoint: >
-      sh -c "$flink_connectors && exec /docker-entrypoint.sh taskmanager"
+      sh -c "$flink_connectors exec /docker-entrypoint.sh taskmanager"
     environment:
       - |
         FLINK_PROPERTIES=
@@ -42,7 +42,7 @@ services:
     tty: true
     # command: bin/sql-client.sh
     entrypoint: >
-      sh -c "$flink_connectors && exec /docker-entrypoint.sh bin/sql-client.sh"
+      sh -c "$flink_connectors exec /docker-entrypoint.sh bin/sql-client.sh"
     environment:
       - |
         FLINK_PROPERTIES=
