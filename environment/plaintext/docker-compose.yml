@@ -616,7 +616,8 @@ services:
       - flink
     ports:
       - "18081:18081"  # Expose port 18081 for REST API and Web UI
-    command: jobmanager
+    entrypoint: >
+      sh -c "$flink_connectors && exec /docker-entrypoint.sh jobmanager"
     environment:
       - |
         FLINK_PROPERTIES=
@@ -633,7 +634,8 @@ services:
       - flink
     depends_on:
       - jobmanager
-    command: taskmanager
+    entrypoint: >
+      sh -c "$flink_connectors && exec /docker-entrypoint.sh taskmanager"
     environment:
       - |
         FLINK_PROPERTIES=
@@ -649,12 +651,12 @@ services:
     container_name: sql-client
     profiles:
       - flink
-    
     depends_on:
       - jobmanager
     stdin_open: true
     tty: true
-    command: bin/sql-client.sh
+    entrypoint: >
+      sh -c "$flink_connectors && exec /docker-entrypoint.sh bin/sql-client.sh"
     environment:
       - |
         FLINK_PROPERTIES=

@@ -503,6 +503,7 @@ function set_profiles() {
     log "🐿️ Starting services with Flink"
     profile_flink="--profile flink"
     playground state set flags.ENABLE_FLINK 1
+    source ${DIR}/../../scripts/flink_download_connectors.sh
   fi
 
   profile_ksqldb_command=""

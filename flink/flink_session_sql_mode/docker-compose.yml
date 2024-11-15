@@ -8,7 +8,8 @@ services:
     container_name: jobmanager
     ports:
       - "8081:8081"
-    command: jobmanager
+    entrypoint: >
+      sh -c "$flink_connectors && exec /docker-entrypoint.sh jobmanager"
     environment:
       - |
         FLINK_PROPERTIES=
@@ -21,7 +22,8 @@ services:
     container_name: taskmanager
     depends_on:
       - jobmanager
-    command: taskmanager
+    entrypoint: >
+      sh -c "$flink_connectors && exec /docker-entrypoint.sh taskmanager"
     environment:
       - |
         FLINK_PROPERTIES=
@@ -38,7 +40,9 @@ services:
       - jobmanager
     stdin_open: true
     tty: true
-    command: bin/sql-client.sh
+    # command: bin/sql-client.sh
+    entrypoint: >
+      sh -c "$flink_connectors && exec /docker-entrypoint.sh bin/sql-client.sh"
     environment:
       - |
         FLINK_PROPERTIES=
