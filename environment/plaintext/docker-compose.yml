@@ -606,3 +606,62 @@ services:
     command:
       - "server"
       - "-no-self-profiling"
+
+  # Flink JobManager
+  jobmanager:
+    image: flink:${FLINK_TAG}
+    hostname: jobmanager
+    container_name: jobmanager
+    profiles:
+      - flink
+    ports:
+      - "18081:18081"  # Expose port 18081 for REST API and Web UI
+    entrypoint: >
+      sh -c "$flink_connectors exec /docker-entrypoint.sh jobmanager"
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        rest.port: 18081
+        taskmanager.numberOfTaskSlots: 4
+
+  # Flink TaskManager
+  taskmanager:
+    image: flink:${FLINK_TAG}
+    hostname: taskmanager
+    container_name: taskmanager
+    profiles:
+      - flink
+    depends_on:
+      - jobmanager
+    entrypoint: >
+      sh -c "$flink_connectors exec /docker-entrypoint.sh taskmanager"
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        rest.address: jobmanager
+        rest.port: 18081
+        taskmanager.numberOfTaskSlots: 4
+
+  # Flink SQL Client
+  sql-client:
+    image: flink:${FLINK_TAG}
+    hostname: sql-client
+    container_name: sql-client
+    profiles:
+      - flink
+    depends_on:
+      - jobmanager
+    stdin_open: true
+    tty: true
+    entrypoint: >
+      sh -c "$flink_connectors exec /docker-entrypoint.sh bin/sql-client.sh"
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        rest.address: jobmanager
+        rest.port: 18081
+        deployment.gateway-address: jobmanager
+        deployment.gateway-port: 18081

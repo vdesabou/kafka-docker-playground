@@ -1,0 +1,24 @@
+services:
+  jobmanager:
+    image: flink:${FLINK_TAG}
+    entrypoint: >
+      sh -c "$flink_connectors exec /docker-entrypoint.sh jobmanager"
+    ports:
+      - "8081:8081"
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager  
+
+  taskmanager:
+    image: flink:${FLINK_TAG}
+    entrypoint: >
+      sh -c "$flink_connectors exec /docker-entrypoint.sh taskmanager"
+    scale: 1
+    depends_on:
+      - jobmanager
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        taskmanager.numberOfTaskSlots: 2  

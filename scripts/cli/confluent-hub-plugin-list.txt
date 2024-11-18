@@ -128,6 +128,7 @@ hazelcast/kafka-connector
 hivemq/enterprise-extension
 ibm/data-replication
 imply/druid-kafka-indexing-service
+imply/imply-native-integration
 infoviewsystems/kafka-connect-as400
 init/kafka-connect-adso
 init/kafka-connect-odatabusevent
@@ -196,6 +197,7 @@ snowflakeinc/snowflake-kafka-connector
 splunk/kafka-connect-splunk
 spoudinc/spoud-agoora
 sqdata/sqdata-connector
+startree/startree-native-integration
 streamsendio/file-chunk-sink
 streamsendio/file-chunk-source
 streamsets/streamsets-sdc

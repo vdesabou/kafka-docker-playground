@@ -21,6 +21,19 @@ else
   profile_control_center_command="--profile control-center"
 fi
 
+# Check if ENABLE_FLINK is set to true
+profile_flink=""
+if [ -z "$ENABLE_FLINK" ] 
+then
+  log "Starting services without Flink..."
+  playground state del flags.ENABLE_FLINK
+else
+  log "🐿️ Starting services with Flink..."
+  profile_flink="--profile flink"
+  playground state set flags.ENABLE_FLINK 1
+  source ${DIR}/../../scripts/flink_download_connectors.sh
+fi
+
 ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
@@ -40,9 +53,9 @@ fi
 
 docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} build
 docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} down -v --remove-orphans
-docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} up -d --quiet-pull
+docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} up -d --quiet-pull
 log "📝 To see the actual properties file, use cli command playground container get-properties -c <container>"
-command="source ${DIR}/../../scripts/utils.sh && docker compose -f ${DIR}/../../environment/mdc-plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} up -d --quiet-pull"
+command="source ${DIR}/../../scripts/utils.sh && docker compose -f ${DIR}/../../environment/mdc-plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} up -d --quiet-pull"
 playground state set run.docker_command "$command"
 playground state set run.environment "mdc-plaintext"
 log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command playground container recreate"
