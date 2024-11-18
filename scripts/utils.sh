@@ -22,6 +22,12 @@ then
   fi
 fi
 
+if [ -z "$FLINK_TAG" ]
+then
+    # FLINK_TAG is not set, use default:
+    export FLINK_TAG=latest
+fi
+
 # Setting up TAG environment variable
 #
 if [ -z "$TAG" ]
