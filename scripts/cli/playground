@@ -8571,7 +8571,7 @@ function set_profiles() {
 
   # Check if ENABLE_FLINK is set to true
   profile_flink=""
-  if [ -z "$ENABLE_FLINK" ] 
+  if [ -z "$ENABLE_FLINK" ]
   then
     log "🛑 Starting services without Flink"
     playground state del flags.ENABLE_FLINK
@@ -14338,7 +14338,6 @@ playground_run_command() {
         unset 'options[29]'
       fi
 
-
       missing_env=""
       declare -a missing_env_list=()
 
@@ -18966,7 +18965,7 @@ playground_debug_heap_dump_command() {
           docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
       else
           log "🎯 Taking heap dump (without live option) on container ${container}"
-          docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
+          docker exec $container jmap -dump:format=b,file=/tmp/${filename} 1
       fi
       if [ $? -eq 0 ]
       then
