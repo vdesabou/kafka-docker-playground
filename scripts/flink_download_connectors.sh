@@ -125,7 +125,11 @@ else
     done
 
     # Set the environment variable 'connectors'
-    flink_connectors="wget -P /opt/flink/lib ${connector_urls[*]} && "
+    if [ -z "${connector_urls[*]}" ]; then 
+        flink_connectors=" "
+    else
+        flink_connectors="wget -P /opt/flink/lib ${connector_urls[*]} && "
+    fi
     export flink_connectors
 
     log "Environment variable 'flink_connectors' set with the following URLs which will be downloaded for the containers:"
