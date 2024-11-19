@@ -8572,6 +8572,7 @@ function set_profiles() {
   # Check if ENABLE_FLINK is set to true
   profile_flink=""
   if [ -z "$ENABLE_FLINK" ]
+
   then
     log "🛑 Starting services without Flink"
     playground state del flags.ENABLE_FLINK
@@ -16739,15 +16740,15 @@ playground_repro_bootstrap_command() {
   cat $repro_test_file | grep -v "#!/bin/bash" >> $tmp_dir/tmp_file
   mv $tmp_dir/tmp_file $repro_test_file
 
-  # for file in README.md docker-compose*.yml keyfile.json stop.sh .gitignore sql-datagen
-  # do
-  #   if [ -f $file ]
-  #   then
-  #     cd $repro_dir > /dev/null
-  #     ln -sf ../../$dir2/$file .
-  #     cd - > /dev/null
-  #   fi
-  # done
+  for file in README.md docker-compose*.yml keyfile.json stop.sh .gitignore sql-datagen
+  do
+    if [ -f $file ]
+    then
+      cd $repro_dir > /dev/null
+      ln -sf ../../$dir2/$file .
+      cd - > /dev/null
+    fi
+  done
 
   if [ "$producer" != "none" ]
   then
