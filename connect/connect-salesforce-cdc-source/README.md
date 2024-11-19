@@ -38,7 +38,13 @@ Example:
 ![Create a connected app](Screenshot3.png)
 
 * Save the new app and press Continue at the prompt.
-* Look for the Consumer Key and Consumer Secret in the displayed form. Save these so you can put them in the configuration for the Salesforce connect or
+* Look for the Consumer Key and Consumer Secret in the displayed form. Save these so you can put them in the configuration properties file for the Salesforce connect worker.
+
+**IMPORTANT !!**: for new orgs, "Username-Password Flow" is disabled by default, see the [help page](https://help.salesforce.com/s/articleView?id=release-notes.rn_security_username-password_flow_blocked_by_default.htm&release=244&type=5).
+
+You need to activate this (otherwise you get `{"error":"invalid_grant","error_description":"authentication failure"}`):
+
+![Username-Password Flow enabled](../../ccloud/fm-salesforce-cdc-source/ScreenshotOauthDisabled.jpg)
 
 ### Find your Security token
 

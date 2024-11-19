@@ -849,6 +849,30 @@ subcommands:
             
             Allowed values: IMPORT, READONLY, READWRITE
             
+      - name: set-normalize
+        description: | 
+          🧽 Set normalize at schema registry level
+            
+            See https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#schema-normalization
+        usage: playground schema set-normalize [OPTIONS]
+        options:
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
+          - --value
+          argument: [true, false]
+          description: | 
+            true or false
+            
+            Required: ✓ Yes
+            
+            Allowed values: true, false
+            
       - name: delete
         description: | 
           🧟 Delete schema
@@ -1830,6 +1854,8 @@ subcommands:
           argument: 100
           description: | 
             Max number of messages to display (default is 100)
+            
+            You can use -1 to display all messages
             
             Default value: 100
             

@@ -731,6 +731,31 @@
           ]
         },
         {
+          "name": "set-normalize",
+          "description": "🧽 Set normalize at schema registry level\n  \n  See https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#schema-normalization\n",
+          "usage": "playground schema set-normalize [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
+                "--value"
+              ],
+              "argument": [
+                true,
+                false
+              ],
+              "description": "true or false\n\nRequired: ✓ Yes\n\nAllowed values: true, false\n"
+            }
+          ]
+        },
+        {
           "name": "delete",
           "description": "🧟 Delete schema\n",
           "usage": "playground schema delete [OPTIONS]",
@@ -1718,7 +1743,7 @@
                 "--max-messages"
               ],
               "argument": 100,
-              "description": "Max number of messages to display (default is 100)\n\nDefault value: 100\n"
+              "description": "Max number of messages to display (default is 100)\n\nYou can use -1 to display all messages\n\nDefault value: 100\n"
             },
             {
               "names": [

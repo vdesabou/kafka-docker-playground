@@ -215,6 +215,12 @@ then
   export ENABLE_CONTROL_CENTER=true
 fi
 
+if [[ -n "$enable_flink" ]]
+then
+  array_flag_list+=("--enable-flink")
+  export ENABLE_FLINK=true
+fi
+
 if [[ -n "$enable_conduktor" ]]
 then
   array_flag_list+=("--enable-conduktor")
@@ -806,6 +812,12 @@ then
     else
       unset 'options[28]'
     fi
+    if [ ! -z $ENABLE_FLINK ]
+    then
+      unset 'options[20]'
+    else
+      unset 'options[29]'
+    fi
 
     missing_env=""
     declare -a missing_env_list=()
@@ -1013,6 +1025,19 @@ then
       array_flag_list=("${array_flag_list[@]/"--enable-control-center"}")
       unset ENABLE_CONTROL_CENTER
       interactive_enable_c3=""
+    fi
+
+    if [[ $res == *"$MENU_ENABLE_FL"* ]]
+    then
+      array_flag_list+=("--enable-flink")
+      export ENABLE_FLINK=true
+      interactive_enable_flink="true"
+    fi
+    if [[ $res == *"$MENU_DISABLE_FL"* ]]
+    then
+      array_flag_list=("${array_flag_list[@]/"--enable-flink"}")
+      unset ENABLE_FLINK
+      interactive_enable_flink=""
     fi
 
     if [[ $res == *"$MENU_ENABLE_RP"* ]]
@@ -1309,6 +1334,14 @@ then
     if [[ -n "$force_interactive_repro" ]]
     then
       force_enable --enable-control-center ENABLE_CONTROL_CENTER
+    fi
+  fi
+
+  if [ "$interactive_enable_flink" == "true" ]
+  then
+    if [[ -n "$force_interactive_repro" ]]
+    then
+      force_enable --enable-flink ENABLE_FLINK
     fi
   fi
 

@@ -67,6 +67,7 @@ playground_usage() {
   printf "  %s   🛡️ Set subject-level compatibility\n" "$(green "schema set-compatibility")                  "
   printf "  %s   🔏 Get subject-level mode\n" "$(green "schema get-mode")                           "
   printf "  %s   🔏 Set subject-level mode\n" "$(green "schema set-mode")                           "
+  printf "  %s   🧽 Set normalize at schema registry level\n" "$(green "schema set-normalize")                      "
   printf "  %s   🧟 Delete schema\n" "$(green "schema delete")                             "
   echo
   printf "%s\n" "$(bold "TCP Proxy commands:")"
@@ -2262,6 +2263,7 @@ playground_schema_usage() {
   printf "  %s   🛡️ Set subject-level compatibility\n" "$(green "set-compatibility")"
   printf "  %s   🔏 Get subject-level mode\n" "$(green "get-mode")         "
   printf "  %s   🔏 Set subject-level mode\n" "$(green "set-mode")         "
+  printf "  %s   🧽 Set normalize at schema registry level\n" "$(green "set-normalize")    "
   printf "  %s   🧟 Delete schema\n" "$(green "delete")           "
   echo
 
@@ -2512,6 +2514,44 @@ playground_schema_set_mode_usage() {
     printf "  %s\n" "$(magenta "--mode MODE (required)")"
     printf "    Schema Registry mode\n"
     printf "    %s\n" "Allowed: IMPORT, READONLY, READWRITE"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_schema_set_normalize_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground schema set-normalize\n\n"
+    printf "  🧽 Set normalize at schema registry level\n  \n  See\n  https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#schema-normalization\n\n"
+  else
+    printf "playground schema set-normalize - 🧽 Set normalize at schema registry level\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground schema set-normalize [OPTIONS]\n"
+  printf "  playground schema set-normalize --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--value VALUE (required)")"
+    printf "    true or false\n"
+    printf "    %s\n" "Allowed: true, false"
     echo
 
     # :command.usage_fixed_flags
@@ -4377,7 +4417,7 @@ playground_topic_consume_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--max-messages MAX-MESSAGES")"
-    printf "    Max number of messages to display (default is 100)\n"
+    printf "    Max number of messages to display (default is 100)\n    \n    You can use -1 to display all messages\n"
     printf "    %s\n" "Default: 100"
     echo
 
@@ -8531,7 +8571,7 @@ function set_profiles() {
 
   # Check if ENABLE_FLINK is set to true
   profile_flink=""
-  if [ -z "$ENABLE_FLINK" ] 
+  if [ -z "$ENABLE_FLINK" ]
   then
     log "🛑 Starting services without Flink"
     playground state del flags.ENABLE_FLINK
@@ -14298,7 +14338,6 @@ playground_run_command() {
         unset 'options[29]'
       fi
 
-
       missing_env=""
       declare -a missing_env_list=()
 
@@ -16700,15 +16739,15 @@ playground_repro_bootstrap_command() {
   cat $repro_test_file | grep -v "#!/bin/bash" >> $tmp_dir/tmp_file
   mv $tmp_dir/tmp_file $repro_test_file
 
-  for file in README.md docker-compose*.yml keyfile.json stop.sh .gitignore sql-datagen
-  do
-    if [ -f $file ]
-    then
-      cd $repro_dir > /dev/null
-      ln -sf ../../$dir2/$file .
-      cd - > /dev/null
-    fi
-  done
+  # for file in README.md docker-compose*.yml keyfile.json stop.sh .gitignore sql-datagen
+  # do
+  #   if [ -f $file ]
+  #   then
+  #     cd $repro_dir > /dev/null
+  #     ln -sf ../../$dir2/$file .
+  #     cd - > /dev/null
+  #   fi
+  # done
 
   if [ "$producer" != "none" ]
   then
@@ -18149,6 +18188,42 @@ playground_schema_set_mode_command() {
 }
 
 # :command.function
+playground_schema_set_normalize_command() {
+  # src/commands/schema/set-normalize.sh
+  value="${args[--value]}"
+  verbose="${args[--verbose]}"
+
+  get_sr_url_and_security
+
+  log "🧽 Set normalize to $value at schema registry level"
+  if [[ -n "$verbose" ]]
+  then
+      log "🐞 curl command used"
+      echo "curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"normalize\": \"${value}\"}" "${sr_url}/config""
+  fi
+  curl_output=$(curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"normalize\": \"${value}\"}" "${sr_url}/config" | jq .)
+  ret=$?
+  if [ $ret -eq 0 ]
+  then
+      if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
+
+      then
+          error_code=$(echo "$curl_output" | jq -r .error_code)
+          message=$(echo "$curl_output" | jq -r .message)
+          logerror "Command failed with error code $error_code"
+          logerror "$message"
+          exit 1
+      else
+          normalize=$(echo "$curl_output" | jq -r .normalize)
+          echo "$normalize"
+      fi
+  else
+      logerror "❌ curl request failed with error code $ret!"
+      exit 1
+  fi
+}
+
+# :command.function
 playground_schema_delete_command() {
   # src/commands/schema/delete.sh
   subject="${args[--subject]}"
@@ -18890,7 +18965,7 @@ playground_debug_heap_dump_command() {
           docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
       else
           log "🎯 Taking heap dump (without live option) on container ${container}"
-          docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
+          docker exec $container jmap -dump:format=b,file=/tmp/${filename} 1
       fi
       if [ $? -eq 0 ]
       then
@@ -30041,6 +30116,13 @@ playground_schema_parse_requirements() {
       shift $#
       ;;
 
+    set-normalize)
+      action="set-normalize"
+      shift
+      playground_schema_set_normalize_parse_requirements "$@"
+      shift $#
+      ;;
+
     delete)
       action="delete"
       shift
@@ -30702,6 +30784,97 @@ playground_schema_set_mode_parse_requirements() {
   # :command.whitelist_filter
   if [[ ${args['--mode']:-} ]] && [[ ! ${args['--mode']:-} =~ ^(IMPORT|READONLY|READWRITE)$ ]]; then
     printf "%s\n" "--mode must be one of: IMPORT, READONLY, READWRITE" >&2
+    exit 1
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_not_mdc_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_schema_set_normalize_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_schema_set_normalize_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="schema set-normalize"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --value)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--value']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--value requires an argument: --value VALUE" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--value']+x} ]]; then
+    printf "missing required flag: --value VALUE\n" >&2
+    exit 1
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--value']:-} ]] && [[ ! ${args['--value']:-} =~ ^(true|false)$ ]]; then
+    printf "%s\n" "--value must be one of: true, false" >&2
     exit 1
   fi
 
@@ -39229,6 +39402,7 @@ run() {
     "schema set-compatibility") playground_schema_set_compatibility_command ;;
     "schema get-mode") playground_schema_get_mode_command ;;
     "schema set-mode") playground_schema_set_mode_command ;;
+    "schema set-normalize") playground_schema_set_normalize_command ;;
     "schema delete") playground_schema_delete_command ;;
     "tcp-proxy") playground_tcp_proxy_command ;;
     "tcp-proxy start") playground_tcp_proxy_start_command ;;

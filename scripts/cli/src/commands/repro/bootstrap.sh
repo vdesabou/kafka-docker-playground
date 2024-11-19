@@ -378,15 +378,15 @@ cat $tmp_dir/intro > $tmp_dir/tmp_file
 cat $repro_test_file | grep -v "#!/bin/bash" >> $tmp_dir/tmp_file
 mv $tmp_dir/tmp_file $repro_test_file
 
-for file in README.md docker-compose*.yml keyfile.json stop.sh .gitignore sql-datagen
-do
-  if [ -f $file ]
-  then
-    cd $repro_dir > /dev/null
-    ln -sf ../../$dir2/$file .
-    cd - > /dev/null
-  fi
-done
+# for file in README.md docker-compose*.yml keyfile.json stop.sh .gitignore sql-datagen
+# do
+#   if [ -f $file ]
+#   then
+#     cd $repro_dir > /dev/null
+#     ln -sf ../../$dir2/$file .
+#     cd - > /dev/null
+#   fi
+# done
 
 if [ "$producer" != "none" ]
 then

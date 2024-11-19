@@ -37,7 +37,7 @@ else
         docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
     else
         log "🎯 Taking heap dump (without live option) on container ${container}"
-        docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
+        docker exec $container jmap -dump:format=b,file=/tmp/${filename} 1
     fi
     if [ $? -eq 0 ]
     then
