@@ -139,7 +139,7 @@ then
             add_connector_config_based_on_environment "$environment" "$json_content"
         fi
         # add mandatory name field
-        new_json_content=$(echo $json_content | jq ". + {\"name\": \"$connector\"}")
+        new_json_content=$(echo "$json_content" | jq ". + {\"name\": \"$connector\"}")
 
         echo "$new_json_content" > $new_json_file
         handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$new_json_file $connect_url/connector-plugins/$connector_class/config/validate"
@@ -241,7 +241,7 @@ then
     then
         log "📍 creating $connector_type connector $connector with offsets: $offsets" 
         # add mandatory name field
-        new_json_content=$(echo $json_content | jq -c ". + {\"name\": \"$connector\"}")
+        new_json_content=$(echo "$json_content" | jq -c ". + {\"name\": \"$connector\"}")
 
         sed -e "s|:CONNECTOR_NAME:|$connector|g" \
             -e "s|:CONNECTOR_CONFIG:|$new_json_content|g" \
@@ -275,7 +275,7 @@ else
     then
         log "🪵 creating $connector_type connector $connector with --initial-state: $initial_state" 
         # add mandatory name field
-        new_json_content=$(echo $json_content | jq -c ". + {\"name\": \"$connector\"}")
+        new_json_content=$(echo "$json_content" | jq -c ". + {\"name\": \"$connector\"}")
 
         sed -e "s|:CONNECTOR_NAME:|$connector|g" \
             -e "s|:CONNECTOR_CONFIG:|$new_json_content|g" \
