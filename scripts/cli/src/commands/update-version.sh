@@ -22,7 +22,7 @@ then
   docker_compose_file_available=0
 fi
 
-current_tag=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
+current_tag=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
 
 if [ "$current_tag" == "" ]
 then
@@ -389,7 +389,7 @@ tag_changed=0
 IFS=' ' flag_list="${array_flag_list[*]}"
 if [[ -n "$tag" ]]
 then
-  current_tag=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
+  current_tag=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
 
   if [ "$current_tag" == "" ]
   then

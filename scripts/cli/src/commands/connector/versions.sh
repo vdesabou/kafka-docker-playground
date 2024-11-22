@@ -18,7 +18,7 @@ then
     logwarn "❌ skipping as it is not an example with connector, but --connector-tag is set"
     exit 1
 else
-    current_tag=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
+    current_tag=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
     log "🎯 Version currently used for confluent platform"
     echo "$current_tag"
 
