@@ -7,4 +7,4 @@ source ${DIR}/../../scripts/utils.sh
 
 source ${DIR}/../../scripts/flink_download_connectors.sh
 
-docker-compose up -d
+docker compose --profile grafana up -d
