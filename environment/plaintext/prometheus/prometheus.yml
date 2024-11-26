@@ -25,6 +25,14 @@ scrape_configs:
     static_configs:
       - targets: ["localhost:9090"]
 
+  - job_name: 'flink-jobmanager'
+    static_configs:
+      - targets: ['jobmanager:9090']  
+
+  - job_name: 'flink-taskmanager'
+    static_configs:
+      - targets: ['taskmanager:9090'] 
+
 
   - job_name: "node-exporter"
     static_configs:

@@ -615,7 +615,8 @@ services:
     profiles:
       - flink
     ports:
-      - "18081:18081"  # Expose port 18081 for REST API and Web UI
+      - "18081:18081"  # REST API and Web UI
+      - "9090:9090"    # Prometheus metrics
     entrypoint: >
       sh -c "$flink_connectors exec /docker-entrypoint.sh jobmanager"
     environment:
@@ -624,7 +625,8 @@ services:
         jobmanager.rpc.address: jobmanager
         rest.port: 18081
         taskmanager.numberOfTaskSlots: 4
-
+        ${GRAFANA_FLINK}
+  
   # Flink TaskManager
   taskmanager:
     image: flink:${FLINK_TAG}
@@ -643,7 +645,7 @@ services:
         rest.address: jobmanager
         rest.port: 18081
         taskmanager.numberOfTaskSlots: 4
-
+        ${GRAFANA_FLINK}
   # Flink SQL Client
   sql-client:
     image: flink:${FLINK_TAG}
