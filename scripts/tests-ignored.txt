@@ -21,3 +21,6 @@ snowflake-sink-snowpipe-streaming.sh
 # no need to test in CI
 azure-cognitive-search-sink-proxy.sh
 s3-sink-with-short-lived-creds.sh
+
+# hostname validation
+fully-managed-mqtt-source-mtls.sh
