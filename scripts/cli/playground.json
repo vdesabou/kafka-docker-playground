@@ -613,6 +613,13 @@
               ],
               "argument": "ID",
               "description": "☢️ Force schema id\n\n❗it will replace any schema which already exists at given id\n"
+            },
+            {
+              "names": [
+                "--metadata-property"
+              ],
+              "argument": "METADATA-PROPERTY",
+              "description": "🟡 Add metadata properties to schema contract\n\nSee docs: https://docs.confluent.io/platform/current/schema-registry/fundamentals/data-contracts.html#metadata-properties\n\n🎓 Tip: you can pass multiple properties by specifying --metadata-property multiple times\n\nExample: --metadata-property \"metadata1=value\" --metadata-property \"metadata2=value\"\n\nRepeatable: ✓ Yes\n"
             }
           ]
         },

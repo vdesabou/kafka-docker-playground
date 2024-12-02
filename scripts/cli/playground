@@ -2366,6 +2366,11 @@ playground_schema_register_usage() {
     printf "    ☢️ Force schema id\n    \n    ❗it will replace any schema which already exists at given id\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--metadata-property METADATA-PROPERTY (repeatable)")"
+    printf "    🟡 Add metadata properties to schema contract\n    \n    See docs:\n    https://docs.confluent.io/platform/current/schema-registry/fundamentals/data-contracts.html#metadata-properties\n    \n    🎓 Tip: you can pass multiple properties by specifying --metadata-property\n    multiple times\n    \n    Example: --metadata-property \"metadata1=value\" --metadata-property\n    \"metadata2=value\"\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -17858,6 +17863,7 @@ playground_schema_register_command() {
   id="${args[--id]}"
   verbose="${args[--verbose]}"
 
+  eval "metadata_property=(${args[--metadata-property]})"
   get_sr_url_and_security
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
@@ -17917,6 +17923,15 @@ playground_schema_register_command() {
       json="{\"schemaType\":\"$schema_type\"}"
       content=$(cat $schema_file | tr -d '\n' | tr -s ' ')
       json_new=$(echo $json | jq --arg content "$content" '. + { "schema": $content }')
+  fi
+
+  # Check if the array contains multiple results
+  if [ "${#metadata_property[@]}" -gt 1 ]
+  then
+      log "🟡 schema metadata are present, adding them"
+      # Construct metadata_json using jq
+      metadata_json=$(jq -n --argjson props "$(printf '%s\n' "${metadata_property[@]}" | jq -R 'split("=") | { (.[0]): .[1] }' | jq -s 'add')" '{properties: $props}')
+      json_new=$(echo $json_new | jq --argjson metadata "$metadata_json" '. + { "metadata": $metadata }')
   fi
 
   if [[ -n "$id" ]]
@@ -30364,6 +30379,25 @@ playground_schema_register_parse_requirements() {
           shift
         else
           printf "%s\n" "--id requires an argument: --id ID" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --metadata-property)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--metadata-property']+x} ]]; then
+            args['--metadata-property']="$escaped"
+          else
+            args['--metadata-property']="${args['--metadata-property']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--metadata-property requires an argument: --metadata-property METADATA-PROPERTY" >&2
           exit 1
         fi
         ;;

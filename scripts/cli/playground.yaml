@@ -747,6 +747,20 @@ subcommands:
             
             ❗it will replace any schema which already exists at given id
             
+        - names:
+          - --metadata-property
+          argument: METADATA-PROPERTY
+          description: | 
+            🟡 Add metadata properties to schema contract
+            
+            See docs: https://docs.confluent.io/platform/current/schema-registry/fundamentals/data-contracts.html#metadata-properties
+            
+            🎓 Tip: you can pass multiple properties by specifying --metadata-property multiple times
+            
+            Example: --metadata-property "metadata1=value" --metadata-property "metadata2=value"
+            
+            Repeatable: ✓ Yes
+            
       - name: get-compatibility
         description: | 
           🛡️ Get subject-level compatibility

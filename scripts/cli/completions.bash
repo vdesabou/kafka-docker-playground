@@ -1041,7 +1041,7 @@ _playground_completions() {
       ;;
 
     *'schema register'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --id --schema --subject --verbose -h -v")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --id --metadata-property --schema --subject --verbose -h -v")" -- "$cur")
       ;;
 
     *'debug heap-dump'*)

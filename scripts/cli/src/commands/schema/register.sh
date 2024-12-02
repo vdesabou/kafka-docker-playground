@@ -3,6 +3,7 @@ schema="${args[--schema]}"
 id="${args[--id]}"
 verbose="${args[--verbose]}"
 
+eval "metadata_property=(${args[--metadata-property]})"
 get_sr_url_and_security
 
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
@@ -62,6 +63,15 @@ else
     json="{\"schemaType\":\"$schema_type\"}"
     content=$(cat $schema_file | tr -d '\n' | tr -s ' ')
     json_new=$(echo $json | jq --arg content "$content" '. + { "schema": $content }')
+fi
+
+# Check if the array contains multiple results
+if [ "${#metadata_property[@]}" -gt 1 ]
+then
+    log "🟡 schema metadata are present, adding them"
+    # Construct metadata_json using jq
+    metadata_json=$(jq -n --argjson props "$(printf '%s\n' "${metadata_property[@]}" | jq -R 'split("=") | { (.[0]): .[1] }' | jq -s 'add')" '{properties: $props}')
+    json_new=$(echo $json_new | jq --argjson metadata "$metadata_json" '. + { "metadata": $metadata }')
 fi
 
 if [[ -n "$id" ]]

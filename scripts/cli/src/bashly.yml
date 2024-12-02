@@ -1182,6 +1182,19 @@ commands:
 
           ❗it will replace any schema which already exists at given id
 
+      - long: --metadata-property
+        arg: metadata-property
+        help: |-
+          🟡 Add metadata properties to schema contract
+          
+          See docs: https://docs.confluent.io/platform/current/schema-registry/fundamentals/data-contracts.html#metadata-properties
+
+          🎓 Tip: you can pass multiple properties by specifying --metadata-property multiple times
+
+          Example: --metadata-property "metadata1=value" --metadata-property "metadata2=value"
+        required: false
+        repeatable: true
+
     examples: |
       playground schema register --subject test-protobuf << 'EOF'
       syntax = "proto3";
