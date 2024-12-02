@@ -1209,7 +1209,7 @@ commands:
       }
       EOF
 
-      playground schema register --subject test-avro << 'EOF'
+      playground schema register --subject test-avro --metadata-property test=test --metadata-property test2=test << 'EOF'
       {
           "type": "record",
           "namespace": "com.github.vdesabou",
