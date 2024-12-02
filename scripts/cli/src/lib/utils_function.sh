@@ -499,6 +499,7 @@ function set_profiles() {
   then
     log "🛑 Starting services without Flink"
     playground state del flags.ENABLE_FLINK
+    export flink_connectors=""
   else
     log "🐿️ Starting services with Flink"
     profile_flink="--profile flink"

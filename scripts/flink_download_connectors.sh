@@ -9,6 +9,7 @@ if [ -n "$FLINK_URL" ]; then
     flink_connectors="wget -P /opt/flink/lib $FLINK_URL && "
     export flink_connectors
 else
+    export flink_connectors=""
     logging "❗ Do you need to install any Flink connectors? (yes/no)"
     read need_connectors
 
