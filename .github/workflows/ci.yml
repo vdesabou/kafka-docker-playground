@@ -91,7 +91,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: ["7.7.2"]
+        tag: ["7.8.0"]
         test_list : [
                       # requiring ngrok
                       "🚀1️⃣ ccloud/fm-debezium-mysql-legacy-source ccloud/fm-debezium-postgresql-legacy-source ccloud/fm-debezium-mysql-v2-source ccloud/fm-debezium-sqlserver-legacy-source ccloud/fm-debezium-sqlserver-v2-source ccloud/fm-elasticsearch-sink ccloud/fm-jdbc-sqlserver-sink ccloud/fm-jdbc-sqlserver-source ccloud/fm-ibm-mq-source ccloud/fm-jdbc-mysql-source ccloud/fm-jdbc-postgresql-sink ccloud/fm-mqtt-source ccloud/fm-debezium-postgresql-v2-source ccloud/fm-jdbc-postgresql-source",
@@ -326,7 +326,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: ["7.7.2"]
+        tag: ["7.8.0"]
         test_list : [
                       "🚀 ${{ github.event.inputs.test_name }}"
                     ]
@@ -595,7 +595,7 @@ jobs:
       - name: Update README
         run: |
           cd ./scripts/cli
-          ./playground update-readme --tags "7.7.2"
+          ./playground update-readme --tags "7.8.0"
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
