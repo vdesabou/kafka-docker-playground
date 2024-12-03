@@ -10195,7 +10195,7 @@ function wait_for_log () {
 }
 
 
-CLI_MIN_VERSION=${CLI_MIN_VERSION:-2.5.0}
+CLI_MIN_VERSION=${CLI_MIN_VERSION:-4.0.0}
 
 # --------------------------------------------------------------
 # Library
@@ -11015,7 +11015,7 @@ function ccloud::set_kafka_cluster_use() {
 # https://docs.confluent.io/platform/current/tutorials/examples/ccloud/docs/ccloud-stack.html
 #
 function ccloud::create_ccloud_stack() {
-  #ccloud::validate_version_cli $CLI_MIN_VERSION || exit 1
+  ccloud::validate_version_cli $CLI_MIN_VERSION || exit 1
   QUIET="${QUIET:-false}"
   REPLICATION_FACTOR=${REPLICATION_FACTOR:-3}
   enable_ksqldb=${1:-false}

@@ -622,7 +622,7 @@ function get_ansible_version() {
 }
 
 function check_confluent_version() {
-  REQUIRED_CONFLUENT_VER=${1:-"3.0.0"}
+  REQUIRED_CONFLUENT_VER=${1:-"4.0.0"}
   CONFLUENT_VER=$(get_confluent_version)
 
   if version_gt $REQUIRED_CONFLUENT_VER $CONFLUENT_VER; then
@@ -1711,7 +1711,7 @@ function maybe_delete_ccloud_environment () {
     #
     log "🧹❌ Confluent Cloud cluster will be deleted..."
     verify_installed "confluent"
-    check_confluent_version 2.0.0 || exit 1
+    check_confluent_version 4.0.0 || exit 1
     verify_confluent_login  "confluent kafka cluster list"
 
     export QUIET=true
@@ -2125,7 +2125,7 @@ function wait_for_log () {
 
 
 
-CLI_MIN_VERSION=${CLI_MIN_VERSION:-2.5.0}
+CLI_MIN_VERSION=${CLI_MIN_VERSION:-4.0.0}
 
 # --------------------------------------------------------------
 # Library
@@ -2953,7 +2953,7 @@ function ccloud::set_kafka_cluster_use() {
 # https://docs.confluent.io/platform/current/tutorials/examples/ccloud/docs/ccloud-stack.html
 #
 function ccloud::create_ccloud_stack() {
-  #ccloud::validate_version_cli $CLI_MIN_VERSION || exit 1
+  ccloud::validate_version_cli $CLI_MIN_VERSION || exit 1
   QUIET="${QUIET:-false}"
   REPLICATION_FACTOR=${REPLICATION_FACTOR:-3}
   enable_ksqldb=${1:-false}
