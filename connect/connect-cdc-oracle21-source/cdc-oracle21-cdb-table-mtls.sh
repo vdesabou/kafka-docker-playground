@@ -229,6 +229,7 @@ playground connector create-or-update --connector cdc-oracle-source-cdb --packag
                "connection.pool.max.size": 20,
                "redo.log.row.fetch.size":1,
                "oracle.dictionary.mode": "auto",
+               "topic.creation.groups": "redo",
                "topic.creation.redo.include": "redo-log-topic",
                "topic.creation.redo.replication.factor": 1,
                "topic.creation.redo.partitions": 1,
