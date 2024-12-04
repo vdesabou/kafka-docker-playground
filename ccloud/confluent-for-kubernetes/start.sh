@@ -38,8 +38,8 @@ log "Install Confluent for Kubernetes"
 helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes
 
 log "Generate a CA pair"
-docker run -u0 --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "openssl genrsa -out /tmp/ca-key.pem 2048 && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
-docker run -u0 --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "openssl req -new -key /tmp/ca-key.pem -x509 -days 1000 -out /tmp/ca.pem -subj '/C=US/ST=CA/L=MountainView/O=Confluent/OU=Operator/CN=TestCA' && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
+docker run -u0 --rm -v $PWD:/tmp vulhub/openssl:1.0.1c bash -c "openssl genrsa -out /tmp/ca-key.pem 2048 && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
+docker run -u0 --rm -v $PWD:/tmp vulhub/openssl:1.0.1c bash -c "openssl req -new -key /tmp/ca-key.pem -x509 -days 1000 -out /tmp/ca.pem -subj '/C=US/ST=CA/L=MountainView/O=Confluent/OU=Operator/CN=TestCA' && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
 
 log "Create a Kuebernetes secret for inter-component TLS"
 kubectl create secret tls ca-pair-sslcerts \
