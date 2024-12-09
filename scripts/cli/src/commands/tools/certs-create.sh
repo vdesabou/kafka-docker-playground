@@ -22,6 +22,7 @@ if version_gt $CONNECT_TAG "7.7.99"
 then
     new_open_ssl=1
 fi
+mkdir -p "${output_folder}"
 cd "${output_folder}"
 cp $root_folder/scripts/cli/src/ssl/certs-create.sh .
 log "🔐 Generate keys and certificates in folder ${output_folder}"

@@ -1610,7 +1610,6 @@ commands:
     - *verbose
     - long: --output-folder
       required: true
-      validate: dir_exists
       arg: folder
       help: |-
         📁 Folder where certificates are created
