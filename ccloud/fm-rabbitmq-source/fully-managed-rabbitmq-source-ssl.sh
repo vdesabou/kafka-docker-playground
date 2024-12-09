@@ -4,10 +4,10 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-
 cd ../../ccloud/fm-rabbitmq-source/security
-log "🔐 Generate keys and certificates used for SSL"
-docker run -u0 --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "/tmp/certs-create.sh > /dev/null 2>&1 && chown -R $(id -u $USER):$(id -g $USER) /tmp/ && chmod a+r /tmp/*"
+playground tools certs-create --output-folder "$PWD" --container connect --container rabbitmq
+base64_truststore=$(cat $PWD/kafka.connect.truststore.jks | base64 | tr -d '\n')
+base64_keystore=$(cat $PWD/kafka.connect.keystore.jks | base64 | tr -d '\n')
 cd -
 
 NGROK_AUTH_TOKEN=${NGROK_AUTH_TOKEN:-$1}
@@ -60,9 +60,6 @@ sleep 6
 
 log "Send message to RabbitMQ in myqueue"
 docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"
-
-base64_truststore=$(cat $PWD/security/kafka.connect.truststore.jks | base64 | tr -d '\n')
-base64_keystore=$(cat $PWD/security/kafka.connect.keystore.jks | base64 | tr -d '\n')
 
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF

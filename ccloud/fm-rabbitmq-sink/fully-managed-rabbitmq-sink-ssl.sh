@@ -6,8 +6,9 @@ source ${DIR}/../../scripts/utils.sh
 NGROK_AUTH_TOKEN=${NGROK_AUTH_TOKEN:-$1}
 
 cd ../../ccloud/fm-rabbitmq-sink/security
-log "🔐 Generate keys and certificates used for SSL"
-docker run -u0 --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "/tmp/certs-create.sh > /dev/null 2>&1 && chown -R $(id -u $USER):$(id -g $USER) /tmp/ && chmod a+r /tmp/*"
+playground tools certs-create --output-folder "$PWD" --container connect --container rabbitmq
+base64_truststore=$(cat $PWD/kafka.connect.truststore.jks | base64 | tr -d '\n')
+base64_keystore=$(cat $PWD/kafka.connect.keystore.jks | base64 | tr -d '\n')
 cd -
 
 display_ngrok_warning
@@ -71,9 +72,6 @@ connector_name="RabbitMQSinkSSL_$USER"
 set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
-
-base64_truststore=$(cat $PWD/security/kafka.connect.truststore.jks | base64 | tr -d '\n')
-base64_keystore=$(cat $PWD/security/kafka.connect.keystore.jks | base64 | tr -d '\n')
 
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
