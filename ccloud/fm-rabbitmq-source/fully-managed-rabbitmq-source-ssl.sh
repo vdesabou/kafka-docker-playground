@@ -4,6 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+mkdir -p ../../ccloud/fm-rabbitmq-source/security
 cd ../../ccloud/fm-rabbitmq-source/security
 playground tools certs-create --output-folder "$PWD" --container connect --container rabbitmq
 base64_truststore=$(cat $PWD/kafka.connect.truststore.jks | base64 | tr -d '\n')

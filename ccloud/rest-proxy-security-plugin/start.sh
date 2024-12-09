@@ -32,6 +32,7 @@ sed -e "s|:CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY:|$CCLOUD_REST_PROXY_SECURIT
     -e "s|:CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET:|$CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET|g" \
     ../../ccloud/rest-proxy-security-plugin/kafka-rest.jaas-template.conf > ../../ccloud/rest-proxy-security-plugin/kafka-rest.jaas.conf
 
+mkdir -p ../../ccloud/rest-proxy-security-plugin/security
 cd ../../ccloud/rest-proxy-security-plugin/security
 playground tools certs-create --output-folder "$PWD" --container restproxy --container $CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY --verbose
 cd -

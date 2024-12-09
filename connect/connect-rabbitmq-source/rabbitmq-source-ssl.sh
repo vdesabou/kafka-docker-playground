@@ -4,6 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+mkdir -p ../../connect/connect-rabbitmq-source/security
 cd ../../connect/connect-rabbitmq-source/security
 playground tools certs-create --output-folder "$PWD" --container connect --container rabbitmq
 cd -

@@ -31,6 +31,7 @@ then
 fi
 cd -
 
+mkdir -p ../../connect/connect-ibm-mq-source/security
 cd ../../connect/connect-ibm-mq-source/security
 playground tools certs-create --output-folder "$PWD" --container connect --container ibmmq
 cd -
