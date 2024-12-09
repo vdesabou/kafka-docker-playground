@@ -11,13 +11,7 @@ check_docker_compose_version
 check_bash_version
 check_playground_version
 
-
-OLDDIR=$PWD
-cd ${OLDDIR}/../../environment/ssl_kerberos/security
-log "🔐 Generate keys and certificates used for SSL"
-docker run -u0 --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "/tmp/certs-create.sh > /dev/null 2>&1 && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
-cd ${OLDDIR}/../../environment/ssl_kerberos
-
+playground tools certs-create --output-folder "${PWD}/../../environment/ssl_kerberos/security"
 
 # Starting kerberos,
 # Avoiding starting up all services at the begining to generate the keytab first

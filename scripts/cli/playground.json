@@ -1050,6 +1050,49 @@
               "description": "🔖 Parquet file to read\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
             }
           ]
+        },
+        {
+          "name": "certs-create",
+          "description": "🔐 Generate keys and certificates used for SSL\n",
+          "usage": "playground tools certs-create [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--container"
+              ],
+              "argument": [
+                "broker",
+                "broker2",
+                "broker3",
+                "client",
+                "schema-registry",
+                "restproxy",
+                "connect",
+                "connect2",
+                "connect3",
+                "control-center",
+                "clientrestproxy",
+                "ksqldb-server",
+                "conduktor"
+              ],
+              "description": "🐳 container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: [\"broker\", \"broker2\", \"broker3\", \"client\", \"schema-registry\", \"restproxy\", \"connect\", \"connect2\", \"connect3\", \"control-center\", \"clientrestproxy\", \"ksqldb-server\", \"conduktor\"]\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
+                "--output-folder"
+              ],
+              "argument": "FOLDER",
+              "description": "📁 Folder where certificates are created\n\nRequired: ✓ Yes\n"
+            }
+          ]
         }
       ]
     },

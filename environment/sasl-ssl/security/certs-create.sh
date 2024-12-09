@@ -9,7 +9,7 @@
 rm -f /tmp/*.crt /tmp/*.csr /tmp/*_creds /tmp/*.jks /tmp/*.srl /tmp/*.key /tmp/*.pem /tmp/*.der /tmp/*.p12 /tmp/extfile
 
 # Generate CA key
-openssl req -new -x509 -keyout /tmp/snakeoil-ca-1.key -out /tmp/snakeoil-ca-1.crt -days 365 -subj '/CN=ca1.test.confluent.io/OU=TEST/O=CONFLUENT/L=PaloAlto/ST=Ca/C=US' -passin pass:confluent -passout pass:confluent
+openssl req -new -x509 -keyout /tmp/snakeoil-ca-1.key -out /tmp/snakeoil-ca-1.crt -days 365 -subj '/CN=ca1.test.confluent.io/OU=TEST/O=CONFLUENT/L=PaloAlto/ST=Ca/C=US' -passin pass:confluent -passout pass:confluent -provider base
 
 for i in broker broker2 broker3 client schema-registry restproxy connect connect2 connect3 control-center clientrestproxy ksqldb-server conduktor
 do
@@ -44,7 +44,7 @@ DNS.1 = $i
 DNS.2 = localhost
 EOF
         # Sign the host certificate with the certificate authority (CA)
-        openssl x509 -req -CA /tmp/snakeoil-ca-1.crt -CAkey /tmp/snakeoil-ca-1.key -in /tmp/$i.csr -out /tmp/$i-ca1-signed.crt -days 9999 -CAcreateserial -passin pass:confluent -extensions v3_req -extfile /tmp/extfile
+        openssl x509 -req -CA /tmp/snakeoil-ca-1.crt -CAkey /tmp/snakeoil-ca-1.key -in /tmp/$i.csr -out /tmp/$i-ca1-signed.crt -days 9999 -CAcreateserial -passin pass:confluent -extensions v3_req -extfile /tmp/extfile -provider base
 
         #openssl x509 -noout -text -in $i-ca1-signed.crt
 
@@ -69,9 +69,9 @@ EOF
     #   openssl rsa -noout -modulus -in client.key | openssl md5
     #   log "GET /" | openssl s_client -connect localhost:8081/subjects -cert client.certificate.pem -key client.key -tls1
     keytool -export -alias $i -file /tmp/$i.der -keystore /tmp/kafka.$i.keystore.jks -storepass confluent
-    openssl x509 -inform der -in /tmp/$i.der -out /tmp/$i.certificate.pem
+    openssl x509 -inform der -in /tmp/$i.der -out /tmp/$i.certificate.pem -provider base
     keytool -importkeystore -srckeystore /tmp/kafka.$i.keystore.jks -destkeystore /tmp/$i.keystore.p12 -deststoretype PKCS12 -deststorepass confluent -srcstorepass confluent -noprompt
-    openssl pkcs12 -in /tmp/$i.keystore.p12 -nodes -nocerts -out /tmp/$i.key -passin pass:confluent
+    openssl pkcs12 -in /tmp/$i.keystore.p12 -nodes -nocerts -out /tmp/$i.key -passin pass:confluent -provider base -nomacver
 
     
     cacerts_path="$(readlink -f /usr/bin/java | sed "s:bin/java::")lib/security/cacerts"
@@ -82,7 +82,7 @@ done
 # https://stackoverflow.com/a/8224863
 openssl pkcs12 -export -in /tmp/clientrestproxy-ca1-signed.crt -inkey /tmp/clientrestproxy.key \
                -out /tmp/clientrestproxy.p12 -name clientrestproxy \
-               -CAfile /tmp/snakeoil-ca-1.crt -caname CARoot -passout pass:confluent
+               -CAfile /tmp/snakeoil-ca-1.crt -caname CARoot -passout pass:confluent -provider base --nomac
 
 keytool -importkeystore \
         -deststorepass confluent -destkeypass confluent -destkeystore /tmp/kafka.restproxy.keystore.jks \

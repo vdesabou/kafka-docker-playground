@@ -1183,6 +1183,38 @@ subcommands:
             
             🎓 Tip: use <tab> completion to trigger fzf completion
             
+      - name: certs-create
+        description: | 
+          🔐 Generate keys and certificates used for SSL
+        usage: playground tools certs-create [OPTIONS]
+        options:
+        - names:
+          - --container
+          argument: ["broker", "broker2", "broker3", "client", "schema-registry", "restproxy", "connect", "connect2", "connect3", "control-center", "clientrestproxy", "ksqldb-server", "conduktor"]
+          description: | 
+            🐳 container name
+            
+            🎓 Tip: you can pass multiple containers by specifying --container multiple times
+            
+            Repeatable: ✓ Yes
+            
+            Default value: ["broker", "broker2", "broker3", "client", "schema-registry", "restproxy", "connect", "connect2", "connect3", "control-center", "clientrestproxy", "ksqldb-server", "conduktor"]
+            
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
+          - --output-folder
+          argument: FOLDER
+          description: | 
+            📁 Folder where certificates are created
+            
+            Required: ✓ Yes
+            
   - name: debug
     description: | 
         🐞 Debug commands

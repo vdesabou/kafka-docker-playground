@@ -4,10 +4,8 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-cd ${DIR}/security
-log "🔐 Generate keys and certificates used for SSL"
-docker run -u0 --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "/tmp/certs-create.sh > /dev/null 2>&1 && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
-cd ${DIR}
+
+playground tools certs-create --output-folder "${PWD}/../../other/ldap-authorizer-with-ldap-failover/security"
 
 playground start-environment --environment ldap-authorizer-sasl-plain --docker-compose-override-file "${PWD}/docker-compose.ldap-authorizer-sasl-plain.ldaps.yml"
 

@@ -1580,6 +1580,41 @@ commands:
 
         🎓 Tip: use <tab> completion to trigger fzf completion
 
+  - name: certs-create
+    help: |-
+      🔐 Generate keys and certificates used for SSL
+    flags:
+    - long: --container
+      arg: container
+      help: |-
+        🐳 container name
+
+        🎓 Tip: you can pass multiple containers by specifying --container multiple times
+      required: false
+      repeatable: true
+      unique: true
+      default:
+        - broker 
+        - broker2 
+        - broker3
+        - client 
+        - schema-registry 
+        - restproxy
+        - connect
+        - connect2
+        - connect3
+        - control-center
+        - clientrestproxy
+        - ksqldb-server
+        - conduktor
+    - *verbose
+    - long: --output-folder
+      required: true
+      validate: dir_exists
+      arg: folder
+      help: |-
+        📁 Folder where certificates are created
+
 - name: debug
   expose: always
   group: Debug

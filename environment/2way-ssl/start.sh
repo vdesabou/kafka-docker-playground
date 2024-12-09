@@ -23,11 +23,7 @@ then
 fi
 set_profiles
 
-OLDDIR=$PWD
-cd ${OLDDIR}/../../environment/2way-ssl/security
-log "🔐 Generate keys and certificates used for SSL"
-docker run -u0 --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "/tmp/certs-create.sh > /dev/null 2>&1 && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
-cd ${OLDDIR}
+playground tools certs-create --output-folder "${PWD}/../../environment/2way-ssl/security"
 
 docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/2way-ssl/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} build
 docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/2way-ssl/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans

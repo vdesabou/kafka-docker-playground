@@ -11,11 +11,7 @@ check_docker_compose_version
 check_bash_version
 check_playground_version
 
-OLDDIR=$PWD
-cd ${OLDDIR}/../../environment/sasl-ssl/security
-log "🔐 Generate keys and certificates used for SSL"
-docker run -u0 --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "/tmp/certs-create.sh > /dev/null 2>&1 && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
-cd ${OLDDIR}/../../environment/sasl-ssl
+playground tools certs-create --output-folder "${PWD}/../../environment/sasl-ssl/security"
 
 nb_connect_services=0
 ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
