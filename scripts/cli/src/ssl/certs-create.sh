@@ -3,6 +3,7 @@
 # Split the argument into an array
 IFS=' ' read -r -a containers <<< "$1"
 new_open_ssl=$2
+kerberos_mode=$3
 
 if [[ $new_open_ssl -eq 1 ]]
 then
@@ -14,6 +15,14 @@ else
     maybe_nomacver=""
     maybe_nomac=""
 fi
+
+if [[ $kerberos_mode -eq 1 ]]
+then
+    maybe_kerberos=".kerberos-demo.local"
+else
+    maybe_kerberos=""
+fi
+
 
 # Cleanup files
 rm -f /tmp/*.crt /tmp/*.csr /tmp/*_creds /tmp/*.jks /tmp/*.srl /tmp/*.key /tmp/*.pem /tmp/*.der /tmp/*.p12 /tmp/extfile
@@ -27,7 +36,7 @@ do
     keytool -genkey -noprompt \
         -alias ${container} \
         -dname "CN=${container},OU=TEST,O=CONFLUENT,L=PaloAlto,S=Ca,C=US" \
-        -ext "SAN=dns:${container},dns:localhost" \
+        -ext "SAN=dns:${container}${maybe_kerberos},dns:localhost" \
         -keystore /tmp/kafka.${container}.keystore.jks \
         -keyalg RSA \
         -storepass confluent \
@@ -35,7 +44,7 @@ do
         -storetype pkcs12
 
     # Create the certificate signing request (CSR)
-    keytool -keystore /tmp/kafka.${container}.keystore.jks -alias ${container} -certreq -file /tmp/${container}.csr -storepass confluent -keypass confluent -ext "SAN=dns:${container},dns:localhost"
+    keytool -keystore /tmp/kafka.${container}.keystore.jks -alias ${container} -certreq -file /tmp/${container}.csr -storepass confluent -keypass confluent -ext "SAN=dns:${container}${maybe_kerberos},dns:localhost"
     #openssl req -in ${container}.csr -text -noout
 
 cat << EOF > /tmp/extfile
@@ -48,7 +57,7 @@ CN = ${container}
 [v3_req]
 subjectAltName = @alt_names
 [alt_names]
-DNS.1 = ${container}
+DNS.1 = ${container}${maybe_kerberos}
 DNS.2 = localhost
 EOF
     # Sign the host certificate with the certificate authority (CA)
@@ -58,7 +67,7 @@ EOF
     keytool -noprompt -keystore /tmp/kafka.${container}.keystore.jks -alias CARoot -import -file /tmp/snakeoil-ca-1.crt -storepass confluent -keypass confluent
 
     # Sign and import the host certificate into the keystore
-    keytool -noprompt -keystore /tmp/kafka.${container}.keystore.jks -alias ${container} -import -file /tmp/${container}-ca1-signed.crt -storepass confluent -keypass confluent -ext "SAN=dns:${container},dns:localhost"
+    keytool -noprompt -keystore /tmp/kafka.${container}.keystore.jks -alias ${container} -import -file /tmp/${container}-ca1-signed.crt -storepass confluent -keypass confluent -ext "SAN=dns:${container}${maybe_kerberos},dns:localhost"
 
     # Create truststore and import the CA cert
     keytool -noprompt -keystore /tmp/kafka.${container}.truststore.jks -alias CARoot -import -file /tmp/snakeoil-ca-1.crt -storepass confluent -keypass confluent

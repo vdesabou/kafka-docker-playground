@@ -1613,6 +1613,11 @@ commands:
       arg: folder
       help: |-
         📁 Folder where certificates are created
+    - long: --kerberos
+      required: false
+      private: true
+      help: |-
+        add "kerberos-demo.local" to dns names (required for kerberos)
 
 - name: debug
   expose: always

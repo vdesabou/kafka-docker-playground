@@ -1091,6 +1091,13 @@
               ],
               "argument": "FOLDER",
               "description": "📁 Folder where certificates are created\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--kerberos"
+              ],
+              "argument": "",
+              "description": "add \"kerberos-demo.local\" to dns names (required for kerberos)\n"
             }
           ]
         }
