@@ -57,10 +57,33 @@ cd -
 
 # Generating public and private keys for token signing
 log "Generating public and private keys for token signing"
+
+
+maybe_provider=""
+if version_gt $TAG "7.7.99"
+then
+    maybe_provider="-provider base"
+fi
+
 mkdir -p ../../environment/rbac-sasl-plain/conf
 cd ../../environment/rbac-sasl-plain/
-docker run -v $PWD:/tmp -u0 ${CP_KAFKA_IMAGE}:${TAG} bash -c "mkdir -p /tmp/conf; openssl genrsa -out /tmp/conf/keypair.pem 2048; openssl rsa -in /tmp/conf/keypair.pem -outform PEM -pubout -out /tmp/conf/public.pem && chown -R $(id -u $USER):$(id -g $USER) /tmp/conf && chmod 644 /tmp/conf/keypair.pem"
+OLDDIR=$PWD
+mkdir -p conf
+docker run -v $PWD:/tmp -u0 alpine/openssl genrsa -out /tmp/conf/keypair.pem 2048
+docker run -v $PWD:/tmp -u0 alpine/openssl rsa -in /tmp/conf/keypair.pem -outform PEM -pubout -out /tmp/conf/public.pem
+cd conf
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    chmod -R a+rw .
+else
+    # on CI, docker is run as runneradmin user, need to use sudo
+    ls -lrt
+    sudo chmod -R a+rw .
+    ls -lrt
+fi
 cd -
+cd ${OLDDIR}
 
 # Bring up base cluster and Confluent CLI
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
