@@ -4,9 +4,9 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-mkdir -p ../../connect/connect-active-mq-sink/security
 cd ../../connect/connect-active-mq-sink/security
-playground tools certs-create --output-folder "$PWD" --container connect --container activemq
+log "🔐 Generate keys and certificates used for SSL using rmohr/activemq:5.15.9 image"
+docker run -u0 --rm -v $PWD:/tmp rmohr/activemq:5.15.9 bash -c "/tmp/certs-create.sh > /dev/null 2>&1 && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
 cd -
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
