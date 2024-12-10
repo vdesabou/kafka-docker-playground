@@ -1,6 +1,5 @@
 output_folder="${args[--output-folder]}"
 verbose="${args[--verbose]}"
-kerberos="${args[--kerberos]}"
 # Convert the space delimited string to an array
 eval "containers=(${args[--container]})"
 
@@ -16,12 +15,6 @@ then
     maybe_redirect_output=""
 fi
 
-kerberos_mode=0
-if [[ -n "$kerberos" ]]
-then
-    kerberos_mode=1
-fi
-
 container_list="${containers[*]}"
 
 new_open_ssl=0
@@ -33,4 +26,4 @@ mkdir -p "${output_folder}"
 cd "${output_folder}"
 cp $root_folder/scripts/cli/src/ssl/certs-create.sh .
 log "🔐 Generate keys and certificates in folder ${output_folder}"
-docker run -u0 --rm -v $root_folder/scripts/cli/src/openssl.cnf:/usr/local/ssl/openssl.cnf -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "/tmp/certs-create.sh $maybe_redirect_output \"$container_list\" $new_open_ssl $kerberos_mode && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
+docker run -u0 --rm -v $root_folder/scripts/cli/src/openssl.cnf:/usr/local/ssl/openssl.cnf -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "/tmp/certs-create.sh $maybe_redirect_output \"$container_list\" $new_open_ssl && chown -R $(id -u $USER):$(id -g $USER) /tmp/"

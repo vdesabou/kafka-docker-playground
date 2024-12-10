@@ -1215,12 +1215,6 @@ subcommands:
             
             Required: ✓ Yes
             
-        - names:
-          - --kerberos
-          argument: ""
-          description: | 
-            add "kerberos-demo.local" to dns names (required for kerberos)
-            
   - name: debug
     description: | 
         🐞 Debug commands
