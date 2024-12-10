@@ -223,7 +223,9 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
       - name: Build and Test
-        run: bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
+        run: |
+          echo "$GITHUB_WORKSPACE/scripts/cli" >> $GITHUB_PATH
+          bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
@@ -411,7 +413,9 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
       - name: Build and Test
-        run: bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
+        run: |
+          echo "$GITHUB_WORKSPACE/scripts/cli" >> $GITHUB_PATH
+          bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
