@@ -320,6 +320,7 @@ jobs:
           MONGODB_ATLAS_HOST: ${{ secrets.MONGODB_ATLAS_HOST}}
           MONGODB_ATLAS_USER: ${{ secrets.MONGODB_ATLAS_USER}}
           MONGODB_ATLAS_PASSWORD: ${{ secrets.MONGODB_ATLAS_PASSWORD}}
+          CP_CONNECT_IMAGE: "confluentinc/cp-kafka-connect-base"
 
   execute_one_test:
     if: ${{ github.event.inputs.test_name != '' }}
@@ -510,6 +511,7 @@ jobs:
           MONGODB_ATLAS_HOST: ${{ secrets.MONGODB_ATLAS_HOST}}
           MONGODB_ATLAS_USER: ${{ secrets.MONGODB_ATLAS_USER}}
           MONGODB_ATLAS_PASSWORD: ${{ secrets.MONGODB_ATLAS_PASSWORD}}
+          CP_CONNECT_IMAGE: "confluentinc/cp-kafka-connect-base"
 
   post-build:
     name: Cleanup resources and Update README
