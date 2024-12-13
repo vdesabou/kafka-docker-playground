@@ -100,7 +100,10 @@ else
           logwarn "Workaround for ST-6539, using custom image vdesabou/cp-server-connect-base !"
           export CP_CONNECT_IMAGE=vdesabou/cp-server-connect-base
         else
-          export CP_CONNECT_IMAGE=confluentinc/cp-server-connect-base
+          if [ -z "$CP_CONNECT_IMAGE" ]
+          then
+            export CP_CONNECT_IMAGE=confluentinc/cp-server-connect-base
+          fi
         fi
     else
         if [ -z "$CP_CONNECT_IMAGE" ]
