@@ -50,7 +50,11 @@ then
     export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-cli:latest
     export LEGACY_CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_SSL=""
     export CONNECT_USER="appuser"
-    export CP_CONNECT_IMAGE=confluentinc/cp-server-connect-base
+
+    if [ -z "$CP_CONNECT_IMAGE" ]
+    then
+      export CP_CONNECT_IMAGE=confluentinc/cp-server-connect-base
+    fi
     set_kafka_client_tag
 else
     if [ -z "$CP_KAFKA_IMAGE" ]
@@ -99,7 +103,10 @@ else
           export CP_CONNECT_IMAGE=confluentinc/cp-server-connect-base
         fi
     else
-        export CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect-base
+        if [ -z "$CP_CONNECT_IMAGE" ]
+        then
+          export CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect-base
+        fi
     fi
     second_version=5.3.99
     if version_gt $first_version $second_version; then
