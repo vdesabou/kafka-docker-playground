@@ -229,6 +229,18 @@ subcommands:
         Control Center is reachable at http://127.0.0.1:9021
         
     - names:
+      - --enable-flink
+      argument: ""
+      description: | 
+        🐿️ Enable Flink
+        
+        By default, flink is not started for every test
+        
+        Once enabled, the CLI will ask if you need to download any connectors. Based on the response, you can download one or more connectors from Flink maven repository.
+        
+        Flink UI is reacheable using http://127.0.0.1:8081 within the flink child directory. If you enable Flink by starting connector deployment, http://127.0.0.1:18081 will be used.
+        
+    - names:
       - --enable-conduktor
       argument: ""
       description: | 

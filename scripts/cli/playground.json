@@ -162,6 +162,13 @@
         },
         {
           "names": [
+            "--enable-flink"
+          ],
+          "argument": "",
+          "description": "🐿️ Enable Flink\n\nBy default, flink is not started for every test\n\nOnce enabled, the CLI will ask if you need to download any connectors. Based on the response, you can download one or more connectors from Flink maven repository.\n\nFlink UI is reacheable using http://127.0.0.1:8081 within the flink child directory. If you enable Flink by starting connector deployment, http://127.0.0.1:18081 will be used.\n"
+        },
+        {
+          "names": [
             "--enable-conduktor"
           ],
           "argument": "",
