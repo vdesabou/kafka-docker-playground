@@ -17,6 +17,7 @@ fi
 
 container_list="${containers[*]}"
 
+get_connect_image
 new_open_ssl=0
 if version_gt $CONNECT_TAG "7.7.99"
 then
