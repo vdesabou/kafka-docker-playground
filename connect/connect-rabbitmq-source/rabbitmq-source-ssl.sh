@@ -12,7 +12,10 @@ cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext-ssl.yml"
 
-sleep 5
+playground container exec --command  "chown rabbitmq:rabbitmq /tmp/*" --container rabbitmq
+playground container restart --container rabbitmq
+
+sleep 10
 
 log "Send message to RabbitMQ in myqueue"
 docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"

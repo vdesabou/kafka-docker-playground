@@ -12,6 +12,10 @@ cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext-ssl.yml"
 
+playground container exec --command  "chown rabbitmq:rabbitmq /tmp/*" --container rabbitmq
+playground container restart --container rabbitmq
+
+sleep 10
 
 log "Create RabbitMQ exchange, queue and binding"
 docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare exchange name=exchange1 type=direct

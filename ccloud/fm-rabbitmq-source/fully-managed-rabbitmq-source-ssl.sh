@@ -23,7 +23,10 @@ docker compose -f docker-compose.ssl.yml build
 docker compose -f docker-compose.ssl.yml down -v --remove-orphans
 docker compose -f docker-compose.ssl.yml up -d --quiet-pull
 
-sleep 5
+playground container exec --command  "chown rabbitmq:rabbitmq /tmp/*" --container rabbitmq
+playground container restart --container rabbitmq
+
+sleep 10
 
 log "Waiting for ngrok to start"
 while true
