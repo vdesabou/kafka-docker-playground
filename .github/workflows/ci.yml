@@ -596,6 +596,12 @@ jobs:
           SALESFORCE_CONSUMER_KEY_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_KEY_ACCOUNT2}}
           SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2}}
 
+      - name: Update DOCS
+        run: |
+          sudo gem install bashly
+          cd ./scripts/cli
+          ./playground update-docs
+
       - name: Update README
         run: |
           cd ./scripts/cli
@@ -606,26 +612,13 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           AWS_REGION: ${{ secrets.AWS_REGION}}
 
-      - name: Pushes content.md
+      - name: Pushes docs
         uses: dmnemec/copy_file_to_another_repo_action@main
         env:
           API_TOKEN_GITHUB: ${{ secrets.CI_GITHUB_TOKEN }}
         with:
-          source_file: './docs/content.md'
+          source_file: './docs'
           destination_repo: 'vdesabou/kafka-docker-playground-docs'
-          destination_folder: 'docs'
-          user_email: 'vincent.desaboulin@gmail.com'
-          user_name: 'vdesabou'
-          commit_message: 'updating with latest versions'
-
-      - name: Pushes introduction.md
-        uses: dmnemec/copy_file_to_another_repo_action@main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.CI_GITHUB_TOKEN }}
-        with:
-          source_file: './docs/introduction.md'
-          destination_repo: 'vdesabou/kafka-docker-playground-docs'
-          destination_folder: 'docs'
           user_email: 'vincent.desaboulin@gmail.com'
           user_name: 'vdesabou'
           commit_message: 'updating with latest versions'
