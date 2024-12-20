@@ -50,7 +50,7 @@ jobs:
         env:
           API_TOKEN_GITHUB: ${{ secrets.CI_GITHUB_TOKEN }}
         with:
-          source_file: './docs'
+          source_file: './docs/*.md'
           destination_repo: 'vdesabou/kafka-docker-playground-docs'
           destination_folder: 'docs'
           user_email: 'vincent.desaboulin@gmail.com'
