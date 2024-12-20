@@ -240,6 +240,9 @@ commands:
     - long: --generate-for-kb
       required: false
 
+- name: update-docs
+  private: true
+
 - name: bashly-reload
   private: true
   dependencies:

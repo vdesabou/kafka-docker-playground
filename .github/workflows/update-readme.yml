@@ -17,34 +17,40 @@ jobs:
           ssh-key: ${{ secrets.GH_SSH_KEY_FILE }}
           ssh-strict: 'false'
 
-      - name: Update README
+      - name: Update DOCS
         run: |
+          gem install bashly
           cd ./scripts/cli
-          ./playground update-readme --tags "7.6.1"
-        env:
-          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          AWS_REGION: ${{ secrets.AWS_REGION}}
+          ./playground update-docs
 
-      - name: Pushes content.md
+      # - name: Update README
+      #   run: |
+      #     cd ./scripts/cli
+      #     ./playground update-readme --tags "7.6.1"
+      #   env:
+      #     GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+      #     AWS_REGION: ${{ secrets.AWS_REGION}}
+
+      # - name: Pushes content.md
+      #   uses: dmnemec/copy_file_to_another_repo_action@main
+      #   env:
+      #     API_TOKEN_GITHUB: ${{ secrets.CI_GITHUB_TOKEN }}
+      #   with:
+      #     source_file: './docs/content.md'
+      #     destination_repo: 'vdesabou/kafka-docker-playground-docs'
+      #     destination_folder: 'docs' 
+      #     user_email: 'vincent.desaboulin@gmail.com'
+      #     user_name: 'vdesabou'
+      #     commit_message: 'updating with latest versions'
+
+      - name: Pushes docs
         uses: dmnemec/copy_file_to_another_repo_action@main
         env:
           API_TOKEN_GITHUB: ${{ secrets.CI_GITHUB_TOKEN }}
         with:
-          source_file: './docs/content.md'
-          destination_repo: 'vdesabou/kafka-docker-playground-docs'
-          destination_folder: 'docs' 
-          user_email: 'vincent.desaboulin@gmail.com'
-          user_name: 'vdesabou'
-          commit_message: 'updating with latest versions'
-
-      - name: Pushes introduction.md
-        uses: dmnemec/copy_file_to_another_repo_action@main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.CI_GITHUB_TOKEN }}
-        with:
-          source_file: './docs/introduction.md'
+          source_file: './docs'
           destination_repo: 'vdesabou/kafka-docker-playground-docs'
           destination_folder: 'docs'
           user_email: 'vincent.desaboulin@gmail.com'

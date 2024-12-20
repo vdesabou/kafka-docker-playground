@@ -942,6 +942,27 @@ playground_update_readme_usage() {
 }
 
 # :command.usage
+playground_update_docs_usage() {
+  printf "playground update-docs\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground update-docs\n"
+  printf "  playground update-docs --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_bashly_reload_usage() {
   printf "playground bashly-reload\n\n"
 
@@ -13357,6 +13378,17 @@ playground_update_readme_command() {
 }
 
 # :command.function
+playground_update_docs_command() {
+  # src/commands/update-docs.sh
+  cd ${root_folder}/scripts/cli
+
+  docker run --rm -it --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/bashly render templates/markdown docs
+
+  cat ${root_folder}scripts/cli/docs/cli-template.md > ${root_folder}/docs/cli.md
+  cat ${root_folder}/scripts/cli/docs/index.md >> ${root_folder}/docs/cli.md
+}
+
+# :command.function
 playground_bashly_reload_command() {
   # src/commands/bashly-reload.sh
   cd $root_folder/scripts/cli
@@ -25669,6 +25701,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    update-docs)
+      action="update-docs"
+      shift
+      playground_update_docs_parse_requirements "$@"
+      shift $#
+      ;;
+
     bashly-reload)
       action="bashly-reload"
       shift
@@ -27311,6 +27350,51 @@ playground_update_readme_parse_requirements() {
     printf "validation error in %s:\n%s\n" "--tags TAGS" "$(validate_not_empty "${args['--tags']:-}")" >&2
     exit 1
   fi
+
+}
+
+# :command.parse_requirements
+playground_update_docs_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_update_docs_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="update-docs"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -39598,6 +39682,7 @@ run() {
     "get-playground-repro-export-with-fzf") playground_get_playground_repro_export_with_fzf_command ;;
     "get-predefined-schemas") playground_get_predefined_schemas_command ;;
     "update-readme") playground_update_readme_command ;;
+    "update-docs") playground_update_docs_command ;;
     "bashly-reload") playground_bashly_reload_command ;;
     "state") playground_state_command ;;
     "state show") playground_state_show_command ;;
