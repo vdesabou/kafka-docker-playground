@@ -67,7 +67,7 @@ else
      SINCE=$(date -d '3 hour ago'  +%Y-%m-%dT%H:%M:%SZ)
 fi
 
-playground debug log-level set --package "org.apache.http" --level TRACE
+# playground debug log-level set --package "org.apache.http" --level TRACE
 
 log "Creating Marketo Source connector"
 playground connector create-or-update --connector marketo-source  << EOF
