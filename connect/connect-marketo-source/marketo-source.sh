@@ -4,7 +4,12 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-
+cd ../../connect/connect-marketo-source/
+if [ ! -f jcl-over-slf4j-2.0.7.jar ]
+then
+     wget -q https://repo1.maven.org/maven2/org/slf4j/jcl-over-slf4j/2.0.7/jcl-over-slf4j-2.0.7.jar
+fi
+cd -
 
 MARKETO_ENDPOINT_URL=${MARKETO_ENDPOINT_URL:-$1}
 MARKETO_CLIENT_ID=${MARKETO_CLIENT_ID:-$2}
@@ -61,6 +66,8 @@ then
 else
      SINCE=$(date -d '3 hour ago'  +%Y-%m-%dT%H:%M:%SZ)
 fi
+
+playground debug log-level set --package "org.apache.http" --level TRACE
 
 log "Creating Marketo Source connector"
 playground connector create-or-update --connector marketo-source  << EOF
