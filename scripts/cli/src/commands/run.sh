@@ -1517,7 +1517,7 @@ fi
 
 increment_cli_metric nb_runs
 log "🚀 Number of examples ran so far: $(get_cli_metric nb_runs)"
-
+playground get-ci-result
 log "####################################################"
 log "🚀 Executing $filename in dir $test_file_directory"
 log "####################################################"
