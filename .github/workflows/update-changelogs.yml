@@ -1,5 +1,5 @@
 
-name: Create Release
+name: Update Change Logs
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
@@ -51,7 +51,7 @@ jobs:
           tail -n +2 changelog_orig.md > changelog_tmp.md
 
           echo "# 📜 Change Log" > ./docs/changelog.md
-          echo "${{ steps.read_release_file.outputs.content }}" >> ./docs/changelog.md
+          echo "${{ steps.read_release_file.outputs.content }}" | sed 's/#/##/g' >> ./docs/changelog.md
           cat changelog_tmp.md >> ./docs/changelog.md
 
       - name: Pushes docs
