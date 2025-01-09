@@ -44,14 +44,14 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 log "Creating an access token"
 ACCESS_TOKEN=$(docker exec connect \
-   curl -X GET \
+   curl -s -X GET \
     "${MARKETO_ENDPOINT_URL}/identity/oauth/token?grant_type=client_credentials&client_id=$MARKETO_CLIENT_ID&client_secret=$MARKETO_CLIENT_SECRET" | jq -r .access_token)
 
 log "Create one lead to Marketo"
 LEAD_FIRSTNAME=John_$RANDOM
 LEAD_LASTNAME=Doe_$RANDOM
 docker exec connect \
-   curl -X POST \
+   curl -s -X POST \
     "${MARKETO_ENDPOINT_URL}/rest/v1/leads.json?access_token=$ACCESS_TOKEN" \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
@@ -68,6 +68,8 @@ else
 fi
 
 # playground debug log-level set --package "org.apache.http" --level TRACE
+
+playground topic create --topic marketo_leads
 
 log "Creating Marketo Source connector"
 playground connector create-or-update --connector marketo-source  << EOF
