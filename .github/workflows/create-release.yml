@@ -32,7 +32,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Create Release Notes
-        uses: docker://decathlon/release-notes-generator-action:3.1.6
+        uses: Decathlon/release-notes-generator-action@v3.1.6
         id: Changelog
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
