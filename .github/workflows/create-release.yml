@@ -1,0 +1,66 @@
+
+name: Create Release
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  milestone:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      milestoneId:
+        description: 'Milestone ID'
+        required: true
+        default: '1'
+
+jobs:
+  build:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: vdesabou/kafka-docker-playground
+          fetch-depth: 0
+      # issues need to be closed to generate release notes
+      - name: Close issues
+        id: close_issues
+        uses: lee-dohm/close-matching-issues@v2
+        with:
+          query: "milestone:${{ github.event.milestone.title }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Create Release Notes
+        uses: docker://decathlon/release-notes-generator-action:3.1.6
+        id: Changelog
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OUTPUT_FOLDER: temp_release_notes
+
+      - name: Read temp_release_notes/release_file.md
+        id: read_release_file
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./temp_release_notes/release_file.md
+
+      - name: Update changelog.md
+        run: |
+          curl -s -o changelog_orig.md https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-docs/refs/heads/main/docs/changelog.md
+
+          tail -n +2 changelog_orig.md > changelog_tmp.md
+
+          echo "# 📜 Change Log" > ./docs/changelog.md
+          echo "${{ steps.read_release_file.outputs.content }}" >> ./docs/changelog.md
+          cat changelog_orig.md >> ./docs/changelog.md
+
+      - name: Pushes docs
+        uses: dmnemec/copy_file_to_another_repo_action@main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.CI_GITHUB_TOKEN }}
+        with:
+          source_file: './docs'
+          destination_repo: 'vdesabou/kafka-docker-playground-docs'
+          user_email: 'vincent.desaboulin@gmail.com'
+          user_name: 'vdesabou'
+          commit_message: 'updating with milestone ${{ github.event.milestone.title }}'
