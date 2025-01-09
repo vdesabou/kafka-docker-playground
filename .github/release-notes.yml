@@ -1,6 +1,6 @@
 changelog:
   sections:
-  - title: "Enhancements"
+  - title: "🌟 Enhancements"
     labels: ["enhancement"]
-  - title: "Bugs"
+  - title: "🐛 Bugs"
     labels: ["fix"]
