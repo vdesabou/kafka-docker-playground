@@ -102,6 +102,7 @@ confluentinc/kafka-connect-solace-sink
 confluentinc/kafka-connect-solace-source
 confluentinc/kafka-connect-splunk-s2s
 confluentinc/kafka-connect-splunk-source
+confluentinc/kafka-connect-spooldir
 confluentinc/kafka-connect-sqs
 confluentinc/kafka-connect-syslog
 confluentinc/kafka-connect-teradata
@@ -199,6 +200,7 @@ splunk/kafka-connect-splunk
 spoudinc/spoud-agoora
 sqdata/sqdata-connector
 startree/startree-native-integration
+streaming-dev-lab/secured-flow
 streamsendio/file-chunk-sink
 streamsendio/file-chunk-source
 streamsets/streamsets-sdc
