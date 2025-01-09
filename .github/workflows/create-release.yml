@@ -52,7 +52,7 @@ jobs:
 
           echo "# 📜 Change Log" > ./docs/changelog.md
           echo "${{ steps.read_release_file.outputs.content }}" >> ./docs/changelog.md
-          cat changelog_orig.md >> ./docs/changelog.md
+          cat changelog_tmp.md >> ./docs/changelog.md
 
       - name: Pushes docs
         uses: dmnemec/copy_file_to_another_repo_action@main
