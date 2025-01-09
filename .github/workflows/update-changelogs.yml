@@ -15,7 +15,7 @@ on:
 
 jobs:
   build:
-    name: Create Release
+    name: Update Change Logs
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -53,9 +53,8 @@ jobs:
           echo "# 📜 Change Log" > ./docs/changelog.md
           echo "" >> ./docs/changelog.md
           current_month=$(date +"%B %Y")
-          echo "# ${current_month}" >> ./docs/changelog.md
-          echo "# ${{ github.event.milestone.title }}" | sed 's/#/##/g' >> ./docs/changelog.md
-          echo "${{ steps.read_release_file.outputs.content }}" | sed 's/#/##/g' >> ./docs/changelog.md
+          echo "## ${current_month}" >> ./docs/changelog.md
+          echo "${{ steps.read_release_file.outputs.content }}" | sed 's/^#/##/g' >> ./docs/changelog.md
           cat changelog_tmp.md >> ./docs/changelog.md
 
       - name: Pushes docs
