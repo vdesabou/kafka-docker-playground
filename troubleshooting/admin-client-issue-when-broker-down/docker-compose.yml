@@ -12,7 +12,7 @@ services:
     container_name: adminclient
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${TAG}
     hostname: zookeeper
     container_name: zookeeper
     environment:

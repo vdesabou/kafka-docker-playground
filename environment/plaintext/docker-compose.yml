@@ -2,7 +2,7 @@
 services:
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${TAG}
     hostname: zookeeper
     container_name: zookeeper
     restart: always
@@ -148,7 +148,7 @@ services:
 
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:${TAG}
+    image: ${CP_SCHEMA_REGISTRY_IMAGE}:${TAG}
     hostname: schema-registry
     container_name: schema-registry
     restart: always
@@ -441,7 +441,7 @@ services:
     tty: true
 
   control-center:
-    image: confluentinc/cp-enterprise-control-center:${TAG}
+    image: ${CP_CONTROL_CENTER_IMAGE}:${TAG}
     hostname: control-center
     container_name: control-center
     restart: always
@@ -480,7 +480,7 @@ services:
       #CONTROL_CENTER_MODE_ENABLE: management
       # CONTROL_CENTER_ID: 32
   rest-proxy:
-    image: confluentinc/cp-kafka-rest:${TAG}
+    image: ${CP_REST_PROXY_IMAGE}:${TAG}
     hostname: rest-proxy
     container_name: rest-proxy
     restart: always

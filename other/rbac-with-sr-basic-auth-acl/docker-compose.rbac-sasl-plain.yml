@@ -31,7 +31,7 @@ services:
       - ../../other/rbac-with-sr-basic-auth-acl/scripts/create-acls.sh:/tmp/create-acls.sh
 
   schema-registry2:
-    image: confluentinc/cp-schema-registry:${TAG}
+    image: ${CP_SCHEMA_REGISTRY_IMAGE}:${TAG}
     hostname: schema-registry2
     container_name: schema-registry2
     restart: always

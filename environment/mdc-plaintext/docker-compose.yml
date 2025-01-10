@@ -8,7 +8,7 @@ services:
     ####
 
   zookeeper-europe:
-    image: confluentinc/cp-zookeeper:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${TAG}
     hostname: zookeeper-europe
     container_name: zookeeper-europe
     environment:
@@ -16,7 +16,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   zookeeper-us:
-    image: confluentinc/cp-zookeeper:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${TAG}
     hostname: zookeeper-us
     container_name: zookeeper-us
     environment:
@@ -24,7 +24,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   zookeeper-metrics:
-    image: confluentinc/cp-zookeeper:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${TAG}
     hostname: zookeeper-metrics
     container_name: zookeeper-metrics
     environment:
@@ -199,7 +199,7 @@ services:
       - ../../confluent-hub:/usr/share/confluent-hub-components
       
   schema-registry-europe:
-    image: confluentinc/cp-schema-registry:${TAG}
+    image: ${CP_SCHEMA_REGISTRY_IMAGE}:${TAG}
     hostname: schema-registry-europe
     container_name: schema-registry-europe
     restart: always
@@ -213,7 +213,7 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker-europe:9092
 
   schema-registry-us:
-    image: confluentinc/cp-schema-registry:${TAG}
+    image: ${CP_SCHEMA_REGISTRY_IMAGE}:${TAG}
     hostname: schema-registry-us
     container_name: schema-registry-us
     restart: always
@@ -227,7 +227,7 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker-us:9092
 
   control-center:
-    image: confluentinc/cp-enterprise-control-center:${TAG}
+    image: ${CP_CONTROL_CENTER_IMAGE}:${TAG}
     hostname: control-center
     container_name: control-center
     depends_on:

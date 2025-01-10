@@ -20,7 +20,7 @@ services:
               user_client="client-secret";
 
   restproxy:
-    image: confluentinc/cp-kafka-rest:${TAG}
+    image: ${CP_REST_PROXY_IMAGE}:${TAG}
     restart: always
     depends_on:
       - zookeeper

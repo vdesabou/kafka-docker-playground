@@ -2,7 +2,7 @@
 services:
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${TAG}
     hostname: zookeeper
     container_name: zookeeper
     environment:
@@ -62,7 +62,7 @@ services:
       KAFKA_MESSAGE_MAX_BYTES: 10048588
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:${TAG}
+    image: ${CP_SCHEMA_REGISTRY_IMAGE}:${TAG}
     hostname: schema-registry
     container_name: schema-registry
     ports:

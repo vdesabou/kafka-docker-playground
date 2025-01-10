@@ -2,7 +2,7 @@
 services:
 
   zookeeper-europe:
-    image: confluentinc/cp-zookeeper:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${TAG}
     hostname: zookeeper-europe
     container_name: zookeeper-europe
     restart: always
@@ -17,7 +17,7 @@ services:
       EXTRA_ARGS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/zookeeper.yml"    
 
   zookeeper-us:
-    image: confluentinc/cp-zookeeper:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${TAG}
     hostname: zookeeper-us
     container_name: zookeeper-us
     restart: always

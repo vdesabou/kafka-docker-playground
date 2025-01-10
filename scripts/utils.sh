@@ -44,16 +44,48 @@ then
         log "🎓 Use --tag option to specify different version, see https://kafka-docker-playground.io/#/how-to-use?id=🎯-for-confluent-platform-cp"
       fi
     fi
-    export CP_KAFKA_IMAGE=confluentinc/cp-server
     export CP_BASE_IMAGE=confluentinc/cp-base-new
-    export CP_KSQL_IMAGE=confluentinc/cp-ksqldb-server
-    export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-cli:latest
     export LEGACY_CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_SSL=""
     export CONNECT_USER="appuser"
+
+    if [ -z "$CP_ZOOKEEPER_IMAGE" ]
+    then
+      export CP_ZOOKEEPER_IMAGE=confluentinc/cp-zookeeper
+    fi
+
+    if [ -z "$CP_KAFKA_IMAGE" ]
+    then
+      export CP_KAFKA_IMAGE=confluentinc/cp-server
+    fi
 
     if [ -z "$CP_CONNECT_IMAGE" ]
     then
       export CP_CONNECT_IMAGE=confluentinc/cp-server-connect-base
+    fi
+
+    if [ -z "$CP_SCHEMA_REGISTRY_IMAGE" ]
+    then
+      export CP_SCHEMA_REGISTRY_IMAGE=confluentinc/cp-schema-registry
+    fi
+
+    if [ -z "$CP_CONTROL_CENTER_IMAGE" ]
+    then
+      export CP_CONTROL_CENTER_IMAGE=confluentinc/cp-enterprise-control-center
+    fi
+
+    if [ -z "$CP_REST_PROXY_IMAGE" ]
+    then
+      export CP_REST_PROXY_IMAGE=confluentinc/cp-kafka-rest
+    fi
+
+    if [ -z "$CP_KSQL_IMAGE" ]
+    then
+      export CP_KSQL_IMAGE=confluentinc/cp-ksqldb-server
+    fi
+
+    if [ -z "$CP_KSQL_CLI_IMAGE" ]
+    then
+      export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-cli:latest
     fi
     set_kafka_client_tag
 else
@@ -71,13 +103,22 @@ else
     if version_gt $first_version $second_version; then
         if [ "$first_version" = "5.3.6" ]
         then
-          logwarn "Workaround for 5.3.6 image broker, using custom image vdesabou/cp-server !"
-          export CP_KAFKA_IMAGE=vdesabou/cp-server
+          if [ -z "$CP_KAFKA_IMAGE" ]
+          then
+            logwarn "Workaround for 5.3.6 image broker, using custom image vdesabou/cp-server !"
+            export CP_KAFKA_IMAGE=vdesabou/cp-server
+          fi
         else
-          export CP_KAFKA_IMAGE=confluentinc/cp-server
+          if [ -z "$CP_KAFKA_IMAGE" ]
+          then
+            export CP_KAFKA_IMAGE=confluentinc/cp-server
+          fi
         fi
     else
+      if [ -z "$CP_KAFKA_IMAGE" ]
+      then
         export CP_KAFKA_IMAGE=confluentinc/cp-enterprise-kafka
+      fi
     fi
     second_version=5.3.99
     if version_gt $first_version $second_version; then
@@ -87,11 +128,23 @@ else
     fi
     second_version=5.4.99
     if version_gt $first_version $second_version; then
+      if [ -z "$CP_KSQL_IMAGE" ]
+      then
         export CP_KSQL_IMAGE=confluentinc/cp-ksqldb-server
+      fi
+      if [ -z "$CP_KSQL_CLI_IMAGE" ]
+      then
         export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-cli:${TAG_BASE}
+      fi
     else
+      if [ -z "$CP_KSQL_IMAGE" ]
+      then
         export CP_KSQL_IMAGE=confluentinc/cp-ksql-server
+      fi
+      if [ -z "$CP_KSQL_CLI_IMAGE" ]
+      then
         export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksql-cli:${TAG_BASE}
+      fi
     fi
     second_version=5.2.99
     if version_gt $first_version $second_version; then

@@ -2,7 +2,7 @@
 services:
 
   restproxy:
-    image: confluentinc/cp-kafka-rest:${TAG}
+    image: ${CP_REST_PROXY_IMAGE}:${TAG}
     restart: always
     hostname: restproxy
     container_name: restproxy

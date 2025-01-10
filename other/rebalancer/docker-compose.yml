@@ -1,7 +1,7 @@
 ---
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${TAG}
     hostname: zookeeper
     container_name: zookeeper
     environment:
@@ -98,7 +98,7 @@ services:
 
 
   control-center:
-    image: confluentinc/cp-enterprise-control-center:${TAG}
+    image: ${CP_CONTROL_CENTER_IMAGE}:${TAG}
     hostname: control-center
     container_name: control-center
     depends_on:
