@@ -96,6 +96,23 @@ else
         log "🚀 Using specified CP version $TAG"
       fi
     fi
+
+    if [ -z "$CP_ZOOKEEPER_IMAGE" ]
+    then
+      export CP_ZOOKEEPER_IMAGE=confluentinc/cp-zookeeper
+    fi
+    if [ -z "$CP_SCHEMA_REGISTRY_IMAGE" ]
+    then
+      export CP_SCHEMA_REGISTRY_IMAGE=confluentinc/cp-schema-registry
+    fi
+    if [ -z "$CP_REST_PROXY_IMAGE" ]
+    then
+      export CP_REST_PROXY_IMAGE=confluentinc/cp-kafka-rest
+    fi
+    if [ -z "$CP_CONTROL_CENTER_IMAGE" ]
+    then
+      export CP_CONTROL_CENTER_IMAGE=confluentinc/cp-enterprise-control-center
+    fi
     # to handle ubi8 images
     export TAG_BASE=$(echo $TAG | cut -d "-" -f1)
     first_version=${TAG_BASE}
