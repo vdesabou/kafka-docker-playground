@@ -1,3 +1,4 @@
+Onibex/snowflake-sink-connector
 a2solutions/oracdc-kafka
 ably/kafka-connect-ably
 adobeinc/streaming-connect-sink
