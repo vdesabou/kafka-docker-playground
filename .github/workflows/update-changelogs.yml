@@ -54,7 +54,7 @@ jobs:
           echo "" >> ./docs/changelog.md
           current_month=$(date +"%B %Y")
           echo "## ${current_month}" >> ./docs/changelog.md
-          echo "${{ steps.read_release_file.outputs.content }}" | sed 's/^#/##/g' | sed 's/###/####/g' >> ./docs/changelog.md
+          echo "${{ steps.read_release_file.outputs.content }}" | sed 's/^#/##/g' | sed 's/###/#####/g' >> ./docs/changelog.md
           cat changelog_tmp.md >> ./docs/changelog.md
 
       - name: Pushes docs
