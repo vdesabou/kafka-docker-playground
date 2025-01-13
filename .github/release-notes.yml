@@ -3,4 +3,4 @@ changelog:
   - title: "🌟 Enhancements"
     labels: ["enhancement"]
   - title: "🐛 Bugs"
-    labels: ["fix"]
+    labels: ["fix required"]
