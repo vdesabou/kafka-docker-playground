@@ -13436,6 +13436,11 @@ playground_get_ci_result_command() {
       log "🐛📂 not deleting tmp dir $tmp_dir"
   fi
 
+  if [[ "$dir2" == reproduction-models* ]]
+  then
+      exit 0
+  fi
+
   content_file="$tmp_dir/content.md"
   curl -s -o $content_file  https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-docs/main/docs/content.md
 
@@ -13444,15 +13449,18 @@ playground_get_ci_result_command() {
   result_not_tested="$(grep "$dir2" $content_file | sed -n 's/.*\[not tested\].*/🤖CI status: 🤷‍♂️ not tested/p')"
 
   # print only result not empty
-  if [ -n "$result_ok" ]; then
+  if [ -n "$result_ok" ]
+  then
       log "$result_ok"
   fi
 
-  if [ -n "$result_fail" ]; then
+  if [ -n "$result_fail" ]
+  then
       logwarn "$result_fail"
   fi
 
-  if [ -n "$result_not_tested" ]; then
+  if [ -n "$result_not_tested" ]
+  then
       log "$result_not_tested"
   fi
 }
