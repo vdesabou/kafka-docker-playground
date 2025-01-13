@@ -47,24 +47,27 @@ ACCESS_TOKEN=$(docker exec connect \
    curl -s -X GET \
     "${MARKETO_ENDPOINT_URL}/identity/oauth/token?grant_type=client_credentials&client_id=$MARKETO_CLIENT_ID&client_secret=$MARKETO_CLIENT_SECRET" | jq -r .access_token)
 
-log "Create one lead to Marketo"
-LEAD_FIRSTNAME=John_$RANDOM
-LEAD_LASTNAME=Doe_$RANDOM
-docker exec connect \
-   curl -s -X POST \
-    "${MARKETO_ENDPOINT_URL}/rest/v1/leads.json?access_token=$ACCESS_TOKEN" \
-    -H 'Accept: application/json' \
-    -H 'Content-Type: application/json' \
-    -H 'cache-control: no-cache' \
-    -d "{ \"action\":\"createOrUpdate\", \"lookupField\":\"email\", \"input\":[ { \"lastName\":\"$LEAD_LASTNAME\", \"firstName\":\"$LEAD_FIRSTNAME\", \"middleName\":null, \"email\":\"$LEAD_FIRSTNAME.$LEAD_LASTNAME@email.com\" } ]}"
+log "Create 3 leads to Marketo"
+for((i=0;i<3;i++))
+do
+     LEAD_FIRSTNAME="John_$RANDOM_${i}"
+     LEAD_LASTNAME="Doe_$RANDOM_${i}"
 
-# since last hour
+     log "Lead: $LEAD_FIRSTNAME $LEAD_LASTNAME"
+     docker exec connect \
+     curl -s -X POST \
+     "${MARKETO_ENDPOINT_URL}/rest/v1/leads.json?access_token=$ACCESS_TOKEN" \
+     -H 'Accept: application/json' \
+     -H 'Content-Type: application/json' \
+     -H 'cache-control: no-cache' \
+     -d "{ \"action\":\"createOrUpdate\", \"lookupField\":\"email\", \"input\":[ { \"lastName\":\"$LEAD_LASTNAME\", \"firstName\":\"$LEAD_FIRSTNAME\", \"middleName\":null, \"email\":\"$LEAD_FIRSTNAME.$LEAD_LASTNAME@email.com\" } ]}"
+done
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
-     SINCE=$(date -v-3H  +%Y-%m-%dT%H:%M:%SZ)
+     SINCE=$(date -v-8H  +%Y-%m-%dT%H:%M:%SZ)
 else
-     SINCE=$(date -d '3 hour ago'  +%Y-%m-%dT%H:%M:%SZ)
+     SINCE=$(date -d '8 hour ago'  +%Y-%m-%dT%H:%M:%SZ)
 fi
 
 # playground debug log-level set --package "org.apache.http" --level TRACE
