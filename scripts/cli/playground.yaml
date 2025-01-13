@@ -19,6 +19,12 @@ subcommands:
     usage: playground status
     options: []
     subcommands:
+  - name: get-ci-result
+    description: | 
+        get ci result for current test
+    usage: playground get-ci-result
+    options: []
+    subcommands:
   - name: config
     description: | 
         ⚙️ Configure CLI

@@ -33,6 +33,7 @@ playground_usage() {
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   Show help about a command\n" "$(green "help")                                      "
   printf "  %s   🗺️ Show a status\n" "$(green "status")                                    "
+  printf "  %s   get ci result for current test\n" "$(green "get-ci-result")                             "
   printf "  %s   ⚙️ Configure CLI\n" "$(green "config")                                    "
   echo
   printf "%s\n" "$(bold "Run commands:")"

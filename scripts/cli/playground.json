@@ -20,6 +20,13 @@
       "subcommands": null
     },
     {
+      "name": "get-ci-result",
+      "description": "get ci result for current test\n",
+      "usage": "playground get-ci-result",
+      "options": [],
+      "subcommands": null
+    },
+    {
       "name": "config",
       "description": "⚙️ Configure CLI\n",
       "usage": "playground config COMMAND",

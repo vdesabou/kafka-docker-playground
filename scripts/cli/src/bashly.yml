@@ -245,7 +245,6 @@ commands:
 
 - name: get-ci-result
   help: get ci result for current test
-  private: true
 
 - name: bashly-reload
   private: true
