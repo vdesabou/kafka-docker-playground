@@ -2,7 +2,5 @@ changelog:
   sections:
   - title: "🌟 Enhancements"
     labels: ["enhancement"]
-  - title: "🧠 CLI"
-    labels: ["cli"]
   - title: "🐛 Bugs"
     labels: ["fix"]
