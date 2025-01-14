@@ -243,9 +243,6 @@ commands:
 - name: update-docs
   private: true
 
-- name: get-ci-result
-  help: get ci result for current test
-
 - name: bashly-reload
   private: true
   dependencies:
@@ -757,6 +754,10 @@ commands:
   examples:
   - playground re-run (interactive mode)
 
+- name: get-ci-result
+  group: Run
+  help: 🤖 get CI result for current example
+  
 - name: history
   group: Run
   help: |-

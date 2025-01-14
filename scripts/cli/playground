@@ -33,12 +33,12 @@ playground_usage() {
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   Show help about a command\n" "$(green "help")                                      "
   printf "  %s   🗺️ Show a status\n" "$(green "status")                                    "
-  printf "  %s   get ci result for current test\n" "$(green "get-ci-result")                             "
   printf "  %s   ⚙️ Configure CLI\n" "$(green "config")                                    "
   echo
   printf "%s\n" "$(bold "Run commands:")"
   printf "  %s   🕹️ Run any example !\n" "$(green "run")                                       "
   printf "  %s   ⚡ Simply re-run last example you ran with <playground run>\n" "$(green "re-run")                                    "
+  printf "  %s   🤖 get CI result for current example\n" "$(green "get-ci-result")                             "
   printf "  %s   🏰 Get an history of the examples which were run with run command and run it again\n" "$(green "history")                                   "
   printf "  %s   🌩️  Switch to ccloud environment.\n" "$(green "switch-ccloud")                             "
   printf "  %s   💺  Switch back from previous environment before switch-ccloud was called.\n" "$(green "switch-back")                               "
@@ -964,27 +964,6 @@ playground_update_docs_usage() {
 }
 
 # :command.usage
-playground_get_ci_result_usage() {
-  printf "playground get-ci-result - get ci result for current test\n\n"
-
-  printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground get-ci-result\n"
-  printf "  playground get-ci-result --help | -h\n"
-  echo
-
-  # :command.long_usage
-  if [[ -n "$long_usage" ]]; then
-    printf "%s\n" "$(bold "== Options ==")"
-
-    # :command.usage_fixed_flags
-    printf "  %s\n" "$(magenta "--help, -h")"
-    printf "    Show this help\n"
-    echo
-
-  fi
-}
-
-# :command.usage
 playground_bashly_reload_usage() {
   printf "playground bashly-reload\n\n"
 
@@ -1760,6 +1739,27 @@ playground_re_run_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground re-run (interactive mode)\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_get_ci_result_usage() {
+  printf "playground get-ci-result - 🤖 get CI result for current example\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground get-ci-result\n"
+  printf "  playground get-ci-result --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
     echo
 
   fi
@@ -13413,61 +13413,6 @@ playground_update_docs_command() {
 }
 
 # :command.function
-playground_get_ci_result_command() {
-  # src/commands/get-ci-result.sh
-  test_file=$(playground state get run.test_file)
-
-  if [ ! -f $test_file ]
-  then
-
-      logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
-      exit 1
-  fi
-
-  test_file_directory="$(dirname "${test_file}")"
-  base1="${test_file_directory##*/}" # connect-cdc-oracle12-source
-  dir1="${test_file_directory%/*}" #connect
-  dir2="${dir1##*/}/$base1" # connect/connect-cdc-oracle12-source
-
-  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  if [ -z "$PG_VERBOSE_MODE" ]
-  then
-      trap 'rm -rf $tmp_dir' EXIT
-  else
-      log "🐛📂 not deleting tmp dir $tmp_dir"
-  fi
-
-  if [[ "$dir2" == reproduction-models* ]]
-  then
-      exit 0
-  fi
-
-  content_file="$tmp_dir/content.md"
-  curl -s -o $content_file  https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-docs/main/docs/content.md
-
-  result_ok="$(grep "$dir2" $content_file | sed -n 's/.*\[CI \(ok\)\].*(\(https[^)]*\)).*/🤖CI status: 🟢 ok\n🔗test url: \2/p')"
-  result_fail="$(grep "$dir2" $content_file | sed -n 's/.*\[CI \(fail\)\].*(\(https[^)]*\)).*/🤖CI status: 🔴 fail\n🐛 github issue: \2/p')"
-  result_not_tested="$(grep "$dir2" $content_file | sed -n 's/.*\[not tested\].*/🤖CI status: 🤷‍♂️ not tested/p')"
-
-  # print only result not empty
-  if [ -n "$result_ok" ]
-  then
-      log "$result_ok"
-  fi
-
-  if [ -n "$result_fail" ]
-  then
-      logwarn "$result_fail"
-      check_if_continue
-  fi
-
-  if [ -n "$result_not_tested" ]
-  then
-      log "$result_not_tested"
-  fi
-}
-
-# :command.function
 playground_bashly_reload_command() {
   # src/commands/bashly-reload.sh
   cd $root_folder/scripts/cli
@@ -15295,6 +15240,61 @@ playground_re_run_command() {
 
   log "⚡ re-run with playground run -f \"$test_file\" $flag_list"
   playground run -f "$test_file" $flag_list --force-interactive-re-run
+}
+
+# :command.function
+playground_get_ci_result_command() {
+  # src/commands/get-ci-result.sh
+  test_file=$(playground state get run.test_file)
+
+  if [ ! -f $test_file ]
+  then
+
+      logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
+      exit 1
+  fi
+
+  test_file_directory="$(dirname "${test_file}")"
+  base1="${test_file_directory##*/}" # connect-cdc-oracle12-source
+  dir1="${test_file_directory%/*}" #connect
+  dir2="${dir1##*/}/$base1" # connect/connect-cdc-oracle12-source
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
+  if [[ "$dir2" == reproduction-models* ]]
+  then
+      exit 0
+  fi
+
+  content_file="$tmp_dir/content.md"
+  curl -s -o $content_file  https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-docs/main/docs/content.md
+
+  result_ok="$(grep "$dir2" $content_file | sed -n 's/.*\[CI \(ok\)\].*(\(https[^)]*\)).*/🤖CI status: 🟢 ok\n🔗test url: \2/p')"
+  result_fail="$(grep "$dir2" $content_file | sed -n 's/.*\[CI \(fail\)\].*(\(https[^)]*\)).*/🤖CI status: 🔴 fail\n🐛 github issue: \2/p')"
+  result_not_tested="$(grep "$dir2" $content_file | sed -n 's/.*\[not tested\].*/🤖CI status: 🤷‍♂️ not tested/p')"
+
+  # print only result not empty
+  if [ -n "$result_ok" ]
+  then
+      log "$result_ok"
+  fi
+
+  if [ -n "$result_fail" ]
+  then
+      logwarn "$result_fail"
+      check_if_continue
+  fi
+
+  if [ -n "$result_not_tested" ]
+  then
+      log "$result_not_tested"
+  fi
 }
 
 # :command.function
@@ -25789,13 +25789,6 @@ parse_requirements() {
       shift $#
       ;;
 
-    get-ci-result)
-      action="get-ci-result"
-      shift
-      playground_get_ci_result_parse_requirements "$@"
-      shift $#
-      ;;
-
     bashly-reload)
       action="bashly-reload"
       shift
@@ -25828,6 +25821,13 @@ parse_requirements() {
       action="re-run"
       shift
       playground_re_run_parse_requirements "$@"
+      shift $#
+      ;;
+
+    get-ci-result)
+      action="get-ci-result"
+      shift
+      playground_get_ci_result_parse_requirements "$@"
       shift $#
       ;;
 
@@ -27487,51 +27487,6 @@ playground_update_docs_parse_requirements() {
 }
 
 # :command.parse_requirements
-playground_get_ci_result_parse_requirements() {
-  # :command.fixed_flags_filter
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-      --help | -h)
-        long_usage=yes
-        playground_get_ci_result_usage
-        exit
-        ;;
-
-      *)
-        break
-        ;;
-
-    esac
-  done
-
-  # :command.command_filter
-  action="get-ci-result"
-
-  # :command.parse_requirements_while
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-
-      -?*)
-        printf "invalid option: %s\n" "$key" >&2
-        exit 1
-        ;;
-
-      *)
-        # :command.parse_requirements_case
-        # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
-
-        ;;
-
-    esac
-  done
-
-}
-
-# :command.parse_requirements
 playground_bashly_reload_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
@@ -29155,6 +29110,51 @@ playground_re_run_parse_requirements() {
 
   # :command.command_filter
   action="re-run"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_get_ci_result_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_get_ci_result_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="get-ci-result"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -39816,7 +39816,6 @@ run() {
     "get-predefined-schemas") playground_get_predefined_schemas_command ;;
     "update-readme") playground_update_readme_command ;;
     "update-docs") playground_update_docs_command ;;
-    "get-ci-result") playground_get_ci_result_command ;;
     "bashly-reload") playground_bashly_reload_command ;;
     "state") playground_state_command ;;
     "state show") playground_state_show_command ;;
@@ -39837,6 +39836,7 @@ run() {
     "config check-repo-version") playground_config_check_repo_version_command ;;
     "run") playground_run_command ;;
     "re-run") playground_re_run_command ;;
+    "get-ci-result") playground_get_ci_result_command ;;
     "history") playground_history_command ;;
     "start-environment") playground_start_environment_command ;;
     "switch-ccloud") playground_switch_ccloud_command ;;

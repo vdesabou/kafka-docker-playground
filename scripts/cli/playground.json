@@ -20,13 +20,6 @@
       "subcommands": null
     },
     {
-      "name": "get-ci-result",
-      "description": "get ci result for current test\n",
-      "usage": "playground get-ci-result",
-      "options": [],
-      "subcommands": null
-    },
-    {
       "name": "config",
       "description": "⚙️ Configure CLI\n",
       "usage": "playground config COMMAND",
@@ -294,6 +287,13 @@
       "name": "re-run",
       "description": "⚡ Simply re-run last example you ran with <playground run>\n",
       "usage": "playground re-run",
+      "options": [],
+      "subcommands": null
+    },
+    {
+      "name": "get-ci-result",
+      "description": "🤖 get CI result for current example\n",
+      "usage": "playground get-ci-result",
       "options": [],
       "subcommands": null
     },

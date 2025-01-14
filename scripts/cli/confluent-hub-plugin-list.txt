@@ -82,7 +82,6 @@ confluentinc/kafka-connect-mqtt
 confluentinc/kafka-connect-netezza
 confluentinc/kafka-connect-omnisci
 confluentinc/kafka-connect-oracle-cdc
-confluentinc/kafka-connect-oracle-xstream-cdc-source
 confluentinc/kafka-connect-pagerduty
 confluentinc/kafka-connect-pinecone-sink
 confluentinc/kafka-connect-pivotal-gemfire

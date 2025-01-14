@@ -19,12 +19,6 @@ subcommands:
     usage: playground status
     options: []
     subcommands:
-  - name: get-ci-result
-    description: | 
-        get ci result for current test
-    usage: playground get-ci-result
-    options: []
-    subcommands:
   - name: config
     description: | 
         ⚙️ Configure CLI
@@ -392,6 +386,12 @@ subcommands:
     description: | 
         ⚡ Simply re-run last example you ran with <playground run>
     usage: playground re-run
+    options: []
+    subcommands:
+  - name: get-ci-result
+    description: | 
+        🤖 get CI result for current example
+    usage: playground get-ci-result
     options: []
     subcommands:
   - name: history
