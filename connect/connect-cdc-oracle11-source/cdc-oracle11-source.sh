@@ -81,6 +81,7 @@ log "Creating Oracle source connector"
 playground connector create-or-update --connector cdc-oracle11-source --package "io.confluent.connect.oracle.cdc.util.metrics.MetricsReporter" --level DEBUG  << EOF
 {
      "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
+     "log.sensitive.data": "true",
      "tasks.max": 2,
      "key.converter": "io.confluent.connect.avro.AvroConverter",
      "key.converter.schema.registry.url": "http://schema-registry:8081",

@@ -45,6 +45,7 @@ $ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
+     "log.sensitive.data": "true",
                "tasks.max":2,
                "key.converter": "io.confluent.connect.avro.AvroConverter",
                "key.converter.schema.registry.url": "http://schema-registry:8081",
