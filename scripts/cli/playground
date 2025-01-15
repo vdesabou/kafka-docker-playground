@@ -8907,6 +8907,8 @@ function get_connect_image() {
     if [ -z "$TAG" ]
     then
       CONNECT_TAG=$(grep "export TAG" $root_folder/scripts/utils.sh | head -1 | cut -d "=" -f 2 | cut -d " " -f 1)
+    else
+      CONNECT_TAG=$TAG
     fi
 
     if [ "$CONNECT_TAG" == "" ]
