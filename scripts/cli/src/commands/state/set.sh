@@ -1,7 +1,7 @@
 # Using the standard library (lib/ini.sh) to store a value to the config
-if [ ! -f $root_folder/playground.ini ]
+if [ ! -f "$root_folder/playground.ini" ]
 then
-    touch $root_folder/playground.ini
+  touch $root_folder/playground.ini
 fi
 set -e
 ini_load $root_folder/playground.ini

@@ -13445,9 +13445,7 @@ playground_state_show_command() {
   # Using the standard library (lib/ini.sh) to show the entire config file
   if [ ! -f "$root_folder/playground.ini" ]
   then
-      logerror "$root_folder/playground.ini does not exist !"
-      logerror "Make sure to always use the CLI to run examples"
-      exit 1
+    touch $root_folder/playground.ini
   fi
   ini_load $root_folder/playground.ini
   ini_show
@@ -13459,9 +13457,7 @@ playground_state_get_command() {
   # Using the standard library (lib/ini.sh) to show a value from the config
   if [ ! -f "$root_folder/playground.ini" ]
   then
-      logerror "$root_folder/playground.ini does not exist !"
-      logerror "Make sure to always use the CLI to run examples"
-      exit 1
+    touch $root_folder/playground.ini
   fi
   ini_load $root_folder/playground.ini
 
@@ -13480,9 +13476,9 @@ playground_state_get_command() {
 playground_state_set_command() {
   # src/commands/state/set.sh
   # Using the standard library (lib/ini.sh) to store a value to the config
-  if [ ! -f $root_folder/playground.ini ]
+  if [ ! -f "$root_folder/playground.ini" ]
   then
-      touch $root_folder/playground.ini
+    touch $root_folder/playground.ini
   fi
   set -e
   ini_load $root_folder/playground.ini
@@ -13500,9 +13496,7 @@ playground_state_del_command() {
   # Using the standard library (lib/ini.sh) to delete a value from the config
   if [ ! -f "$root_folder/playground.ini" ]
   then
-      logerror "$root_folder/playground.ini does not exist !"
-      logerror "Make sure to always use the CLI to run examples"
-      exit 1
+    touch $root_folder/playground.ini
   fi
   set -e
   ini_load $root_folder/playground.ini
