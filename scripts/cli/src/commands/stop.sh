@@ -5,6 +5,7 @@ then
     logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
     exit 1
 fi
+export flink_connectors=""
 filename=$(basename -- "$test_file")
 test_file_directory="$(dirname "${test_file}")"
 
