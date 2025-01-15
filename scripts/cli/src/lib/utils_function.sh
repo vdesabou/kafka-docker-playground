@@ -4002,7 +4002,16 @@ function playground() {
   verbose_begin
   if [[ $(type -f playground 2>&1) =~ "not found" ]]
   then
-    ../../scripts/cli/playground "$@"
+    if [ -f ../../scripts/cli/playground ]
+    then
+      ../../scripts/cli/playground "$@"
+    elif [ -f ../../../scripts/cli/playground ]
+    then
+      ../../../scripts/cli/playground "$@"
+    else
+      logerror "🔍 playground command not found, add it to your PATH https://kafka-docker-playground.io/#/cli?id=🦶-setup-path"
+      exit 1
+    fi
   else
     $(which playground) "$@"
   fi
