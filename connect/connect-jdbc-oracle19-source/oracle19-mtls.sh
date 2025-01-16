@@ -10,29 +10,9 @@ create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "../../connect/connect
 # PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 #playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-if [ ! -z "$CONNECTOR_TAG" ]
-then
-     JDBC_CONNECTOR_VERSION=$CONNECTOR_TAG
-else
-     JDBC_CONNECTOR_VERSION=$(docker run ${CP_CONNECT_IMAGE}:${CONNECT_TAG} cat /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/manifest.json | jq -r '.version')
-fi
-log "JDBC Connector version is $JDBC_CONNECTOR_VERSION"
-if ! version_gt $JDBC_CONNECTOR_VERSION "9.9.9"; then
-     get_3rdparty_file "ojdbc8.jar"
-     if [ ! -f ${DIR}/ojdbc8.jar ]
-     then
-          logerror "ERROR: ${DIR}/ojdbc8.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
-          exit 1
-     fi
-     docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.mtls.yml" down -v --remove-orphans
-     log "Starting up oracle container to get generated cert from oracle server wallet"
-     docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.mtls.yml" up -d oracle
-else
-     log "ojdbc jar is shipped with connector (starting with 10.0.0)"
-     docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.no-ojdbc-mtls.yml" down -v --remove-orphans
-     log "Starting up oracle container to get generated cert from oracle server wallet"
-     docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.no-ojdbc-mtls.yml" up -d oracle
-fi
+docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.mtls.yml" down -v --remove-orphans
+log "Starting up oracle container to get generated cert from oracle server wallet"
+docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.mtls.yml" up -d oracle
 
 playground --output-level WARN container logs --container oracle --wait-for-log "DATABASE IS READY TO USE" --max-wait 2500
 log "Oracle DB has started!"
