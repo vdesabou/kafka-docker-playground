@@ -4336,15 +4336,25 @@ EOF
       fi
     fi
   else
+    #
+    # AWS short live credentials
+    #
     if [ ! -z $AWS_SESSION_TOKEN ] || grep -q "aws_session_token" $HOME/.aws/credentials
     then
       if [ ! -z $AWS_SESSION_TOKEN ]
       then
-          logwarn "AWS_SESSION_TOKEN environment variable is set, running example s3-sink-with-short-lived-creds.sh"
+          log "🔏 AWS_SESSION_TOKEN environment variable is set, using AWS short live credentials"
       else
-          logwarn "the file $HOME/.aws/credentials contains aws_session_token, running example s3-sink-with-short-lived-creds.sh"
+          log "🔏 the file $HOME/.aws/credentials contains aws_session_token, using AWS short live credentials"
       fi
 
+      connector_type=$(playground state get run.connector_type)
+      
+      if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+      then
+        logerror "❌ AWS short live credentials are not supported for fully managed connectors or custom connectors"
+        exit 1
+      fi
 
       if [ ! -z $AWS_ACCESS_KEY_ID ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ] && [ ! -z "$AWS_SESSION_TOKEN" ]
       then
