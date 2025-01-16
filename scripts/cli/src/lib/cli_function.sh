@@ -814,6 +814,14 @@ function add_connector_config_based_on_environment () {
 
   echo "$json_content" > $tmp_dir/1.json
 
+  if [ -n "$AWS_SHORT_LIVE_CREDENTIALS_USED" ]
+  then
+    log "💫 removing aws.access.key.id and aws.secret.access.key from config"
+    echo "$json_content" > $tmp_dir/input.json
+    jq 'del(.["aws.access.key.id"], .["aws.secret.access.key"])' $tmp_dir/input.json > $tmp_dir/output.json
+    json_content=$(cat $tmp_dir/output.json)
+  fi
+
   case "${environment}" in
     plaintext)
       # nothing to do

@@ -4,58 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ] && [ -z $AWS_SESSION_TOKEN ]
-then
-    :
-else
-    if [ ! -z $AWS_SESSION_TOKEN ] || grep -q "aws_session_token" $HOME/.aws/credentials
-    then
-        if [ ! -z $AWS_SESSION_TOKEN ]
-        then
-            logwarn "AWS_SESSION_TOKEN environment variable is set, running example s3-sink-with-short-lived-creds.sh"
-        else
-            logwarn "the file $HOME/.aws/credentials contains aws_session_token, running example s3-sink-with-short-lived-creds.sh"
-        fi
-        ./s3-sink-with-short-lived-creds.sh
-        exit 0
-    fi
-fi
-
-if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
-then
-     logerror "ERROR: either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
-     exit 1
-else
-    if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
-    then
-        log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
-        export AWS_ACCESS_KEY_ID
-        export AWS_SECRET_ACCESS_KEY
-    else
-        if [ -f $HOME/.aws/credentials ]
-        then
-            logwarn "💭 AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
-            export AWS_ACCESS_KEY_ID=$( grep "^aws_access_key_id" $HOME/.aws/credentials | head -1 | awk -F'=' '{print $2;}' )
-            export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/credentials | head -1 | awk -F'=' '{print $2;}' ) 
-        fi
-    fi
-    if [ -z "$AWS_REGION" ]
-    then
-        AWS_REGION=$(aws configure get region | tr '\r' '\n')
-        if [ "$AWS_REGION" == "" ]
-        then
-            logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
-            exit 1
-        fi
-    fi
-fi
-
-if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
-then
-     export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
-else
-     export CONNECT_CONTAINER_HOME_DIR="/root"
-fi
+handle_aws_credentials
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"

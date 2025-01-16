@@ -4287,3 +4287,118 @@ function maybe_set_azure_subscription () {
     log "💎 AZURE_SUBSCRIPTION_NAME is not set, using default subscription $default_subscription"
   fi
 }
+
+function handle_aws_credentials () {
+  log "handle_aws_credentials"
+  if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ] && [ -z $AWS_SESSION_TOKEN ]
+  then
+    if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
+    then
+        logerror "ERROR: either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
+        exit 1
+    else
+      if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
+      then
+          log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
+          export AWS_ACCESS_KEY_ID
+          export AWS_SECRET_ACCESS_KEY
+      else
+          if [ -f $HOME/.aws/credentials ]
+          then
+              logwarn "💭 AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
+              export AWS_ACCESS_KEY_ID=$( grep "^aws_access_key_id" $HOME/.aws/credentials | head -1 | awk -F'=' '{print $2;}' )
+              export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/credentials | head -1 | awk -F'=' '{print $2;}' ) 
+          fi
+      fi
+      if [ -z "$AWS_REGION" ]
+      then
+          AWS_REGION=$(aws configure get region | tr '\r' '\n')
+          if [ "$AWS_REGION" == "" ]
+          then
+              logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+              exit 1
+          fi
+      fi
+    fi
+  else
+    if [ ! -z $AWS_SESSION_TOKEN ] || grep -q "aws_session_token" $HOME/.aws/credentials
+    then
+      if [ ! -z $AWS_SESSION_TOKEN ]
+      then
+          logwarn "AWS_SESSION_TOKEN environment variable is set, running example s3-sink-with-short-lived-creds.sh"
+      else
+          logwarn "the file $HOME/.aws/credentials contains aws_session_token, running example s3-sink-with-short-lived-creds.sh"
+      fi
+
+      tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+      if [ -z "$PG_VERBOSE_MODE" ]
+      then
+          trap 'rm -rf $tmp_dir' EXIT
+      else
+          log "🐛📂 not deleting tmp dir $tmp_dir"
+      fi
+      export AWS_CREDENTIALS_FILE_NAME="$tmp_dir/credentials"
+
+      if [ ! -z $AWS_ACCESS_KEY_ID ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ] && [ ! -z "$AWS_SESSION_TOKEN" ]
+      then
+          log "💭 Using environment variables AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_SESSION_TOKEN"
+          export AWS_ACCESS_KEY_ID
+          export AWS_SECRET_ACCESS_KEY
+          export AWS_SESSION_TOKEN
+
+      cat << EOF > $AWS_CREDENTIALS_FILE_NAME
+      [default]
+      aws_access_key_id=$AWS_ACCESS_KEY_ID
+      aws_secret_access_key=$AWS_SECRET_ACCESS_KEY
+      aws_session_token=$AWS_SESSION_TOKEN
+EOF
+      elif grep -q "aws_session_token" $HOME/.aws/credentials
+      then
+          head -4 $HOME/.aws/credentials > $AWS_CREDENTIALS_FILE_NAME
+
+          set +e
+          grep -q default $AWS_CREDENTIALS_FILE_NAME
+          if [ $? != 0 ]
+          then
+              logerror "$HOME/.aws/credentials does not have expected format, the 4 first lines must be:"
+              echo "[default]"
+              echo "aws_access_key_id=<AWS_ACCESS_KEY_ID>"
+              echo "aws_secret_access_key=<AWS_SECRET_ACCESS_KEY>"
+              echo "aws_session_token=<AWS_SESSION_TOKEN>"
+              exit 1
+          fi
+          grep -q aws_session_token $AWS_CREDENTIALS_FILE_NAME
+          if [ $? != 0 ]
+          then
+              logerror "$HOME/.aws/credentials does not have expected format, the 4 first lines must be:"
+              echo "[default]"
+              echo "aws_access_key_id=<AWS_ACCESS_KEY_ID>"
+              echo "aws_secret_access_key=<AWS_SECRET_ACCESS_KEY>"
+              echo "aws_session_token=<AWS_SESSION_TOKEN>"
+              exit 1
+          fi
+          set +e
+      fi
+
+      log "✨ Using AWS short live with credentials file $AWS_CREDENTIALS_FILE_NAME"
+      export AWS_SHORT_LIVE_CREDENTIALS_USED=1
+    fi
+  fi
+
+  if [ -z "$AWS_REGION" ]
+  then
+      AWS_REGION=$(aws configure get region | tr '\r' '\n')
+      if [ "$AWS_REGION" == "" ]
+      then
+          logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+          exit 1
+      fi
+  fi
+
+  if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
+  then
+      export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
+  else
+      export CONNECT_CONTAINER_HOME_DIR="/root"
+  fi
+}

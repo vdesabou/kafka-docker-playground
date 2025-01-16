@@ -8,49 +8,14 @@ source ${DIR}/../../scripts/utils.sh
 logwarn "WARN: This is not working due to https://github.com/aws/aws-sdk-java/issues/2558"
 exit 111
 
-# this is only used for AWS CLI
-if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
+export AWS_CREDENTIALS_FILE_NAME=$HOME/.aws/credentials-with-assuming-iam-role
+if [ ! -f $AWS_CREDENTIALS_FILE_NAME ]
 then
-     logerror "ERROR: either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
-     exit 1
-else
-    if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
-    then
-        log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
-        export AWS_ACCESS_KEY_ID
-        export AWS_SECRET_ACCESS_KEY
-    else
-        if [ -f $HOME/.aws/credentials ]
-        then
-            logwarn "💭 AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
-            export AWS_ACCESS_KEY_ID=$( grep "^aws_access_key_id" $HOME/.aws/credentials | head -1 | awk -F'=' '{print $2;}' )
-            export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/credentials | head -1 | awk -F'=' '{print $2;}' ) 
-        fi
-    fi
-    if [ -z "$AWS_REGION" ]
-    then
-        AWS_REGION=$(aws configure get region | tr '\r' '\n')
-        if [ "$AWS_REGION" == "" ]
-        then
-            logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
-            exit 1
-        fi
-    fi
-fi
-
-export AWS_CREDENTIALS_FILE_NAME=credentials-with-assuming-iam-role
-if [ ! -f $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME ]
-then
-     logerror "ERROR: $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME is not set"
+     logerror "ERROR: $AWS_CREDENTIALS_FILE_NAME is not set"
      exit 1
 fi
 
-if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
-then
-     export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
-else
-     export CONNECT_CONTAINER_HOME_DIR="/root"
-fi
+handle_aws_credentials
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.proxy.with-assuming-iam-role.yml"
