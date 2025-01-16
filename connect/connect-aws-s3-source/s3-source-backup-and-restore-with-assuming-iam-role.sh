@@ -10,29 +10,14 @@ then
     exit 111
 fi
 
-export AWS_CREDENTIALS_FILE_NAME=credentials-with-assuming-iam-role
-if [ ! -f $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME ]
+export AWS_CREDENTIALS_FILE_NAME=$HOME/.aws/credentials-with-assuming-iam-role
+if [ ! -f $AWS_CREDENTIALS_FILE_NAME ]
 then
-     logerror "ERROR: $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME is not set"
+     logerror "ERROR: $AWS_CREDENTIALS_FILE_NAME is not set"
      exit 1
 fi
 
-if [ -z "$AWS_REGION" ]
-then
-     AWS_REGION=$(aws configure get region | tr '\r' '\n')
-     if [ "$AWS_REGION" == "" ]
-     then
-          logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
-          exit 1
-     fi
-fi
-
-if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
-then
-     export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
-else
-     export CONNECT_CONTAINER_HOME_DIR="/root"
-fi
+handle_aws_credentials
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.backup-and-restore.with-assuming-iam-role.yml"

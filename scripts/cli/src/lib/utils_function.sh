@@ -4289,12 +4289,21 @@ function maybe_set_azure_subscription () {
 }
 
 function handle_aws_credentials () {
-  log "handle_aws_credentials"
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+  export AWS_CREDENTIALS_FILE_NAME="$tmp_dir/credentials"
+
   if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ] && [ -z $AWS_SESSION_TOKEN ]
   then
     if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
     then
-        logerror "ERROR: either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
+        logerror "❌ either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
         exit 1
     else
       if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
@@ -4310,12 +4319,18 @@ function handle_aws_credentials () {
               export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/credentials | head -1 | awk -F'=' '{print $2;}' ) 
           fi
       fi
+
+      cat << EOF > $AWS_CREDENTIALS_FILE_NAME
+      [default]
+      aws_access_key_id=$AWS_ACCESS_KEY_ID
+      aws_secret_access_key=$AWS_SECRET_ACCESS_KEY
+EOF
       if [ -z "$AWS_REGION" ]
       then
           AWS_REGION=$(aws configure get region | tr '\r' '\n')
           if [ "$AWS_REGION" == "" ]
           then
-              logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+              logerror "❌ either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
               exit 1
           fi
       fi
@@ -4330,14 +4345,6 @@ function handle_aws_credentials () {
           logwarn "the file $HOME/.aws/credentials contains aws_session_token, running example s3-sink-with-short-lived-creds.sh"
       fi
 
-      tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-      if [ -z "$PG_VERBOSE_MODE" ]
-      then
-          trap 'rm -rf $tmp_dir' EXIT
-      else
-          log "🐛📂 not deleting tmp dir $tmp_dir"
-      fi
-      export AWS_CREDENTIALS_FILE_NAME="$tmp_dir/credentials"
 
       if [ ! -z $AWS_ACCESS_KEY_ID ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ] && [ ! -z "$AWS_SESSION_TOKEN" ]
       then
