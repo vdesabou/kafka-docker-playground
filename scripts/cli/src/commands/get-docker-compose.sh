@@ -3,6 +3,8 @@ export TAG=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d 
 export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
 export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
 
+handle_aws_credentials
+
 docker_command=$(playground state get run.docker_command)
 if [ "$docker_command" == "" ]
 then

@@ -4289,15 +4289,7 @@ function maybe_set_azure_subscription () {
 }
 
 function handle_aws_credentials () {
-
-  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  if [ -z "$PG_VERBOSE_MODE" ]
-  then
-      trap 'rm -rf $tmp_dir' EXIT
-  else
-      log "🐛📂 not deleting tmp dir $tmp_dir"
-  fi
-  export AWS_CREDENTIALS_FILE_NAME="$tmp_dir/credentials"
+  export AWS_CREDENTIALS_FILE_NAME="/tmp/aws_credentials"
 
   if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ] && [ -z $AWS_SESSION_TOKEN ]
   then
@@ -4321,9 +4313,9 @@ function handle_aws_credentials () {
       fi
 
       cat << EOF > $AWS_CREDENTIALS_FILE_NAME
-      [default]
-      aws_access_key_id=$AWS_ACCESS_KEY_ID
-      aws_secret_access_key=$AWS_SECRET_ACCESS_KEY
+[default]
+aws_access_key_id=$AWS_ACCESS_KEY_ID
+aws_secret_access_key=$AWS_SECRET_ACCESS_KEY
 EOF
       if [ -z "$AWS_REGION" ]
       then
@@ -4364,10 +4356,10 @@ EOF
           export AWS_SESSION_TOKEN
 
       cat << EOF > $AWS_CREDENTIALS_FILE_NAME
-      [default]
-      aws_access_key_id=$AWS_ACCESS_KEY_ID
-      aws_secret_access_key=$AWS_SECRET_ACCESS_KEY
-      aws_session_token=$AWS_SESSION_TOKEN
+[default]
+aws_access_key_id=$AWS_ACCESS_KEY_ID
+aws_secret_access_key=$AWS_SECRET_ACCESS_KEY
+aws_session_token=$AWS_SESSION_TOKEN
 EOF
       elif grep -q "aws_session_token" $HOME/.aws/credentials
       then
