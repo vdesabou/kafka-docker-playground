@@ -564,7 +564,7 @@ function set_profiles() {
     playground state del flags.ENABLE_CONDUKTOR
   else
     log "🐺 conduktor is enabled"
-    log "Use http://localhost:8080/console (admin/admin) to login"
+    log "Use http://localhost:8080/console to login"
     profile_conduktor_command="--profile conduktor"
     playground state set flags.ENABLE_CONDUKTOR 1
   fi
