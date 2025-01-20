@@ -563,21 +563,45 @@ services:
       CONTROL_CENTER_KAFKA_MYCLUSTER_SSL_KEYSTORE_PASSWORD: confluent
       CONTROL_CENTER_KAFKA_MYCLUSTER_SSL_KEY_PASSWORD: confluent
 
-    # https://github.com/conduktor/conduktor-platform/blob/main/doc/Configuration.md
-  conduktor:
+  conduktor-postgresql:
+    image: postgres:14
+    hostname: conduktor-postgresql
+    container_name: conduktor-postgresql
+    environment:
+      POSTGRES_DB: "conduktor"
+      POSTGRES_USER: "conduktor"
+      POSTGRES_PASSWORD: "change_me"
+    profiles:
+      - "conduktor"
+
+  conduktor-console:
+    image: conduktor/conduktor-console:1.30.0
     hostname: conduktor.kerberos-demo.local
+    container_name: conduktor-console
+    depends_on:
+      - conduktor-postgresql
+    ports:
+      - "8080:8080"
     volumes:
       - ../../environment/ssl_kerberos/conduktor/platform-config.yaml:/tmp/platform-config.yaml
       - secret:/var/lib/secret
-      - ../../environment/ssl_kerberos/kdc/krb5.conf:/etc/kdc/krb5.conf
+      - ../../environment/ssl_kerberos/kdc/krb5.conf:/etc/krb5.conf
       - ../../environment/ssl_kerberos/security:/etc/kafka/secrets
-# FIXTHIS: Caused by: org.apache.kafka.common.KafkaException: javax.security.auth.login.LoginException: Cannot locate KDC
-#         at org.apache.kafka.common.network.SaslChannelBuilder.configure(SaslChannelBuilder.java:172)
-#         at org.apache.kafka.common.network.ChannelBuilders.create(ChannelBuilders.java:157)
-#         at org.apache.kafka.common.network.ChannelBuilders.clientChannelBuilder(ChannelBuilders.java:73)
-#         at org.apache.kafka.clients.ClientUtils.createChannelBuilder(ClientUtils.java:105)
-#         at org.apache.kafka.clients.consumer.KafkaConsumer.<init>(KafkaConsumer.java:743)
-#         ... 25 common frames omitted
+    environment:
+      CDK_IN_CONF_FILE: /tmp/platform-config.yaml
+      KRB5_CONFIG: /etc/krb5.conf
+    profiles:
+      - "conduktor"
+
+  conduktor-monitoring:
+    image: conduktor/conduktor-console-cortex:1.30.0
+    hostname: conduktor-monitoring
+    container_name: conduktor-monitoring
+    environment:
+      # Connection to the Console container
+      CDK_CONSOLE-URL: "http://conduktor-console:8080"
+    profiles:
+      - "conduktor"
 
 volumes:
   secret: {}

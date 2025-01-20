@@ -1,10 +1,26 @@
 organization:
-  name: kafka-docker-playground
+  name: conduktor
+
+database:
+  hosts: 
+   - host: 'conduktor-postgresql'
+     port: 5432
+  name: 'conduktor'
+  username: 'conduktor'
+  password: 'change_me'
+  connection_timeout: 30 # in seconds
+
+monitoring:
+  cortex-url: 'http://conduktor-monitoring:9009/'
+  alert-manager-url: 'http://conduktor-monitoring:9010/'
+  callback-url: 'http://conduktor-console:8080/monitoring/api/'
+  notifications-callback-url: 'http://localhost:8080'
+
 clusters:
   - id: local
     name: My Cluster
     color: "#0013E7"
-    ignoreUntrustedCertificate: false
+    ignoreUntrustedCertificate: true
     bootstrapServers: "broker:9092"
     properties: |
       client.id=conduktor
@@ -12,8 +28,10 @@ clusters:
       request.timeout.ms=5000
       ssl.truststore.location=/etc/kafka/secrets/kafka.conduktor.truststore.jks
       ssl.truststore.password=confluent
+      ssl.truststore.type=JKS
       ssl.keystore.location=/etc/kafka/secrets/kafka.conduktor.keystore.jks
       ssl.keystore.password=confluent
+      ssl.keystore.type=JKS
       ssl.key.password=confluent
       sasl.jaas.config=com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab="/var/lib/secret/kafka-controlcenter.key" principal="controlcenter@TEST.CONFLUENT.IO";
       sasl.mechanism=GSSAPI
@@ -21,8 +39,8 @@ clusters:
       sasl.kerberos.service.name=kafka
     schemaRegistry:
       id: Local SR
-      url: "https://schema-registry:8081"
-      ignoreUntrustedCertificate: false
+      url: "http://schema-registry:8081"
+      ignoreUntrustedCertificate: true
       properties: |
         acks=all
         client.id=conduktor
@@ -36,12 +54,7 @@ clusters:
     labels:
       env: default
     kafkaConnects:
-      - url: "https://connect:8083"
+      - url: "http://connect:8083"
         id: kafka-connect
-        name: kafkConnect
-auth:
-  demo-users:
-    - email: admin
-      password: admin
-      groups:
-        - ADMIN
+        name: kafkaConnect
+        ignoreUntrustedCertificate: true
