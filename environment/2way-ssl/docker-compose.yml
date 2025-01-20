@@ -366,8 +366,39 @@ services:
                   -Djavax.net.ssl.keyStore=/etc/kafka/secrets/kafka.control-center.keystore.jks
                   -Djavax.net.ssl.keyStorePassword=confluent
 
-    # https://github.com/conduktor/conduktor-platform/blob/main/doc/Configuration.md
-  conduktor:
+  conduktor-postgresql:
+    image: postgres:14
+    hostname: conduktor-postgresql
+    container_name: conduktor-postgresql
+    environment:
+      POSTGRES_DB: "conduktor"
+      POSTGRES_USER: "conduktor"
+      POSTGRES_PASSWORD: "change_me"
+    profiles:
+      - "conduktor"
+
+  conduktor-console:
+    image: conduktor/conduktor-console:1.30.0
+    hostname: conduktor-console
+    container_name: conduktor-console
+    depends_on:
+      - conduktor-postgresql
+    ports:
+      - "8080:8080"
     volumes:
       - ../../environment/2way-ssl/conduktor/platform-config.yaml:/tmp/platform-config.yaml
       - ../../environment/2way-ssl/security:/etc/kafka/secrets
+    environment:
+      CDK_IN_CONF_FILE: /tmp/platform-config.yaml
+    profiles:
+      - "conduktor"
+
+  conduktor-monitoring:
+    image: conduktor/conduktor-console-cortex:1.30.0
+    hostname: conduktor-monitoring
+    container_name: conduktor-monitoring
+    environment:
+      # Connection to the Console container
+      CDK_CONSOLE-URL: "http://conduktor-console:8080"
+    profiles:
+      - "conduktor"
