@@ -16117,7 +16117,7 @@ playground_open_docs_command() {
   if [[ $url =~ "http" ]]
   then
       short_url=$(echo $url | cut -d '#' -f 1)
-      if [[ -n "$only_show_url" ]]
+      if [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]]
       then
           log "🌐 documentation is available at:"
           echo "$short_url"
@@ -18608,9 +18608,12 @@ EOF
 
   log "💗 you can now use zazkia tcp proxy using <zazkia:49998>"
   log "🌐 zazkia UI is available on http://localhost:9191"
-  set +e
-  open "http://localhost:9191"
-  set -e
+  if [[ $(type -f open 2>&1) =~ "not found" ]]
+  then
+    :
+  else
+    open "http://localhost:9191"
+  fi
 
   if [[ -n "$skip_automatic_connector_config" ]]
   then
@@ -20600,7 +20603,12 @@ playground_topic_consume_command() {
     plot 'latency.csv' using 1:(\$2-\$3) with points;"
 
     # open $latency_csv
-    open $latency_png
+    if [[ $(type -f open 2>&1) =~ "not found" ]]
+    then
+      :
+    else
+      open $latency_png
+    fi
   fi
 }
 
@@ -24275,7 +24283,7 @@ playground_connector_open_docs_command() {
               if [[ $url =~ "http" ]]
               then
                   short_url=$(echo $url | cut -d '#' -f 1)
-                  if [[ -n "$only_show_url" ]]
+                  if [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]]
                   then
                       log "🌐 documentation for $connector_type connector $name is available at:"
                       echo "$short_url"
@@ -24491,13 +24499,19 @@ playground_connector_open_ccloud_connector_in_browser_command() {
           TYPE="sources"
       fi
 
-      if [[ -n "$browser" ]]
+      if [[ $(type -f open 2>&1) =~ "not found" ]]
       then
-          log "🤖 Open $connector_type connector $connector ($connectorId) in Confluent Cloud dashboard with browser $browser"
-          open -a "$browser" "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
+          log "🔗 Cannot open browser, use url:"
+          echo "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
       else
-          log "🤖 Open $connector_type connector $connector ($connectorId) in Confluent Cloud dashboard"
-          open "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
+          if [[ -n "$browser" ]]
+          then
+              log "🤖 Open $connector_type connector $connector ($connectorId) in Confluent Cloud dashboard with browser $browser"
+              open -a "$browser" "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
+          else
+              log "🤖 Open $connector_type connector $connector ($connectorId) in Confluent Cloud dashboard"
+              open "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
+          fi
       fi
   done
 }

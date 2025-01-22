@@ -510,5 +510,10 @@ then
   plot 'latency.csv' using 1:(\$2-\$3) with points;"
 
   # open $latency_csv
-  open $latency_png
+  if [[ $(type -f open 2>&1) =~ "not found" ]]
+  then
+    :
+  else
+    open $latency_png
+  fi
 fi
