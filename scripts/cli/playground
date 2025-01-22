@@ -7983,11 +7983,18 @@ function check_for_ec2_instance_running() {
 
 function open_file_with_editor() {
   filename="$1"
+  wait="$2"
+
   editor=$(playground config get editor)
   if [ "$editor" != "" ] && command -v "$editor" > /dev/null
   then
     log "📖 opening ${filename} using configured editor \"$editor\" (you can change editor by using \"playground config set editor <editor>\")"
-    $editor ${filename}
+    if [ "$editor" = "code" ] && [ "$wait" != "" ]
+    then
+      code --wait ${filename}
+    else
+      $editor ${filename}
+    fi
   else
     logerror "❌ editor \"$editor\" is not installed - you can change editor by using \"playground config set editor <editor>\""
     exit 1
@@ -17068,27 +17075,9 @@ playground_repro_bootstrap_command() {
 
       if [[ -n "$schema_file_key" ]]
       then
+        log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
+        open_file_with_editor "$tmp_dir/key_schema" "--wait"
 
-        editor=$(playground config get editor)
-        if [ "$editor" != "" ]
-        then
-          log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
-          if [ "$editor" = "code" ]
-          then
-            code --wait $tmp_dir/key_schema
-          else
-            $editor $tmp_dir/key_schema
-          fi
-        else
-          if [[ $(type code 2>&1) =~ "not found" ]]
-          then
-            logerror "Could not determine an editor to use as default code is not found (you can change editor by using \"playground config set editor <editor>\")"
-            exit 1
-          else
-            log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
-            code --wait $tmp_dir/key_schema
-          fi
-        fi
         case "${producer}" in
           avro-with-key)
             original_namespace=$(cat $tmp_dir/key_schema | jq -r .namespace)
@@ -17163,26 +17152,8 @@ playground_repro_bootstrap_command() {
 
       if [[ -n "$schema_file_value" ]]
       then
-        editor=$(playground config get editor)
-        if [ "$editor" != "" ]
-        then
-          log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
-          if [ "$editor" = "code" ]
-          then
-            code --wait $tmp_dir/value_schema
-          else
-            $editor $tmp_dir/value_schema
-          fi
-        else
-          if [[ $(type code 2>&1) =~ "not found" ]]
-          then
-            logerror "Could not determine an editor to use as default code is not found (you can change editor by using \"playground config set editor <editor>\")"
-            exit 1
-          else
-            log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
-            code --wait $tmp_dir/value_schema
-          fi
-        fi
+        log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
+        open_file_with_editor "$tmp_dir/value_schema" "--wait"
 
         case "${producer}" in
           avro|avro-with-key)
@@ -22772,26 +22743,8 @@ playground_connector_offsets_alter_command() {
           jq 'del(.metadata)' $file > $file_tmp
           cp $file_tmp $file
 
-          editor=$(playground config get editor)
-          if [ "$editor" != "" ]
-          then
-              log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-              if [ "$editor" = "code" ]
-              then
-                  code --wait $file
-              else
-                  $editor $file
-              fi
-          else
-              if [[ $(type code 2>&1) =~ "not found" ]]
-              then
-                  logerror "Could not determine an editor to use as default code is not found (you can change editor by using \"playground config set editor <editor>\")"
-                  exit 1
-              else
-                  log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-                  code --wait $file
-              fi
-          fi
+          log "✨ Update the connector offsets as per your needs, save and close the file to continue"
+          open_file_with_editor "${file}" "--wait"
 
           handle_ccloud_connect_rest_api "curl -s --request POST -H \"Content-Type: application/json\" --data @$file \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request\" --header \"authorization: Basic $authorization\""
       else
@@ -22806,26 +22759,8 @@ playground_connector_offsets_alter_command() {
           file=$tmp_dir/offsets-$connector.json
           echo "$curl_output" | jq . > $file
 
-          editor=$(playground config get editor)
-          if [ "$editor" != "" ]
-          then
-              log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-              if [ "$editor" = "code" ]
-              then
-                  code --wait $file
-              else
-                  $editor $file
-              fi
-          else
-              if [[ $(type code 2>&1) =~ "not found" ]]
-              then
-                  logerror "Could not determine an editor to use as default code is not found (you can change editor by using \"playground config set editor <editor>\")"
-                  exit 1
-              else
-                  log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-                  code --wait $file
-              fi
-          fi
+          log "✨ Update the connector offsets as per your needs, save and close the file to continue"
+          open_file_with_editor "${file}" "--wait"
 
           playground connector stop --connector $connector
 
@@ -22927,26 +22862,8 @@ playground_connector_offsets_alter_command() {
                       echo "topic,partition,current-offset" > $file
                       docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --export --reset-offsets --to-current --all-topics --dry-run >> $file
 
-                      editor=$(playground config get editor)
-                      if [ "$editor" != "" ]
-                      then
-                          log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-                          if [ "$editor" = "code" ]
-                          then
-                              code --wait $file
-                          else
-                              $editor $file
-                          fi
-                      else
-                          if [[ $(type code 2>&1) =~ "not found" ]]
-                          then
-                              logerror "Could not determine an editor to use as default code is not found (you can change editor by using \"playground config set editor <editor>\")"
-                              exit 1
-                          else
-                              log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-                              code --wait $file
-                          fi
-                      fi
+                      log "✨ Update the connector offsets as per your needs, save and close the file to continue"
+                      open_file_with_editor "${file}" "--wait"
 
                       # remove any empty lines and header
                       grep -v '^$' "$file" > $tmp_dir/tmp && mv $tmp_dir/tmp "$file"
@@ -25008,27 +24925,8 @@ playground_connector_update_command() {
       echo -e "" >> $file
       playground connector show-config-parameters --connector $connector  | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> $file
 
-      editor=$(playground config get editor)
-      if [ "$editor" != "" ]
-      then
-          log "✨ Update the connector config as per your needs, save and close the file to continue"
-          if [ "$editor" = "code" ]
-          then
-              code --wait $file
-          else
-              $editor $file
-          fi
-      else
-          if [[ $(type code 2>&1) =~ "not found" ]]
-          then
-              logerror "Could not determine an editor to use as default code is not found (you can change editor by using \"playground config set editor <editor>\")"
-              exit 1
-          else
-              log "✨ Update the connector config as per your needs, save and close the file to continue"
-              code --wait $file
-          fi
-      fi
-
+      log "✨ Update the connector config as per your needs, save and close the file to continue"
+      open_file_with_editor "${file}" "--wait"
       bash $file
   done
 

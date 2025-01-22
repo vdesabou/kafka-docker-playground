@@ -66,26 +66,8 @@ function handle_first_class_offset() {
         jq 'del(.metadata)' $file > $file_tmp
         cp $file_tmp $file
 
-        editor=$(playground config get editor)
-        if [ "$editor" != "" ]
-        then
-            log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-            if [ "$editor" = "code" ]
-            then
-                code --wait $file
-            else
-                $editor $file
-            fi
-        else
-            if [[ $(type code 2>&1) =~ "not found" ]]
-            then
-                logerror "Could not determine an editor to use as default code is not found (you can change editor by using \"playground config set editor <editor>\")"
-                exit 1
-            else
-                log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-                code --wait $file
-            fi
-        fi
+        log "✨ Update the connector offsets as per your needs, save and close the file to continue"
+        open_file_with_editor "${file}" "--wait"
 
         handle_ccloud_connect_rest_api "curl -s --request POST -H \"Content-Type: application/json\" --data @$file \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request\" --header \"authorization: Basic $authorization\""
     else
@@ -100,26 +82,8 @@ function handle_first_class_offset() {
         file=$tmp_dir/offsets-$connector.json
         echo "$curl_output" | jq . > $file
 
-        editor=$(playground config get editor)
-        if [ "$editor" != "" ]
-        then
-            log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-            if [ "$editor" = "code" ]
-            then
-                code --wait $file
-            else
-                $editor $file
-            fi
-        else
-            if [[ $(type code 2>&1) =~ "not found" ]]
-            then
-                logerror "Could not determine an editor to use as default code is not found (you can change editor by using \"playground config set editor <editor>\")"
-                exit 1
-            else
-                log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-                code --wait $file
-            fi
-        fi
+        log "✨ Update the connector offsets as per your needs, save and close the file to continue"
+        open_file_with_editor "${file}" "--wait"
 
         playground connector stop --connector $connector
 
@@ -225,26 +189,8 @@ do
                     echo "topic,partition,current-offset" > $file
                     docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --export --reset-offsets --to-current --all-topics --dry-run >> $file
 
-                    editor=$(playground config get editor)
-                    if [ "$editor" != "" ]
-                    then
-                        log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-                        if [ "$editor" = "code" ]
-                        then
-                            code --wait $file
-                        else
-                            $editor $file
-                        fi
-                    else
-                        if [[ $(type code 2>&1) =~ "not found" ]]
-                        then
-                            logerror "Could not determine an editor to use as default code is not found (you can change editor by using \"playground config set editor <editor>\")"
-                            exit 1
-                        else
-                            log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-                            code --wait $file
-                        fi
-                    fi
+                    log "✨ Update the connector offsets as per your needs, save and close the file to continue"
+                    open_file_with_editor "${file}" "--wait"
 
                     # remove any empty lines and header
                     grep -v '^$' "$file" > $tmp_dir/tmp && mv $tmp_dir/tmp "$file"

@@ -67,26 +67,7 @@ do
     echo -e "" >> $file
     playground connector show-config-parameters --connector $connector  | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> $file
 
-    editor=$(playground config get editor)
-    if [ "$editor" != "" ]
-    then
-        log "✨ Update the connector config as per your needs, save and close the file to continue"
-        if [ "$editor" = "code" ]
-        then
-            code --wait $file
-        else
-            $editor $file
-        fi
-    else
-        if [[ $(type code 2>&1) =~ "not found" ]]
-        then
-            logerror "Could not determine an editor to use as default code is not found (you can change editor by using \"playground config set editor <editor>\")"
-            exit 1
-        else
-            log "✨ Update the connector config as per your needs, save and close the file to continue"
-            code --wait $file
-        fi
-    fi
-
+    log "✨ Update the connector config as per your needs, save and close the file to continue"
+    open_file_with_editor "${file}" "--wait"
     bash $file
 done

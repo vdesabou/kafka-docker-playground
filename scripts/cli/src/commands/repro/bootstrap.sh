@@ -462,29 +462,9 @@ then
     #### schema_file_key
     if [[ -n "$schema_file_key" ]]
     then
+      log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
+      open_file_with_editor "$tmp_dir/key_schema" "--wait"
 
-
-
-      editor=$(playground config get editor)
-      if [ "$editor" != "" ]
-      then
-        log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
-        if [ "$editor" = "code" ]
-        then
-          code --wait $tmp_dir/key_schema
-        else
-          $editor $tmp_dir/key_schema
-        fi
-      else
-        if [[ $(type code 2>&1) =~ "not found" ]]
-        then
-          logerror "Could not determine an editor to use as default code is not found (you can change editor by using \"playground config set editor <editor>\")"
-          exit 1
-        else
-          log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
-          code --wait $tmp_dir/key_schema
-        fi
-      fi
       case "${producer}" in
         avro-with-key)
           original_namespace=$(cat $tmp_dir/key_schema | jq -r .namespace)
@@ -561,27 +541,9 @@ then
     #### schema_file_value
     if [[ -n "$schema_file_value" ]]
     then
-      editor=$(playground config get editor)
-      if [ "$editor" != "" ]
-      then
-        log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
-        if [ "$editor" = "code" ]
-        then
-          code --wait $tmp_dir/value_schema
-        else
-          $editor $tmp_dir/value_schema
-        fi
-      else
-        if [[ $(type code 2>&1) =~ "not found" ]]
-        then
-          logerror "Could not determine an editor to use as default code is not found (you can change editor by using \"playground config set editor <editor>\")"
-          exit 1
-        else
-          log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
-          code --wait $tmp_dir/value_schema
-        fi
-      fi
-
+      log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
+      open_file_with_editor "$tmp_dir/value_schema" "--wait"
+      
       case "${producer}" in
         avro|avro-with-key)
           original_namespace=$(cat $tmp_dir/value_schema | jq -r .namespace)
