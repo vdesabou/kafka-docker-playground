@@ -104,7 +104,7 @@ playground connector create-or-update --connector redshift-jdbc-source  << EOF
 {
      "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
      "tasks.max": "1",
-     "connection.url": "jdbc:redshift://$CLUSTER:5439/dev?user=masteruser&password=myPassword1&ssl=false",
+     "connection.url": "jdbc:redshift://$CLUSTER:5439/dev?user=masteruser&password=myPassword1",
      "table.whitelist": "customers",
      "mode": "timestamp+incrementing",
      "timestamp.column.name": "update_ts",
