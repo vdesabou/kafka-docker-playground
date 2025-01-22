@@ -1568,3 +1568,16 @@ function check_for_ec2_instance_running() {
     done
   fi
 }
+
+function open_file_with_editor() {
+  filename="$1"
+  editor=$(playground config get editor)
+  if [ "$editor" != "" ] && command -v "$editor" > /dev/null
+  then
+    log "📖 opening ${filename} using configured editor \"$editor\" (you can change editor by using \"playground config set editor <editor>\")"
+    $editor ${filename}
+  else
+    logerror "❌ editor \"$editor\" is not installed - you can change editor by using \"playground config set editor <editor>\""
+    exit 1
+  fi
+}

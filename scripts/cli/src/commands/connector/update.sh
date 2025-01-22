@@ -80,7 +80,7 @@ do
     else
         if [[ $(type code 2>&1) =~ "not found" ]]
         then
-            logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
+            logerror "Could not determine an editor to use as default code is not found (you can change editor by using \"playground config set editor <editor>\")"
             exit 1
         else
             log "✨ Update the connector config as per your needs, save and close the file to continue"

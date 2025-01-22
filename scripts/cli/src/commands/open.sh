@@ -16,18 +16,4 @@ else
   fi
 fi
 
-editor=$(playground config get editor)
-if [ "$editor" != "" ]
-then
-  log "📖 Opening ${test_file} using configured editor $editor"
-  $editor ${test_file}
-else
-  if [[ $(type code 2>&1) =~ "not found" ]]
-  then
-    logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
-    exit 1
-  else
-    log "📖 Opening ${test_file} with code (default) - you can change editor by using playground config editor <editor>"
-    code ${test_file}
-  fi
-fi
+open_file_with_editor "${test_file}"

@@ -478,7 +478,7 @@ then
       else
         if [[ $(type code 2>&1) =~ "not found" ]]
         then
-          logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
+          logerror "Could not determine an editor to use as default code is not found (you can change editor by using \"playground config set editor <editor>\")"
           exit 1
         else
           log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
@@ -561,7 +561,6 @@ then
     #### schema_file_value
     if [[ -n "$schema_file_value" ]]
     then
-
       editor=$(playground config get editor)
       if [ "$editor" != "" ]
       then
@@ -575,7 +574,7 @@ then
       else
         if [[ $(type code 2>&1) =~ "not found" ]]
         then
-          logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
+          logerror "Could not determine an editor to use as default code is not found (you can change editor by using \"playground config set editor <editor>\")"
           exit 1
         else
           log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
@@ -1297,21 +1296,7 @@ fi
 playground state set run.test_file "$repro_dir/$repro_test_filename"
 playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
 
-editor=$(playground config get editor)
-if [ "$editor" != "" ]
-then
-  log "📖 Opening ${repro_test_filename} using configured editor $editor"
-  $editor $repro_dir/$repro_test_filename
-else
-    if [[ $(type code 2>&1) =~ "not found" ]]
-    then
-        logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
-        exit 1
-    else
-        log "📖 Opening ${repro_test_filename} with code (default) - you can change editor by using playground config editor <editor>"
-        code $repro_dir/$repro_test_filename
-    fi
-fi
+open_file_with_editor "$repro_dir/$repro_test_filename"
 
 increment_cli_metric nb_reproduction_models
 log "👷 Number of repro models created so far: $(get_cli_metric nb_reproduction_models)"
