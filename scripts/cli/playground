@@ -19884,7 +19884,7 @@ playground_container_wait_for_connect_rest_api_ready_command() {
     cur_wait=$(( cur_wait+1 ))
     if [[ "$cur_wait" -gt "$max_wait" ]]
     then
-      logerror "The connect REST API is still not ready after $max_wait seconds, see output"
+      logerror "❌ the connect REST API is still not ready after $max_wait seconds, see output"
       handle_onprem_connect_rest_api "curl $security -s \"$connect_url\""
       return 1
     fi
