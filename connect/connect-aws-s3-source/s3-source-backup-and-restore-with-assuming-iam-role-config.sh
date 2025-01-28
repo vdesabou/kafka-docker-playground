@@ -109,24 +109,26 @@ rm -f s3_topic+0+0000000000.avro
 log "Creating Backup and Restore S3 Source connector with bucket name <$AWS_BUCKET_NAME>"
 playground connector create-or-update --connector s3-source  << EOF
 {
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
-               "s3.region": "$AWS_REGION",
-               "s3.bucket.name": "$AWS_BUCKET_NAME",
-               "topics.dir": "$TAG",
-               "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "s3.credentials.provider.class": "io.confluent.connect.s3.auth.AwsAssumeRoleCredentialsProvider",
-               "s3.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
-               "s3.credentials.provider.sts.role.session.name": "session-name",
-               "s3.credentials.provider.sts.role.external.id": "123",
-               "transforms": "AddPrefix",
-               "transforms.AddPrefix.type": "org.apache.kafka.connect.transforms.RegexRouter",
-               "transforms.AddPrefix.regex": ".*",
-               "transforms.AddPrefix.replacement": "copy_of_\$0"
-          }
+  "tasks.max": "1",
+  "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
+  "s3.region": "$AWS_REGION",
+  "s3.bucket.name": "$AWS_BUCKET_NAME",
+  "topics.dir": "$TAG",
+  "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
+  "confluent.license": "",
+  "confluent.topic.bootstrap.servers": "broker:9092",
+  "confluent.topic.replication.factor": "1",
+  "s3.credentials.provider.class": "io.confluent.connect.s3.auth.AwsAssumeRoleCredentialsProvider",
+  "s3.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
+  "s3.credentials.provider.sts.role.session.name": "session-name",
+  "s3.credentials.provider.sts.role.external.id": "123",
+  "s3.credentials.provider.aws.access.key.id": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID",
+  "s3.credentials.provider.aws.secret.access.key": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY",
+  "transforms": "AddPrefix",
+  "transforms.AddPrefix.type": "org.apache.kafka.connect.transforms.RegexRouter",
+  "transforms.AddPrefix.regex": ".*",
+  "transforms.AddPrefix.replacement": "copy_of_\$0"
+}
 EOF
 
 sleep 10
