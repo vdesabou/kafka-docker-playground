@@ -6415,11 +6415,28 @@ function get_environment_used() {
 function get_connect_url_and_security() {
   get_environment_used
 
-  connect_url="http://localhost:8083"
+  connect_port="8083"
+  if ! nc -vz localhost 8083 > /dev/null 2>&1
+  then
+    if nc -vz localhost 8283 > /dev/null 2>&1
+    then
+      connect_port="8283"
+      # log "💫 using connect rest api for connect2 as connect rest api on port 8083 is not available"
+    elif nc -vz localhost 8383 > /dev/null 2>&1
+    then
+      connect_port="8383"
+      # log "💫 using connect rest api for connect3 as connect rest api on port 8083 and connect2 rest api on port 8283 are not available"
+    else
+      logerror "❌ No available port found for connect rest api"
+      exit 1
+    fi
+  fi
+  connect_url="http://localhost:$connect_port"
+
   security=""
   if [[ "$environment" == "sasl-ssl" ]] || [[ "$environment" == "2way-ssl" ]]
   then
-      connect_url="https://localhost:8083"
+      connect_url="https://localhost:$connect_port"
       DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
       security="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
