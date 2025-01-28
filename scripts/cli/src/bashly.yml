@@ -2112,6 +2112,19 @@ commands:
         help: |-
           🧽 Restore back original values before any changes was made
 
+    - name: wait-for-connect-rest-api-ready
+      group: Container
+      private: true
+      help: |-
+        🚏 wait-for-connect-rest-api-ready
+      flags:
+        - long: --max-wait
+          arg: max_wait
+          validate: integer
+          default: "300"
+          help: |- 
+            ⏳ Max time in seconds to wait
+
 - name: topic
   expose: always
   group: Topic

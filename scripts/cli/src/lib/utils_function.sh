@@ -1050,7 +1050,7 @@ function wait_container_ready() {
     playground --output-level WARN container logs --container $CONTROL_CENTER_CONTAINER --wait-for-log "Started NetworkTrafficServerConnector" --max-wait $MAX_WAIT
   else
     log "⌛ Waiting up to $MAX_WAIT seconds for ${CONNECT_CONTAINER} to start"
-    playground --output-level WARN container logs --container $CONNECT_CONTAINER --wait-for-log "Finished starting connectors and tasks" --max-wait $MAX_WAIT
+    playground container wait-for-connect-rest-api-ready --max-wait $MAX_WAIT
   fi
   # Verify Docker containers started
   if [[ $(docker container ps) =~ "Exit 137" ]]
@@ -4138,7 +4138,7 @@ function handle_ccloud_connect_rest_api () {
       if [ "$curl_output" == "[]" ]
       then
         # logerror "No connector running"
-        # exit 1
+        # return 1
         echo ""
         return
       fi
@@ -4154,18 +4154,18 @@ function handle_ccloud_connect_rest_api () {
         fi
         logerror "Command failed with error code $code"
         logerror "$message"
-        exit 1
+        return 1
       elif echo "$curl_output" | jq 'has("errors")' 2> /dev/null | grep -q true
       then
         code=$(echo "$curl_output" | jq -r '.errors[0].status')
         message=$(echo "$curl_output" | jq -r '.errors[0].detail')
         logerror "Command failed with error code $code"
         logerror "$message"
-        exit 1
+        return 1
       fi
   else
     logerror "❌ curl request failed with error code $ret!"
-    exit 1
+    return 1
   fi
 }
 
@@ -4183,7 +4183,7 @@ function handle_onprem_connect_rest_api () {
       if [ "$curl_output" == "[]" ]
       then
         # logerror "No connector running"
-        # exit 1
+        # return 1
         echo ""
         return
       fi
@@ -4193,11 +4193,11 @@ function handle_onprem_connect_rest_api () {
         message=$(echo "$curl_output" | jq -r .message)
         logerror "Command failed with error code $error_code"
         logerror "$message"
-        exit 1
+        return 1
       fi
   else
       logerror "❌ curl request failed with error code $ret!"
-      exit 1
+      return 1
   fi
 }
 

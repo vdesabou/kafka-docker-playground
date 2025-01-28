@@ -3800,21 +3800,21 @@ playground_container_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   📝 Get properties file from a container\n" "$(green "get-properties")           "
+  printf "  %s   📝 Get properties file from a container\n" "$(green "get-properties")                 "
   echo
   printf "%s\n" "$(bold "Container commands:")"
-  printf "  %s   💫 Recreate container(s)\n" "$(green "recreate")                 "
-  printf "  %s   🖥️  Get ip address of running containers\n" "$(green "get-ip-addresses")         "
-  printf "  %s   💀 Kill all containers\n" "$(green "kill-all")                 "
-  printf "  %s   🕵️  Tail and follow container logs\n" "$(green "logs")                     "
-  printf "  %s   🛬 SSH into container\n" "$(green "ssh")                      "
-  printf "  %s   🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)\n" "$(green "change-jdk")               "
-  printf "  %s   🪄  Execute command in a container\n" "$(green "exec")                     "
-  printf "  %s   🔁 Restart a container\n" "$(green "restart")                  "
-  printf "  %s   ⏸️  Pause a container\n" "$(green "pause")                    "
-  printf "  %s   ⏯️  Resume a container\n" "$(green "resume")                   "
-  printf "  %s   🔫 Kill a container\n" "$(green "kill")                     "
-  printf "  %s   📦  Set environment variable(s) for a container\n" "$(green "set-environment-variables")"
+  printf "  %s   💫 Recreate container(s)\n" "$(green "recreate")                       "
+  printf "  %s   🖥️  Get ip address of running containers\n" "$(green "get-ip-addresses")               "
+  printf "  %s   💀 Kill all containers\n" "$(green "kill-all")                       "
+  printf "  %s   🕵️  Tail and follow container logs\n" "$(green "logs")                           "
+  printf "  %s   🛬 SSH into container\n" "$(green "ssh")                            "
+  printf "  %s   🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)\n" "$(green "change-jdk")                     "
+  printf "  %s   🪄  Execute command in a container\n" "$(green "exec")                           "
+  printf "  %s   🔁 Restart a container\n" "$(green "restart")                        "
+  printf "  %s   ⏸️  Pause a container\n" "$(green "pause")                          "
+  printf "  %s   ⏯️  Resume a container\n" "$(green "resume")                         "
+  printf "  %s   🔫 Kill a container\n" "$(green "kill")                           "
+  printf "  %s   📦  Set environment variable(s) for a container\n" "$(green "set-environment-variables")      "
   echo
 
   # :command.long_usage
@@ -4289,6 +4289,34 @@ playground_container_set_environment_variables_usage() {
     printf "  %s\n" "$(magenta "--restore-original-values")"
     printf "    🧽 Restore back original values before any changes was made\n"
     printf "    %s\n" "Conflicts: --env"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_container_wait_for_connect_rest_api_ready_usage() {
+  printf "playground container wait-for-connect-rest-api-ready - 🚏 wait-for-connect-rest-api-ready\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground container wait-for-connect-rest-api-ready [OPTIONS]\n"
+  printf "  playground container wait-for-connect-rest-api-ready --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-wait MAX_WAIT")"
+    printf "    ⏳ Max time in seconds to wait\n"
+    printf "    %s\n" "Default: 300"
     echo
 
     # :command.usage_fixed_flags
@@ -9248,7 +9276,7 @@ function wait_container_ready() {
     playground --output-level WARN container logs --container $CONTROL_CENTER_CONTAINER --wait-for-log "Started NetworkTrafficServerConnector" --max-wait $MAX_WAIT
   else
     log "⌛ Waiting up to $MAX_WAIT seconds for ${CONNECT_CONTAINER} to start"
-    playground --output-level WARN container logs --container $CONNECT_CONTAINER --wait-for-log "Finished starting connectors and tasks" --max-wait $MAX_WAIT
+    playground container wait-for-connect-rest-api-ready --max-wait $MAX_WAIT
   fi
   # Verify Docker containers started
   if [[ $(docker container ps) =~ "Exit 137" ]]
@@ -12267,7 +12295,7 @@ function handle_ccloud_connect_rest_api () {
       if [ "$curl_output" == "[]" ]
       then
         # logerror "No connector running"
-        # exit 1
+        # return 1
         echo ""
         return
       fi
@@ -12283,18 +12311,18 @@ function handle_ccloud_connect_rest_api () {
         fi
         logerror "Command failed with error code $code"
         logerror "$message"
-        exit 1
+        return 1
       elif echo "$curl_output" | jq 'has("errors")' 2> /dev/null | grep -q true
       then
         code=$(echo "$curl_output" | jq -r '.errors[0].status')
         message=$(echo "$curl_output" | jq -r '.errors[0].detail')
         logerror "Command failed with error code $code"
         logerror "$message"
-        exit 1
+        return 1
       fi
   else
     logerror "❌ curl request failed with error code $ret!"
-    exit 1
+    return 1
   fi
 }
 
@@ -12312,7 +12340,7 @@ function handle_onprem_connect_rest_api () {
       if [ "$curl_output" == "[]" ]
       then
         # logerror "No connector running"
-        # exit 1
+        # return 1
         echo ""
         return
       fi
@@ -12323,11 +12351,11 @@ function handle_onprem_connect_rest_api () {
         message=$(echo "$curl_output" | jq -r .message)
         logerror "Command failed with error code $error_code"
         logerror "$message"
-        exit 1
+        return 1
       fi
   else
       logerror "❌ curl request failed with error code $ret!"
-      exit 1
+      return 1
   fi
 }
 
@@ -19841,6 +19869,26 @@ EOF
       load_env_variables
       bash $tmp_dir/playground-command
   fi
+}
+
+# :command.function
+playground_container_wait_for_connect_rest_api_ready_command() {
+  # src/commands/container/wait-for-connect-rest-api-ready.sh
+  max_wait="${args[--max-wait]}"
+
+  get_connect_url_and_security
+  cur_wait=0
+  while ! handle_onprem_connect_rest_api "curl $security -s \"$connect_url\"" > /dev/null;
+  do
+    sleep 1
+    cur_wait=$(( cur_wait+1 ))
+    if [[ "$cur_wait" -gt "$max_wait" ]]
+    then
+      logerror "The connect REST API is still not ready after $max_wait seconds, see output"
+      handle_onprem_connect_rest_api "curl $security -s \"$connect_url\""
+      return 1
+    fi
+  done
 }
 
 # :command.function
@@ -33970,6 +34018,13 @@ playground_container_parse_requirements() {
       shift $#
       ;;
 
+    wait-for-connect-rest-api-ready)
+      action="wait-for-connect-rest-api-ready"
+      shift
+      playground_container_wait_for_connect_rest_api_ready_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_container_usage >&2
@@ -34960,6 +35015,74 @@ playground_container_set_environment_variables_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['--container']:-} ]] || args['--container']="connect"
+
+}
+
+# :command.parse_requirements
+playground_container_wait_for_connect_rest_api_ready_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_container_wait_for_connect_rest_api_ready_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="container wait-for-connect-rest-api-ready"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --max-wait)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-wait']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-wait requires an argument: --max-wait MAX_WAIT" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--max-wait']:-} ]] || args['--max-wait']="300"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--max-wait'] && -n $(validate_integer "${args['--max-wait']:-}") ]]; then
+    printf "validation error in %s:\n%s\n" "--max-wait MAX_WAIT" "$(validate_integer "${args['--max-wait']:-}")" >&2
+    exit 1
+  fi
 
 }
 
@@ -39840,6 +39963,7 @@ run() {
     "container resume") playground_container_resume_command ;;
     "container kill") playground_container_kill_command ;;
     "container set-environment-variables") playground_container_set_environment_variables_command ;;
+    "container wait-for-connect-rest-api-ready") playground_container_wait_for_connect_rest_api_ready_command ;;
     "topic") playground_topic_command ;;
     "topic get-number-records") playground_topic_get_number_records_command ;;
     "topic display-consumer-offsets") playground_topic_display_consumer_offsets_command ;;
