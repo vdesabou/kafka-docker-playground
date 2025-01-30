@@ -1157,7 +1157,7 @@ done
 
   if [[ -n "$open" ]]
   then
-    open_file_with_editor "/tmp/jmx_metrics.log"
+    playground open --file "/tmp/jmx_metrics.log"
   fi
 }
 

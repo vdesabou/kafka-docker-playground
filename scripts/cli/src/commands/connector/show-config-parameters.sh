@@ -202,7 +202,7 @@ do
             echo "🔩 list of all available parameters for connector $connector ($class) and version $version (with default value when applicable)" >> $filename
         fi
 
-        open_file_with_editor "${filename}"
+        playground open --file "${filename}"
     else
         if [[ -n "$only_show_json" ]] || [[ -n "$only_show_json_file_path" ]]
         then

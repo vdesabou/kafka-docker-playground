@@ -484,6 +484,12 @@ subcommands:
         
         🎓 Tip: use <tab> completion to trigger fzf completion
         
+    - names:
+      - --wait
+      argument: ""
+      description: | 
+        😴 Wait
+        
     subcommands:
   - name: stop
     description: | 

@@ -9,7 +9,7 @@ then
   docker container logs "$container" > "$filename" 2>&1
   if [ $? -eq 0 ]
   then
-    open_file_with_editor "${filename}"
+    playground open --file "${filename}"
   else
     logerror "❌ failed to get logs using container logs $container"
   fi

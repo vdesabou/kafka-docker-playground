@@ -67,7 +67,7 @@ function handle_first_class_offset() {
         cp $file_tmp $file
 
         log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-        open_file_with_editor "${file}" "--wait"
+        playground open --file "${file}" --wait
 
         handle_ccloud_connect_rest_api "curl -s --request POST -H \"Content-Type: application/json\" --data @$file \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request\" --header \"authorization: Basic $authorization\""
     else
@@ -83,7 +83,7 @@ function handle_first_class_offset() {
         echo "$curl_output" | jq . > $file
 
         log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-        open_file_with_editor "${file}" "--wait"
+        playground open --file "${file}" --wait
 
         playground connector stop --connector $connector
 
@@ -190,7 +190,7 @@ do
                     docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --export --reset-offsets --to-current --all-topics --dry-run >> $file
 
                     log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-                    open_file_with_editor "${file}" "--wait"
+                    playground open --file "${file}" --wait
 
                     # remove any empty lines and header
                     grep -v '^$' "$file" > $tmp_dir/tmp && mv $tmp_dir/tmp "$file"

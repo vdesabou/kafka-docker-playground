@@ -415,7 +415,7 @@ fi
 
 if [[ -n "$open" ]]
 then
-  open_file_with_editor "${test_file}"
+  playground open --file "${test_file}"
   check_if_continue
 fi
 
@@ -956,7 +956,7 @@ then
 
     if [[ $res == *"$MENU_OPEN_FILE"* ]]
     then
-      open_file_with_editor "${test_file}"
+      playground open --file "${test_file}"
     fi
 
     if [[ $res == *"$MENU_OPEN_DOCS"* ]]

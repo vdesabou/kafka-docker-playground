@@ -68,6 +68,6 @@ do
     playground connector show-config-parameters --connector $connector  | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> $file
 
     log "✨ Update the connector config as per your needs, save and close the file to continue"
-    open_file_with_editor "${file}" "--wait"
+    playground open --file "${file}" --wait
     bash $file
 done

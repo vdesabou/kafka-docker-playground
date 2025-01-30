@@ -366,6 +366,13 @@
           ],
           "argument": "FILE",
           "description": "🔎 Search any file and open it.\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+        },
+        {
+          "names": [
+            "--wait"
+          ],
+          "argument": "",
+          "description": "😴 Wait\n"
         }
       ],
       "subcommands": null

@@ -9400,7 +9400,7 @@ done
 
   if [[ -n "$open" ]]
   then
-    open_file_with_editor "/tmp/jmx_metrics.log"
+    playground open --file "/tmp/jmx_metrics.log"
   fi
 }
 
@@ -14223,7 +14223,7 @@ playground_run_command() {
 
   if [[ -n "$open" ]]
   then
-    open_file_with_editor "${test_file}"
+    playground open --file "${test_file}"
     check_if_continue
   fi
 
@@ -14771,7 +14771,7 @@ playground_run_command() {
 
       if [[ $res == *"$MENU_OPEN_FILE"* ]]
       then
-        open_file_with_editor "${test_file}"
+        playground open --file "${test_file}"
       fi
 
       if [[ $res == *"$MENU_OPEN_DOCS"* ]]
@@ -15870,7 +15870,7 @@ playground_update_version_command() {
 
       if [[ $res == *"$MENU_OPEN_FILE"* ]]
       then
-        open_file_with_editor "${test_file}"
+        playground open --file "${test_file}"
       fi
 
       if [[ $res == *"$MENU_OPEN_DOCS"* ]]
@@ -16051,6 +16051,7 @@ playground_update_version_command() {
 playground_open_command() {
   # src/commands/open.sh
   test_file="${args[--file]}"
+  wait="${args[--wait]}"
 
   if [[ -n "$test_file" ]]
   then
@@ -16069,7 +16070,13 @@ playground_open_command() {
     fi
   fi
 
-  open_file_with_editor "${test_file}"
+  do_wait=""
+  if [[ -n "$wait" ]]
+  then
+    do_wait="wait"
+  fi
+
+  open_file_with_editor "${test_file}" "${do_wait}"
 }
 
 # :command.function
@@ -17121,7 +17128,7 @@ playground_repro_bootstrap_command() {
       if [[ -n "$schema_file_key" ]]
       then
         log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
-        open_file_with_editor "$tmp_dir/key_schema" "--wait"
+        playground open --file "$tmp_dir/key_schema" --wait
 
         case "${producer}" in
           avro-with-key)
@@ -17198,7 +17205,7 @@ playground_repro_bootstrap_command() {
       if [[ -n "$schema_file_value" ]]
       then
         log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
-        open_file_with_editor "$tmp_dir/value_schema" "--wait"
+        playground open --file "$tmp_dir/value_schema" --wait
 
         case "${producer}" in
           avro|avro-with-key)
@@ -17911,7 +17918,7 @@ EOF
   playground state set run.test_file "$repro_dir/$repro_test_filename"
   playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
 
-  open_file_with_editor "$repro_dir/$repro_test_filename"
+  playground open --file "$repro_dir/$repro_test_filename"
 
   increment_cli_metric nb_reproduction_models
   log "👷 Number of repro models created so far: $(get_cli_metric nb_reproduction_models)"
@@ -19201,7 +19208,7 @@ playground_debug_thread_dump_command() {
   docker exec $container jstack 1 > "$filename" 2>&1
   if [ $? -eq 0 ]
   then
-      open_file_with_editor "${filename}"
+      playground open --file "${filename}"
   else
       logerror "❌ Failed to take thread dump"
   fi
@@ -19709,7 +19716,7 @@ playground_container_logs_command() {
     docker container logs "$container" > "$filename" 2>&1
     if [ $? -eq 0 ]
     then
-      open_file_with_editor "${filename}"
+      playground open --file "${filename}"
     else
       logerror "❌ failed to get logs using container logs $container"
     fi
@@ -22817,7 +22824,7 @@ playground_connector_offsets_alter_command() {
           cp $file_tmp $file
 
           log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-          open_file_with_editor "${file}" "--wait"
+          playground open --file "${file}" --wait
 
           handle_ccloud_connect_rest_api "curl -s --request POST -H \"Content-Type: application/json\" --data @$file \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request\" --header \"authorization: Basic $authorization\""
       else
@@ -22833,7 +22840,7 @@ playground_connector_offsets_alter_command() {
           echo "$curl_output" | jq . > $file
 
           log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-          open_file_with_editor "${file}" "--wait"
+          playground open --file "${file}" --wait
 
           playground connector stop --connector $connector
 
@@ -22936,7 +22943,7 @@ playground_connector_offsets_alter_command() {
                       docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --export --reset-offsets --to-current --all-topics --dry-run >> $file
 
                       log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-                      open_file_with_editor "${file}" "--wait"
+                      playground open --file "${file}" --wait
 
                       # remove any empty lines and header
                       grep -v '^$' "$file" > $tmp_dir/tmp && mv $tmp_dir/tmp "$file"
@@ -24027,7 +24034,7 @@ playground_connector_show_config_parameters_command() {
               echo "🔩 list of all available parameters for connector $connector ($class) and version $version (with default value when applicable)" >> $filename
           fi
 
-          open_file_with_editor "${filename}"
+          playground open --file "${filename}"
       else
           if [[ -n "$only_show_json" ]] || [[ -n "$only_show_json_file_path" ]]
           then
@@ -25005,7 +25012,7 @@ playground_connector_update_command() {
       playground connector show-config-parameters --connector $connector  | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> $file
 
       log "✨ Update the connector config as per your needs, save and close the file to continue"
-      open_file_with_editor "${file}" "--wait"
+      playground open --file "${file}" --wait
       bash $file
   done
 
@@ -29596,6 +29603,14 @@ playground_open_parse_requirements() {
           printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --wait)
+
+        # :flag.case_no_arg
+        args['--wait']=1
+        shift
         ;;
 
       -?*)

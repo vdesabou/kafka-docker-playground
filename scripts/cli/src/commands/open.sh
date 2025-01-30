@@ -1,4 +1,5 @@
 test_file="${args[--file]}"
+wait="${args[--wait]}"
 
 if [[ -n "$test_file" ]]
 then
@@ -16,4 +17,10 @@ else
   fi
 fi
 
-open_file_with_editor "${test_file}"
+do_wait=""
+if [[ -n "$wait" ]]
+then
+  do_wait="wait"
+fi
+
+open_file_with_editor "${test_file}" "${do_wait}"

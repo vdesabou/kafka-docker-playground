@@ -881,6 +881,10 @@ commands:
       ❕ It must be absolute full path
 
       🎓 Tip: use <tab> completion to trigger fzf completion
+  - long: --wait
+    private: true
+    help: |- 
+      😴 Wait
 
 - name: stop
   group: Run

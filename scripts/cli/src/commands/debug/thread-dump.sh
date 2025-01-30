@@ -13,7 +13,7 @@ log "🎯 Taking thread dump on container ${container} for pid 1"
 docker exec $container jstack 1 > "$filename" 2>&1
 if [ $? -eq 0 ]
 then
-    open_file_with_editor "${filename}"
+    playground open --file "${filename}"
 else
     logerror "❌ Failed to take thread dump"
 fi
