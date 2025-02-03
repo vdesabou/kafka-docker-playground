@@ -111,7 +111,7 @@ services:
     hostname: connect-us
     container_name: connect-us
     ports:
-      - "28083:8083"
+      - "8083:8083"
       - "5005:5005"
     depends_on:
       - zookeeper-us
@@ -157,7 +157,7 @@ services:
     hostname: connect-europe
     container_name: connect-europe
     ports:
-      - "18083:8083"
+      - "8283:8083"
       - "5006:5005"
     depends_on:
       - zookeeper-europe
