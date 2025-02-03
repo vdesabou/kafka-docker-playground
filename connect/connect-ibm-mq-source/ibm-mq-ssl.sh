@@ -56,6 +56,7 @@ playground connector create-or-update --connector ibm-mq-source-ssl  << EOF
      "mq.channel": "DEV.APP.SVRCONN",
      "mq.username": "app",
      "mq.password": "passw0rd",
+     "max.retry.time": "10000",
      "jms.destination.name": "DEV.QUEUE.1",
      "jms.destination.type": "queue",
      "mq.tls.truststore.location": "/tmp/truststore.jks",
