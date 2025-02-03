@@ -19686,6 +19686,8 @@ playground_container_recreate_command() {
   echo "$docker_command" > /tmp/playground-command
   log "💫 Recreate container(s)"
   bash /tmp/playground-command
+
+  wait_container_ready
 }
 
 # :command.function

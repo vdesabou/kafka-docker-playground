@@ -36,3 +36,5 @@ fi
 echo "$docker_command" > /tmp/playground-command
 log "💫 Recreate container(s)"
 bash /tmp/playground-command
+
+wait_container_ready
