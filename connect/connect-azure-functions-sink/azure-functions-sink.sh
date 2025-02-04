@@ -68,40 +68,18 @@ log "Creating local functions project with HTTP trigger"
 docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node14-core-tools bash -c "func init LocalFunctionProj --javascript && cd LocalFunctionProj && func new --name HttpExample --template \"HTTP trigger\" --authlevel \"anonymous\""
 
 log "Creating functions app $AZURE_FUNCTIONS_NAME"
-max_attempts="10"
-sleep_interval="30"
-attempt_num=1
+az functionapp create --consumption-plan-location "$AZURE_REGION" --name "$AZURE_FUNCTIONS_NAME" --resource-group "$AZURE_RESOURCE_GROUP" --runtime node --storage-account "$AZURE_STORAGE_NAME" --runtime-version 18 --functions-version 4 --tags owner_email="$AZ_USER" --disable-app-insights true
 
-until az functionapp create --consumption-plan-location $AZURE_REGION --name $AZURE_FUNCTIONS_NAME --resource-group $AZURE_RESOURCE_GROUP --runtime node --storage-account $AZURE_STORAGE_NAME --runtime-version 18 --functions-version 4 --tags owner_email=$AZ_USER --disable-app-insights true > /dev/null 2>&1
-do
-    if (( attempt_num == max_attempts ))
-    then
-        logerror "❌ Failed to create function app after $attempt_num attempts. Please troubleshoot and run again."
-        exit 1
-    else
-        log "Retrying to create function app after $sleep_interval seconds"
-        ((attempt_num++))
-        sleep $sleep_interval
-    fi
-done
+# Check if the function app was created successfully
+if [ $? -eq 0 ]
+then
+    log "Azure Function App created successfully."
+else
+    logerror "❌ Failed to create Azure Function App."
+    exit 1
+fi
 
-# Verify the creation by listing the function apps in the resource group
-max_attempts="10"
-sleep_interval="30"
-attempt_num=1
-
-until az functionapp list --resource-group $AZURE_RESOURCE_GROUP --query "[?name=='$AZURE_FUNCTIONS_NAME']" --output table | grep -q "$AZURE_FUNCTIONS_NAME"
-do
-    if (( attempt_num == max_attempts ))
-    then
-        logerror "❌ Failed to verify function app creation after $attempt_num attempts. Please troubleshoot and run again."
-        exit 1
-    else
-        log "Retrying to verify function app creation after $sleep_interval seconds"
-        ((attempt_num++))
-        sleep $sleep_interval
-    fi
-done
+sleep 10
 
 log "Publishing functions app, it will take a while"
 max_attempts="10"
@@ -128,6 +106,8 @@ attempt_num=1
 until [ ! -z "$FUNCTIONS_URL" ]
 do
     output=$(docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node14-core-tools bash -c "az login -u \"$AZ_USER\" -p \"$AZ_PASS\" > /dev/null 2>&1 && cd LocalFunctionProj && func azure functionapp list-functions $AZURE_FUNCTIONS_NAME --show-keys")
+
+    log "Output from list-functions command: $output"
 
     FUNCTIONS_URL=$(echo "$output" | grep "Invoke url" | grep -Eo 'https://[^ >]+' | head -1)
 
