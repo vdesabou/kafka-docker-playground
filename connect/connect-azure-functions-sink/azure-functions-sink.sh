@@ -99,8 +99,11 @@ do
     fi
 done
 
+set +e
 curl -s https://$AZURE_FUNCTIONS_NAME.azurewebsites.net/" > /dev/null
 curl -s https://$AZURE_FUNCTIONS_NAME.azurewebsites.net/api/httpexample" > /dev/null
+
+set -e
 
 max_attempts="10"
 sleep_interval="30"
