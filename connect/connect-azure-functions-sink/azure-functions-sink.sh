@@ -95,6 +95,10 @@ attempt_num=1
 until [ ! -z "$FUNCTIONS_URL" ]
 do
     output=$(docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node14-core-tools bash -c "az login -u \"$AZ_USER\" -p \"$AZ_PASS\" > /dev/null 2>&1 && cd LocalFunctionProj && func azure functionapp list-functions $AZURE_FUNCTIONS_NAME --show-keys")
+
+    log "before echo"
+    echo "$output"
+    log "after echo"
     FUNCTIONS_URL=$(echo "$output" | grep "Invoke url" | grep -Eo 'https://[^ >]+' | head -1)
 
     if [ ! -z "$FUNCTIONS_URL" ]
