@@ -81,7 +81,7 @@ fi
 
 sleep 10
 
-log "Publishing functions app, it will take a while"
+log "Publishing functions app $AZURE_FUNCTIONS_NAME, it will take a while"
 max_attempts="10"
 sleep_interval="60"
 attempt_num=1
@@ -99,13 +99,16 @@ do
     fi
 done
 
+curl -s https://$AZURE_FUNCTIONS_NAME.azurewebsites.net/" > /dev/null
+curl -s https://$AZURE_FUNCTIONS_NAME.azurewebsites.net/api/httpexample" > /dev/null
+
 max_attempts="10"
 sleep_interval="30"
 attempt_num=1
 
 until [ ! -z "$FUNCTIONS_URL" ]
 do
-    output=$(docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node14-core-tools bash -c "az login -u \"$AZ_USER\" -p \"$AZ_PASS\" > /dev/null 2>&1 && cd LocalFunctionProj && func azure functionapp list-functions $AZURE_FUNCTIONS_NAME --show-keys")
+    output=$(docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node14-core-tools bash -c "az login -u \"$AZ_USER\" -p \"$AZ_PASS\" > /dev/null 2>&1 && cd LocalFunctionProj && func azure functionapp list-functions \"$AZURE_FUNCTIONS_NAME\" --show-keys")
 
     log "Output from list-functions command: $output"
 
