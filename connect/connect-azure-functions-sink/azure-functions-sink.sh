@@ -79,7 +79,7 @@ until docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/
 do
     if (( attempt_num == max_attempts ))
     then
-        logerror "ERROR: Failed after $attempt_num attempts. Please troubleshoot and run again."
+        logerror "❌ Failed after $attempt_num attempts. Please troubleshoot and run again."
         exit 1
     else
         log "Retrying after $sleep_interval seconds"
@@ -88,15 +88,30 @@ do
     fi
 done
 
+max_attempts="10"
+sleep_interval="30"
+attempt_num=1
 
-output=$(docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node14-core-tools bash -c "az login -u \"$AZ_USER\" -p \"$AZ_PASS\" > /dev/null 2>&1 && cd LocalFunctionProj && func azure functionapp list-functions $AZURE_FUNCTIONS_NAME --show-keys")
-FUNCTIONS_URL=$(echo "$output" | grep "Invoke url" | grep -Eo 'https://[^ >]+'|head -1)
+until [ ! -z "$FUNCTIONS_URL" ]
+do
+    output=$(docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node14-core-tools bash -c "az login -u \"$AZ_USER\" -p \"$AZ_PASS\" > /dev/null 2>&1 && cd LocalFunctionProj && func azure functionapp list-functions $AZURE_FUNCTIONS_NAME --show-keys")
+    FUNCTIONS_URL=$(echo "$output" | grep "Invoke url" | grep -Eo 'https://[^ >]+' | head -1)
 
-echo "$output"
-# if [ -z "$GITHUB_RUN_NUMBER" ]
-# then
-  log "Functions URL is $FUNCTIONS_URL"
-# fi
+    if [ ! -z "$FUNCTIONS_URL" ]
+    then
+        log "Functions URL is $FUNCTIONS_URL"
+    else
+        if (( attempt_num == max_attempts ))
+        then
+            logerror "❌ Failed to retrieve FUNCTIONS_URL after $attempt_num attempts. Please troubleshoot and run again."
+            exit 1
+        else
+            log "Retrying to get FUNCTIONS_URL after $sleep_interval seconds"
+            ((attempt_num++))
+            sleep $sleep_interval
+        fi
+    fi
+done
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
