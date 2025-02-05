@@ -85,7 +85,7 @@ then
                 then
                     source $root_folder/.ccloud/env.delta
                 else
-                    logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
+                    logerror "❌ $root_folder/.ccloud/env.delta has not been generated"
                     exit 1
                 fi
                 echo -e "    \"key.converter\": \"$converter_class\"," >> $converter_file

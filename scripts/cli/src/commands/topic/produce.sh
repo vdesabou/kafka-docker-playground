@@ -112,12 +112,12 @@ then
     then
         source $DELTA_CONFIGS_ENV
     else
-        logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+        logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
         exit 1
     fi
     if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
     then
-        logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
+        logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
         exit 1
     fi
 fi
@@ -675,7 +675,7 @@ then
     docker run -i --rm -e TAG=$tag -v "${root_folder}/scripts/cli/src/schema-validator":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "${root_folder}/scripts/cli/src/schema-validator/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=$tag package > /tmp/result.log 2>&1
     if [ $? != 0 ]
     then
-        logerror "ERROR: failed to build java component schema-validator"
+        logerror "❌ failed to build java component schema-validator"
         tail -500 /tmp/result.log
         exit 1
     fi

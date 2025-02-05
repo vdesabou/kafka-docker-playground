@@ -13,7 +13,7 @@ get_3rdparty_file "$GRAPHDB_SINK_CONNECTOR_ZIP"
 
 if [ ! -f ${PWD}/$GRAPHDB_SINK_CONNECTOR_ZIP ]
 then
-     logerror "ERROR: ${PWD}/$GRAPHDB_SINK_CONNECTOR_ZIP is missing. You must be a Confluent Employee to run this example !"
+     logerror "❌ ${PWD}/$GRAPHDB_SINK_CONNECTOR_ZIP is missing. You must be a Confluent Employee to run this example !"
      exit 1
 fi
 

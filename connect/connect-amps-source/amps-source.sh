@@ -12,7 +12,7 @@ cd -
 
 if [ ! -f ${DIR}/docker-amps/AMPS.tar.gz ]
 then
-     logerror "ERROR: ${DIR}/docker-amps/ does not contain AMPS tgz file AMPS.tar.gz"
+     logerror "❌ ${DIR}/docker-amps/ does not contain AMPS tgz file AMPS.tar.gz"
      exit 1
 fi
 

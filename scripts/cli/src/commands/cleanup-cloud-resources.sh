@@ -20,7 +20,7 @@ fi
 function cleanup_aws () {
     if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
     then
-        logerror "ERROR: either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
+        logerror "❌ either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
         exit 1
     else
         if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
@@ -41,7 +41,7 @@ function cleanup_aws () {
             AWS_REGION=$(aws configure get region | tr '\r' '\n')
             if [ "$AWS_REGION" == "" ]
             then
-                logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+                logerror "❌ either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
                 exit 1
             fi
         fi

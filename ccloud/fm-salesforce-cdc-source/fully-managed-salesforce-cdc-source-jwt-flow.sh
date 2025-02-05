@@ -50,7 +50,7 @@ fi
 if [ ! -f ${PWD}/salesforce-confluent.keystore.jks ]
 then
      # not running with github actions
-     logerror "ERROR: ${PWD}/salesforce-confluent.keystore.jks is missing. Check README !"
+     logerror "❌ ${PWD}/salesforce-confluent.keystore.jks is missing. Check README !"
      exit 1
 fi
 

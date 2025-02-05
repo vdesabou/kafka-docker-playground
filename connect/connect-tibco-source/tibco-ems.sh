@@ -10,7 +10,7 @@ get_3rdparty_file "TIB_ems-ce_8.5.1_linux_x86_64.zip"
 cd -
 if [ ! -f ../../connect/connect-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip ]
 then
-     logerror "ERROR: ../../connect/connect-tibco-source/docker-tibco/ does not contain TIBCO EMS zip file TIB_ems-ce_8.5.1_linux_x86_64.zip"
+     logerror "❌ ../../connect/connect-tibco-source/docker-tibco/ does not contain TIBCO EMS zip file TIB_ems-ce_8.5.1_linux_x86_64.zip"
      exit 1
 fi
 

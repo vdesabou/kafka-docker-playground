@@ -8,7 +8,7 @@ get_3rdparty_file "ImpalaJDBC42.jar"
 
 if [ ! -f ${DIR}/ImpalaJDBC42.jar ]
 then
-     logerror "ERROR: ${DIR}/ImpalaJDBC42.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
+     logerror "❌ ${DIR}/ImpalaJDBC42.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
      exit 1
 fi
 

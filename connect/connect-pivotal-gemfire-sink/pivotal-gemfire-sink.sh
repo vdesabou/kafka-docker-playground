@@ -13,7 +13,7 @@ then
 
      if [ ! -f ${DIR}/docker-pivotal-gemfire/pivotal-gemfire.tgz ]
      then
-          logerror "ERROR: ${DIR}/docker-pivotal-gemfire/ does not contain file pivotal-gemfire.tgz"
+          logerror "❌ ${DIR}/docker-pivotal-gemfire/ does not contain file pivotal-gemfire.tgz"
           exit 1
      fi
      log "Building pivotal-gemfire docker image..it can take a while..."

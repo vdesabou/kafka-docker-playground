@@ -290,7 +290,7 @@ function get_ccloud_connect() {
 
   if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
   then
-      logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
+      logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
       exit 1
   fi
 
@@ -345,7 +345,7 @@ function get_sr_url_and_security() {
     then
         source $root_folder/.ccloud/env.delta
     else
-        logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
+        logerror "❌ $root_folder/.ccloud/env.delta has not been generated"
         exit 1
     fi
     sr_url=$SCHEMA_REGISTRY_URL
@@ -849,7 +849,7 @@ function add_connector_config_based_on_environment () {
       then
           source $root_folder/.ccloud/env.delta
       else
-          logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
+          logerror "❌ $root_folder/.ccloud/env.delta has not been generated"
           exit 1
       fi
 

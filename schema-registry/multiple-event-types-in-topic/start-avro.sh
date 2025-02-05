@@ -6,7 +6,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.4.99"; then
-    logerror "ERROR: This can only be run with version greater than 5.5"
+    logerror "❌ This can only be run with version greater than 5.5"
     exit 111
 fi
 

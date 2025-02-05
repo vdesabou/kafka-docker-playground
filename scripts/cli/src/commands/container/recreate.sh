@@ -28,7 +28,7 @@ then
     then
         source $DELTA_CONFIGS_ENV
     else
-        logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+        logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
         exit 1
     fi
 fi

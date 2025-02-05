@@ -13,7 +13,7 @@ fi
 export AWS_CREDENTIALS_FILE_NAME=$HOME/.aws/credentials-with-assuming-iam-role
 if [ ! -f $AWS_CREDENTIALS_FILE_NAME ]
 then
-     logerror "ERROR: $AWS_CREDENTIALS_FILE_NAME is not set"
+     logerror "❌ $AWS_CREDENTIALS_FILE_NAME is not set"
      exit 1
 fi
 

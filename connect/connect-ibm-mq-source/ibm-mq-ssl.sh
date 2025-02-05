@@ -10,7 +10,7 @@ get_3rdparty_file "IBM-MQ-Install-Java-All.jar"
 if [ ! -f ${PWD}/IBM-MQ-Install-Java-All.jar ]
 then
      # not running with github actions
-     logerror "ERROR: ${PWD}/IBM-MQ-Install-Java-All.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
+     logerror "❌ ${PWD}/IBM-MQ-Install-Java-All.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
      exit 1
 fi
 

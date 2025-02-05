@@ -1564,7 +1564,7 @@ function create_or_get_oracle_image() {
       fi
       if [ ! -f ${ZIP_FILE} ]
       then
-          logerror "ERROR: ${ZIP_FILE} is missing. It must be downloaded manually in order to acknowledge user agreement"
+          logerror "❌ ${ZIP_FILE} is missing. It must be downloaded manually in order to acknowledge user agreement"
           exit 1
       fi
       log "👷 Building $BASE_ORACLE_IMAGE docker image..it can take a while...(more than 15 minutes!)"
@@ -1596,7 +1596,7 @@ function create_or_get_oracle_image() {
       docker container logs ${TEMP_CONTAINER} > /tmp/out.txt 2>&1
       CUR_WAIT=$(( CUR_WAIT+10 ))
       if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-            logerror "ERROR: The logs in ${TEMP_CONTAINER} container do not show 'DATABASE IS READY TO USE' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+            logerror "❌ The logs in ${TEMP_CONTAINER} container do not show 'DATABASE IS READY TO USE' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
             exit 1
       fi
       done
@@ -1694,7 +1694,7 @@ function maybe_delete_ccloud_environment () {
   then
     source $DELTA_CONFIGS_ENV
   else
-    logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+    logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
     exit 1
   fi
 
@@ -1969,7 +1969,7 @@ function bootstrap_ccloud_environment () {
   then
     source $DELTA_CONFIGS_ENV
   else
-    logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+    logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
     exit 1
   fi
 
@@ -4385,7 +4385,7 @@ EOF
       AWS_REGION=$(aws configure get region | tr '\r' '\n')
       if [ "$AWS_REGION" == "" ]
       then
-          logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+          logerror "❌ either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
           exit 1
       fi
   fi

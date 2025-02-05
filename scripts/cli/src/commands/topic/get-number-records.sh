@@ -52,7 +52,7 @@ do
 
         if [ ! -f $root_folder/.ccloud/librdkafka.delta ]
         then
-            logerror "ERROR: $root_folder/.ccloud/librdkafka.delta has not been generated"
+            logerror "❌ $root_folder/.ccloud/librdkafka.delta has not been generated"
             exit 1
         fi
         tr -d '"' < $root_folder/.ccloud/librdkafka.delta > $root_folder/.ccloud/librdkafka_no_quotes_tmp.delta

@@ -57,13 +57,13 @@ fi
 
 if [ ! -f "$test_file" ]
 then
-  logerror "ERROR: test_file $test_file does not exist!"
+  logerror "❌ test_file $test_file does not exist!"
   exit 1
 fi
 
 if [[ "$test_file" != *".sh" ]]
 then
-  logerror "ERROR: test_file $test_file is not a .sh file!"
+  logerror "❌ test_file $test_file is not a .sh file!"
   exit 1
 fi
 
