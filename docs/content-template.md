@@ -180,6 +180,7 @@
 
 ### 🤖 Fully-Managed Connectors
 
+  - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/activemq.png" width="15"> [ActiveMQ Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fm-active-mq-source) :ccloud/fm-active-mq-source:
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/cloudwatch_logs.svg" width="15"> [Amazon CloudWatch Logs Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fm-aws-cloudwatch-logs-source) :ccloud/fm-aws-cloudwatch-logs-source:
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/cloudwatch_logs.svg" width="15"> [Amazon CloudWatch Metrics Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fm-aws-cloudwatch-metrics-sink) :ccloud/fm-aws-cloudwatch-metrics-sink:
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/dynamodb.svg" width="15"> [Amazon DynamoDB CDC Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fm-aws-dynamodb-cdc-source) :ccloud/fm-aws-dynamodb-cdc-source:

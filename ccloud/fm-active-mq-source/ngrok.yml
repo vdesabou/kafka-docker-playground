@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  activemq:
+    addr: activemq:61616
+    proto: tcp
