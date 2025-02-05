@@ -140,7 +140,7 @@ jobs:
 
                       # requiring ngrok
                       "🚀2️⃣ ccloud/fm-influxdb2-sink ccloud/fm-influxdb2-source ccloud/fm-jdbc-oracle19-source ccloud/fm-jdbc-oracle19-sink ccloud/fm-cdc-oracle19-source ccloud/fm-rabbitmq-source ccloud/fm-zendesk-source ccloud/fm-splunk-sink ccloud/fm-rabbitmq-sink ccloud/fm-jdbc-mysql-sink ccloud/fm-sftp-source ccloud/fm-http-sink ccloud/fm-http-v2-sink ccloud/fm-http-source ccloud/fm-http-v2-source",
-                      "🚀3️⃣ ccloud/fm-cdc-oracle11-source ccloud/fm-solace-sink ccloud/fm-opensearch-sink ccloud/fm-sftp-sink ccloud/fm-redis-sink"
+                      "🚀3️⃣ ccloud/fm-cdc-oracle11-source ccloud/fm-solace-sink ccloud/fm-opensearch-sink ccloud/fm-sftp-sink ccloud/fm-redis-sink ccloud/fm-active-mq-source"
                     ]
     steps:
 
