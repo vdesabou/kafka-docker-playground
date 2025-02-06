@@ -56,31 +56,31 @@ docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cl
 # cleanup if required
 set +e
 log "Delete topic and subscription, if required"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics delete topic-1
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions delete subscription-1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics delete topic-1-$GITHUB_RUN_NUMBER-$GITHUB_RUN_NUMBER
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions delete subscription-1-$GITHUB_RUN_NUMBER
 set -e
 
-log "Create a Pub/Sub topic called topic-1"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics create topic-1
+log "Create a Pub/Sub topic called topic-1-$GITHUB_RUN_NUMBER"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics create topic-1-$GITHUB_RUN_NUMBER
 
-log "Create a Pub/Sub subscription called subscription-1"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions create --topic topic-1 subscription-1 --ack-deadline 60
+log "Create a Pub/Sub subscription called subscription-1-$GITHUB_RUN_NUMBER"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions create --topic topic-1-$GITHUB_RUN_NUMBER subscription-1-$GITHUB_RUN_NUMBER --ack-deadline 60
 
 function cleanup_cloud_resources {
     set +e
     log "Delete GCP PubSub topic and subscription"
     check_if_continue
-    docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics delete topic-1
-    docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions delete subscription-1
+    docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics delete topic-1-$GITHUB_RUN_NUMBER-$GITHUB_RUN_NUMBER
+    docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions delete subscription-1-$GITHUB_RUN_NUMBER
 
     docker rm -f gcloud-config
 }
 trap cleanup_cloud_resources EXIT
 
-log "Publish three messages to topic-1"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics publish topic-1 --message "Peter"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics publish topic-1 --message "Megan"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics publish topic-1 --message "Erin"
+log "Publish three messages to topic-1-$GITHUB_RUN_NUMBER"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics publish topic-1-$GITHUB_RUN_NUMBER --message "Peter"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics publish topic-1-$GITHUB_RUN_NUMBER --message "Megan"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics publish topic-1-$GITHUB_RUN_NUMBER --message "Erin"
 
 sleep 10
 
@@ -91,8 +91,8 @@ playground connector create-or-update --connector pubsub-source  << EOF
      "tasks.max" : "1",
      "kafka.topic" : "pubsub-topic",
      "cps.project" : "$GCP_PROJECT",
-     "cps.topic" : "topic-1",
-     "cps.subscription" : "subscription-1",
+     "cps.topic" : "topic-1-$GITHUB_RUN_NUMBER",
+     "cps.subscription" : "subscription-1-$GITHUB_RUN_NUMBER",
      "gcp.credentials.file.path" : "/tmp/keyfile.json",
      "errors.tolerance": "all",
      "errors.log.enable": "true",

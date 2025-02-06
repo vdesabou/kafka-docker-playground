@@ -48,24 +48,24 @@ Doing gsutil authentication
 $ gcloud auth activate-service-account --key-file ${GCP_KEYFILE}
 ```
 
-Create a Pub/Sub topic called topic-1
+Create a Pub/Sub topic called topic-1-$GITHUB_RUN_NUMBER
 
 ```bash
-$ gcloud pubsub topics create topic-1
+$ gcloud pubsub topics create topic-1-$GITHUB_RUN_NUMBER
 ```
 
-Create a Pub/Sub subscription called subscription-1
+Create a Pub/Sub subscription called subscription-1-$GITHUB_RUN_NUMBER
 
 ```bash
-$ gcloud pubsub subscriptions create --topic topic-1 subscription-1
+$ gcloud pubsub subscriptions create --topic topic-1-$GITHUB_RUN_NUMBER subscription-1-$GITHUB_RUN_NUMBER
 ```
 
-Publish three messages to topic-1
+Publish three messages to topic-1-$GITHUB_RUN_NUMBER
 
 ```bash
-$ gcloud pubsub topics publish topic-1 --message "Peter"
-gcloud pubsub topics publish topic-1 --message "Megan"
-gcloud pubsub topics publish topic-1 --message "Erin"
+$ gcloud pubsub topics publish topic-1-$GITHUB_RUN_NUMBER --message "Peter"
+gcloud pubsub topics publish topic-1-$GITHUB_RUN_NUMBER --message "Megan"
+gcloud pubsub topics publish topic-1-$GITHUB_RUN_NUMBER --message "Erin"
 ```
 
 Creating reating Google Cloud Pub/Sub Group Kafka Source connector
@@ -78,8 +78,8 @@ $ curl -X PUT \
                "tasks.max" : "1",
                "kafka.topic" : "pubsub-topic",
                "cps.project" : "$GCP_PROJECT",
-               "cps.topic" : "topic-1",
-               "cps.subscription" : "subscription-1",
+               "cps.topic" : "topic-1-$GITHUB_RUN_NUMBER",
+               "cps.subscription" : "subscription-1-$GITHUB_RUN_NUMBER",
                "gcp.credentials.file.path" : "/tmp/keyfile.json",
                "errors.tolerance": "all",
                "errors.log.enable": "true",

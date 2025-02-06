@@ -48,24 +48,24 @@ Doing gsutil authentication
 $ gcloud auth activate-service-account --key-file ${GCP_KEYFILE}
 ```
 
-Create a Pub/Sub topic called topic-1
+Create a Pub/Sub topic called topic-1-$GITHUB_RUN_NUMBER
 
 ```bash
-$ gcloud pubsub topics create topic-1
+$ gcloud pubsub topics create topic-1-$GITHUB_RUN_NUMBER
 ```
 
-Create a Pub/Sub subscription called subscription-1
+Create a Pub/Sub subscription called subscription-1-$GITHUB_RUN_NUMBER
 
 ```bash
-$ gcloud pubsub subscriptions create --topic topic-1 subscription-1
+$ gcloud pubsub subscriptions create --topic topic-1-$GITHUB_RUN_NUMBER subscription-1-$GITHUB_RUN_NUMBER
 ```
 
-Publish three messages to topic-1
+Publish three messages to topic-1-$GITHUB_RUN_NUMBER
 
 ```bash
-$ gcloud pubsub topics publish topic-1 --message "Peter"
-gcloud pubsub topics publish topic-1 --message "Megan"
-gcloud pubsub topics publish topic-1 --message "Erin"
+$ gcloud pubsub topics publish topic-1-$GITHUB_RUN_NUMBER --message "Peter"
+gcloud pubsub topics publish topic-1-$GITHUB_RUN_NUMBER --message "Megan"
+gcloud pubsub topics publish topic-1-$GITHUB_RUN_NUMBER --message "Erin"
 ```
 
 Creating GCP PubSub Source connector
@@ -78,8 +78,8 @@ $ curl -X PUT \
                     "tasks.max" : "1",
                     "kafka.topic" : "pubsub-topic",
                     "gcp.pubsub.project.id" : "$GCP_PROJECT",
-                    "gcp.pubsub.topic.id" : "topic-1",
-                    "gcp.pubsub.subscription.id" : "subscription-1",
+                    "gcp.pubsub.topic.id" : "topic-1-$GITHUB_RUN_NUMBER",
+                    "gcp.pubsub.subscription.id" : "subscription-1-$GITHUB_RUN_NUMBER",
                     "gcp.pubsub.credentials.path" : "/tmp/keyfile.json",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
