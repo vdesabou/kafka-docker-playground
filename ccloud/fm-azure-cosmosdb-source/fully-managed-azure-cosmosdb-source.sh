@@ -29,7 +29,7 @@ playground topic create --topic apparels --nb-partitions 1
 set -e
 
 # https://github.com/microsoft/kafka-connect-cosmosdb/blob/dev/doc/CosmosDB_Setup.md
-AZURE_NAME=pg${USER}ck${GITHUB_RUN_NUMBER}${TAG}
+AZURE_NAME=pgfm${USER}ck${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 AZURE_REGION=westeurope
 AZURE_RESOURCE_GROUP=$AZURE_NAME

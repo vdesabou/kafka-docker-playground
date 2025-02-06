@@ -19,7 +19,7 @@ fi
 # when AZURE_SUBSCRIPTION_NAME env var is set, we need to set the correct subscription
 maybe_set_azure_subscription
 
-AZURE_NAME=pg${USER}wh${GITHUB_RUN_NUMBER}${TAG}
+AZURE_NAME=pgfm${USER}wh${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 AZURE_RESOURCE_GROUP=$AZURE_NAME
 AZURE_SQL_NAME=$AZURE_NAME

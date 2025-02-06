@@ -19,11 +19,11 @@ fi
 # when AZURE_SUBSCRIPTION_NAME env var is set, we need to set the correct subscription
 maybe_set_azure_subscription
 
-AZURE_NAME=pg${USER}dl${GITHUB_RUN_NUMBER}${TAG}
+AZURE_NAME=pgfm${USER}dl${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 AZURE_RESOURCE_GROUP=$AZURE_NAME
 AZURE_DATALAKE_ACCOUNT_NAME=$AZURE_NAME
-AZURE_AD_APP_NAME=pg${USER}
+AZURE_AD_APP_NAME=pgfm${USER}
 AZURE_REGION=westeurope
 
 set +e

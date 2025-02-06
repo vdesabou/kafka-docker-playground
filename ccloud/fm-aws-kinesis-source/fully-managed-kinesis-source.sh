@@ -14,7 +14,7 @@ sleep 3
 playground topic create --topic kinesis_topic --nb-partitions 1
 set -e
 
-KINESIS_STREAM_NAME=pg${USER}${TAG}
+KINESIS_STREAM_NAME=pgfm${USER}${TAG}
 KINESIS_STREAM_NAME=${KINESIS_STREAM_NAME//[-.]/}
 
 set +e

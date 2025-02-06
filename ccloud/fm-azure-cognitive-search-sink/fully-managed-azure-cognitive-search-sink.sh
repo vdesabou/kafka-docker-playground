@@ -19,12 +19,12 @@ fi
 # when AZURE_SUBSCRIPTION_NAME env var is set, we need to set the correct subscription
 maybe_set_azure_subscription
 
-AZURE_NAME=pg${USER}s${GITHUB_RUN_NUMBER}${TAG}
+AZURE_NAME=pgfm${USER}s${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 AZURE_RESOURCE_GROUP=$AZURE_NAME
 AZURE_SEARCH_SERVICE_NAME=$AZURE_NAME
 AZURE_REGION=westeurope
-AZURE_AD_APP=pg${USER}
+AZURE_AD_APP=pgfm${USER}
 
 set +e
 az group delete --name $AZURE_RESOURCE_GROUP --yes

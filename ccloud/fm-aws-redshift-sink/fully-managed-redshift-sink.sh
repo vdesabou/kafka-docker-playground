@@ -14,7 +14,7 @@ sleep 3
 playground topic create --topic orders --nb-partitions 1
 set -e
 
-CLUSTER_NAME=pg${USER}redshift${TAG}
+CLUSTER_NAME=pgfm${USER}redshift${TAG}
 CLUSTER_NAME=${CLUSTER_NAME//[-._]/}
 
 PASSWORD=$(date +%s | cksum | base64 | head -c 32 ; echo)

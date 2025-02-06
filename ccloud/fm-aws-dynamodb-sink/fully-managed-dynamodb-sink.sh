@@ -12,7 +12,7 @@ fi
 
 handle_aws_credentials
 
-DYNAMODB_TABLE="pg${USER}dynamo${TAG}"
+DYNAMODB_TABLE="pgfm${USER}dynamo${TAG}"
 
 set +e
 log "Delete table, this might fail"
