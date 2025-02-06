@@ -18,6 +18,12 @@ then
   exit 1
 fi
 
+enable_flink=$(playground state get flags.ENABLE_FLINK)
+if [ "$enable_flink" != "1" ]
+then
+  export flink_connectors=""
+fi
+
 get_environment_used
 if [[ "$environment" == "ccloud" ]]
 then
