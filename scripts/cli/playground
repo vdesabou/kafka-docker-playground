@@ -23205,17 +23205,10 @@ playground_connector_restart_command() {
       fi
   fi
 
-  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  if [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then
       log "connector restart command is not supported with $connector_type connector"
       exit 0
-  fi
-
-  tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
-  if [ $? != 0 ] || [ "$tag" == "" ]
-  then
-      logerror "Could not find current CP version from docker ps"
-      exit 1
   fi
 
   items=($connector)
@@ -23227,23 +23220,34 @@ playground_connector_restart_command() {
   for connector in "${items[@]}"
   do
       log "🔄 Restarting $connector_type connector $connector"
-
-      get_connect_url_and_security
-      log "🔄 Restarting connector $connector"
-      if ! version_gt $tag "6.9.9"
+      if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] #|| [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
       then
-          handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/tasks"
-
-          task_ids=$(echo "$curl_output" | jq -r '.[].id.task')
-
-          for task_id in $task_ids
-          do
-              log "🤹‍♂️ Restart task $task_id"
-              handle_onprem_connect_rest_api "curl $security -s -X POST -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/tasks/$task_id/restart\""
-          done
+          get_ccloud_connect
+          handle_ccloud_connect_rest_api "curl -s --request POST \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/restart\" --header \"authorization: Basic $authorization\""
       else
-          handle_onprem_connect_rest_api "curl $security -s -X POST -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/restart?includeTasks=true&onlyFailed=false\""
+              tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+              if [ $? != 0 ] || [ "$tag" == "" ]
+              then
+                  logerror "Could not find current CP version from docker ps"
+                  exit 1
+              fi
+          get_connect_url_and_security
+          if ! version_gt $tag "6.9.9"
+          then
+              handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/tasks"
+
+              task_ids=$(echo "$curl_output" | jq -r '.[].id.task')
+
+              for task_id in $task_ids
+              do
+                  log "🤹‍♂️ Restart task $task_id"
+                  handle_onprem_connect_rest_api "curl $security -s -X POST -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/tasks/$task_id/restart\""
+              done
+          else
+              handle_onprem_connect_rest_api "curl $security -s -X POST -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/restart?includeTasks=true&onlyFailed=false\""
+          fi
       fi
+
       log "🔄 $connector_type connector $connector has been restarted successfully"
   done
   sleep 3
