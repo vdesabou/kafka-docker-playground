@@ -1134,6 +1134,8 @@ do
                     fi
                 fi
             else
+                # 🧠 remove SLF4J traces from topic produce #6254
+                playground container exec --command "rm -f /usr/share/java/schema-registry/slf4j-reload4j-1.7.36.jar > /dev/null 2>&1" --root
                 if [ -f $key_schema_file ]
                 then
                     docker cp $key_schema_file $container:/tmp/key_schema_file > /dev/null 2>&1
