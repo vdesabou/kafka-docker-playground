@@ -1041,7 +1041,7 @@ function stop_all() {
 function wait_container_ready() {
   
   CONNECT_CONTAINER=${1:-"connect"}
-  CONTROL_CENTER_CONTAINER={$1:-"control-center"}
+  CONTROL_CENTER_CONTAINER=${1:-"control-center"}
   MAX_WAIT=300
 
   if [ ! -z $WAIT_FOR_CONTROL_CENTER ]
