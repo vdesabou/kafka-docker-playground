@@ -109,6 +109,9 @@ sleep 20
 log "Assigning Storage Blob Data Owner role to Service Principal $SERVICE_PRINCIPAL_ID"
 az role assignment create --assignee $SERVICE_PRINCIPAL_ID --role "Storage Blob Data Owner" --scope $AZURE_RESOURCE_GROUP_ID
 
+# Ensure the role assignment has been applied
+sleep 30
+
 # generate data file for externalizing secrets
 sed -e "s|:AZURE_DATALAKE_CLIENT_ID:|$AZURE_DATALAKE_CLIENT_ID|g" \
     -e "s|:AZURE_DATALAKE_CLIENT_PASSWORD:|$AZURE_DATALAKE_CLIENT_PASSWORD|g" \

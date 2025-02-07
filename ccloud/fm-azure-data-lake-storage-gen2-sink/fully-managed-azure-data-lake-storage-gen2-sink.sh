@@ -109,6 +109,8 @@ sleep 20
 log "Assigning Storage Blob Data Owner role to Service Principal $SERVICE_PRINCIPAL_ID"
 az role assignment create --assignee $SERVICE_PRINCIPAL_ID --role "Storage Blob Data Owner" --scope $AZURE_RESOURCE_GROUP_ID
 
+# Ensure the role assignment has been applied
+sleep 30
 
 bootstrap_ccloud_environment
 
