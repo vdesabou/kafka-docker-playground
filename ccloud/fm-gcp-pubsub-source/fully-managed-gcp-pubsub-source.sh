@@ -29,8 +29,8 @@ cd -
 
 bootstrap_ccloud_environment
 
-GCP_PUB_SUB_TOPIC="topic-1-$GITHUB_RUN_NUMBER"
-GCP_PUB_SUB_SUBSCRIPTION="subscription-1-$GITHUB_RUN_NUMBER"
+GCP_PUB_SUB_TOPIC="topic-1-fm-$GITHUB_RUN_NUMBER"
+GCP_PUB_SUB_SUBSCRIPTION="subscription-1-fm-$GITHUB_RUN_NUMBER"
 
 set +e
 playground topic delete --topic pubsub-topic
