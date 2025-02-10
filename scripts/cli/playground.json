@@ -825,6 +825,27 @@
               "description": "🐞 Show command being ran.\n"
             }
           ]
+        },
+        {
+          "name": "derive-schema",
+          "description": "🔮 Derive a schema based on payload. \n",
+          "usage": "playground schema derive-schema [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--payload"
+              ],
+              "argument": "PAYLOAD",
+              "description": "📦 Payload to derive schema from\n\nDefault value: -\n"
+            },
+            {
+              "names": [
+                "--schema-type"
+              ],
+              "argument": "AVRO",
+              "description": "🧩 Schema Registry schema \"type\":\n\n- AVRO\n- JSON (json schema)\n- PROTOBUF\n\nDefault is AVRO\n\nDefault value: AVRO\n\nAllowed values: AVRO, JSON, PROTOBUF\n"
+            }
+          ]
         }
       ]
     },

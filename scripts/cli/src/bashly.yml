@@ -1395,6 +1395,44 @@ commands:
         💀 Hard delete (default is soft delete)
     - *verbose
 
+  - name: derive-schema
+    group: Schema
+    filters:
+    - not_mdc_environment
+    help: |-
+      🔮 Derive a schema based on payload. 
+    flags:
+      - long: --payload
+        arg: payload
+        default: "-"
+        required: false
+        help: |-
+          📦 Payload to derive schema from
+      - long: --schema-type
+        required: false
+        default: "AVRO"
+        arg: schema-type
+        help: |-
+           🧩 Schema Registry schema "type":
+
+           - AVRO
+           - JSON (json schema)
+           - PROTOBUF
+
+           Default is AVRO
+        allowed: 
+          - AVRO
+          - JSON
+          - PROTOBUF
+    examples: |
+        playground schema derive-schema << EOF
+        {"name": "Foo", "Age": {"int": 12}}
+        {"name": "Bar", "Age": {"string": "12"}}
+        {"sport": "Football"}
+        {"_id":{"key":"AA"},"duration":{"numberInt":"240"},"employeeNumber":{"numberInt":"12345"},"isActive":"Y","plannedAbsenceKey":"AA","startTimeMin":{"numberLong":"11599920"}}
+        EOF
+
+        playground schema derive-schema --payload '{"sport": "Football"}' --schema-type PROTOBUF
 
 - name: tcp-proxy
   expose: always

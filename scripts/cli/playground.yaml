@@ -957,6 +957,35 @@ subcommands:
           description: | 
             🐞 Show command being ran.
             
+      - name: derive-schema
+        description: | 
+          🔮 Derive a schema based on payload. 
+        usage: playground schema derive-schema [OPTIONS]
+        options:
+        - names:
+          - --payload
+          argument: PAYLOAD
+          description: | 
+            📦 Payload to derive schema from
+            
+            Default value: -
+            
+        - names:
+          - --schema-type
+          argument: AVRO
+          description: | 
+            🧩 Schema Registry schema "type":
+            
+            - AVRO
+            - JSON (json schema)
+            - PROTOBUF
+            
+            Default is AVRO
+            
+            Default value: AVRO
+            
+            Allowed values: AVRO, JSON, PROTOBUF
+            
   - name: tcp-proxy
     description: | 
         🏚 Zazkia TCP Proxy commands
