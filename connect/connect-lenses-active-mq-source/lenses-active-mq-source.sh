@@ -29,10 +29,15 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 
 log "Creating Lenses JMS ActiveMQ source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data @lenses-active-mq-source.json \
-     http://localhost:8083/connectors/lenses-active-mq-source/config | jq .
+playground connector create-or-update --connector lenses-active-mq-source << EOF
+{
+     "connector.class": "com.datamountaineer.streamreactor.connect.jms.source.JMSSourceConnector",
+     "connect.jms.kcql": "INSERT INTO MyKafkaTopicName SELECT * FROM myqueue WITHTYPE QUEUE WITHCONVERTER=\`com.datamountaineer.streamreactor.connect.converters.source.JsonSimpleConverter\`",
+     "connect.jms.url": "tcp://activemq:61616",
+     "connect.jms.initial.context.factory": "org.apache.activemq.jndi.ActiveMQInitialContextFactory",
+     "connect.jms.connection.factory": "ConnectionFactory"
+}
+EOF
 
 sleep 5
 
