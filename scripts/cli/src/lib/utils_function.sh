@@ -759,10 +759,6 @@ function get_connect_image() {
   fi
 }
 
-function nc() {
-  docker run -i --rm --network=host subfuzion/netcat "$@"
-}
-
 function az() {
   docker run --quiet --rm -v /tmp:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli:cbl-mariner2.0 az "$@"
 }

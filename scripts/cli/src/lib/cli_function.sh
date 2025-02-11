@@ -2,25 +2,32 @@ function get_environment_used() {
   environment=$(playground state get run.environment)
 }
 
+function is_container_running() {
+  container_name=$1
+  docker inspect -f '{{.State.Running}}' "$container_name" 2>/dev/null | grep -q "true"
+}
+
 function get_connect_url_and_security() {
   get_environment_used
 
   connect_port="8083"
-  if ! nc -vz localhost 8083 > /dev/null 2>&1
+
+  if ! is_container_running "connect"
   then
-    if nc -vz localhost 8283 > /dev/null 2>&1
+    if is_container_running "connect2"
     then
       connect_port="8283"
       # log "💫 using connect rest api for connect2 as connect rest api on port 8083 is not available"
-    elif nc -vz localhost 8383 > /dev/null 2>&1
+    elif is_container_running "connect3"
     then
       connect_port="8383"
       # log "💫 using connect rest api for connect3 as connect rest api on port 8083 and connect2 rest api on port 8283 are not available"
     else
-      logerror "❌ No available port found for connect rest api"
+      logerror "❌ No available port found for connect rest api, none of containers connect, connect2 or connect3 are running!"
       exit 1
     fi
   fi
+
   connect_url="http://localhost:$connect_port"
 
   security=""
