@@ -24,7 +24,7 @@ EOF
 sleep 10
 
 log "Test with sample syslog-formatted message sent via netcat"
-echo "<34>1 2003-10-11T22:14:15.003Z mymachine.example.com su - ID47 - Your refrigerator is running" | nc -v -w 0 localhost 5454
+echo "<34>1 2003-10-11T22:14:15.003Z mymachine.example.com su - ID47 - Your refrigerator is running" | docker run -i --rm --network=host subfuzion/netcat -v -w 0 localhost 5454
 
 sleep 5
 
