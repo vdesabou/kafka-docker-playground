@@ -22,8 +22,7 @@ playground connector create-or-update --connector mysql-sink  << EOF
      "tasks.max": "1",
      "connection.url": "jdbc:mysql://mysql:3306/db?user=user&password=password&useSSL=false",
      "topics": "orders",
-     "auto.create": "true",
-     "consumer.override.enable.auto.commit": "false"
+     "auto.create": "true"
 }
 EOF
 
