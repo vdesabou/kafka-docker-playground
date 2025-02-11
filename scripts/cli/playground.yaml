@@ -959,7 +959,7 @@ subcommands:
             
       - name: derive-schema
         description: | 
-          🔮 Derive a schema based on payload. 
+          🪄 Derive a schema based on payload
         usage: playground schema derive-schema [OPTIONS]
         options:
         - names:
@@ -2231,6 +2231,34 @@ subcommands:
           argument: ""
           description: | 
             ☑️ Validate schema according to connect sink converter used
+            
+        - names:
+          - --derive-key-schema-as
+          argument: [AVRO, JSON, PROTOBUF]
+          description: | 
+            🪄 Use playground schema derive-schema command to deduce schema from key payload
+            
+            Possible values:
+            
+            - AVRO
+            - JSON (json schema)
+            - PROTOBUF
+            
+            Allowed values: AVRO, JSON, PROTOBUF
+            
+        - names:
+          - --derive-value-schema-as
+          argument: [AVRO, JSON, PROTOBUF]
+          description: | 
+            🪄 Use playground schema derive-schema command to deduce schema from value payload
+            
+            Possible values:
+            
+            - AVRO
+            - JSON (json schema)
+            - PROTOBUF
+            
+            Allowed values: AVRO, JSON, PROTOBUF
             
         - names:
           - --no-null

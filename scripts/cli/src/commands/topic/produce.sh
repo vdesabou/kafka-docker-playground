@@ -23,6 +23,8 @@ value_schema_id="${args[--value-schema-id]}"
 no_null="${args[--no-null]}"
 consume="${args[--consume]}"
 delete_topic="${args[--delete-topic]}"
+derive_key_schema_as="${args[--derive-key-schema-as]}"
+derive_value_schema_as="${args[--derive-value-schema-as]}"
 
 # Convert the space delimited string to an array
 eval "validate_config=(${args[--validate-config]})"
@@ -290,12 +292,46 @@ then
         echo "$key" > "$key_schema_file"
     fi
     
+    if [[ -n "$derive_key_schema_as" ]]
+    then
+        log "🪄 --derive-key-schema-as $derive_key_schema_as is used"
+        set +e
+        output=$(playground --output-level ERROR  schema derive-schema --schema-type "${derive_key_schema_as}" < "$key_schema_file")
+        if [ $? -ne 0 ]
+        then
+            logerror "❌ schema derivation failed"
+            echo "$output"
+            exit 1
+        else
+            log "🪄 generated $derive_key_schema_as schema:"
+            echo "$output"
+        fi
+        set -e
+        echo "$output" > $key_schema_file
+    fi
     identify_schema "$key_schema_file" "key"
     key_schema_type=$schema_type
 fi
 
 if [[ ! -n "$tombstone" ]]
 then
+    if [[ -n "$derive_value_schema_as" ]]
+    then
+        log "🪄 --derive-value-schema-as $derive_value_schema_as is used"
+        set +e
+        output=$(playground --output-level ERROR  schema derive-schema --schema-type "${derive_value_schema_as}" < "$value_schema_file")
+        if [ $? -ne 0 ]
+        then
+            logerror "❌ schema derivation failed"
+            echo "$output"
+            exit 1
+        else
+            log "🪄 generated $derive_value_schema_as schema:"
+            echo "$output"
+        fi
+        set -e
+        echo "$output" > $value_schema_file
+    fi
     identify_schema "$value_schema_file" "value"
     value_schema_type=$schema_type
 fi

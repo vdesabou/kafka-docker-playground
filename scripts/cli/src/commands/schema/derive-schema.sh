@@ -86,5 +86,5 @@ then
 fi
 
 set -e
-log "🔮 Schema file generated at $tmp_dir/schema_file"
+log "🪄 Schema file generated"
 cat $tmp_dir/schema_file | jq -r '.schemas[]|del(.messagesMatched)|.schema'

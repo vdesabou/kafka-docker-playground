@@ -1397,10 +1397,8 @@ commands:
 
   - name: derive-schema
     group: Schema
-    filters:
-    - not_mdc_environment
     help: |-
-      🔮 Derive a schema based on payload. 
+      🪄 Derive a schema based on payload
     flags:
       - long: --payload
         arg: payload
@@ -1413,13 +1411,13 @@ commands:
         default: "AVRO"
         arg: schema-type
         help: |-
-           🧩 Schema Registry schema "type":
+            🧩 Schema Registry schema "type":
 
-           - AVRO
-           - JSON (json schema)
-           - PROTOBUF
+            - AVRO
+            - JSON (json schema)
+            - PROTOBUF
 
-           Default is AVRO
+            Default is AVRO
         allowed: 
           - AVRO
           - JSON
@@ -2514,6 +2512,38 @@ commands:
         required: false
         help: |-
           ☑️ Validate schema according to connect sink converter used
+
+      - long: --derive-key-schema-as
+        required: false
+        arg: derive-key-schema-as
+        help: |-
+            🪄 Use playground schema derive-schema command to deduce schema from key payload
+
+            Possible values:
+
+            - AVRO
+            - JSON (json schema)
+            - PROTOBUF
+        allowed: 
+          - AVRO
+          - JSON
+          - PROTOBUF
+
+      - long: --derive-value-schema-as
+        required: false
+        arg: derive-value-schema-as
+        help: |-
+            🪄 Use playground schema derive-schema command to deduce schema from value payload
+
+            Possible values:
+
+            - AVRO
+            - JSON (json schema)
+            - PROTOBUF
+        allowed: 
+          - AVRO
+          - JSON
+          - PROTOBUF
 
       - long: --no-null
         required: false

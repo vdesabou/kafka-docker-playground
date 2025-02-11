@@ -70,7 +70,7 @@ playground_usage() {
   printf "  %s   🔏 Set subject-level mode\n" "$(green "schema set-mode")                           "
   printf "  %s   🧽 Set normalize at schema registry level\n" "$(green "schema set-normalize")                      "
   printf "  %s   🧟 Delete schema\n" "$(green "schema delete")                             "
-  printf "  %s   🔮 Derive a schema based on payload. \n" "$(green "schema derive-schema")                      "
+  printf "  %s   🪄 Derive a schema based on payload\n" "$(green "schema derive-schema")                      "
   echo
   printf "%s\n" "$(bold "TCP Proxy commands:")"
   printf "  %s   🏚 Zazkia TCP Proxy commands\n" "$(green "tcp-proxy")                                 "
@@ -2315,7 +2315,7 @@ playground_schema_usage() {
   printf "  %s   🔏 Set subject-level mode\n" "$(green "set-mode")         "
   printf "  %s   🧽 Set normalize at schema registry level\n" "$(green "set-normalize")    "
   printf "  %s   🧟 Delete schema\n" "$(green "delete")           "
-  printf "  %s   🔮 Derive a schema based on payload. \n" "$(green "derive-schema")    "
+  printf "  %s   🪄 Derive a schema based on payload\n" "$(green "derive-schema")    "
   echo
 
   # :command.long_usage
@@ -2669,7 +2669,7 @@ playground_schema_delete_usage() {
 
 # :command.usage
 playground_schema_derive_schema_usage() {
-  printf "playground schema derive-schema - 🔮 Derive a schema based on payload. \n\n"
+  printf "playground schema derive-schema - 🪄 Derive a schema based on payload\n\n"
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground schema derive-schema [OPTIONS]\n"
@@ -4758,6 +4758,18 @@ playground_topic_produce_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--validate")"
     printf "    ☑️ Validate schema according to connect sink converter used\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--derive-key-schema-as DERIVE-KEY-SCHEMA-AS")"
+    printf "    🪄 Use playground schema derive-schema command to deduce schema from key\n    payload\n    \n    Possible values:\n    \n    - AVRO\n    - JSON (json schema)\n    - PROTOBUF\n"
+    printf "    %s\n" "Allowed: AVRO, JSON, PROTOBUF"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--derive-value-schema-as DERIVE-VALUE-SCHEMA-AS")"
+    printf "    🪄 Use playground schema derive-schema command to deduce schema from value\n    payload\n    \n    Possible values:\n    \n    - AVRO\n    - JSON (json schema)\n    - PROTOBUF\n"
+    printf "    %s\n" "Allowed: AVRO, JSON, PROTOBUF"
     echo
 
     # :flag.usage
@@ -18732,7 +18744,7 @@ EOF
   fi
 
   set -e
-  log "🔮 Schema file generated at $tmp_dir/schema_file"
+  log "🪄 Schema file generated"
   cat $tmp_dir/schema_file | jq -r '.schemas[]|del(.messagesMatched)|.schema'
 }
 
@@ -20876,6 +20888,8 @@ playground_topic_produce_command() {
   no_null="${args[--no-null]}"
   consume="${args[--consume]}"
   delete_topic="${args[--delete-topic]}"
+  derive_key_schema_as="${args[--derive-key-schema-as]}"
+  derive_value_schema_as="${args[--derive-value-schema-as]}"
 
   # Convert the space delimited string to an array
   eval "validate_config=(${args[--validate-config]})"
@@ -21143,12 +21157,46 @@ playground_topic_produce_command() {
           echo "$key" > "$key_schema_file"
       fi
 
+      if [[ -n "$derive_key_schema_as" ]]
+      then
+          log "🪄 --derive-key-schema-as $derive_key_schema_as is used"
+          set +e
+          output=$(playground --output-level ERROR  schema derive-schema --schema-type "${derive_key_schema_as}" < "$key_schema_file")
+          if [ $? -ne 0 ]
+          then
+              logerror "❌ schema derivation failed"
+              echo "$output"
+              exit 1
+          else
+              log "🪄 generated $derive_key_schema_as schema:"
+              echo "$output"
+          fi
+          set -e
+          echo "$output" > $key_schema_file
+      fi
       identify_schema "$key_schema_file" "key"
       key_schema_type=$schema_type
   fi
 
   if [[ ! -n "$tombstone" ]]
   then
+      if [[ -n "$derive_value_schema_as" ]]
+      then
+          log "🪄 --derive-value-schema-as $derive_value_schema_as is used"
+          set +e
+          output=$(playground --output-level ERROR  schema derive-schema --schema-type "${derive_value_schema_as}" < "$value_schema_file")
+          if [ $? -ne 0 ]
+          then
+              logerror "❌ schema derivation failed"
+              echo "$output"
+              exit 1
+          else
+              log "🪄 generated $derive_value_schema_as schema:"
+              echo "$output"
+          fi
+          set -e
+          echo "$output" > $value_schema_file
+      fi
       identify_schema "$value_schema_file" "value"
       value_schema_type=$schema_type
   fi
@@ -31655,13 +31703,6 @@ playground_schema_derive_schema_parse_requirements() {
     exit 1
   fi
 
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
-    exit 1
-  fi
-
 }
 
 # :command.parse_requirements
@@ -36351,6 +36392,34 @@ playground_topic_produce_parse_requirements() {
         ;;
 
       # :flag.case
+      --derive-key-schema-as)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--derive-key-schema-as']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--derive-key-schema-as requires an argument: --derive-key-schema-as DERIVE-KEY-SCHEMA-AS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --derive-value-schema-as)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--derive-value-schema-as']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--derive-value-schema-as requires an argument: --derive-value-schema-as DERIVE-VALUE-SCHEMA-AS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --no-null)
 
         # :flag.case_no_arg
@@ -36547,6 +36616,14 @@ playground_topic_produce_parse_requirements() {
   fi
   if [[ ${args['--value-subject-name-strategy']:-} ]] && [[ ! ${args['--value-subject-name-strategy']:-} =~ ^(TopicNameStrategy|RecordNameStrategy|TopicRecordNameStrategy)$ ]]; then
     printf "%s\n" "--value-subject-name-strategy must be one of: TopicNameStrategy, RecordNameStrategy, TopicRecordNameStrategy" >&2
+    exit 1
+  fi
+  if [[ ${args['--derive-key-schema-as']:-} ]] && [[ ! ${args['--derive-key-schema-as']:-} =~ ^(AVRO|JSON|PROTOBUF)$ ]]; then
+    printf "%s\n" "--derive-key-schema-as must be one of: AVRO, JSON, PROTOBUF" >&2
+    exit 1
+  fi
+  if [[ ${args['--derive-value-schema-as']:-} ]] && [[ ! ${args['--derive-value-schema-as']:-} =~ ^(AVRO|JSON|PROTOBUF)$ ]]; then
+    printf "%s\n" "--derive-value-schema-as must be one of: AVRO, JSON, PROTOBUF" >&2
     exit 1
   fi
   input_array=''
