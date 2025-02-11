@@ -7237,9 +7237,15 @@ function filter_ccloud_environment() {
 function filter_schema_registry_running() {
   get_sr_url_and_security
 
-  curl $sr_security -s "${sr_url}/config" > /dev/null 2>&1
-  if [ $? != 0 ]
-  then
+  for i in {1..30}; do
+    curl $sr_security -s "${sr_url}/config" > /dev/null 2>&1
+    if [ $? == 0 ]; then
+      break
+    fi
+    sleep 1
+  done
+
+  if [ $? != 0 ]; then
     logerror "schema registry rest api should be running to run this command"
   fi
 }
