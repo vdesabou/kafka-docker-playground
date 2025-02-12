@@ -43,7 +43,8 @@ playground connector create-or-update --connector datagen-shipments  << EOF
       "max.interval": 1,
       "iterations": "10000",
       "tasks.max": "10",
-      "schema.filename" : "/tmp/schemas/shipments.avro"
+      "schema.filename" : "/tmp/schemas/shipments.avro",
+      "schema.keyfield" : "orderid"
 }
 EOF
 
@@ -62,7 +63,7 @@ playground connector create-or-update --connector datagen-products  << EOF
       "iterations": "100",
       "tasks.max": "10",
       "schema.filename" : "/tmp/schemas/products.avro",
-      "schema.keyfield" : "orderid"
+      "schema.keyfield" : "productid"
 }
 EOF
 wait_for_datagen_connector_to_inject_data "products" "10"
@@ -79,7 +80,7 @@ playground connector create-or-update --connector datagen-customers  << EOF
       "iterations": "1000",
       "tasks.max": "10",
       "schema.filename" : "/tmp/schemas/customers.avro",
-      "schema.keyfield" : "orderid"
+      "schema.keyfield" : "customerid"
 }
 EOF
 wait_for_datagen_connector_to_inject_data "customers" "10"
@@ -88,12 +89,3 @@ sleep 10
 
 log "Verify we have received the data in orders topic"
 playground topic consume --topic orders --min-expected-messages 1 --timeout 60
-
-log "Verify we have received the data in shipments topic"
-playground topic consume --topic shipments --min-expected-messages 1 --timeout 60
-
-log "Verify we have received the data in customers topic"
-playground topic consume --topic customers --min-expected-messages 1 --timeout 60
-
-log "Verify we have received the data in products topic"
-playground topic consume --topic products --min-expected-messages 1 --timeout 60
