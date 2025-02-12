@@ -40,7 +40,6 @@ fi
 if [ -n "$result_fail" ]
 then
     logwarn "$result_fail"
-    check_if_continue
 fi
 
 if [ -n "$result_not_tested" ]
