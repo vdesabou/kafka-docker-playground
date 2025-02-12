@@ -12,9 +12,9 @@ function get_connect_url_and_security() {
 
   connect_port="8083"
 
-  if ! is_container_running "connect"
+  if ! is_container_running "connect" && ! is_container_running "connect-us"
   then
-    if is_container_running "connect2"
+    if is_container_running "connect2" || is_container_running "connect-europe"
     then
       connect_port="8283"
       # log "💫 using connect rest api for connect2 as connect rest api on port 8083 is not available"
