@@ -44,9 +44,9 @@ else
     if [[ -n "$verbose" ]]
     then
         log "🐞 CLI command used"
-        echo "kafka-topics --delete --topic $topic --bootstrap-server broker:9092 $security"
+        echo "kafka-topics --delete --topic $topic --bootstrap-server $bootstrap_server:9092 $security"
     fi
-    docker exec $container kafka-topics --delete --topic $topic --bootstrap-server broker:9092 $security
+    docker exec $container kafka-topics --delete --topic $topic --bootstrap-server $bootstrap_server:9092 $security
 fi
 
 if [[ -n "$skip_delete_schema" ]]

@@ -135,7 +135,7 @@ do
             fi
             playground connector offsets get --connector $connector
         else
-            docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION
+            docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security | grep -v PARTITION
 
             if version_gt $tag "7.4.99"
             then
@@ -145,7 +145,7 @@ do
                 playground connector delete --connector $connector
             fi
 
-            docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --to-earliest --reset-offsets --all-topics --execute
+            docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector $security --to-earliest --reset-offsets --all-topics --execute
 
             if version_gt $tag "7.4.99"
             then

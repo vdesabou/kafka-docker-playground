@@ -23,8 +23,10 @@ fi
 get_environment_used
 get_sr_url_and_security
 
-bootstrap_server="broker:9092"
-container="connect"
+get_broker_container
+bootstrap_server="$broker_container:9092"
+get_connect_container
+container=$connect_container
 sr_url_cli="http://schema-registry:8081"
 security=""
 if [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]

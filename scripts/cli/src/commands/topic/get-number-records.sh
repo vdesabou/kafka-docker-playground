@@ -92,13 +92,14 @@ do
             logerror "Could not find current CP version from docker ps"
             exit 1
         fi
+        get_broker_container
         if ! version_gt $tag "6.9.9" && [ "$security" != "" ]
         then
             # GetOffsetShell does not support security before 7.x
             get_security_broker "--consumer.config"
             
             set +e
-            docker exec $container timeout 15 kafka-console-consumer --bootstrap-server broker:9092 --topic $topic $security --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
+            docker exec $container timeout 15 kafka-console-consumer --bootstrap-server $broker_container:9092 --topic $topic $security --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
             set -e
         else
             class_name="kafka.tools.GetOffsetShell"
@@ -106,7 +107,7 @@ do
             then
                 class_name="org.apache.kafka.tools.GetOffsetShell"
             fi
-            docker exec $container kafka-run-class $class_name --broker-list broker:9092 $security --topic $topic --time -1 | awk -F ":" '{sum += $3} END {print sum}'
+            docker exec $broker_container kafka-run-class $class_name --broker-list $broker_container:9092 $security --topic $topic --time -1 | awk -F ":" '{sum += $3} END {print sum}'
         fi
     fi
 done

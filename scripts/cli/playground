@@ -6471,6 +6471,17 @@ function is_container_running() {
   docker inspect -f '{{.State.Running}}' "$container_name" 2>/dev/null | grep -q "true"
 }
 
+function get_connect_container() {
+  for worker in connect connect2 connect3 connect-us connect-europe
+  do
+    if is_container_running $worker
+    then
+      connect_container=$worker
+      break
+    fi
+  done
+}
+
 function get_connect_url_and_security() {
   get_environment_used
 
@@ -6822,11 +6833,24 @@ function get_sr_url_and_security() {
   fi
 }
 
+function get_broker_container() {
+  for broker in broker broker2 broker3 broker-us broker-europe
+  do
+    if is_container_running $broker
+    then
+      broker_container=$broker
+      break
+    fi
+  done
+}
+
 function get_security_broker() {
   config_file_name="$1"
   get_environment_used
 
-  container="broker"
+  get_broker_container
+  container="$broker_container"
+
   security=""
   if [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
   then
@@ -7440,7 +7464,7 @@ function add_connector_config_based_on_environment () {
     ;;
 
     sasl-ssl)
-
+      get_broker_container
       for prefix in {"confluent.topic","redo.log.consumer"}
       do
         if echo "$json_content" | jq ". | has(\"$prefix.bootstrap.servers\")" 2> /dev/null | grep -q true
@@ -7449,7 +7473,7 @@ function add_connector_config_based_on_environment () {
           # log "replacing $prefix config for environment $environment"
 
           echo "$json_content" > $tmp_dir/input.json
-          jq ".[\"$prefix.bootstrap.servers\"] = \"broker:9092\" | .[\"$prefix.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"$prefix.security.protocol\"] = \"SASL_SSL\" | .[\"$prefix.sasl.mechanism\"] = \"PLAIN\" | .[\"$prefix.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"$prefix.ssl.truststore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
+          jq ".[\"$prefix.bootstrap.servers\"] = \"$broker_container:9092\" | .[\"$prefix.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"$prefix.security.protocol\"] = \"SASL_SSL\" | .[\"$prefix.sasl.mechanism\"] = \"PLAIN\" | .[\"$prefix.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"$prefix.ssl.truststore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
           json_content=$(cat $tmp_dir/output.json)
         fi
       done
@@ -7473,7 +7497,7 @@ function add_connector_config_based_on_environment () {
         # log "replacing database.history.kafka.bootstrap.servers config for environment $environment"
 
         echo "$json_content" > $tmp_dir/input.json
-        jq ".[\"database.history.kafka.bootstrap.servers\"] = \"broker:9092\" | .[\"database.history.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"database.history.producer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.producer.sasl.mechanism\"] = \"PLAIN\" | .[\"database.history.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"database.history.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.consumer.sasl.mechanism\"] = \"PLAIN\" | .[\"database.history.producer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"database.history.producer.ssl.truststore.password\"] = \"confluent\" | .[\"database.history.consumer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"database.history.consumer.ssl.truststore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
+        jq ".[\"database.history.kafka.bootstrap.servers\"] = \"$broker_container:9092\" | .[\"database.history.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"database.history.producer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.producer.sasl.mechanism\"] = \"PLAIN\" | .[\"database.history.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"database.history.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.consumer.sasl.mechanism\"] = \"PLAIN\" | .[\"database.history.producer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"database.history.producer.ssl.truststore.password\"] = \"confluent\" | .[\"database.history.consumer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"database.history.consumer.ssl.truststore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
         json_content=$(cat $tmp_dir/output.json)
       fi
 
@@ -7483,7 +7507,7 @@ function add_connector_config_based_on_environment () {
         # log "replacing schema.history.internal.kafka.bootstrap.servers config for environment $environment"
 
         echo "$json_content" > $tmp_dir/input.json
-        jq ".[\"schema.history.internal.kafka.bootstrap.servers\"] = \"broker:9092\" | .[\"schema.history.internal.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"schema.history.internal.producer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.producer.sasl.mechanism\"] = \"PLAIN\" | .[\"schema.history.internal.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"schema.history.internal.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.consumer.sasl.mechanism\"] = \"PLAIN\" | .[\"schema.history.internal.producer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"schema.history.internal.producer.ssl.truststore.password\"] = \"confluent\" | .[\"schema.history.internal.consumer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"schema.history.internal.consumer.ssl.truststore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
+        jq ".[\"schema.history.internal.kafka.bootstrap.servers\"] = \"$broker_container:9092\" | .[\"schema.history.internal.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"schema.history.internal.producer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.producer.sasl.mechanism\"] = \"PLAIN\" | .[\"schema.history.internal.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"schema.history.internal.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.consumer.sasl.mechanism\"] = \"PLAIN\" | .[\"schema.history.internal.producer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"schema.history.internal.producer.ssl.truststore.password\"] = \"confluent\" | .[\"schema.history.internal.consumer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"schema.history.internal.consumer.ssl.truststore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
         json_content=$(cat $tmp_dir/output.json)
       fi
 
@@ -7499,7 +7523,7 @@ function add_connector_config_based_on_environment () {
     ;;
 
     2way-ssl)
-
+      get_broker_container
       for prefix in {"confluent.topic","redo.log.consumer"}
       do
         if echo "$json_content" | jq ". | has(\"$prefix.bootstrap.servers\")" 2> /dev/null | grep -q true
@@ -7508,7 +7532,7 @@ function add_connector_config_based_on_environment () {
           # log "replacing $prefix config for environment $environment"
 
           echo "$json_content" > $tmp_dir/input.json
-          jq ".[\"$prefix.bootstrap.servers\"] = \"broker:9092\" | .[\"$prefix.security.protocol\"] = \"SSL\" | .[\"$prefix.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"$prefix.ssl.truststore.password\"] = \"confluent\" | .[\"$prefix.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"$prefix.ssl.keystore.password\"] = \"confluent\" | .[\"$prefix.ssl.key.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
+          jq ".[\"$prefix.bootstrap.servers\"] = \"$broker_container:9092\" | .[\"$prefix.security.protocol\"] = \"SSL\" | .[\"$prefix.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"$prefix.ssl.truststore.password\"] = \"confluent\" | .[\"$prefix.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"$prefix.ssl.keystore.password\"] = \"confluent\" | .[\"$prefix.ssl.key.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
           json_content=$(cat $tmp_dir/output.json)
         fi
       done
@@ -7532,7 +7556,7 @@ function add_connector_config_based_on_environment () {
         # log "replacing database.history.kafka.bootstrap.servers config for environment $environment"
 
         echo "$json_content" > $tmp_dir/input.json
-        jq ".[\"database.history.kafka.bootstrap.servers\"] = \"broker:9092\" | .[\"database.history.producer.security.protocol\"] = \"SSL\" | .[\"database.history.consumer.security.protocol\"] = \"SSL\" | .[\"database.history.producer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"database.history.producer.ssl.truststore.password\"] = \"confluent\" | .[\"database.history.producer.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"database.history.producer.ssl.keystore.password\"] = \"confluent\" | .[\"database.history.producer.ssl.keystore.password\"] = \"confluent\" | .[\"database.history.consumer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"database.history.consumer.ssl.truststore.password\"] = \"confluent\" | .[\"database.history.consumer.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"database.history.consumer.ssl.keystore.password\"] = \"confluent\" | .[\"database.history.consumer.ssl.keystore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
+        jq ".[\"database.history.kafka.bootstrap.servers\"] = \"$broker_container:9092\" | .[\"database.history.producer.security.protocol\"] = \"SSL\" | .[\"database.history.consumer.security.protocol\"] = \"SSL\" | .[\"database.history.producer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"database.history.producer.ssl.truststore.password\"] = \"confluent\" | .[\"database.history.producer.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"database.history.producer.ssl.keystore.password\"] = \"confluent\" | .[\"database.history.producer.ssl.keystore.password\"] = \"confluent\" | .[\"database.history.consumer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"database.history.consumer.ssl.truststore.password\"] = \"confluent\" | .[\"database.history.consumer.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"database.history.consumer.ssl.keystore.password\"] = \"confluent\" | .[\"database.history.consumer.ssl.keystore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
         json_content=$(cat $tmp_dir/output.json)
       fi
 
@@ -7542,7 +7566,7 @@ function add_connector_config_based_on_environment () {
         # log "replacing schema.history.internal.kafka.bootstrap.servers config for environment $environment"
 
         echo "$json_content" > $tmp_dir/input.json
-        jq ".[\"schema.history.internal.kafka.bootstrap.servers\"] = \"broker:9092\" | .[\"schema.history.internal.producer.security.protocol\"] = \"SSL\" | .[\"schema.history.internal.consumer.security.protocol\"] = \"SSL\" | .[\"schema.history.internal.producer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"schema.history.internal.producer.ssl.truststore.password\"] = \"confluent\" | .[\"schema.history.internal.producer.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"schema.history.internal.producer.ssl.keystore.password\"] = \"confluent\" | .[\"schema.history.internal.producer.ssl.keystore.password\"] = \"confluent\" | .[\"schema.history.internal.consumer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"schema.history.internal.consumer.ssl.truststore.password\"] = \"confluent\" | .[\"schema.history.internal.consumer.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"schema.history.internal.consumer.ssl.keystore.password\"] = \"confluent\" | .[\"schema.history.internal.consumer.ssl.keystore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
+        jq ".[\"schema.history.internal.kafka.bootstrap.servers\"] = \"$broker_container:9092\" | .[\"schema.history.internal.producer.security.protocol\"] = \"SSL\" | .[\"schema.history.internal.consumer.security.protocol\"] = \"SSL\" | .[\"schema.history.internal.producer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"schema.history.internal.producer.ssl.truststore.password\"] = \"confluent\" | .[\"schema.history.internal.producer.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"schema.history.internal.producer.ssl.keystore.password\"] = \"confluent\" | .[\"schema.history.internal.producer.ssl.keystore.password\"] = \"confluent\" | .[\"schema.history.internal.consumer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"schema.history.internal.consumer.ssl.truststore.password\"] = \"confluent\" | .[\"schema.history.internal.consumer.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"schema.history.internal.consumer.ssl.keystore.password\"] = \"confluent\" | .[\"schema.history.internal.consumer.ssl.keystore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
         json_content=$(cat $tmp_dir/output.json)
       fi
 
@@ -13006,15 +13030,16 @@ playground_get_topic_list_command() {
       set -e
     fi
   else
+    get_broker_container
     # trick to be faster
-    docker exec broker ls /var/lib/kafka/data > /dev/null 2>&1
+    docker exec $broker_container ls /var/lib/kafka/data > /dev/null 2>&1
     if [ $? -eq 0 ]
     then
       if [[ -n "$skip_connect_internal_topics" ]]
       then
-        docker exec broker ls /var/lib/kafka/data | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "connect-" | grep -v "^_" | grep -v "delete" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
+        docker exec $broker_container ls /var/lib/kafka/data | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "connect-" | grep -v "^_" | grep -v "delete" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
       else
-        docker exec broker ls /var/lib/kafka/data | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "^_" | grep -v "delete" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
+        docker exec $broker_container ls /var/lib/kafka/data | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "^_" | grep -v "delete" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
       fi
     fi
   fi
@@ -20193,13 +20218,14 @@ playground_topic_get_number_records_command() {
               logerror "Could not find current CP version from docker ps"
               exit 1
           fi
+          get_broker_container
           if ! version_gt $tag "6.9.9" && [ "$security" != "" ]
           then
               # GetOffsetShell does not support security before 7.x
               get_security_broker "--consumer.config"
 
               set +e
-              docker exec $container timeout 15 kafka-console-consumer --bootstrap-server broker:9092 --topic $topic $security --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
+              docker exec $container timeout 15 kafka-console-consumer --bootstrap-server $broker_container:9092 --topic $topic $security --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
               set -e
           else
               class_name="kafka.tools.GetOffsetShell"
@@ -20207,7 +20233,7 @@ playground_topic_get_number_records_command() {
               then
                   class_name="org.apache.kafka.tools.GetOffsetShell"
               fi
-              docker exec $container kafka-run-class $class_name --broker-list broker:9092 $security --topic $topic --time -1 | awk -F ":" '{sum += $3} END {print sum}'
+              docker exec $broker_container kafka-run-class $class_name --broker-list $broker_container:9092 $security --topic $topic --time -1 | awk -F ":" '{sum += $3} END {print sum}'
           fi
       fi
   done
@@ -20231,9 +20257,9 @@ playground_topic_display_consumer_offsets_command() {
       if [[ -n "$verbose" ]]
       then
           log "🐞 CLI command used"
-          echo "kafka-console-consumer --bootstrap-server broker:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security"
+          echo "kafka-console-consumer --bootstrap-server $bootstrap_server:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security"
       fi
-      docker exec -i $container kafka-console-consumer --bootstrap-server broker:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security | grep -v "_confluent-controlcenter"
+      docker exec -i $container kafka-console-consumer --bootstrap-server $bootstrap_server:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security | grep -v "_confluent-controlcenter"
   fi
 }
 
@@ -20297,9 +20323,9 @@ playground_topic_describe_command() {
           if [[ -n "$verbose" ]]
           then
               log "🐞 CLI command used"
-              echo "kafka-topics --describe --topic $topic --bootstrap-server broker:9092 $security"
+              echo "kafka-topics --describe --topic $topic --bootstrap-server $bootstrap_server:9092 $security"
           fi
-          docker exec $container kafka-topics --describe --topic $topic --bootstrap-server broker:9092 $security
+          docker exec $container kafka-topics --describe --topic $topic --bootstrap-server $bootstrap_server:9092 $security
       fi
   done
 }
@@ -20367,8 +20393,10 @@ playground_topic_consume_command() {
   get_environment_used
   get_sr_url_and_security
 
-  bootstrap_server="broker:9092"
-  container="connect"
+  get_broker_container
+  bootstrap_server="$broker_container:9092"
+  get_connect_container
+  container=$connect_container
   sr_url_cli="http://schema-registry:8081"
   security=""
   if [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
@@ -20952,8 +20980,10 @@ playground_topic_produce_command() {
   get_environment_used
   get_sr_url_and_security
 
-  bootstrap_server="broker:9092"
-  container="connect"
+  get_broker_container
+  bootstrap_server="$broker_container:9092"
+  get_connect_container
+  container=$connect_container
   sr_url_cli="http://schema-registry:8081"
   security=""
   if [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
@@ -22190,9 +22220,9 @@ playground_topic_create_command() {
           if [[ -n "$verbose" ]]
           then
               log "🐞 CLI command used"
-              echo "kafka-topics --create --topic $topic --bootstrap-server broker:9092 --partitions $nb_partitions $security ${other_args[*]}"
+              echo "kafka-topics --create --topic $topic --bootstrap-server $bootstrap_server:9092 --partitions $nb_partitions $security ${other_args[*]}"
           fi
-          docker exec $container kafka-topics --create --topic $topic --bootstrap-server broker:9092 --partitions $nb_partitions $security ${other_args[*]}
+          docker exec $container kafka-topics --create --topic $topic --bootstrap-server $bootstrap_server:9092 --partitions $nb_partitions $security ${other_args[*]}
       fi
   else
       logerror "❌ topic $topic already exist !"
@@ -22249,9 +22279,9 @@ playground_topic_delete_command() {
       if [[ -n "$verbose" ]]
       then
           log "🐞 CLI command used"
-          echo "kafka-topics --delete --topic $topic --bootstrap-server broker:9092 $security"
+          echo "kafka-topics --delete --topic $topic --bootstrap-server $bootstrap_server:9092 $security"
       fi
-      docker exec $container kafka-topics --delete --topic $topic --bootstrap-server broker:9092 $security
+      docker exec $container kafka-topics --delete --topic $topic --bootstrap-server $bootstrap_server:9092 $security
   fi
 
   if [[ -n "$skip_delete_schema" ]]
@@ -22315,7 +22345,7 @@ playground_topic_alter_command() {
           get_connect_image
           docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties ${other_args[*]}
       else
-          docker exec $container kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server broker:9092 $security ${other_args[*]}
+          docker exec $container kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $bootstrap_server:9092 $security ${other_args[*]}
       fi
   fi
   set -e
@@ -22785,7 +22815,7 @@ playground_connector_offsets_get_command() {
           if [[ -n "$verbose" ]]
           then
               log "🐞 CLI command used"
-              echo "kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security"
+              echo "kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security"
           fi
           get_environment_used
           if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [[ "$environment" == "ccloud" ]]
@@ -22801,7 +22831,7 @@ playground_connector_offsets_get_command() {
                       continue
                   fi
               else
-                  docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security
+                  docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security
 
               fi
           fi
@@ -22947,7 +22977,7 @@ playground_connector_offsets_reset_command() {
               fi
               playground connector offsets get --connector $connector
           else
-              docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION
+              docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security | grep -v PARTITION
 
               if version_gt $tag "7.4.99"
               then
@@ -22957,7 +22987,7 @@ playground_connector_offsets_reset_command() {
                   playground connector delete --connector $connector
               fi
 
-              docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --to-earliest --reset-offsets --all-topics --execute
+              docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector $security --to-earliest --reset-offsets --all-topics --execute
 
               if version_gt $tag "7.4.99"
               then
@@ -23140,7 +23170,7 @@ playground_connector_offsets_alter_command() {
                   # if [[ -n "$verbose" ]]
                   # then
                   #     log "🐞 CLI command used"
-                  #     echo "kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security"
+                  #     echo "kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security"
                   # fi
                   get_environment_used
                   if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [[ "$environment" == "ccloud" ]]
@@ -23159,7 +23189,7 @@ playground_connector_offsets_alter_command() {
                       fi
 
                       echo "topic,partition,current-offset" > $file
-                      docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --export --reset-offsets --to-current --all-topics --dry-run >> $file
+                      docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector $security --export --reset-offsets --to-current --all-topics --dry-run >> $file
 
                       log "✨ Update the connector offsets as per your needs, save and close the file to continue"
                       playground open --file "${file}" --wait
@@ -23169,7 +23199,7 @@ playground_connector_offsets_alter_command() {
                       grep -v 'current-offset' "$file" > $tmp_dir/tmp && mv $tmp_dir/tmp "$file"
 
                       docker cp $file $container:/tmp/offsets.csv > /dev/null 2>&1
-                      docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --reset-offsets --from-file /tmp/offsets.csv --execute
+                      docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector $security --reset-offsets --from-file /tmp/offsets.csv --execute
 
                       if version_gt $tag "7.4.99"
                       then
@@ -23809,7 +23839,7 @@ playground_connector_show_lag_command() {
     if [[ -n "$verbose" ]]
     then
         log "🐞 CLI command used"
-        echo "kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security"
+        echo "kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security"
     fi
 
     SECONDS=0
@@ -23834,7 +23864,7 @@ playground_connector_show_lag_command() {
         fi
         docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group $consumer_group --describe | grep -v PARTITION | sed '/^$/d' &> $lag_output
       else
-        docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d' &> $lag_output
+        docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d' &> $lag_output
       fi
 
       if grep -q "Warning" $lag_output

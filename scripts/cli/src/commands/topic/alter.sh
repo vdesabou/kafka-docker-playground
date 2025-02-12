@@ -35,7 +35,7 @@ else
         get_connect_image
         docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties ${other_args[*]}
     else
-        docker exec $container kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server broker:9092 $security ${other_args[*]}
+        docker exec $container kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $bootstrap_server:9092 $security ${other_args[*]}
     fi
 fi
 set -e
