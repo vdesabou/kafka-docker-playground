@@ -234,6 +234,7 @@ services:
       # JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
       # uncomment when investigating class not found issue, see https://kafka-docker-playground.io/#/reusables?id=🔬-class-loading
       # KAFKA_OPTS: '-verbose:class'
+      KAFKA_OPTS: -Ddynamic.worker.config.file=/dev/null
       # Reduce Connect memory utilization
       EXTRA_ARGS: ${GRAFANA_AGENT_CONNECT}
       # KAFKA_JVM_PERFORMANCE_OPTS: -server -XX:+UseG1GC -XX:GCTimeRatio=1
@@ -305,6 +306,7 @@ services:
       # JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
       # uncomment when investigating class not found issue, see https://kafka-docker-playground.io/#/reusables?id=🔬-class-loading
       # KAFKA_OPTS: '-verbose:class'
+      KAFKA_OPTS: -Ddynamic.worker.config.file=/dev/null
       # Reduce Connect memory utilization
       EXTRA_ARGS: ${GRAFANA_AGENT_CONNECT}
       # KAFKA_JVM_PERFORMANCE_OPTS: -server -XX:+UseG1GC -XX:GCTimeRatio=1
@@ -376,6 +378,7 @@ services:
       # JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
       # uncomment when investigating class not found issue, see https://kafka-docker-playground.io/#/reusables?id=🔬-class-loading
       # KAFKA_OPTS: '-verbose:class'
+      KAFKA_OPTS: -Ddynamic.worker.config.file=/dev/null
       # Reduce Connect memory utilization
       EXTRA_ARGS: ${GRAFANA_AGENT_CONNECT}
       # KAFKA_JVM_PERFORMANCE_OPTS: -server -XX:+UseG1GC -XX:GCTimeRatio=1
