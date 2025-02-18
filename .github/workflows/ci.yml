@@ -102,7 +102,7 @@ jobs:
 
                       "🚀 ccloud/fm-aws-kinesis-source ccloud/fm-aws-redshift-sink ccloud/fm-aws-sqs-source ccloud/fm-aws-lambda-sink ccloud/fm-azure-blob-storage-sink ccloud/fm-azure-blob-storage-source ccloud/fm-azure-cognitive-search-sink ccloud/fm-mongodb-atlas-source ccloud/fm-mongodb-atlas-sink ccloud/fm-salesforce-bulkapi-source ccloud/fm-salesforce-bulkapi-2-0-source ccloud/custom-connector-connect-aws-s3-sink",
 
-                      "🚀 ccloud/fm-datadog-metrics-sink ccloud/fm-salesforce-bulkapi-2-0-sink ccloud/fm-salesforce-platform-events-source ccloud/fm-servicenow-source ccloud/fm-servicenow-sink ccloud/fm-aws-dynamodb-cdc-source ccloud/fm-datagen-source",
+                      "🚀 ccloud/fm-datadog-metrics-sink ccloud/fm-salesforce-bulkapi-2-0-sink ccloud/fm-salesforce-platform-events-source ccloud/fm-servicenow-source ccloud/fm-servicenow-v2-source ccloud/fm-servicenow-sink ccloud/fm-aws-dynamodb-cdc-source ccloud/fm-datagen-source",
 
                       "🚀 connect/connect-servicenow-sink connect/connect-servicenow-source connect/connect-datagen-source",
                       "🚀 connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source",
