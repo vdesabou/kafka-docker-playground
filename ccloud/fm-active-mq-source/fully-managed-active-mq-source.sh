@@ -69,8 +69,6 @@ playground connector create-or-update --connector $connector_name << EOF
      "activemq.password": "admin",
      "jms.destination.name": "DEV.QUEUE.1",
      "jms.destination.type": "queue",
-     "jms.destination.name": "DEV.QUEUE.1",
-     "jms.destination.type": "queue",
      "tasks.max" : "1"
 }
 EOF
