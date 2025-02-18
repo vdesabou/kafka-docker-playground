@@ -70,3 +70,4 @@ else
     load_env_variables
     bash $tmp_dir/playground-command
 fi
+wait_container_ready
