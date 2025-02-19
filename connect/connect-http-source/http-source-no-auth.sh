@@ -37,7 +37,7 @@ log "Send a message to HTTP server"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{"test":"value"}' \
-     http://localhost:18080/api/messages | jq .
+     http://localhost:9006/api/messages
 
 
 sleep 2
