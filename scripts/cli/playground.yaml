@@ -3203,10 +3203,10 @@ subcommands:
             🎓 Tip: If not specified, the command will apply to all ec2 instances
             
         - names:
-          - --disable-sync-repro-folder
+          - --enable-sync-repro-folder
           argument: ""
           description: | 
-            🚫 Disable sync reproduction-models folder between local and ec2 instance
+            👉 Enable sync reproduction-models folder between local and ec2 instance
             
       - name: list
         description: | 

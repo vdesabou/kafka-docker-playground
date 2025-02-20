@@ -3038,10 +3038,10 @@
             },
             {
               "names": [
-                "--disable-sync-repro-folder"
+                "--enable-sync-repro-folder"
               ],
               "argument": "",
-              "description": "🚫 Disable sync reproduction-models folder between local and ec2 instance\n"
+              "description": "👉 Enable sync reproduction-models folder between local and ec2 instance\n"
             }
           ]
         },

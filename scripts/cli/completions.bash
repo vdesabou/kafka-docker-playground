@@ -1265,7 +1265,7 @@ _playground_completions() {
       ;;
 
     *'ec2 open'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--disable-sync-repro-folder --help --instance -h -i")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--enable-sync-repro-folder --help --instance -h -i")" -- "$cur")
       ;;
 
     *'history'*)
