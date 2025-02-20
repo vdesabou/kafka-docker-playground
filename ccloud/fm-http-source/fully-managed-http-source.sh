@@ -46,12 +46,12 @@ do
 done
 
 set +e
-playground topic delete --topic http-source-topic-v1
+playground topic delete --topic http-source-v1-topic
 set -e
 
-log "Creating http-source-topic topic in Confluent Cloud"-v1
+log "Creating http-source-v1-topic topic in Confluent Cloud"
 set +e
-playground topic create --topic http-source-topic-v1
+playground topic create --topic http-source-v1-topic
 set -e
 
 connector_name="HttpSource_$USER"
@@ -72,7 +72,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "kafka.auth.mode": "KAFKA_API_KEY",
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",
-     "topic.name.pattern": "http-source-topic",-v1
+     "topic.name.pattern": "http-source-v1-topic",
      "output.data.format": "AVRO",
      "url": "http://$NGROK_HOSTNAME:$NGROK_PORT",
      "entity.names": "messages",
@@ -91,8 +91,8 @@ curl -X PUT \
 
 sleep 2
 
-log "Verify we have received the data in http-source-topic topic"-v1
-playground topic consume --topic http-source-topic --min-expected-messages 1 --timeout 60-v1
+log "Verify we have received the data in http-source-v1-topic topic"
+playground topic consume --topic http-source-v1-topic --min-expected-messages 1 --timeout 60
 
 
 log "Do you want to delete the fully managed connector $connector_name ?"
