@@ -191,37 +191,6 @@ else
     log "🔄 Updating $connector_type connector $connector"
 fi
 
-echo "$json_content" > "/tmp/config-$connector"
-
-if [ -z "$GITHUB_RUN_NUMBER" ]
-then
-    if [[ "$OSTYPE" == "darwin"* ]]
-    then
-        clipboard=$(playground config get clipboard)
-        if [ "$clipboard" == "" ]
-        then
-            playground config set clipboard true
-        fi
-
-        if ( [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] ) && [[ ! -n "$no_clipboard" ]]
-        then
-            tmp_dir_clipboard=$(mktemp -d -t pg-XXXXXXXXXX)
-            if [ -z "$PG_VERBOSE_MODE" ]
-            then
-                trap 'rm -rf $tmp_dir_clipboard' EXIT
-            else
-                log "🐛📂 not deleting tmp dir $tmp_dir_clipboard"
-            fi
-            echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir_clipboard/tmp
-            cat "/tmp/config-$connector" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir_clipboard/tmp
-            echo "EOF" >> $tmp_dir_clipboard/tmp
-
-            cat $tmp_dir_clipboard/tmp | pbcopy
-            log "📋 $connector_type connector config has been copied to the clipboard (disable with 'playground config clipboard false')"
-        fi
-    fi
-fi
-
 if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
 then
     if [[ -n "$offsets" ]] && [ $is_create == 0 ]
@@ -288,6 +257,37 @@ else
     else
         echo "$json_content" > $new_json_file
         handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$new_json_file $connect_url/connectors/$connector/config"
+    fi
+fi
+
+echo "$json_content" > "/tmp/config-$connector"
+
+if [ -z "$GITHUB_RUN_NUMBER" ]
+then
+    if [[ "$OSTYPE" == "darwin"* ]]
+    then
+        clipboard=$(playground config get clipboard)
+        if [ "$clipboard" == "" ]
+        then
+            playground config set clipboard true
+        fi
+
+        if ( [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] ) && [[ ! -n "$no_clipboard" ]]
+        then
+            tmp_dir_clipboard=$(mktemp -d -t pg-XXXXXXXXXX)
+            if [ -z "$PG_VERBOSE_MODE" ]
+            then
+                trap 'rm -rf $tmp_dir_clipboard' EXIT
+            else
+                log "🐛📂 not deleting tmp dir $tmp_dir_clipboard"
+            fi
+            echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir_clipboard/tmp
+            cat "/tmp/config-$connector" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir_clipboard/tmp
+            echo "EOF" >> $tmp_dir_clipboard/tmp
+
+            cat $tmp_dir_clipboard/tmp | pbcopy
+            log "📋 $connector_type connector config has been copied to the clipboard (disable with 'playground config clipboard false')"
+        fi
     fi
 fi
 
