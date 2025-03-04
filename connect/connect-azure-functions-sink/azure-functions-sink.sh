@@ -86,12 +86,6 @@ do
     fi
 done
 
-set +e
-curl -s https://$AZURE_FUNCTIONS_NAME.azurewebsites.net/" > /dev/null
-curl -s https://$AZURE_FUNCTIONS_NAME.azurewebsites.net/api/httpexample" > /dev/null
-
-set -e
-
 max_attempts="10"
 sleep_interval="30"
 attempt_num=1
@@ -99,8 +93,6 @@ attempt_num=1
 until [ ! -z "$FUNCTIONS_URL" ]
 do
     output=$(docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node20-core-tools bash -c "az login -u \"$AZ_USER\" -p \"$AZ_PASS\" > /dev/null 2>&1 && cd LocalFunctionProj && func azure functionapp list-functions \"$AZURE_FUNCTIONS_NAME\" --show-keys")
-
-    log "Output from list-functions command: $output"
 
     FUNCTIONS_URL=$(echo "$output" | grep "Invoke url" | grep -Eo 'https://[^ >]+' | head -1)
 
