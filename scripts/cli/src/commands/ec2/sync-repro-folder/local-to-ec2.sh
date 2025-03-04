@@ -47,5 +47,5 @@ do
     ip=$(echo "${instance}" | cut -d "/" -f 3)
 
     log "👉 Sync local reproduction-models folder to ec2 instance $name"
-    rsync -cauv --filter=':- .gitignore' -e "ssh -i $pem_file -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" "$root_folder/reproduction-models" "$username@$ip:/home/$username/kafka-docker-playground"
+    rsync -cauv --exclude '.git' --filter=':- .gitignore' -e "ssh -i $pem_file -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" "$root_folder/reproduction-models" "$username@$ip:/home/$username/kafka-docker-playground"
 done
