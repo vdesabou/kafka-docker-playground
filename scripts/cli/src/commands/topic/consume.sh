@@ -459,6 +459,9 @@ fi
     elif [[ $line =~ "Processed a total of" ]]
     then
       continue
+    elif [[ $line =~ "SLF4J" ]]
+    then
+      continue
     else
       if [[ -n "$grep_string" ]]
       then
