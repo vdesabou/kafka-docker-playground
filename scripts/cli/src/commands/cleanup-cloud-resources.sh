@@ -134,7 +134,7 @@ function cleanup_azure () {
         az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
     fi
 
-    maybe_set_azure_subscription
+    login_and_maybe_set_azure_subscription
 
     log "Cleanup Azure Resource groups"
     for group in $(az group list --query '[].name' --output tsv)

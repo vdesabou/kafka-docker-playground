@@ -7,28 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 logwarn "Azure Data Lake Storage Gen1 will be retired 29 February 2024"
 check_if_continue
 
-if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
-then
-    log "Logging to Azure using environment variables AZ_USER and AZ_PASS"
-    set +e
-    az logout
-    set -e
-    az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
-else
-    log "Logging to Azure using browser"
-    az login
-fi
-
-AZURE_SUBSCRIPTION_NAME=${AZURE_SUBSCRIPTION_NAME:-$1}
-
-if [ -z "$AZURE_SUBSCRIPTION_NAME" ]
-then
-  logerror "AZURE_SUBSCRIPTION_NAME is not set. Export it as environment variable or pass it as argument"
-  exit 1
-fi
-
-# when AZURE_SUBSCRIPTION_NAME env var is set, we need to set the correct subscription
-maybe_set_azure_subscription
+login_and_maybe_set_azure_subscription
 
 AZURE_NAME=pg${USER}dl${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
