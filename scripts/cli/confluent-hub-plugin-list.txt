@@ -1,4 +1,3 @@
-Onibex/snowflake-sink-connector
 a2solutions/oracdc-kafka
 ably/kafka-connect-ably
 adobeinc/streaming-connect-sink
@@ -168,6 +167,7 @@ neo4j/kafka-connect-neo4j
 newrelic/newrelic-kafka-connector
 onewayautomation/ogamma-visual-logger-for-opc
 onibex/onibex-databricks-sink-connector
+onibex/snowflake-sink-connector
 opencredo/kafka-connect-venafi
 oracle/goldengate
 oticsinc/maads-viper
