@@ -77,3 +77,5 @@ playground_config.ini
 hsperfdata_appuser
 *.lck
 reproduction-models
+**/bin/
+**/obj
