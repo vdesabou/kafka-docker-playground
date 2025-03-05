@@ -3649,10 +3649,10 @@ commands:
           🖥️ ec2 instance (need to use completion to get all required details)
 
           🎓 Tip: If not specified, the command will apply to all ec2 instances
-      - long: --disable-sync-repro-folder
+      - long: --enable-sync-repro-folder
         required: false
         help: |-
-          🚫 Disable sync reproduction-models folder between local and ec2 instance
+          👉 Enable sync reproduction-models folder between local and ec2 instance
 
   - name: allow-my-ip
     private: true

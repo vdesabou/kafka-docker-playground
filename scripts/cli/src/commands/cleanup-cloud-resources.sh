@@ -134,7 +134,7 @@ function cleanup_azure () {
         az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
     fi
 
-    maybe_set_azure_subscription
+    login_and_maybe_set_azure_subscription
 
     log "Cleanup Azure Resource groups"
     for group in $(az group list --query '[].name' --output tsv)
@@ -263,7 +263,7 @@ function cleanup_salesforce () {
         docker run -i --rm vdesabou/sfdx-cli:latest sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\" && sfdx data:query --target-org \"$SALESFORCE_USERNAME\" -q \"SELECT Id FROM Contact\" --result-format csv > /tmp/out.csv && sfdx force:data:bulk:delete --target-org \"$SALESFORCE_USERNAME\" -s Contact -f /tmp/out.csv"
 
         log "Cleanup PushTopics on account with $SALESFORCE_USERNAME"
-        docker exec -i sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF
+        docker run -i --rm vdesabou/sfdx-cli:latest sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\" && sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF
 List<PushTopic> pts = [SELECT Id FROM PushTopic];
 Database.delete(pts);
 EOF
@@ -279,7 +279,7 @@ EOF
         docker run -i --rm vdesabou/sfdx-cli:latest sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\" && sfdx data:query --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -q \"SELECT Id FROM Contact\" --result-format csv > /tmp/out.csv && sfdx force:data:bulk:delete --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -s Contact -f /tmp/out.csv"
 
         log "Cleanup PushTopics on account with $SALESFORCE_USERNAME_ACCOUNT2"
-        docker exec -i sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\"" << EOF
+        docker run -i --rm vdesabou/sfdx-cli:latest sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\" && sfdx apex run --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\"" << EOF
 List<PushTopic> pts = [SELECT Id FROM PushTopic];
 Database.delete(pts);
 EOF

@@ -1,4 +1,3 @@
-Onibex/snowflake-sink-connector
 a2solutions/oracdc-kafka
 ably/kafka-connect-ably
 adobeinc/streaming-connect-sink
@@ -34,7 +33,6 @@ confluentinc/kafka-connect-aws-lambda
 confluentinc/kafka-connect-aws-redshift
 confluentinc/kafka-connect-azure-blob-storage
 confluentinc/kafka-connect-azure-blob-storage-source
-confluentinc/kafka-connect-azure-data-lake-gen1-storage
 confluentinc/kafka-connect-azure-data-lake-gen2-storage
 confluentinc/kafka-connect-azure-event-hubs
 confluentinc/kafka-connect-azure-functions
@@ -169,6 +167,7 @@ neo4j/kafka-connect-neo4j
 newrelic/newrelic-kafka-connector
 onewayautomation/ogamma-visual-logger-for-opc
 onibex/onibex-databricks-sink-connector
+onibex/snowflake-sink-connector
 opencredo/kafka-connect-venafi
 oracle/goldengate
 oticsinc/maads-viper
@@ -198,7 +197,6 @@ singlestore/singlestore-kafka-connector
 snowflakeinc/snowflake-kafka-connector
 splunk/kafka-connect-splunk
 spoudinc/spoud-agoora
-sqdata/sqdata-connector
 startree/startree-native-integration
 streaming-dev-lab/secured-flow
 streamsendio/file-chunk-sink
@@ -211,6 +209,7 @@ tabular/iceberg-kafka-connect
 thomaskwscott/kafka-connect-shell-sink
 thomaskwscott/kafka-connect-shell-source
 timeplus/kafka-timeplus-connector-sink
+vectara/kafka-connect-vectara
 vertica/vertica-analytics-platform
 waterstreamsrl/waterstream-kafka-mqtt
 wepay/kafka-connect-bigquery

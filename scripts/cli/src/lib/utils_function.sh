@@ -113,6 +113,11 @@ function version_gt() {
 
 function set_kafka_client_tag()
 {
+    if [[ $TAG_BASE = 7.9.* ]]
+    then
+      export KAFKA_CLIENT_TAG="3.9.0"
+    fi
+    
     if [[ $TAG_BASE = 7.8.* ]]
     then
       export KAFKA_CLIENT_TAG="3.8.0"
@@ -3978,8 +3983,9 @@ function check_arm64_support() {
     if [ $? = 0 ]
     then
         logerror "🖥️ This example is not working with ARM64 !"
-        log "It is highly recommended to use playground ec2 command (https://kafka-docker-playground.io/#/playground%20ec2) to run the example on ubuntu ec2 instance"
-        log "Do you want to start test anyway ?"
+        log "It is highly recommended to use 'playground ec2 command' (https://kafka-docker-playground.io/#/playground%20ec2) to run the example on ubuntu ec2 instance"
+        log "You can also use gitpod https://gitpod.io/#https://github.com/vdesabou/kafka-docker-playground"
+        log "Do you want to start the example anyway ?"
         check_if_continue
         return
     fi
@@ -4245,7 +4251,21 @@ function display_ngrok_warning () {
   check_if_continue
 }
 
-function maybe_set_azure_subscription () {
+function login_and_maybe_set_azure_subscription () {
+
+  if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
+  then
+    log "🫐 Logging to Azure using environment variables AZ_USER and AZ_PASS "
+    set +e
+    az logout
+    set -e
+    az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
+  else
+    logerror "❌ AZ_USER and AZ_PASS environment variables are not set (for Confluent employees, that is simply your Confluent email address and Okta password)"
+    exit 1
+  fi
+
+  # when AZURE_SUBSCRIPTION_NAME env var is set, we need to set the correct subscription
   if [ ! -z "$AZURE_SUBSCRIPTION_NAME" ]
   then
     log "💙 AZURE_SUBSCRIPTION_NAME ($AZURE_SUBSCRIPTION_NAME) is set, searching for subscription id..."

@@ -25,8 +25,8 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 16,
-  "iteration": 1720555864154,
+  "id": 11,
+  "iteration": 1741097725359,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -60,7 +60,7 @@
       },
       "id": 76,
       "options": {
-        "content": "\n# Debezium Connector Metrics\n\nThe Debezium connectors has three metric types:\n\n* snapshot metrics\n\n* binlog metrics (MySql)\n\n* schema history metrics (MySql and SQLServer)\n\nFor more detailed informarion about the metrics please visit the Debezium documentation page\n\n[Click here to visit](https://debezium.io/documentation/reference/stable/operations/monitoring.html)\n\n\n\n",
+        "content": "\n# Debezium Connector Metrics\n\nThe Debezium connectors has three metric types:\n\n* snapshot metrics\n\n* binlog metrics (MySql)\n\n* schema history metrics (MySql, Confluent Oracle and SQLServer)\n\nFor more detailed informarion about the metrics please visit the Debezium documentation page\n\n[Click here to visit](https://debezium.io/documentation/reference/stable/operations/monitoring.html)\n\n\n\n",
         "mode": "markdown"
       },
       "pluginVersion": "8.5.27",
@@ -1903,8 +1903,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "semi-dark-blue",
-                "value": null
+                "color": "semi-dark-blue"
               },
               {
                 "color": "semi-dark-purple",
@@ -2077,8 +2076,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2152,8 +2150,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2219,8 +2216,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "semi-dark-blue",
-                "value": null
+                "color": "semi-dark-blue"
               },
               {
                 "color": "dark-purple",
@@ -2523,8 +2519,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2597,8 +2592,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2668,8 +2662,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2913,15 +2906,16 @@
     "debezium",
     "postgres",
     "mongodb",
-    "sqlserver"
+    "sqlserver",
+    "confluent oracle"
   ],
   "templating": {
     "list": [
       {
         "current": {
           "selected": true,
-          "text": "server_mysql",
-          "value": "server_mysql"
+          "text": "All",
+          "value": "$__all"
         },
         "datasource": {
           "type": "prometheus",
@@ -3000,6 +2994,6 @@
   "timezone": "browser",
   "title": "Debezium Connectors",
   "uid": "Ro1hBYYZz",
-  "version": 7,
+  "version": 2,
   "weekStart": ""
 }

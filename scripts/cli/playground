@@ -6157,8 +6157,8 @@ playground_ec2_open_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--disable-sync-repro-folder")"
-    printf "    🚫 Disable sync reproduction-models folder between local and ec2 instance\n"
+    printf "  %s\n" "$(magenta "--enable-sync-repro-folder")"
+    printf "    👉 Enable sync reproduction-models folder between local and ec2 instance\n"
     echo
 
     # :command.usage_fixed_flags
@@ -8450,6 +8450,11 @@ function version_gt() {
 
 function set_kafka_client_tag()
 {
+    if [[ $TAG_BASE = 7.9.* ]]
+    then
+      export KAFKA_CLIENT_TAG="3.9.0"
+    fi
+
     if [[ $TAG_BASE = 7.8.* ]]
     then
       export KAFKA_CLIENT_TAG="3.8.0"
@@ -12245,8 +12250,9 @@ function check_arm64_support() {
     if [ $? = 0 ]
     then
         logerror "🖥️ This example is not working with ARM64 !"
-        log "It is highly recommended to use playground ec2 command (https://kafka-docker-playground.io/#/playground%20ec2) to run the example on ubuntu ec2 instance"
-        log "Do you want to start test anyway ?"
+        log "It is highly recommended to use 'playground ec2 command' (https://kafka-docker-playground.io/#/playground%20ec2) to run the example on ubuntu ec2 instance"
+        log "You can also use gitpod https://gitpod.io/#https://github.com/vdesabou/kafka-docker-playground"
+        log "Do you want to start the example anyway ?"
         check_if_continue
         return
     fi
@@ -12514,7 +12520,21 @@ function display_ngrok_warning () {
   check_if_continue
 }
 
-function maybe_set_azure_subscription () {
+function login_and_maybe_set_azure_subscription () {
+
+  if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
+  then
+    log "🫐 Logging to Azure using environment variables AZ_USER and AZ_PASS "
+    set +e
+    az logout
+    set -e
+    az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
+  else
+    logerror "❌ AZ_USER and AZ_PASS environment variables are not set (for Confluent employees, that is simply your Confluent email address and Okta password)"
+    exit 1
+  fi
+
+  # when AZURE_SUBSCRIPTION_NAME env var is set, we need to set the correct subscription
   if [ ! -z "$AZURE_SUBSCRIPTION_NAME" ]
   then
     log "💙 AZURE_SUBSCRIPTION_NAME ($AZURE_SUBSCRIPTION_NAME) is set, searching for subscription id..."
@@ -14456,8 +14476,7 @@ playground_run_command() {
     fi
 
     sql_datagen=0
-    if [[ $test_file == *"connect-debezium-sqlserver"* ]] || [[ $test_file == *"connect-debezium-mysql"* ]] || [[ $test_file == *"connect-debezium-postgresql"* ]] || [[ $test_file == *"connect-debezium-oracle"* ]] || [[ $test_file == *"connect-cdc-oracle"* ]] || [[ $test_file == *"connect-jdbc-sqlserver"* ]] || [[ $test_file == *"connect-jdbc-mysql"* ]] || [[ $test_file == *"connect-jdbc-postgresql"* ]] || [[ $test_file == *"connect-jdbc-oracle"* ]]
-
+    if [[ $test_file == *"connect-debezium-sqlserver"* ]] || [[ $test_file == *"connect-debezium-mysql"* ]] || [[ $test_file == *"connect-debezium-postgresql"* ]] || [[ $test_file == *"connect-debezium-oracle"* ]] || [[ $test_file == *"connect-cdc-oracle"* ]] || [[ $test_file == *"connect-jdbc-sqlserver"* ]] || [[ $test_file == *"connect-jdbc-mysql"* ]] || [[ $test_file == *"connect-jdbc-postgresql"* ]] || [[ $test_file == *"connect-jdbc-oracle"* ]] || [[ $test_file == *"connect-cdc-xstream"* ]]
     then
       sql_datagen=1
     fi
@@ -16420,7 +16439,7 @@ playground_cleanup_cloud_resources_command() {
           az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
       fi
 
-      maybe_set_azure_subscription
+      login_and_maybe_set_azure_subscription
 
       log "Cleanup Azure Resource groups"
       for group in $(az group list --query '[].name' --output tsv)
@@ -16549,7 +16568,7 @@ EOF
           docker run -i --rm vdesabou/sfdx-cli:latest sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\" && sfdx data:query --target-org \"$SALESFORCE_USERNAME\" -q \"SELECT Id FROM Contact\" --result-format csv > /tmp/out.csv && sfdx force:data:bulk:delete --target-org \"$SALESFORCE_USERNAME\" -s Contact -f /tmp/out.csv"
 
           log "Cleanup PushTopics on account with $SALESFORCE_USERNAME"
-          docker exec -i sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF
+          docker run -i --rm vdesabou/sfdx-cli:latest sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\" && sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF
 List<PushTopic> pts = [SELECT Id FROM PushTopic];
 Database.delete(pts);
 EOF
@@ -16565,7 +16584,7 @@ EOF
           docker run -i --rm vdesabou/sfdx-cli:latest sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\" && sfdx data:query --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -q \"SELECT Id FROM Contact\" --result-format csv > /tmp/out.csv && sfdx force:data:bulk:delete --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -s Contact -f /tmp/out.csv"
 
           log "Cleanup PushTopics on account with $SALESFORCE_USERNAME_ACCOUNT2"
-          docker exec -i sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\"" << EOF
+          docker run -i --rm vdesabou/sfdx-cli:latest sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\" && sfdx apex run --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\"" << EOF
 List<PushTopic> pts = [SELECT Id FROM PushTopic];
 Database.delete(pts);
 EOF
@@ -20832,6 +20851,9 @@ playground_topic_consume_command() {
       elif [[ $line =~ "Processed a total of" ]]
       then
         continue
+      elif [[ $line =~ "SLF4J" ]]
+      then
+        continue
       else
         if [[ -n "$grep_string" ]]
         then
@@ -25038,6 +25060,77 @@ playground_connector_create_or_update_command() {
       log "🔄 Updating $connector_type connector $connector"
   fi
 
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+      if [[ -n "$offsets" ]] && [ $is_create == 0 ]
+      then
+          logerror "❌ --offsets is set but $connector_type connector $connector already exists"
+          exit 1
+      fi
+
+      if [[ -n "$initial_state" ]]
+      then
+          logerror "❌ --initial-state is set but not supported with $connector_type connector"
+          exit 1
+      fi
+
+      get_ccloud_connect
+      if [[ -n "$offsets" ]]
+      then
+          log "📍 creating $connector_type connector $connector with offsets: $offsets"
+
+          # add mandatory name field
+          new_json_content=$(echo "$json_content" | jq -c ". + {\"name\": \"$connector\"}")
+
+          sed -e "s|:CONNECTOR_NAME:|$connector|g" \
+              -e "s|:CONNECTOR_CONFIG:|$new_json_content|g" \
+              -e "s|:CONNECTOR_OFFSETS:|$offsets|g" \
+              $root_folder/scripts/cli/src/create-connector-post-template.json > ${connector_with_offsets_file}
+
+          handle_ccloud_connect_rest_api "curl $security -s -X POST -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$connector_with_offsets_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors"
+      else
+          handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config"
+      fi
+  else
+      if [[ -n "$offsets" ]]
+      then
+          logerror "❌ --offsets is set but not supported with $connector_type connector"
+          exit 1
+      fi
+      if [[ -n "$initial_state" ]] && [ $is_create == 0 ]
+      then
+          logerror "❌ --initial-state is set but $connector_type connector $connector already exists"
+          exit 1
+      fi
+      get_connect_url_and_security
+      if [[ -n "$skip_automatic_connector_config" ]]
+      then
+          log "🤖 --skip-automatic-connector-config is set"
+      else
+          add_connector_config_based_on_environment "$environment" "$json_content"
+      fi
+
+      if [[ -n "$initial_state" ]]
+      then
+          log "🪵 creating $connector_type connector $connector with --initial-state: $initial_state"
+
+          # add mandatory name field
+          new_json_content=$(echo "$json_content" | sed 's/&/:AMPERSAND:/g' | jq -c ". + {\"name\": \"$connector\"}")
+
+          sed -e "s|:CONNECTOR_NAME:|$connector|g" \
+              -e "s|:CONNECTOR_CONFIG:|$new_json_content|g" \
+              -e "s|:CONNECTOR_INITIAL_STATE:|$initial_state|g" \
+              $root_folder/scripts/cli/src/create-connector-post-template-initial-state.json > /tmp/connector_with_initial_state_file.json
+
+          sed -e "s|:AMPERSAND:|\&|g" /tmp/connector_with_initial_state_file.json > ${connector_with_initial_state_file}
+
+          handle_onprem_connect_rest_api "curl $security -s -X POST -H \"Content-Type: application/json\" --data @$connector_with_initial_state_file $connect_url/connectors"
+      else
+          echo "$json_content" > $new_json_file
+          handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$new_json_file $connect_url/connectors/$connector/config"
+      fi
+  fi
+
   echo "$json_content" > "/tmp/config-$connector"
 
   if [ -z "$GITHUB_RUN_NUMBER" ]
@@ -25066,77 +25159,6 @@ playground_connector_create_or_update_command() {
             cat $tmp_dir_clipboard/tmp | pbcopy
             log "📋 $connector_type connector config has been copied to the clipboard (disable with 'playground config clipboard false')"
         fi
-    fi
-fi
-
-if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
-then
-    if [[ -n "$offsets" ]] && [ $is_create == 0 ]
-    then
-        logerror "❌ --offsets is set but $connector_type connector $connector already exists"
-        exit 1
-    fi
-
-    if [[ -n "$initial_state" ]]
-    then
-        logerror "❌ --initial-state is set but not supported with $connector_type connector"
-        exit 1
-    fi
-
-    get_ccloud_connect
-    if [[ -n "$offsets" ]]
-    then
-        log "📍 creating $connector_type connector $connector with offsets: $offsets"
-
-        # add mandatory name field
-        new_json_content=$(echo "$json_content" | jq -c ". + {\"name\": \"$connector\"}")
-
-        sed -e "s|:CONNECTOR_NAME:|$connector|g" \
-            -e "s|:CONNECTOR_CONFIG:|$new_json_content|g" \
-            -e "s|:CONNECTOR_OFFSETS:|$offsets|g" \
-            $root_folder/scripts/cli/src/create-connector-post-template.json > ${connector_with_offsets_file}
-
-        handle_ccloud_connect_rest_api "curl $security -s -X POST -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$connector_with_offsets_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors"
-    else
-        handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config"
-    fi
-else
-    if [[ -n "$offsets" ]]
-    then
-        logerror "❌ --offsets is set but not supported with $connector_type connector"
-        exit 1
-    fi
-    if [[ -n "$initial_state" ]] && [ $is_create == 0 ]
-    then
-        logerror "❌ --initial-state is set but $connector_type connector $connector already exists"
-        exit 1
-    fi
-    get_connect_url_and_security
-    if [[ -n "$skip_automatic_connector_config" ]]
-    then
-        log "🤖 --skip-automatic-connector-config is set"
-    else
-        add_connector_config_based_on_environment "$environment" "$json_content"
-    fi
-
-    if [[ -n "$initial_state" ]]
-    then
-        log "🪵 creating $connector_type connector $connector with --initial-state: $initial_state"
-
-        # add mandatory name field
-        new_json_content=$(echo "$json_content" | sed 's/&/:AMPERSAND:/g' | jq -c ". + {\"name\": \"$connector\"}")
-
-        sed -e "s|:CONNECTOR_NAME:|$connector|g" \
-            -e "s|:CONNECTOR_CONFIG:|$new_json_content|g" \
-            -e "s|:CONNECTOR_INITIAL_STATE:|$initial_state|g" \
-            $root_folder/scripts/cli/src/create-connector-post-template-initial-state.json > /tmp/connector_with_initial_state_file.json
-
-        sed -e "s|:AMPERSAND:|\&|g" /tmp/connector_with_initial_state_file.json > ${connector_with_initial_state_file}
-
-        handle_onprem_connect_rest_api "curl $security -s -X POST -H \"Content-Type: application/json\" --data @$connector_with_initial_state_file $connect_url/connectors"
-    else
-        echo "$json_content" > $new_json_file
-        handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$new_json_file $connect_url/connectors/$connector/config"
     fi
 fi
 
@@ -25353,7 +25375,7 @@ playground_ec2_create_command() {
   log "👷 ec2 instance $name is created and accesible via SSH, it will be opened with visual studio code in 3 minutes..."
   log "🌀 cloud formation is still in progress (installing docker, etc...) and can be reverted after 10 minutes (i.e removing ec2 instance) in case of issue. You can check progress by checking log file output.log in root folder of ec2 instance"
   sleep 180
-  playground ec2 open --instance "$instance" --disable-sync-repro-folder
+  playground ec2 open --instance "$instance"
 
   wait_for_ec2_cloudformation_to_be_completed "$name"
 
@@ -25414,7 +25436,7 @@ playground_ec2_delete_command() {
 playground_ec2_open_command() {
   # src/commands/ec2/open.sh
   instance="${args[--instance]}"
-  disable_sync_repro_folder="${args[--disable-sync-repro-folder]}"
+  enable_sync_repro_folder="${args[--enable-sync-repro-folder]}"
 
   if [[ $(type code 2>&1) =~ "not found" ]]
   then
@@ -25457,7 +25479,7 @@ playground_ec2_open_command() {
 
       playground ec2 allow-my-ip --instance "$instance"
 
-      if [[ ! -n "$disable_sync_repro_folder" ]]
+      if [[ -n "$enable_sync_repro_folder" ]]
       then
           instance="$(playground ec2 status --instance "$name" --all)"
           playground ec2 sync-repro-folder local-to-ec2 --instance "$instance"
@@ -25745,7 +25767,7 @@ playground_ec2_sync_repro_folder_local_to_ec2_command() {
       ip=$(echo "${instance}" | cut -d "/" -f 3)
 
       log "👉 Sync local reproduction-models folder to ec2 instance $name"
-      rsync -cauv --filter=':- .gitignore' -e "ssh -i $pem_file -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" "$root_folder/reproduction-models" "$username@$ip:/home/$username/kafka-docker-playground"
+      rsync -cauv --exclude '.git' --filter=':- .gitignore' -e "ssh -i $pem_file -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" "$root_folder/reproduction-models" "$username@$ip:/home/$username/kafka-docker-playground"
   done
 }
 
@@ -25801,7 +25823,7 @@ playground_ec2_sync_repro_folder_ec2_to_local_command() {
       ip=$(echo "${instance}" | cut -d "/" -f 3)
 
       log "👈 Sync ec2 instance $name reproduction-models folder to local"
-      rsync -cauv --filter=':- .gitignore' -e "ssh -i $pem_file -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" "$username@$ip:/home/$username/kafka-docker-playground/reproduction-models" "$root_folder"
+      rsync -cauv --exclude '.git' --filter=':- .gitignore' -e "ssh -i $pem_file -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" "$username@$ip:/home/$username/kafka-docker-playground/reproduction-models" "$root_folder"
   done
 }
 
@@ -39642,10 +39664,10 @@ playground_ec2_open_parse_requirements() {
         ;;
 
       # :flag.case
-      --disable-sync-repro-folder)
+      --enable-sync-repro-folder)
 
         # :flag.case_no_arg
-        args['--disable-sync-repro-folder']=1
+        args['--enable-sync-repro-folder']=1
         shift
         ;;
 
