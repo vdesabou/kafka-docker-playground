@@ -20,6 +20,19 @@ app.use((req, res, next) => {
   next();
 });
 
+// Wildcard route to accept any path
+app.all('*', (req, res) => {
+  res.status(errorCode)
+    .set('Content-Type', 'application/json')
+    .set('Custom-Header', 'Hello')
+    .json(responseBody);
+  console.log("headers:");
+  console.log(req.headers);
+  console.log("body:");
+  console.log(req.body);
+  console.log(`[${new Date().toISOString()}] sending back ${errorCode}`); 
+});
+
 app.get('/', (req, res) => {
   res.status(errorCode)
     .set('Content-Type', 'application/json')
