@@ -5,4 +5,4 @@ services:
       - ../../other/custom-smt/MyCustomSMT/target/MyCustomSMT-1.0.0-SNAPSHOT-jar-with-dependencies.jar:/usr/share/filestream-connectors/lib/MyCustomSMT-1.0.0-SNAPSHOT-jar-with-dependencies.jar
     environment:
       # in newer version, it is located in /usr/share/filestream-connectors
-      CONNECT_PLUGIN_PATH: /usr/share/java/,/usr/share/confluent-hub-components/,/usr/share/filestream-connectors
+      CONNECT_PLUGIN_PATH: /usr/share/filestream-connectors
