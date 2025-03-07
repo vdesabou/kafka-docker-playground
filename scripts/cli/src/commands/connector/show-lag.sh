@@ -133,7 +133,7 @@ function log_up() {
 function log_same() {
   ORANGE='\033[0;33m'
   NC='\033[0m' # No Color
-  echo -e "$ORANGE`date +"%H:%M:%S"` 🔸$@$NC"
+  echo -e "$ORANGE$(date +"%H:%M:%S") 🔸$@$NC"
 }
 
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)

@@ -13,6 +13,7 @@ subcommands:
     usage: playground help [COMMAND]
     options: []
     subcommands:
+
   - name: status
     description: | 
         🗺️ Show a status
@@ -78,6 +79,7 @@ subcommands:
           browser to use
         usage: playground config open-ccloud-connector-in-browser browser [BROWSER]
         options: []
+
   - name: run
     description: | 
         🕹️ Run any example !
@@ -382,24 +384,28 @@ subcommands:
         Force interactive mode
         
     subcommands:
+
   - name: re-run
     description: | 
         ⚡ Simply re-run last example you ran with <playground run>
     usage: playground re-run
     options: []
     subcommands:
+
   - name: get-ci-result
     description: | 
         🤖 get CI result for current example
     usage: playground get-ci-result
     options: []
     subcommands:
+
   - name: history
     description: | 
         🏰 Get an history of the examples which were run with run command and run it again
     usage: playground history
     options: []
     subcommands:
+
   - name: switch-ccloud
     description: | 
         🌩️  Switch to ccloud environment.
@@ -408,12 +414,14 @@ subcommands:
     usage: playground switch-ccloud
     options: []
     subcommands:
+
   - name: switch-back
     description: | 
         💺  Switch back from previous environment before switch-ccloud was called.
     usage: playground switch-back
     options: []
     subcommands:
+
   - name: update-version
     description: | 
         ✨ Update current confluent platform or connector(s) with new version(s)
@@ -466,6 +474,7 @@ subcommands:
                 use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
         
     subcommands:
+
   - name: open
     description: | 
         👐 When --file is not provided, simply open last example you ran with <playground run>
@@ -491,18 +500,21 @@ subcommands:
         😴 Wait
         
     subcommands:
+
   - name: stop
     description: | 
         🛑 Stop currently running example
     usage: playground stop
     options: []
     subcommands:
+
   - name: remove-all-docker-images
     description: | 
         🧨 Remove all docker images (including docker volumes)
     usage: playground remove-all-docker-images
     options: []
     subcommands:
+
   - name: cleanup-cloud-details
     description: | 
         🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)
@@ -510,6 +522,7 @@ subcommands:
     usage: playground cleanup-cloud-details
     options: []
     subcommands:
+
   - name: open-docs
     description: | 
         🧑‍🎓 Open Confluent documentation of currently running example
@@ -522,6 +535,7 @@ subcommands:
         🌐 Only show url
         
     subcommands:
+
   - name: cleanup-cloud-resources
     description: | 
         🧹 Cleanup cloud resources that were created by running examples from the playground
@@ -683,6 +697,7 @@ subcommands:
             
             Conflicts with: --producer
             
+
   - name: get-docker-compose
     description: | 
         🐋 Get docker-compose
@@ -1542,6 +1557,7 @@ subcommands:
             
             Allowed values: INFO, WARN, DEBUG, TRACE
             
+
   - name: get-jmx-metrics
     description: | 
         🔢 Get JMX metrics from a container

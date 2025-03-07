@@ -45,6 +45,7 @@ command.deep_commands.reject(&:private).each do |subcommand|
   else
     unless processed_subcommands.include?(subcommand.full_name)
       File.open("#{target}/playground.yaml", "a") do |file|
+        file.write("\n")
         file.write(gtxsub.parse(subcommand))
       end
       processed_subcommands << subcommand.full_name
