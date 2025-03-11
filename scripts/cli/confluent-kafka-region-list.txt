@@ -25,6 +25,7 @@ Ireland(eu-west-1)/eu-west-1
 Ireland(northeurope)/northeurope
 Jakarta(ap-southeast-3)/ap-southeast-3
 Jakarta(asia-southeast2)/asia-southeast2
+JioIndiaWest(jioindiawest)/jioindiawest
 Johannesburg/southafricanorth
 (southafricanorth)/
 LasVegas(us-west4)/us-west4
