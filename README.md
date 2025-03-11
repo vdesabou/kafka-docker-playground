@@ -31,7 +31,7 @@ Check out [kafka-docker-playground.io](https://kafka-docker-playground.io/) to l
 
 ## 🎙️ Podcast
 
-
+<iframe width="560" height="315" src="https://www.youtube.com/embed/zV56G1Gz1kI?si=Yn0YKg2Vzs6xnCpP" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 Made with love ♥️ by AI
 
