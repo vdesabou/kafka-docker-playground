@@ -9803,6 +9803,7 @@ function create_or_get_oracle_image() {
     set +e
     log "attempting to get the Oracle prebuilt docker image from Confluent S3 bucket (only works for Confluent employees)..."
     log "command is <aws s3 ls s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar>"
+    handle_aws_credentials
     aws s3 ls s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar
     if [ $? -eq 0 ]
     then
@@ -9849,6 +9850,7 @@ function create_or_get_oracle_image() {
   if test -z "$(docker images -q $BASE_ORACLE_IMAGE)"
   then
     set +e
+    handle_aws_credentials
     aws s3 ls s3://kafka-docker-playground/3rdparty/oracle_database_$ORACLE_VERSION.tar > /dev/null 2>&1
     if [ $? -eq 0 ]
     then
@@ -9886,6 +9888,7 @@ function create_or_get_oracle_image() {
       if [ ! -f ${ZIP_FILE} ]
       then
           set +e
+          handle_aws_credentials
           aws s3 ls s3://kafka-docker-playground/3rdparty/${ZIP_FILE} > /dev/null 2>&1
           if [ $? -eq 0 ]
           then
