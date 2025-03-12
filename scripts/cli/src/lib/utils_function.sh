@@ -262,7 +262,7 @@ function maybe_create_image()
     if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
     then
       export CONNECT_USER="appuser"
-      if [ `uname -m` = "arm64" ]
+      if [ "$(uname -m)" = "arm64" ]
       then
         CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && rpm -i --nosignature https://yum.oracle.com/repo/OracleLinux/OL8/appstream/aarch64/getPackage/tcpdump-4.9.3-3.el8.aarch64.rpm && touch /tmp/done; fi"
       else
@@ -1414,7 +1414,7 @@ function remove_cdb_oracle_image() {
 
   SETUP_FILE=${SETUP_FOLDER}/01_user-setup.sh
   SETUP_FILE_CKSUM=$(cksum $SETUP_FILE | awk '{ print $1 }')
-  if [ `uname -m` = "arm64" ]
+  if [ "$(uname -m)" = "arm64" ]
   then
       export ORACLE_IMAGE="db-prebuilt-arm64-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
   else
@@ -1442,7 +1442,7 @@ function create_or_get_oracle_image() {
   then
       ORACLE_VERSION="21.3.0-ee"
   else
-      if [ `uname -m` = "arm64" ]
+      if [ "$(uname -m)" = "arm64" ]
       then
           ZIP_FILE="LINUX.ARM64_1919000_db_home.zip"
       else
@@ -1457,7 +1457,7 @@ function create_or_get_oracle_image() {
   SETUP_FILE=${SETUP_FOLDER}/01_user-setup.sh
   SETUP_FILE_CKSUM=$(cksum $SETUP_FILE | awk '{ print $1 }')
 
-  if [ `uname -m` = "arm64" ]
+  if [ "$(uname -m)" = "arm64" ]
   then
       export ORACLE_IMAGE="db-prebuilt-arm64-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
   else
@@ -3969,7 +3969,7 @@ function check_arm64_support() {
   DIR="$1"
   DOCKER_COMPOSE_FILE="$2"
   set +e
-  if [ `uname -m` = "arm64" ]
+  if [ "$(uname -m)" = "arm64" ]
   then
     test=$(echo "$DOCKER_COMPOSE_FILE" | awk -F"/" '{ print $(NF-2)"/"$(NF-1) }')
     base_folder=$(echo $test | cut -d "/" -f 1)
