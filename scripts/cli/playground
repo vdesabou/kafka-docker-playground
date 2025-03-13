@@ -9002,30 +9002,17 @@ function remove_partition() {
 }
 
 function aws() {
-
-    if [ -z "$AWS_ACCESS_KEY_ID" ] && [ -z "$AWS_SECRET_ACCESS_KEY" ] && [ ! -f $HOME/.aws/credentials ]
-    then
-      logerror 'ERROR: Neither AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY or $HOME/.aws/credentials are set. AWS credentials must be set !'
-      if [ -z "$AWS_ACCESS_KEY_ID" ]
-      then
-        log 'AWS_ACCESS_KEY_ID environment variable is not set.'
-      fi
-      if [ -z "$AWS_SECRET_ACCESS_KEY" ]
-      then
-        log 'AWS_SECRET_ACCESS_KEY environment variable is not set.'
-      fi
-      if [ ! -f $HOME/.aws/credentials ]
-      then
-        log '$HOME/.aws/credentials does not exist.'
-      fi
-      return 1
-    fi
-
     if [ ! -z "$AWS_REGION" ]
     then
       if [ ! -f $HOME/.aws/config ]
       then
         aws_tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+        if [ -z "$PG_VERBOSE_MODE" ]
+        then
+            trap 'rm -rf $aws_tmp_dir' EXIT
+        else
+            log "🐛📂 not deleting aws tmp dir $aws_tmp_dir"
+        fi
 cat << EOF > $aws_tmp_dir/config
 [default]
 region = $AWS_REGION
@@ -9041,15 +9028,14 @@ EOF
       # log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
       if [ -f $aws_tmp_dir/config ]
       then
-        docker run --quiet --rm -iv $aws_tmp_dir/config:/root/.aws/config -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
-        rm -rf $aws_tmp_dir
+        docker run --quiet --rm -iv $aws_tmp_dir/config:/root/.aws/config -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
       else
-        docker run --quiet --rm -iv $HOME/.aws/config:/root/.aws/config -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
+        docker run --quiet --rm -iv $HOME/.aws/config:/root/.aws/config -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
       fi
     else
       if [ ! -f $HOME/.aws/credentials ]
       then
-        logerror '$HOME/.aws/credentials does not exist.'
+        logerror "❌ $HOME/.aws/credentials does not exist"
       else
         # log "💭 AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
         docker run --quiet --rm -iv $HOME/.aws:/root/.aws -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
@@ -12573,12 +12559,12 @@ function login_and_maybe_set_azure_subscription () {
 function handle_aws_credentials () {
   export AWS_CREDENTIALS_FILE_NAME="/tmp/aws_credentials"
 
-  if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ] && [ -z $AWS_SESSION_TOKEN ]
+  if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ] && [ -z "$AWS_SESSION_TOKEN" ]
   then
     if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
     then
-        logerror "❌ either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
-        exit 1
+      logerror "❌ either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
+      exit 1
     else
       if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
       then
@@ -12611,6 +12597,14 @@ EOF
       fi
     fi
   else
+    if [ ! -z $AWS_PROFILE ] && [ -z "$AWS_SESSION_TOKEN" ]
+    then
+      logwarn "💭 AWS_PROFILE environment variable is set with $AWS_PROFILE"
+      logwarn "🚀 run manually this command and re-run the example again:"
+      echo "source <(aws configure export-credentials --profile $AWS_PROFILE --format env)"
+      exit 1
+    fi
+
     #
     # AWS short live credentials
     #
@@ -12674,6 +12668,12 @@ EOF
 
       log "✨ Using AWS short live with credentials file $AWS_CREDENTIALS_FILE_NAME"
       export AWS_SHORT_LIVE_CREDENTIALS_USED=1
+    else
+      if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
+      then
+        logerror "❌ either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
+        exit 1
+      fi
     fi
   fi
 
