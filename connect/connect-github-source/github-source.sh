@@ -45,7 +45,7 @@ else
      playground connector create-or-update --connector github-source  << EOF
 {
      "connector.class": "io.confluent.connect.github.GithubSourceConnector",
-     "topic.name.pattern":"github-topic-${entityName}",
+     "topic.name.pattern":"github-topic-\${entityName}",
      "tasks.max": "1",
      "github.service.url":"https://api.github.com",
      "github.repositories":"apache/kafka",
