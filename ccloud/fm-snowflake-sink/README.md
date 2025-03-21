@@ -21,10 +21,10 @@ https://<SNOWFLAKE_ACCOUNT_NAME>.snowflakecomputing.com
 Example:
 
 ```
-https://of77992.eu-west-2.aws.snowflakecomputing.com
+https://MZLPQCM-DW39774.snowflakecomputing.com
 ```
 
-`SNOWFLAKE_ACCOUNT_NAME` should be set with `of77992.eu-west-2.aws`
+`SNOWFLAKE_ACCOUNT_NAME` should be set with `MZLPQCM-DW39774`
 
 ## Prerequisites
 
