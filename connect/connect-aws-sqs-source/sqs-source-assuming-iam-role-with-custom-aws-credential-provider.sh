@@ -6,14 +6,10 @@ source ${DIR}/../../scripts/utils.sh
 
 logwarn "⚠️ This example and associated custom code is not supported, use at your own risks !"
 
+export COMPONENT_NAME="awscredentialsprovider"
 if version_gt $CONNECTOR_TAG "1.9.9"
 then
-    logwarn "WARN: connector version >= 2.0.0 do not support this custom credentials provider as it was build with AWS JDK 1.x"
-    # 08:54:15 🔥 Command failed with error code 400
-    # 08:54:15 🔥 Connector configuration is invalid and contains the following 1 error(s):
-    # Invalid value class com.github.vdesabou.AwsAssumeRoleCredentialsProvider for configuration sqs.credentials.provider.class: Class must extend: interface software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
-    # You can also find the above list of errors at the endpoint `/connector-plugins/{connectorType}/config/validate`
-    exit 111
+    export COMPONENT_NAME="awscredentialsprovider-v2"
 fi
 
 AWS_STS_ROLE_ARN=${AWS_STS_ROLE_ARN:-$1}
@@ -38,7 +34,7 @@ fi
 
 handle_aws_credentials
 
-for component in awscredentialsprovider
+for component in $COMPONENT_NAME
 do
     set +e
     log "🏗 Building jar for ${component}"
@@ -53,7 +49,7 @@ do
 done
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.backup-and-restore-assuming-iam-role-with-custom-aws-credential-provider.yml"
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.assuming-iam-role-with-custom-aws-credential-provider.yml"
 
 QUEUE_NAME=pg${USER}sqs${TAG}
 QUEUE_NAME=${QUEUE_NAME//[-._]/}
@@ -103,8 +99,8 @@ playground connector create-or-update --connector sqs-source  << EOF
     "sqs.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
     "sqs.credentials.provider.sts.role.session.name": "session-name",
     "sqs.credentials.provider.sts.role.external.id": "123",
-    "sqs.credentials.provider.sts.aws.access.key.id": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID",
-    "sqs.credentials.provider.sts.aws.secret.key.id": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY",
+    "_sqs.credentials.provider.sts.aws.access.key.id": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID",
+    "_sqs.credentials.provider.sts.aws.secret.key.id": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY",
     "confluent.license": "",
     "confluent.topic.bootstrap.servers": "broker:9092",
     "confluent.topic.replication.factor": "1",
@@ -116,3 +112,75 @@ EOF
 
 log "Verify we have received the data in test-sqs-source topic"
 playground topic consume --topic test-sqs-source --min-expected-messages 2 --timeout 60
+
+
+# [2025-03-21 09:11:30,583] WARN /connectors/sqs-source/config (org.eclipse.jetty.server.HttpChannel:776)
+# javax.servlet.ServletException: org.glassfish.jersey.server.ContainerException: java.lang.IllegalAccessError: class software.amazon.awssdk.awscore.client.builder.AwsDefaultClientBuilder tried to access private field software.amazon.awssdk.core.client.builder.SdkDefaultClientBuilder.overrideConfig (software.amazon.awssdk.awscore.client.builder.AwsDefaultClientBuilder and software.amazon.awssdk.core.client.builder.SdkDefaultClientBuilder are in unnamed module of loader org.apache.kafka.connect.runtime.isolation.PluginClassLoader @5f7b97da)
+#         at org.glassfish.jersey.servlet.WebComponent.serviceImpl(WebComponent.java:410)
+#         at org.glassfish.jersey.servlet.WebComponent.service(WebComponent.java:346)
+#         at org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:358)
+#         at org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:311)
+#         at org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:205)
+#         at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:799)
+#         at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:554)
+#         at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:233)
+#         at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1624)
+#         at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:233)
+#         at org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1440)
+#         at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:188)
+#         at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:505)
+#         at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1594)
+#         at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:186)
+#         at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1355)
+#         at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)
+#         at org.eclipse.jetty.server.handler.ContextHandlerCollection.handle(ContextHandlerCollection.java:234)
+#         at org.eclipse.jetty.server.handler.StatisticsHandler.handle(StatisticsHandler.java:181)
+#         at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:127)
+#         at org.eclipse.jetty.server.Server.handle(Server.java:516)
+#         at org.eclipse.jetty.server.HttpChannel.lambda$handle$1(HttpChannel.java:487)
+#         at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:732)
+#         at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:479)
+#         at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:277)
+#         at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:311)
+#         at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:105)
+#         at org.eclipse.jetty.io.ChannelEndPoint$1.run(ChannelEndPoint.java:104)
+#         at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.runTask(EatWhatYouKill.java:338)
+#         at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.doProduce(EatWhatYouKill.java:315)
+#         at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.tryProduce(EatWhatYouKill.java:173)
+#         at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.run(EatWhatYouKill.java:131)
+#         at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:409)
+#         at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:883)
+#         at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1034)
+#         at java.base/java.lang.Thread.run(Unknown Source)
+# Caused by: org.glassfish.jersey.server.ContainerException: java.lang.IllegalAccessError: class software.amazon.awssdk.awscore.client.builder.AwsDefaultClientBuilder tried to access private field software.amazon.awssdk.core.client.builder.SdkDefaultClientBuilder.overrideConfig (software.amazon.awssdk.awscore.client.builder.AwsDefaultClientBuilder and software.amazon.awssdk.core.client.builder.SdkDefaultClientBuilder are in unnamed module of loader org.apache.kafka.connect.runtime.isolation.PluginClassLoader @5f7b97da)
+#         at org.glassfish.jersey.servlet.internal.ResponseWriter.rethrow(ResponseWriter.java:255)
+#         at org.glassfish.jersey.servlet.internal.ResponseWriter.failure(ResponseWriter.java:237)
+#         at org.glassfish.jersey.server.ServerRuntime$Responder.process(ServerRuntime.java:438)
+#         at org.glassfish.jersey.server.ServerRuntime$1.run(ServerRuntime.java:263)
+#         at org.glassfish.jersey.internal.Errors$1.call(Errors.java:248)
+#         at org.glassfish.jersey.internal.Errors$1.call(Errors.java:244)
+#         at org.glassfish.jersey.internal.Errors.process(Errors.java:292)
+#         at org.glassfish.jersey.internal.Errors.process(Errors.java:274)
+#         at org.glassfish.jersey.internal.Errors.process(Errors.java:244)
+#         at org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:265)
+#         at org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:234)
+#         at org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:684)
+#         at org.glassfish.jersey.servlet.WebComponent.serviceImpl(WebComponent.java:394)
+#         ... 35 more
+# Caused by: java.lang.IllegalAccessError: class software.amazon.awssdk.awscore.client.builder.AwsDefaultClientBuilder tried to access private field software.amazon.awssdk.core.client.builder.SdkDefaultClientBuilder.overrideConfig (software.amazon.awssdk.awscore.client.builder.AwsDefaultClientBuilder and software.amazon.awssdk.core.client.builder.SdkDefaultClientBuilder are in unnamed module of loader org.apache.kafka.connect.runtime.isolation.PluginClassLoader @5f7b97da)
+#         at software.amazon.awssdk.awscore.client.builder.AwsDefaultClientBuilder.setOverrides(AwsDefaultClientBuilder.java:205)
+#         at software.amazon.awssdk.core.client.builder.SdkDefaultClientBuilder.asyncClientConfiguration(SdkDefaultClientBuilder.java:212)
+#         at software.amazon.awssdk.services.sqs.DefaultSqsAsyncClientBuilder.buildClient(DefaultSqsAsyncClientBuilder.java:37)
+#         at software.amazon.awssdk.services.sqs.DefaultSqsAsyncClientBuilder.buildClient(DefaultSqsAsyncClientBuilder.java:25)
+#         at software.amazon.awssdk.core.client.builder.SdkDefaultClientBuilder.build(SdkDefaultClientBuilder.java:155)
+#         at io.confluent.connect.sqs.util.SqsClientUtil.createAsyncClient(SqsClientUtil.java:46)
+#         at io.confluent.connect.sqs.source.SqsSourceConfigValidation.performValidation(SqsSourceConfigValidation.java:89)
+#         at io.confluent.connect.utils.validators.all.ConfigValidation.validate(ConfigValidation.java:185)
+#         at io.confluent.connect.sqs.source.SqsSourceConnector.validate(SqsSourceConnector.java:80)
+#         at org.apache.kafka.connect.runtime.AbstractHerder.validateConnectorConfig(AbstractHerder.java:745)
+#         at org.apache.kafka.connect.runtime.AbstractHerder.lambda$validateConnectorConfig$5(AbstractHerder.java:597)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+#         at java.base/java.util.concurrent.FutureTask.run(Unknown Source)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+#         ... 1 more
