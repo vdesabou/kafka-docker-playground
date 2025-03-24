@@ -8,23 +8,11 @@ Quickly test [Snowflake Sink](https://docs.confluent.io/cloud/current/connectors
 
 Go to [Snowflake](https://www.snowflake.com) and register an account. You'll receive an email to setup your account and access to a 30 day trial instance.
 
-To get the `SNOWFLAKE_ACCOUNT_NAME`, go there and click on url:
+To get the `SNOWFLAKE_ACCOUNT_NAME`, get the *Account Locator* from:
 
-![ui](ui.jpg)
+![ui](ui.png)
 
-This will give you an url like:
-
-```
-https://<SNOWFLAKE_ACCOUNT_NAME>.snowflakecomputing.com
-```
-
-Example:
-
-```
-https://MZLPQCM-DW39774.snowflakecomputing.com
-```
-
-`SNOWFLAKE_ACCOUNT_NAME` should be set with `MZLPQCM-DW39774`
+`SNOWFLAKE_ACCOUNT_NAME` should be set with `<account_locator>.<region_id>.<cloud_provider>` (for example `XXXXX.eu-west-3.aws`)
 
 ## Prerequisites
 
