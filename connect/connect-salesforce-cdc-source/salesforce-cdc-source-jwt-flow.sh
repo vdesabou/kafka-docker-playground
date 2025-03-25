@@ -69,8 +69,6 @@ playground connector create-or-update --connector salesforce-cdc-source  << EOF
      "__comment" : "from 2.0.0 salesforce.cdc.name is renamed salesforce.cdc.channel",
      "salesforce.cdc.channel" : "ContactChangeEvent",
      "salesforce.username" : "$SALESFORCE_USERNAME",
-     "salesforce.password" : "$SALESFORCE_PASSWORD",
-     "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
      "salesforce.initial.start" : "latest",
      "connection.max.message.size": "10048576",
      "key.converter": "org.apache.kafka.connect.json.JsonConverter",
