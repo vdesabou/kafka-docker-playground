@@ -36,12 +36,6 @@ then
      exit 1
 fi
 
-if [ -z "$SALESFORCE_CONSUMER_PASSWORD_WITH_JWT" ]
-then
-     logerror "SALESFORCE_CONSUMER_PASSWORD_WITH_JWT is not set. Export it as environment variable or pass it as argument. Check README !"
-     exit 1
-fi
-
 if [ -z "$SALESFORCE_SECURITY_TOKEN" ]
 then
      logerror "SALESFORCE_SECURITY_TOKEN is not set. Export it as environment variable or pass it as argument"
@@ -86,7 +80,6 @@ playground connector create-or-update --connector salesforce-cdc-source  << EOF
      "confluent.topic.replication.factor": "1",
 
      "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY_WITH_JWT",
-     "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD_WITH_JWT",
      "salesforce.jwt.keystore.path": "/tmp/salesforce-confluent.keystore.jks",
      "salesforce.jwt.keystore.password": "confluent"
 }

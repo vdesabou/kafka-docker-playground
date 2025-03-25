@@ -110,7 +110,7 @@ Example:
 ![Create a connected app](jwt-bearer-authentication1.jpg)
 
 * Save the connected app, it takes between 2 and 10 minutes to be activated.
-* Look for the Consumer Key `SALESFORCE_CONSUMER_KEY_WITH_JWT` and Consumer Secret `SALESFORCE_CONSUMER_PASSWORD_WITH_JWT`in the displayed form. Save these so you can put them in the configuration for the Salesforce connector.
+* Look for the Consumer Key `SALESFORCE_CONSUMER_KEY_WITH_JWT` in the displayed form. Save these so you can put them in the configuration for the Salesforce connector.
 
 ### Pre-Approve the connected app with the User-Agent OAuth Flow
 

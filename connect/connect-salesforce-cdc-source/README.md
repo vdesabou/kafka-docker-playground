@@ -63,13 +63,13 @@ Search for "Change Data Capture" in Settings and then select `Contact`:
 Simply run:
 
 ```
-$ just use <playground run> command and search for salesforce-cdc-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_CONSUMER_KEY> <SALESFORCE_CONSUMER_PASSWORD> .sh in this folder
+$ just use <playground run> command and search for salesforce-cdc-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
 ```
 
 or with JWT flow:
 
 ```
-$ just use <playground run> command and search for salesforce-cdc-source-jwt-flow<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_CONSUMER_KEY_WITH_JWT> <SALESFORCE_CONSUMER_PASSWORD_WITH_JWT> .sh in this folder
+$ just use <playground run> command and search for salesforce-cdc-source-jwt-flow<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>
 ```
 
 Note: you can also export these values as environment variable
@@ -698,7 +698,7 @@ Example:
 ![Create a connected app](jwt-bearer-authentication1.jpg)
 
 * Save the connected app, it takes between 2 and 10 minutes to be activated.
-* Look for the Consumer Key `SALESFORCE_CONSUMER_KEY_WITH_JWT` and Consumer Secret `SALESFORCE_CONSUMER_PASSWORD_WITH_JWT`in the displayed form. Save these so you can put them in the configuration for the Salesforce connector.
+* Look for the Consumer Key `SALESFORCE_CONSUMER_KEY_WITH_JWT` in the displayed form. Save these so you can put them in the configuration for the Salesforce connector.
 
 ### Pre-Approve the connected app with the User-Agent OAuth Flow
 
