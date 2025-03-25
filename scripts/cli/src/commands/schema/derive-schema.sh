@@ -38,6 +38,19 @@ else
     fi
 fi
 
+if jq -e . >/dev/null 2>&1 <<< "$(head -1 "$payload_file")"
+then
+    log "💫 payload is one json per line, one json record per line will be used"
+elif jq -e . >/dev/null 2>&1 <<< "$(cat "$payload_file")"
+then
+    log "💫 payload is single json, it will be used as one record"
+    jq -c . "$payload_file" > $tmp_dir/minified.json
+    cp $tmp_dir/minified.json $payload_file
+else
+    logerror "❌ payload is not a valid json"
+    exit 1
+fi
+
 LATEST_TAG=$(grep "export TAG" $root_folder/scripts/utils.sh | head -1 | cut -d "=" -f 2 | cut -d " " -f 1)
 if [ -z "$LATEST_TAG" ]
 then
