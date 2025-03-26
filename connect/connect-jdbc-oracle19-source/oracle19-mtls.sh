@@ -179,27 +179,27 @@ sleep 10
 log "Creating Oracle source connector"
 playground connector create-or-update --connector oracle-source-mtls  << EOF
 {
-     "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
-     "tasks.max":"1",
-     "connection.user": "C##MYUSER",
-     "connection.password": "mypassword",
-     "connection.oracle.net.ssl_server_dn_match": "true",
-     "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLCDB))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=server,C=US\")))",
-     "numeric.mapping":"best_fit",
-     "mode":"timestamp",
-     "poll.interval.ms":"1000",
-     "validate.non.null":"false",
-     "schema.pattern": "C##MYUSER",
-     "table.whitelist":"CUSTOMERS",
-     "timestamp.column.name":"UPDATE_TS",
-     "topic.prefix":"oracle-",
-     "errors.log.enable": "true",
-     "errors.log.include.messages": "true",
-     "connection.javax.net.ssl.trustStore": "/tmp/truststore.jks",
-     "connection.javax.net.ssl.trustStorePassword": "welcome123",
-     "connection.javax.net.ssl.keyStore": "/tmp/keystore.jks",
-     "connection.javax.net.ssl.keyStorePassword": "welcome123"
-}
+    "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
+    "tasks.max":"1",
+    "connection.user": "C##MYUSER",
+    "connection.password": "mypassword",
+    "connection.oracle.net.ssl_server_dn_match": "true",
+    "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLCDB))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=server,C=US\")))",
+    "connection.javax.net.ssl.trustStore": "/tmp/truststore.jks",
+    "connection.javax.net.ssl.trustStorePassword": "welcome123",
+    "connection.javax.net.ssl.keyStore": "/tmp/keystore.jks",
+    "connection.javax.net.ssl.keyStorePassword": "welcome123",
+    "numeric.mapping":"best_fit",
+    "mode":"timestamp",
+    "poll.interval.ms":"1000",
+    "validate.non.null":"false",
+    "schema.pattern": "C##MYUSER",
+    "table.whitelist":"CUSTOMERS",
+    "timestamp.column.name":"UPDATE_TS",
+    "topic.prefix":"oracle-",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
+    }
 EOF
 
 sleep 5

@@ -157,6 +157,8 @@ playground connector create-or-update --connector oracle-source-ssl  << EOF
      "connection.password": "mypassword",
      "connection.oracle.net.ssl_server_dn_match": "true",
      "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLCDB))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=server,C=US\")))",
+     "connection.javax.net.ssl.trustStore": "/tmp/truststore.jks",
+     "connection.javax.net.ssl.trustStorePassword": "welcome123",
      "numeric.mapping":"best_fit",
      "mode":"timestamp",
      "poll.interval.ms":"1000",
