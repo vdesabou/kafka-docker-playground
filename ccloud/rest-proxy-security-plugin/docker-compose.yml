@@ -2,7 +2,7 @@
 services:
 
   restproxy:
-    image: ${CP_REST_PROXY_IMAGE}:${TAG}
+    image: ${CP_REST_PROXY_IMAGE}:${CP_REST_PROXY_TAG}
     restart: always
     hostname: restproxy
     container_name: restproxy

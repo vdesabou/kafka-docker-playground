@@ -35,7 +35,7 @@ then
     # TAG is not set, use default:
     export TAG=7.9.0 # default tag
     # to handle ubi8 images
-    export TAG_BASE=$TAG
+    export TAG_BASE="$TAG"
     if [ -z "$CP_KAFKA_IMAGE" ]
     then
       if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ] && [ -z "$DOCKER_COMPOSE_FILE_UPDATE_VERSION" ]
@@ -85,7 +85,47 @@ then
 
     if [ -z "$CP_KSQL_CLI_IMAGE" ]
     then
-      export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-cli:latest
+      export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-cli
+    fi
+
+    if [ -z "$CP_ZOOKEEPER_TAG" ]
+    then
+      export CP_ZOOKEEPER_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_KAFKA_TAG" ]
+    then
+      export CP_KAFKA_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_CONNECT_TAG" ]
+    then
+      export CP_CONNECT_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_SCHEMA_REGISTRY_TAG" ]
+    then
+      export CP_SCHEMA_REGISTRY_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_CONTROL_CENTER_TAG" ]
+    then
+      export CP_CONTROL_CENTER_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_REST_PROXY_TAG" ]
+    then
+      export CP_REST_PROXY_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_KSQL_TAG" ]
+    then
+      export CP_KSQL_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_KSQL_CLI_TAG" ]
+    then
+      export CP_KSQL_CLI_TAG="latest"
     fi
     set_kafka_client_tag
 else
@@ -112,6 +152,41 @@ else
     if [ -z "$CP_CONTROL_CENTER_IMAGE" ]
     then
       export CP_CONTROL_CENTER_IMAGE=confluentinc/cp-enterprise-control-center
+    fi
+
+    if [ -z "$CP_ZOOKEEPER_TAG" ]
+    then
+      export CP_ZOOKEEPER_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_KAFKA_TAG" ]
+    then
+      export CP_KAFKA_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_CONNECT_TAG" ]
+    then
+      export CP_CONNECT_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_SCHEMA_REGISTRY_TAG" ]
+    then
+      export CP_SCHEMA_REGISTRY_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_CONTROL_CENTER_TAG" ]
+    then
+      export CP_CONTROL_CENTER_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_REST_PROXY_TAG" ]
+    then
+      export CP_REST_PROXY_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_KSQL_TAG" ]
+    then
+      export CP_KSQL_TAG="$TAG"
     fi
     # to handle ubi8 images
     export TAG_BASE=$(echo $TAG | cut -d "-" -f1)
@@ -151,7 +226,11 @@ else
       fi
       if [ -z "$CP_KSQL_CLI_IMAGE" ]
       then
-        export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-cli:${TAG_BASE}
+        export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-cli
+      fi
+      if [ -z "$CP_KSQL_CLI_TAG" ]
+      then
+        export CP_KSQL_CLI_TAG=${TAG_BASE}
       fi
     else
       if [ -z "$CP_KSQL_IMAGE" ]
@@ -160,7 +239,11 @@ else
       fi
       if [ -z "$CP_KSQL_CLI_IMAGE" ]
       then
-        export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksql-cli:${TAG_BASE}
+        export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksql-cli
+      fi
+      if [ -z "$CP_KSQL_CLI_TAG" ]
+      then
+        export CP_KSQL_CLI_TAG=${TAG_BASE}
       fi
     fi
     second_version=5.2.99

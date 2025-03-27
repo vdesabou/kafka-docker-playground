@@ -8,7 +8,7 @@ services:
     ####
 
   zookeeper-europe:
-    image: ${CP_ZOOKEEPER_IMAGE}:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
     hostname: zookeeper-europe
     container_name: zookeeper-europe
     environment:
@@ -16,7 +16,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   zookeeper-us:
-    image: ${CP_ZOOKEEPER_IMAGE}:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
     hostname: zookeeper-us
     container_name: zookeeper-us
     environment:
@@ -24,7 +24,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   zookeeper-metrics:
-    image: ${CP_ZOOKEEPER_IMAGE}:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
     hostname: zookeeper-metrics
     container_name: zookeeper-metrics
     environment:
@@ -32,7 +32,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   broker-europe:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker-europe
     container_name: broker-europe
     depends_on:
@@ -60,7 +60,7 @@ services:
       KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry-europe:8081
 
   broker-us:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker-us
     container_name: broker-us
     depends_on:
@@ -88,7 +88,7 @@ services:
       KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry-us:8081
 
   broker-metrics:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker-metrics
     container_name: broker-metrics
     depends_on:
@@ -199,7 +199,7 @@ services:
       - ../../confluent-hub:/usr/share/confluent-hub-components
       
   schema-registry-europe:
-    image: ${CP_SCHEMA_REGISTRY_IMAGE}:${TAG}
+    image: ${CP_SCHEMA_REGISTRY_IMAGE}:${CP_SCHEMA_REGISTRY_TAG}
     hostname: schema-registry-europe
     container_name: schema-registry-europe
     restart: always
@@ -213,7 +213,7 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker-europe:9092
 
   schema-registry-us:
-    image: ${CP_SCHEMA_REGISTRY_IMAGE}:${TAG}
+    image: ${CP_SCHEMA_REGISTRY_IMAGE}:${CP_SCHEMA_REGISTRY_TAG}
     hostname: schema-registry-us
     container_name: schema-registry-us
     restart: always
@@ -227,7 +227,7 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker-us:9092
 
   control-center:
-    image: ${CP_CONTROL_CENTER_IMAGE}:${TAG}
+    image: ${CP_CONTROL_CENTER_IMAGE}:${CP_CONTROL_CENTER_TAG}
     hostname: control-center
     container_name: control-center
     depends_on:

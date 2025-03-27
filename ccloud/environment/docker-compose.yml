@@ -69,7 +69,7 @@ services:
       CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
 
   control-center:
-    image: ${CP_CONTROL_CENTER_IMAGE}:${TAG}
+    image: ${CP_CONTROL_CENTER_IMAGE}:${CP_CONTROL_CENTER_TAG}
     hostname: control-center
     container_name: control-center
     depends_on:
@@ -142,7 +142,7 @@ services:
 
   # 75147
   # schema-registry:
-  #   image: ${CP_SCHEMA_REGISTRY_IMAGE}:${TAG}
+  #   image: ${CP_SCHEMA_REGISTRY_IMAGE}:${CP_SCHEMA_REGISTRY_TAG}
   #   hostname: schema-registry
   #   container_name: schema-registry
   #   ports:

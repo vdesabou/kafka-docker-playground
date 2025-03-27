@@ -25,7 +25,7 @@ services:
 
 
   controller:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: controller
     container_name: controller
     ports:

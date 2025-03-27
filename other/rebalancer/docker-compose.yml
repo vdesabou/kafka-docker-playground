@@ -1,14 +1,14 @@
 ---
 services:
   zookeeper:
-    image: ${CP_ZOOKEEPER_IMAGE}:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
     hostname: zookeeper
     container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
 
   broker1:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker1
     container_name: broker1
     depends_on:
@@ -23,7 +23,7 @@ services:
 
 
   broker2:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker2
     container_name: broker2
     depends_on:
@@ -38,7 +38,7 @@ services:
 
 
   broker3:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker3
     container_name: broker3
     depends_on:
@@ -53,7 +53,7 @@ services:
 
 
   broker4:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker4
     container_name: broker4
     depends_on:
@@ -68,7 +68,7 @@ services:
 
 
   broker5:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker5
     container_name: broker5
     depends_on:
@@ -83,7 +83,7 @@ services:
 
 
   broker6:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker6
     container_name: broker6
     depends_on:
@@ -98,7 +98,7 @@ services:
 
 
   control-center:
-    image: ${CP_CONTROL_CENTER_IMAGE}:${TAG}
+    image: ${CP_CONTROL_CENTER_IMAGE}:${CP_CONTROL_CENTER_TAG}
     hostname: control-center
     container_name: control-center
     depends_on:

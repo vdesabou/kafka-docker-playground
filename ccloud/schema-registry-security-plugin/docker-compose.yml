@@ -2,7 +2,7 @@
 services:
 
   schema-registry:
-    image: ${CP_SCHEMA_REGISTRY_IMAGE}:${TAG}
+    image: ${CP_SCHEMA_REGISTRY_IMAGE}:${CP_SCHEMA_REGISTRY_TAG}
     hostname: schema-registry
     container_name: schema-registry
     ports:

@@ -92,7 +92,7 @@ services:
         principal=\"admin/for-kafka@TEST.CONFLUENT.IO\";"
 
   broker2:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker2.kerberos-demo.local
     container_name: broker2
     depends_on:
@@ -151,7 +151,7 @@ services:
       CONFLUENT_METRICS_ENABLE: 'true'
 
   broker3:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker3.kerberos-demo.local
     container_name: broker3
     depends_on:

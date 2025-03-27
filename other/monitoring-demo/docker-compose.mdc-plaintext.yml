@@ -10,7 +10,7 @@ services:
     - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
 
   zookeeper-europe2:
-    image: ${CP_ZOOKEEPER_IMAGE}:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
     hostname: zookeeper-europe2
     container_name: zookeeper-europe2
     environment:
@@ -35,7 +35,7 @@ services:
     - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
 
   zookeeper-us2:
-    image: ${CP_ZOOKEEPER_IMAGE}:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
     hostname: zookeeper-us2
     container_name: zookeeper-us2
     environment:

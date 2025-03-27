@@ -2,7 +2,7 @@
 services:
 
   zookeeper:
-    image: ${CP_ZOOKEEPER_IMAGE}:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
     hostname: zookeeper
     container_name: zookeeper
     environment:
@@ -12,7 +12,7 @@ services:
       KAFKA_OPTS: -Dzookeeper.4lw.commands.whitelist=*
 
   broker:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker
     container_name: broker
     depends_on:
@@ -36,7 +36,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
   schema-registry:
-    image: ${CP_SCHEMA_REGISTRY_IMAGE}:${TAG}
+    image: ${CP_SCHEMA_REGISTRY_IMAGE}:${CP_SCHEMA_REGISTRY_TAG}
     hostname: schema-registry
     container_name: schema-registry
     ports:

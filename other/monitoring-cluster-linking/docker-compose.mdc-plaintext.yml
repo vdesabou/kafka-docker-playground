@@ -2,7 +2,7 @@
 services:
 
   zookeeper-europe:
-    image: ${CP_ZOOKEEPER_IMAGE}:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
     hostname: zookeeper-europe
     container_name: zookeeper-europe
     restart: always
@@ -17,7 +17,7 @@ services:
       EXTRA_ARGS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/zookeeper.yml"    
 
   zookeeper-us:
-    image: ${CP_ZOOKEEPER_IMAGE}:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
     hostname: zookeeper-us
     container_name: zookeeper-us
     restart: always
@@ -29,7 +29,7 @@ services:
       EXTRA_ARGS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/zookeeper.yml"    
 
   broker-europe:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker-europe
     container_name: broker-europe
     cap_add:
@@ -54,7 +54,7 @@ services:
       EXTRA_ARGS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/broker.yml"
 
   broker-us:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker-us
     container_name: broker-us
     cap_add:

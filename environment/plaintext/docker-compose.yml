@@ -2,7 +2,7 @@
 services:
 
   zookeeper:
-    image: ${CP_ZOOKEEPER_IMAGE}:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
     hostname: zookeeper
     container_name: zookeeper
     restart: always
@@ -21,7 +21,7 @@ services:
       PYROSCOPE_APPLICATION_NAME: "zookeeper"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
   broker:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker
     container_name: broker
     restart: always
@@ -62,7 +62,7 @@ services:
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
 
   broker2:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker2
     container_name: broker2
     restart: always
@@ -104,7 +104,7 @@ services:
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
 
   broker3:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker3
     container_name: broker3
     restart: always
@@ -148,7 +148,7 @@ services:
 
 
   schema-registry:
-    image: ${CP_SCHEMA_REGISTRY_IMAGE}:${TAG}
+    image: ${CP_SCHEMA_REGISTRY_IMAGE}:${CP_SCHEMA_REGISTRY_TAG}
     hostname: schema-registry
     container_name: schema-registry
     restart: always
@@ -389,7 +389,7 @@ services:
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
   ksqldb-server:
-    image: ${CP_KSQL_IMAGE}:${TAG}
+    image: ${CP_KSQL_IMAGE}:${CP_KSQL_TAG}
     hostname: ksqldb-server
     container_name: ksqldb-server
     depends_on:
@@ -432,7 +432,7 @@ services:
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
   ksqldb-cli:
-    image: ${CP_KSQL_CLI_IMAGE}
+    image: ${CP_KSQL_CLI_IMAGE}:${CP_KSQL_CLI_TAG}
     container_name: ksqldb-cli
     depends_on:
       - broker
@@ -444,7 +444,7 @@ services:
     tty: true
 
   control-center:
-    image: ${CP_CONTROL_CENTER_IMAGE}:${TAG}
+    image: ${CP_CONTROL_CENTER_IMAGE}:${CP_CONTROL_CENTER_TAG}
     hostname: control-center
     container_name: control-center
     restart: always
@@ -483,7 +483,7 @@ services:
       #CONTROL_CENTER_MODE_ENABLE: management
       # CONTROL_CENTER_ID: 32
   rest-proxy:
-    image: ${CP_REST_PROXY_IMAGE}:${TAG}
+    image: ${CP_REST_PROXY_IMAGE}:${CP_REST_PROXY_TAG}
     hostname: rest-proxy
     container_name: rest-proxy
     restart: always
