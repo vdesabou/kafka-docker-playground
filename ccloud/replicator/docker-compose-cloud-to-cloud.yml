@@ -2,7 +2,7 @@
 services:
 
   connect:
-    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator
       CONNECT_REST_EXTENSION_CLASSES: io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension

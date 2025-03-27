@@ -48,5 +48,5 @@ services:
       SCHEMA_REGISTRY_MODE_MUTABILITY: "true"
 
   connect:
-    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     entrypoint: ["sh", "-c", "sleep 2073600"]

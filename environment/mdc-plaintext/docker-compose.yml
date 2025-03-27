@@ -107,7 +107,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
   connect-us:
-    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     hostname: connect-us
     container_name: connect-us
     ports:
@@ -153,7 +153,7 @@ services:
       - ../../confluent-hub:/usr/share/confluent-hub-components
 
   connect-europe:
-    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     hostname: connect-europe
     container_name: connect-europe
     ports:

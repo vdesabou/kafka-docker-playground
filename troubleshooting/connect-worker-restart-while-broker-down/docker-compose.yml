@@ -65,7 +65,7 @@ services:
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker1:9092,broker2:9092,broker3:9092
 
   connect1:
-    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     hostname: connect1
     container_name: connect1
     # restart: always
@@ -105,7 +105,7 @@ services:
       # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
 
   connect2:
-    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     hostname: connect2
     container_name: connect2
     restart: always
@@ -145,7 +145,7 @@ services:
       # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
 
   connect3:
-    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     hostname: connect3
     container_name: connect3
     # restart: always

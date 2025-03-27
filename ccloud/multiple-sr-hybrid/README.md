@@ -26,7 +26,7 @@ Here is the container:
 
 ```yml
   webserver:
-    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     hostname: webserver
     container_name: webserver
     depends_on:

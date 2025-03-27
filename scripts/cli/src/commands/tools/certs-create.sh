@@ -19,7 +19,7 @@ container_list="${containers[*]}"
 
 get_connect_image
 new_open_ssl=0
-if version_gt $CONNECT_TAG "7.7.99"
+if version_gt $CP_CONNECT_TAG "7.7.99"
 then
     new_open_ssl=1
 fi
@@ -27,4 +27,4 @@ mkdir -p "${output_folder}"
 cd "${output_folder}"
 cp $root_folder/scripts/cli/src/ssl/certs-create.sh .
 log "🔐 Generate keys and certificates in folder ${output_folder}"
-  docker run -u0 --rm -v $root_folder/scripts/cli/src/openssl.cnf:/usr/local/ssl/openssl.cnf -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "/tmp/certs-create.sh $maybe_redirect_output \"$container_list\" $new_open_ssl && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
+  docker run -u0 --rm -v $root_folder/scripts/cli/src/openssl.cnf:/usr/local/ssl/openssl.cnf -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "/tmp/certs-create.sh $maybe_redirect_output \"$container_list\" $new_open_ssl && chown -R $(id -u $USER):$(id -g $USER) /tmp/"

@@ -254,9 +254,9 @@ function maybe_create_image()
     return
   fi
   set +e
-  log "🧰 Checking if Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG} contains additional tools"
+  log "🧰 Checking if Docker image ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} contains additional tools"
   log "⏳ it can take a while if image is downloaded for the first time"
-  docker run --quiet --rm ${CP_CONNECT_IMAGE}:${CONNECT_TAG} type unzip > /dev/null 2>&1
+  docker run --quiet --rm ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} type unzip > /dev/null 2>&1
   if [ $? != 0 ]
   then
     if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
@@ -281,13 +281,13 @@ else
     log "🐛📂 not deleting tmp dir $tmp_dir"
 fi
 cat << EOF > $tmp_dir/Dockerfile
-FROM ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+FROM ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
 USER root
 RUN ${CONNECT_3RDPARTY_INSTALL}
 USER ${CONNECT_USER}
 EOF
-    log "👷📦 Re-building Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG} to include additional tools"
-    docker build -t ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $tmp_dir
+    log "👷📦 Re-building Docker image ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} to include additional tools"
+    docker build -t ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $tmp_dir
     rm -rf $tmp_dir
   fi
   set -e
@@ -721,18 +721,18 @@ function timeout() {
 
 function get_connect_image() {
   set +e
-  CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+  CP_CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
   set -e
-  if [ "$CONNECT_TAG" == "" ]
+  if [ "$CP_CONNECT_TAG" == "" ]
   then
     if [ -z "$TAG" ]
     then
-      CONNECT_TAG=$(grep "export TAG" $root_folder/scripts/utils.sh | head -1 | cut -d "=" -f 2 | cut -d " " -f 1)
+      CP_CONNECT_TAG=$(grep "export TAG" $root_folder/scripts/utils.sh | head -1 | cut -d "=" -f 2 | cut -d " " -f 1)
     else
-      CONNECT_TAG=$TAG
+      CP_CONNECT_TAG=$TAG
     fi
 
-    if [ "$CONNECT_TAG" == "" ]
+    if [ "$CP_CONNECT_TAG" == "" ]
     then
       logerror "Error while getting default TAG in get_connect_image()"
       exit 1
@@ -741,7 +741,7 @@ function get_connect_image() {
 
   if [ -z "$CP_CONNECT_IMAGE" ]
   then
-    if version_gt $CONNECT_TAG 5.2.99
+    if version_gt $CP_CONNECT_TAG 5.2.99
     then
       CP_CONNECT_IMAGE=confluentinc/cp-server-connect-base
     else

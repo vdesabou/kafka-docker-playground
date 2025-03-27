@@ -4,9 +4,9 @@ export IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 
 if [[ ! -n "$ignore_current_versions" ]]
 then
-  # keep TAG and CONNECT_TAG
+  # keep TAG and CP_CONNECT_TAG
   export TAG=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
-  export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+  export CP_CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
 fi
 
 export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)

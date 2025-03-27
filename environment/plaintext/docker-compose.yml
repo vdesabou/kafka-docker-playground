@@ -176,7 +176,7 @@ services:
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
   connect:
-    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     hostname: connect
     container_name: connect
     restart: always
@@ -245,7 +245,7 @@ services:
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
   connect2:
-    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     hostname: connect2
     container_name: connect2
     restart: always
@@ -317,7 +317,7 @@ services:
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
   connect3:
-    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     hostname: connect3
     container_name: connect3
     restart: always

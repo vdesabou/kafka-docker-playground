@@ -48,9 +48,9 @@ docker run --quiet --rm -v $PWD:/tmp alpine/openssl x509 -req -in /tmp/server.cs
 log "LDAPS: Create a JKS truststore"
 rm -f ldap_truststore.jks
 # We import the test CA certificate
-docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} keytool -import -v -alias testroot -file /tmp/ca.crt -keystore /tmp/ldap_truststore.jks -storetype JKS -storepass 'welcome123' -noprompt
+docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keytool -import -v -alias testroot -file /tmp/ca.crt -keystore /tmp/ldap_truststore.jks -storetype JKS -storepass 'welcome123' -noprompt
 log "LDAPS: Displaying truststore"
-docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} keytool -list -keystore /tmp/ldap_truststore.jks -storepass 'welcome123' -v
+docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keytool -list -keystore /tmp/ldap_truststore.jks -storepass 'welcome123' -v
 cd -
 
 ../../environment/rbac-sasl-plain/stop.sh $@

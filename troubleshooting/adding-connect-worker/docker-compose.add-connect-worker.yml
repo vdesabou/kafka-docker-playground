@@ -1,7 +1,7 @@
 ---
 services:
   connect2:
-    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     hostname: connect2
     container_name: connect2
     depends_on:

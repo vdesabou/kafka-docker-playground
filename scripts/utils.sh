@@ -241,16 +241,16 @@ then
   if [[ $0 == *"environment"* ]]
   then
     # log "DEBUG: start.sh from environment folder. Skipping..."
-    if [ -z "$CONNECT_TAG" ]
+    if [ -z "$CP_CONNECT_TAG" ]
     then
-      export CONNECT_TAG="$TAG"
+      export CP_CONNECT_TAG="$TAG"
     fi
     :
   elif [[ $0 == *"stop.sh"* ]]
   then
-    if [ -z "$CONNECT_TAG" ]
+    if [ -z "$CP_CONNECT_TAG" ]
     then
-      export CONNECT_TAG="$TAG"
+      export CP_CONNECT_TAG="$TAG"
     fi
     :
   elif [[ $0 == *"run-tests"* ]]
@@ -276,9 +276,9 @@ then
       if [ "$connector_paths" == "" ]
       then
         # not a connector test
-        if [ -z "$CONNECT_TAG" ]
+        if [ -z "$CP_CONNECT_TAG" ]
         then
-          export CONNECT_TAG="$TAG"
+          export CP_CONNECT_TAG="$TAG"
         fi
       else
         ###
@@ -299,7 +299,7 @@ then
             logwarn "CONNECTOR_TAG (--connector-tag option) was not set for element $i, setting it to latest"
             CONNECTOR_VERSION="latest"
           fi
-          export CONNECT_TAG="$TAG"
+          export CP_CONNECT_TAG="$TAG"
 
           maybe_create_image
 
@@ -316,7 +316,7 @@ then
           fi
           log "🎱 Installing connector $owner/$name:$CONNECTOR_VERSION"
           set +e
-          docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "confluent-hub install --no-prompt $owner/$name:$CONNECTOR_VERSION && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" > /tmp/result.log 2>&1
+          docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "confluent-hub install --no-prompt $owner/$name:$CONNECTOR_VERSION && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" > /tmp/result.log 2>&1
           if [ $? != 0 ]
           then
               logerror "❌ failed to install connector $owner/$name:$CONNECTOR_VERSION"
@@ -377,9 +377,9 @@ then
         logerror "🎓 Check the related documentation https://kafka-docker-playground.io/#/how-it-works?id=🐳-docker-override"
         exit 1
       else
-        if [ -z "$CONNECT_TAG" ]
+        if [ -z "$CP_CONNECT_TAG" ]
         then
-          export CONNECT_TAG="$TAG"
+          export CP_CONNECT_TAG="$TAG"
         fi
       fi
     fi
@@ -390,16 +390,16 @@ else
   ###
   if [[ $0 == *"environment"* ]]
   then
-    if [ -z "$CONNECT_TAG" ]
+    if [ -z "$CP_CONNECT_TAG" ]
     then
-      export CONNECT_TAG="$TAG"
+      export CP_CONNECT_TAG="$TAG"
     fi
     :
   elif [[ $0 == *"stop.sh"* ]]
   then
-    if [ -z "$CONNECT_TAG" ]
+    if [ -z "$CP_CONNECT_TAG" ]
     then
-      export CONNECT_TAG="$TAG"
+      export CP_CONNECT_TAG="$TAG"
     fi
     CONNECTOR_TAG=$version
     :
@@ -421,9 +421,9 @@ else
       if [ "$connector_paths" == "" ]
       then
         # not a connector test
-        if [ -z "$CONNECT_TAG" ]
+        if [ -z "$CP_CONNECT_TAG" ]
         then
-          export CONNECT_TAG="$TAG"
+          export CP_CONNECT_TAG="$TAG"
           maybe_create_image
         fi
       else
@@ -449,15 +449,15 @@ else
           if [ "$name" == "" ]
           then
             # can happen for filestream
-            if [ -z "$CONNECT_TAG" ]
+            if [ -z "$CP_CONNECT_TAG" ]
             then
-              export CONNECT_TAG="$TAG"
+              export CP_CONNECT_TAG="$TAG"
               maybe_create_image
             fi
           else
-            if [ -z "$CONNECT_TAG" ]
+            if [ -z "$CP_CONNECT_TAG" ]
             then
-              export CONNECT_TAG="$TAG"
+              export CP_CONNECT_TAG="$TAG"
             fi
 
             ###
@@ -478,7 +478,7 @@ else
 
               log "🎱 Installing connector from zip $connector_zip_name"
               set +e
-              docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components  -v /tmp:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "confluent-hub install --no-prompt /tmp/${connector_zip_name} && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" > /tmp/result.log 2>&1
+              docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components  -v /tmp:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "confluent-hub install --no-prompt /tmp/${connector_zip_name} && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" > /tmp/result.log 2>&1
               if [ $? != 0 ]
               then
                   logerror "❌ failed to install connector from zip $connector_zip_name"
@@ -521,7 +521,7 @@ else
 
             log "🎱 Installing connector $owner/$name:$version_to_get_from_hub"
             set +e
-            docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "confluent-hub install --no-prompt $owner/$name:$version_to_get_from_hub && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" > /tmp/result.log 2>&1
+            docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "confluent-hub install --no-prompt $owner/$name:$version_to_get_from_hub && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" > /tmp/result.log 2>&1
             if [ $? != 0 ]
             then
                 logerror "❌ failed to install connector $owner/$name:$version_to_get_from_hub"
@@ -571,9 +571,9 @@ else
             #  Neither CONNECTOR_ZIP or CONNECTOR_JAR are set
             ###
             else
-              if [ -z "$CONNECT_TAG" ]
+              if [ -z "$CP_CONNECT_TAG" ]
               then
-                export CONNECT_TAG="$TAG"
+                export CP_CONNECT_TAG="$TAG"
               fi
               if [ "$first_loop" = true ]
               then
@@ -593,8 +593,8 @@ else
       fi
     fi
   fi
-  if [ -z "$CONNECT_TAG" ]
+  if [ -z "$CP_CONNECT_TAG" ]
   then
-    export CONNECT_TAG="$TAG"
+    export CP_CONNECT_TAG="$TAG"
   fi
 fi
