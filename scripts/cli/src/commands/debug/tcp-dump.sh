@@ -13,7 +13,7 @@ then
 
   if [ "$container" == "ngrok" ]
   then
-    playground container exec -c ngrok --command "adduser --force-badname --system --no-create-home _apt" --root > /dev/null 2>&1
+    playground container exec -c ngrok --command "adduser --force-badname --system --no-create-home _apt --gid 1000" --root > /dev/null 2>&1
   fi
   docker exec --privileged --user root $container bash -c "apt-get update && echo tcpdump | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*" > /dev/null 2>&1
 fi
