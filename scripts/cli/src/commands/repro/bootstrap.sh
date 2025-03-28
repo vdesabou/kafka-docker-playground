@@ -1279,4 +1279,17 @@ log "🛠️ Number of repro models available: $(get_cli_metric nb_existing_repr
 
 playground generate-fzf-find-files &
 playground open-docs --only-show-url
-playground run -f $repro_dir/$repro_test_filename --force-interactive-repro $flag_list
+
+if [[ "$repro_test_filename" == *"perf"* ]]
+then
+  if [[ $test_file == *"connect-debezium-sqlserver"* ]] || [[ $test_file == *"connect-debezium-mysql"* ]] || [[ $test_file == *"connect-debezium-postgresql"* ]] || [[ $test_file == *"connect-debezium-oracle"* ]] || [[ $test_file == *"connect-cdc-oracle"* ]] || [[ $test_file == *"connect-jdbc-sqlserver"* ]] || [[ $test_file == *"connect-jdbc-mysql"* ]] || [[ $test_file == *"connect-jdbc-postgresql"* ]] || [[ $test_file == *"connect-jdbc-oracle"* ]] || [[ $test_file == *"connect-cdc-xstream"* ]]
+  then
+    log "🌪️ automatically enabling SQL Datagen injection as repro name contains <perf>"
+    playground run -f $repro_dir/$repro_test_filename --enable-sql-datagen --force-interactive-repro $flag_list
+  else
+    log "📊 automatically enabling Grafana as repro name contains <perf>"
+    playground run -f $repro_dir/$repro_test_filename --enable-jmx-grafana --force-interactive-repro $flag_list
+  fi
+else
+  playground run -f $repro_dir/$repro_test_filename --force-interactive-repro $flag_list
+fi

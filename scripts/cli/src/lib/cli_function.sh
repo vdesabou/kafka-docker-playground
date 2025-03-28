@@ -1617,6 +1617,8 @@ function check_for_ec2_instance_running() {
     # loop through the list
     for instance in $(echo $current_list | tr "|" "\n")
     do
+      echo ""
+      echo ""
       log "💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸"
       log "🤑 you have an ec2 instance $instance running !"
       log "💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸"

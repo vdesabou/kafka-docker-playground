@@ -271,6 +271,11 @@ then
   fi
   array_flag_list+=("--enable-jmx-grafana")
   export ENABLE_JMX_GRAFANA=true
+
+  if [[ -n "$force_interactive_repro" ]]
+  then
+    force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
+  fi
 fi
 
 if [[ -n "$enable_kcat" ]]
@@ -287,6 +292,12 @@ then
   log "📊 automatically enabling Grafana as --enable-sql-datagen is set"
   array_flag_list+=("--enable-jmx-grafana")
   export ENABLE_JMX_GRAFANA=true
+
+  if [[ -n "$force_interactive_repro" ]]
+  then
+    force_enable --enable-sql-datagen SQL_DATAGEN
+    force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
+  fi
 fi
 
 if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_name" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
@@ -1571,3 +1582,10 @@ else
     display_docker_container_error_log
 fi
 check_for_ec2_instance_running
+
+if [ ! -z "$ENABLE_JMX_GRAFANA" ]
+then
+  log "🛡️ Prometheus is reachable at http://127.0.0.1:9090"
+  log "📛 Pyroscope is reachable at http://127.0.0.1:4040"
+  log "📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/password) or JMX metrics are available locally on those ports:"
+fi

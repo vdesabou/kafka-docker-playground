@@ -8112,6 +8112,8 @@ function check_for_ec2_instance_running() {
     # loop through the list
     for instance in $(echo $current_list | tr "|" "\n")
     do
+      echo ""
+      echo ""
       log "💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸"
       log "🤑 you have an ec2 instance $instance running !"
       log "💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸"
@@ -14241,6 +14243,11 @@ playground_run_command() {
     fi
     array_flag_list+=("--enable-jmx-grafana")
     export ENABLE_JMX_GRAFANA=true
+
+    if [[ -n "$force_interactive_repro" ]]
+    then
+      force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
+    fi
   fi
 
   if [[ -n "$enable_kcat" ]]
@@ -14257,6 +14264,12 @@ playground_run_command() {
     log "📊 automatically enabling Grafana as --enable-sql-datagen is set"
     array_flag_list+=("--enable-jmx-grafana")
     export ENABLE_JMX_GRAFANA=true
+
+    if [[ -n "$force_interactive_repro" ]]
+    then
+      force_enable --enable-sql-datagen SQL_DATAGEN
+      force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
+    fi
   fi
 
   if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_name" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
@@ -15551,6 +15564,13 @@ playground_run_command() {
       display_docker_container_error_log
   fi
   check_for_ec2_instance_running
+
+  if [ ! -z "$ENABLE_JMX_GRAFANA" ]
+  then
+    log "🛡️ Prometheus is reachable at http://127.0.0.1:9090"
+    log "📛 Pyroscope is reachable at http://127.0.0.1:4040"
+    log "📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/password) or JMX metrics are available locally on those ports:"
+  fi
 }
 
 # :command.function
@@ -18137,7 +18157,21 @@ EOF
 
   playground generate-fzf-find-files &
   playground open-docs --only-show-url
-  playground run -f $repro_dir/$repro_test_filename --force-interactive-repro $flag_list
+
+  if [[ "$repro_test_filename" == *"perf"* ]]
+  then
+    if [[ $test_file == *"connect-debezium-sqlserver"* ]] || [[ $test_file == *"connect-debezium-mysql"* ]] || [[ $test_file == *"connect-debezium-postgresql"* ]] || [[ $test_file == *"connect-debezium-oracle"* ]] || [[ $test_file == *"connect-cdc-oracle"* ]] || [[ $test_file == *"connect-jdbc-sqlserver"* ]] || [[ $test_file == *"connect-jdbc-mysql"* ]] || [[ $test_file == *"connect-jdbc-postgresql"* ]] || [[ $test_file == *"connect-jdbc-oracle"* ]] || [[ $test_file == *"connect-cdc-xstream"* ]]
+    then
+      log "🌪️ automatically enabling SQL Datagen injection as repro name contains <perf>"
+      playground run -f $repro_dir/$repro_test_filename --enable-sql-datagen --force-interactive-repro $flag_list
+    else
+      log "📊 automatically enabling Grafana as repro name contains <perf>"
+      playground run -f $repro_dir/$repro_test_filename --enable-jmx-grafana --force-interactive-repro $flag_list
+    fi
+  else
+    playground run -f $repro_dir/$repro_test_filename --force-interactive-repro $flag_list
+  fi
+
 }
 
 # :command.function
