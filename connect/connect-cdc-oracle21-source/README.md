@@ -17,12 +17,9 @@ Note: The first time you'll run the script, it will build (using this [project](
 
 ![Docker image disk](Screenshot1.png)
 
-## Note on `redo.log.row.fetch.size`
+## Note on performance testing
 
-The connector is configured with `"redo.log.row.fetch.size":1` for demo purpose only. 
-If you're planning to inject more data, it is recommended to increase the value.
-
-You can set environment variable `SQL_DATAGEN` before running the example and it will use a Java based datagen tool:
+You can set environment variable `SQL_DATAGEN` or use `--enable-sql-datagen` with `playground run` before running the example and it will use a Java based datagen tool:
 
 Example:
 
@@ -32,7 +29,7 @@ log "Injecting data for $DURATION minutes"
 docker exec -d sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username C##MYUSER --password mypassword --sidOrServerName sid --sidOrServerNameVal ORCLCDB --maxPoolSize 10 --durationTimeMin $DURATION"
 ```
 
-You can increase thoughtput with `maxPoolSize`.
+You can increase throughput with `maxPoolSize`.
 
 ## How to run
 

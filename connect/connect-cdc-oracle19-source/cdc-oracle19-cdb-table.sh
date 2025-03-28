@@ -9,7 +9,7 @@ create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "../../connect/connect
 if [ ! -z "$SQL_DATAGEN" ]
 then
      cd ../../connect/connect-cdc-oracle19-source
-     log "🌪️ SQL_DATAGEN is set, make sure to increase redo.log.row.fetch.size, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle19-source/README.md#note-on-redologrowfetchsize"
+     log "🌪️ SQL_DATAGEN is set"
      for component in oracle-datagen
      do
      set +e
@@ -135,7 +135,6 @@ playground connector create-or-update --connector cdc-oracle-source-cdb --packag
      "table.topic.name.template": "\${databaseName}.\${schemaName}.\${tableName}",
      "numeric.mapping": "best_fit",
      "connection.pool.max.size": 20,
-     "redo.log.row.fetch.size":1,
      "oracle.dictionary.mode": "auto",
      "topic.creation.groups": "redo",
      "topic.creation.redo.include": "redo-log-topic",

@@ -233,7 +233,6 @@ playground connector create-or-update --connector cdc-oracle-source-cdb --packag
     "table.topic.name.template": "\${databaseName}.\${schemaName}.\${tableName}",
     "numeric.mapping": "best_fit",
     "connection.pool.max.size": 20,
-    "redo.log.row.fetch.size":1,
     "oracle.dictionary.mode": "auto",
     "errors.tolerance": "all",
     "errors.log.enable": "true",

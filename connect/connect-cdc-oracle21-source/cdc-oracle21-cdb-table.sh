@@ -135,7 +135,6 @@ playground connector create-or-update --connector cdc-oracle-source-cdb --packag
      "table.topic.name.template": "\${databaseName}.\${schemaName}.\${tableName}",
      "numeric.mapping": "best_fit",
      "connection.pool.max.size": 20,
-     "redo.log.row.fetch.size":1,
      "oracle.dictionary.mode": "auto",
      "topic.creation.groups": "redo",
      "topic.creation.redo.include": "redo-log-topic",
@@ -145,7 +144,8 @@ playground connector create-or-update --connector cdc-oracle-source-cdb --packag
      "topic.creation.redo.retention.ms": 1209600000,
      "topic.creation.default.replication.factor": 1,
      "topic.creation.default.partitions": 1,
-     "topic.creation.default.cleanup.policy": "delete"
+     "topic.creation.default.cleanup.policy": "delete",
+     "use.transaction.begin.for.mining.session": "true"
 }
 EOF
 
