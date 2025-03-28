@@ -283,6 +283,10 @@ if [[ -n "$enable_sql_datagen" ]]
 then
   array_flag_list+=("--enable-sql-datagen")
   export SQL_DATAGEN=true
+
+  log "📊 automatically enabling Grafana as --enable-sql-datagen is set"
+  array_flag_list+=("--enable-jmx-grafana")
+  export ENABLE_JMX_GRAFANA=true
 fi
 
 if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_name" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
@@ -1114,12 +1118,20 @@ then
       array_flag_list+=("--enable-sql-datagen")
       export SQL_DATAGEN=true
       interactive_enable_sql="true"
+
+      array_flag_list+=("--enable-jmx-grafana")
+      export ENABLE_JMX_GRAFANA=true
+      interactive_enable_grafana="true"
     fi
     if [[ $res == *"$MENU_DISABLE_SQL_DATAGEN"* ]]
     then
       array_flag_list=("${array_flag_list[@]/"--enable-sql-datagen"}")
       unset SQL_DATAGEN
       interactive_enable_sql=""
+
+      array_flag_list=("${array_flag_list[@]/"--enable-jmx-grafana"}")
+      unset ENABLE_JMX_GRAFANA
+      interactive_enable_grafana=""
     fi
 
     if [[ $res == *"$MENU_ENVIRONMENT"* ]]
@@ -1361,9 +1373,11 @@ then
 
   if [ "$interactive_enable_sql" == "true" ]
   then
+    log "📊 automatically enabling Grafana as --enable-sql-datagen is set"
     if [[ -n "$force_interactive_repro" ]]
     then
       force_enable --enable-sql-datagen SQL_DATAGEN
+      force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
     fi
   fi
 
