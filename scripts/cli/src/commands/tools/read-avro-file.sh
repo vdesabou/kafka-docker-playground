@@ -7,6 +7,9 @@ fi
 
 filename=$(basename $file)
 
+log "🔖 ${filename}.avro metadata"
+docker run --quiet --rm -v ${file}:/tmp/${filename} vdesabou/avro-tools getmeta /tmp/${filename}
+
 log "🔖 ${filename}.avro schema"
 docker run --quiet --rm -v ${file}:/tmp/${filename} vdesabou/avro-tools getschema /tmp/${filename}
 
