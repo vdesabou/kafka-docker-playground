@@ -1287,8 +1287,13 @@ then
     log "🌪️ automatically enabling SQL Datagen injection as repro name contains <perf>"
     playground run -f $repro_dir/$repro_test_filename --enable-sql-datagen --force-interactive-repro $flag_list
   else
-    log "📊 automatically enabling Grafana as repro name contains <perf>"
-    playground run -f $repro_dir/$repro_test_filename --enable-jmx-grafana --force-interactive-repro $flag_list
+    if [[ $test_file != *"fully-managed"* ]]
+    then
+      log "📊 automatically enabling Grafana as repro name contains <perf>"
+      playground run -f $repro_dir/$repro_test_filename --enable-jmx-grafana --force-interactive-repro $flag_list
+    else 
+      playground run -f $repro_dir/$repro_test_filename --force-interactive-repro $flag_list
+    fi
   fi
 else
   playground run -f $repro_dir/$repro_test_filename --force-interactive-repro $flag_list
