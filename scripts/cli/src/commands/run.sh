@@ -284,14 +284,17 @@ then
   array_flag_list+=("--enable-sql-datagen")
   export SQL_DATAGEN=true
 
-  log "📊 automatically enabling Grafana as --enable-sql-datagen is set"
-  array_flag_list+=("--enable-jmx-grafana")
-  export ENABLE_JMX_GRAFANA=true
-
-  if [[ -n "$force_interactive_repro" ]]
+  if [[ $test_file != *"fully-managed"* ]]
   then
-    force_enable --enable-sql-datagen SQL_DATAGEN
-    force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
+    log "📊 automatically enabling Grafana as --enable-sql-datagen is set"
+    array_flag_list+=("--enable-jmx-grafana")
+    export ENABLE_JMX_GRAFANA=true
+
+    if [[ -n "$force_interactive_repro" ]]
+    then
+      force_enable --enable-sql-datagen SQL_DATAGEN
+      force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
+    fi
   fi
 fi
 
@@ -1135,9 +1138,12 @@ then
       unset SQL_DATAGEN
       interactive_enable_sql=""
 
-      array_flag_list=("${array_flag_list[@]/"--enable-jmx-grafana"}")
-      unset ENABLE_JMX_GRAFANA
-      interactive_enable_grafana=""
+      if [[ $test_file != *"fully-managed"* ]]
+      then
+        array_flag_list=("${array_flag_list[@]/"--enable-jmx-grafana"}")
+        unset ENABLE_JMX_GRAFANA
+        interactive_enable_grafana=""
+      fi
     fi
 
     if [[ $res == *"$MENU_ENVIRONMENT"* ]]
@@ -1379,11 +1385,14 @@ then
 
   if [ "$interactive_enable_sql" == "true" ]
   then
-    log "📊 automatically enabling Grafana as --enable-sql-datagen is set"
-    if [[ -n "$force_interactive_repro" ]]
+    if [[ $test_file != *"fully-managed"* ]]
     then
-      force_enable --enable-sql-datagen SQL_DATAGEN
-      force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
+      log "📊 automatically enabling Grafana as --enable-sql-datagen is set"
+      if [[ -n "$force_interactive_repro" ]]
+      then
+        force_enable --enable-sql-datagen SQL_DATAGEN
+        force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
+      fi
     fi
   fi
 
