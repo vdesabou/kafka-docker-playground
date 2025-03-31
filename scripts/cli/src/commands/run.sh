@@ -264,11 +264,6 @@ fi
 
 if [[ -n "$enable_jmx_grafana" ]]
 then
-  if [[ $test_file == *"ccloud"* ]]
-  then
-    logwarn "❌ --enable-jmx-grafana"
-    exit 1
-  fi
   array_flag_list+=("--enable-jmx-grafana")
   export ENABLE_JMX_GRAFANA=true
 

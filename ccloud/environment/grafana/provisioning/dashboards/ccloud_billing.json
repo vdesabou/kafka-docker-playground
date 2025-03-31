@@ -1,0 +1,2329 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 3,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 47,
+      "options": {
+        "infinitePan": false,
+        "inlineEditing": true,
+        "panZoom": false,
+        "root": {
+          "background": {
+            "color": {
+              "fixed": "transparent"
+            },
+            "image": {
+              "field": "sum(confluent_cloud_cost_amount{id=~\"lksqlc.*\",environment=~\"(env-12qyw6|env-22p2nm|env-2j5yko|env-3w59qo|env-5q1v7z|env-5qz70g|env-6wzdz8|env-7pxxr2|env-7qkyjj|env-7qz7kw|env-81530r|env-8wd277|env-9yxv5|env-9zgrnv|env-dv01po|env-dv901d|env-dvwmpz|env-j8pn8m|env-j9wgp|env-jv0mmm|env-jv7952|env-m25yq1|env-mv0o3q|env-nvv5xz|env-nx0vmd|env-nx53j6|env-pg5vry|env-pk01x5|env-pwn02|env-r0kg50|env-r0krd1|env-r0krm0|env-r57ov7|env-v6nw0|env-vy3g0|env-w16zgw|env-xrd7gz|env-zmz2zd|env-zp5p7)\",id=~\"(lksqlc-67zk06|lksqlc-7odgr1|lksqlc-9gmywv|lksqlc-k6m6pm|lksqlc-oqgv9x|lksqlc-vymyr5|lksqlc-vyvn50|lksqlc-xyzw6k|lksqlc-z67n17)\"})",
+              "fixed": "",
+              "mode": "field"
+            }
+          },
+          "border": {
+            "color": {
+              "fixed": "dark-green"
+            }
+          },
+          "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+          },
+          "elements": [
+            {
+              "background": {
+                "color": {
+                  "fixed": "transparent"
+                }
+              },
+              "border": {
+                "color": {
+                  "fixed": "dark-green"
+                }
+              },
+              "config": {
+                "align": "center",
+                "color": {
+                  "fixed": "blue"
+                },
+                "size": 20,
+                "text": {
+                  "field": "sum(confluent_cloud_cost_amount{id=~\"lsrc.*\", environment=~\"(env-12qyw6|env-22p2nm|env-2j5yko|env-3w59qo|env-5q1v7z|env-5qz70g|env-6wzdz8|env-7pxxr2|env-7qkyjj|env-7qz7kw|env-81530r|env-8wd277|env-9yxv5|env-9zgrnv|env-dv01po|env-dv901d|env-dvwmpz|env-j8pn8m|env-j9wgp|env-jv0mmm|env-jv7952|env-m25yq1|env-mv0o3q|env-nvv5xz|env-nx0vmd|env-nx53j6|env-pg5vry|env-pk01x5|env-pwn02|env-r0kg50|env-r0krd1|env-r0krm0|env-r57ov7|env-v6nw0|env-vy3g0|env-w16zgw|env-xrd7gz|env-zmz2zd|env-zp5p7)\"})",
+                  "fixed": "",
+                  "mode": "field"
+                },
+                "valign": "middle"
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "name": "sr_metric",
+              "placement": {
+                "height": 58,
+                "left": 508,
+                "top": 66,
+                "width": 93
+              },
+              "type": "metric-value"
+            },
+            {
+              "background": {
+                "color": {
+                  "fixed": "transparent"
+                }
+              },
+              "border": {
+                "color": {
+                  "fixed": "dark-green"
+                }
+              },
+              "config": {
+                "align": "center",
+                "color": {
+                  "fixed": "text"
+                },
+                "size": 16,
+                "text": {
+                  "fixed": "Schema Registry"
+                },
+                "valign": "middle"
+              },
+              "connections": [],
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "name": "SchemaReg_Lab",
+              "placement": {
+                "height": 50,
+                "left": 516,
+                "top": 45,
+                "width": 141
+              },
+              "type": "text"
+            },
+            {
+              "background": {
+                "color": {
+                  "fixed": "transparent"
+                },
+                "image": {
+                  "fixed": "img/bg/p3.png",
+                  "mode": "field"
+                }
+              },
+              "border": {
+                "color": {
+                  "fixed": "blue"
+                },
+                "width": 0
+              },
+              "config": {
+                "fill": {
+                  "fixed": "#D9D9D9"
+                },
+                "path": {
+                  "fixed": "img/icons/confluent/icon-schema_registry.svg",
+                  "mode": "fixed"
+                }
+              },
+              "connections": [],
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "name": "SchemaRegistry",
+              "placement": {
+                "height": 40,
+                "left": 473,
+                "top": 62,
+                "width": 34
+              },
+              "type": "icon"
+            },
+            {
+              "background": {
+                "color": {
+                  "fixed": "transparent"
+                }
+              },
+              "border": {
+                "color": {
+                  "fixed": "dark-green"
+                }
+              },
+              "config": {
+                "align": "center",
+                "color": {
+                  "fixed": "blue"
+                },
+                "size": 20,
+                "text": {
+                  "field": "sum(confluent_cloud_cost_amount{id=~\"lkc.*\",environment=~\"(env-12qyw6|env-22p2nm|env-2j5yko|env-3w59qo|env-5q1v7z|env-5qz70g|env-6wzdz8|env-7pxxr2|env-7qkyjj|env-7qz7kw|env-81530r|env-8wd277|env-9yxv5|env-9zgrnv|env-dv01po|env-dv901d|env-dvwmpz|env-j8pn8m|env-j9wgp|env-jv0mmm|env-jv7952|env-m25yq1|env-mv0o3q|env-nvv5xz|env-nx0vmd|env-nx53j6|env-pg5vry|env-pk01x5|env-pwn02|env-r0kg50|env-r0krd1|env-r0krm0|env-r57ov7|env-v6nw0|env-vy3g0|env-w16zgw|env-xrd7gz|env-zmz2zd|env-zp5p7)\"})",
+                  "fixed": "",
+                  "mode": "field"
+                },
+                "valign": "middle"
+              },
+              "connections": [],
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "name": "Flink_metric",
+              "placement": {
+                "height": 58,
+                "left": 221,
+                "top": 66,
+                "width": 93
+              },
+              "type": "metric-value"
+            },
+            {
+              "background": {
+                "color": {
+                  "fixed": "transparent"
+                }
+              },
+              "border": {
+                "color": {
+                  "fixed": "dark-green"
+                }
+              },
+              "config": {
+                "align": "center",
+                "color": {
+                  "fixed": "text"
+                },
+                "size": 16,
+                "text": {
+                  "fixed": "Flink compute pools"
+                },
+                "valign": "middle"
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "name": "Flink_Lab",
+              "placement": {
+                "height": 50,
+                "left": 959,
+                "top": 45,
+                "width": 190
+              },
+              "type": "text"
+            },
+            {
+              "background": {
+                "color": {
+                  "fixed": "transparent"
+                },
+                "image": {
+                  "fixed": "img/bg/p3.png",
+                  "mode": "field"
+                }
+              },
+              "border": {
+                "color": {
+                  "fixed": "blue"
+                },
+                "width": 0
+              },
+              "config": {
+                "fill": {
+                  "fixed": "#D9D9D9"
+                },
+                "path": {
+                  "fixed": "img/icons/confluent/icon-flink.svg",
+                  "mode": "fixed"
+                }
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "name": "Flink",
+              "placement": {
+                "height": 46,
+                "left": 921,
+                "top": 56,
+                "width": 38
+              },
+              "type": "icon"
+            },
+            {
+              "background": {
+                "color": {
+                  "fixed": "transparent"
+                }
+              },
+              "border": {
+                "color": {
+                  "fixed": "dark-green"
+                }
+              },
+              "config": {
+                "align": "center",
+                "color": {
+                  "fixed": "blue"
+                },
+                "size": 20,
+                "text": {
+                  "field": "sum(confluent_cloud_cost_amount{id=~\"lksqlc.*\",environment=~\"(env-12qyw6|env-22p2nm|env-2j5yko|env-3w59qo|env-5q1v7z|env-5qz70g|env-6wzdz8|env-7pxxr2|env-7qkyjj|env-7qz7kw|env-81530r|env-8wd277|env-9yxv5|env-9zgrnv|env-dv01po|env-dv901d|env-dvwmpz|env-j8pn8m|env-j9wgp|env-jv0mmm|env-jv7952|env-m25yq1|env-mv0o3q|env-nvv5xz|env-nx0vmd|env-nx53j6|env-pg5vry|env-pk01x5|env-pwn02|env-r0kg50|env-r0krd1|env-r0krm0|env-r57ov7|env-v6nw0|env-vy3g0|env-w16zgw|env-xrd7gz|env-zmz2zd|env-zp5p7)\",id=~\"(lksqlc-67zk06|lksqlc-7odgr1|lksqlc-9gmywv|lksqlc-k6m6pm|lksqlc-oqgv9x|lksqlc-vymyr5|lksqlc-vyvn50|lksqlc-xyzw6k|lksqlc-z67n17)\"})",
+                  "fixed": "",
+                  "mode": "field"
+                },
+                "valign": "middle"
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "name": "ksqldb_metric",
+              "placement": {
+                "height": 58,
+                "left": 1202,
+                "top": 67,
+                "width": 93
+              },
+              "type": "metric-value"
+            },
+            {
+              "background": {
+                "color": {
+                  "fixed": "transparent"
+                }
+              },
+              "border": {
+                "color": {
+                  "fixed": "dark-green"
+                }
+              },
+              "config": {
+                "align": "center",
+                "color": {
+                  "fixed": "text"
+                },
+                "size": 16,
+                "text": {
+                  "fixed": "KsqlDB"
+                },
+                "valign": "middle"
+              },
+              "connections": [],
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "name": "Ksql_Lab",
+              "placement": {
+                "height": 50,
+                "left": 1202,
+                "top": 46,
+                "width": 100
+              },
+              "type": "text"
+            },
+            {
+              "background": {
+                "color": {
+                  "fixed": "transparent"
+                },
+                "image": {
+                  "fixed": "img/bg/p3.png",
+                  "mode": "field"
+                }
+              },
+              "border": {
+                "color": {
+                  "fixed": "blue"
+                },
+                "width": 0
+              },
+              "config": {
+                "fill": {
+                  "fixed": "#D9D9D9"
+                },
+                "path": {
+                  "fixed": "img/icons/confluent/icon-ksqldb_rocket.svg",
+                  "mode": "fixed"
+                }
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "name": "Ksqldb",
+              "placement": {
+                "height": 58,
+                "left": 1166,
+                "top": 49,
+                "width": 43
+              },
+              "type": "icon"
+            },
+            {
+              "background": {
+                "color": {
+                  "fixed": "transparent"
+                }
+              },
+              "border": {
+                "color": {
+                  "fixed": "dark-green"
+                }
+              },
+              "config": {
+                "align": "center",
+                "color": {
+                  "fixed": "text"
+                },
+                "size": 16,
+                "text": {
+                  "fixed": "Confluent Kafka Clusters"
+                },
+                "valign": "middle"
+              },
+              "connections": [],
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "name": "Kafka_lab",
+              "placement": {
+                "height": 50,
+                "left": 228,
+                "top": 45,
+                "width": 206
+              },
+              "type": "text"
+            },
+            {
+              "background": {
+                "color": {
+                  "fixed": "transparent"
+                }
+              },
+              "border": {
+                "color": {
+                  "fixed": "dark-green"
+                }
+              },
+              "config": {
+                "align": "center",
+                "color": {
+                  "fixed": "blue"
+                },
+                "size": 20,
+                "text": {
+                  "field": "sum(confluent_cloud_cost_amount{id=~\"lfcp.*\",environment=~\"(env-12qyw6|env-22p2nm|env-2j5yko|env-3w59qo|env-5q1v7z|env-5qz70g|env-6wzdz8|env-7pxxr2|env-7qkyjj|env-7qz7kw|env-81530r|env-8wd277|env-9yxv5|env-9zgrnv|env-dv01po|env-dv901d|env-dvwmpz|env-j8pn8m|env-j9wgp|env-jv0mmm|env-jv7952|env-m25yq1|env-mv0o3q|env-nvv5xz|env-nx0vmd|env-nx53j6|env-pg5vry|env-pk01x5|env-pwn02|env-r0kg50|env-r0krd1|env-r0krm0|env-r57ov7|env-v6nw0|env-vy3g0|env-w16zgw|env-xrd7gz|env-zmz2zd|env-zp5p7)\",id=~\"(lfcp-671z18|lfcp-k613dp|lfcp-k62odg|lfcp-n5j6dd)\"})",
+                  "fixed": "",
+                  "mode": "field"
+                },
+                "valign": "middle"
+              },
+              "connections": [],
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "name": "Kafka_metric",
+              "placement": {
+                "height": 58,
+                "left": 951,
+                "top": 66,
+                "width": 93
+              },
+              "type": "metric-value"
+            },
+            {
+              "background": {
+                "color": {
+                  "fixed": "transparent"
+                },
+                "image": {
+                  "fixed": "img/bg/p3.png",
+                  "mode": "field"
+                }
+              },
+              "border": {
+                "color": {
+                  "fixed": "blue"
+                },
+                "width": 0
+              },
+              "config": {
+                "fill": {
+                  "fixed": "#D9D9D9"
+                },
+                "path": {
+                  "fixed": "img/icons/confluent/icon-kafka.svg",
+                  "mode": "fixed"
+                }
+              },
+              "connections": [],
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "name": "Kafka",
+              "placement": {
+                "height": 54,
+                "left": 172,
+                "top": 53,
+                "width": 49
+              },
+              "type": "icon"
+            },
+            {
+              "background": {
+                "color": {
+                  "fixed": "transparent"
+                },
+                "image": {
+                  "fixed": "img/bg/p3.png",
+                  "mode": "field"
+                }
+              },
+              "border": {
+                "color": {
+                  "fixed": "blue"
+                },
+                "width": 0
+              },
+              "config": {
+                "fill": {
+                  "fixed": "transparent"
+                },
+                "path": {
+                  "fixed": "img/icons/confluent/icon-confluent.svg",
+                  "mode": "fixed"
+                }
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "name": "Cloud",
+              "placement": {
+                "height": 83,
+                "left": 41,
+                "top": 32,
+                "width": 105
+              },
+              "type": "icon"
+            },
+            {
+              "background": {
+                "color": {
+                  "fixed": "transparent"
+                },
+                "image": {
+                  "field": "",
+                  "fixed": "",
+                  "mode": "fixed"
+                },
+                "size": "cover"
+              },
+              "border": {
+                "color": {
+                  "fixed": "dark-green"
+                }
+              },
+              "config": {
+                "align": "center",
+                "color": {
+                  "fixed": "light-blue"
+                },
+                "size": 40,
+                "text": {
+                  "field": "sum(confluent_cloud_cost_amount)",
+                  "fixed": "",
+                  "mode": "field"
+                },
+                "valign": "middle"
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "name": "CloudCost",
+              "placement": {
+                "height": 66,
+                "left": -10,
+                "top": 110,
+                "width": 193
+              },
+              "type": "metric-value"
+            },
+            {
+              "background": {
+                "color": {
+                  "fixed": "transparent"
+                }
+              },
+              "border": {
+                "color": {
+                  "fixed": "dark-green"
+                }
+              },
+              "config": {
+                "align": "center",
+                "color": {
+                  "fixed": "text"
+                },
+                "size": 16,
+                "text": {
+                  "fixed": "Connectors"
+                },
+                "valign": "middle"
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "name": "Connect_lab",
+              "placement": {
+                "height": 50,
+                "left": 762,
+                "top": 45,
+                "width": 100
+              },
+              "type": "text"
+            },
+            {
+              "background": {
+                "color": {
+                  "fixed": "transparent"
+                }
+              },
+              "border": {
+                "color": {
+                  "fixed": "dark-green"
+                }
+              },
+              "config": {
+                "align": "center",
+                "color": {
+                  "fixed": "blue"
+                },
+                "size": 20,
+                "text": {
+                  "field": "sum(confluent_cloud_cost_amount{id=~\"lcc.*\",environment=~\"(env-12qyw6|env-22p2nm|env-2j5yko|env-3w59qo|env-5q1v7z|env-5qz70g|env-6wzdz8|env-7pxxr2|env-7qkyjj|env-7qz7kw|env-81530r|env-8wd277|env-9yxv5|env-9zgrnv|env-dv01po|env-dv901d|env-dvwmpz|env-j8pn8m|env-j9wgp|env-jv0mmm|env-jv7952|env-m25yq1|env-mv0o3q|env-nvv5xz|env-nx0vmd|env-nx53j6|env-pg5vry|env-pk01x5|env-pwn02|env-r0kg50|env-r0krd1|env-r0krm0|env-r57ov7|env-v6nw0|env-vy3g0|env-w16zgw|env-xrd7gz|env-zmz2zd|env-zp5p7)\"})",
+                  "fixed": "",
+                  "mode": "field"
+                },
+                "valign": "middle"
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "name": "Connect_metric",
+              "placement": {
+                "height": 58,
+                "left": 752,
+                "top": 66,
+                "width": 93
+              },
+              "type": "metric-value"
+            },
+            {
+              "background": {
+                "color": {
+                  "fixed": "transparent"
+                },
+                "image": {
+                  "fixed": "img/bg/p3.png",
+                  "mode": "field"
+                }
+              },
+              "border": {
+                "color": {
+                  "fixed": "blue"
+                },
+                "width": 0
+              },
+              "config": {
+                "fill": {
+                  "fixed": "#D9D9D9"
+                },
+                "path": {
+                  "fixed": "img/icons/confluent/icon-connector.svg",
+                  "mode": "fixed"
+                }
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "name": "connect_icon",
+              "placement": {
+                "height": 44,
+                "left": 701,
+                "top": 58,
+                "width": 61
+              },
+              "type": "icon"
+            }
+          ],
+          "name": "Element 1719653367903",
+          "placement": {
+            "height": 100,
+            "left": 0,
+            "rotation": 0,
+            "top": 0,
+            "width": 100
+          },
+          "type": "frame"
+        },
+        "showAdvancedTypes": true
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "sum(confluent_cloud_cost_amount)",
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "sum(confluent_cloud_cost_amount{id=~\"lkc.*\",environment=~\"$Environment\"})",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "sum(confluent_cloud_cost_amount{id=~\"lcc.*\",environment=~\"$Environment\"})",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "sum(confluent_cloud_cost_amount{id=~\"lfcp.*\",environment=~\"$Environment\",id=~\"$Flink\"})",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "sum(confluent_cloud_cost_amount{id=~\"lksqlc.*\",environment=~\"$Environment\",id=~\"$KSQL\"})",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "sum(confluent_cloud_cost_amount{id=~\"lsrc.*\", environment=~\"$Environment\"})",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "F"
+        }
+      ],
+      "title": "Confluent Cloud Costs",
+      "type": "canvas"
+    },
+    {
+      "collapsed": false,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 18,
+      "panels": [],
+      "title": "Breakdown",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 18,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
+      "id": 10,
+      "options": {
+        "displayMode": "gradient",
+        "maxVizHeight": 300,
+        "minVizHeight": 12,
+        "minVizWidth": 0,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {},
+        "valueMode": "color"
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum by(end_date)(confluent_cloud_cost_amount{environment=~\"$Environment\"})",
+          "hide": false,
+          "interval": "",
+          "intervalFactor": 4,
+          "legendFormat": "{{end_date}}",
+          "refId": "A"
+        }
+      ],
+      "title": "By Day",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 7,
+        "x": 0,
+        "y": 25
+      },
+      "id": 35,
+      "options": {
+        "displayLabels": [
+          "value"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum by(product)(confluent_cloud_cost_amount{environment=~\"$Environment\"})",
+          "interval": "",
+          "legendFormat": "{{ product }}",
+          "refId": "A"
+        }
+      ],
+      "title": "by Product",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 8,
+        "x": 7,
+        "y": 25
+      },
+      "id": 44,
+      "options": {
+        "displayLabels": [
+          "value"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "exemplar": true,
+          "expr": "sum by(line_type)(confluent_cloud_cost_amount{environment=~\"$Environment\"})",
+          "interval": "",
+          "legendFormat": "{{ product }}",
+          "refId": "A"
+        }
+      ],
+      "title": "by Line Type",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 9,
+        "x": 15,
+        "y": 25
+      },
+      "id": 45,
+      "options": {
+        "displayLabels": [
+          "value"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "sum by(network_access_type)(confluent_cloud_cost_amount{environment=~\"$Environment\"})",
+          "interval": "",
+          "legendFormat": "{{ network_access_type }}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "by Network Access Type",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 1000
+              },
+              {
+                "color": "red",
+                "value": 2000
+              },
+              {
+                "color": "purple",
+                "value": 3000
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 24,
+        "x": 0,
+        "y": 38
+      },
+      "id": 33,
+      "options": {
+        "displayMode": "gradient",
+        "maxVizHeight": 300,
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {},
+        "valueMode": "color"
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum by(environment)(confluent_cloud_cost_amount{environment=~\"$Environment\"})",
+          "interval": "",
+          "legendFormat": "{{ environment }}",
+          "refId": "A"
+        }
+      ],
+      "title": "by Environment",
+      "type": "bargauge"
+    },
+    {
+      "collapsed": false,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 51
+      },
+      "id": 14,
+      "panels": [],
+      "title": "Confluent Kafka ",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 7,
+        "x": 0,
+        "y": 52
+      },
+      "id": 22,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto",
+        "text": {}
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(confluent_cloud_cost_amount{id=~\"lkc.*\",environment=~\"$Environment\"})",
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Confluent Kafka Clusters",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 18,
+        "w": 17,
+        "x": 7,
+        "y": 52
+      },
+      "id": 31,
+      "options": {
+        "displayMode": "gradient",
+        "maxVizHeight": 300,
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {},
+        "valueMode": "color"
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "exemplar": true,
+          "expr": "sum by(id,resource)(confluent_cloud_cost_amount{id=~\"lkc.*\",environment=~\"$Environment\",id=~\"$Kafka\"})",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{ id }} - {{ resource }}",
+          "refId": "A"
+        }
+      ],
+      "title": "Kafka Clusters",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 7,
+        "x": 0,
+        "y": 58
+      },
+      "id": 37,
+      "options": {
+        "displayLabels": [
+          "value"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "sum(confluent_cloud_cost_amount{id=~\"lkc.*\",environment=~\"$Environment\",id=~\"$Kafka\"}) by (line_type)",
+          "format": "time_series",
+          "interval": "",
+          "legendFormat": "{{line_type}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Line Type",
+      "type": "piechart"
+    },
+    {
+      "collapsed": true,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 70
+      },
+      "id": 16,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "currencyUSD"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 4,
+            "x": 0,
+            "y": 46
+          },
+          "id": 23,
+          "options": {
+            "minVizHeight": 75,
+            "minVizWidth": 75,
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true,
+            "sizing": "auto",
+            "text": {}
+          },
+          "pluginVersion": "11.1.0",
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum(confluent_cloud_cost_amount{id=~\"lcc.*\",environment=~\"$Environment\"})",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "Confluent Connectors",
+          "type": "gauge"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "mappings": [],
+              "unit": "currencyUSD"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 4,
+            "y": 46
+          },
+          "id": 38,
+          "options": {
+            "displayLabels": [
+              "value"
+            ],
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "pieType": "pie",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "expr": "sum(confluent_cloud_cost_amount{id=~\"lcc.*\",environment=~\"$Environment\",id=~\"$Connectors\"}) by (line_type)",
+              "format": "time_series",
+              "interval": "",
+              "legendFormat": "{{line_type}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Line Type",
+          "type": "piechart"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "green",
+                    "value": 5
+                  },
+                  {
+                    "color": "light-yellow",
+                    "value": 10.0016
+                  },
+                  {
+                    "color": "red",
+                    "value": 15.0001
+                  }
+                ]
+              },
+              "unit": "currencyUSD"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 23,
+            "w": 24,
+            "x": 0,
+            "y": 54
+          },
+          "id": 8,
+          "options": {
+            "displayMode": "gradient",
+            "maxVizHeight": 300,
+            "minVizHeight": 10,
+            "minVizWidth": 0,
+            "namePlacement": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showUnfilled": true,
+            "sizing": "auto",
+            "text": {},
+            "valueMode": "color"
+          },
+          "pluginVersion": "11.1.0",
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum by (id,resource)(confluent_cloud_cost_amount{id=~\"lcc.*\",environment=~\"$Environment\",id=~\"$Connectors\"})",
+              "interval": "",
+              "legendFormat": "{{ id }} - {{ resource }}",
+              "refId": "A"
+            }
+          ],
+          "title": "Connectors",
+          "type": "bargauge"
+        }
+      ],
+      "title": "Confluent Connectors",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 71
+      },
+      "id": 28,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "currencyUSD"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 4,
+            "x": 0,
+            "y": 47
+          },
+          "id": 25,
+          "options": {
+            "minVizHeight": 75,
+            "minVizWidth": 75,
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true,
+            "sizing": "auto",
+            "text": {}
+          },
+          "pluginVersion": "11.1.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum(confluent_cloud_cost_amount{id=~\"lksqlc.*\",environment=~\"$Environment\",id=~\"$KSQL\"})",
+              "interval": "",
+              "legendFormat": "{{id}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "KSQLDB",
+          "type": "gauge"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "mappings": [],
+              "unit": "currencyUSD"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 4,
+            "x": 4,
+            "y": 47
+          },
+          "id": 39,
+          "options": {
+            "displayLabels": [
+              "value"
+            ],
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "pieType": "pie",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "expr": "sum(confluent_cloud_cost_amount{id=~\"lksqlc.*\",environment=~\"$Environment\", id=~\"$KSQL\"}) by (line_type)",
+              "format": "time_series",
+              "interval": "",
+              "legendFormat": "{{line_type}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Line Type",
+          "type": "piechart"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "green",
+                    "value": 5
+                  },
+                  {
+                    "color": "light-yellow",
+                    "value": 10
+                  },
+                  {
+                    "color": "red",
+                    "value": 15
+                  }
+                ]
+              },
+              "unit": "currencyUSD"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 23,
+            "x": 0,
+            "y": 54
+          },
+          "id": 26,
+          "options": {
+            "displayMode": "gradient",
+            "maxVizHeight": 300,
+            "minVizHeight": 10,
+            "minVizWidth": 0,
+            "namePlacement": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showUnfilled": true,
+            "sizing": "auto",
+            "text": {},
+            "valueMode": "color"
+          },
+          "pluginVersion": "11.1.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "exemplar": true,
+              "expr": "sum by (id,resource)(confluent_cloud_cost_amount{id=~\"lksqlc.*\",environment=~\"$Environment\", id=~\"$KSQL\"})",
+              "interval": "",
+              "legendFormat": "{{ id }} - {{ resource }}",
+              "refId": "A"
+            }
+          ],
+          "title": "KSQL",
+          "type": "bargauge"
+        }
+      ],
+      "title": "KSQL",
+      "type": "row"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 72
+      },
+      "id": 41,
+      "panels": [],
+      "title": "Flink",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 0,
+        "y": 73
+      },
+      "id": 46,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto",
+        "text": {}
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "sum(confluent_cloud_cost_amount{id=~\"lfcp.*\",environment=~\"$Environment\",id=~\"$Flink\"})",
+          "interval": "",
+          "legendFormat": "{{id}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Flink",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 4,
+        "y": 73
+      },
+      "id": 43,
+      "options": {
+        "displayLabels": [
+          "value"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "sum(confluent_cloud_cost_amount{id=~\"lfcp.*\",environment=~\"$Environment\",id=~\"$Flink\"}) by (line_type)",
+          "format": "time_series",
+          "interval": "",
+          "legendFormat": "{{line_type}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Line Type",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 5
+              },
+              {
+                "color": "light-yellow",
+                "value": 10
+              },
+              {
+                "color": "red",
+                "value": 15
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 16,
+        "x": 8,
+        "y": 73
+      },
+      "id": 42,
+      "options": {
+        "displayMode": "gradient",
+        "maxVizHeight": 300,
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {},
+        "valueMode": "color"
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "exemplar": true,
+          "expr": "sum by (id,resource)(confluent_cloud_cost_amount{id=~\"lfcp.*\",environment=~\"$Environment\", id=~\"$Flink\"})",
+          "interval": "",
+          "legendFormat": "{{ id }} - {{ resource }}",
+          "refId": "A"
+        }
+      ],
+      "title": "Flink",
+      "type": "bargauge"
+    },
+    {
+      "collapsed": true,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 80
+      },
+      "id": 30,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "green",
+                    "value": 50
+                  },
+                  {
+                    "color": "#EAB839",
+                    "value": 100
+                  },
+                  {
+                    "color": "red",
+                    "value": 200
+                  }
+                ]
+              },
+              "unit": "currencyUSD"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 12,
+            "w": 24,
+            "x": 0,
+            "y": 12
+          },
+          "id": 4,
+          "options": {
+            "displayMode": "gradient",
+            "maxVizHeight": 300,
+            "minVizHeight": 10,
+            "minVizWidth": 0,
+            "namePlacement": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showUnfilled": true,
+            "sizing": "auto",
+            "text": {},
+            "valueMode": "color"
+          },
+          "pluginVersion": "11.1.0",
+          "targets": [
+            {
+              "exemplar": false,
+              "expr": "sum by (id) (confluent_cloud_cost_amount)",
+              "interval": "",
+              "legendFormat": "{{ id }}",
+              "refId": "A"
+            }
+          ],
+          "title": "Cost by Resource",
+          "type": "bargauge"
+        }
+      ],
+      "title": "All",
+      "type": "row"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA97CFB590B2093"
+        },
+        "definition": "label_values(confluent_cloud_cost_amount, environment)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "Environment",
+        "options": [],
+        "query": {
+          "query": "label_values(confluent_cloud_cost_amount, environment)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA97CFB590B2093"
+        },
+        "definition": "label_values(confluent_cloud_cost_amount{id=~\"lkc.*\",environment=~\"$Environment\"}, id)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": false,
+        "name": "Kafka",
+        "options": [],
+        "query": {
+          "query": "label_values(confluent_cloud_cost_amount{id=~\"lkc.*\",environment=~\"$Environment\"}, id)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA97CFB590B2093"
+        },
+        "definition": "label_values(confluent_cloud_cost_amount{id=~\"lcc.*\",environment=~\"$Environment\"}, id)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": false,
+        "name": "Connectors",
+        "options": [],
+        "query": {
+          "query": "label_values(confluent_cloud_cost_amount{id=~\"lcc.*\",environment=~\"$Environment\"}, id)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA97CFB590B2093"
+        },
+        "definition": "label_values(confluent_cloud_cost_amount{id=~\"lksqlc.*\",environment=~\"$Environment\"}, id)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": false,
+        "name": "KSQL",
+        "options": [],
+        "query": {
+          "query": "label_values(confluent_cloud_cost_amount{id=~\"lksqlc.*\",environment=~\"$Environment\"}, id)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA97CFB590B2093"
+        },
+        "definition": "label_values(confluent_cloud_cost_amount{id=~\"lfcp.*\",environment=~\"$Environment\"}, id)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": false,
+        "name": "Flink",
+        "options": [],
+        "query": {
+          "query": "label_values(confluent_cloud_cost_amount{id=~\"lfcp.*\",environment=~\"$Environment\"}, id)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Confluent Cloud Cost",
+  "uid": "abnfTqmIk",
+  "version": 3,
+  "weekStart": ""
+}

@@ -140,6 +140,50 @@ services:
     profiles:
       - "conduktor"
 
+  prometheus:
+    image: prom/prometheus:v2.29.2
+    hostname: prometheus
+    container_name: prometheus
+    profiles:
+      - "grafana"
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    hostname: grafana
+    container_name: grafana
+    profiles:
+      - "grafana"
+    environment:
+      - "GF_SECURITY_ADMIN_USER=admin"
+      - "GF_SECURITY_ADMIN_PASSWORD=password"
+      - "GF_USERS_ALLOW_SIGN_UP=false"
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+      - ./grafana/config/grafana.ini:/etc/grafana/grafana.ini
+      - ./grafana/confluent:/usr/share/grafana/public/img/icons/confluent
+    depends_on:
+      - prometheus
+
+  confluent_cost_exporter:
+    profiles:
+      - "grafana"
+    image: docker.io/mcolomerc/confluent-costs-exporter:latest
+    #platform: linux/amd64
+    container_name: confluent_cost_exporter
+    environment:
+    - CONFLUENT_CLOUD_API_KEY=$CLOUD_API_KEY
+    - CONFLUENT_CLOUD_API_SECRET=$CLOUD_API_SECRET
+    - CACHE_EXPIRATION=240m
+    - PORT=7979 
+    ports:
+      - 7979:7979
+
   # 75147
   # schema-registry:
   #   image: ${CP_SCHEMA_REGISTRY_IMAGE}:${CP_SCHEMA_REGISTRY_TAG}
