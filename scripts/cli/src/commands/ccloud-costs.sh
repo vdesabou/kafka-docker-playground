@@ -48,33 +48,27 @@ display_histogram() {
 
     total_cost_local=$(awk '{sum += $2} END {print sum}' $file)
     echo ""
-    echo "$title"
     echo "---------------------------------"
-    echo "TOTAL COST $file: 💰 $total_cost_local"
+    echo "TOTAL COST: 💰 $total_cost_local"
     echo "---------------------------------"
 
     # Find the maximum value in the dataset
-    max_value=$(awk '{if ($2 > max) max = $2} END {print max}' "$file")
+    # max_value=$(awk '{if ($2 > max) max = $2} END {print max}' "$file")
 
     while read -r line; do
-    label=$(echo "$line" | awk '{print $1}')
+    resource_name=$(echo "$line" | awk '{print $1}')
     value=$(echo "$line" | awk '{print $2}')
+    resource=$(echo "$line" | awk '{print $3}')
     # Calculate the proportion of the value relative to the maximum value
-    proportion=$(echo "scale=2; $value / $max_value * 50" | bc) # Scale to a maximum of 20 emojis with precision
+    proportion=$(echo "scale=1; $value / $total_cost_local * 100" | bc) # Calculate percentage
     bar=$(printf '💰%.0s' $(seq 1 ${proportion%.*})) # Generate the bar based on the integer part of the proportion
-    printf "%-20s | %s (%.2f)\n" "$label" "$bar" "$value"
+    printf "%-50s (%s) | %s (%.2f)\n" "$resource_name" "$resource" "$bar" "$value" 
     done < "$file"
     echo ""
 }
 
-jq -r '.[] | "\(.product) \(.amount | sub("\\$"; ""; "g") | tonumber)"' "$INPUT_FILE" | \
-awk '{sum[$1] += $2} END {for (product in sum) print product, sum[product]}' | sort -k2 -n > $tmp_dir/product_costs.txt
-
-jq -r '.[] | "\(.resource_name) \(.amount | sub("\\$"; ""; "g") | tonumber)"' "$INPUT_FILE" | \
-awk '{sum[$1] += $2} END {for (resource in sum) print resource, sum[resource]}' | sort -k2 -n > $tmp_dir/resource_costs.txt
-
-jq -r '.[] | "\(.environment) \(.amount | sub("\\$"; ""; "g") | tonumber)"' "$INPUT_FILE" | \
-awk '{sum[$1] += $2} END {for (env in sum) print env, sum[env]}' | sort -k2 -n > $tmp_dir/environment_costs.txt
+jq -r '.[] | "\(.product) \(.amount | sub("\\$"; ""; "g") | tonumber) \(.resource)"' "$INPUT_FILE" | \
+awk '{sum[$1] += $2} END {for (product in sum) print product, sum[product], $3}' | sort -k2 -nr > $tmp_dir/product_costs.txt
 
 # Calculate and display the total cost across all products
 total_cost=$(awk '{sum += $2} END {print sum}' $tmp_dir/product_costs.txt)
@@ -82,9 +76,25 @@ echo "---------------------------------"
 echo "TOTAL COST ACROSS ALL PRODUCTS: 💰 $total_cost"
 echo "---------------------------------"
 
-# Display histograms
-display_histogram "$tmp_dir/product_costs.txt" "Histogram: Total Cost per Product"
+while read -r line
+do
+product=$(echo "$line" | awk '{print $1}')
+log "processing $product"
+TMP_FILE="$tmp_dir/product_costs_$product.txt"
+jq -r '.[] | select(.product == "'"$product"'") | "\(.resource_name) \(.amount | sub("\\$"; ""; "g") | tonumber) \(.resource)"' "$INPUT_FILE" | \
+awk '{sum[$1] += $2} END {for (resource in sum) print resource, sum[resource], $3}' | sort -k2 -nr > "$TMP_FILE"
+display_histogram "$TMP_FILE" "Histogram: Total Cost per Product $product"
+done < $tmp_dir/product_costs.txt
 
-display_histogram "$tmp_dir/resource_costs.txt" "Histogram: Total Cost per Resource"
+# jq -r '.[] | "\(.resource_name) \(.amount | sub("\\$"; ""; "g") | tonumber)"' "$INPUT_FILE" | \
+# awk '{sum[$1] += $2} END {for (resource in sum) print resource, sum[resource]}' | sort -k2 -n > $tmp_dir/resource_costs.txt
 
-display_histogram "$tmp_dir/environment_costs.txt" "Histogram: Total Cost per Environment"
+# jq -r '.[] | "\(.environment) \(.amount | sub("\\$"; ""; "g") | tonumber)"' "$INPUT_FILE" | \
+# awk '{sum[$1] += $2} END {for (env in sum) print env, sum[env]}' | sort -k2 -n > $tmp_dir/environment_costs.txt
+
+# # Display histograms
+# display_histogram "$tmp_dir/product_costs.txt" "Histogram: Total Cost per Product"
+
+# display_histogram "$tmp_dir/resource_costs.txt" "Histogram: Total Cost per Resource"
+
+# display_histogram "$tmp_dir/environment_costs.txt" "Histogram: Total Cost per Environment"
