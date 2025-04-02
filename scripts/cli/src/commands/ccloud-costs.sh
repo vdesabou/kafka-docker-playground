@@ -29,22 +29,21 @@ else
     log "🐛📂 not deleting tmp dir $tmp_dir"
 fi
 
-INPUT_FILE="$tmp_dir/out.log"
+INPUT_FILE="$tmp_dir/out.json"
 
 log "💰 Retrieve ccloud costs for a range from $start_date to $end_date "
 confluent billing cost list --start-date "$start_date" --end-date "$end_date" --output json > $INPUT_FILE
 if [[ $? -ne 0 ]]
 then
-    logerror "❌ Failed to retrieve ccloud costs with command: confluent billing cost list --start-date $start_date --end-date $end_date --output json"
+    logerror "❌ failed to retrieve ccloud costs with command: confluent billing cost list --start-date $start_date --end-date $end_date"
     cat "$INPUT_FILE"
     exit 1
 fi
 
-log "💰 costs retrieved successfully. Processing costs from JSON..."
+log "⏳ costs retrieved successfully. processing results..."
 
 display_histogram() {
     local file=$1
-    local title=$2
 
     total_cost_local=$(awk '{sum += $2} END {print sum}' $file)
     echo ""
@@ -52,23 +51,33 @@ display_histogram() {
     echo "TOTAL COST: 💰 $total_cost_local"
     echo "---------------------------------"
 
-    # Find the maximum value in the dataset
-    # max_value=$(awk '{if ($2 > max) max = $2} END {print max}' "$file")
-
     while read -r line; do
-    resource_name=$(echo "$line" | awk '{print $1}')
-    value=$(echo "$line" | awk '{print $2}')
-    resource=$(echo "$line" | awk '{print $3}')
-    # Calculate the proportion of the value relative to the maximum value
-    proportion=$(echo "scale=1; $value / $total_cost_local * 100" | bc) # Calculate percentage
-    bar=$(printf '💰%.0s' $(seq 1 ${proportion%.*})) # Generate the bar based on the integer part of the proportion
-    printf "%-50s (%s) | %s (%.2f)\n" "$resource_name" "$resource" "$bar" "$value" 
+        resource_name=$(echo "$line" | awk '{print $1}')
+        cost=$(echo "$line" | awk '{print $2}')
+        resource=$(echo "$line" | awk '{print $3}')
+        # proportion=$(echo "scale=1; $cost / $total_cost_local * 100" | bc) # Calculate percentage
+        # bar=$(printf '💰%.0s' $(seq 1 ${proportion%.*})) # Generate the bar based on the integer part of the proportion
+        
+        # calculate the percentage of cost
+        percentage=$(echo "scale=2; 100 * $cost / $total_cost_local" | bc)
+        inverse_percentage=$(echo "100 - $percentage" | bc)
+
+        # create the cost bar
+        bar_length=50
+        filled_length=$(echo "$inverse_percentage * $bar_length / 100" | bc)
+        empty_length=$((bar_length - filled_length))
+        bar=$(printf "%${empty_length}s" | tr ' ' '💰')
+        bar+=$(printf "%${filled_length}s" | tr ' ' '⬛')
+
+        resource_no_comma=$(echo "${resource//,/}")
+        printf "%-50s (%s) | %s $%.2f (%.2f%%)\n" "$resource_name" "$resource_no_comma" "$bar" "$cost" "$percentage"
+
     done < "$file"
     echo ""
 }
 
-jq -r '.[] | "\(.product) \(.amount | sub("\\$"; ""; "g") | tonumber) \(.resource)"' "$INPUT_FILE" | \
-awk '{sum[$1] += $2} END {for (product in sum) print product, sum[product], $3}' | sort -k2 -nr > $tmp_dir/product_costs.txt
+jq -r '.[] | "\(.product) \(.amount | sub("\\$"; ""; "g") | tonumber)"' "$INPUT_FILE" | \
+awk '{sum[$1] += $2} END {for (product in sum) print product, sum[product]}' | sort -k2 -nr > $tmp_dir/product_costs.txt
 
 # Calculate and display the total cost across all products
 total_cost=$(awk '{sum += $2} END {print sum}' $tmp_dir/product_costs.txt)
@@ -78,23 +87,16 @@ echo "---------------------------------"
 
 while read -r line
 do
-product=$(echo "$line" | awk '{print $1}')
-log "processing $product"
-TMP_FILE="$tmp_dir/product_costs_$product.txt"
-jq -r '.[] | select(.product == "'"$product"'") | "\(.resource_name) \(.amount | sub("\\$"; ""; "g") | tonumber) \(.resource)"' "$INPUT_FILE" | \
-awk '{sum[$1] += $2} END {for (resource in sum) print resource, sum[resource], $3}' | sort -k2 -nr > "$TMP_FILE"
-display_histogram "$TMP_FILE" "Histogram: Total Cost per Product $product"
+    product=$(echo "$line" | awk '{print $1}')
+    log "👛 $(echo "$product" | tr '[:upper:]' '[:lower:]') product costs"
+    TMP_FILE="$tmp_dir/product_costs_$product.txt"
+    jq -r '.[] | select(.product == "'"$product"'") | "\(.resource_name) \(.amount | sub("\\$"; ""; "g") | tonumber) \(.resource)"' "$INPUT_FILE" | \
+    awk '{sum[$1] += $2; resources[$1] = (resources[$1] ? resources[$1] ", " : "") $3} END {for (resource in sum) print resource, sum[resource], resources[resource]}' | sort -k2 -nr > "$TMP_FILE"
+    display_histogram "$TMP_FILE"
 done < $tmp_dir/product_costs.txt
 
-# jq -r '.[] | "\(.resource_name) \(.amount | sub("\\$"; ""; "g") | tonumber)"' "$INPUT_FILE" | \
-# awk '{sum[$1] += $2} END {for (resource in sum) print resource, sum[resource]}' | sort -k2 -n > $tmp_dir/resource_costs.txt
+jq -r '.[] | "\(.environment) \(.amount | sub("\\$"; ""; "g") | tonumber)"' "$INPUT_FILE" | \
+awk '{sum[$1] += $2} END {for (env in sum) print env, sum[env]}' | sort -k2 -nr > $tmp_dir/environment_costs.txt
 
-# jq -r '.[] | "\(.environment) \(.amount | sub("\\$"; ""; "g") | tonumber)"' "$INPUT_FILE" | \
-# awk '{sum[$1] += $2} END {for (env in sum) print env, sum[env]}' | sort -k2 -n > $tmp_dir/environment_costs.txt
-
-# # Display histograms
-# display_histogram "$tmp_dir/product_costs.txt" "Histogram: Total Cost per Product"
-
-# display_histogram "$tmp_dir/resource_costs.txt" "Histogram: Total Cost per Resource"
-
-# display_histogram "$tmp_dir/environment_costs.txt" "Histogram: Total Cost per Environment"
+log "👛 environment costs"
+display_histogram "$tmp_dir/environment_costs.txt"
