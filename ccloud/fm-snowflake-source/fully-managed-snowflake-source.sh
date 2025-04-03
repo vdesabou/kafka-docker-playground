@@ -126,8 +126,7 @@ USE ROLE $PLAYGROUND_CONNECTOR_ROLE;
 USE DATABASE $PLAYGROUND_DB;
 USE SCHEMA MYSCHEMA;
 USE WAREHOUSE $PLAYGROUND_WAREHOUSE;
-create or replace sequence seq1;
-create or replace table TEST_TABLE (id number default seq1.nextval, f1 string, update_ts timestamp default current_timestamp());
+create or replace table TEST_TABLE (id INTEGER AUTOINCREMENT ORDER PRIMARY KEY, f1 string, update_ts timestamp default current_timestamp());
 insert into TEST_TABLE (f1) values ('value1');
 insert into TEST_TABLE (f1) values ('value2');
 insert into TEST_TABLE (f1) values ('value3');
@@ -156,9 +155,9 @@ playground connector create-or-update --connector $connector_name << EOF
   "output.data.format": "AVRO",
   "table.include.list": "$PLAYGROUND_DB.MYSCHEMA.TEST_TABLE.*",
   "db.timezone": "$timezone",
-  "mode": "timestamp",
+  "mode": "timestamp+incrementing",
   "timestamp.columns.mapping": "$PLAYGROUND_DB.MYSCHEMA.TEST_TABLE.*:[UPDATE_TS]",
-  "_incrementing.column.mapping": "$PLAYGROUND_DB.MYSCHEMA.TEST_TABLE.*:[ID]",
+  "incrementing.column.mapping": "$PLAYGROUND_DB.MYSCHEMA.TEST_TABLE.*:ID",
   "topic.prefix": "pg.",
   "connection.url": "$SNOWFLAKE_URL",
   "connection.user": "$PLAYGROUND_USER",
