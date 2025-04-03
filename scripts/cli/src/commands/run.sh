@@ -1587,6 +1587,19 @@ else
 fi
 check_for_ec2_instance_running
 
+if [[ $test_file == *"ccloud"* ]]
+then
+  if [ -f /tmp/ccloud-costs-history.txt ]
+  then
+    log "📅💰 monthly ccloud costs"
+    cat /tmp/ccloud-costs-history.txt
+  fi
+  if [ -f /tmp/ccloud-costs-history-detailed.txt ]
+  then
+    log "👀 if you want more details, open /tmp/ccloud-costs-history-detailed.txt file"
+  fi
+fi
+
 if [ ! -z "$ENABLE_JMX_GRAFANA" ]
 then
   log "🛡️ Prometheus is reachable at http://127.0.0.1:9090"
