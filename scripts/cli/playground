@@ -15879,16 +15879,19 @@ playground_run_command() {
   fi
   check_for_ec2_instance_running
 
-  if [[ $test_file == *"ccloud"* ]]
+  if [ -z "$GITHUB_RUN_NUMBER" ]
   then
-    if [ -f /tmp/ccloud-costs-history.txt ]
+    if [[ $test_file == *"ccloud"* ]]
     then
-      log "📅💰 monthly ccloud costs"
-      cat /tmp/ccloud-costs-history.txt
-    fi
-    if [ -f /tmp/ccloud-costs-history-detailed.txt ]
-    then
-      log "👀 if you want more details, open /tmp/ccloud-costs-history-detailed.txt file"
+      if [ -f /tmp/ccloud-costs-history.txt ]
+      then
+        log "📅💰 monthly ccloud costs"
+        cat /tmp/ccloud-costs-history.txt
+      fi
+      if [ -f /tmp/ccloud-costs-history-detailed.txt ]
+      then
+        log "👀 if you want more details, open /tmp/ccloud-costs-history-detailed.txt file"
+      fi
     fi
   fi
 
