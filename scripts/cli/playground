@@ -15918,15 +15918,28 @@ playground_ccloud_costs_command() {
       else
           start_date=$(date -d "1 month ago" +%Y-%m-%d)
       fi
-  fi
 
-  if [[ ! -n "$end_date" ]]
-  then
-      if [[ "$OSTYPE" == "darwin"* ]]
+      if [[ ! -n "$end_date" ]]
       then
-          end_date=$(date -v-3d +%Y-%m-%d)
-      else
-          end_date=$(date -d "3 days ago" +%Y-%m-%d)
+          if [[ "$OSTYPE" == "darwin"* ]]
+          then
+              end_date=$(date -v-3d +%Y-%m-%d)
+          else
+              end_date=$(date -d "3 days ago" +%Y-%m-%d)
+          fi
+      fi
+  else
+      # start_date is set
+      if [[ ! -n "$end_date" ]]
+      then
+          if [[ "$OSTYPE" == "darwin"* ]]
+          then
+              #end_date set with start_date +30 days
+              end_date=$(date -v+30d -j -f "%Y-%m-%d" "$start_date" +%Y-%m-%d)
+          else
+              #end_date set with start_date +30 days
+              end_date=$(date -d "$start_date +30 days" +%Y-%m-%d)
+          fi
       fi
   fi
 
@@ -15957,7 +15970,7 @@ playground_ccloud_costs_command() {
       total_cost_local=$(awk '{sum += $2} END {print sum}' $file)
       echo ""
       echo "---------------------------------"
-      echo "TOTAL COST: 💰 $total_cost_local"
+      echo "TOTAL COST: 💰 \$$total_cost_local"
       echo "---------------------------------"
 
       while read -r line; do
