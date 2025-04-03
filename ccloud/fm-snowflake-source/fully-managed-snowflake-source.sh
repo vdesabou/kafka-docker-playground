@@ -46,13 +46,13 @@ fi
 bootstrap_ccloud_environment
 
 set +e
-playground topic delete --topic test_table
+playground topic delete --topic pg.$PLAYGROUND_DB.MYSCHEMA.TEST_TABLE
 set -e
 
 # https://<account_name>.<region_id>.snowflakecomputing.com:443
 SNOWFLAKE_URL="https://$SNOWFLAKE_ACCOUNT_NAME.snowflakecomputing.com"
 
-cd ../../ccloud/fm-snowflake-sink
+cd ../../ccloud/fm-snowflake-source
 # using v1 PBE-SHA1-RC4-128, see https://community.snowflake.com/s/article/Private-key-provided-is-invalid-or-not-supported-rsa-key-p8--data-isn-t-an-object-ID
 # Create encrypted Private key - keep this safe, do not share!
 docker run -u0 --rm -v $PWD:/tmp vulhub/openssl:1.0.1c bash -c "openssl genrsa 2048 | openssl pkcs8 -topk8 -inform PEM -v1 PBE-SHA1-RC4-128 -out /tmp/snowflake_key.p8 -passout pass:confluent && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
@@ -133,6 +133,13 @@ insert into TEST_TABLE (f1) values ('value2');
 insert into TEST_TABLE (f1) values ('value3');
 EOF
 
+timezone_result=$(docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
+SHOW PARAMETERS LIKE 'TIMEZONE';
+EOF
+)
+timezone=$(echo "$timezone_result" | grep "TIMEZONE" | awk '{print $4}')
+log "Extracted Timezone: $timezone"
+
 connector_name="SnowflakeSource_$USER"
 set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
@@ -148,7 +155,7 @@ playground connector create-or-update --connector $connector_name << EOF
   "kafka.api.secret": "$CLOUD_SECRET",
   "output.data.format": "AVRO",
   "table.include.list": "$PLAYGROUND_DB.MYSCHEMA.TEST_TABLE.*",
-  "db.timezone": "Europe/Paris",
+  "db.timezone": "$timezone",
   "mode": "timestamp",
   "timestamp.columns.mapping": "$PLAYGROUND_DB.MYSCHEMA.TEST_TABLE.*:[UPDATE_TS]",
   "_incrementing.column.mapping": "$PLAYGROUND_DB.MYSCHEMA.TEST_TABLE.*:[ID]",
@@ -165,7 +172,7 @@ wait_for_ccloud_connector_up $connector_name 180
 
 sleep 15
 
-log "Verifying topic pg.$$PLAYGROUND_DB.MYSCHEMA.TEST_TABLE"
+log "Verifying topic pg.$PLAYGROUND_DB.MYSCHEMA.TEST_TABLE"
 playground topic consume --topic pg.$PLAYGROUND_DB.MYSCHEMA.TEST_TABLE --min-expected-messages 3 --timeout 60
 
 
