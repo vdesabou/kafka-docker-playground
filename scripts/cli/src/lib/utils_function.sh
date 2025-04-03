@@ -383,12 +383,11 @@ function check_if_skip() {
   else
     read -p "Do you want to skip this command? (y/n) " reply
 
-    if [[ $reply != 'y' ]] 
-    then
-      eval "$1"
-    else
-      log "Skipping command..."
-    fi
+    case "$reply" in
+    y|Y ) log "Skipping command...";;
+    n|N ) eval "$1";;
+    * ) logwarn "invalid response <$reply>! Please enter y or n."; check_if_skip;;
+    esac
   fi
 }
 
