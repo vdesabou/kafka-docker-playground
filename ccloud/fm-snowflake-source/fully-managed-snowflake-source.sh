@@ -166,7 +166,7 @@ wait_for_ccloud_connector_up $connector_name 180
 sleep 15
 
 log "Verifying topic pg.$$PLAYGROUND_DB.MYSCHEMA.TEST_TABLE"
-playground topic consume --topic pg.$$PLAYGROUND_DB.MYSCHEMA.TEST_TABLE --min-expected-messages 3 --timeout 60
+playground topic consume --topic pg.$PLAYGROUND_DB.MYSCHEMA.TEST_TABLE --min-expected-messages 3 --timeout 60
 
 
 log "Do you want to delete the fully managed connector $connector_name ?"
