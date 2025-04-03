@@ -1911,7 +1911,7 @@ playground_ccloud_costs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--end-date END_DATE")"
-    printf "    🗓️ end date in format yyyy-mm-dd\n    \n    Default is 3 days ago\n"
+    printf "    🗓️ end date in format yyyy-mm-dd\n    \n      Default is 3 days ago\n"
     echo
 
     # :command.usage_fixed_flags
@@ -12760,23 +12760,6 @@ validate_date_format() {
     fi
   fi
 
-  if [[ "$OSTYPE" == "darwin"* ]]
-  then
-    # macOS: Check if the date is more than one year ago
-    if [[ $(date -j -f "%Y-%m-%d" "$1" +%s) -lt $(date -v-1y +%s) ]]
-    then
-      logerror "must be less than one year old"
-      return 1
-    fi
-  else
-    # Linux: Check if the date is more than one year ago
-    if [[ $(date -d "$1" +%s) -lt $(date -d "1 year ago" +%s) ]]
-    then
-      logerror "must be less than one year old"
-      return 1
-    fi
-  fi
-
   return 0
 }
 
@@ -15909,6 +15892,7 @@ playground_ccloud_costs_command() {
   # src/commands/ccloud-costs.sh
   start_date="${args[--start-date]}"
   end_date="${args[--end-date]}"
+  display_only_total_cost="${args[--display-only-total-cost]}"
 
   if [[ ! -n "$start_date" ]]
   then
@@ -15930,6 +15914,23 @@ playground_ccloud_costs_command() {
       fi
   else
       # start_date is set
+      if [[ "$OSTYPE" == "darwin"* ]]
+      then
+          # macOS: Check if the date is more than one year ago
+          if [[ $(date -j -f "%Y-%m-%d" "$start_date" +%s) -lt $(date -v-1y +%s) ]]
+          then
+              logerror "start_date must be less than one year old"
+              return 1
+          fi
+      else
+          # Linux: Check if the date is more than one year ago
+          if [[ $(date -d "$start_date" +%s) -lt $(date -d "1 year ago" +%s) ]]
+          then
+              logerror "start_date must be less than one year old"
+              return 1
+          fi
+      fi
+
       if [[ ! -n "$end_date" ]]
       then
           if [[ "$OSTYPE" == "darwin"* ]]
@@ -15953,7 +15954,10 @@ playground_ccloud_costs_command() {
 
   INPUT_FILE="$tmp_dir/out.json"
 
-  log "💰 Retrieve ccloud costs for a range from $start_date to $end_date "
+  if [[ ! -n "$display_only_total_cost" ]]
+  then
+      log "💰 Retrieve ccloud costs for a range from $start_date to $end_date "
+  fi
   confluent billing cost list --start-date "$start_date" --end-date "$end_date" --output json > $INPUT_FILE
   if [[ $? -ne 0 ]]
   then
@@ -15961,8 +15965,10 @@ playground_ccloud_costs_command() {
       cat "$INPUT_FILE"
       exit 1
   fi
-
-  log "⏳ costs retrieved successfully. processing results..."
+  if [[ ! -n "$display_only_total_cost" ]]
+  then
+      log "⏳ costs retrieved successfully. processing results..."
+  fi
 
   display_histogram() {
       local file=$1
@@ -16003,6 +16009,12 @@ playground_ccloud_costs_command() {
 
   # Calculate and display the total cost across all products
   total_cost=$(awk '{sum += $2} END {print sum}' $tmp_dir/product_costs.txt)
+
+  if [[ -n "$display_only_total_cost" ]]
+  then
+      echo "$total_cost"
+      exit 0
+  fi
   echo "---------------------------------"
   echo "TOTAL COST ACROSS ALL PRODUCTS: 💰 $total_cost"
   echo "---------------------------------"
@@ -30289,6 +30301,14 @@ playground_ccloud_costs_parse_requirements() {
           printf "%s\n" "--end-date requires an argument: --end-date END_DATE" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --display-only-total-cost)
+
+        # :flag.case_no_arg
+        args['--display-only-total-cost']=1
+        shift
         ;;
 
       -?*)

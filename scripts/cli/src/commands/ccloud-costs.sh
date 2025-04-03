@@ -1,5 +1,6 @@
 start_date="${args[--start-date]}"
 end_date="${args[--end-date]}"
+display_only_total_cost="${args[--display-only-total-cost]}"
 
 if [[ ! -n "$start_date" ]]
 then
@@ -21,6 +22,23 @@ then
     fi
 else
     # start_date is set
+    if [[ "$OSTYPE" == "darwin"* ]]
+    then
+        # macOS: Check if the date is more than one year ago
+        if [[ $(date -j -f "%Y-%m-%d" "$start_date" +%s) -lt $(date -v-1y +%s) ]]
+        then
+            logerror "start_date must be less than one year old"
+            return 1
+        fi
+    else
+        # Linux: Check if the date is more than one year ago
+        if [[ $(date -d "$start_date" +%s) -lt $(date -d "1 year ago" +%s) ]]
+        then
+            logerror "start_date must be less than one year old"
+            return 1
+        fi
+    fi
+
     if [[ ! -n "$end_date" ]]
     then
         if [[ "$OSTYPE" == "darwin"* ]]
@@ -44,7 +62,10 @@ fi
 
 INPUT_FILE="$tmp_dir/out.json"
 
-log "💰 Retrieve ccloud costs for a range from $start_date to $end_date "
+if [[ ! -n "$display_only_total_cost" ]]
+then
+    log "💰 Retrieve ccloud costs for a range from $start_date to $end_date "
+fi
 confluent billing cost list --start-date "$start_date" --end-date "$end_date" --output json > $INPUT_FILE
 if [[ $? -ne 0 ]]
 then
@@ -52,8 +73,10 @@ then
     cat "$INPUT_FILE"
     exit 1
 fi
-
-log "⏳ costs retrieved successfully. processing results..."
+if [[ ! -n "$display_only_total_cost" ]]
+then
+    log "⏳ costs retrieved successfully. processing results..."
+fi
 
 display_histogram() {
     local file=$1
@@ -94,6 +117,12 @@ awk '{sum[$1] += $2} END {for (product in sum) print product, sum[product]}' | s
 
 # Calculate and display the total cost across all products
 total_cost=$(awk '{sum += $2} END {print sum}' $tmp_dir/product_costs.txt)
+
+if [[ -n "$display_only_total_cost" ]]
+then
+    echo "$total_cost"
+    exit 0
+fi
 echo "---------------------------------"
 echo "TOTAL COST ACROSS ALL PRODUCTS: 💰 $total_cost"
 echo "---------------------------------"

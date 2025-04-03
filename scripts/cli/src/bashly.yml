@@ -878,7 +878,9 @@ commands:
       help: |- 
         🗓️ end date in format yyyy-mm-dd
 
-        Default is 3 days ago
+          Default is 3 days ago
+    - long: --display-only-total-cost
+      private: true
 
 - name: update-version
   group: Run

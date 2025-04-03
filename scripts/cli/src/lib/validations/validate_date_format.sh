@@ -22,23 +22,6 @@ validate_date_format() {
       return 1
     fi
   fi
-
-  if [[ "$OSTYPE" == "darwin"* ]]
-  then
-    # macOS: Check if the date is more than one year ago
-    if [[ $(date -j -f "%Y-%m-%d" "$1" +%s) -lt $(date -v-1y +%s) ]]
-    then
-      logerror "must be less than one year old"
-      return 1
-    fi
-  else
-    # Linux: Check if the date is more than one year ago
-    if [[ $(date -d "$1" +%s) -lt $(date -d "1 year ago" +%s) ]]
-    then
-      logerror "must be less than one year old"
-      return 1
-    fi
-  fi
-
+  
   return 0
 }

@@ -451,7 +451,13 @@ subcommands:
       description: | 
         🗓️ end date in format yyyy-mm-dd
         
-        Default is 3 days ago
+          Default is 3 days ago
+        
+    - names:
+      - --display-only-total-cost
+      argument: ""
+      description: | 
+        
         
     subcommands:
 

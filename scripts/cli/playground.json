@@ -335,7 +335,14 @@
             "--end-date"
           ],
           "argument": "END_DATE",
-          "description": "🗓️ end date in format yyyy-mm-dd\n\nDefault is 3 days ago\n"
+          "description": "🗓️ end date in format yyyy-mm-dd\n\n  Default is 3 days ago\n"
+        },
+        {
+          "names": [
+            "--display-only-total-cost"
+          ],
+          "argument": "",
+          "description": ""
         }
       ],
       "subcommands": null
