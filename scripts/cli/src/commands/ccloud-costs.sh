@@ -95,7 +95,11 @@ display_histogram() {
         # bar=$(printf '💰%.0s' $(seq 1 ${proportion%.*})) # Generate the bar based on the integer part of the proportion
         
         # calculate the percentage of cost
-        percentage=$(echo "scale=2; 100 * $cost / $total_cost_local" | bc)
+        if [[ "$total_cost_local" == "0" ]]; then
+            percentage=0
+        else
+            percentage=$(echo "scale=2; 100 * $cost / $total_cost_local" | bc)
+        fi
         inverse_percentage=$(echo "100 - $percentage" | bc)
 
         # create the cost bar
