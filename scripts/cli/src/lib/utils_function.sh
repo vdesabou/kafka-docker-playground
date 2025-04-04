@@ -1745,7 +1745,6 @@ function bootstrap_ccloud_environment () {
   fi
 
   playground ccloud-costs-history > /tmp/ccloud-costs-history.txt &
-  playground ccloud-costs-history --detailed > /tmp/ccloud-costs-history-detailed.txt &
 
   suggest_use_previous_example_ccloud=1
   test_file=$(playground state get run.test_file)

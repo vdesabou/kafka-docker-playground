@@ -1587,24 +1587,9 @@ else
 fi
 check_for_ec2_instance_running
 
-if [ -z "$GITHUB_RUN_NUMBER" ]
-then
-  if [[ $test_file == *"ccloud"* ]]
-  then
-    if [ -f /tmp/ccloud-costs-history.txt ]
-    then
-      log "📅💰 monthly ccloud costs"
-      cat /tmp/ccloud-costs-history.txt
-    fi
-    if [ -f /tmp/ccloud-costs-history-detailed.txt ]
-    then
-      log "👀 if you want more details, open /tmp/ccloud-costs-history-detailed.txt file"
-    fi
-  fi
-fi
-
 if [ ! -z "$ENABLE_JMX_GRAFANA" ]
 then
+  echo ""
   if [[ $test_file == *"ccloud"* ]]
   then
     log "🛡️ Prometheus is reachable at http://127.0.0.1:9090"
@@ -1649,5 +1634,27 @@ then
         fi
       fi
     fi
+  fi
+fi
+
+if [ -z "$GITHUB_RUN_NUMBER" ]
+then
+  if [[ $test_file == *"ccloud"* ]]
+  then
+    echo ""
+    # wait that process with "playground ccloud-costs-history" is finished
+    set +e
+    while pgrep -f "playground ccloud-costs-history" > /dev/null
+    do
+      log "⌛ wait for monthly ccloud costs..."
+      sleep 5
+    done
+    set -e
+    if [ -f /tmp/ccloud-costs-history.txt ]
+    then
+      log "📅💰 monthly ccloud costs"
+      cat /tmp/ccloud-costs-history.txt
+    fi
+    log "👀 if you want more details, run <playground ccloud-costs-history --detailed>"
   fi
 fi

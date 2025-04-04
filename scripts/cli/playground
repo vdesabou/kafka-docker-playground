@@ -10253,7 +10253,6 @@ function bootstrap_ccloud_environment () {
   fi
 
   playground ccloud-costs-history > /tmp/ccloud-costs-history.txt &
-  playground ccloud-costs-history --detailed > /tmp/ccloud-costs-history-detailed.txt &
 
   suggest_use_previous_example_ccloud=1
   test_file=$(playground state get run.test_file)
@@ -14363,12 +14362,6 @@ playground_ccloud_costs_history_command() {
 
   current_date="$start_date"
 
-  maybe_display_only_total_cost="--display-only-total-cost"
-  if [[ -n "$detailed" ]]
-  then
-      maybe_display_only_total_cost=""
-  fi
-
   # Function to display histograms
   display_histogram() {
       local label=$1
@@ -14396,14 +14389,25 @@ playground_ccloud_costs_history_command() {
       # Break the loop if end_date is in the future
       if [[ "$end_date" > "$(date +%Y-%m-%d)" ]]; then
           end_date=$(date +%Y-%m-%d) # Set end_date to today
-          cost=$(playground ccloud-costs --start-date "$current_date" --end-date "$end_date" $maybe_display_only_total_cost)
+          cost=$(playground ccloud-costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost)
           display_histogram "$(readable_date $current_date) to $(readable_date $end_date)" "$cost"
+          if [[ -n "$detailed" ]]
+          then
+              playground ccloud-costs --start-date "$current_date" --end-date "$end_date"
+
+          fi
           break
       fi
 
       # Call playground ccloud-costs for the current range
-      cost=$(playground ccloud-costs --start-date "$current_date" --end-date "$end_date" $maybe_display_only_total_cost)
+      cost=$(playground ccloud-costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost)
       display_histogram "$(readable_date $current_date) to $(readable_date $end_date)" "$cost"
+
+      if [[ -n "$detailed" ]]
+      then
+          playground ccloud-costs --start-date "$current_date" --end-date "$end_date"
+
+      fi
 
       # Move to the next range
       current_date="$end_date"
@@ -16013,24 +16017,9 @@ playground_run_command() {
   fi
   check_for_ec2_instance_running
 
-  if [ -z "$GITHUB_RUN_NUMBER" ]
-  then
-    if [[ $test_file == *"ccloud"* ]]
-    then
-      if [ -f /tmp/ccloud-costs-history.txt ]
-      then
-        log "📅💰 monthly ccloud costs"
-        cat /tmp/ccloud-costs-history.txt
-      fi
-      if [ -f /tmp/ccloud-costs-history-detailed.txt ]
-      then
-        log "👀 if you want more details, open /tmp/ccloud-costs-history-detailed.txt file"
-      fi
-    fi
-  fi
-
   if [ ! -z "$ENABLE_JMX_GRAFANA" ]
   then
+    echo ""
     if [[ $test_file == *"ccloud"* ]]
     then
       log "🛡️ Prometheus is reachable at http://127.0.0.1:9090"
@@ -16075,6 +16064,28 @@ playground_run_command() {
           fi
         fi
       fi
+    fi
+  fi
+
+  if [ -z "$GITHUB_RUN_NUMBER" ]
+  then
+    if [[ $test_file == *"ccloud"* ]]
+    then
+      echo ""
+      # wait that process with "playground ccloud-costs-history" is finished
+      set +e
+      while pgrep -f "playground ccloud-costs-history" > /dev/null
+      do
+        log "⌛ wait for monthly ccloud costs..."
+        sleep 5
+      done
+      set -e
+      if [ -f /tmp/ccloud-costs-history.txt ]
+      then
+        log "📅💰 monthly ccloud costs"
+        cat /tmp/ccloud-costs-history.txt
+      fi
+      log "👀 if you want more details, run <playground ccloud-costs-history --detailed>"
     fi
   fi
 }

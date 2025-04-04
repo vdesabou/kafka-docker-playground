@@ -17,12 +17,6 @@ fi
 
 current_date="$start_date"
 
-maybe_display_only_total_cost="--display-only-total-cost"
-if [[ -n "$detailed" ]]
-then
-    maybe_display_only_total_cost=""
-fi
-
 # Function to display histograms
 display_histogram() {
     local label=$1
@@ -50,14 +44,23 @@ while true; do
     # Break the loop if end_date is in the future
     if [[ "$end_date" > "$(date +%Y-%m-%d)" ]]; then
         end_date=$(date +%Y-%m-%d) # Set end_date to today
-        cost=$(playground ccloud-costs --start-date "$current_date" --end-date "$end_date" $maybe_display_only_total_cost)
+        cost=$(playground ccloud-costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost)
         display_histogram "$(readable_date $current_date) to $(readable_date $end_date)" "$cost"
+        if [[ -n "$detailed" ]]
+        then
+            playground ccloud-costs --start-date "$current_date" --end-date "$end_date" 
+        fi
         break
     fi
 
     # Call playground ccloud-costs for the current range
-    cost=$(playground ccloud-costs --start-date "$current_date" --end-date "$end_date" $maybe_display_only_total_cost)
+    cost=$(playground ccloud-costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost)
     display_histogram "$(readable_date $current_date) to $(readable_date $end_date)" "$cost"
+
+    if [[ -n "$detailed" ]]
+    then
+        playground ccloud-costs --start-date "$current_date" --end-date "$end_date" 
+    fi
 
     # Move to the next range
     current_date="$end_date"
