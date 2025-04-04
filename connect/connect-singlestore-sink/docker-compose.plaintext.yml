@@ -2,7 +2,7 @@
 services:
 
   singlestore:
-    image:  memsql/cluster-in-a-box
+    image:  ghcr.io/singlestore-labs/singlestoredb-dev
     hostname: singlestore
     container_name: singlestore
     environment:
