@@ -28,7 +28,7 @@ display_histogram() {
     local label=$1
     local value=$2
     local bar=$(printf '💰%.0s' $(seq 1 $(echo "$value / 10" | bc))) # Each 💰 represents $10
-    printf "%-20s | %s (%.2f)\n" "$label" "$bar" "$value"
+    printf "%-20s | %s $%.2f\n" "$label" "$bar" "$value"
 }
 
 readable_date () {
