@@ -133,6 +133,7 @@ playground connector create-or-update --connector $connector_name << EOF
     "confluent.connector.type": "CUSTOM",
     "confluent.custom.plugin.id": "$plugin_id",
     "confluent.custom.connection.endpoints": "s3.$AWS_REGION.amazonaws.com:443:TCP",
+    "connector.class": "io.confluent.connect.s3.S3SinkConnector",
 
     "kafka.api.key": "$CLOUD_KEY",
     "kafka.api.secret": "$CLOUD_SECRET",

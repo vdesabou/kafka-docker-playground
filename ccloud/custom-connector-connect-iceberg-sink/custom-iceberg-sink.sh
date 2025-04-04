@@ -145,6 +145,7 @@ playground connector create-or-update --connector $connector_name << EOF
   "confluent.connector.type": "CUSTOM",
   "confluent.custom.plugin.id": "$plugin_id",
   "confluent.custom.connection.endpoints": "$NGROK_HOSTNAME:$NGROK_PORT:TCP;$NGROK_HOSTNAME2:$NGROK_PORT2:TCP",
+  "connector.class": "io.tabular.iceberg.connect.IcebergSinkConnector",
 
   "kafka.api.key": "$CLOUD_KEY",
   "kafka.api.secret": "$CLOUD_SECRET",
