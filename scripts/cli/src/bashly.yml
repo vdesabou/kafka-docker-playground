@@ -385,6 +385,28 @@ commands:
         examples:
         - playground config open-ccloud-connector-in-browser browser Safari
 
+  - name: open-grafana-in-browser
+    help: |
+      when running an example with --enable-jmx-grafana flag, it opens grafana in browser
+    commands:
+      - name: automatically
+        help: automatically open grafana in browser
+        args:
+        - name: automatically
+          required: false
+          default: "true"
+        examples:
+        - playground config open-grafana-in-browser automatically false
+        - playground config open-grafana-in-browser automatically true
+      - name: browser
+        help: browser to use
+        args:
+        - name: browser
+          required: false
+          default: ""
+        examples:
+        - playground config open-grafana-in-browser browser Safari
+
   - name: container-kill-all-before-run
     help: |
       when running an example, always call playground container kill-all first. If not set, it will call playground stop instead.

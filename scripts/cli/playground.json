@@ -50,6 +50,12 @@
           "options": []
         },
         {
+          "name": "open-grafana-in-browser",
+          "description": "when running an example with --enable-jmx-grafana flag, it opens grafana in browser\n  \n",
+          "usage": "playground config open-grafana-in-browser COMMAND",
+          "options": []
+        },
+        {
           "name": "container-kill-all-before-run",
           "description": "when running an example, always call playground container kill-all first. If not set, it will call playground stop instead.\n  \n",
           "usage": "playground config container-kill-all-before-run [ENABLED]",
@@ -79,6 +85,26 @@
           "name": "browser",
           "description": "browser to use\n",
           "usage": "playground config open-ccloud-connector-in-browser browser [BROWSER]",
+          "options": []
+        }
+      ]
+    },
+    {
+      "name": "open-grafana-in-browser",
+      "description": "when running an example with --enable-jmx-grafana flag, it opens grafana in browser\n",
+      "usage": "playground config open-grafana-in-browser COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "automatically",
+          "description": "automatically open grafana in browser\n",
+          "usage": "playground config open-grafana-in-browser automatically [AUTOMATICALLY]",
+          "options": []
+        },
+        {
+          "name": "browser",
+          "description": "browser to use\n",
+          "usage": "playground config open-grafana-in-browser browser [BROWSER]",
           "options": []
         }
       ]

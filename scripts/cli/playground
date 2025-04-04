@@ -1156,6 +1156,7 @@ playground_config_usage() {
   printf "  %s   📂 list of folders where to search for zip or jar\n" "$(green "folder_zip_or_jar")               "
   printf "  %s   copy to clipboard connector config (only working on MacOS)\n" "$(green "clipboard")                       "
   printf "  %s   when running a fully managed connector example, it opens the connector in browser\n" "$(green "open-ccloud-connector-in-browser")"
+  printf "  %s   when running an example with --enable-jmx-grafana flag, it opens grafana in browser\n" "$(green "open-grafana-in-browser")         "
   printf "  %s   when running an example, always call playground container kill-all first. If not set, it will call playground stop instead.\n" "$(green "container-kill-all-before-run")   "
   printf "  %s   when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.\n" "$(green "check-repo-version")              "
   echo
@@ -1476,6 +1477,108 @@ playground_config_open_ccloud_connector_in_browser_browser_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground config open-ccloud-connector-in-browser browser Safari\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_config_open_grafana_in_browser_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground config open-grafana-in-browser\n\n"
+    printf "  when running an example with --enable-jmx-grafana flag, it opens grafana in\n  browser\n\n"
+  else
+    printf "playground config open-grafana-in-browser - when running an example with --enable-jmx-grafana flag, it opens grafana in browser\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground config open-grafana-in-browser COMMAND\n"
+  printf "  playground config open-grafana-in-browser [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   automatically open grafana in browser\n" "$(green "automatically")"
+  printf "  %s   browser to use\n" "$(green "browser")      "
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_config_open_grafana_in_browser_automatically_usage() {
+  printf "playground config open-grafana-in-browser automatically - automatically open grafana in browser\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground config open-grafana-in-browser automatically [AUTOMATICALLY]\n"
+  printf "  playground config open-grafana-in-browser automatically --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "AUTOMATICALLY")"
+    printf "\n"
+    printf "    %s\n" "Default: true"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground config open-grafana-in-browser automatically false\n"
+    printf "  playground config open-grafana-in-browser automatically true\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_config_open_grafana_in_browser_browser_usage() {
+  printf "playground config open-grafana-in-browser browser - browser to use\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground config open-grafana-in-browser browser [BROWSER]\n"
+  printf "  playground config open-grafana-in-browser browser --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "BROWSER")"
+    printf "\n"
+    printf "    %s\n" "Default: "
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground config open-grafana-in-browser browser Safari\n"
     echo
 
   fi
@@ -14051,6 +14154,22 @@ playground_config_open_ccloud_connector_in_browser_browser_command() {
 }
 
 # :command.function
+playground_config_open_grafana_in_browser_automatically_command() {
+
+  # src/commands/config/open-grafana-in-browser/automatically.sh
+  log "📋 configuring automatically with ${args[automatically]}"
+  playground config set open-grafana-in-browser.automatically "${args[automatically]}"
+}
+
+# :command.function
+playground_config_open_grafana_in_browser_browser_command() {
+
+  # src/commands/config/open-grafana-in-browser/browser.sh
+  log "🔖 configuring browser for open-grafana-in-browser with ${args[browser]}"
+  playground config set open-grafana-in-browser.browser "${args[browser]}"
+}
+
+# :command.function
 playground_config_container_kill_all_before_run_command() {
 
   # src/commands/config/container-kill-all-before-run.sh
@@ -15895,9 +16014,51 @@ playground_run_command() {
 
   if [ ! -z "$ENABLE_JMX_GRAFANA" ]
   then
-    log "🛡️ Prometheus is reachable at http://127.0.0.1:9090"
-    log "📛 Pyroscope is reachable at http://127.0.0.1:4040"
-    log "📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/password) or JMX metrics are available locally on those ports:"
+    if [[ $test_file == *"ccloud"* ]]
+    then
+      log "🛡️ Prometheus is reachable at http://127.0.0.1:9090"
+      log "📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/password)"
+    else
+      log "📛 Pyroscope is reachable at http://127.0.0.1:4040"
+      log "🛡️ Prometheus is reachable at http://127.0.0.1:9090"
+      log "📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/password) or JMX metrics are available locally on those ports:"
+    fi
+
+    if [ -z "$GITHUB_RUN_NUMBER" ]
+    then
+      automatically=$(playground config get open-grafana-in-browser.automatically)
+      if [ "$automatically" == "" ]
+      then
+          playground config set open-grafana-in-browser.automatically true
+      fi
+
+      browser=$(playground config get open-grafana-in-browser.browser)
+      if [ "$browser" == "" ]
+      then
+          playground config set open-grafana-in-browser.browser ""
+      fi
+
+      if [ "$automatically" == "true" ] || [ "$automatically" == "" ]
+      then
+
+        if [[ $(type -f open 2>&1) =~ "not found" ]]
+        then
+          log "🔗 Cannot open browser, use url:"
+          echo "http://127.0.0.1:3000"
+        else
+          if [ "$browser" != "" ]
+          then
+            log "🤖 automatically (disable with 'playground config open-grafana-in-browser automatically false') open grafana in browser $browser (you can change browser with 'playground config open-grafana-in-browser browser <browser>')"
+            log "🤖 Open grafana with browser $browser (login/password is admin/password)"
+            open -a "$browser" "http://127.0.0.1:3000"
+          else
+            log "🤖 automatically (disable with 'playground config open-grafana-in-browser automatically false') open grafana in default browser (you can set browser with 'playground config open-grafana-in-browser browser <browser>')"
+            log "🤖 Open grafana (login/password is admin/password)"
+            open "http://127.0.0.1:3000"
+          fi
+        fi
+      fi
+    fi
   fi
 }
 
@@ -28842,6 +29003,13 @@ playground_config_parse_requirements() {
       shift $#
       ;;
 
+    open-grafana-in-browser)
+      action="open-grafana-in-browser"
+      shift
+      playground_config_open_grafana_in_browser_parse_requirements "$@"
+      shift $#
+      ;;
+
     container-kill-all-before-run)
       action="container-kill-all-before-run"
       shift
@@ -29426,6 +29594,189 @@ playground_config_open_ccloud_connector_in_browser_browser_parse_requirements() 
 
   # :command.command_filter
   action="config open-ccloud-connector-in-browser browser"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['browser']+x} ]]; then
+          args['browser']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['browser']:-} ]] || args['browser']=""
+
+}
+
+# :command.parse_requirements
+playground_config_open_grafana_in_browser_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_config_open_grafana_in_browser_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    automatically)
+      action="automatically"
+      shift
+      playground_config_open_grafana_in_browser_automatically_parse_requirements "$@"
+      shift $#
+      ;;
+
+    browser)
+      action="browser"
+      shift
+      playground_config_open_grafana_in_browser_browser_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_config_open_grafana_in_browser_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_config_open_grafana_in_browser_automatically_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_config_open_grafana_in_browser_automatically_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="config open-grafana-in-browser automatically"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['automatically']+x} ]]; then
+          args['automatically']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['automatically']:-} ]] || args['automatically']="true"
+
+}
+
+# :command.parse_requirements
+playground_config_open_grafana_in_browser_browser_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_config_open_grafana_in_browser_browser_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="config open-grafana-in-browser browser"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -41191,6 +41542,9 @@ run() {
     "config open-ccloud-connector-in-browser") playground_config_open_ccloud_connector_in_browser_command ;;
     "config open-ccloud-connector-in-browser automatically") playground_config_open_ccloud_connector_in_browser_automatically_command ;;
     "config open-ccloud-connector-in-browser browser") playground_config_open_ccloud_connector_in_browser_browser_command ;;
+    "config open-grafana-in-browser") playground_config_open_grafana_in_browser_command ;;
+    "config open-grafana-in-browser automatically") playground_config_open_grafana_in_browser_automatically_command ;;
+    "config open-grafana-in-browser browser") playground_config_open_grafana_in_browser_browser_command ;;
     "config container-kill-all-before-run") playground_config_container_kill_all_before_run_command ;;
     "config check-repo-version") playground_config_check_repo_version_command ;;
     "ccloud-costs") playground_ccloud_costs_command ;;
