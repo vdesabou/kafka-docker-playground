@@ -41,16 +41,8 @@ playground connector create-or-update --connector datadog-logs-sink  << EOF
      "tasks.max": "1",
      "key.converter":"org.apache.kafka.connect.storage.StringConverter",
      "value.converter":"org.apache.kafka.connect.storage.StringConverter",
-     "confluent.topic.bootstrap.servers": "broker:9092",
-     "confluent.topic.replication.factor":1,
      "datadog.api_key": "$DD_API_KEY",
      "datadog.site": "$DD_SITE",
-     "reporter.bootstrap.servers": "broker:9092",
-     "reporter.error.topic.name": "error-responses",
-     "reporter.error.topic.replication.factor": 1,
-     "reporter.result.topic.name": "success-responses",
-     "reporter.result.topic.replication.factor": 1,
-     "behavior.on.error": "fail",
      "topics": "datadog-logs-topic"
 }
 EOF
