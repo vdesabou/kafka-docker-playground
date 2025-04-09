@@ -62,9 +62,9 @@
           "options": []
         },
         {
-          "name": "check-repo-version",
+          "name": "check-and-update-repo-version",
           "description": "when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.\n  \n",
-          "usage": "playground config check-repo-version [ENABLED]",
+          "usage": "playground config check-and-update-repo-version [ENABLED]",
           "options": []
         }
       ]

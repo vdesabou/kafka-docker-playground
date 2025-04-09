@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 
 check_docker_compose_version
 check_bash_version
-check_playground_version
+check_and_update_playground_version
 bootstrap_ccloud_environment
 
 # generate data file for externalizing secrets

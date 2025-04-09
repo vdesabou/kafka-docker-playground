@@ -453,11 +453,11 @@ function check_bash_version() {
   fi
 }
 
-function check_playground_version() {
-  check_repo_version=$(playground config get check-repo-version)
+function check_and_update_playground_version() {
+  check_repo_version=$(playground config get check-and-update-repo-version)
   if [ "$check_repo_version" == "" ]
   then
-      playground config set check-repo-version true
+      playground config set check-and-update-repo-version true
   fi
 
   if [ "$check_repo_version" == "true" ] || [ "$check_repo_version" == "" ]
@@ -481,7 +481,7 @@ function check_playground_version() {
 
     if [ $difference -gt $X ]
     then
-        logwarn "🥶 The current repo version is older than $X days ($difference days), now trying to refresh your version using git pull (disable with 'playground config check-repo-version false')"
+        logwarn "🥶 The current repo version is older than $X days ($difference days), now trying to refresh your version using git pull (disable with 'playground config check-and-update-repo-version false')"
         set +e
         git pull
         if [ $? -ne 0 ]

@@ -9,7 +9,7 @@ verify_docker_and_memory
 
 check_docker_compose_version
 check_bash_version
-check_playground_version
+check_and_update_playground_version
 
 playground tools certs-create --output-folder "${PWD}/../../environment/sasl-ssl/security"
 

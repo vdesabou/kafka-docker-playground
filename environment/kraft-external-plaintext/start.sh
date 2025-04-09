@@ -14,7 +14,7 @@ verify_docker_and_memory
 
 check_docker_compose_version
 check_bash_version
-check_playground_version
+check_and_update_playground_version
 nb_connect_services=0
 ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
 DOCKER_COMPOSE_FILE_OVERRIDE=$1

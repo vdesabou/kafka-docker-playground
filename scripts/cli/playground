@@ -1158,7 +1158,7 @@ playground_config_usage() {
   printf "  %s   when running a fully managed connector example, it opens the connector in browser\n" "$(green "open-ccloud-connector-in-browser")"
   printf "  %s   when running an example with --enable-jmx-grafana flag, it opens grafana in browser\n" "$(green "open-grafana-in-browser")         "
   printf "  %s   when running an example, always call playground container kill-all first. If not set, it will call playground stop instead.\n" "$(green "container-kill-all-before-run")   "
-  printf "  %s   when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.\n" "$(green "check-repo-version")              "
+  printf "  %s   when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.\n" "$(green "check-and-update-repo-version")   "
   echo
 
   # :command.long_usage
@@ -1626,17 +1626,17 @@ playground_config_container_kill_all_before_run_usage() {
 }
 
 # :command.usage
-playground_config_check_repo_version_usage() {
+playground_config_check_and_update_repo_version_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground config check-repo-version\n\n"
+    printf "playground config check-and-update-repo-version\n\n"
     printf "  when running an example, always check if repo version is older than 3 days, if\n  disabled, it will skip this check.\n\n"
   else
-    printf "playground config check-repo-version - when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.\n\n"
+    printf "playground config check-and-update-repo-version - when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground config check-repo-version [ENABLED]\n"
-  printf "  playground config check-repo-version --help | -h\n"
+  printf "  playground config check-and-update-repo-version [ENABLED]\n"
+  printf "  playground config check-and-update-repo-version --help | -h\n"
   echo
 
   # :command.long_usage
@@ -1659,8 +1659,8 @@ playground_config_check_repo_version_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground config check-repo-version false\n"
-    printf "  playground config check-repo-version true\n"
+    printf "  playground config check-and-update-repo-version false\n"
+    printf "  playground config check-and-update-repo-version true\n"
     echo
 
   fi
@@ -8963,11 +8963,11 @@ function check_bash_version() {
   fi
 }
 
-function check_playground_version() {
-  check_repo_version=$(playground config get check-repo-version)
+function check_and_update_playground_version() {
+  check_repo_version=$(playground config get check-and-update-repo-version)
   if [ "$check_repo_version" == "" ]
   then
-      playground config set check-repo-version true
+      playground config set check-and-update-repo-version true
   fi
 
   if [ "$check_repo_version" == "true" ] || [ "$check_repo_version" == "" ]
@@ -8991,7 +8991,7 @@ function check_playground_version() {
 
     if [ $difference -gt $X ]
     then
-        logwarn "🥶 The current repo version is older than $X days ($difference days), now trying to refresh your version using git pull (disable with 'playground config check-repo-version false')"
+        logwarn "🥶 The current repo version is older than $X days ($difference days), now trying to refresh your version using git pull (disable with 'playground config check-and-update-repo-version false')"
         set +e
         git pull
         if [ $? -ne 0 ]
@@ -14186,11 +14186,11 @@ playground_config_container_kill_all_before_run_command() {
 }
 
 # :command.function
-playground_config_check_repo_version_command() {
+playground_config_check_and_update_repo_version_command() {
 
-  # src/commands/config/check-repo-version.sh
-  log "📋 configuring check-repo-version with ${args[enabled]}"
-  playground config set check-repo-version "${args[enabled]}"
+  # src/commands/config/check-and-update-repo-version.sh
+  log "📋 configuring check-and-update-repo-version with ${args[enabled]}"
+  playground config set check-and-update-repo-version "${args[enabled]}"
 }
 
 # :command.function
@@ -29054,10 +29054,10 @@ playground_config_parse_requirements() {
       shift $#
       ;;
 
-    check-repo-version)
-      action="check-repo-version"
+    check-and-update-repo-version)
+      action="check-and-update-repo-version"
       shift
-      playground_config_check_repo_version_parse_requirements "$@"
+      playground_config_check_and_update_repo_version_parse_requirements "$@"
       shift $#
       ;;
 
@@ -29902,14 +29902,14 @@ playground_config_container_kill_all_before_run_parse_requirements() {
 }
 
 # :command.parse_requirements
-playground_config_check_repo_version_parse_requirements() {
+playground_config_check_and_update_repo_version_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
       --help | -h)
         long_usage=yes
-        playground_config_check_repo_version_usage
+        playground_config_check_and_update_repo_version_usage
         exit
         ;;
 
@@ -29921,7 +29921,7 @@ playground_config_check_repo_version_parse_requirements() {
   done
 
   # :command.command_filter
-  action="config check-repo-version"
+  action="config check-and-update-repo-version"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -41583,7 +41583,7 @@ run() {
     "config open-grafana-in-browser automatically") playground_config_open_grafana_in_browser_automatically_command ;;
     "config open-grafana-in-browser browser") playground_config_open_grafana_in_browser_browser_command ;;
     "config container-kill-all-before-run") playground_config_container_kill_all_before_run_command ;;
-    "config check-repo-version") playground_config_check_repo_version_command ;;
+    "config check-and-update-repo-version") playground_config_check_and_update_repo_version_command ;;
     "ccloud-costs") playground_ccloud_costs_command ;;
     "ccloud-costs-history") playground_ccloud_costs_history_command ;;
     "run") playground_run_command ;;

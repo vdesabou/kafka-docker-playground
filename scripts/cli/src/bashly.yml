@@ -418,7 +418,7 @@ commands:
     - playground config container-kill-all-before-run false
     - playground config container-kill-all-before-run true
 
-  - name: check-repo-version
+  - name: check-and-update-repo-version
     help: |
       when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.
     args:
@@ -426,8 +426,8 @@ commands:
       required: false
       default: "true"
     examples:
-    - playground config check-repo-version false
-    - playground config check-repo-version true
+    - playground config check-and-update-repo-version false
+    - playground config check-and-update-repo-version true
 
 - name: ccloud-costs
   dependencies:
