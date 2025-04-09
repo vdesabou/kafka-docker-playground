@@ -481,8 +481,17 @@ function check_playground_version() {
 
     if [ $difference -gt $X ]
     then
-        logwarn "🥶 The current repo version is older than $X days ($difference days), please refresh your version using git pull ! (disable with 'playground config check-repo-version false')"
-        check_if_continue
+        logwarn "🥶 The current repo version is older than $X days ($difference days), now trying to refresh your version using git pull (disable with 'playground config check-repo-version false')"
+        set +e
+        git pull
+        if [ $? -ne 0 ]
+        then
+          logerror "❌ Error while pulling the latest version of the repo. Please check your git configuration/error message, do you still want to continue using outdated version ?"
+          check_if_continue
+        else
+          log "🔄 The repo version is now up to date, calling <playground re-run> to restart your example now."
+          playground re-run
+        fi
     fi
     set -e
   fi
