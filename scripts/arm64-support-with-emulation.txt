@@ -29,7 +29,7 @@ connect/connect-tibco-source
 connect/connect-jms-weblogic-sink
 connect/connect-jms-weblogic-source
 connect/connect-weblogic-source
-connect/connect-omnisci-sink
+connect/connect-heavy-ai-sink
 connect/connect-sftp-sink
 connect/connect-sftp-source
 connect/connect-snmp-source

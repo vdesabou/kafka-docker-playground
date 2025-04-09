@@ -35,7 +35,7 @@ playground topic produce -t orders --nb-messages 3 << 'EOF'
 EOF
 
 
-log "Creating OmniSci sink connector"
+log "Creating HEAVY-AI (Formerly OmniSci) sink connector"
 playground connector create-or-update --connector omnisci-sink  << EOF
 {
      "connector.class": "io.confluent.connect.omnisci.OmnisciSinkConnector",
