@@ -1913,6 +1913,7 @@ function bootstrap_ccloud_environment () {
     export WARMUP_TIME=15
     export QUIET=true
 
+    log "💡 if you notice that the playground is using unexpected ccloud details, use <playground cleanup-cloud-details> to remove all caching and re-launch the example"
     check_if_continue
   else
     #
@@ -1935,6 +1936,8 @@ function bootstrap_ccloud_environment () {
     log "🌤  CLUSTER_CLOUD is set with $CLUSTER_CLOUD"
     log "🗺  CLUSTER_REGION is set with $CLUSTER_REGION"
 
+    log "💡 if you notice that the playground is using unexpected ccloud details, use <playground cleanup-cloud-details> to remove all caching and re-launch the example"
+    
     for row in $(confluent kafka cluster list --output json | jq -r '.[] | @base64'); do
         _jq() {
         echo ${row} | base64 -d | jq -r ${1}
