@@ -1645,3 +1645,43 @@ function open_file_with_editor() {
     exit 1
   fi
 }
+
+function arm64_support() {
+
+  test_file=$(playground state get run.test_file)
+
+  if [ ! -f $test_file ]
+  then 
+    return
+  fi
+
+  set +e
+  if [ "$(uname -m)" = "arm64" ]
+  then
+    base_folder=$(basename $(dirname $(dirname $test_file)))
+    base_test=$(basename $(dirname $test_file))
+    if [ "$base_folder" == "reproduction-models" ]
+    then
+      base_test=${base_test#*-}
+    fi
+
+    grep "${base_test}" ${root_folder}/scripts/arm64-support-none.txt > /dev/null
+    if [ $? = 0 ]
+    then
+      echo "❌🖥️ this example is not working with ARM64 !"
+      echo "❌🖥️ it is highly recommended to use 'playground ec2 command' to run the example on ubuntu ec2 instance"
+      echo "❌🖥️ you can also use gitpod"
+      return
+    fi
+
+    grep "${base_test}" ${root_folder}/scripts/arm64-support-with-emulation.txt > /dev/null
+    if [ $? = 0 ]
+    then
+        echo "☑️🖥️ this example is working with ARM64 but requires emulation"
+        return
+    fi
+
+    echo "✅🖥️ this example should work natively with ARM64"
+  fi
+  set -e
+}

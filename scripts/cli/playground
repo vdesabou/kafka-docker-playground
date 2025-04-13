@@ -8315,6 +8315,47 @@ function open_file_with_editor() {
   fi
 }
 
+function arm64_support() {
+
+  test_file=$(playground state get run.test_file)
+
+  if [ ! -f $test_file ]
+  then
+
+    return
+  fi
+
+  set +e
+  if [ "$(uname -m)" = "arm64" ]
+  then
+    base_folder=$(basename $(dirname $(dirname $test_file)))
+    base_test=$(basename $(dirname $test_file))
+    if [ "$base_folder" == "reproduction-models" ]
+    then
+      base_test=${base_test#*-}
+    fi
+
+    grep "${base_test}" ${root_folder}/scripts/arm64-support-none.txt > /dev/null
+    if [ $? = 0 ]
+    then
+      echo "❌🖥️ this example is not working with ARM64 !"
+      echo "❌🖥️ it is highly recommended to use 'playground ec2 command' to run the example on ubuntu ec2 instance"
+      echo "❌🖥️ you can also use gitpod"
+      return
+    fi
+
+    grep "${base_test}" ${root_folder}/scripts/arm64-support-with-emulation.txt > /dev/null
+    if [ $? = 0 ]
+    then
+        echo "☑️🖥️ this example is working with ARM64 but requires emulation"
+        return
+    fi
+
+    echo "✅🖥️ this example should work natively with ARM64"
+  fi
+  set -e
+}
+
 # src/lib/colors.sh
 print_in_color() {
   local color="$1"
@@ -10424,6 +10465,7 @@ function bootstrap_ccloud_environment () {
     export WARMUP_TIME=15
     export QUIET=true
 
+    log "💡 if you notice that the playground is using unexpected ccloud details, use <playground cleanup-cloud-details> to remove all caching and re-launch the example"
     check_if_continue
   else
     #
@@ -10445,6 +10487,8 @@ function bootstrap_ccloud_environment () {
     log "🎰 CLUSTER_NAME is set with $CLUSTER_NAME"
     log "🌤  CLUSTER_CLOUD is set with $CLUSTER_CLOUD"
     log "🗺  CLUSTER_REGION is set with $CLUSTER_REGION"
+
+    log "💡 if you notice that the playground is using unexpected ccloud details, use <playground cleanup-cloud-details> to remove all caching and re-launch the example"
 
     for row in $(confluent kafka cluster list --output json | jq -r '.[] | @base64'); do
         _jq() {
@@ -15380,7 +15424,14 @@ playground_run_command() {
       IFS=$'\n' flag_string="${array_flag_list[*]}"
       IFS=$oldifs
 
-      preview="${ccloud_preview}\n${missing_env}\n🚀 number of examples ran so far: $(get_cli_metric nb_runs)\n\n⛳ flag list:\n$flag_string\n"
+      arm64_support=$(arm64_support)
+
+      if [[ "$arm64_support" == *"❌"* ]]
+      then
+        unset 'options[0]'
+        options[1]="❌🖥️ this example is not working with ARM64 !"
+      fi
+      preview="${ccloud_preview}\n${missing_env}\n${arm64_support}\n🚀 number of examples ran so far: $(get_cli_metric nb_runs)\n\n⛳ flag list:\n$flag_string\n"
       res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🚀" --header="select option(s) for $example (use tab to select more than one)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"$preview\"")
 
       if [[ $res == *"$MENU_LETS_GO"* ]]

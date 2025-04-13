@@ -944,7 +944,14 @@ then
     IFS=$'\n' flag_string="${array_flag_list[*]}"
     IFS=$oldifs
 
-    preview="${ccloud_preview}\n${missing_env}\n🚀 number of examples ran so far: $(get_cli_metric nb_runs)\n\n⛳ flag list:\n$flag_string\n"
+    arm64_support=$(arm64_support)
+
+    if [[ "$arm64_support" == *"❌"* ]]
+    then
+      unset 'options[0]'
+      options[1]="❌🖥️ this example is not working with ARM64 !"
+    fi
+    preview="${ccloud_preview}\n${missing_env}\n${arm64_support}\n🚀 number of examples ran so far: $(get_cli_metric nb_runs)\n\n⛳ flag list:\n$flag_string\n"
     res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🚀" --header="select option(s) for $example (use tab to select more than one)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"$preview\"")
 
     if [[ $res == *"$MENU_LETS_GO"* ]]
