@@ -7,11 +7,21 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 let errorCode = 200;
 let delay = 0; // response delay in ms
 let responseBody = {}; // response body
+let closeConnection = false; // flag to track connection closure
 
 app.use((req, res, next) => {
   setTimeout(() => {
     next();
   }, delay);
+});
+
+app.use((req, res, next) => {
+  if (closeConnection) {
+    console.log(`[${new Date().toISOString()}] Closing connection for ${req.method} to ${req.url}`);
+    req.socket.destroy(); // Close the connection without sending a response
+  } else {
+    next();
+  }
 });
 
 app.use((req, res, next) => {
@@ -93,6 +103,12 @@ app.put('/set-response-body', (req, res) => {
   } else {
     res.status(400).json({ message: 'Please provide response body as JSON'});
   }
+});
+
+app.put('/set-connection-closed', (req, res) => {
+  closeConnection = true;
+  console.log(`[${new Date().toISOString()}] Connection closure enabled`);
+  res.status(200).json({ message: 'Connection closure enabled' });
 });
 
 // Wildcard route to accept any path
