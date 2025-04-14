@@ -21,6 +21,7 @@ then
         # confluent employee
         export number_of_days=4
         export open_audit_logs=1
+        export opensearch_url="https://opensearch.logs.aws.confluent.cloud"
         log "🐛 Opening dashboards for $CONNECTOR_TYPE_FULLY_MANAGED connector ($lcc_id)"
         bash "$opensearch_script" "$lcc_id"
         bash "$datadog_script" "$lcc_id"
@@ -54,6 +55,7 @@ then
         fi
         export number_of_days=4
         export open_audit_logs=1
+        export opensearch_url="https://opensearch.logs.aws.confluent.cloud"
         for connector in "${items[@]}"
         do
             connectorId=$(get_ccloud_connector_lcc $connector)
