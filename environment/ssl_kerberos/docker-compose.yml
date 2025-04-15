@@ -54,7 +54,6 @@ services:
   broker:
     hostname: broker.kerberos-demo.local
     depends_on:
-      - zookeeper
       - kdc
     # Required to wait for the keytab to get generated
     restart: on-failure
@@ -108,7 +107,6 @@ services:
   broker2:
     hostname: broker2.kerberos-demo.local
     depends_on:
-      - zookeeper
       - kdc
     # Required to wait for the keytab to get generated
     restart: on-failure
@@ -162,7 +160,6 @@ services:
   broker3:
     hostname: broker3.kerberos-demo.local
     depends_on:
-      - zookeeper
       - kdc
     # Required to wait for the keytab to get generated
     restart: on-failure

@@ -53,7 +53,6 @@ services:
   broker:
     hostname: broker.kerberos-demo.local
     depends_on:
-      - zookeeper
       - kdc
     # Required to wait for the keytab to get generated
     restart: on-failure
@@ -96,7 +95,6 @@ services:
     hostname: broker2.kerberos-demo.local
     container_name: broker2
     depends_on:
-      - zookeeper
       - kdc
     profiles:
       - "kafka_nodes"
@@ -155,7 +153,6 @@ services:
     hostname: broker3.kerberos-demo.local
     container_name: broker3
     depends_on:
-      - zookeeper
       - kdc
     profiles:
       - "kafka_nodes"
@@ -211,7 +208,6 @@ services:
 
   connect:
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
     # Required to wait for the keytab to get generated
@@ -273,7 +269,6 @@ services:
 
   connect2:
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
     # Required to wait for the keytab to get generated
@@ -335,7 +330,6 @@ services:
 
   connect3:
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
     # Required to wait for the keytab to get generated
@@ -432,7 +426,6 @@ services:
     # Required to wait for the keytab to get generated
     restart: on-failure
     depends_on:
-      - zookeeper
       - broker
       - connect
     volumes:

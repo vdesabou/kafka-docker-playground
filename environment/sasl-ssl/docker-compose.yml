@@ -117,7 +117,6 @@ services:
 
   schema-registry:
     depends_on:
-      - zookeeper
       - broker
     volumes:
       - ../../environment/sasl-ssl/security:/etc/kafka/secrets
@@ -147,7 +146,6 @@ services:
 
   connect:
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
     volumes:
@@ -225,7 +223,6 @@ services:
 
   connect2:
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
     volumes:
@@ -303,7 +300,6 @@ services:
 
   connect3:
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
     volumes:
@@ -419,7 +415,6 @@ services:
 
   control-center:
     depends_on:
-      - zookeeper
       - broker
       - connect
     ports:
