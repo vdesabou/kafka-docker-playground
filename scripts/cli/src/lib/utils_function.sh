@@ -497,8 +497,45 @@ function check_and_update_playground_version() {
   fi
 }
 
+function determine_kraft_mode() {
+  export TAG_BASE=$(echo $TAG | cut -d "-" -f1)
+  first_version=${TAG_BASE}
+  if version_gt $first_version 6.9.99
+  then
+    log "🛰️ Starting up Confluent Platform in Kraft mode"
+    export ENABLE_KRAFT="true"
+    export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="-f ../../environment/plaintext/docker-compose-kraft.yml"
+  else
+     log "👨‍⚕️ Starting up Confluent Platform in Zookeeper mode"
+    export ENABLE_ZOOKEEPER="true"
+    export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE=""
+  fi
+}
 function set_profiles() {
   # https://docs.docker.com/compose/profiles/
+  profile_zookeeper_command=""
+  if [ -z "$ENABLE_ZOOKEEPER" ]
+  then
+    log "🛑 zookeeper is disabled"
+    playground state del flags.ENABLE_ZOOKEEPER
+  else
+    log "👨‍⚕️ zookeeper is enabled"
+    profile_zookeeper_command="--profile zookeeper"
+    playground state set flags.ENABLE_ZOOKEEPER 1
+  fi
+
+  # profile_kraft_command=""
+  # if [ -z "$ENABLE_KRAFT" ]
+  # then
+  #   log "🛑 kraft is disabled"
+  #   playground state del flags.ENABLE_KRAFT
+  # else
+  #   log "🛰️ kraft is enabled"
+  #   profile_kraft_command="--profile kraft"
+  #   playground state set flags.ENABLE_KRAFT 1
+  # fi
+
+
   profile_control_center_command=""
   if [ -z "$ENABLE_CONTROL_CENTER" ]
   then

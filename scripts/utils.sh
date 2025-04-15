@@ -681,3 +681,5 @@ else
     export CP_CONNECT_TAG="$TAG"
   fi
 fi
+
+determine_kraft_mode

@@ -6,6 +6,8 @@ services:
     hostname: zookeeper
     container_name: zookeeper
     restart: always
+    profiles:
+    - zookeeper
     volumes:
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
     ports:
