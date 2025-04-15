@@ -9048,8 +9048,44 @@ function check_and_update_playground_version() {
   fi
 }
 
+function determine_kraft_mode() {
+  export TAG_BASE=$(echo $TAG | cut -d "-" -f1)
+  first_version=${TAG_BASE}
+  if version_gt $first_version 6.9.99
+  then
+    log "🛰️ Starting up Confluent Platform in Kraft mode"
+    export ENABLE_KRAFT="true"
+    export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="-f ../../environment/plaintext/docker-compose-kraft.yml"
+  else
+     log "👨‍⚕️ Starting up Confluent Platform in Zookeeper mode"
+    export ENABLE_ZOOKEEPER="true"
+    export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE=""
+  fi
+}
 function set_profiles() {
   # https://docs.docker.com/compose/profiles/
+  profile_zookeeper_command=""
+  if [ -z "$ENABLE_ZOOKEEPER" ]
+  then
+    log "🛑 zookeeper is disabled"
+    playground state del flags.ENABLE_ZOOKEEPER
+  else
+    log "👨‍⚕️ zookeeper is enabled"
+    profile_zookeeper_command="--profile zookeeper"
+    playground state set flags.ENABLE_ZOOKEEPER 1
+  fi
+
+  # profile_kraft_command=""
+  # if [ -z "$ENABLE_KRAFT" ]
+  # then
+  #   log "🛑 kraft is disabled"
+  #   playground state del flags.ENABLE_KRAFT
+  # else
+  #   log "🛰️ kraft is enabled"
+  #   profile_kraft_command="--profile kraft"
+  #   playground state set flags.ENABLE_KRAFT 1
+  # fi
+
   profile_control_center_command=""
   if [ -z "$ENABLE_CONTROL_CENTER" ]
   then
@@ -14705,10 +14741,10 @@ playground_run_command() {
   then
     if [[ $test_file == *"ccloud"* ]]
     then
-      logwarn "❌ --enable-multiple-broker is not supported with ccloud examples"
+      logwarn "❌ --enable-multiple-brokers is not supported with ccloud examples"
       exit 1
     fi
-    array_flag_list+=("--enable-multiple-broker")
+    array_flag_list+=("--enable-multiple-brokers")
     export ENABLE_KAFKA_NODES=true
   fi
 
@@ -14980,7 +15016,7 @@ playground_run_command() {
     MENU_ENABLE_RP="🧲 Enable Rest Proxy $(printf '%*s' $((${MAX_LENGTH}-20-${#MENU_ENABLE_RP})) ' ') --enable-rest-proxy"
 
     MENU_ENABLE_GRAFANA="📊 Enable Grafana $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_ENABLE_GRAFANA})) ' ') --enable-jmx-grafana"
-    MENU_ENABLE_BROKERS="3️⃣  Enabling multiple brokers $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_ENABLE_BROKERS})) ' ') --enable-multiple-broker"
+    MENU_ENABLE_BROKERS="3️⃣  Enabling multiple brokers $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_ENABLE_BROKERS})) ' ') --enable-multiple-brokers"
     MENU_ENABLE_CONNECT_WORKERS="🥉 Enabling multiple connect workers $(printf '%*s' $((${MAX_LENGTH}-36-${#MENU_ENABLE_CONNECT_WORKERS})) ' ') --enable-multiple-connect-workers"
     MENU_ENABLE_KCAT="🐈 Enabling kcat $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_ENABLE_KCAT})) ' ') --enable-kcat"
     MENU_ENABLE_SQL_DATAGEN="🌪️  Enable SQL Datagen injection $(printf '%*s' $((${MAX_LENGTH}-32-${#MENU_ENABLE_SQL_DATAGEN})) ' ') --enable-sql-datagen" #19
@@ -15557,14 +15593,14 @@ playground_run_command() {
 
       if [[ $res == *"$MENU_ENABLE_BROKERS"* ]]
       then
-        array_flag_list+=("--enable-multiple-broker")
+        array_flag_list+=("--enable-multiple-brokers")
         export ENABLE_KAFKA_NODES=true
         interactive_enable_broker="true"
       fi
 
       if [[ $res == *"$MENU_DISABLE_BROKERS"* ]]
       then
-        array_flag_list=("${array_flag_list[@]/"--enable-multiple-broker"}")
+        array_flag_list=("${array_flag_list[@]/"--enable-multiple-brokers"}")
         unset ENABLE_KAFKA_NODES
         interactive_enable_broker=""
       fi
@@ -15845,7 +15881,7 @@ playground_run_command() {
     then
       if [[ -n "$force_interactive_repro" ]]
       then
-        force_enable --enable-multiple-broker ENABLE_KAFKA_NODES
+        force_enable --enable-multiple-brokers ENABLE_KAFKA_NODES
       fi
     fi
 

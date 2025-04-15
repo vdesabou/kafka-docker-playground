@@ -232,10 +232,10 @@ if [[ -n "$enable_multiple_brokers" ]]
 then
   if [[ $test_file == *"ccloud"* ]]
   then
-    logwarn "❌ --enable-multiple-broker is not supported with ccloud examples"
+    logwarn "❌ --enable-multiple-brokers is not supported with ccloud examples"
     exit 1
   fi
-  array_flag_list+=("--enable-multiple-broker")
+  array_flag_list+=("--enable-multiple-brokers")
   export ENABLE_KAFKA_NODES=true
 fi
 
@@ -505,7 +505,7 @@ then
   MENU_ENABLE_CONDUKTOR="🐺 Enable Conduktor Platform $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_ENABLE_CONDUKTOR})) ' ') --enable-conduktor"
   MENU_ENABLE_RP="🧲 Enable Rest Proxy $(printf '%*s' $((${MAX_LENGTH}-20-${#MENU_ENABLE_RP})) ' ') --enable-rest-proxy" 
   MENU_ENABLE_GRAFANA="📊 Enable Grafana $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_ENABLE_GRAFANA})) ' ') --enable-jmx-grafana"
-  MENU_ENABLE_BROKERS="3️⃣  Enabling multiple brokers $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_ENABLE_BROKERS})) ' ') --enable-multiple-broker"
+  MENU_ENABLE_BROKERS="3️⃣  Enabling multiple brokers $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_ENABLE_BROKERS})) ' ') --enable-multiple-brokers"
   MENU_ENABLE_CONNECT_WORKERS="🥉 Enabling multiple connect workers $(printf '%*s' $((${MAX_LENGTH}-36-${#MENU_ENABLE_CONNECT_WORKERS})) ' ') --enable-multiple-connect-workers"
   MENU_ENABLE_KCAT="🐈 Enabling kcat $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_ENABLE_KCAT})) ' ') --enable-kcat"
   MENU_ENABLE_SQL_DATAGEN="🌪️  Enable SQL Datagen injection $(printf '%*s' $((${MAX_LENGTH}-32-${#MENU_ENABLE_SQL_DATAGEN})) ' ') --enable-sql-datagen" #19
@@ -1076,13 +1076,13 @@ then
 
     if [[ $res == *"$MENU_ENABLE_BROKERS"* ]]
     then
-      array_flag_list+=("--enable-multiple-broker")
+      array_flag_list+=("--enable-multiple-brokers")
       export ENABLE_KAFKA_NODES=true
       interactive_enable_broker="true"
     fi 
     if [[ $res == *"$MENU_DISABLE_BROKERS"* ]]
     then
-      array_flag_list=("${array_flag_list[@]/"--enable-multiple-broker"}")
+      array_flag_list=("${array_flag_list[@]/"--enable-multiple-brokers"}")
       unset ENABLE_KAFKA_NODES
       interactive_enable_broker=""
     fi
@@ -1362,7 +1362,7 @@ then
   then
     if [[ -n "$force_interactive_repro" ]]
     then
-      force_enable --enable-multiple-broker ENABLE_KAFKA_NODES
+      force_enable --enable-multiple-brokers ENABLE_KAFKA_NODES
     fi
   fi
 
