@@ -9,7 +9,7 @@ services:
       - "9093:9093"
       - "9102:9102"
     environment:
-      KAFKA_NODE_ID: 2
+      KAFKA_NODE_ID: 4
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
@@ -18,7 +18,7 @@ services:
       KAFKA_JMX_PORT: 9102
       KAFKA_JMX_HOSTNAME: localhost
       KAFKA_PROCESS_ROLES: 'controller'
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '2@controller:9093'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '4@controller:9093'
       KAFKA_LISTENERS: 'CONTROLLER://controller:9093'
       KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
@@ -41,7 +41,40 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: ''
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,BROKER:PLAINTEXT,HOST:PLAINTEXT
       KAFKA_PROCESS_ROLES: 'broker'
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '2@controller:9093'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '4@controller:9093'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid" 
+      # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+
+
+  broker2:
+    depends_on:
+      - controller
+    profiles:
+      - "kafka_nodes"
+    environment:
+      KAFKA_NODE_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: ''
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,BROKER:PLAINTEXT,HOST:PLAINTEXT
+      KAFKA_PROCESS_ROLES: 'broker'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '4@controller:9093'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid" 
+      # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+
+  broker3:
+    depends_on:
+      - controller
+    profiles:
+      - "kafka_nodes"
+    environment:
+      KAFKA_NODE_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: ''
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,BROKER:PLAINTEXT,HOST:PLAINTEXT
+      KAFKA_PROCESS_ROLES: 'broker'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '4@controller:9093'
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid" 
       # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
