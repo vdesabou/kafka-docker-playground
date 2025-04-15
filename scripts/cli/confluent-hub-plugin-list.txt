@@ -134,6 +134,7 @@ confluentinc/SalesforcePlatformEventSink
 confluentinc/SalesforcePlatformEventSource
 confluentinc/SalesforcePushTopicSource
 confluentinc/SalesforceSObjectSink
+confluentinc/SnowflakeSource
 couchbase/kafka-connect-couchbase
 dariobalinzo/kafka-connect-elasticsearch-source
 databricks/databricks-kafka
