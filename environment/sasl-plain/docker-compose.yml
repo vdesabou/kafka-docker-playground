@@ -20,7 +20,7 @@ services:
             - ../../environment/sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
             - ../../environment/sasl-plain/client.properties:/tmp/client.properties
         environment:
-            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:SASL_PLAINTEXT,HOST:SASL_PLAINTEXT
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:SASL_PLAINTEXT,HOST:SASL_PLAINTEXT${CONTROLLER_SECURITY_PROTOCOL_MAP}
             KAFKA_LISTENER_NAME_BROKER_SASL_ENABLED_MECHANISMS: PLAIN
             KAFKA_LISTENER_NAME_BROKER_PLAIN_SASL_JAAS_CONFIG: |
                     org.apache.kafka.common.security.plain.PlainLoginModule required \
@@ -59,7 +59,7 @@ services:
             - ../../environment/sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
             - ../../environment/sasl-plain/client.properties:/tmp/client.properties
         environment:
-            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:SASL_PLAINTEXT,HOST:SASL_PLAINTEXT
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:SASL_PLAINTEXT,HOST:SASL_PLAINTEXT${CONTROLLER_SECURITY_PROTOCOL_MAP}
             KAFKA_LISTENER_NAME_BROKER_SASL_ENABLED_MECHANISMS: PLAIN
             KAFKA_LISTENER_NAME_BROKER_PLAIN_SASL_JAAS_CONFIG: |
                     org.apache.kafka.common.security.plain.PlainLoginModule required \
@@ -98,7 +98,7 @@ services:
             - ../../environment/sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
             - ../../environment/sasl-plain/client.properties:/tmp/client.properties
         environment:
-            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:SASL_PLAINTEXT,HOST:SASL_PLAINTEXT
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:SASL_PLAINTEXT,HOST:SASL_PLAINTEXT${CONTROLLER_SECURITY_PROTOCOL_MAP}
             KAFKA_LISTENER_NAME_BROKER_SASL_ENABLED_MECHANISMS: PLAIN
             KAFKA_LISTENER_NAME_BROKER_PLAIN_SASL_JAAS_CONFIG: |
                     org.apache.kafka.common.security.plain.PlainLoginModule required \

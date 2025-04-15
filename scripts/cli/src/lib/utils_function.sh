@@ -505,10 +505,12 @@ function determine_kraft_mode() {
     log "🛰️ Starting up Confluent Platform in Kraft mode"
     export ENABLE_KRAFT="true"
     export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="-f ../../environment/plaintext/docker-compose-kraft.yml"
+    export CONTROLLER_SECURITY_PROTOCOL_MAP=",CONTROLLER:PLAINTEXT"
   else
      log "👨‍⚕️ Starting up Confluent Platform in Zookeeper mode"
     export ENABLE_ZOOKEEPER="true"
     export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE=""
+    export CONTROLLER_SECURITY_PROTOCOL_MAP=""
   fi
 }
 function set_profiles() {

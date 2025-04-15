@@ -65,7 +65,7 @@ services:
       - ../../environment/ssl_kerberos/security:/etc/kafka/secrets
     environment:
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL${CONTROLLER_SECURITY_PROTOCOL_MAP}
       KAFKA_LISTENERS: SASL_SSL://:9092
       KAFKA_ADVERTISED_LISTENERS: SASL_SSL://broker.kerberos-demo.local:9092
       # Kerberos / GSSAPI Authentication mechanism
@@ -119,7 +119,7 @@ services:
       - ../../environment/ssl_kerberos/security:/etc/kafka/secrets
     environment:
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL${CONTROLLER_SECURITY_PROTOCOL_MAP}
       KAFKA_LISTENERS: SASL_SSL://:9092
       KAFKA_ADVERTISED_LISTENERS: SASL_SSL://broker2.kerberos-demo.local:9092
       # Kerberos / GSSAPI Authentication mechanism
@@ -173,7 +173,7 @@ services:
       - ../../environment/ssl_kerberos/security:/etc/kafka/secrets
     environment:
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL${CONTROLLER_SECURITY_PROTOCOL_MAP}
       KAFKA_LISTENERS: SASL_SSL://:9092
       KAFKA_ADVERTISED_LISTENERS: SASL_SSL://broker3.kerberos-demo.local:9092
       # Kerberos / GSSAPI Authentication mechanism
