@@ -301,15 +301,6 @@ else
         metrics.reporter.prom.port: 9090"
 fi
 
-# Migrate SimpleAclAuthorizer to AclAuthorizer #1276
-if version_gt $TAG "5.3.99"
-then
-  export KAFKA_AUTHORIZER_CLASS_NAME="kafka.security.authorizer.AclAuthorizer"
-else
-  export KAFKA_AUTHORIZER_CLASS_NAME="kafka.security.auth.SimpleAclAuthorizer"
-fi
-
-
 if [ ! -z "$CONNECTOR_TAG" ] && [ ! -z "$CONNECTOR_ZIP" ]
 then
   logerror "CONNECTOR_TAG and CONNECTOR_ZIP are both set, they cannot be used at same time!"

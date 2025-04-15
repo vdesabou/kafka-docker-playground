@@ -500,17 +500,26 @@ function check_and_update_playground_version() {
 function determine_kraft_mode() {
   export TAG_BASE=$(echo $TAG | cut -d "-" -f1)
   first_version=${TAG_BASE}
-  if version_gt $first_version 6.9.99
+  if version_gt $first_version 7.9.99
   then
     log "🛰️ Starting up Confluent Platform in Kraft mode"
     export ENABLE_KRAFT="true"
     export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="-f ../../environment/plaintext/docker-compose-kraft.yml"
     export CONTROLLER_SECURITY_PROTOCOL_MAP=",CONTROLLER:PLAINTEXT"
+    export KAFKA_AUTHORIZER_CLASS_NAME="org.apache.kafka.metadata.authorizer.StandardAuthorizer"
   else
-     log "👨‍⚕️ Starting up Confluent Platform in Zookeeper mode"
+    log "👨‍⚕️ Starting up Confluent Platform in Zookeeper mode"
     export ENABLE_ZOOKEEPER="true"
     export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE=""
     export CONTROLLER_SECURITY_PROTOCOL_MAP=""
+
+    # Migrate SimpleAclAuthorizer to AclAuthorizer #1276
+    if version_gt $TAG "5.3.99"
+    then
+      export KAFKA_AUTHORIZER_CLASS_NAME="kafka.security.authorizer.AclAuthorizer"
+    else
+      export KAFKA_AUTHORIZER_CLASS_NAME="kafka.security.auth.SimpleAclAuthorizer"
+    fi
   fi
 }
 function set_profiles() {
