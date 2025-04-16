@@ -5,6 +5,12 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [[ $CP_CONNECT_IMAGE == *"cp-kafka-"* ]] || [[ $CP_KAFKA_IMAGE == *"cp-kafka" ]]
+then
+  logwarn "LDAP Authorizer is not available with community image"
+  exit 111
+fi
+
 verify_docker_and_memory
 
 check_docker_compose_version
