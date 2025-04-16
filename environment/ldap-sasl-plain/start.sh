@@ -10,6 +10,12 @@ if ! version_gt $TAG_BASE "5.3.99"; then
     exit 111
 fi
 
+if [[ $CP_CONNECT_IMAGE == *"cp-kafka-"* ]] || [[ $CP_KAFKA_IMAGE == *"cp-kafka" ]]
+then
+  logwarn "Kafka Client Authentication with LDAP is not available with community image"
+  exit 111
+fi
+
 verify_docker_and_memory
 
 check_docker_compose_version
