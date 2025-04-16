@@ -86,7 +86,7 @@ do
         esac
         wc -l /tmp/result.log | awk '{print $1}'
     else
-        tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+        tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
         if [ $? != 0 ] || [ "$tag" == "" ]
         then
             logerror "Could not find current CP version from docker ps"
@@ -107,7 +107,12 @@ do
             then
                 class_name="org.apache.kafka.tools.GetOffsetShell"
             fi
-            docker exec $broker_container kafka-run-class $class_name --broker-list $broker_container:9092 $security --topic $topic --time -1 | awk -F ":" '{sum += $3} END {print sum}'
+            parameter_for_list_broker="--bootstrap-server"
+            if ! version_gt $tag "5.3.99"
+            then
+                parameter_for_list_broker="--broker-list"
+            fi
+            docker exec $broker_container kafka-run-class $class_name $parameter_for_list_broker $broker_container:9092 $security --topic $topic --time -1 | grep -v "No configuration found" | awk -F ":" '{sum += $3} END {print sum}'
         fi
     fi
 done

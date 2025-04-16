@@ -33,7 +33,7 @@ do
         get_ccloud_connect
         handle_ccloud_connect_rest_api "curl -s --request POST \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/restart\" --header \"authorization: Basic $authorization\""
     else
-            tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+            tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
             if [ $? != 0 ] || [ "$tag" == "" ]
             then
                 logerror "Could not find current CP version from docker ps"
