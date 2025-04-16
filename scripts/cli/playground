@@ -1768,7 +1768,7 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--open, -o")"
-    printf "    📖 Opening example file with text editor set with playground config editor\n    <editor> (default is code)\n"
+    printf "    📖 Opening example files (including docker-compose file) with text editor set\n    with playground config editor <editor> (default is code)\n"
     echo
 
     # :flag.usage
@@ -14954,7 +14954,12 @@ playground_run_command() {
 
   if [[ -n "$open" ]]
   then
-    playground open --file "${test_file}"
+    if [[ $test_file == *"fully-managed"* ]] || [[ $test_file == *"custom-"* ]]
+    then
+      playground open --file "${test_file}"
+    else
+      playground open --file "${test_file}" --open-docker-compose
+    fi
     check_if_continue
   fi
 
@@ -15007,7 +15012,12 @@ playground_run_command() {
     fi
 
     MENU_PROBLEM="❌ The example cannot be executed, check error(s) 👉" #1
-    readonly MENU_OPEN_FILE="📖 Open the file in text editor"
+    if [[ $test_file == *"fully-managed"* ]] || [[ $test_file == *"custom-"* ]]
+    then
+      MENU_OPEN_FILE="📖 Open the example file in text editor"
+    else
+      MENU_OPEN_FILE="📖 Open the example files (including docker-compose file) in text editor"
+    fi
     set +e
     if [[ $(type -f open 2>&1) =~ "not found" ]]
     then
@@ -15508,7 +15518,12 @@ playground_run_command() {
 
       if [[ $res == *"$MENU_OPEN_FILE"* ]]
       then
-        playground open --file "${test_file}"
+        if [[ $test_file == *"fully-managed"* ]] || [[ $test_file == *"custom-"* ]]
+        then
+          playground open --file "${test_file}"
+        else
+          playground open --file "${test_file}" --open-docker-compose
+        fi
       fi
 
       if [[ $res == *"$MENU_OPEN_DOCS"* ]]
@@ -16924,10 +16939,11 @@ playground_open_command() {
     docker_compose_file="${test_file_directory}/${docker_compose_file}"
     if [ ! -f $docker_compose_file ]
     then
-      log "❌ --open-docker-compose is set but docker compose file $docker_compose_file does not exist!"
-      exit 1
+      logwarn "--open-docker-compose is set but docker compose file could not be retrieved from $test_file"
+    else
+      open_file_with_editor "${docker_compose_file}"
     fi
-    open_file_with_editor "${docker_compose_file}"
+
   fi
 
   open_file_with_editor "${test_file}" "${do_wait}"

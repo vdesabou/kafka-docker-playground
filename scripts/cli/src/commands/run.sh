@@ -428,7 +428,12 @@ fi
 
 if [[ -n "$open" ]]
 then
-  playground open --file "${test_file}"
+  if [[ $test_file == *"fully-managed"* ]] || [[ $test_file == *"custom-"* ]]
+  then
+    playground open --file "${test_file}"
+  else
+    playground open --file "${test_file}" --open-docker-compose
+  fi
   check_if_continue
 fi
 
@@ -481,7 +486,12 @@ then
   fi
   
   MENU_PROBLEM="❌ The example cannot be executed, check error(s) 👉" #1
-  readonly MENU_OPEN_FILE="📖 Open the file in text editor"
+  if [[ $test_file == *"fully-managed"* ]] || [[ $test_file == *"custom-"* ]]
+  then
+    MENU_OPEN_FILE="📖 Open the example file in text editor"
+  else
+    MENU_OPEN_FILE="📖 Open the example files (including docker-compose file) in text editor"
+  fi
   set +e
   if [[ $(type -f open 2>&1) =~ "not found" ]]
   then
@@ -976,7 +986,12 @@ then
 
     if [[ $res == *"$MENU_OPEN_FILE"* ]]
     then
-      playground open --file "${test_file}"
+      if [[ $test_file == *"fully-managed"* ]] || [[ $test_file == *"custom-"* ]]
+      then
+        playground open --file "${test_file}"
+      else
+        playground open --file "${test_file}" --open-docker-compose
+      fi
     fi
 
     if [[ $res == *"$MENU_OPEN_DOCS"* ]]

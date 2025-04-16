@@ -179,7 +179,7 @@
             "-o"
           ],
           "argument": "",
-          "description": "📖 Opening example file with text editor set with playground config editor <editor> (default is code)\n"
+          "description": "📖 Opening example files (including docker-compose file) with text editor set with playground config editor <editor> (default is code)\n"
         },
         {
           "names": [

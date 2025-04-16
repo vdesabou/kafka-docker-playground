@@ -32,10 +32,11 @@ then
   docker_compose_file="${test_file_directory}/${docker_compose_file}"
   if [ ! -f $docker_compose_file ]
   then
-    log "❌ --open-docker-compose is set but docker compose file $docker_compose_file does not exist!"
-    exit 1
+    logwarn "--open-docker-compose is set but docker compose file could not be retrieved from $test_file"
+  else
+    open_file_with_editor "${docker_compose_file}"
   fi
-  open_file_with_editor "${docker_compose_file}"
+
 fi
 
 open_file_with_editor "${test_file}" "${do_wait}"
