@@ -4,7 +4,7 @@ duration="${args[--duration]}"
 filename="tcp-dump-$container-$port-`date '+%Y-%m-%d-%H-%M-%S'`.pcap"
 
 set +e
-docker exec $container whereis tcpdump > /dev/null 2>&1
+docker exec $container type tcpdump > /dev/null 2>&1
 if [ $? != 0 ]
 then
   logwarn "tcpdump is not installed on container $container, attempting to install it"
@@ -17,7 +17,7 @@ then
   fi
   docker exec --privileged --user root $container bash -c "apt-get update && echo tcpdump | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*" > /dev/null 2>&1
 fi
-docker exec $container whereis tcpdump > /dev/null 2>&1
+docker exec $container type tcpdump > /dev/null 2>&1
 if [ $? != 0 ]
 then
     logerror "❌ tcpdump could not be installed"
