@@ -264,7 +264,12 @@ function maybe_create_image()
       export CONNECT_USER="appuser"
       if [ "$(uname -m)" = "arm64" ]
       then
-        CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && rpm -i --nosignature https://yum.oracle.com/repo/OracleLinux/OL8/appstream/aarch64/getPackage/tcpdump-4.9.3-3.el8.aarch64.rpm && touch /tmp/done; fi"
+        if version_gt $TAG_BASE "7.9.9"
+        then
+          CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then yum -y install bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && rpm -i --nosignature https://yum.oracle.com/repo/OracleLinux/OL9/appstream/aarch64/getPackage/tcpdump-4.99.0-9.el9.aarch64.rpm&& touch /tmp/done; fi"
+        else
+          CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && rpm -i --nosignature https://yum.oracle.com/repo/OracleLinux/OL9/appstream/aarch64/getPackage/tcpdump-4.9.3-3.el8.aarch64.rpm && touch /tmp/done; fi"
+        fi
       else
         CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then curl https://download.rockylinux.org/pub/rocky/8/AppStream/x86_64/kickstart/Packages/t/tcpdump-4.9.3-5.el8.x86_64.rpm -o tcpdump-4.9.3-1.el8.x86_64.rpm && rpm -Uvh tcpdump-4.9.3-1.el8.x86_64.rpm && yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && touch /tmp/done; fi"
       fi
@@ -291,6 +296,7 @@ EOF
     rm -rf $tmp_dir
   fi
   set -e
+  exit 0
 }
 
 
