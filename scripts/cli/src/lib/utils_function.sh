@@ -502,8 +502,12 @@ function get_ccs_or_ce_specifics() {
   then
     log "Ⓜ️ detected community image used, disabling Metrics Reporter"
     export KAFKA_METRIC_REPORTERS=""
+    export CONNECT_CONSUMER_INTERCEPTOR_CLASSES=""
+    export CONNECT_PRODUCER_INTERCEPTOR_CLASSES=""
   else
     export KAFKA_METRIC_REPORTERS="io.confluent.metrics.reporter.ConfluentMetricsReporter"
+    export CONNECT_CONSUMER_INTERCEPTOR_CLASSES="io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+    export CONNECT_PRODUCER_INTERCEPTOR_CLASSES="io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
   fi
 }
 
