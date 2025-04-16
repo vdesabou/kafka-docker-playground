@@ -19,8 +19,6 @@ services:
         volumes:
             - ../../environment/sasl-scram/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
             - ../../environment/sasl-scram/client.properties:/tmp/client.properties
-        depends_on:
-        - zookeeper
         environment:
             KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
             KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT${CONTROLLER_SECURITY_PROTOCOL_MAP}
@@ -39,8 +37,6 @@ services:
         volumes:
             - ../../environment/sasl-scram/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
             - ../../environment/sasl-scram/client.properties:/tmp/client.properties
-        depends_on:
-        - zookeeper
         environment:
             KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
             KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT${CONTROLLER_SECURITY_PROTOCOL_MAP}
@@ -59,8 +55,6 @@ services:
         volumes:
             - ../../environment/sasl-scram/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
             - ../../environment/sasl-scram/client.properties:/tmp/client.properties
-        depends_on:
-        - zookeeper
         environment:
             KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
             KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT${CONTROLLER_SECURITY_PROTOCOL_MAP}
@@ -79,8 +73,6 @@ services:
     connect:
         volumes:
             - ../../environment/sasl-scram/client.properties:/tmp/client.properties
-        depends_on:
-        - zookeeper
         environment:
             # Configure the Connect workers to use SASL/SCRAM-SHA-256.
             CONNECT_SASL_MECHANISM: SCRAM-SHA-256
@@ -117,8 +109,6 @@ services:
     connect2:
         volumes:
             - ../../environment/sasl-scram/client.properties:/tmp/client.properties
-        depends_on:
-        - zookeeper
         environment:
             # Configure the Connect workers to use SASL/SCRAM-SHA-256.
             CONNECT_SASL_MECHANISM: SCRAM-SHA-256
@@ -155,8 +145,6 @@ services:
     connect3:
         volumes:
             - ../../environment/sasl-scram/client.properties:/tmp/client.properties
-        depends_on:
-        - zookeeper
         environment:
             # Configure the Connect workers to use SASL/SCRAM-SHA-256.
             CONNECT_SASL_MECHANISM: SCRAM-SHA-256
