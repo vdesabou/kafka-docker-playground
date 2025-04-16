@@ -1333,7 +1333,7 @@ _playground_completions() {
       ;;
 
     *'open'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--file --help -f -h")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--file --help --open-docker-compose -f -h")" -- "$cur")
       ;;
 
     *'stop'*)

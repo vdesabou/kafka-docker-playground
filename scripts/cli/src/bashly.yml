@@ -954,6 +954,10 @@ commands:
       ❕ It must be absolute full path
 
       🎓 Tip: use <tab> completion to trigger fzf completion
+  - long: --open-docker-compose
+    required: false
+    help: |-
+      🐳 Also open associated docker-compose file for the current example
   - long: --wait
     private: true
     help: |- 

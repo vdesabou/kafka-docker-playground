@@ -573,6 +573,12 @@ subcommands:
         🎓 Tip: use <tab> completion to trigger fzf completion
         
     - names:
+      - --open-docker-compose
+      argument: ""
+      description: | 
+        🐳 Also open associated docker-compose file for the current example
+        
+    - names:
       - --wait
       argument: ""
       description: | 

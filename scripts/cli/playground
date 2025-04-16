@@ -2132,6 +2132,11 @@ playground_open_usage() {
     printf "    🔎 Search any file and open it.\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--open-docker-compose")"
+    printf "    🐳 Also open associated docker-compose file for the current example\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -9051,15 +9056,26 @@ function check_and_update_playground_version() {
 function determine_kraft_mode() {
   export TAG_BASE=$(echo $TAG | cut -d "-" -f1)
   first_version=${TAG_BASE}
-  if version_gt $first_version 6.9.99
+  if version_gt $first_version 7.9.99
   then
     log "🛰️ Starting up Confluent Platform in Kraft mode"
     export ENABLE_KRAFT="true"
     export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="-f ../../environment/plaintext/docker-compose-kraft.yml"
+    export CONTROLLER_SECURITY_PROTOCOL_MAP=",CONTROLLER:PLAINTEXT"
+    export KAFKA_AUTHORIZER_CLASS_NAME="org.apache.kafka.metadata.authorizer.StandardAuthorizer"
   else
-     log "👨‍⚕️ Starting up Confluent Platform in Zookeeper mode"
+    log "👨‍⚕️ Starting up Confluent Platform in Zookeeper mode"
     export ENABLE_ZOOKEEPER="true"
     export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE=""
+    export CONTROLLER_SECURITY_PROTOCOL_MAP=""
+
+    # Migrate SimpleAclAuthorizer to AclAuthorizer #1276
+    if version_gt $TAG "5.3.99"
+    then
+      export KAFKA_AUTHORIZER_CLASS_NAME="kafka.security.authorizer.AclAuthorizer"
+    else
+      export KAFKA_AUTHORIZER_CLASS_NAME="kafka.security.auth.SimpleAclAuthorizer"
+    fi
   fi
 }
 function set_profiles() {
@@ -16875,6 +16891,7 @@ playground_open_command() {
   # src/commands/open.sh
   test_file="${args[--file]}"
   wait="${args[--wait]}"
+  open_docker_compose="${args[--open-docker-compose]}"
 
   if [[ -n "$test_file" ]]
   then
@@ -16897,6 +16914,20 @@ playground_open_command() {
   if [[ -n "$wait" ]]
   then
     do_wait="wait"
+  fi
+
+  if [[ -n "$open_docker_compose" ]]
+  then
+    # determining the docker-compose file from from test_file
+    docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
+    test_file_directory="$(dirname "${test_file}")"
+    docker_compose_file="${test_file_directory}/${docker_compose_file}"
+    if [ ! -f $docker_compose_file ]
+    then
+      log "❌ --open-docker-compose is set but docker compose file $docker_compose_file does not exist!"
+      exit 1
+    fi
+    open_file_with_editor "${docker_compose_file}"
   fi
 
   open_file_with_editor "${test_file}" "${do_wait}"
@@ -31176,6 +31207,14 @@ playground_open_parse_requirements() {
           printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --open-docker-compose)
+
+        # :flag.case_no_arg
+        args['--open-docker-compose']=1
+        shift
         ;;
 
       # :flag.case

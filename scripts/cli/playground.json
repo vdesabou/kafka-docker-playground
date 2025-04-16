@@ -439,6 +439,13 @@
         },
         {
           "names": [
+            "--open-docker-compose"
+          ],
+          "argument": "",
+          "description": "🐳 Also open associated docker-compose file for the current example\n"
+        },
+        {
+          "names": [
             "--wait"
           ],
           "argument": "",
