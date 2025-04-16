@@ -497,6 +497,16 @@ function check_and_update_playground_version() {
   fi
 }
 
+function get_ccs_or_ce_specifics() {
+  if [[ $CP_CONNECT_IMAGE == *"cp-kafka-"* ]] || [[ $CP_KAFKA_IMAGE == *"cp-kafka" ]]
+  then
+    log "Ⓜ️ detected community image used, disabling Metrics Reporter"
+    export KAFKA_METRIC_REPORTERS=""
+  else
+    export KAFKA_METRIC_REPORTERS="io.confluent.metrics.reporter.ConfluentMetricsReporter"
+  fi
+}
+
 function determine_kraft_mode() {
   export TAG_BASE=$(echo $TAG | cut -d "-" -f1)
   first_version=${TAG_BASE}
@@ -522,6 +532,7 @@ function determine_kraft_mode() {
     fi
   fi
 }
+
 function set_profiles() {
   # https://docs.docker.com/compose/profiles/
   profile_zookeeper_command=""
