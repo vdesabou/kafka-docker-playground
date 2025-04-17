@@ -5,9 +5,6 @@ services:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: controller
     container_name: controller
-    ports:
-      - "9093:9093"
-      - "9102:9102"
     environment:
       KAFKA_NODE_ID: 4
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
