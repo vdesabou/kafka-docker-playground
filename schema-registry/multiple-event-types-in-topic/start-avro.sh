@@ -59,7 +59,7 @@ AUTO_REGISTER_PROPERTY="auto.register.schemas"
 if ! version_gt $TAG_BASE "5.5.2"; then
     AUTO_REGISTER_PROPERTY="auto.register"
 fi
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic all-types --property value.schema.id=$id --property $AUTO_REGISTER_PROPERTY=false --property use.latest.version=true << EOF
+docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic all-types --property value.schema.id=$id --property $AUTO_REGISTER_PROPERTY=false --property use.latest.version=true << EOF
 { "io.confluent.examples.avro.Product": { "product_id": 1, "product_name" : "rice", "product_price" : 100.00 } }
 { "io.confluent.examples.avro.Customer": { "customer_id": 100, "customer_name": "acme", "customer_email": "acme@google.com", "customer_address": "1 Main St" } }
 EOF

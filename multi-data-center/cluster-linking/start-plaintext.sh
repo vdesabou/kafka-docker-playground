@@ -15,7 +15,7 @@ log "Create topic demo"
 docker exec broker-europe kafka-topics --create --topic demo --bootstrap-server broker-us:9092 --replication-factor 1 --partitions 1
 
 log "Sending 20 messages in US cluster"
-seq -f "us_sale_%g ${RANDOM}" 20 | docker container exec -i connect-us bash -c "kafka-console-producer --broker-list broker-us:9092 --topic demo"
+seq -f "us_sale_%g ${RANDOM}" 20 | docker container exec -i connect-us bash -c "kafka-console-producer --bootstrap-server broker-us:9092 --topic demo"
 
 log "Verify we have received the data in source cluster using consumer group id my-consumer-group, we read only 5 messages"
 docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --topic demo --from-beginning --max-messages 5 --consumer-property group.id=my-consumer-group"
@@ -75,7 +75,7 @@ log "Consume from the destination cluster, it will continue from it's last offse
 docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-europe:9092 --topic demo --max-messages 5 --consumer-property group.id=my-consumer-group"
 
 log "Verify that the topic mirror is read-only"
-seq -f "europe_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "kafka-console-producer --broker-list broker-europe:9092 --topic demo"
+seq -f "europe_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "kafka-console-producer --bootstrap-server broker-europe:9092 --topic demo"
 
 log "Modify the source topic config, set retention.ms"
 docker container exec -i connect-us kafka-configs --alter --topic demo --add-config retention.ms=123456890 --bootstrap-server broker-us:9092
@@ -110,10 +110,10 @@ docker container exec -i connect-us kafka-mirrors --promote --topics demo --boot
 log "Produce to both topics to verify divergence"
 
 log "Sending data again in US cluster"
-seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "kafka-console-producer --broker-list broker-us:9092 --topic demo"
+seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "kafka-console-producer --bootstrap-server broker-us:9092 --topic demo"
 
 log "Sending data in EUROPE cluster"
-seq -f "europe_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "kafka-console-producer --broker-list broker-europe:9092 --topic demo"
+seq -f "europe_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "kafka-console-producer --bootstrap-server broker-europe:9092 --topic demo"
 
 set +e
 log "Delete the cluster link"

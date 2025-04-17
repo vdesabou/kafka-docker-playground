@@ -18,7 +18,7 @@ log "Checking the schema existence in the schema registry"
 docker exec -i connect curl -s GET http://schema-registry:8081/subjects/orders-value/versions/1
 
 log "Sending messages to topic orders"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema.id=1 << EOF
+docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema.id=1 << EOF
 {"id": 111, "product": "foo1", "quantity": 101}
 {"id": 222, "product": "foo2", "quantity": 102}
 EOF
@@ -81,7 +81,7 @@ EOF
 sleep 5
 
 log "Sending messages to topic orders using the new schema "
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema.id=2 << EOF
+docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema.id=2 << EOF
 {"id": 333, "product": "foo3", "quantity": 103, "category": "sample"}
 {"id": 444, "product": "foo4", "quantity": 104, "category": "sample"}
 EOF

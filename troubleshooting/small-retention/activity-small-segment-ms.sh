@@ -20,7 +20,7 @@ i=0
 while [ $i -le 50 ]
 do
   log "Sending message $i to topic testtopic"
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic << EOF
+docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic testtopic << EOF
 This is my message
 EOF
   sleep 1

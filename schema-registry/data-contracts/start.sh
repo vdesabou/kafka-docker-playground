@@ -16,7 +16,7 @@ sleep 5
 log "Create a topic named test-data-contracts"
 docker exec -i connect kafka-topics --create --bootstrap-server broker:9092 --topic test-data-contracts --partitions 1
 log "Produce records to the topic test-data-contracts"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --topic test-data-contracts --property schema.registry.url=http://schema-registry:8081 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property value.rule.set='{"domainRules":[{ "name": "checkLen", "kind": "CONDITION", "type": "CEL","mode": "WRITE", "expr": "size(message.f1) < 10","onFailure": "ERROR"}]}' << EOF
+docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --topic test-data-contracts --property schema.registry.url=http://schema-registry:8081 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property value.rule.set='{"domainRules":[{ "name": "checkLen", "kind": "CONDITION", "type": "CEL","mode": "WRITE", "expr": "size(message.f1) < 10","onFailure": "ERROR"}]}' << EOF
 {"f1": "success"}
 EOF
 
@@ -25,7 +25,7 @@ docker exec -i connect kafka-avro-console-consumer --bootstrap-server broker:909
 
 set +e
 log "Produce a record that will fail"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --topic test-data-contracts --property schema.registry.url=http://schema-registry:8081 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property value.rule.set='{"domainRules":[{ "name": "checkLen", "kind": "CONDITION", "type": "CEL","mode": "WRITE", "expr": "size(message.f1) < 10","onFailure": "ERROR"}]}' << EOF
+docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --topic test-data-contracts --property schema.registry.url=http://schema-registry:8081 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property value.rule.set='{"domainRules":[{ "name": "checkLen", "kind": "CONDITION", "type": "CEL","mode": "WRITE", "expr": "size(message.f1) < 10","onFailure": "ERROR"}]}' << EOF
 {"f1": "this will fail"}
 EOF
 # Expected output:
@@ -55,7 +55,7 @@ log "Register a new schema for the topic Orders"
 docker exec -i connect jq -n --rawfile schema /data/order.avsc '{schema: $schema}' | docker exec -i connect curl http://schema-registry:8081/subjects/orders-value/versions -H "Content-Type: application/json" -d @-
 
 log "We start a producer, and pass the schema ID that was returned during registration as the value of value.schema.id."
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --topic orders --property schema.registry.url=http://schema-registry:8081 --property value.schema.id=2 << EOF
+docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --topic orders --property schema.registry.url=http://schema-registry:8081 --property value.schema.id=2 << EOF
 {"orderId": 1, "customerId": 2, "totalPriceCents": 12000, "state": "Pending", "timestamp": 1693591356 }
 EOF
 
@@ -79,13 +79,13 @@ docker exec -i connect curl http://schema-registry:8081/subjects/orders-value/ve
 #   }
 
 log "We can produce a record to this topic"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --topic orders --property schema.registry.url=http://schema-registry:8081 --property value.schema.id=4 << EOF
+docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --topic orders --property schema.registry.url=http://schema-registry:8081 --property value.schema.id=4 << EOF
 {"orderId": 1, "customerId": 2, "totalPriceCents": 15, "state": "Pending", "timestamp": 1693591356 }
 EOF
 
 log "Let's try with a message with a non-positive price. This record should be rejected."
 set +e
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --topic orders --property schema.registry.url=http://schema-registry:8081 --property value.schema.id=4 << EOF
+docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --topic orders --property schema.registry.url=http://schema-registry:8081 --property value.schema.id=4 << EOF
 {"orderId": 1, "customerId": 2, "totalPriceCents": -1, "state": "Pending", "timestamp": 1693591356 }
 EOF
 # Expected output

@@ -53,7 +53,7 @@ curl -X POST \
 log "Sending a non-Avro record, it should fail"
 docker exec -i connect kafka-console-producer \
      --topic topic-validation \
-     --broker-list broker:9092 \
+     --bootstrap-server broker:9092 \
      --producer.config /etc/kafka/secrets/client_without_interceptors.config << EOF
 {"userid":1,"username":"RODRIGUEZ"}
 EOF
@@ -61,7 +61,7 @@ EOF
 log "Sending a Avro record, it should work"
 docker exec -i connect kafka-avro-console-producer \
      --topic topic-validation \
-     --broker-list broker:9092 \
+     --bootstrap-server broker:9092 \
      --property basic.auth.credentials.source=USER_INFO \
      --property schema.registry.basic.auth.user.info="write:write" \
      --property schema.registry.url=https://schema-registry:8081 \

@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/mdc-plaintext/start.sh "${PWD}/docker-compose.mdc-plaintext.yml"
 
 log "Sending 20 records in Metrics cluster"
-seq -f "sale_%g ${RANDOM}" 20 | docker container exec -i connect-europe bash -c "kafka-console-producer --broker-list broker-metrics:9092 --topic sales"
+seq -f "sale_%g ${RANDOM}" 20 | docker container exec -i connect-europe bash -c "kafka-console-producer --bootstrap-server broker-metrics:9092 --topic sales"
 
 log "Consumer with group my-consumer-group reads 10 messages in Metrics cluster"
 # Points of interest:

@@ -60,4 +60,4 @@ playground topic consume --topic test-topic-duplicate --min-expected-messages 10
 log "Generating some data to a perf-test topic"
 docker exec broker kafka-producer-perf-test --topic perf-test --num-records 200000 --record-size 1000 --throughput 100000 --producer-props bootstrap.servers=broker:9092
 
-docker exec broker kafka-consumer-perf-test --topic perf-test --messages 200000  --broker-list broker:9092
+docker exec broker kafka-consumer-perf-test --topic perf-test --messages 200000  --bootstrap-server broker:9092

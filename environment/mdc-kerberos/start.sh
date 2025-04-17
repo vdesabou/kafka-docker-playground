@@ -139,11 +139,11 @@ docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/fo
 log "-----------------------------------------"
 log "Example configuration to access kafka on US cluster:"
 log "-----------------------------------------"
-log "-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list broker-us:9092 --topic test --producer.config /etc/kafka/producer-us.properties'"
+log "-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --bootstrap-server broker-us:9092 --topic test --producer.config /etc/kafka/producer-us.properties'"
 log "-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker-us:9092 --topic test --consumer.config /etc/kafka/consumer-us.properties --from-beginning'"
 
 log "-----------------------------------------"
 log "Example configuration to access kafka on EUROPE cluster:"
 log "-----------------------------------------"
-log "-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list broker-europe:9092 --topic test --producer.config /etc/kafka/producer-europe.properties'"
+log "-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --bootstrap-server broker-europe:9092 --topic test --producer.config /etc/kafka/producer-europe.properties'"
 log "-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker-europe:9092 --topic test --consumer.config /etc/kafka/consumer-europe.properties --from-beginning'"

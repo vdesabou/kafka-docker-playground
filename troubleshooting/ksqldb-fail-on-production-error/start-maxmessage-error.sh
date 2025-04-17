@@ -28,7 +28,7 @@ EOF
 
 log "Produce a big message to the input topic SENSORS_RAW"
 bigmessage=$(cat bigmessage.txt)
-echo "{\"id\": \"$bigmessage\", \"timestamp\": \"2020-01-15 02:20:30\", \"enabled\": true}" | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic SENSORS_RAW --compression-codec=snappy --producer-property max.request.size=2097172
+echo "{\"id\": \"$bigmessage\", \"timestamp\": \"2020-01-15 02:20:30\", \"enabled\": true}" | docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic SENSORS_RAW --compression-codec=snappy --producer-property max.request.size=2097172
 
 sleep 60
 

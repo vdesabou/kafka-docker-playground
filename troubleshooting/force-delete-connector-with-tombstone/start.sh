@@ -62,7 +62,7 @@ docker stop connect
 if [ "$CLI" = "kafka-console-producer" ]
 then
      log "Sending string null (kafka-console-producer is not able to send tombstone, coming in https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=199527475)"
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic connect-configs --property parse.key=true --property key.separator=, << EOF
+docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic connect-configs --property parse.key=true --property key.separator=, << EOF
 connector-http-sink,null
 EOF
 else

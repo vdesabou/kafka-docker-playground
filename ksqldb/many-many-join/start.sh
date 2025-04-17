@@ -26,7 +26,7 @@ CREATE STREAM lhsstr(id STRING KEY, desc STRING, field1 STRING)
 EOF
 
 log "Producing records to the Stream rhsTopic"
-docker exec -i connect kafka-console-producer --broker-list broker:9092 --topic rhsTopic --property parse.key=true --property key.separator=? << EOF
+docker exec -i connect kafka-console-producer --bootstrap-server broker:9092 --topic rhsTopic --property parse.key=true --property key.separator=? << EOF
 1?{"desc":"ABC"}
 2?{"desc":"ABC"}
 3?{"desc":"DEF"}
@@ -35,7 +35,7 @@ docker exec -i connect kafka-console-producer --broker-list broker:9092 --topic 
 3?{"desc":"DEF"}
 EOF
 log "Producing records to the Stream lhsTopic"
-docker exec -i connect kafka-console-producer --broker-list broker:9092 --topic lhsTopic --property parse.key=true --property key.separator=? << EOF
+docker exec -i connect kafka-console-producer --bootstrap-server broker:9092 --topic lhsTopic --property parse.key=true --property key.separator=? << EOF
 a?{"field1":"value1","desc":"ABC"}
 b?{"field1":"value1","desc":"DEF"}
 EOF

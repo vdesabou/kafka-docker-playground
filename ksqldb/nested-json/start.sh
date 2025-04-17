@@ -33,7 +33,7 @@ CREATE STREAM TRANSACTION_STREAM (
 EOF
 
 log "Produce records to financial_txns"
-docker exec -i connect kafka-console-producer --broker-list broker:9092 --topic financial_txns << EOF
+docker exec -i connect kafka-console-producer --bootstrap-server broker:9092 --topic financial_txns << EOF
 { "id": "1", "transaction": { "num_shares": 50000, "amount": 50044568.89, "txn_ts": "2020-11-18 02:31:43", "customer": { "first_name": "Jill", "last_name": "Smith", "id": 1234567, "email": "jsmith@gmail.com" }, "company": { "name": "ACME Corp", "ticker": "ACMC", "id": "ACME837275222752952", "address": "Anytown USA, 333333" } } }
 { "id": "2", "transaction": { "num_shares": 30000, "amount": 5004.89, "txn_ts": "2020-11-18 02:35:43", "customer": { "first_name": "Art", "last_name": "Vandeley", "id": 8976612, "email": "avendleay@gmail.com" }, "company": { "name": "Imports Corp", "ticker": "IMPC", "id": "IMPC88875222752952", "address": "Anytown USA, 333333" } } }
 { "id": "3", "transaction": { "num_shares": 3000000, "amount": 600044568.89, "txn_ts": "2020-11-18 02:36:43", "customer": { "first_name": "John", "last_name": "England", "id": 456321, "email": "je@gmail.com" }, "company": { "name": "Hechinger", "ticker": "HECH", "id": "HECH8333785222752952", "address": "Anytown USA, 333333" } } }

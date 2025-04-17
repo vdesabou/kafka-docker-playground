@@ -41,7 +41,7 @@ log "sleeping 30 seconds"
 sleep 30
 
 log "Sending messages in A cluster (OnPrem)"
-seq -f "A_sale_%g ${RANDOM}" 20 | docker container exec -i broker1 kafka-console-producer --broker-list localhost:9092 --topic sales_A
+seq -f "A_sale_%g ${RANDOM}" 20 | docker container exec -i broker1 kafka-console-producer --bootstrap-server localhost:9092 --topic sales_A
 
 log "Consumer with group my-consumer-group reads 10 messages in A cluster (OnPrem)"
 docker exec -i connect bash -c "kafka-console-consumer --bootstrap-server broker1:9092 --whitelist 'sales_A' --from-beginning --max-messages 10 --consumer-property group.id=my-consumer-group"
@@ -50,7 +50,7 @@ log "sleeping 70 seconds"
 sleep 70
 
 log "Sending messages in A cluster (OnPrem)"
-seq -f "A_sale_%g ${RANDOM}" 20 | docker container exec -i broker1 kafka-console-producer --broker-list localhost:9092 --topic sales_A
+seq -f "A_sale_%g ${RANDOM}" 20 | docker container exec -i broker1 kafka-console-producer --bootstrap-server localhost:9092 --topic sales_A
 
 sleep 30
 

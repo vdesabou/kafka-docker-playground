@@ -53,7 +53,7 @@ log "Denying principal to use output topic SENSORS"
 docker exec broker kafka-acls --bootstrap-server broker:9092 --add --deny-principal User:ksqldb --operation All --topic SENSORS --command-config /tmp/client.properties
 
 log "Produce events to the input topic SENSORS_RAW"
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic SENSORS_RAW --producer.config /tmp/client.properties << EOF
+docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic SENSORS_RAW --producer.config /tmp/client.properties << EOF
 {"id": "e7f45046-ad13-404c-995e-1eca16742801", "timestamp": "2020-01-15 02:20:30", "enabled": true}
 {"id": "835226cf-caf6-4c91-a046-359f1d3a6e2e", "timestamp": "2020-01-15 02:25:30", "enabled": true}
 {"id": "835226cf-caf6-4c91-a046-359f1d3a6e2e", "timestamp": "2020-01-15 02:25:30", "enabled": true}

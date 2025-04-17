@@ -33,7 +33,7 @@ log "Verify we have received the protobuf data in customer-protobuf topic"
 playground topic consume --topic customer-protobuf --min-expected-messages 5 --timeout 60
 
 log "Produce protobuf data using kafka-protobuf-console-producer"
-docker exec -i connect kafka-protobuf-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic protobuf-topic --property key.schema='syntax = "proto3"; message Id { int64 Id = 1; }' --property value.schema='syntax = "proto3"; message MyRecord { string f1 = 1; }'  --property parse.key=true --property key.separator="|" << EOF
+docker exec -i connect kafka-protobuf-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic protobuf-topic --property key.schema='syntax = "proto3"; message Id { int64 Id = 1; }' --property value.schema='syntax = "proto3"; message MyRecord { string f1 = 1; }'  --property parse.key=true --property key.separator="|" << EOF
 {"Id": 111}|{"f1": "value1"}
 {"Id": 222}|{"f1": "value2"}
 EOF

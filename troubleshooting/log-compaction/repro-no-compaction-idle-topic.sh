@@ -20,7 +20,7 @@ i=0
 while [ $i -le 4 ]
 do
   log "Sending message key: <key$(($i % 2))> and value <value$i> to topic testtopic"
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --property parse.key=true --property key.separator=, << EOF
+docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic testtopic --property parse.key=true --property key.separator=, << EOF
 key$(($i % 2)),value$i
 EOF
   sleep 1
@@ -46,7 +46,7 @@ log "Check data in topic: there was no compaction"
 timeout 10 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic testtopic --from-beginning --property print.key=true --property key.separator=,
 
 log "Inject one more message"
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --property parse.key=true --property key.separator=, << EOF
+docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic testtopic --property parse.key=true --property key.separator=, << EOF
 key1,value5
 EOF
 
