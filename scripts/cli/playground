@@ -8854,7 +8854,6 @@ EOF
     rm -rf $tmp_dir
   fi
   set -e
-  exit 0
 }
 
 function verify_docker_and_memory()
@@ -9074,19 +9073,31 @@ function get_ccs_or_ce_specifics() {
 }
 
 function determine_kraft_mode() {
-  export TAG_BASE=$(echo $TAG | cut -d "-" -f1)
+  TAG_BASE=$(echo $TAG | cut -d "-" -f1)
   first_version=${TAG_BASE}
-  if version_gt $first_version 7.9.99
+  if [[ -n $ENABLE_KRAFT ]] || version_gt $first_version "7.9.99"
   then
-    log "🛰️ Starting up Confluent Platform in Kraft mode"
+    if [[ -n $ENABLE_KRAFT ]]
+    then
+      log "🛰️ Starting up Confluent Platform in Kraft mode as ENABLE_KRAFT environment variable is set"
+      if ! version_gt $TAG_BASE "7.3.99"
+      then
+        logerror "❌ Kraft mode is not supported with playground for CP version < 7.4, please use Zookeeper mode"
+        exit 1
+      fi
+    else
+      log "🛰️ Starting up Confluent Platform in Kraft mode as CP version is > 8"
+    fi
     export ENABLE_KRAFT="true"
     export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="-f ../../environment/plaintext/docker-compose-kraft.yml"
+    export MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="-f ../../environment/mdc-plaintext/docker-compose-kraft.yml"
     export CONTROLLER_SECURITY_PROTOCOL_MAP=",CONTROLLER:PLAINTEXT"
     export KAFKA_AUTHORIZER_CLASS_NAME="org.apache.kafka.metadata.authorizer.StandardAuthorizer"
   else
-    log "👨‍⚕️ Starting up Confluent Platform in Zookeeper mode"
+    log "👨‍🦳 Starting up Confluent Platform in Zookeeper mode"
     export ENABLE_ZOOKEEPER="true"
     export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE=""
+    export MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE=""
     export CONTROLLER_SECURITY_PROTOCOL_MAP=""
 
     # Migrate SimpleAclAuthorizer to AclAuthorizer #1276
@@ -21603,27 +21614,43 @@ playground_topic_consume_command() {
     then
       nottailing2=""
     fi
-    if [[ -n "$verbose" ]]
-    then
-        set -x
-    fi
     case "${value_type}" in
       avro|protobuf|json-schema)
           if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
           then
               if [[ "$environment" == "ccloud" ]]
               then
+                if [[ -n "$verbose" ]]
+                then
+                  log "🐞 CLI command used to consume data"
+                  echo "kafka-$value_type-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config=\"$SASL_JAAS_CONFIG\" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" --property schema.registry.url=$SCHEMA_REGISTRY_URL --property print.schema.ids=true --property schema.id.separator=\"|\" --property print.partition=true --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator=\"|\" --skip-message-on-error $security $nottailing1"
+                fi
                 get_connect_image
                 docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_type=$value_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $nottailing2 kafka-$value_type-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --property print.schema.ids=true --property schema.id.separator="|" --property print.partition=true --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator="|" --skip-message-on-error $security $nottailing1 > "$fifo_path" 2>&1 &
               else
+                if [[ -n "$verbose" ]]
+                then
+                  log "🐞 CLI command used to consume data"
+                  echo "kafka-$value_type-console-consumer -bootstrap-server $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic  --property print.schema.ids=true --property schema.id.separator=\"|\" --property print.partition=true --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator=\"|\" --skip-message-on-error $security $nottailing1"
+                fi
                 docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container $nottailing2 kafka-$value_type-console-consumer -bootstrap-server $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic  --property print.schema.ids=true --property schema.id.separator="|" --property print.partition=true --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator="|" --skip-message-on-error $security $nottailing1 > "$fifo_path" 2>&1 &
               fi
           else
               if [[ "$environment" == "ccloud" ]]
               then
+                if [[ -n "$verbose" ]]
+                then
+                  log "🐞 CLI command used to consume data"
+                  echo "kafka-$value_type-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config=\"$SASL_JAAS_CONFIG\" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" --property schema.registry.url=$SCHEMA_REGISTRY_URL --property print.schema.ids=true --property schema.id.separator=\"|\" --property print.partition=true --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator=\"|\" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error $security $nottailing1"
+                fi
                 get_connect_image
                 docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_type=$value_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $nottailing2 kafka-$value_type-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --property print.schema.ids=true --property schema.id.separator="|" --property print.partition=true --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error $security $nottailing1 > "$fifo_path" 2>&1 &
               else
+                if [[ -n "$verbose" ]]
+                then
+                  log "🐞 CLI command used to consume data"
+                  echo "kafka-$value_type-console-consumer --bootstrap-server $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic --property print.partition=true  --property print.schema.ids=true --property schema.id.separator=\"|\" --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator=\"|\" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error $security $nottailing1"
+                fi
                 docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container $nottailing2  kafka-$value_type-console-consumer --bootstrap-server $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic --property print.partition=true  --property print.schema.ids=true --property schema.id.separator="|" --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error $security $nottailing1 > "$fifo_path" 2>&1 &
               fi
           fi
@@ -21631,9 +21658,19 @@ playground_topic_consume_command() {
       *)
         if [[ "$environment" == "ccloud" ]]
         then
+          if [[ -n "$verbose" ]]
+          then
+            log "🐞 CLI command used to consume data"
+            echo "kafka-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer.config /tmp/configuration/ccloud.properties --property print.partition=true --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator=\"|\" $security $nottailing1"
+          fi
           get_connect_image
           docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $nottailing2 kafka-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer.config /tmp/configuration/ccloud.properties --property print.partition=true --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator="|" $security $nottailing1 > "$fifo_path" 2>&1 &
         else
+          if [[ -n "$verbose" ]]
+          then
+            log "🐞 CLI command used to consume data"
+            echo "kafka-console-consumer --bootstrap-server $bootstrap_server --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator=\"|\" $security $nottailing1"
+          fi
           docker exec $container $nottailing2 kafka-console-consumer --bootstrap-server $bootstrap_server --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property headers.separator=, --property headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.timestamp=true --property print.key=true --property key.separator="|" $security $nottailing1 > "$fifo_path" 2>&1  &
         fi
       ;;
