@@ -927,7 +927,7 @@ retrycmd() {
 
 # for RBAC, taken from cp-demo
 function host_check_kafka_cluster_registered() {
-  KAFKA_CLUSTER_ID=$(docker container exec zookeeper zookeeper-shell zookeeper:2181 get /cluster/id 2> /dev/null | grep \"version\" | jq -r .id)
+  KAFKA_CLUSTER_ID=$(confluent cluster describe --url http://broker:8091 --output json | jq -r .scope[0].id)
   if [ -z "$KAFKA_CLUSTER_ID" ]; then
     return 1
   fi

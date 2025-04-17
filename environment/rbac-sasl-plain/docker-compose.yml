@@ -11,7 +11,6 @@ services:
         hostname: tools
         container_name: tools
         depends_on:
-          - zookeeper
           - broker
         volumes:
           - ../../environment/rbac-sasl-plain/scripts/helper:/tmp/helper
@@ -307,7 +306,6 @@ services:
         environment:
             CUB_CLASSPATH: '/usr/share/java/confluent-security/schema-registry/*:/usr/share/java/schema-registry/*:/etc/confluent/docker/docker-utils.jar:/usr/share/java/cp-base-new/*'
             SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:10091
-            SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper:2181
             SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SASL_PLAINTEXT
 
             SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM: OAUTHBEARER
@@ -333,15 +331,9 @@ services:
           - ../../environment/rbac-sasl-plain/conf:/tmp/conf
           - ../../environment/rbac-sasl-plain/scripts/helper:/tmp/helper
           - ../../environment/rbac-sasl-plain/scripts/security/client_without_interceptors.config:/etc/kafka/secrets/client_without_interceptors.config
-          - mi3:/usr/share/java/kafka-connect-replicator/
         depends_on:
-          - zookeeper
           - broker
           - schema-registry
-          - replicator-for-jar-transfer
-        command: "bash -c 'sleep 10 && \
-                  cp /usr/share/java/kafka-connect-replicator/replicator-rest-extension-*.jar /etc/kafka-connect/jars/ && \
-                  /etc/confluent/docker/run'"
         environment:
             CUB_CLASSPATH: '/usr/share/java/kafka/*:/etc/confluent/docker/docker-utils.jar:/usr/share/java/cp-base-new/*:/usr/share/java/confluent-security/connect/*:/usr/share/java/confluent-secret-registry/*'
             CONNECT_BOOTSTRAP_SERVERS: broker:10091
@@ -405,9 +397,8 @@ services:
                     password="connectAdmin" \
                     metadataServerUrls="http://broker:8091";
 
-            # io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension - Confluent Replicator
             # io.confluent.connect.security.ConnectSecurityExtension - RBAC
-            CONNECT_REST_EXTENSION_CLASSES: io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension,io.confluent.connect.security.ConnectSecurityExtension
+            CONNECT_REST_EXTENSION_CLASSES: io.confluent.connect.security.ConnectSecurityExtension
             CONNECT_REST_SERVLET_INITIALIZOR_CLASSES: 'io.confluent.common.security.jetty.initializer.InstallBearerOrBasicSecurityHandler'
             CONNECT_PUBLIC_KEY_PATH: /tmp/conf/public.pem
             CONNECT_CONFLUENT_METADATA_BOOTSTRAP_SERVER_URLS: http://broker:8091
@@ -419,15 +410,9 @@ services:
           - ../../environment/rbac-sasl-plain/conf:/tmp/conf
           - ../../environment/rbac-sasl-plain/scripts/helper:/tmp/helper
           - ../../environment/rbac-sasl-plain/scripts/security/client_without_interceptors.config:/etc/kafka/secrets/client_without_interceptors.config
-          - mi3:/usr/share/java/kafka-connect-replicator/
         depends_on:
-          - zookeeper
           - broker
           - schema-registry
-          - replicator-for-jar-transfer
-        command: "bash -c 'sleep 10 && \
-                  cp /usr/share/java/kafka-connect-replicator/replicator-rest-extension-*.jar /etc/kafka-connect/jars/ && \
-                  /etc/confluent/docker/run'"
         environment:
             CUB_CLASSPATH: '/usr/share/java/kafka/*:/etc/confluent/docker/docker-utils.jar:/usr/share/java/cp-base-new/*:/usr/share/java/confluent-security/connect/*:/usr/share/java/confluent-secret-registry/*'
             CONNECT_BOOTSTRAP_SERVERS: broker:10091
@@ -491,9 +476,8 @@ services:
                     password="connectAdmin" \
                     metadataServerUrls="http://broker:8091";
 
-            # io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension - Confluent Replicator
             # io.confluent.connect.security.ConnectSecurityExtension - RBAC
-            CONNECT_REST_EXTENSION_CLASSES: io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension,io.confluent.connect.security.ConnectSecurityExtension
+            CONNECT_REST_EXTENSION_CLASSES: io.confluent.connect.security.ConnectSecurityExtension
             CONNECT_REST_SERVLET_INITIALIZOR_CLASSES: 'io.confluent.common.security.jetty.initializer.InstallBearerOrBasicSecurityHandler'
             CONNECT_PUBLIC_KEY_PATH: /tmp/conf/public.pem
             CONNECT_CONFLUENT_METADATA_BOOTSTRAP_SERVER_URLS: http://broker:8091
@@ -505,15 +489,9 @@ services:
           - ../../environment/rbac-sasl-plain/conf:/tmp/conf
           - ../../environment/rbac-sasl-plain/scripts/helper:/tmp/helper
           - ../../environment/rbac-sasl-plain/scripts/security/client_without_interceptors.config:/etc/kafka/secrets/client_without_interceptors.config
-          - mi3:/usr/share/java/kafka-connect-replicator/
         depends_on:
-          - zookeeper
           - broker
           - schema-registry
-          - replicator-for-jar-transfer
-        command: "bash -c 'sleep 10 && \
-                  cp /usr/share/java/kafka-connect-replicator/replicator-rest-extension-*.jar /etc/kafka-connect/jars/ && \
-                  /etc/confluent/docker/run'"
         environment:
             CUB_CLASSPATH: '/usr/share/java/kafka/*:/etc/confluent/docker/docker-utils.jar:/usr/share/java/cp-base-new/*:/usr/share/java/confluent-security/connect/*:/usr/share/java/confluent-secret-registry/*'
             CONNECT_BOOTSTRAP_SERVERS: broker:10091
@@ -577,25 +555,13 @@ services:
                     password="connectAdmin" \
                     metadataServerUrls="http://broker:8091";
 
-            # io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension - Confluent Replicator
             # io.confluent.connect.security.ConnectSecurityExtension - RBAC
-            CONNECT_REST_EXTENSION_CLASSES: io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension,io.confluent.connect.security.ConnectSecurityExtension
+            CONNECT_REST_EXTENSION_CLASSES: io.confluent.connect.security.ConnectSecurityExtension
             CONNECT_REST_SERVLET_INITIALIZOR_CLASSES: 'io.confluent.common.security.jetty.initializer.InstallBearerOrBasicSecurityHandler'
             CONNECT_PUBLIC_KEY_PATH: /tmp/conf/public.pem
             CONNECT_CONFLUENT_METADATA_BOOTSTRAP_SERVER_URLS: http://broker:8091
             CONNECT_CONFLUENT_METADATA_BASIC_AUTH_USER_INFO: 'connectAdmin:connectAdmin'
             CONNECT_CONFLUENT_METADATA_HTTP_AUTH_CREDENTIALS_PROVIDER: 'BASIC'
-
-
-    # This container is just to transfer Replicator jars to the Connect worker
-    # It is not used as a Connect worker
-    replicator-for-jar-transfer:
-      image: confluentinc/cp-enterprise-replicator:${TAG}
-      hostname: replicator-for-jar-transfer
-      container_name: replicator-for-jar-transfer
-      volumes:
-        - mi3:/usr/share/java/kafka-connect-replicator/
-      command: "sleep infinity"
 
     ksqldb-server:
       volumes:
@@ -681,5 +647,3 @@ services:
                     username="controlcenterAdmin" \
                     password="controlcenterAdmin" \
                     metadataServerUrls="http://broker:8091";
-volumes:
-    mi3: {}
