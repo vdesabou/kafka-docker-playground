@@ -15,7 +15,7 @@ $ just use <playground run> command and search for start.sh in this folder
 Sending 20 records in Europe cluster
 
 ```bash
-$ seq -f "european_sale_%g ${RANDOM}" 20 | docker container exec -i connect-europe bash -c "kafka-console-producer --broker-list broker-europe:9092 --topic sales_EUROPE --producer-property interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor --producer-property confluent.monitoring.interceptor.bootstrap.servers=broker-metrics:9092"
+$ seq -f "european_sale_%g ${RANDOM}" 20 | docker container exec -i connect-europe bash -c "kafka-console-producer --bootstrap-server broker-europe:9092 --topic sales_EUROPE --producer-property interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor --producer-property confluent.monitoring.interceptor.bootstrap.servers=broker-metrics:9092"
 ```
 
 Consumer with group my-consumer-group reads 10 messages in Europe cluster

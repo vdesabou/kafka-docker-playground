@@ -48,7 +48,7 @@ Note: you can also export these values as environment variable
 Sending messages to topic `incidents`:
 
 ```bash
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic incidents --property value.schema='{"type":"record","name":"details","fields":[{"name":"fromEmail","type":"string"}, {"name":"serviceId","type":"string"},{"name":"incidentTitle","type":"string"}]}' << EOF
+docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic incidents --property value.schema='{"type":"record","name":"details","fields":[{"name":"fromEmail","type":"string"}, {"name":"serviceId","type":"string"},{"name":"incidentTitle","type":"string"}]}' << EOF
 {"fromEmail":"$PAGERDUTY_USER_EMAIL", "serviceId":"$PAGERDUTY_SERVICE_ID", "incidentTitle":"Incident Title x 0"}
 {"fromEmail":"$PAGERDUTY_USER_EMAIL", "serviceId":"$PAGERDUTY_SERVICE_ID", "incidentTitle":"Incident Title x 1"}
 {"fromEmail":"$PAGERDUTY_USER_EMAIL", "serviceId":"$PAGERDUTY_SERVICE_ID", "incidentTitle":"Incident Title x 2"}

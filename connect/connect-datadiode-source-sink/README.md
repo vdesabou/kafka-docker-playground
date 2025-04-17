@@ -65,7 +65,7 @@ $ curl -X PUT \
 Send message to diode topic
 
 ```bash
-$ seq -f "This is a message %g" 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic diode
+$ seq -f "This is a message %g" 10 | docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic diode
 ```
 
 Verifying topic dest_diode

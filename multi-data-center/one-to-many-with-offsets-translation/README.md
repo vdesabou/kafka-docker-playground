@@ -16,7 +16,7 @@ $ just use <playground run> command and search for start.sh in this folder
 Sending 20 records in Metrics cluster
 
 ```bash
-$ seq -f "sale_%g ${RANDOM}" 20 | docker container exec -i connect-europe bash -c "kafka-console-producer --broker-list broker-metrics:9092 --topic sales"
+$ seq -f "sale_%g ${RANDOM}" 20 | docker container exec -i connect-europe bash -c "kafka-console-producer --bootstrap-server broker-metrics:9092 --topic sales"
 ```
 
 Consumer with group my-consumer-group and the `ConsumerTimestampsInterceptor` interceptor reads 10 messages in Metrics cluster. The interceptor will create the `__consumer_timestamp` topic.

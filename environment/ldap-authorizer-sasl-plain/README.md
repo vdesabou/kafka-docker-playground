@@ -93,7 +93,7 @@ $ docker exec broker kafka-topics --create --topic testtopic --partitions 10 --r
 Run console producer without authorizing user `client`: SHOULD FAIL
 
 ```bash
-$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/client.properties << EOF
+$ docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic testtopic --producer.config /service/kafka/users/client.properties << EOF
 message client
 EOF
 ```
@@ -116,7 +116,7 @@ $ docker exec broker kafka-acls --bootstrap-server broker:9092 --add --topic=tes
 Rerun producer for `client`: SHOULD BE SUCCESS
 
 ```bash
-$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/client.properties << EOF
+$ docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic testtopic --producer.config /service/kafka/users/client.properties << EOF
 message client
 EOF
 ```
@@ -148,7 +148,7 @@ playground topic consume --topic testtopic --min-expected-messages 1 --timeout 6
 Run console producer with authorized user `barnie` (barnie is in group): SHOULD BE SUCCESS
 
 ```bash
-$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/barnie.properties << EOF
+$ docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic testtopic --producer.config /service/kafka/users/barnie.properties << EOF
 message Barnie
 EOF
 ```
@@ -156,7 +156,7 @@ EOF
 Run console producer without authorizing user `charlie` (charlie is NOT in group): SHOULD FAIL
 
 ```bash
-$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/charlie.properties << EOF
+$ docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic testtopic --producer.config /service/kafka/users/charlie.properties << EOF
 message Charlie
 EOF
 ```

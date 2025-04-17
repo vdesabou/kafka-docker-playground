@@ -32,7 +32,7 @@ $ curl -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO -X PUT -H "Content-Type: applica
 Sending messages to topic executable-products on source OnPREM cluster:
 
 ```bash
-$ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic executable-products --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"name","type":"string"},
+$ docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic executable-products --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"name","type":"string"},
 {"name":"price", "type": "float"}, {"name":"quantity", "type": "int"}]}' << EOF
 {"name": "scissors", "price": 2.75, "quantity": 3}
 {"name": "tape", "price": 0.99, "quantity": 10}

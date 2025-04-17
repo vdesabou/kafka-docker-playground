@@ -32,7 +32,7 @@ sleep 30
 Sending messages in A cluster (OnPrem)
 
 ```bash
-seq -f "A_sale_%g ${RANDOM}" 20 | docker container exec -i broker1 kafka-console-producer --broker-list localhost:9092 --topic sales_A
+seq -f "A_sale_%g ${RANDOM}" 20 | docker container exec -i broker1 kafka-console-producer --bootstrap-server localhost:9092 --topic sales_A
 ```
 
 Consumer with group my-consumer-group reads 10 messages in A cluster (OnPrem)

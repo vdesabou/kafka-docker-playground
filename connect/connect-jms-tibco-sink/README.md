@@ -64,7 +64,7 @@ $ curl -X PUT \
 Sending messages to topic `sink-messages`:
 
 ```bash
-seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages
+seq 10 | docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic sink-messages
 ```
 
 Verify we have received the data in `connector-quickstart` EMS queue:

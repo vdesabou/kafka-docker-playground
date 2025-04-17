@@ -38,7 +38,7 @@ docker exec broker-europe kafka-topics --create --topic demo --bootstrap-server 
 Sending 20 messages in US cluster
 
 ```bash
-seq -f "us_sale_%g ${RANDOM}" 20 | docker container exec -i connect-us bash -c "kafka-console-producer --broker-list broker-us:9092 --topic demo"
+seq -f "us_sale_%g ${RANDOM}" 20 | docker container exec -i connect-us bash -c "kafka-console-producer --bootstrap-server broker-us:9092 --topic demo"
 ```
 
 Verify we have received the data in source cluster using consumer group id my-consumer-group, we read only 5 messages
@@ -213,7 +213,7 @@ Processed a total of 5 messages
 Verify that the topic mirror is read-only
 
 ```bash
-seq -f "europe_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "kafka-console-producer --broker-list broker-europe:9092 --topic demo"
+seq -f "europe_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "kafka-console-producer --bootstrap-server broker-europe:9092 --topic demo"
 ```
 
 ```
@@ -338,12 +338,12 @@ Produce to both topics to verify divergence
 Sending data again in US cluster
 
 ```bash
-seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "kafka-console-producer --broker-list broker-us:9092 --topic demo"
+seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "kafka-console-producer --bootstrap-server broker-us:9092 --topic demo"
 ```
 Sending data in EUROPE cluster
 
 ```bash
-seq -f "europe_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "kafka-console-producer --broker-list broker-europe:9092 --topic demo"
+seq -f "europe_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "kafka-console-producer --bootstrap-server broker-europe:9092 --topic demo"
 ```
 
 Delete the cluster link

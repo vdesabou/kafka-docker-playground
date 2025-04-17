@@ -56,7 +56,7 @@ If you want to manually create the token using UI, follow steps from [Quick Star
 Sending messages to topic splunk-qs
 
 ```bash
-$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic splunk-qs << EOF
+$ docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic splunk-qs << EOF
 This is a test with Splunk 1
 This is a test with Splunk 2
 This is a test with Splunk 3

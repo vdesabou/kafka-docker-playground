@@ -19,13 +19,13 @@ $ just use <playground run> command and search for mirrormaker2-plaintext.sh in 
 Sending sales in Europe cluster
 
 ```bash
-$ seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe kafka-console-producer --broker-list localhost:9092 --topic sales_EUROPE
+$ seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe kafka-console-producer --bootstrap-server localhost:9092 --topic sales_EUROPE
 ```
 
 Sending sales in US cluster
 
 ```bash
-$ seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-us kafka-console-producer --broker-list localhost:9092 --topic sales_US
+$ seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-us kafka-console-producer --bootstrap-server localhost:9092 --topic sales_US
 ```
 
 Consolidating all sales (logs are in /tmp/mirrormaker.log):

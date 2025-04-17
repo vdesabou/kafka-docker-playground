@@ -37,7 +37,7 @@ $ just use <playground run> command and search for google-cloud-functions<use ta
 Produce test data to the functions-messages topic in Kafka
 
 ```bash
-$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic functions-messages --property parse.key=true --property key.separator=, << EOF
+$ docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic functions-messages --property parse.key=true --property key.separator=, << EOF
 key1,value1
 key2,value2
 key3,value3

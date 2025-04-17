@@ -22,7 +22,7 @@ $ just use <playground run> command and search for redis-sink.sh in this folder
 Sending messages to topic users
 
 ```bash
-$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic users --property parse.key=true --property key.separator=, << EOF
+$ docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic users --property parse.key=true --property key.separator=, << EOF
 key1,value1
 key2,value2
 key3,value3
