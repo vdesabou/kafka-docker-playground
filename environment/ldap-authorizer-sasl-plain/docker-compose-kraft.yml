@@ -1,0 +1,24 @@
+---
+services:
+
+  controller:
+    environment:
+      KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
+      KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter;User:ksqldb;User:conduktor;User:controller;User:ANONYMOUS
+
+  broker:
+    environment:
+      # FIXTHIS:
+      # org.apache.kafka.common.KafkaException: Class io.confluent.metrics.reporter.ConfluentMetricsReporter cannot be found
+      KAFKA_METRIC_REPORTERS: ""
+
+  broker2:
+    environment:
+      # FIXTHIS:
+      # org.apache.kafka.common.KafkaException: Class io.confluent.metrics.reporter.ConfluentMetricsReporter cannot be found
+      KAFKA_METRIC_REPORTERS: ""
+  broker3:
+    environment:
+      # FIXTHIS:
+      # org.apache.kafka.common.KafkaException: Class io.confluent.metrics.reporter.ConfluentMetricsReporter cannot be found
+      KAFKA_METRIC_REPORTERS: ""
