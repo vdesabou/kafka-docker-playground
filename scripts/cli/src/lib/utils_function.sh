@@ -296,7 +296,6 @@ EOF
     rm -rf $tmp_dir
   fi
   set -e
-  exit 0
 }
 
 
@@ -518,17 +517,27 @@ function get_ccs_or_ce_specifics() {
 }
 
 function determine_kraft_mode() {
-  export TAG_BASE=$(echo $TAG | cut -d "-" -f1)
+  TAG_BASE=$(echo $TAG | cut -d "-" -f1)
   first_version=${TAG_BASE}
-  if version_gt $first_version 7.9.99
+  if [[ -n $ENABLE_KRAFT ]] || version_gt $first_version "7.9.99"
   then
-    log "🛰️ Starting up Confluent Platform in Kraft mode"
+    if [[ -n $ENABLE_KRAFT ]]
+    then
+      log "🛰️ Starting up Confluent Platform in Kraft mode as ENABLE_KRAFT environment variable is set"
+      if ! version_gt $TAG_BASE "7.3.99"
+      then
+        logerror "❌ Kraft mode is not supported with playground for CP version < 7.4, please use Zookeeper mode"
+        exit 1
+      fi
+    else
+      log "🛰️ Starting up Confluent Platform in Kraft mode as CP version is > 8"
+    fi
     export ENABLE_KRAFT="true"
     export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="-f ../../environment/plaintext/docker-compose-kraft.yml"
     export CONTROLLER_SECURITY_PROTOCOL_MAP=",CONTROLLER:PLAINTEXT"
     export KAFKA_AUTHORIZER_CLASS_NAME="org.apache.kafka.metadata.authorizer.StandardAuthorizer"
   else
-    log "👨‍⚕️ Starting up Confluent Platform in Zookeeper mode"
+    log "👨‍🦳 Starting up Confluent Platform in Zookeeper mode"
     export ENABLE_ZOOKEEPER="true"
     export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE=""
     export CONTROLLER_SECURITY_PROTOCOL_MAP=""
