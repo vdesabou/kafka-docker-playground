@@ -331,10 +331,6 @@ Using single cluster:
 - [LDAP Authorizer with SASL/PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/ldap-authorizer-sasl-plain) no SSL encryption, SASL/PLAIN authentication, LDAP Authorizer for ACL authorization :environment/ldap-authorizer-sasl-plain:
 - [RBAC with SASL/PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/rbac-sasl-plain) RBAC with no SSL encryption, SASL/PLAIN authentication :environment/rbac-sasl-plain:
 
-Using KRaft ([KIP-500](https://cwiki.apache.org/confluence/display/KAFKA/KIP-500%3A+Replace+ZooKeeper+with+a+Self-Managed+Metadata+Quorum), i.e without zookeeper) cluster:
-
-- [KRAFT PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/kraft-plaintext): no security :environment/kraft-plaintext:
-
 Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 
 - [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-plaintext): no security :environment/mdc-plaintext:
