@@ -11,6 +11,8 @@ services:
     image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
     hostname: zookeeper-europe
     container_name: zookeeper-europe
+    profiles:
+    - zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -19,6 +21,8 @@ services:
     image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
     hostname: zookeeper-us
     container_name: zookeeper-us
+    profiles:
+    - zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -27,6 +31,8 @@ services:
     image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
     hostname: zookeeper-metrics
     container_name: zookeeper-metrics
+    profiles:
+    - zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -36,9 +42,7 @@ services:
     hostname: broker-europe
     container_name: broker-europe
     depends_on:
-      - zookeeper-europe
       - broker-metrics
-      - zookeeper-metrics
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-europe:2181'
@@ -64,11 +68,9 @@ services:
     hostname: broker-us
     container_name: broker-us
     depends_on:
-      - zookeeper-us
       - broker-metrics
-      - zookeeper-metrics
     environment:
-      KAFKA_BROKER_ID: 2
+      KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-us:2181'
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker-us:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -91,10 +93,8 @@ services:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker-metrics
     container_name: broker-metrics
-    depends_on:
-      - zookeeper-metrics
     environment:
-      KAFKA_BROKER_ID: 2
+      KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-metrics:2181'
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker-metrics:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -114,7 +114,6 @@ services:
       - "8083:8083"
       - "5005:5005"
     depends_on:
-      - zookeeper-us
       - broker-us
       - broker-metrics
     environment:
@@ -160,7 +159,6 @@ services:
       - "8283:8083"
       - "5006:5005"
     depends_on:
-      - zookeeper-europe
       - broker-europe
       - broker-metrics
     environment:
@@ -232,7 +230,6 @@ services:
     container_name: control-center
     depends_on:
       - broker-metrics
-      - zookeeper-metrics
       - broker-us
       - connect-us
     ports:
