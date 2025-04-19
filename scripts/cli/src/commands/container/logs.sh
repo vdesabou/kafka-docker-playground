@@ -5,7 +5,7 @@ max_wait="${args[--max-wait]}"
 
 if [[ -n "$open" ]]
 then
-  filename="/tmp/${container}-`date '+%Y-%m-%d-%H-%M-%S'`.log"
+  filename="/tmp/${container}-$(date '+%Y-%m-%d-%H-%M-%S').log"
   docker container logs "$container" > "$filename" 2>&1
   if [ $? -eq 0 ]
   then

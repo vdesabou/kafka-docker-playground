@@ -1940,7 +1940,7 @@
                 "--tail"
               ],
               "argument": "",
-              "description": "Tail on logs.\n\nConflicts with: --min-expected-messages, --max-messages\n"
+              "description": "Tail on logs.\n\nConflicts with: --min-expected-messages, --max-messages, --open\n"
             },
             {
               "names": [
@@ -1969,6 +1969,14 @@
               ],
               "argument": 3000,
               "description": "Max characters per message to display (default is 3000)\n\nDefault value: 3000\n"
+            },
+            {
+              "names": [
+                "--open",
+                "-o"
+              ],
+              "argument": "",
+              "description": "🔖 Save full dump of topic to a file and open with text editor set with playground config editor <editor> (default is code)\n\nConflicts with: --max-characters, --tail, --min-expected-messages\n"
             }
           ]
         },

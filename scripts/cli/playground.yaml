@@ -2091,7 +2091,7 @@ subcommands:
           description: | 
             Tail on logs.
             
-            Conflicts with: --min-expected-messages, --max-messages
+            Conflicts with: --min-expected-messages, --max-messages, --open
             
         - names:
           - --plot-latencies-timestamp-field
@@ -2122,6 +2122,15 @@ subcommands:
             Max characters per message to display (default is 3000)
             
             Default value: 3000
+            
+        - names:
+          - --open
+          - -o
+          argument: ""
+          description: | 
+            🔖 Save full dump of topic to a file and open with text editor set with playground config editor <editor> (default is code)
+            
+            Conflicts with: --max-characters, --tail, --min-expected-messages
             
       - name: produce
         description: | 

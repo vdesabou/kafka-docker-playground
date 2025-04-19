@@ -9,6 +9,7 @@ timestamp_field="${args[--plot-latencies-timestamp-field]}"
 key_subject="${args[--key-subject]}"
 value_subject="${args[--value-subject]}"
 max_characters="${args[--max-characters]}"
+open="${args[--open]}"
 
 if [[ -n "$key_subject" ]]
 then
@@ -171,9 +172,28 @@ do
     fi
   fi
 
+  if [[ -n "$open" ]]
+  then
+    filename="/tmp/dump-${topic}-$(date '+%Y-%m-%d-%H-%M-%S').log"
+
+    log "📄 dumping topic content to $filename"
+    playground topic consume --topic $topic --max-messages -1 > $filename
+    if [ $? -eq 0 ]
+    then
+      playground open --file "${filename}"
+    else
+      logerror "❌ failed to dump topic $topic"
+    fi
+    exit 0
+  fi
+
   if [ -n "$tail" ]
   then
     log "✨ Tailing content of topic $topic"
+  elif [[ -n "$max_messages" ]] && [ $max_messages -eq -1 ] && [[ ! -n "$timestamp_field" ]]
+  then
+    log "✨ --max-messages is set to -1, display full content of topic $topic, it contains $nb_messages messages"
+    max_messages=$nb_messages
   elif [[ -n "$max_messages" ]] && [ $nb_messages -ge $max_messages ] && [[ ! -n "$timestamp_field" ]]
   then
     log "✨ Display content of topic $topic, it contains $nb_messages messages, but displaying only --max-messages=$max_messages"

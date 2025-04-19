@@ -2341,7 +2341,7 @@ commands:
         required: false
         help: |-
           Tail on logs.
-        conflicts: [--min-expected-messages, --max-messages]
+        conflicts: [--min-expected-messages, --max-messages, --open]
 
       - long: --plot-latencies-timestamp-field
         required: false
@@ -2376,6 +2376,12 @@ commands:
         default: "3000"
         help: |-
           Max characters per message to display (default is 3000)
+
+      - long: --open
+        short: -o
+        help: |- 
+          🔖 Save full dump of topic to a file and open with text editor set with playground config editor <editor> (default is code)
+        conflicts: [--max-characters, --tail, --min-expected-messages]
 
     - name: produce
       filters:

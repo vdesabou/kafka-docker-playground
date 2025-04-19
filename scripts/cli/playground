@@ -4784,7 +4784,7 @@ playground_topic_consume_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--tail")"
     printf "    Tail on logs.\n"
-    printf "    %s\n" "Conflicts: --min-expected-messages, --max-messages"
+    printf "    %s\n" "Conflicts: --min-expected-messages, --max-messages, --open"
     echo
 
     # :flag.usage
@@ -4806,6 +4806,12 @@ playground_topic_consume_usage() {
     printf "  %s\n" "$(magenta "--max-characters MAX-CHARACTERS")"
     printf "    Max characters per message to display (default is 3000)\n"
     printf "    %s\n" "Default: 3000"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--open, -o")"
+    printf "    🔖 Save full dump of topic to a file and open with text editor set with\n    playground config editor <editor> (default is code)\n"
+    printf "    %s\n" "Conflicts: --max-characters, --tail, --min-expected-messages"
     echo
 
     # :command.usage_fixed_flags
@@ -20831,7 +20837,7 @@ playground_container_logs_command() {
 
   if [[ -n "$open" ]]
   then
-    filename="/tmp/${container}-`date '+%Y-%m-%d-%H-%M-%S'`.log"
+    filename="/tmp/${container}-$(date '+%Y-%m-%d-%H-%M-%S').log"
     docker container logs "$container" > "$filename" 2>&1
     if [ $? -eq 0 ]
     then
@@ -21318,6 +21324,7 @@ playground_topic_consume_command() {
   key_subject="${args[--key-subject]}"
   value_subject="${args[--value-subject]}"
   max_characters="${args[--max-characters]}"
+  open="${args[--open]}"
 
   if [[ -n "$key_subject" ]]
   then
@@ -21482,9 +21489,28 @@ playground_topic_consume_command() {
       fi
     fi
 
+    if [[ -n "$open" ]]
+    then
+      filename="/tmp/dump-${topic}-$(date '+%Y-%m-%d-%H-%M-%S').log"
+
+      log "📄 Logging output to $filename"
+      playground topic consume --topic $topic --max-messages -1 > $filename
+      if [ $? -eq 0 ]
+      then
+        playground open --file "${filename}"
+      else
+        logerror "❌ failed to dump topic $topic"
+      fi
+      exit 0
+    fi
+
     if [ -n "$tail" ]
     then
       log "✨ Tailing content of topic $topic"
+    elif [[ -n "$max_messages" ]] && [ $max_messages -eq -1 ] && [[ ! -n "$timestamp_field" ]]
+    then
+      log "✨ --max-messages is set to -1, display content of topic $topic, it contains $nb_messages messages"
+      max_messages=$nb_messages
     elif [[ -n "$max_messages" ]] && [ $nb_messages -ge $max_messages ] && [[ ! -n "$timestamp_field" ]]
     then
       log "✨ Display content of topic $topic, it contains $nb_messages messages, but displaying only --max-messages=$max_messages"
@@ -21502,6 +21528,7 @@ playground_topic_consume_command() {
     then
       log "📈 plotting results.."
     fi
+
     key_type=""
     version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/latest" | jq -r .version)
     if [ "$version" != "null" ]
@@ -21695,6 +21722,7 @@ playground_topic_consume_command() {
     first_record=1
     is_base64=0
     export LC_ALL=C
+
     # Loop through each line in the named pipe
     while read -r line
     do
@@ -37519,7 +37547,7 @@ playground_topic_consume_parse_requirements() {
       # :flag.case
       --tail)
         # :flag.conflicts
-        for conflict in --min-expected-messages --max-messages; do
+        for conflict in --min-expected-messages --max-messages --open; do
           if [[ -n "${args[$conflict]:-}" ]]; then
             printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
             exit 1
@@ -37585,6 +37613,21 @@ playground_topic_consume_parse_requirements() {
           printf "%s\n" "--max-characters requires an argument: --max-characters MAX-CHARACTERS" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --open | -o)
+        # :flag.conflicts
+        for conflict in --max-characters --tail --min-expected-messages; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--open']=1
+        shift
         ;;
 
       -?*)
