@@ -946,6 +946,46 @@ playground_update_readme_usage() {
 }
 
 # :command.usage
+playground_force_ci_usage() {
+  printf "playground force-ci\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground force-ci [FILENAME] [OPTIONS]\n"
+  printf "  playground force-ci --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--all")"
+    printf "\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--force")"
+    printf "\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "FILENAME")"
+    printf "    pattern of file to remove. A confirmation will be asked\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_update_docs_usage() {
   printf "playground update-docs\n\n"
 
@@ -9500,7 +9540,7 @@ retrycmd() {
 
 # for RBAC, taken from cp-demo
 function host_check_kafka_cluster_registered() {
-  KAFKA_CLUSTER_ID=$(confluent cluster describe --url http://broker:8091 --output json | jq -r .scope[0].id)
+  KAFKA_CLUSTER_ID=$(docker container exec zookeeper zookeeper-shell zookeeper:2181 get /cluster/id 2> /dev/null | grep \"version\" | jq -r .id)
   if [ -z "$KAFKA_CLUSTER_ID" ]; then
     return 1
   fi
@@ -14080,6 +14120,47 @@ playground_update_readme_command() {
   echo "" >> ./docs/introduction.md
   cat ./docs/introduction-footer.md >> ./docs/introduction.md
 
+}
+
+# :command.function
+playground_force_ci_command() {
+
+  # src/commands/force-ci.sh
+  filename="${args[filename]}"
+  all="${args[--all]}"
+  force="${args[--force]}"
+
+  if [[ -n "$all" ]]
+  then
+      log "removing all ci files in s3://kafka-docker-playground/ci/"
+      check_if_continue
+      aws s3 rm --only-show-errors s3://kafka-docker-playground/ci/ --recursive --region us-east-1
+      exit 0
+  fi
+
+  if [[ -n "$force" ]]
+  then
+      GITHUB_RUN_NUMBER=1
+  fi
+
+  if [[ -n "$filename" ]]
+  then
+      log "checking if file exists in s3://kafka-docker-playground/ci/ containing '$filename' in its name"
+      files=$(aws s3 ls s3://kafka-docker-playground/ci/ --region us-east-1 | grep "$filename" | awk '{print $4}')
+
+      if [[ -n "$files" ]]; then
+          log "file(s) found: $files. Deleting..."
+          for file in $files
+          do
+              log "deleting $file"
+              check_if_continue
+              aws s3 rm "s3://kafka-docker-playground/ci/$file" --only-show-errors --region us-east-1
+          done
+          log "file(s) deleted successfully."
+      else
+          log "no file found containing '$filename' in its name."
+      fi
+  fi
 }
 
 # :command.function
@@ -21493,7 +21574,7 @@ playground_topic_consume_command() {
     then
       filename="/tmp/dump-${topic}-$(date '+%Y-%m-%d-%H-%M-%S').log"
 
-      log "📄 Logging output to $filename"
+      log "📄 dumping topic content to $filename"
       playground topic consume --topic $topic --max-messages -1 > $filename
       if [ $? -eq 0 ]
       then
@@ -21509,7 +21590,7 @@ playground_topic_consume_command() {
       log "✨ Tailing content of topic $topic"
     elif [[ -n "$max_messages" ]] && [ $max_messages -eq -1 ] && [[ ! -n "$timestamp_field" ]]
     then
-      log "✨ --max-messages is set to -1, display content of topic $topic, it contains $nb_messages messages"
+      log "✨ --max-messages is set to -1, display full content of topic $topic, it contains $nb_messages messages"
       max_messages=$nb_messages
     elif [[ -n "$max_messages" ]] && [ $nb_messages -ge $max_messages ] && [[ ! -n "$timestamp_field" ]]
     then
@@ -21528,7 +21609,6 @@ playground_topic_consume_command() {
     then
       log "📈 plotting results.."
     fi
-
     key_type=""
     version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/latest" | jq -r .version)
     if [ "$version" != "null" ]
@@ -21722,7 +21802,6 @@ playground_topic_consume_command() {
     first_record=1
     is_base64=0
     export LC_ALL=C
-
     # Loop through each line in the named pipe
     while read -r line
     do
@@ -27095,6 +27174,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    force-ci)
+      action="force-ci"
+      shift
+      playground_force_ci_parse_requirements "$@"
+      shift $#
+      ;;
+
     update-docs)
       action="update-docs"
       shift
@@ -28777,6 +28863,72 @@ playground_update_readme_parse_requirements() {
     printf "validation error in %s:\n%s\n" "--tags TAGS" "$(validate_not_empty "${args['--tags']:-}")" >&2
     exit 1
   fi
+
+}
+
+# :command.parse_requirements
+playground_force_ci_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_force_ci_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="force-ci"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --all)
+
+        # :flag.case_no_arg
+        args['--all']=1
+        shift
+        ;;
+
+      # :flag.case
+      --force)
+
+        # :flag.case_no_arg
+        args['--force']=1
+        shift
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['filename']+x} ]]; then
+          args['filename']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -41838,6 +41990,7 @@ run() {
     "get-playground-repro-export-with-fzf") playground_get_playground_repro_export_with_fzf_command ;;
     "get-predefined-schemas") playground_get_predefined_schemas_command ;;
     "update-readme") playground_update_readme_command ;;
+    "force-ci") playground_force_ci_command ;;
     "update-docs") playground_update_docs_command ;;
     "bashly-reload") playground_bashly_reload_command ;;
     "state") playground_state_command ;;

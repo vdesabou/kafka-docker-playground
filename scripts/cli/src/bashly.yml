@@ -240,6 +240,17 @@ commands:
     - long: --generate-for-kb
       required: false
 
+- name: force-ci
+  private: true
+  args:
+  - name: filename
+    help: pattern of file to remove. A confirmation will be asked
+  flags:
+    - long: --all
+      required: false
+    - long: --force
+      required: false
+
 - name: update-docs
   private: true
 
