@@ -946,12 +946,14 @@ function handle_signal {
 trap handle_signal SIGINT
 
 parameter_for_list_broker="--bootstrap-server"
+set +e
 tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
 if [ $? != 0 ] || [ "$tag" == "" ]
 then
-    logerror "❌ Could not find current CP version from docker ps"
-    exit 1
+    # default to --bootstrap-server
+    parameter_for_list_broker="--bootstrap-server"
 fi
+set -e
 if ! version_gt $tag "5.4.99"
 then
     parameter_for_list_broker="--broker-list"
