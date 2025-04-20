@@ -10,16 +10,7 @@ verify_docker_and_memory
 check_docker_compose_version
 check_bash_version
 check_and_update_playground_version
-# https://docs.docker.com/compose/profiles/
-profile_control_center_command=""
-if [ -z "$ENABLE_CONTROL_CENTER" ]
-then
-  log "🛑 control-center is disabled"
-else
-  log "💠 control-center is enabled"
-  log "Use http://localhost:9021 to login"
-  profile_control_center_command="--profile control-center"
-fi
+set_profiles
 
 ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
 DOCKER_COMPOSE_FILE_OVERRIDE=$1

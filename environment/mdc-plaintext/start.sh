@@ -10,29 +10,8 @@ verify_docker_and_memory
 check_docker_compose_version
 check_bash_version
 check_and_update_playground_version
-# https://docs.docker.com/compose/profiles/
-profile_control_center_command=""
-if [ -z "$ENABLE_CONTROL_CENTER" ]
-then
-  log "🛑 control-center is disabled"
-else
-  log "💠 control-center is enabled"
-  log "Use http://localhost:9021 to login"
-  profile_control_center_command="--profile control-center"
-fi
 
-# Check if ENABLE_FLINK is set to true
-profile_flink=""
-if [ -z "$ENABLE_FLINK" ] 
-then
-  log "Starting services without Flink..."
-  playground state del flags.ENABLE_FLINK
-else
-  log "🐿️ Starting services with Flink..."
-  profile_flink="--profile flink"
-  playground state set flags.ENABLE_FLINK 1
-  source ${DIR}/../../scripts/flink_download_connectors.sh
-fi
+set_profiles
 
 ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
