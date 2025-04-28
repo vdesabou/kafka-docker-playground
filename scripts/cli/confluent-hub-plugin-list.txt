@@ -224,6 +224,7 @@ splunk/kafka-connect-splunk
 spoudinc/spoud-agoora
 startree/startree-native-integration
 streaming-dev-lab/secured-flow
+streamsendio/file-chunk-sink
 streamsendio/file-chunk-source
 streamsets/streamsets-sdc
 swim/swim-kafka-connect
