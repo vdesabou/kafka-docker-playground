@@ -128,7 +128,7 @@ jobs:
                       "🚀 other/filebeat-to-kafka other/rest-proxy-security-plugin other/tiered-storage-with-aws other/write-logs-to-files other/audit-logs schema-registry/multiple-event-types-in-topic other/broker-schema-validation other/schema-registry-security-plugin multi-data-center/cluster-linking other/secrets-management other/connect-secret-registry other/schema-format-protobuf other/schema-format-json-schema other/schema-format-avro",
                       "🚀 ccloud/replicator ccloud/rest-proxy-security-plugin ccloud/schema-registry-security-plugin ccloud/audit-log-connector",
                       "🚀 connect/connect-cdc-oracle12-source",
-                      "🚀 connect/connect-cdc-oracle19-source",
+                      "🚀 connect/connect-cdc-oracle19-source connect/connect-cdc-xstream-oracle19-source",
                       "🚀 connect/connect-cdc-oracle18-source",
                       "🚀 connect/connect-cdc-oracle21-source",
                       "🚀 connect/connect-weblogic-source connect/connect-jms-weblogic-sink connect/connect-jms-weblogic-source",
