@@ -18,6 +18,9 @@ set -e
 # https://github.com/microsoft/kafka-connect-cosmosdb/blob/dev/doc/CosmosDB_Setup.md
 AZURE_NAME=pgfm${USER}ck${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
+if [ ${#AZURE_NAME} -gt 24 ]; then
+  AZURE_NAME=${AZURE_NAME:0:24}
+fi
 AZURE_REGION=westeurope
 AZURE_RESOURCE_GROUP=$AZURE_NAME
 AZURE_COSMOSDB_SERVER_NAME=$AZURE_NAME
