@@ -3137,6 +3137,11 @@ commands:
 
         # json schema references
         playground topic produce --value /path/to/scripts/cli/predefined-schemas/json-schema/schema-reference/customer.json --reference /path/to/scripts/cli/predefined-schemas/json-schema/schema-reference/address.json --reference /path/to/scripts/cli/predefined-schemas/json-schema/schema-reference/email.json --topic customers
+
+        # --derive-value-schema-as
+        playground topic produce --topic tocpic --derive-value-schema-as PROTOBUF --derive-key-schema-as PROTOBUF --key '{"id": "1"}' << 'EOF'
+        {"name": "Foo", "Age": {"int": 12}}
+        EOF
     - name: create
       group: Topic
       help: |-
