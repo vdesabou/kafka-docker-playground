@@ -16,7 +16,7 @@ set +e
 container_kill_all_before_run=$(playground config get container-kill-all-before-run)
 if [ "$container_kill_all_before_run" == "" ]
 then
-    playground config set container-kill-all-before-run true
+    playground config set container-kill-all-before-run false
 fi
 
 if [ "$container_kill_all_before_run" == "true" ] || [ "$container_kill_all_before_run" == "" ]

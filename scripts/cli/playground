@@ -1197,7 +1197,7 @@ playground_config_usage() {
   printf "  %s   copy to clipboard connector config (only working on MacOS)\n" "$(green "clipboard")                       "
   printf "  %s   when running a fully managed connector example, it opens the connector in browser\n" "$(green "open-ccloud-connector-in-browser")"
   printf "  %s   when running an example with --enable-jmx-grafana flag, it opens grafana in browser\n" "$(green "open-grafana-in-browser")         "
-  printf "  %s   when running an example, always call playground container kill-all first. If not set, it will call playground stop instead.\n" "$(green "container-kill-all-before-run")   "
+  printf "  %s   when running an example, always call playground container kill-all first. If set to false, it will call playground stop instead.\n" "$(green "container-kill-all-before-run")   "
   printf "  %s   when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.\n" "$(green "check-and-update-repo-version")   "
   echo
 
@@ -1628,9 +1628,9 @@ playground_config_open_grafana_in_browser_browser_usage() {
 playground_config_container_kill_all_before_run_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground config container-kill-all-before-run\n\n"
-    printf "  when running an example, always call playground container kill-all first. If\n  not set, it will call playground stop instead.\n\n"
+    printf "  when running an example, always call playground container kill-all first. If\n  set to false, it will call playground stop instead.\n\n"
   else
-    printf "playground config container-kill-all-before-run - when running an example, always call playground container kill-all first. If not set, it will call playground stop instead.\n\n"
+    printf "playground config container-kill-all-before-run - when running an example, always call playground container kill-all first. If set to false, it will call playground stop instead.\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -1653,7 +1653,7 @@ playground_config_container_kill_all_before_run_usage() {
     # :argument.usage
     printf "  %s\n" "$(blue "ENABLED")"
     printf "\n"
-    printf "    %s\n" "Default: true"
+    printf "    %s\n" "Default: false"
     echo
 
     # :command.usage_examples
@@ -14725,7 +14725,7 @@ playground_run_command() {
   container_kill_all_before_run=$(playground config get container-kill-all-before-run)
   if [ "$container_kill_all_before_run" == "" ]
   then
-      playground config set container-kill-all-before-run true
+      playground config set container-kill-all-before-run false
   fi
 
   if [ "$container_kill_all_before_run" == "true" ] || [ "$container_kill_all_before_run" == "" ]
@@ -16486,7 +16486,7 @@ playground_start_environment_command() {
   container_kill_all_before_run=$(playground config get container-kill-all-before-run)
   if [ "$container_kill_all_before_run" == "" ]
   then
-      playground config set container-kill-all-before-run true
+      playground config set container-kill-all-before-run false
   fi
 
   if [ "$container_kill_all_before_run" == "true" ] || [ "$container_kill_all_before_run" == "" ]
@@ -30309,7 +30309,7 @@ playground_config_container_kill_all_before_run_parse_requirements() {
   done
 
   # :command.default_assignments
-  [[ -n ${args['enabled']:-} ]] || args['enabled']="true"
+  [[ -n ${args['enabled']:-} ]] || args['enabled']="false"
 
 }
 

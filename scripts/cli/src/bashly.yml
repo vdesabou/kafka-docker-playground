@@ -420,11 +420,11 @@ commands:
 
   - name: container-kill-all-before-run
     help: |
-      when running an example, always call playground container kill-all first. If not set, it will call playground stop instead.
+      when running an example, always call playground container kill-all first. If set to false, it will call playground stop instead.
     args:
     - name: enabled
       required: false
-      default: "true"
+      default: "false"
     examples:
     - playground config container-kill-all-before-run false
     - playground config container-kill-all-before-run true
