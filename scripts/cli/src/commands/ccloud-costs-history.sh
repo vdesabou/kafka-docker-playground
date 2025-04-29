@@ -44,22 +44,22 @@ while true; do
     # Break the loop if end_date is in the future
     if [[ "$end_date" > "$(date +%Y-%m-%d)" ]]; then
         end_date=$(date +%Y-%m-%d) # Set end_date to today
-        cost=$(playground ccloud-costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost)
+        cost=$(playground  --output-level ERROR ccloud-costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost)
         display_histogram "$(readable_date $current_date) to $(readable_date $end_date)" "$cost"
         if [[ -n "$detailed" ]]
         then
-            playground ccloud-costs --start-date "$current_date" --end-date "$end_date" 
+            playground  --output-level ERROR ccloud-costs --start-date "$current_date" --end-date "$end_date" 
         fi
         break
     fi
 
-    # Call playground ccloud-costs for the current range
-    cost=$(playground ccloud-costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost)
+    # Call playground  --output-level ERROR ccloud-costs for the current range
+    cost=$(playground  --output-level ERROR ccloud-costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost)
     display_histogram "$(readable_date $current_date) to $(readable_date $end_date)" "$cost"
 
     if [[ -n "$detailed" ]]
     then
-        playground ccloud-costs --start-date "$current_date" --end-date "$end_date" 
+        playground  --output-level ERROR ccloud-costs --start-date "$current_date" --end-date "$end_date" 
     fi
 
     # Move to the next range
