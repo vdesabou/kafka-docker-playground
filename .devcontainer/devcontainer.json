@@ -1,34 +1,96 @@
 {
   "name": "kafka-docker-playground",
   "build": {
-    "dockerfile": "Dockerfile"
+    "dockerfile": "../.gitpod.Dockerfile"
   },
-  "settings": {
-    "terminal.integrated.defaultProfile.linux": "zsh",
-    "terminal.integrated.profiles.linux": {
-      "bash": {
-        "path": "bash",
-        "icon": "terminal-bash"
-      },
-      "zsh": {
-        "path": "zsh"
-      }
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "remoteUser": "gitpod",
+  "containerUser": "gitpod",
+  "workspaceFolder": "/workspace/kafka-docker-playground",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace/kafka-docker-playground,type=bind",
+  "forwardPorts": [
+    9999,
+    9092,
+    10000,
+    29092,
+    8083,
+    5005,
+    10002,
+    9021,
+    8081,
+    10001,
+    8088,
+    10003
+  ],
+  "portsAttributes": {
+    "10000": {
+      "label": "Port 10000",
+      "onAutoForward": "ignore",
+      "elevateIfNeeded": true
+    },
+    "10001": {
+      "label": "Port 10001",
+      "onAutoForward": "ignore",
+      "elevateIfNeeded": true
+    },
+    "10002": {
+      "label": "Port 10002",
+      "onAutoForward": "ignore",
+      "elevateIfNeeded": true
+    },
+    "10003": {
+      "label": "Port 10003",
+      "onAutoForward": "ignore",
+      "elevateIfNeeded": true
+    },
+    "29092": {
+      "label": "Port 29092",
+      "onAutoForward": "ignore",
+      "elevateIfNeeded": true
+    },
+    "5005": {
+      "label": "Port 5005",
+      "onAutoForward": "ignore",
+      "elevateIfNeeded": true
+    },
+    "8081": {
+      "label": "Port 8081",
+      "onAutoForward": "ignore",
+      "elevateIfNeeded": true
+    },
+    "8083": {
+      "label": "Port 8083",
+      "onAutoForward": "ignore",
+      "elevateIfNeeded": true
+    },
+    "8088": {
+      "label": "Port 8088",
+      "onAutoForward": "ignore",
+      "elevateIfNeeded": true
+    },
+    "9021": {
+      "label": "Port 9021",
+      "onAutoForward": "notify",
+      "elevateIfNeeded": true
+    },
+    "9092": {
+      "label": "Port 9092",
+      "onAutoForward": "ignore",
+      "elevateIfNeeded": true
+    },
+    "9999": {
+      "label": "Port 9999",
+      "onAutoForward": "ignore",
+      "elevateIfNeeded": true
     }
   },
-  "remoteEnv": {
-    "PATH": "${containerEnv:PATH}:/workspaces/kafka-docker-playground/scripts/cli",
-    "C3_PORT": "9023"
-  },
-  "forwardPorts": [9023],
-  "features": {
-      "ghcr.io/devcontainers/features/docker-in-docker:2": {},
-      "ghcr.io/mikaello/devcontainer-features/modern-shell-utils:1": {},
-      "ghcr.io/devcontainers-contrib/features/fzf:1": {},
-      "ghcr.io/devcontainers-contrib/features/starship:1": {},
-      "ghcr.io/devcontainers/features/java:1": {
-          "version": "none",
-          "installGradle": "false",
-          "installMaven": "true"
-      }
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-docker"
+      ]
+    }
   }
 }

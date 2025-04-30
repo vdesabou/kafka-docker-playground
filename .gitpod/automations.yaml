@@ -1,0 +1,19 @@
+tasks:
+    command-1:
+        command: "if [ -z \"$SECRETS_ENCRYPTION_PASSWORD\" ]; then echo \"\U0001F680 Enjoy the playground\"; else echo \"ℹ️ SECRETS_ENCRYPTION_PASSWORD environment variable is set\"; ./.github/scripts/decrypt_secret.sh;tar xvf secrets.tar;rm secrets.tar;mkdir -p $HOME/.aws;mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role;chmod -R a+rw $HOME/.aws;mkdir -p $HOME/.confluent;echo \"$DOCKER_PASSWORD\" | docker login -u \"$DOCKER_USERNAME\" --password-stdin;fi"
+        dependsOn:
+            - init-001
+        description: init task migrated from .gitpod.yml
+        name: 'playground: command'
+        triggeredBy:
+            - postDevcontainerStart
+    init-000:
+        command: "cd environment/kerberos && source ../../scripts/utils.sh && docker compose -f ../../environment/plaintext/docker-compose.yml --profile control-center --profile ksqldb pull && cd - \ndocker pull google/cloud-sdk:latest\ndocker pull amazon/aws-cli\ndocker pull mcr.microsoft.com/azure-cli\ndocker pull imega/jq\ndocker pull vdesabou/avro-tools\ngp sync-done prebuild\n"
+        description: init task migrated from .gitpod.yml
+        name: 'prebuild: init'
+        triggeredBy:
+            - postDevcontainerStart
+    init-001:
+        command: gp sync-await prebuild
+        description: init task migrated from .gitpod.yml
+        name: 'playground: init'
