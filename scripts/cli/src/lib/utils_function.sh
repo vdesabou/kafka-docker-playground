@@ -3122,7 +3122,7 @@ function ccloud::create_ccloud_stack() {
 
   MAX_WAIT=720
   echo ""
-  echo "Waiting up to $MAX_WAIT seconds for Confluent Cloud cluster to be ready"
+  echo "Waiting up to $MAX_WAIT seconds for Confluent Cloud cluster $CLUSTER to be ready"
   ccloud::retry $MAX_WAIT ccloud::validate_ccloud_cluster_ready || exit 1
 
   # VINC: added
