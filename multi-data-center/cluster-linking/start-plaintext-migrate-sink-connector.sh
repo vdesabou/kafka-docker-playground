@@ -9,7 +9,7 @@ if ! version_gt $TAG_BASE "6.9.9"; then
     exit 111
 fi
 
-${DIR}/../../environment/mdc-plaintext/start.sh "${PWD}/docker-compose.mdc-plaintext-migrate-sink-connector.yml"
+playground start-environment --environment mdc-sasl-plain --docker-compose-override-file "${PWD}/docker-compose.mdc-plaintext-migrate-sink-connector.yml"
 
 
 log "Create topic demo"

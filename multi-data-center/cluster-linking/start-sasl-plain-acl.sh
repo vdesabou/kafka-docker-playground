@@ -9,7 +9,7 @@ if ! version_gt $TAG_BASE "6.9.9"; then
     exit 111
 fi
 
-${DIR}/../../environment/mdc-sasl-plain/start.sh "${PWD}/docker-compose.mdc-sasl-plain-acl.yml"
+playground start-environment --environment mdc-sasl-plain --docker-compose-override-file "${PWD}/docker-compose.mdc-sasl-plain-acl.yml"
 
 log "Create topic demo"
 docker exec broker-europe kafka-topics --create --topic demo --bootstrap-server broker-us:9092 --replication-factor 1 --partitions 1 --command-config /tmp/superuser-client.properties
