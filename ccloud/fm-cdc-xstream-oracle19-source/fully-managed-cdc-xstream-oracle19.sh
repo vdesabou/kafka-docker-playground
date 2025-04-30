@@ -312,6 +312,11 @@ then
      docker exec -d sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username c##cfltuser --password password --sidOrServerName sid --sidOrServerNameVal ORCLCDB --maxPoolSize 10 --durationTimeMin $DURATION"
 fi
 
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name
+
 # see confluent internal doc https://docs.google.com/presentation/d/1nnbyv0YEqajzlYSDeTXFbvGYNsHzpYqgGIveWqso40Q/edit#slide=id.g32ec57f622f_0_2880 for more details
 
 # log "Monitoring session information about XStream Out components"
