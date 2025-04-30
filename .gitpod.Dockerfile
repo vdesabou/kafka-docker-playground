@@ -19,6 +19,8 @@ RUN curl -o /usr/local/bin/docker compose -fsSL https://github.com/docker/compos
 RUN echo "PATH="${PATH}"" | sudo tee /etc/environment
 
 RUN apt update && apt install fzf -y && apt install bat -y
+RUN curl -L --http1.1 https://cnfl.io/cli | sh -s -- -b /usr/local/bin
+
 USER gitpod
 RUN mkdir -p ~/.local/bin && ln -s /usr/bin/batcat ~/.local/bin/bat
 RUN echo "export PATH=~/.local/bin:/workspace/kafka-docker-playground/scripts/cli:$PATH"  >> ~/.bashrc
@@ -26,7 +28,6 @@ RUN echo "source /workspace/kafka-docker-playground/scripts/cli/completions.bash
 
 # Install Confluent Cloud CLI, with shell auto completion
 RUN mkdir -p ~/.local/share/bash-completion/
-RUN curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin && \
-    touch ~/.local/share/bash-completion/confluent && \
+RUN touch ~/.local/share/bash-completion/confluent && \
     confluent completion bash > ~/.local/share/bash-completion/confluent && \
     echo "source ~/.local/share/bash-completion/confluent" >> ~/.bashrc
