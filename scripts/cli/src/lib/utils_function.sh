@@ -2841,7 +2841,7 @@ function ccloud::validate_ccloud_ksqldb_endpoint_ready() {
 }
 
 function ccloud::validate_ccloud_cluster_ready() {
-  confluent kafka topic list #&>/dev/null
+  confluent kafka topic list --cluster "$CLUSTER" #&>/dev/null
   return $?
 }
 
