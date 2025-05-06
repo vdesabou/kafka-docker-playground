@@ -994,6 +994,15 @@ commands:
     help: |-
       🌐 Only show url
 
+- name: open-changelog
+  group: Run
+  help: |-
+    📜 Open playground changelog (https://kafka-docker-playground.io/#/changelog)
+  flags:
+  - long: --only-show-url
+    help: |-
+      🌐 Only show url
+
 - name: cleanup-cloud-resources
   group: Run
   dependencies:

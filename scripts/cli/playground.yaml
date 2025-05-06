@@ -619,6 +619,19 @@ subcommands:
         
     subcommands:
 
+  - name: open-changelog
+    description: | 
+        📜 Open playground changelog (https://kafka-docker-playground.io/#/changelog)
+    usage: playground open-changelog [OPTIONS]
+    options:
+    - names:
+      - --only-show-url
+      argument: ""
+      description: | 
+        🌐 Only show url
+        
+    subcommands:
+
   - name: cleanup-cloud-resources
     description: | 
         🧹 Cleanup cloud resources that were created by running examples from the playground
