@@ -96,7 +96,7 @@ playground connector create-or-update --connector debezium-mongodb-source  << EO
         "_comment": "old version before 2.4.x",
     "mongodb.hosts": "debezium/mongodb:27017",
     "_comment": "new version since 2.4.x",
-    "mongodb.connection.string": "mongodb://mongodb:27017",
+    "mongodb.connection.string": "mongodb://mongodb:27017/?replicaSet=debezium",
 
     "_comment": "old version before 2.x",
     "mongodb.name": "dbserver1",
