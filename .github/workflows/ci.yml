@@ -320,6 +320,7 @@ jobs:
           MONGODB_ATLAS_HOST: ${{ secrets.MONGODB_ATLAS_HOST}}
           MONGODB_ATLAS_USER: ${{ secrets.MONGODB_ATLAS_USER}}
           MONGODB_ATLAS_PASSWORD: ${{ secrets.MONGODB_ATLAS_PASSWORD}}
+          ENABLE_KRAFT: 1
 
   execute_one_test:
     if: ${{ github.event.inputs.test_name != '' }}
