@@ -9,7 +9,7 @@ if ! version_gt $TAG_BASE "6.9.9"; then
     exit 111
 fi
 
-playground start-environment --environment mdc-plaintext--docker-compose-override-file "${PWD}/docker-compose.mdc-plaintext.yml"
+playground start-environment --environment mdc-plaintext --docker-compose-override-file "${PWD}/docker-compose.mdc-plaintext.yml"
 
 log "Create topic demo"
 docker exec broker-europe kafka-topics --create --topic demo --bootstrap-server broker-us:9092 --replication-factor 1 --partitions 1
