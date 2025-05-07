@@ -1597,15 +1597,17 @@ playground generate-kafka-region-list > /dev/null 2>&1 &
 set -e
 if [ $ret -eq 0 ]
 then
-    log "####################################################"
-    log "✅ RESULT: SUCCESS for $filename ($ELAPSED - $CUMULATED)"
-    log "####################################################"
+  log "####################################################"
+  log "✅ RESULT: SUCCESS for $filename ($ELAPSED - $CUMULATED)"
+  log "####################################################"
 else
-    logerror "####################################################"
-    logerror "🔥 RESULT: FAILURE for $filename ($ELAPSED - $CUMULATED)"
-    logerror "####################################################"
+  logerror "####################################################"
+  logerror "🔥 RESULT: FAILURE for $filename ($ELAPSED - $CUMULATED)"
+  logerror "####################################################"
 
-    display_docker_container_error_log
+  display_docker_container_error_log
+
+  exit 1
 fi
 check_for_ec2_instance_running
 
