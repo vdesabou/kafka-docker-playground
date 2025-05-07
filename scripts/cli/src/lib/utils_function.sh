@@ -3121,6 +3121,7 @@ function ccloud::create_ccloud_stack() {
   fi
 
   MAX_WAIT=720
+  confluent kafka cluster use $CLUSTER
   echo ""
   echo "Waiting up to $MAX_WAIT seconds for Confluent Cloud cluster $CLUSTER to be ready"
   ccloud::retry $MAX_WAIT ccloud::validate_ccloud_cluster_ready || exit 1
