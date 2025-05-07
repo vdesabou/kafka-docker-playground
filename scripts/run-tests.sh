@@ -36,6 +36,8 @@ then
     test_list=$(grep "🚀" ${DIR}/../.github/workflows/ci.yml | cut -d '"' -f 2 | tr '\n' ' ')
 fi
 
+playground config container-kill-all-before-run true
+
 for dir in $test_list
 do
     if [ ! -d $dir ]
