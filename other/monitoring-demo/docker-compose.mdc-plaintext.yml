@@ -51,8 +51,6 @@ services:
     - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
 
   broker-europe:
-    depends_on:-europe
-      - zookeeper-europe2
     environment:
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-europe:2181,zookeeper-europe2:2181'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -64,8 +62,6 @@ services:
     - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
 
   broker-us:
-    depends_on:-us
-      - zookeeper-us2
     environment:
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-us:2181,zookeeper-us2:2181'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
