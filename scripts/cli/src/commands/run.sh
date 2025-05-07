@@ -61,6 +61,11 @@ then
   exit 1
 fi
 
+if [[ "$test_file" != /* ]]
+then
+  test_file="$PWD/$test_file"
+fi
+
 if [[ "$test_file" != *".sh" ]]
 then
   logerror "❌ test_file $test_file is not a .sh file!"
