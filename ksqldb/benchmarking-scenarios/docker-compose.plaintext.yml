@@ -9,7 +9,6 @@ services:
 
   ksqldb-server:
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
     volumes:

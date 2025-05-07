@@ -11,8 +11,6 @@ services:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker1
     container_name: broker1
-    depends_on:
-      - zookeeper
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_BROKER_RACK: rack-a
@@ -26,8 +24,6 @@ services:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker2
     container_name: broker2
-    depends_on:
-      - zookeeper
     environment:
       KAFKA_BROKER_ID: 2
       KAFKA_BROKER_RACK: rack-a
@@ -41,8 +37,6 @@ services:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker3
     container_name: broker3
-    depends_on:
-      - zookeeper
     environment:
       KAFKA_BROKER_ID: 3
       KAFKA_BROKER_RACK: rack-a
@@ -56,8 +50,6 @@ services:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker4
     container_name: broker4
-    depends_on:
-      - zookeeper
     environment:
       KAFKA_BROKER_ID: 4
       KAFKA_BROKER_RACK: rack-b
@@ -71,8 +63,6 @@ services:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker5
     container_name: broker5
-    depends_on:
-      - zookeeper
     environment:
       KAFKA_BROKER_ID: 5
       KAFKA_BROKER_RACK: rack-b
@@ -86,8 +76,6 @@ services:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker6
     container_name: broker6
-    depends_on:
-      - zookeeper
     environment:
       KAFKA_BROKER_ID: 6
       KAFKA_BROKER_RACK: rack-b
@@ -102,7 +90,6 @@ services:
     hostname: control-center
     container_name: control-center
     depends_on:
-      - zookeeper
       - broker1
       - broker2
       - broker3

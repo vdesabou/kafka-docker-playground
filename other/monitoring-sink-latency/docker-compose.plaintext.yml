@@ -33,7 +33,6 @@ services:
     container_name: connect-with-fetch-latency
     restart: always
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
     ports:
@@ -80,7 +79,6 @@ services:
     container_name: connect-with-put-latency
     restart: always
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
     ports:

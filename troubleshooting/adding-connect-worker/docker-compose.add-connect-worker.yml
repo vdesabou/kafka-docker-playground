@@ -5,7 +5,6 @@ services:
     hostname: connect2
     container_name: connect2
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
     ports:

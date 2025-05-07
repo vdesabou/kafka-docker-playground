@@ -15,7 +15,6 @@ services:
       - ../../other/mqtt-proxy/jaas_config.file:/tmp/jaas_config.file
       - ../../other/mqtt-proxy/password-file:/tmp/password-file
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
       - mosquitto

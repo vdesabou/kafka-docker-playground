@@ -21,8 +21,6 @@ services:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker1
     container_name: broker1
-    depends_on:
-      - zookeeper
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
@@ -37,8 +35,6 @@ services:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker2
     container_name: broker2
-    depends_on:
-      - zookeeper
     environment:
       KAFKA_BROKER_ID: 2
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
@@ -53,8 +49,6 @@ services:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker3
     container_name: broker3
-    depends_on:
-      - zookeeper
     environment:
       KAFKA_BROKER_ID: 3
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
@@ -70,7 +64,6 @@ services:
     container_name: connect1
     # restart: always
     depends_on:
-      - zookeeper
       - broker1
       - broker2
       - broker3
@@ -110,7 +103,6 @@ services:
     container_name: connect2
     restart: always
     depends_on:
-      - zookeeper
       - broker1
       - broker2
       - broker3
@@ -150,7 +142,6 @@ services:
     container_name: connect3
     # restart: always
     depends_on:
-      - zookeeper
       - broker1
       - broker2
       - broker3
@@ -189,7 +180,6 @@ services:
     hostname: control-center
     container_name: control-center
     depends_on:
-      - zookeeper
       - broker1
       - broker2
       - broker3

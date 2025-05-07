@@ -34,8 +34,7 @@ services:
     container_name: broker-europe
     cap_add:
       - NET_ADMIN
-    depends_on:
-      - zookeeper-europe
+    depends_on:-europe
     volumes:
       - ../../other/monitoring-cluster-linking/jmx-exporter:/usr/share/jmx_exporter/
     ports:
@@ -59,8 +58,7 @@ services:
     container_name: broker-us
     cap_add:
       - NET_ADMIN
-    depends_on:
-      - zookeeper-us
+    depends_on:-us
     volumes:
       - ../../other/monitoring-cluster-linking/jmx-exporter:/usr/share/jmx_exporter/
     ports:
