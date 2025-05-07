@@ -30,7 +30,6 @@ Here is the container:
     hostname: webserver
     container_name: webserver
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
     ports:
