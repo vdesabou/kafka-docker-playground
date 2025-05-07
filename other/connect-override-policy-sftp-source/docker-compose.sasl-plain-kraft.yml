@@ -1,0 +1,44 @@
+---
+services:
+
+  controller:
+    environment:
+      KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
+      KAFKA_SUPER_USERS: User:broker;User:schemaregistry;User:client;User:connect;User:ANONYMOUS
+
+  broker:
+    environment:
+      KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
+      KAFKA_ZOOKEEPER_SET_ACL: "true"
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+      KAFKA_SUPER_USERS: User:broker;User:schemaregistry;User:client;User:connect
+
+
+  sftp-server:
+    image: atmoz/sftp
+    hostname: sftp-server
+    container_name: sftp-server
+    ports:
+      - "2222:22"
+    command: foo:pass:::upload
+
+  connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-sftp
+      CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: Principal
+      CONNECT_ADMIN_SASL_MECHANISM: PLAIN
+      CONNECT_ADMIN_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONNECT_ADMIN_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+                username=\"connect\" \
+                password=\"connect-secret\";"
+      CONNECT_PRODUCER_SASL_MECHANISM: PLAIN
+      CONNECT_PRODUCER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONNECT_PRODUCER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+                username=\"connect\" \
+                password=\"connect-secret\";"
+      CONNECT_CONSUMER_SASL_MECHANISM: PLAIN
+      CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONNECT_CONSUMER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+                username=\"connect\" \
+                password=\"connect-secret\";"
