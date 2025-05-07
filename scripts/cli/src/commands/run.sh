@@ -1585,11 +1585,11 @@ trap cleanup EXIT
 playground generate-fzf-find-files &
 generate_connector_versions > /dev/null 2>&1 &
 touch /tmp/playground-run-command-used
+set +e
 bash $filename
 ret=$?
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 let ELAPSED_TOTAL+=$SECONDS
-set +e
 # keep those lists up to date
 playground generate-tag-list > /dev/null 2>&1 &
 playground generate-connector-plugin-list > /dev/null 2>&1 &
