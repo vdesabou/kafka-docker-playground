@@ -19,32 +19,32 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 QUEUE_NAME=pg${USER}sqs${TAG}
 QUEUE_NAME=${QUEUE_NAME//[-._]/}
 
-QUEUE_URL_RAW=$(aws sqs create-queue --queue-name $QUEUE_NAME | jq .QueueUrl)
+QUEUE_URL_RAW=$(aws sqs create-queue --queue-name $QUEUE_NAME --region ${AWS_REGION} | jq .QueueUrl)
 AWS_ACCOUNT_NUMBER=$(echo "$QUEUE_URL_RAW" | cut -d "/" -f 4)
 # https://docs.amazonaws.cn/sdk-for-net/v3/developer-guide/how-to/sqs/QueueURL.html
 # https://{REGION_ENDPOINT}/queue.|api-domain|/{YOUR_ACCOUNT_NUMBER}/{YOUR_QUEUE_NAME}
 QUEUE_URL="https://sqs.$AWS_REGION.amazonaws.com/$AWS_ACCOUNT_NUMBER/$QUEUE_NAME"
 
 set +e
-log "Delete queue ${QUEUE_URL}"
-aws sqs delete-queue --queue-url ${QUEUE_URL}
+log "Delete queue ${QUEUE_URL} in region ${AWS_REGION}"
+aws sqs delete-queue --queue-url ${QUEUE_URL} --region ${AWS_REGION}
 if [ $? -eq 0 ]
 then
      # You must wait 60 seconds after deleting a queue before you can create another with the same name
      log "Sleeping 60 seconds"
      sleep 60
-     aws sqs delete-queue --queue-url ${QUEUE_URL}
+     aws sqs delete-queue --queue-url ${QUEUE_URL} --region ${AWS_REGION}
 fi
 set -e
 
-log "Create a FIFO queue $QUEUE_NAME"
-aws sqs create-queue --queue-name $QUEUE_NAME
+log "Create a FIFO queue $QUEUE_NAME in region ${AWS_REGION}"
+aws sqs create-queue --queue-name $QUEUE_NAME --region ${AWS_REGION}
 
 function cleanup_cloud_resources {
     set +e
-    log "Delete SQS queue ${QUEUE_NAME}"
+    log "Delete SQS queue ${QUEUE_NAME} in region ${AWS_REGION}"
     check_if_continue
-    aws sqs delete-queue --queue-url ${QUEUE_URL}
+    aws sqs delete-queue --queue-url ${QUEUE_URL} --region ${AWS_REGION}
 }
 trap cleanup_cloud_resources EXIT
 
