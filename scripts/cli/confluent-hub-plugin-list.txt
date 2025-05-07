@@ -19,6 +19,8 @@ confluentinc/AlloyDbSink
 confluentinc/AzureLogAnalyticsSink
 confluentinc/BigQueryStorageSink
 confluentinc/connect-transforms
+confluentinc/CosmosDbSinkV2
+confluentinc/CosmosDbSourceV2
 confluentinc/csid-secrets-provider-aws
 confluentinc/csid-secrets-provider-azure
 confluentinc/csid-secrets-provider-gcloud
