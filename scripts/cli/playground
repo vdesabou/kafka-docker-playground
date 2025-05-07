@@ -9483,19 +9483,20 @@ function display_docker_container_error_log() {
   logerror "🐳 docker ps"
   docker ps
   logerror "####################################################"
-  for container in $(docker ps  --format="{{.Names}}")
+  while IFS= read -r container
   do
-      logerror "####################################################"
-      logerror "$container logs"
-      if [[ "$container" == "connect" ]] || [[ "$container" == "sap" ]]
-      then
-          # always show all logs for connect
-          docker container logs --tail=500 $container 2>&1 | grep -v "was supplied but isn't a known config"
-      else
-          docker container logs $container 2>&1 | egrep "ERROR|FATAL"
-      fi
-      logwarn "####################################################"
-  done
+    logerror "####################################################"
+    logerror "$container logs"
+    if [[ "$container" == "connect" ]] || [[ "$container" == "sap" ]]
+    then
+        # always show all logs for connect
+        docker container logs --tail=500 $container 2>&1 | grep -v "was supplied but isn't a known config"
+    else
+        docker container logs $container 2>&1 | egrep "ERROR|FATAL"
+    fi
+    logwarn "####################################################"
+  done < <(docker ps --format="{{.Names}}")
+
 }
 
 function retry() {
