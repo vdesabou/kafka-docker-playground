@@ -4388,9 +4388,10 @@ function login_and_maybe_set_azure_subscription () {
 }
 
 function handle_aws_credentials () {
+  rm -rf /tmp/aws_credentials
   export AWS_CREDENTIALS_FILE_NAME="/tmp/aws_credentials"
 
-  if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ] && [ -z "$AWS_SESSION_TOKEN" ]
+  if [ -z "$AWS_SESSION_TOKEN" ]
   then
     if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
     then
