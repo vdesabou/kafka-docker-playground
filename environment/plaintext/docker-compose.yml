@@ -640,7 +640,7 @@ services:
       - flink
     ports:
       - "18081:18081"  # REST API and Web UI
-      - "9090:9090"    # Prometheus metrics
+      - "9091:9090"    # Prometheus metrics
     entrypoint: >
       sh -c "$flink_connectors exec /docker-entrypoint.sh jobmanager"
     environment:
