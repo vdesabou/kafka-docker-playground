@@ -85,7 +85,7 @@ trap cleanup_cloud_resources EXIT
 
 log "Sending messages to $QUEUE_URL"
 cd ../../connect/connect-aws-sqs-source
-aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-message-batch.json
+aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-message-batch.json --region ${AWS_REGION}
 cd -
 
 log "Creating SQS Source connector"

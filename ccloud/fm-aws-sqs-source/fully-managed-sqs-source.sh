@@ -47,7 +47,7 @@ trap cleanup_cloud_resources EXIT
 
 log "Sending messages to $QUEUE_URL"
 cd ../../ccloud/fm-aws-sqs-source
-aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-message-batch.json
+aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-message-batch.json --region ${AWS_REGION}
 cd -
 
 connector_name="SqsSource_$USER"
