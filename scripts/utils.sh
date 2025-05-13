@@ -44,7 +44,6 @@ then
         log "🎓 Use --tag option to specify different version, see https://kafka-docker-playground.io/#/how-to-use?id=🎯-for-confluent-platform-cp"
       fi
     fi
-    export CP_BASE_IMAGE=confluentinc/cp-base-new
     export LEGACY_CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_SSL=""
     export CONNECT_USER="appuser"
 
@@ -211,12 +210,6 @@ else
       then
         export CP_KAFKA_IMAGE=confluentinc/cp-enterprise-kafka
       fi
-    fi
-    second_version=5.3.99
-    if version_gt $first_version $second_version; then
-        export CP_BASE_IMAGE=confluentinc/cp-base-new
-    else
-        export CP_BASE_IMAGE=confluentinc/cp-base
     fi
     second_version=5.4.99
     if version_gt $first_version $second_version; then

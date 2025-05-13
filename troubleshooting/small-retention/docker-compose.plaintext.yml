@@ -10,8 +10,8 @@ services:
     build:
       context: ../../troubleshooting/small-retention/producer/
       args:
-        TAG: ${TAG}
-        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
+        CP_CONNECT_TAG: ${CP_CONNECT_TAG}
+        CP_CONNECT_IMAGE: ${CP_CONNECT_IMAGE}
         KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
     hostname: producer
     container_name: producer

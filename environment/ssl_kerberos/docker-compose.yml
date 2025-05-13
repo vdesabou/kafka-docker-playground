@@ -20,7 +20,7 @@ services:
       context: ../../environment/ssl_kerberos/client
       args:
         CP_CONNECT_IMAGE: ${CP_CONNECT_IMAGE}
-        TAG: ${TAG}
+        CP_CONNECT_TAG: ${CP_CONNECT_TAG}
     container_name: client
     hostname: client.kerberos-demo.local
     depends_on:

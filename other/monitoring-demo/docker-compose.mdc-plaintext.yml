@@ -172,8 +172,8 @@ services:
     build:
       context: ../../other/monitoring-demo/streams/
       args:
-        TAG: ${TAG}
-        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
+        CP_CONNECT_TAG: ${CP_CONNECT_TAG}
+        CP_CONNECT_IMAGE: ${CP_CONNECT_IMAGE}
     hostname: streams
     container_name: streams
     environment:
