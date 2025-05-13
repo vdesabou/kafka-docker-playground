@@ -30,7 +30,15 @@ sed -e "s|:HPE_MAPR_EMAIL:|$HPE_MAPR_EMAIL|g" \
     ../../connect/connect-mapr-sink/maprtech.repo.template > ../../connect/connect-mapr-sink/maprtech.repo
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+
+if [ ! -z $ENABLE_KRAFT ]
+then
+  # KRAFT mode
+  playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose-kraft.yml"
+else
+  # Zookeeper mode
+  playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+fi
 
 # useful script
 # https://docs.ezmeral.hpe.com/datafabric-customer-managed/74/MapRContainerDevelopers/MapRContainerDevelopersOverview.html
