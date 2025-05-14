@@ -1,0 +1,47 @@
+---
+services:
+  
+  controller:
+    volumes:
+      - ../../environment/2way-ssl/security:/etc/kafka/secrets
+    environment:
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: "https://schema-registry:8081"
+      KAFKA_CONFLUENT_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.client.truststore.jks
+      KAFKA_CONFLUENT_SSL_TRUSTSTORE_PASSWORD: confluent
+      KAFKA_CONFLUENT_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.client.keystore.jks
+      KAFKA_CONFLUENT_SSL_KEYSTORE_PASSWORD: confluent
+      KAFKA_CONFLUENT_SSL_KEY_PASSWORD: confluent
+      KAFKA_CONFLUENT_BASIC_AUTH_CREDENTIALS_SOURCE: USER_INFO
+      KAFKA_CONFLUENT_BASIC_AUTH_USER_INFO: 'read:read'
+
+  broker:
+    environment:
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: "https://schema-registry:8081"
+      KAFKA_CONFLUENT_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.client.truststore.jks
+      KAFKA_CONFLUENT_SSL_TRUSTSTORE_PASSWORD: confluent
+      KAFKA_CONFLUENT_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.client.keystore.jks
+      KAFKA_CONFLUENT_SSL_KEYSTORE_PASSWORD: confluent
+      KAFKA_CONFLUENT_SSL_KEY_PASSWORD: confluent
+      KAFKA_CONFLUENT_BASIC_AUTH_CREDENTIALS_SOURCE: USER_INFO
+      KAFKA_CONFLUENT_BASIC_AUTH_USER_INFO: 'read:read'
+
+  schema-registry:
+    ports:
+      - "8081:8081"
+    environment:
+      CUB_CLASSPATH: '/etc/confluent/docker/docker-utils.jar:/usr/share/java/cp-base-new/*:/usr/share/java/confluent-security/schema-registry/*:/usr/share/java/schema-registry/*'
+      SCHEMA_REGISTRY_KAFKASTORE_TOPIC: "schemas-security-plugin"
+      SCHEMA_REGISTRY_SCHEMA_REGISTRY_RESOURCE_EXTENSION_CLASS: "io.confluent.kafka.schemaregistry.security.SchemaRegistrySecurityResourceExtension"
+      SCHEMA_REGISTRY_CONFLUENT_SCHEMA_REGISTRY_AUTHORIZER_CLASS: io.confluent.kafka.schemaregistry.security.authorizer.schemaregistryacl.SchemaRegistryAclAuthorizer
+      SCHEMA_REGISTRY_AUTHENTICATION_METHOD: "BASIC"
+      SCHEMA_REGISTRY_AUTHENTICATION_ROLES: "write,read,admin"
+      SCHEMA_REGISTRY_AUTHENTICATION_REALM: "Schema"
+      SCHEMA_REGISTRY_OPTS: "-Djava.security.auth.login.config=/tmp/jaas_config.file"
+      SCHEMA_REGISTRY_CONFLUENT_SCHEMA_REGISTRY_AUTH_MECHANISM: "JETTY_AUTH"
+      SCHEMA_REGISTRY_CONFLUENT_LICENSE_REPLICATION_FACTOR: 1
+      # SCHEMA_REGISTRY_CONFLUENT_LICENSE: $CONFLUENT_LICENSE
+      # required prior to 6.x, see https://github.com/vdesabou/kafka-docker-playground/issues/1182
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper:2181
+    volumes:
+      - ../../other/schema-registry-security-plugin/jaas_config.file:/tmp/jaas_config.file
+      - ../../other/schema-registry-security-plugin/password-file:/tmp/password-file

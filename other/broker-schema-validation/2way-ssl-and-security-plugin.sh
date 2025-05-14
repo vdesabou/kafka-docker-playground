@@ -10,7 +10,14 @@ if ! version_gt $TAG_BASE "5.3.99"; then
     exit 111
 fi
 
-playground start-environment --environment 2way-ssl --docker-compose-override-file "${PWD}/docker-compose.2way-ssl.security-plugin.yml"
+if [ ! -z $ENABLE_KRAFT ]
+then
+  # KRAFT mode
+  playground start-environment --environment 2way-ssl --docker-compose-override-file "${PWD}/docker-compose.2way-ssl.security-plugin-kraft.yml"
+else
+  # Zookeeper mode
+  playground start-environment --environment 2way-ssl --docker-compose-override-file "${PWD}/docker-compose.2way-ssl.security-plugin.yml"
+fi
 
 docker exec schema-registry sr-acl-cli --config /etc/schema-registry/schema-registry.properties --add -s '*' -p read -o SUBJECT_READ
 docker exec schema-registry sr-acl-cli --config /etc/schema-registry/schema-registry.properties --add -s '*' -p write -o SUBJECT_WRITE
