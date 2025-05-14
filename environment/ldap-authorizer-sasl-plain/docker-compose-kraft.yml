@@ -4,7 +4,7 @@ services:
   controller:
     environment:
       KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
-      KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter;User:ksqldb;User:conduktor;User:controller;User:ANONYMOUS
+      KAFKA_SUPER_USERS: User:broker;User:client;User:controlcenter;User:connect;User:schemaregistry;User:ksqldb;User:controller;User:ANONYMOUS
 
   broker:
     environment:
