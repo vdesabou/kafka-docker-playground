@@ -4944,7 +4944,7 @@ playground_topic_produce_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--max-nb-messages-to-generate MAX-NB-MESSAGES-TO-GENERATE")"
-    printf "    🔨 Max number of different messages to generate.\n    \n       - when protobuf is used, default is 50 as protobuf generation is really\n    slow\n       - when --record-size is set, default is 100\n       - otherwise default is 100000\n"
+    printf "    🔨 Max number of different messages to generate.\n    \n       - when protobuf is used, default is 50 as protobuf generation is really\n    slow\n       - when --record-size is set, default is 100\n       --when nb-messages is set to -1, default is 1000\n       - otherwise default is 100000\n"
     echo
 
     # :flag.usage
@@ -22439,6 +22439,10 @@ playground_topic_produce_command() {
               else
                   nb_max_messages_to_generate=100000
               fi
+          fi
+          if [ $nb_messages = -1 ]
+          then
+              nb_messages_to_generate=1000
           fi
       fi
       if [ $nb_messages = -1 ]

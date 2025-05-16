@@ -398,6 +398,10 @@ function generate_data() {
                 nb_max_messages_to_generate=100000
             fi
         fi
+        if [ $nb_messages = -1 ]
+        then
+            nb_messages_to_generate=1000
+        fi
     fi
     if [ $nb_messages = -1 ]
     then
