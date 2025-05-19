@@ -19,7 +19,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 QUEUE_NAME=pg${USER}sqs${TAG}
 QUEUE_NAME=${QUEUE_NAME//[-._]/}
 
-QUEUE_URL_RAW=$(aws sqs create-queue --queue-name $QUEUE_NAME --region ${AWS_REGION} | jq .QueueUrl)
+QUEUE_URL_RAW=$(aws sqs create-queue --queue-name $QUEUE_NAME --region ${AWS_REGION} --tags "cflt_managed_by=user,cflt_managed_id=$USER" | jq .QueueUrl)
 AWS_ACCOUNT_NUMBER=$(echo "$QUEUE_URL_RAW" | cut -d "/" -f 4)
 # https://docs.amazonaws.cn/sdk-for-net/v3/developer-guide/how-to/sqs/QueueURL.html
 # https://{REGION_ENDPOINT}/queue.|api-domain|/{YOUR_ACCOUNT_NUMBER}/{YOUR_QUEUE_NAME}
@@ -38,7 +38,7 @@ fi
 set -e
 
 log "Create a FIFO queue $QUEUE_NAME in region ${AWS_REGION}"
-aws sqs create-queue --queue-name $QUEUE_NAME --region ${AWS_REGION}
+aws sqs create-queue --queue-name $QUEUE_NAME --region ${AWS_REGION} --tags "cflt_managed_by=user,cflt_managed_id=$USER"
 
 function cleanup_cloud_resources {
     set +e

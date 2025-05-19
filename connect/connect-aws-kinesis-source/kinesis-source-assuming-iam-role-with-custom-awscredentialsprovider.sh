@@ -62,7 +62,7 @@ set -e
 sleep 5
 
 log "Create a Kinesis stream $KINESIS_STREAM_NAME"
-aws kinesis create-stream --stream-name $KINESIS_STREAM_NAME --shard-count 1 --region $AWS_REGION
+aws kinesis create-stream --stream-name $KINESIS_STREAM_NAME --shard-count 1 --region $AWS_REGION --tags "cflt_managed_by=user,cflt_managed_id=$USER"
 
 function cleanup_cloud_resources {
     set +e
