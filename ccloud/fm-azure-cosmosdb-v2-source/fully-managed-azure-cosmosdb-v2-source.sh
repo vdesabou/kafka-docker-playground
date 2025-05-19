@@ -103,6 +103,7 @@ playground connector create-or-update --connector $connector_name << EOF
     "azure.cosmos.account.key": "$AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY",
     "azure.cosmos.source.database.name": "$AZURE_COSMOSDB_DB_NAME",
     "azure.cosmos.source.containers.includeAll": "true",
+    "azure.cosmos.source.containers.includedList":"$AZURE_COSMOSDB_CONTAINER_NAME",
     "azure.cosmos.source.containers.topicMap": "apparels#${AZURE_COSMOSDB_DB_NAME}",
 
     "output.data.format": "AVRO",
