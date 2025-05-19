@@ -24,8 +24,8 @@ then
     service_response_corrupt_method="randomize"
 fi
 
-mkdir -p /tmp/zazkia
-  cat << EOF > /tmp/zazkia/zazkia-routes.json
+mkdir -p ${root_folder}/zazkia
+  cat << EOF > ${root_folder}/zazkia/zazkia-routes.json
 [
     {
         "label": "tcp-proxy",
@@ -58,7 +58,7 @@ services:
     ports:
       - "9191:9191"
     volumes:
-      - /tmp/zazkia:/data
+      - ${root_folder}/zazkia:/data
     environment:
       DUMMY: $RANDOM
 EOF
