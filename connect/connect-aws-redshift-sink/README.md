@@ -33,7 +33,7 @@ $ just use <playground run> command and search for redshift-sink-with-assuming-i
 Create AWS Redshift cluster
 
 ```bash
-$ aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password myPassword1 --node-type dc2.large --cluster-type single-node --publicly-accessible --tags "cflt_managed_by=user,cflt_managed_id=$USER"
+$ aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password myPassword1 --node-type dc2.large --cluster-type single-node --publicly-accessible --tags "Key=cflt_managed_by,Value=user,Key=cflt_managed_id,Value=$USER"
 ```
 
 Create a security group
