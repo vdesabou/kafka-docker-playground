@@ -22,7 +22,7 @@ docker compose build
 docker compose down -v --remove-orphans
 docker compose up -d --quiet-pull
 
-playground --output-level WARN container logs --container oracle --wait-for-log "Grant succeeded." --max-wait 900
+playground container logs --container oracle --wait-for-log "Grant succeeded." --max-wait 900
 log "Oracle DB has started!"
 
 log "create table"
