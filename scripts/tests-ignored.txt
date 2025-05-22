@@ -29,3 +29,4 @@ fully-managed-http-v2-sink-mtls-auth.sh
 # does not work
 gcp-spanner-sink-proxy.sh
 marketo-source-proxy.sh
+s3-sink-proxy-with-assuming-iam-role.sh
