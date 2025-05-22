@@ -437,7 +437,7 @@ then
         done
       fi
     else
-      if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ] && [ "$0" != "/tmp/playground-command" ] && [ "$0" != "/tmp/playground-command-debugging" ]
+      if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ] && [ "$0" != "/tmp/playground-command" ] && [ "$0" != "/tmp/playground-command-debugging" ] && [ "$0" != "/tmp/playground-command-zazkia" ]
       then
         logerror "📁 Could not determine docker-compose override file from $PWD/$0 !"
         logerror "👉 Please check you're running a connector example !"
