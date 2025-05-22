@@ -175,7 +175,7 @@ USE WAREHOUSE $PLAYGROUND_WAREHOUSE;
 SELECT * FROM $PLAYGROUND_DB.PUBLIC.TEST_TABLE;
 EOF
 cat /tmp/result.log
-grep "u_name" /tmp/result.log
+grep -i "u_name" /tmp/result.log
 
 # docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-snowflake-sink --describe
 

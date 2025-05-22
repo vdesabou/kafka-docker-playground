@@ -126,4 +126,4 @@ curl -X GET \
     -H 'Content-Type: application/json' \
     -H 'cache-control: no-cache' | jq . > /tmp/result.log  2>&1
 cat /tmp/result.log
-grep "u_name" /tmp/result.log
+grep -i "u_name" /tmp/result.log

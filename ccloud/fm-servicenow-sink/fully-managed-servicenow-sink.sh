@@ -129,7 +129,7 @@ playground topic consume --topic error-$connectorId --min-expected-messages 0 --
 #     -H 'Content-Type: application/json' \
 #     -H 'cache-control: no-cache' | jq . > /tmp/result.log  2>&1
 # cat /tmp/result.log
-# grep "u_name" /tmp/result.log
+# grep -i "u_name" /tmp/result.log
 
 
 log "Do you want to delete the fully managed connector $connector_name ?"
