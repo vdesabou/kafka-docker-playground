@@ -69,7 +69,14 @@ then
 
     if [ -z "$CP_CONTROL_CENTER_IMAGE" ]
     then
-      export CP_CONTROL_CENTER_IMAGE=confluentinc/cp-enterprise-control-center
+      if [ ! -z "$ENABLE_LEGACY_CONTROL_CENTER" ]
+      then
+        log "💠👨‍🦳 ENABLE_LEGACY_CONTROL_CENTER is set, using legacy Control Center"
+        export CP_CONTROL_CENTER_IMAGE=confluentinc/cp-enterprise-control-center
+      else
+        log "💠⭐ Using CP Control Center Next Gen"
+        export CP_CONTROL_CENTER_IMAGE=confluentinc/cp-enterprise-control-center-next-gen
+      fi
     fi
 
     if [ -z "$CP_REST_PROXY_IMAGE" ]
@@ -109,7 +116,12 @@ then
 
     if [ -z "$CP_CONTROL_CENTER_TAG" ]
     then
-      export CP_CONTROL_CENTER_TAG="$TAG"
+      if [ ! -z "$ENABLE_LEGACY_CONTROL_CENTER" ]
+      then
+        export CP_CONTROL_CENTER_TAG="$TAG"
+      else
+        export CP_CONTROL_CENTER_TAG=latest
+      fi
     fi
 
     if [ -z "$CP_REST_PROXY_TAG" ]
@@ -148,9 +160,17 @@ else
     then
       export CP_REST_PROXY_IMAGE=confluentinc/cp-kafka-rest
     fi
+
     if [ -z "$CP_CONTROL_CENTER_IMAGE" ]
     then
-      export CP_CONTROL_CENTER_IMAGE=confluentinc/cp-enterprise-control-center
+      if [ ! -z "$ENABLE_LEGACY_CONTROL_CENTER" ]
+      then
+        log "💠👨‍🦳 ENABLE_LEGACY_CONTROL_CENTER is set, using legacy Control Center"
+        export CP_CONTROL_CENTER_IMAGE=confluentinc/cp-enterprise-control-center
+      else
+        log "💠⭐ Using CP Control Center Next Gen"
+        export CP_CONTROL_CENTER_IMAGE=confluentinc/cp-enterprise-control-center-next-gen
+      fi
     fi
 
     if [ -z "$CP_ZOOKEEPER_TAG" ]
@@ -175,7 +195,12 @@ else
 
     if [ -z "$CP_CONTROL_CENTER_TAG" ]
     then
-      export CP_CONTROL_CENTER_TAG="$TAG"
+      if [ ! -z "$ENABLE_LEGACY_CONTROL_CENTER" ]
+      then
+        export CP_CONTROL_CENTER_TAG="$TAG"
+      else
+        export CP_CONTROL_CENTER_TAG=latest
+      fi
     fi
 
     if [ -z "$CP_REST_PROXY_TAG" ]

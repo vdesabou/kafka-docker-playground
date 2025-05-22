@@ -78,6 +78,9 @@ services:
       - "${C3_PORT:-9021}:9021"
     profiles:
     - control-center
+    # needed for c3 next gen
+    command: "bash -c 'dub template /etc/confluent/docker/control-center.properties.template /etc/confluent-control-center/control-center.properties && \
+                          /etc/confluent/docker/run'"
     environment:
       CONTROL_CENTER_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
       CONTROL_CENTER_KSQL_URL: "http://ksql-server:8089"

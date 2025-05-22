@@ -63,6 +63,21 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry-europe:8081
 
+      # Control Center 2.0
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_TYPE: "http"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_ENABLED: "true"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_METRICS_INCLUDE: "io.confluent.kafka.server.request.(?!.*delta).*|io.confluent.kafka.server.server.broker.state|io.confluent.kafka.server.replica.manager.leader.count|io.confluent.kafka.server.request.queue.size|io.confluent.kafka.server.broker.topic.failed.produce.requests.rate.1.min|io.confluent.kafka.server.tier.archiver.total.lag|io.confluent.kafka.server.request.total.time.ms.p99|io.confluent.kafka.server.broker.topic.failed.fetch.requests.rate.1.min|io.confluent.kafka.server.broker.topic.total.fetch.requests.rate.1.min|io.confluent.kafka.server.partition.caught.up.replicas.count|io.confluent.kafka.server.partition.observer.replicas.count|io.confluent.kafka.server.tier.tasks.num.partitions.in.error|io.confluent.kafka.server.broker.topic.bytes.out.rate.1.min|io.confluent.kafka.server.request.total.time.ms.p95|io.confluent.kafka.server.controller.active.controller.count|io.confluent.kafka.server.session.expire.listener.zookeeper.disconnects.total|io.confluent.kafka.server.request.total.time.ms.p999|io.confluent.kafka.server.controller.active.broker.count|io.confluent.kafka.server.request.handler.pool.request.handler.avg.idle.percent.rate.1.min|io.confluent.kafka.server.session.expire.listener.zookeeper.disconnects.rate.1.min|io.confluent.kafka.server.controller.unclean.leader.elections.rate.1.min|io.confluent.kafka.server.replica.manager.partition.count|io.confluent.kafka.server.controller.unclean.leader.elections.total|io.confluent.kafka.server.partition.replicas.count|io.confluent.kafka.server.broker.topic.total.produce.requests.rate.1.min|io.confluent.kafka.server.controller.offline.partitions.count|io.confluent.kafka.server.socket.server.network.processor.avg.idle.percent|io.confluent.kafka.server.partition.under.replicated|io.confluent.kafka.server.log.log.start.offset|io.confluent.kafka.server.log.tier.size|io.confluent.kafka.server.log.size|io.confluent.kafka.server.tier.fetcher.bytes.fetched.total|io.confluent.kafka.server.request.total.time.ms.p50|io.confluent.kafka.server.tenant.consumer.lag.offsets|io.confluent.kafka.server.session.expire.listener.zookeeper.expires.rate.1.min|io.confluent.kafka.server.log.log.end.offset|io.confluent.kafka.server.broker.topic.bytes.in.rate.1.min|io.confluent.kafka.server.partition.under.min.isr|io.confluent.kafka.server.partition.in.sync.replicas.count|io.confluent.telemetry.http.exporter.batches.dropped|io.confluent.telemetry.http.exporter.items.total|io.confluent.telemetry.http.exporter.items.succeeded|io.confluent.telemetry.http.exporter.send.time.total.millis|io.confluent.kafka.server.controller.leader.election.rate.(?!.*delta).*|io.confluent.telemetry.http.exporter.batches.failed"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_CLIENT_BASE_URL: "http://prometheus-c3-v2:9090/api/v1/otlp"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_CLIENT_COMPRESSION: "gzip"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_API_KEY: "dummy"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_API_SECRET: "dummy"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_BUFFER_PENDING_BATCHES_MAX: "80"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_BUFFER_BATCH_ITEMS_MAX: "4000"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_BUFFER_INFLIGHT_SUBMISSIONS_MAX: "10"
+      KAFKA_CONFLUENT_TELEMETRY_METRICS_COLLECTOR_INTERVAL_MS: "60000"
+      KAFKA_CONFLUENT_TELEMETRY_REMOTECONFIG_CONFLUENT_ENABLED: "false"
+      KAFKA_CONFLUENT_CONSUMER_LAG_EMITTER_ENABLED: "true"
+
   broker-us:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker-us
@@ -88,6 +103,21 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry-us:8081
+
+      # Control Center 2.0
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_TYPE: "http"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_ENABLED: "true"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_METRICS_INCLUDE: "io.confluent.kafka.server.request.(?!.*delta).*|io.confluent.kafka.server.server.broker.state|io.confluent.kafka.server.replica.manager.leader.count|io.confluent.kafka.server.request.queue.size|io.confluent.kafka.server.broker.topic.failed.produce.requests.rate.1.min|io.confluent.kafka.server.tier.archiver.total.lag|io.confluent.kafka.server.request.total.time.ms.p99|io.confluent.kafka.server.broker.topic.failed.fetch.requests.rate.1.min|io.confluent.kafka.server.broker.topic.total.fetch.requests.rate.1.min|io.confluent.kafka.server.partition.caught.up.replicas.count|io.confluent.kafka.server.partition.observer.replicas.count|io.confluent.kafka.server.tier.tasks.num.partitions.in.error|io.confluent.kafka.server.broker.topic.bytes.out.rate.1.min|io.confluent.kafka.server.request.total.time.ms.p95|io.confluent.kafka.server.controller.active.controller.count|io.confluent.kafka.server.session.expire.listener.zookeeper.disconnects.total|io.confluent.kafka.server.request.total.time.ms.p999|io.confluent.kafka.server.controller.active.broker.count|io.confluent.kafka.server.request.handler.pool.request.handler.avg.idle.percent.rate.1.min|io.confluent.kafka.server.session.expire.listener.zookeeper.disconnects.rate.1.min|io.confluent.kafka.server.controller.unclean.leader.elections.rate.1.min|io.confluent.kafka.server.replica.manager.partition.count|io.confluent.kafka.server.controller.unclean.leader.elections.total|io.confluent.kafka.server.partition.replicas.count|io.confluent.kafka.server.broker.topic.total.produce.requests.rate.1.min|io.confluent.kafka.server.controller.offline.partitions.count|io.confluent.kafka.server.socket.server.network.processor.avg.idle.percent|io.confluent.kafka.server.partition.under.replicated|io.confluent.kafka.server.log.log.start.offset|io.confluent.kafka.server.log.tier.size|io.confluent.kafka.server.log.size|io.confluent.kafka.server.tier.fetcher.bytes.fetched.total|io.confluent.kafka.server.request.total.time.ms.p50|io.confluent.kafka.server.tenant.consumer.lag.offsets|io.confluent.kafka.server.session.expire.listener.zookeeper.expires.rate.1.min|io.confluent.kafka.server.log.log.end.offset|io.confluent.kafka.server.broker.topic.bytes.in.rate.1.min|io.confluent.kafka.server.partition.under.min.isr|io.confluent.kafka.server.partition.in.sync.replicas.count|io.confluent.telemetry.http.exporter.batches.dropped|io.confluent.telemetry.http.exporter.items.total|io.confluent.telemetry.http.exporter.items.succeeded|io.confluent.telemetry.http.exporter.send.time.total.millis|io.confluent.kafka.server.controller.leader.election.rate.(?!.*delta).*|io.confluent.telemetry.http.exporter.batches.failed"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_CLIENT_BASE_URL: "http://prometheus-c3-v2:9090/api/v1/otlp"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_CLIENT_COMPRESSION: "gzip"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_API_KEY: "dummy"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_API_SECRET: "dummy"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_BUFFER_PENDING_BATCHES_MAX: "80"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_BUFFER_BATCH_ITEMS_MAX: "4000"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_BUFFER_INFLIGHT_SUBMISSIONS_MAX: "10"
+      KAFKA_CONFLUENT_TELEMETRY_METRICS_COLLECTOR_INTERVAL_MS: "60000"
+      KAFKA_CONFLUENT_TELEMETRY_REMOTECONFIG_CONFLUENT_ENABLED: "false"
+      KAFKA_CONFLUENT_CONSUMER_LAG_EMITTER_ENABLED: "true"
 
   broker-metrics:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
@@ -236,6 +266,9 @@ services:
       - "${C3_PORT:-9021}:9021"
     profiles:
     - control-center
+    # needed for c3 next gen
+    command: "bash -c 'dub template /etc/confluent/docker/control-center.properties.template /etc/confluent-control-center/control-center.properties && \
+                          /etc/confluent/docker/run'"
     environment:
       CONTROL_CENTER_BOOTSTRAP_SERVERS: 'broker-metrics:9092'
       CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper-metrics:2181'
@@ -255,3 +288,29 @@ services:
       CONTROL_CENTER_SCHEMA_REGISTRY_EUROPE_URL: "http://schema-registry-europe:8081"
       # starting from 7.0
       # CONTROL_CENTER_MODE_ENABLE: management
+
+      # https://docs.confluent.io/control-center/2.0/installation/overview.html
+      # https://github.com/confluentinc/cp-all-in-one/blob/f062fd7f11134a13c17634f58d592a436f56a11e/cp-all-in-one/docker-compose.yml
+      CONTROL_CENTER_PROMETHEUS_ENABLE: true
+      CONTROL_CENTER_PROMETHEUS_URL: http://prometheus-c3-v2:9090
+      CONTROL_CENTER_PROMETHEUS_RULES_FILE: /mnt/config/trigger_rules-generated.yml
+      CONTROL_CENTER_ALERTMANAGER_URL: http://alertmanager-c3-v2:9093
+      CONTROL_CENTER_ALERTMANAGER_CONFIG_FILE: /mnt/config/alertmanager.yml
+
+  prometheus-c3-v2:
+    image: confluentinc/cp-enterprise-prometheus:2.0.0
+    hostname: prometheus-c3-v2
+    container_name: prometheus-c3-v2
+    volumes:
+      - ../../environment/plaintext/control-center-v2-config:/mnt/config
+    command: "--config.file=/mnt/config/prometheus.yml --enable-feature=otlp-write-receiver --web.enable-lifecycle"
+
+  alertmanager-c3-v2:
+    image: confluentinc/cp-enterprise-alertmanager:2.0.0
+    hostname: alertmanager-c3-v2
+    container_name: alertmanager-c3-v2
+    depends_on:
+      - prometheus-c3-v2
+    volumes:
+      - ../../environment/plaintext/control-center-v2-config:/mnt/config
+    command: "--web.external-url=http://localhost --config.file=/etc/alertmanager/alertmanager.yml"
