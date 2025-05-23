@@ -18,7 +18,7 @@ fi
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-playground --output-level WARN container logs --container vertica --wait-for-log "Vertica is now running" --max-wait 600
+playground container logs --container vertica --wait-for-log "Vertica is now running" --max-wait 600
 log "VERTICA has started!"
 
 log "Create the table and insert data."

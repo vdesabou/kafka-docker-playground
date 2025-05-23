@@ -53,7 +53,7 @@ do
 done
 
 
-playground --output-level WARN container logs --container opensearch-dashboards --wait-for-log "Server running at http://0.0.0.0:5601" --max-wait 300
+playground container logs --container opensearch-dashboards --wait-for-log "Server running at http://0.0.0.0:5601" --max-wait 300
 log "Navigate to http://127.0.0.1:5601 (admin/P@szw0rd1!) for OpenSearch Dashboards"
 
 connector_name="OpenSearchSink_$USER"

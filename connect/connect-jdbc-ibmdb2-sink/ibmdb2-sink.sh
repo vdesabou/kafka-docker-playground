@@ -35,7 +35,7 @@ rm -f ${DIR}/db2jcc4.jar
 log "Getting db2jcc4.jar"
 docker cp ibmdb2:/opt/ibm/db2/V11.5/java/db2jcc4.jar ${DIR}/db2jcc4.jar
 
-playground --output-level WARN container logs --container ibmdb2 --wait-for-log "Setup has completed" --max-wait 2500
+playground container logs --container ibmdb2 --wait-for-log "Setup has completed" --max-wait 600
 log "ibmdb2 DB has started!"
 
 set_profiles

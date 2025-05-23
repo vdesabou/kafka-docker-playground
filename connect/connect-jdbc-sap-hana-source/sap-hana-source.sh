@@ -16,7 +16,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 
-playground --output-level WARN container logs --container sap --wait-for-log "Startup finished!" --max-wait 2500
+playground container logs --container sap --wait-for-log "Startup finished!" --max-wait 600
 log "SAP HANA has started!"
 
 log "Create table in SAP HANA"
