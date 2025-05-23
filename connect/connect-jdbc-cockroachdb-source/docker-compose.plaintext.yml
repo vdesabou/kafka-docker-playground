@@ -2,7 +2,7 @@
 services:
 
   cockroachdb:
-    image: cockroachdb/cockroach:v20.1.14
+    image: cockroachdb/cockroach:v21.2.17
     hostname: cockroachdb
     container_name: cockroachdb
     command: start-single-node --insecure
