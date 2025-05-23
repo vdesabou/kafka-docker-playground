@@ -71,7 +71,7 @@ services:
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
       # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid"
       # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
-      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+      CLUSTER_ID: 'NkU3OEVBNTcwNTJENDM2Qk'
 
   broker-us:
     depends_on:
@@ -85,7 +85,7 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid" 
       # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
-      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+      CLUSTER_ID: 'NkU3OEVBNTcwNTJENDM2Qk'
 
   controller-europe:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
