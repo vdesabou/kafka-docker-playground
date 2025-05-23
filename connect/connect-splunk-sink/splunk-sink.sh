@@ -40,8 +40,8 @@ playground connector create-or-update --connector splunk-sink  << EOF
 }
 EOF
 
-log "Sleeping 60 seconds"
-sleep 60
+log "Sleeping 80 seconds"
+sleep 80
 
 log "Verify data is in splunk"
 docker exec splunk bash -c 'sudo /opt/splunk/bin/splunk search "source=\"http:splunk_hec_token\"" -auth "admin:password"' > /tmp/result.log  2>&1
