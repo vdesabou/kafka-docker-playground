@@ -40,8 +40,6 @@ services:
       SCHEMA_REGISTRY_CONFLUENT_SCHEMA_REGISTRY_AUTH_MECHANISM: "JETTY_AUTH"
       SCHEMA_REGISTRY_CONFLUENT_LICENSE_REPLICATION_FACTOR: 1
       # SCHEMA_REGISTRY_CONFLUENT_LICENSE: $CONFLUENT_LICENSE
-      # required prior to 6.x, see https://github.com/vdesabou/kafka-docker-playground/issues/1182
-      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper:2181
     volumes:
       - ../../other/schema-registry-security-plugin/jaas_config.file:/tmp/jaas_config.file
       - ../../other/schema-registry-security-plugin/password-file:/tmp/password-file
