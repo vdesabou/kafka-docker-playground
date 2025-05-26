@@ -1144,7 +1144,7 @@ function wait_container_ready() {
     playground container wait-for-connect-rest-api-ready --max-wait $MAX_WAIT
   else
     log "⌛ Waiting up to $MAX_WAIT seconds for ${CONNECT_CONTAINER} to start"
-    playground --output-level WARN container logs --container $CONNECT_CONTAINER --wait-for-log "Finished starting connectors and tasks" --max-wait $MAX_WAIT
+    playground container logs --container $CONNECT_CONTAINER --wait-for-log "Finished starting connectors and tasks" --max-wait $MAX_WAIT
   fi
   # Verify Docker containers started
   if [[ $(docker container ps) =~ "Exit 137" ]]
