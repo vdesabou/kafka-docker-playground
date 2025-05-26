@@ -543,8 +543,8 @@ function determine_kraft_mode() {
       log "🛰️ Starting up Confluent Platform in Kraft mode as CP version is > 8"
     fi
     export ENABLE_KRAFT="true"
-    export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="-f ../../environment/plaintext/docker-compose-kraft.yml"
-    export MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="-f ../../environment/mdc-plaintext/docker-compose-kraft.yml"
+    export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DIR_UTILS}/../environment/plaintext/docker-compose-kraft.yml"
+    export MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DIR_UTILS}/../environment/mdc-plaintext/docker-compose-kraft.yml"
     export CONTROLLER_SECURITY_PROTOCOL_MAP=",CONTROLLER:PLAINTEXT"
     export KAFKA_AUTHORIZER_CLASS_NAME="org.apache.kafka.metadata.authorizer.StandardAuthorizer"
   else
