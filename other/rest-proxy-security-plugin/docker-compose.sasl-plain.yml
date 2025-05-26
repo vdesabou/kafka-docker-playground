@@ -49,7 +49,7 @@ services:
               password=\"clientrestproxy-secret\";"
       # Security extension configuration
       # ZooKeeper required to validate trial license
-      KAFKA_REST_ZOOKEEPER_CONNECT: zookeeper:2181
+      # KAFKA_REST_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_REST_KAFKA_REST_RESOURCE_EXTENSION_CLASS: io.confluent.kafkarest.security.KafkaRestSecurityResourceExtension
       # HTTP Basic Authentication
       # https://docs.confluent.io/platform/current/kafka-rest/production-deployment/rest-proxy/security.html#http-basic-authentication
