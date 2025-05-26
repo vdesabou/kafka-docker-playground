@@ -690,6 +690,13 @@
               ],
               "argument": "",
               "description": "🧟 Include soft deleted subjects\n\nConflicts with: id\n"
+            },
+            {
+              "names": [
+                "--store-in-tmp"
+              ],
+              "argument": "FOLDER",
+              "description": "store in /tmp folder\n"
             }
           ]
         },
@@ -892,14 +899,7 @@
                 "--version"
               ],
               "argument": "VERSION",
-              "description": "🔢 Schema version of the provided subject to delete\n\nCan only be used when --subject is provided\n\nConflicts with: --id\n"
-            },
-            {
-              "names": [
-                "--id"
-              ],
-              "argument": "ID",
-              "description": "🫵 Schema id\n\nCan only be used when --subject is provided\n\nConflicts with: --version\n"
+              "description": "🔢 Schema version of the provided subject to delete\n\nCan only be used when --subject is provided\n"
             },
             {
               "names": [

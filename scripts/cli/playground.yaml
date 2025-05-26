@@ -842,6 +842,12 @@ subcommands:
             
             Conflicts with: id
             
+        - names:
+          - --store-in-tmp
+          argument: FOLDER
+          description: | 
+            store in /tmp folder
+            
       - name: register
         description: | 
           ⏺️ Register a schema in specified subject
@@ -1042,18 +1048,6 @@ subcommands:
             🔢 Schema version of the provided subject to delete
             
             Can only be used when --subject is provided
-            
-            Conflicts with: --id
-            
-        - names:
-          - --id
-          argument: ID
-          description: | 
-            🫵 Schema id
-            
-            Can only be used when --subject is provided
-            
-            Conflicts with: --version
             
         - names:
           - --permanent

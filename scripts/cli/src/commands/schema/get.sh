@@ -2,6 +2,7 @@ subject="${args[--subject]}"
 id="${args[--id]}"
 deleted="${args[--deleted]}"
 verbose="${args[--verbose]}"
+store_in_tmp="${args[--store-in-tmp]}"
 
 get_sr_url_and_security
 
@@ -129,6 +130,11 @@ do
             echo "curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}$maybe_include_deleted""
         fi
         echo "${schema}"
+
+        if [[ -n "$store_in_tmp" ]] && [ "$store_in_tmp" != "" ]
+        then
+            echo "${schema}" > $store_in_tmp/schema_$id.txt
+        fi
     done
 done
 

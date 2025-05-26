@@ -83,8 +83,11 @@ then
     }
     trap set_back_read_write EXIT
 
-    log "Deleting 🫵 id ${id} for subject 🔰 ${subject} permanently"
-    playground schema delete --subject "${subject}" --id ${id} --permanent > /dev/null 2>&1
+    # backup
+    playground schema get --subject "${subject}" --store-in-tmp "$tmp_dir" > /dev/null 2>&1
+
+    log "Deleting subject 🔰 ${subject}"
+    playground schema delete --subject "${subject}" --permanent > /dev/null 2>&1
 
     log "Setting mode to IMPORT"
     curl_output=$(curl $sr_security --request PUT -s "${sr_url}/mode/${subject}" --header 'Content-Type: application/json' --data '{"mode": "IMPORT"}' | jq .)
@@ -152,6 +155,13 @@ then
         exit 1
     fi
     echo "$curl_output"
+
+    for schema_file in $tmp_dir/schema_*.txt
+    do
+        [ -e "$schema_file" ] || continue
+        log "Restoring schema from $schema_file"
+        playground schema register --subject "${subject}" --schema "$(cat $schema_file)"
+    done
     exit 0
 fi
 

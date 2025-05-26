@@ -1253,6 +1253,11 @@ commands:
           - "id"
         help: |-
           🧟 Include soft deleted subjects
+
+      - long: --store-in-tmp
+        help: store in /tmp folder
+        arg: folder
+        private: true
     examples:
     - playground schema get
     - playground schema get --subject <SUBJECT>
@@ -1464,20 +1469,8 @@ commands:
       required: false
       validate: integer
       arg: version
-      conflicts:
-        - "--id"
       help: |-
         🔢 Schema version of the provided subject to delete
-
-        Can only be used when --subject is provided
-    - long: --id
-      required: false
-      validate: integer
-      arg: id
-      conflicts:
-        - "--version"
-      help: |-
-        🫵 Schema id
 
         Can only be used when --subject is provided
     - long: --permanent
