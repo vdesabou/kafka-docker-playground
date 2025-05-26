@@ -30,3 +30,4 @@ fully-managed-http-v2-sink-mtls-auth.sh
 gcp-spanner-sink-proxy.sh
 marketo-source-proxy.sh
 s3-sink-proxy-with-assuming-iam-role.sh
+hbase-sink-kerberos.sh
