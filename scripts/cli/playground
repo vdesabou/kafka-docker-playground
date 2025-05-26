@@ -10313,7 +10313,7 @@ function create_or_get_oracle_image() {
       docker container logs ${TEMP_CONTAINER} > /tmp/out.txt 2>&1
       CUR_WAIT=$(( CUR_WAIT+10 ))
       if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-            logerror "❌ The logs in ${TEMP_CONTAINER} container do not show 'DATABASE IS READY TO USE' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+            logerror "❌ The logs in ${TEMP_CONTAINER} container do not show 'DATABASE IS READY TO USE' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'playground container logs --open --container <container>'.\n"
             exit 1
       fi
       done
@@ -10828,7 +10828,7 @@ function wait_for_log () {
   docker container logs ${container} > /tmp/out.txt 2>&1
   cur_wait=$(( cur_wait+10 ))
   if [[ "$cur_wait" -gt "$max_wait" ]]; then
-    logerror "The logs in $container container do not show '$message' after $max_wait seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'."
+    logerror "The logs in $container container do not show '$message' after $max_wait seconds. Please troubleshoot with 'docker container ps' and 'playground container logs --open --container <container>'."
     return 1
   fi
   done
