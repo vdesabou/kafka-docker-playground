@@ -116,6 +116,7 @@ playground_usage() {
   printf "  %s   🖥️  Get ip address of running containers\n" "$(green "container get-ip-addresses")                "
   printf "  %s   💀 Kill all containers\n" "$(green "container kill-all")                        "
   printf "  %s   🕵️  Tail and follow container logs\n" "$(green "container logs")                            "
+  printf "  %s   🔥 Display all ERROR/FATAL logs in all containers. Useful for quick troubleshooting\n" "$(green "container display-error-all-containers")    "
   printf "  %s   🛬 SSH into container\n" "$(green "container ssh")                             "
   printf "  %s   🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)\n" "$(green "container change-jdk")                      "
   printf "  %s   🪄  Execute command in a container\n" "$(green "container exec")                            "
@@ -4089,6 +4090,7 @@ playground_container_usage() {
   printf "  %s   🖥️  Get ip address of running containers\n" "$(green "get-ip-addresses")               "
   printf "  %s   💀 Kill all containers\n" "$(green "kill-all")                       "
   printf "  %s   🕵️  Tail and follow container logs\n" "$(green "logs")                           "
+  printf "  %s   🔥 Display all ERROR/FATAL logs in all containers. Useful for quick troubleshooting\n" "$(green "display-error-all-containers")   "
   printf "  %s   🛬 SSH into container\n" "$(green "ssh")                            "
   printf "  %s   🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)\n" "$(green "change-jdk")                     "
   printf "  %s   🪄  Execute command in a container\n" "$(green "exec")                           "
@@ -4279,6 +4281,27 @@ playground_container_logs_usage() {
     printf "  playground container logs --container connect\n"
     printf "  playground container logs -c connect --open\n"
     printf "  playground container logs -c connect --wait-for-log \"StackOverflowError\"\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_container_display_error_all_containers_usage() {
+  printf "playground container display-error-all-containers - 🔥 Display all ERROR/FATAL logs in all containers. Useful for quick troubleshooting\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground container display-error-all-containers\n"
+  printf "  playground container display-error-all-containers --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
     echo
 
   fi
@@ -9494,7 +9517,6 @@ function display_docker_container_error_log() {
     fi
     logwarn "####################################################"
   done < <(docker ps --format="{{.Names}}")
-
 }
 
 function retry() {
@@ -16298,7 +16320,10 @@ playground_run_command() {
     logerror "🔥 RESULT: FAILURE for $filename ($ELAPSED - $CUMULATED)"
     logerror "####################################################"
 
-    display_docker_container_error_log
+    log "🧑‍🚒 you can troubleshoot the issue by running:"
+    echo "playground container display-error-all-containers"
+    log "🧑‍🚒 open full logs with '<playground container logs --open --container <container>', example:"
+    echo "playground container logs --open --container connect"
 
     exit 1
   fi
@@ -20979,6 +21004,30 @@ playground_container_logs_command() {
   else
 
     docker container logs --tail=200 -f "$container"
+  fi
+}
+
+# :command.function
+playground_container_display_error_all_containers_command() {
+
+  # src/commands/container/display-error-all-containers.sh
+  set +e
+  containers=$(docker ps --format="{{.Names}}")
+  if [ -z "$containers" ]; then
+      logwarn "💤 no running containers"
+  else
+      log "####################################################"
+      log "🐳 docker ps"
+      docker ps
+      log "####################################################"
+
+      while IFS= read -r container
+      do
+          log "####################################################"
+          log "$container logs"
+          docker container logs "$container" 2>&1 | grep -E "ERROR|FATAL"
+          log "####################################################"
+      done <<< "$containers"
   fi
 }
 
@@ -36121,6 +36170,13 @@ playground_container_parse_requirements() {
       shift $#
       ;;
 
+    display-error-all-containers)
+      action="display-error-all-containers"
+      shift
+      playground_container_display_error_all_containers_parse_requirements "$@"
+      shift $#
+      ;;
+
     ssh)
       action="ssh"
       shift
@@ -36546,6 +36602,51 @@ playground_container_logs_parse_requirements() {
     printf "validation error in %s:\n%s\n" "--max-wait, -m MAX_WAIT" "$(validate_integer "${args['--max-wait']:-}")" >&2
     exit 1
   fi
+
+}
+
+# :command.parse_requirements
+playground_container_display_error_all_containers_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_container_display_error_all_containers_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="container display-error-all-containers"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -42193,6 +42294,7 @@ run() {
     "container get-ip-addresses") playground_container_get_ip_addresses_command ;;
     "container kill-all") playground_container_kill_all_command ;;
     "container logs") playground_container_logs_command ;;
+    "container display-error-all-containers") playground_container_display_error_all_containers_command ;;
     "container ssh") playground_container_ssh_command ;;
     "container change-jdk") playground_container_change_jdk_command ;;
     "container exec") playground_container_exec_command ;;

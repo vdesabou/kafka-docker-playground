@@ -1610,7 +1610,10 @@ else
   logerror "🔥 RESULT: FAILURE for $filename ($ELAPSED - $CUMULATED)"
   logerror "####################################################"
 
-  display_docker_container_error_log
+  log "🧑‍🚒 you can troubleshoot the issue by running:"
+  echo "playground container display-error-all-containers"
+  log "🧑‍🚒 open full logs with '<playground container logs --open --container <container>', example:"
+  echo "playground container logs --open --container connect"
 
   exit 1
 fi

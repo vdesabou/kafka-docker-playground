@@ -1621,6 +1621,12 @@
           ]
         },
         {
+          "name": "display-error-all-containers",
+          "description": "🔥 Display all ERROR/FATAL logs in all containers. Useful for quick troubleshooting\n",
+          "usage": "playground container display-error-all-containers",
+          "options": []
+        },
+        {
           "name": "ssh",
           "description": "🛬 SSH into container\n",
           "usage": "playground container ssh [OPTIONS]",

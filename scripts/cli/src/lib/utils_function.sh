@@ -871,7 +871,6 @@ function display_docker_container_error_log() {
     fi
     logwarn "####################################################"
   done < <(docker ps --format="{{.Names}}")
-
 }
 
 function retry() {

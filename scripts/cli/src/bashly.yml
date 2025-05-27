@@ -2089,6 +2089,11 @@ commands:
       - playground container logs -c connect --open
       - playground container logs -c connect --wait-for-log "StackOverflowError"
 
+    - name: display-error-all-containers
+      group: Container
+      help: |-
+        🔥 Display all ERROR/FATAL logs in all containers. Useful for quick troubleshooting
+
     - name: ssh
       group: Container
       help: |-

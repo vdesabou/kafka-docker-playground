@@ -1769,6 +1769,11 @@ subcommands:
             
             Conflicts with: --open
             
+      - name: display-error-all-containers
+        description: | 
+          🔥 Display all ERROR/FATAL logs in all containers. Useful for quick troubleshooting
+        usage: playground container display-error-all-containers
+        options: []
       - name: ssh
         description: | 
           🛬 SSH into container
