@@ -86,7 +86,7 @@ do
         esac
         wc -l /tmp/result.log | awk '{print $1}'
     else
-        tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+        tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
         if [ $? != 0 ] || [ "$tag" == "" ]
         then
             logerror "Could not find current CP version from docker ps"

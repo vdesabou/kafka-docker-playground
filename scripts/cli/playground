@@ -9490,7 +9490,7 @@ function display_docker_container_error_log() {
         # always show all logs for connect
         docker container logs --tail=250 $container 2>&1 | grep -v "was supplied but isn't a known config"
     else
-        docker container logs $container 2>&1 | egrep "ERROR|FATAL"
+        docker container logs $container 2>&1 | grep -E "ERROR|FATAL"
     fi
     logwarn "####################################################"
   done < <(docker ps --format="{{.Names}}")
@@ -18469,14 +18469,14 @@ EOF
 
     kafka_cli_producer_error=0
     kafka_cli_producer_eof=0
-    line_kafka_cli_producer=$(egrep -n "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $repro_test_file | cut -d ":" -f 1 | tail -n1)
+    line_kafka_cli_producer=$(grep -En "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $repro_test_file | cut -d ":" -f 1 | tail -n1)
     if [ $? != 0 ] || [ "$line_kafka_cli_producer" == "" ]
     then
         logwarn "Could not find kafka cli producer!"
         kafka_cli_producer_error=1
     fi
     set +e
-    egrep "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $repro_test_file | grep EOF > /dev/null
+    grep -E "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $repro_test_file | grep EOF > /dev/null
     if [ $? = 0 ]
     then
         kafka_cli_producer_eof=1
@@ -18876,14 +18876,14 @@ EOF
       # need to remove cli which produces and change topic
       kafka_cli_producer_error=0
       kafka_cli_producer_eof=0
-      line_kafka_cli_producer=$(egrep -n "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
+      line_kafka_cli_producer=$(grep -En "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
       if [ $? != 0 ]
       then
           logwarn "Could not find kafka cli producer!"
           kafka_cli_producer_error=1
       fi
       set +e
-      egrep "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | grep EOF > /dev/null
+      grep -E "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | grep EOF > /dev/null
       if [ $? = 0 ]
       then
           kafka_cli_producer_eof=1
@@ -20583,7 +20583,7 @@ playground_debug_block_traffic_command() {
   docker exec $container type iptables > /dev/null 2>&1
   if [ $? != 0 ]
   then
-      tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+      tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
       if [ $? != 0 ] || [ "$tag" == "" ]
       then
           logerror "Could not find current CP version from docker ps"
@@ -20726,7 +20726,7 @@ playground_debug_flight_recorder_command() {
   docker exec $container type jcmd > /dev/null 2>&1
   if [ $? != 0 ]
   then
-      tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+      tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
       if [ $? != 0 ] || [ "$tag" == "" ]
       then
           logerror "Could not find current CP version from docker ps"
@@ -21275,7 +21275,7 @@ playground_topic_get_number_records_command() {
           esac
           wc -l /tmp/result.log | awk '{print $1}'
       else
-          tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+          tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
           if [ $? != 0 ] || [ "$tag" == "" ]
           then
               logerror "Could not find current CP version from docker ps"
@@ -22732,7 +22732,7 @@ playground_topic_produce_command() {
       fi
 
       set +e
-      tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+      tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
       if [ $? != 0 ] || [ "$tag" == "" ]
       then
           logerror "❌ Could not find current CP version from docker ps"
@@ -22979,7 +22979,7 @@ playground_topic_produce_command() {
 
   parameter_for_list_broker="--bootstrap-server"
   set +e
-  tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+  tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
   if [ $? != 0 ] || [ "$tag" == "" ]
   then
       # default to --bootstrap-server
@@ -23902,7 +23902,7 @@ playground_connector_offsets_get_command() {
 
   if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
   then
-      tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+      tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
       if [ $? != 0 ] || [ "$tag" == "" ]
       then
           logerror "❌ could not find current CP version from docker ps"
@@ -24030,7 +24030,7 @@ playground_connector_offsets_reset_command() {
 
   if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
   then
-      tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+      tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
       if [ $? != 0 ] || [ "$tag" == "" ]
       then
           logerror "❌ could not find current CP version from docker ps"
@@ -24194,7 +24194,7 @@ playground_connector_offsets_alter_command() {
 
   if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
   then
-      tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+      tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
       if [ $? != 0 ] || [ "$tag" == "" ]
       then
           logerror "❌ could not find current CP version from docker ps"
@@ -24625,7 +24625,7 @@ playground_connector_restart_command() {
           get_ccloud_connect
           handle_ccloud_connect_rest_api "curl -s --request POST \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/restart\" --header \"authorization: Basic $authorization\""
       else
-              tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+              tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
               if [ $? != 0 ] || [ "$tag" == "" ]
               then
                   logerror "Could not find current CP version from docker ps"
@@ -24679,7 +24679,7 @@ playground_connector_stop_command() {
       fi
   fi
 
-  tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+  tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
   if [ $? != 0 ] || [ "$tag" == "" ]
   then
       logerror "❌ could not find current CP version from docker ps"
@@ -26060,7 +26060,7 @@ playground_connector_create_or_update_command() {
 
   if [[ -n "$initial_state" ]]
   then
-      tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+      tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
       if [ $? != 0 ] || [ "$tag" == "" ]
       then
           logerror "❌ could not find current CP version from docker ps"

@@ -22,7 +22,7 @@ if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
   ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DOCKER_COMPOSE_FILE_OVERRIDE}"
   set +e
-  nb_connect_services=$(egrep -c "connect[0-9]+:" ${DOCKER_COMPOSE_FILE_OVERRIDE})
+  nb_connect_services=$(grep -Ec "connect[0-9]+:" ${DOCKER_COMPOSE_FILE_OVERRIDE})
   set -e
   check_arm64_support "${DIR}" "${DOCKER_COMPOSE_FILE_OVERRIDE}"
 fi

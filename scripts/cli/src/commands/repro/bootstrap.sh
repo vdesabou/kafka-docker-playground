@@ -745,14 +745,14 @@ EOF
 
   kafka_cli_producer_error=0
   kafka_cli_producer_eof=0
-  line_kafka_cli_producer=$(egrep -n "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $repro_test_file | cut -d ":" -f 1 | tail -n1)
+  line_kafka_cli_producer=$(grep -En "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $repro_test_file | cut -d ":" -f 1 | tail -n1)
   if [ $? != 0 ] || [ "$line_kafka_cli_producer" == "" ]
   then
       logwarn "Could not find kafka cli producer!"
       kafka_cli_producer_error=1
   fi
   set +e
-  egrep "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $repro_test_file | grep EOF > /dev/null
+  grep -E "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $repro_test_file | grep EOF > /dev/null
   if [ $? = 0 ]
   then
       kafka_cli_producer_eof=1
@@ -1156,14 +1156,14 @@ for sink_file in "${pipeline_array[@]}"; do
     # need to remove cli which produces and change topic
     kafka_cli_producer_error=0
     kafka_cli_producer_eof=0
-    line_kafka_cli_producer=$(egrep -n "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
+    line_kafka_cli_producer=$(grep -En "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
     if [ $? != 0 ]
     then
         logwarn "Could not find kafka cli producer!"
         kafka_cli_producer_error=1
     fi
     set +e
-    egrep "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | grep EOF > /dev/null
+    grep -E "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | grep EOF > /dev/null
     if [ $? = 0 ]
     then
         kafka_cli_producer_eof=1
