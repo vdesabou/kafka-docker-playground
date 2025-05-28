@@ -245,7 +245,11 @@ playground connector create-or-update --connector cdc-xstream-oracle-source << E
      "schema.history.internal.kafka.topic": "__orcl-schema-changes.cflt",
      "confluent.license": "",
      "confluent.topic.bootstrap.servers": "broker:9092",
-     "confluent.topic.replication.factor": "1"
+     "confluent.topic.replication.factor": "1",
+
+     "_comment:": "remove _ to use ExtractNewRecordState smt",
+     "_transforms": "unwrap,RemoveDots",
+     "_transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
 }
 EOF
 
