@@ -25,7 +25,7 @@ services:
       - minio
     entrypoint: >
       /bin/sh -c "
-        /usr/bin/mc config host add myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY;
+        /usr/bin/mc alias set myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY;
         while ! /usr/bin/mc mb myminio/mybucket; do
           sleep 5
         done
@@ -40,7 +40,7 @@ services:
       - minio
     entrypoint: >
       /bin/sh -c "
-        /usr/bin/mc config host add myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY;
+        /usr/bin/mc alias set myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY;
         while ! /usr/bin/mc ls -r myminio/mybucket; do
           sleep 5
         done
@@ -57,7 +57,7 @@ services:
         - /tmp:/tmp
     entrypoint: >
       /bin/sh -c "
-        /usr/bin/mc config host add myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY;
+        /usr/bin/mc alias set myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY;
         while ! /usr/bin/mc cp myminio/mybucket/topics/minio_topic/partition\=0/minio_topic+0+0000000000.avro /tmp/; do
           sleep 5
         done
