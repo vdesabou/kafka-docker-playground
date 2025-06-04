@@ -124,6 +124,7 @@ confluentinc/MicrosoftSqlServerSink
 confluentinc/MicrosoftSqlServerSource
 confluentinc/MySqlSink
 confluentinc/MySqlSource
+confluentinc/NA
 confluentinc/OpenSearchSink
 confluentinc/OracleDatabaseSink
 confluentinc/OracleDatabaseSource
