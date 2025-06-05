@@ -124,7 +124,6 @@ confluentinc/MicrosoftSqlServerSink
 confluentinc/MicrosoftSqlServerSource
 confluentinc/MySqlSink
 confluentinc/MySqlSource
-confluentinc/NA
 confluentinc/OpenSearchSink
 confluentinc/OracleDatabaseSink
 confluentinc/OracleDatabaseSource
@@ -192,6 +191,7 @@ microsoft/kafka-connect-iothub
 microsoftcorporation/kafka-connect-cosmos
 microsoftcorporation/kafka-sink-azure-kusto
 mongodb/kafka-connect-mongodb
+NA/NA
 neo4j/kafka-connect-neo4j
 newrelic/newrelic-kafka-connector
 onewayautomation/ogamma-visual-logger-for-opc
