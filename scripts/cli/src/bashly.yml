@@ -1666,6 +1666,10 @@ commands:
     flags:
       - *connection-id
 
+  - name: open-ui
+    help: |-
+        🌐 Just open Zazkia UI (http://localhost:9191) in your browser
+
 - name: tools
   expose: always
   group: Tools

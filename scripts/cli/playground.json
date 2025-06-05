@@ -1140,6 +1140,12 @@
               "description": "🧲 Zazkia TCP connection id\n      \n"
             }
           ]
+        },
+        {
+          "name": "open-ui",
+          "description": "🌐 Just open Zazkia UI (http://localhost:9191) in your browser\n",
+          "usage": "playground tcp-proxy open-ui",
+          "options": []
         }
       ]
     },

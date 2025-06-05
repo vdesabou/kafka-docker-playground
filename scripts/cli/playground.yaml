@@ -1290,6 +1290,11 @@ subcommands:
             🧲 Zazkia TCP connection id
                   
             
+      - name: open-ui
+        description: | 
+          🌐 Just open Zazkia UI (http://localhost:9191) in your browser
+        usage: playground tcp-proxy open-ui
+        options: []
   - name: tools
     description: | 
         🧰 Tools commands
