@@ -77,6 +77,8 @@ services:
       KAFKA_CONFLUENT_TELEMETRY_METRICS_COLLECTOR_INTERVAL_MS: "60000"
       KAFKA_CONFLUENT_TELEMETRY_REMOTECONFIG_CONFLUENT_ENABLED: "false"
       KAFKA_CONFLUENT_CONSUMER_LAG_EMITTER_ENABLED: "true"
+      # https://support.confluent.io/hc/en-us/articles/38120641503380--Action-required-Confluent-Platform-7-9-x-Important-Note-on-Group-Coordinator-in-Confluent-Platform-7-9-x
+      KAFKA_GROUP_COORDINATOR_NEW_ENABLE: "false"
 
   broker-us:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
@@ -118,6 +120,8 @@ services:
       KAFKA_CONFLUENT_TELEMETRY_METRICS_COLLECTOR_INTERVAL_MS: "60000"
       KAFKA_CONFLUENT_TELEMETRY_REMOTECONFIG_CONFLUENT_ENABLED: "false"
       KAFKA_CONFLUENT_CONSUMER_LAG_EMITTER_ENABLED: "true"
+      # https://support.confluent.io/hc/en-us/articles/38120641503380--Action-required-Confluent-Platform-7-9-x-Important-Note-on-Group-Coordinator-in-Confluent-Platform-7-9-x
+      KAFKA_GROUP_COORDINATOR_NEW_ENABLE: "false"
 
   broker-metrics:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
@@ -150,7 +154,9 @@ services:
       KAFKA_CONFLUENT_TELEMETRY_METRICS_COLLECTOR_INTERVAL_MS: "60000"
       KAFKA_CONFLUENT_TELEMETRY_REMOTECONFIG_CONFLUENT_ENABLED: "false"
       KAFKA_CONFLUENT_CONSUMER_LAG_EMITTER_ENABLED: "true"
-
+      # https://support.confluent.io/hc/en-us/articles/38120641503380--Action-required-Confluent-Platform-7-9-x-Important-Note-on-Group-Coordinator-in-Confluent-Platform-7-9-x
+      KAFKA_GROUP_COORDINATOR_NEW_ENABLE: "false"
+      
   connect-us:
     image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     hostname: connect-us
