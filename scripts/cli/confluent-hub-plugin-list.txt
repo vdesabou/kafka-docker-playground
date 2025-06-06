@@ -191,7 +191,7 @@ microsoft/kafka-connect-iothub
 microsoftcorporation/kafka-connect-cosmos
 microsoftcorporation/kafka-sink-azure-kusto
 mongodb/kafka-connect-mongodb
-NA/NA
+NA/-NA-
 neo4j/kafka-connect-neo4j
 newrelic/newrelic-kafka-connector
 onewayautomation/ogamma-visual-logger-for-opc
