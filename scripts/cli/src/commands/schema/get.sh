@@ -108,7 +108,7 @@ do
         schema_type=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}$maybe_include_deleted" | jq -r .schemaType)
         id=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}$maybe_include_deleted" | jq -r .id)
         case "${schema_type}" in
-        JSON|null)
+        JSON|AVRO|null)
             schema=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}/schema$maybe_include_deleted" | jq .)
         ;;
         PROTOBUF)

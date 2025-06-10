@@ -8970,7 +8970,7 @@ cat << EOF > $tmp_dir/Dockerfile
 FROM ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
 USER root
 # https://github.com/confluentinc/common-docker/pull/743 and https://github.com/adoptium/adoptium-support/issues/1285
-RUN sed -i "s/packages\.adoptium\.net/adoptium\.jfrog\.io/g" /etc/yum.repos.d/adoptium.repo
+RUN if [ -f /etc/yum.repos.d/adoptium.repo ]; then sed -i "s/packages\.adoptium\.net/adoptium\.jfrog\.io/g" /etc/yum.repos.d/adoptium.repo; fi
 RUN ${CONNECT_3RDPARTY_INSTALL}
 USER ${CONNECT_USER}
 EOF
@@ -19233,7 +19233,7 @@ playground_schema_get_command() {
           schema_type=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}$maybe_include_deleted" | jq -r .schemaType)
           id=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}$maybe_include_deleted" | jq -r .id)
           case "${schema_type}" in
-          JSON|null)
+          JSON|AVRO|null)
               schema=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}/schema$maybe_include_deleted" | jq .)
           ;;
           PROTOBUF)
