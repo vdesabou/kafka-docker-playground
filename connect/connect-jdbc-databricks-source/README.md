@@ -6,6 +6,21 @@
 
 Quickly test [JDBC Databricks Source](https://docs.confluent.io/current/connect/kafka-connect-jdbc/source-connector) connector.
 
+## Register a trial account
+
+Go to [Databricks](https://www.databricks.com/try-databricks) and register for a trial.
+
+Once the trial instance is ready, login the portal 
+Navigate to the SQL Warehouses -> Connection details to collect the Server hostname, HTTP Path.
+Click on your Account on the top right corner, select Settings. Select Developer and generate a new Personal Access token.
+
+Export the below Environment vairables
+
+DATABRICKS_HOST
+
+DATABRICKS_TOKEN
+
+DATABRICKS_HTTP_PATH
 
 ## How to run
 
