@@ -18,7 +18,9 @@ Click on your Account on the top right corner, select Settings. Select Developer
 Export the below Environment vairables
 
 DATABRICKS_HOST
+
 DATABRICKS_TOKEN
+
 DATABRICKS_HTTP_PATH
 
 ## How to run
