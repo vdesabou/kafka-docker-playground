@@ -299,7 +299,7 @@ cat << EOF > $tmp_dir/Dockerfile
 FROM ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
 USER root
 # https://github.com/confluentinc/common-docker/pull/743 and https://github.com/adoptium/adoptium-support/issues/1285
-RUN sed -i "s/packages\.adoptium\.net/adoptium\.jfrog\.io/g" /etc/yum.repos.d/adoptium.repo
+RUN if [ -f /etc/yum.repos.d/adoptium.repo ]; then sed -i "s/packages\.adoptium\.net/adoptium\.jfrog\.io/g" /etc/yum.repos.d/adoptium.repo; fi
 RUN ${CONNECT_3RDPARTY_INSTALL}
 USER ${CONNECT_USER}
 EOF
