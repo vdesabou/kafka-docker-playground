@@ -515,16 +515,27 @@ function check_and_update_playground_version() {
 }
 
 function get_ccs_or_ce_specifics() {
-  if [[ $CP_CONNECT_IMAGE == *"cp-kafka-"* ]] || [[ $CP_KAFKA_IMAGE == *"cp-kafka" ]]
+  if [[ $CP_CONNECT_IMAGE == *"cp-kafka-"* ]]
   then
-    log "Ⓜ️ detected community image used, disabling Metrics Reporter"
-    export KAFKA_METRIC_REPORTERS=""
+    log "Ⓜ️ detected connect community image used, disabling Monitoring Interceptors"
+    export CONNECT_CONSUMER_INTERCEPTOR_CLASSES=""
+    export CONNECT_PRODUCER_INTERCEPTOR_CLASSES=""
+  elif version_gt $TAG_BASE "7.9.9"
+  then
+    log "Ⓜ️ disabling Monitoring Interceptors as CP image is > 8"
     export CONNECT_CONSUMER_INTERCEPTOR_CLASSES=""
     export CONNECT_PRODUCER_INTERCEPTOR_CLASSES=""
   else
-    export KAFKA_METRIC_REPORTERS="io.confluent.metrics.reporter.ConfluentMetricsReporter"
     export CONNECT_CONSUMER_INTERCEPTOR_CLASSES="io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
     export CONNECT_PRODUCER_INTERCEPTOR_CLASSES="io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+  fi
+
+  if [[ $CP_KAFKA_IMAGE == *"cp-kafka" ]]
+  then
+    log "Ⓜ️ detected kafka community image used, disabling Metrics Reporter"
+    export KAFKA_METRIC_REPORTERS=""
+  else
+    export KAFKA_METRIC_REPORTERS="io.confluent.metrics.reporter.ConfluentMetricsReporter"
   fi
 }
 
