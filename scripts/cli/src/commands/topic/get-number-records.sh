@@ -44,7 +44,7 @@ do
             PROTOBUF)
             value_type="protobuf"
             ;;
-            null)
+            AVRO|null)
             value_type="avro"
             ;;
         esac
