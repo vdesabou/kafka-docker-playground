@@ -241,5 +241,6 @@ timeplus/kafka-timeplus-connector-sink
 vectara/kafka-connect-vectara
 vertica/vertica-analytics-platform
 waterstreamsrl/waterstream-kafka-mqtt
+Weaviate/kafka-connect-weaviate
 wepay/kafka-connect-bigquery
 zilliz/kafka-connect-milvus
