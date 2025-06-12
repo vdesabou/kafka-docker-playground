@@ -1535,8 +1535,8 @@ function remove_cdb_oracle_image() {
 }
 
 function create_or_get_oracle_image() {
-  ZIP_FILE="$1"
-  SETUP_FOLDER="$2"
+  local ZIP_FILE="$1"
+  local SETUP_FOLDER="$2"
 
   if [ "$ZIP_FILE" == "linuxx64_12201_database.zip" ]
   then
