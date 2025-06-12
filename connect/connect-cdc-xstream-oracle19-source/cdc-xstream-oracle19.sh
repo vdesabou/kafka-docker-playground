@@ -6,6 +6,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 # https://confluentinc.atlassian.net/wiki/spaces/~62c938d4fa577c57c3b80d59/pages/4038003034/DRAFT+User+facing+documentation+Oracle+XStream+CDC+source+connector+Early+Access
+
 create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "../../connect/connect-cdc-oracle19-source/ora-setup-scripts-cdb-table"
 
 if [ ! -z "$SQL_DATAGEN" ]
@@ -33,14 +34,17 @@ fi
 cd ../../connect/connect-cdc-xstream-oracle19-source
 if [ ! -d "lib/instantclient" ]
 then
-     if [ "$(uname -m)" = "arm64" ]
+     if [ -z "${ZIP_FILE}" ]
      then
-          ZIP_FILE="instantclient_19_25_arm64.zip"
-     else
-          ZIP_FILE="instantclient_19_25_x86.zip"
+          if [ `uname -m` = "arm64" ]
+          then
+               ZIP_FILE="instantclient_19_25_arm64.zip"
+          else
+               ZIP_FILE="instantclient_19_25_x86.zip"
+          fi
+          get_3rdparty_file "${ZIP_FILE}"
      fi
 
-     get_3rdparty_file "${ZIP_FILE}"
      if [ ! -f ${PWD}/${ZIP_FILE} ]
      then
           logerror "❌ ${PWD}/${ZIP_FILE} is missing. It must be downloaded manually in order to acknowledge user agreement"
@@ -49,7 +53,7 @@ then
      fi
 
      unzip ${ZIP_FILE} -d lib
-     mv lib/instantclient_19_25 lib/instantclient
+     mv lib/instantclient_* lib/instantclient
 fi
 cd -
 
