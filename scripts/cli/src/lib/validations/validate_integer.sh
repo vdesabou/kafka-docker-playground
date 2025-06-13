@@ -5,6 +5,6 @@ validate_integer() {
     return 0
   else
     logerror "must be an integer"
-    return 1
+    return
   fi
 }

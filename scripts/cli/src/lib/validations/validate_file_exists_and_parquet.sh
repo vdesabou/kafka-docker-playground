@@ -8,6 +8,17 @@ validate_file_exists_and_parquet() {
     real_file=$(echo "$file" | cut -d "@" -f 2)
   fi
 
-  [[ -f "$real_file" ]] || logerror "<$real_file> does not correspond to the path of an existing file, please make sure to use absolute full path or correct relative path !"
-  [[ "$real_file" == *.parquet ]] || logerror "<$real_file> is not an Parquet file. Please provide a file with .parquet extension."
+  if [[ -f "$real_file" ]]; then
+    return 0
+  else
+    logerror "<$real_file> does not correspond to the path of an existing file, please make sure to use absolute full path or correct relative path !"
+    return
+  fi
+
+  if [[ "$real_file" == *.parquet ]]; then
+    return 0
+  else
+    logerror "<$real_file> is not an Parquet file. Please provide a file with .parquet extension."
+    return
+  fi
 }

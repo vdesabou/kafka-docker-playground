@@ -13171,7 +13171,7 @@ validate_date_format() {
   if [[ ! "$1" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]
   then
     logerror "must be in format yyyy-mm-dd"
-    return 1
+    return
   fi
 
   if [[ "$OSTYPE" == "darwin"* ]]
@@ -13180,14 +13180,14 @@ validate_date_format() {
     if ! date -j -f "%Y-%m-%d" "$1" &>/dev/null
     then
       logerror "must be a valid date"
-      return 1
+      return
     fi
   else
     # Linux: Validate the date format
     if ! date -d "$1" &>/dev/null
     then
       logerror "must be a valid date"
-      return 1
+      return
     fi
   fi
 
@@ -13196,7 +13196,9 @@ validate_date_format() {
 
 # src/lib/validations/validate_dir_exists.sh
 validate_dir_exists() {
-  [[ -d "$1" ]] || logerror "<$1> must be an existing directory"
+  if [[ ! -d "$1" ]]; then
+    logerror "must be an existing directory"
+  fi
 }
 
 # src/lib/validations/validate_editor_exists.sh
@@ -13211,7 +13213,12 @@ validate_editor_exists() {
 # src/lib/validations/validate_file_exists.sh
 validate_file_exists() {
   file="$1"
-  [[ -f "$1" ]] || logerror "<$file> does not correspond to the path of an existing file, please make sure to use absolute full path or correct relative path !"
+  if [[ -f "$1" ]]; then
+    return 0
+  else
+    logerror "<$file> does not correspond to the path of an existing file, please make sure to use absolute full path or correct relative path !"
+    return
+  fi
 }
 
 # src/lib/validations/validate_file_exists_and_avro.sh
@@ -13224,8 +13231,19 @@ validate_file_exists_and_avro() {
     real_file=$(echo "$file" | cut -d "@" -f 2)
   fi
 
-  [[ -f "$real_file" ]] || logerror "<$real_file> does not correspond to the path of an existing file, please make sure to use absolute full path or correct relative path !"
-  [[ "$real_file" == *.avro ]] || logerror "<$real_file> is not an Avro file. Please provide a file with .avro extension."
+  if [[ -f "$real_file" ]]; then
+    return 0
+  else
+    logerror "<$real_file> does not correspond to the path of an existing file, please make sure to use absolute full path or correct relative path !"
+    return
+  fi
+
+  if [[ "$real_file" == *.avro ]]; then
+    return 0
+  else
+    logerror "<$real_file> is not an Avro file. Please provide a file with .avro extension."
+    return
+  fi
 }
 
 # src/lib/validations/validate_file_exists_and_parquet.sh
@@ -13238,8 +13256,19 @@ validate_file_exists_and_parquet() {
     real_file=$(echo "$file" | cut -d "@" -f 2)
   fi
 
-  [[ -f "$real_file" ]] || logerror "<$real_file> does not correspond to the path of an existing file, please make sure to use absolute full path or correct relative path !"
-  [[ "$real_file" == *.parquet ]] || logerror "<$real_file> is not an Parquet file. Please provide a file with .parquet extension."
+  if [[ -f "$real_file" ]]; then
+    return 0
+  else
+    logerror "<$real_file> does not correspond to the path of an existing file, please make sure to use absolute full path or correct relative path !"
+    return
+  fi
+
+  if [[ "$real_file" == *.parquet ]]; then
+    return 0
+  else
+    logerror "<$real_file> is not an Parquet file. Please provide a file with .parquet extension."
+    return
+  fi
 }
 
 # src/lib/validations/validate_file_exists_with_trick.sh
@@ -13252,7 +13281,12 @@ validate_file_exists_with_trick() {
     real_file=$(echo "$file" | cut -d "@" -f 2)
   fi
 
-  [[ -f "$real_file" ]] || logerror "<$real_file> does not correspond to the path of an existing file, please make sure to use absolute full path or correct relative path !"
+  if [[ -f "$real_file" ]]; then
+    return 0
+  else
+    logerror "<$real_file> does not correspond to the path of an existing file, please make sure to use absolute full path or correct relative path !"
+    return
+  fi
 }
 
 # src/lib/validations/validate_integer.sh
@@ -13262,7 +13296,7 @@ validate_integer() {
     return 0
   else
     logerror "must be an integer"
-    return 1
+    return
   fi
 }
 
@@ -13296,7 +13330,7 @@ validate_json() {
               bat $json_file --highlight-line $error_line
           fi
       fi
-      exit 1
+      return
   fi
 }
 
@@ -13312,7 +13346,7 @@ validate_minimal_cp_version() {
 # src/lib/validations/validate_not_empty.sh
 validate_not_empty() {
   if [[ -z "$1" ]]; then
-    echo "must not be empty"
+    logerror "must not be empty"
   fi
 }
 
@@ -13321,13 +13355,13 @@ validate_percentage() {
   if [[ ! "$1" =~ ^[0-9]+$ ]]
   then
     logerror "must be an integer"
-    return 1
+    return
   fi
 
   if [[ "$1" -lt 0 ]] || [[ "$1" -gt 100 ]]
   then
     logerror "must be between 0 and 100"
-    return 1
+    return
   fi
 }
 
