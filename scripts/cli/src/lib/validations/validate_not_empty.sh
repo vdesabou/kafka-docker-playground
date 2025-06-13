@@ -1,4 +1,6 @@
 ## [@bashly-upgrade validations]
 validate_not_empty() {
-  [[ -z "$1" ]] && logerror "must not be empty"
+  if [[ -z "$1" ]]; then
+    echo "must not be empty"
+  fi
 }
