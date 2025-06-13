@@ -958,10 +958,13 @@ then
     parameter_for_list_broker="--bootstrap-server"
 fi
 set -e
-if ! version_gt $tag "5.4.99"
+if [ "$tag" != "" ]
 then
-    parameter_for_list_broker="--broker-list"
-fi
+    if ! version_gt $tag "5.4.99"
+    then
+        parameter_for_list_broker="--broker-list"
+    fi
+fi 
 
 nb_messages_sent=0
 nb_messages_to_send=0
