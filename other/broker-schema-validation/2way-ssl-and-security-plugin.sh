@@ -70,7 +70,7 @@ docker exec -i connect kafka-avro-console-producer \
      --topic topic-validation \
      --bootstrap-server broker:9092 \
      --property basic.auth.credentials.source=USER_INFO \
-     --property schema.registry.basic.auth.user.info="write:write" \
+     --property basic.auth.user.info="write:write" \
      --property schema.registry.url=https://schema-registry:8081 \
      --property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks \
      --property schema.registry.ssl.truststore.password=confluent \
