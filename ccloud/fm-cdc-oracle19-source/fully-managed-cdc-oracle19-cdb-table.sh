@@ -10,9 +10,29 @@ display_ngrok_warning
 
 bootstrap_ccloud_environment
 
-
-
 create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "../../ccloud/fm-cdc-oracle19-source/ora-setup-scripts-cdb-table"
+
+if [ ! -z "$SQL_DATAGEN" ]
+then
+     cd ../../ccloud/fm-cdc-oracle19-source
+     log "🌪️ SQL_DATAGEN is set"
+     for component in oracle-datagen
+     do
+     set +e
+     log "🏗 Building jar for ${component}"
+     docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${PWD}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "${PWD}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
+     if [ $? != 0 ]
+     then
+          logerror "❌ failed to build java component "
+          tail -500 /tmp/result.log
+          exit 1
+     fi
+     set -e
+     done
+     cd -
+else
+     log "🛑 SQL_DATAGEN is not set"
+fi
 
 set +e
 playground topic delete --topic ORCLCDB.C__MYUSER.CUSTOMERS
@@ -211,8 +231,12 @@ playground topic consume --topic ORCLCDB.C__MYUSER.CUSTOMERS --min-expected-mess
 log "Verifying topic redo-log-topic: there should be 14 records"
 playground topic consume --topic redo-log-topic --min-expected-messages 14 --timeout 60
 
-
-
+if [ ! -z "$SQL_DATAGEN" ]
+then
+     DURATION=10
+     log "Injecting data for $DURATION minutes"
+     docker exec -d sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username c##cfltuser --password password --sidOrServerName sid --sidOrServerNameVal ORCLCDB --maxPoolSize 10 --durationTimeMin $DURATION"
+fi
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
