@@ -38,9 +38,10 @@ set +e
 playground topic delete --topic asgard.public.customers
 set -e
 
+set_profiles
 docker compose build
-docker compose down -v --remove-orphans
-docker compose up -d --quiet-pull
+docker compose ${profile_sql_datagen_command} down -v --remove-orphans
+docker compose ${profile_sql_datagen_command} up -d --quiet-pull
 
 sleep 5
 

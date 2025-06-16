@@ -39,9 +39,10 @@ set +e
 playground topic delete --topic cflt.C__CFLTUSER.CUSTOMERS
 set -e
 
+set_profiles
 docker compose build
-docker compose down -v --remove-orphans
-docker compose up -d --quiet-pull
+docker compose ${profile_sql_datagen_command} down -v --remove-orphans
+docker compose ${profile_sql_datagen_command} up -d --quiet-pull
 
 playground container logs --container oracle --wait-for-log "DATABASE IS READY TO USE" --max-wait 600
 log "Oracle DB has started!"
