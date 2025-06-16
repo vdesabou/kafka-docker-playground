@@ -577,7 +577,7 @@ then
   fi
 
   sql_datagen=0
-  if [[ $test_file == *"connect-debezium-sqlserver"* ]] || [[ $test_file == *"connect-debezium-mysql"* ]] || [[ $test_file == *"connect-debezium-postgresql"* ]] || [[ $test_file == *"connect-debezium-oracle"* ]] || [[ $test_file == *"connect-cdc-oracle"* ]] || [[ $test_file == *"connect-jdbc-sqlserver"* ]] || [[ $test_file == *"connect-jdbc-mysql"* ]] || [[ $test_file == *"connect-jdbc-postgresql"* ]] || [[ $test_file == *"connect-jdbc-oracle"* ]] || [[ $test_file == *"connect-cdc-xstream"* ]] || [[ $test_file == *"fm-debezium"* ]]
+  if [[ $test_file == *"connect-debezium-sqlserver"* ]] || [[ $test_file == *"connect-debezium-mysql"* ]] || [[ $test_file == *"connect-debezium-postgresql"* ]] || [[ $test_file == *"connect-debezium-oracle"* ]] || [[ $test_file == *"connect-cdc-oracle"* ]] || [[ $test_file == *"connect-jdbc-sqlserver"* ]] || [[ $test_file == *"connect-jdbc-mysql"* ]] || [[ $test_file == *"connect-jdbc-postgresql"* ]] || [[ $test_file == *"connect-jdbc-oracle"* ]] || [[ $test_file == *"connect-cdc-xstream"* ]] || [[ $test_file == *"fm-debezium"* ]] || [[ $test_file == *"fm-cdc"* ]]
   then
     sql_datagen=1
   fi
@@ -592,7 +592,11 @@ then
     then
       if [[ $test_file == *"fully-managed"* ]]
       then
-        for((i=5;i<32;i++)); do
+        for((i=5;i<19;i++)); do
+          unset "options[$i]"
+        done
+
+        for((i=20;i<32;i++)); do
           unset "options[$i]"
         done
       fi
