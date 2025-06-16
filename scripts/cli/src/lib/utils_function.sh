@@ -1177,6 +1177,12 @@ function display_jmx_info() {
     log "📛 Pyroscope is reachable at http://127.0.0.1:4040"
     log "📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/password) or JMX metrics are available locally on those ports:"
   fi
+  if [ ! -z $ENABLE_KRAFT ]
+  then
+    log "    - kraft-controller : 10005"
+  else
+    log "    - zookeeper       : 9999"
+  fi
   log "    - zookeeper       : 9999"
   log "    - broker          : 10000"
   log "    - schema-registry : 10001"
@@ -1211,6 +1217,9 @@ function get_jmx_metrics() {
   case "$container" in
   zookeeper )
     port=9999
+  ;;
+  controller )
+    port=10005
   ;;
   broker )
     port=10000

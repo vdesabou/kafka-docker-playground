@@ -5,6 +5,10 @@ services:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: controller
     container_name: controller
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
+    ports:
+      - "10005:10005"
     environment:
       KAFKA_NODE_ID: 4
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -12,7 +16,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_JMX_PORT: 9102
+      KAFKA_JMX_PORT: 10005
       KAFKA_JMX_HOSTNAME: localhost
       KAFKA_PROCESS_ROLES: 'controller'
       KAFKA_CONTROLLER_QUORUM_VOTERS: '4@controller:9093'
@@ -29,6 +33,9 @@ services:
       # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid"
       # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+      EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
+      PYROSCOPE_APPLICATION_NAME: "kraft-controller"
+      PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
   broker:
     depends_on:
