@@ -1,0 +1,4 @@
+c3 {
+org.eclipse.jetty.security.jaas.spi.PropertyFileLoginModule required
+file="/tmp/login.properties";
+};

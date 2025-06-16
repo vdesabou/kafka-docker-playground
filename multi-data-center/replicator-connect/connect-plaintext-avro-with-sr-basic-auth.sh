@@ -4,6 +4,11 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+JAAS_CONFIG_FILE="/tmp/jaas_config.file"
+if version_gt $TAG_BASE "7.9.9"; then
+  export JAAS_CONFIG_FILE="/tmp/jaas_config_8_plus.file"
+fi
+
 ${DIR}/../../environment/mdc-plaintext/start.sh "docker-compose.plaintext.avro-with-sr-basic-auth.yml"
 
 log "Sending products in Europe cluster"

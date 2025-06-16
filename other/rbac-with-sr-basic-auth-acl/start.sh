@@ -9,6 +9,11 @@ if ! version_gt $TAG_BASE "5.3.99"; then
     exit 111
 fi
 
+JAAS_CONFIG_FILE="/tmp/jaas_config.file"
+if version_gt $TAG_BASE "7.9.9"; then
+  export JAAS_CONFIG_FILE="/tmp/jaas_config_8_plus.file"
+fi
+
 playground start-environment --environment rbac-sasl-plain --docker-compose-override-file "${PWD}/docker-compose.rbac-sasl-plain.yml"
 
 log "Creating role binding for ACL topics"

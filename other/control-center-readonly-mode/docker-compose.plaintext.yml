@@ -12,10 +12,11 @@ services:
   control-center:
     volumes:
       - ../../other/control-center-readonly-mode/login.properties:/tmp/login.properties
-      - ../../other/control-center-readonly-mode/propertyfile.jaas:/tmp/propertyfile.jaas
+      - ../../other/control-center-readonly-mode/jaas_config.file:/tmp/jaas_config.file
+      - ../../other/control-center-readonly-mode/jaas_config_8_plus.file:/tmp/jaas_config_8_plus.file
     environment:
       CONTROL_CENTER_REST_AUTHENTICATION_ROLES: Administrators,Restricted
       CONTROL_CENTER_AUTH_RESTRICTED_ROLES: Restricted
       CONTROL_CENTER_REST_AUTHENTICATION_METHOD: BASIC
       CONTROL_CENTER_REST_AUTHENTICATION_REALM: c3
-      CONTROL_CENTER_OPTS: -Djava.security.auth.login.config=/tmp/propertyfile.jaas
+      CONTROL_CENTER_OPTS: -Djava.security.auth.login.config=$JAAS_CONFIG_FILE
