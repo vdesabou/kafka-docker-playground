@@ -10,6 +10,11 @@ if ! version_gt $TAG_BASE "5.3.99"; then
     exit 111
 fi
 
+JAAS_CONFIG_FILE="/tmp/jaas_config.file"
+if version_gt $TAG_BASE "7.9.9"; then
+  export JAAS_CONFIG_FILE="/tmp/jaas_config_8_plus.file"
+fi
+
 if [ ! -z $ENABLE_KRAFT ]
 then
   # KRAFT mode
