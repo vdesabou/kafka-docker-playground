@@ -54,7 +54,7 @@ services:
       KAFKA_REST_KAFKA_REST_RESOURCE_EXTENSION_CLASS: io.confluent.kafkarest.security.KafkaRestSecurityResourceExtension
       # HTTP Basic Authentication
       # https://docs.confluent.io/platform/current/kafka-rest/production-deployment/rest-proxy/security.html#http-basic-authentication
-      KAFKAREST_OPTS: "-Djava.security.auth.login.config=/etc/kafka/$PROPERTIES_CONFIG_FILE"
+      KAFKAREST_OPTS: "-Djava.security.auth.login.config=$PROPERTIES_CONFIG_FILE"
       # This is required for dub kafka-ready tool only (Docker specific)
       # This is required when KAFKA_REST_CLIENT_SASL_JAAS_CONFIG is not set
       # KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/sasl-plain-with-basic-auth.properties"
