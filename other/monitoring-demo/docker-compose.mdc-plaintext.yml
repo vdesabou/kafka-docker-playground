@@ -212,7 +212,7 @@ services:
 
       KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry-europe:8081"
 
-      KAFKA_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      # KAFKA_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
       KAFKA_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: "broker-europe:9092"
 
       #KAFKA_ENABLE_IDEMPOTENCE: "true"
@@ -246,7 +246,7 @@ services:
 
       KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry-europe:8081"
 
-      KAFKA_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      #KAFKA_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
       KAFKA_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: "broker-europe:9092"
       JAVA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-consumer.yml -Xmx256M -Xms256M
     volumes:

@@ -31,8 +31,6 @@ curl -X PUT \
           "value.converter.basic.auth.credentials.source": "USER_INFO",
           "value.converter.connect.meta.data": "false",
           "src.consumer.group.id": "replicate-europe-to-us",
-          "src.consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
-          "src.consumer.confluent.monitoring.interceptor.bootstrap.servers": "broker-metrics:9092",
           "src.kafka.bootstrap.servers": "broker-europe:9092",
           "src.value.converter": "io.confluent.connect.avro.AvroConverter",
           "src.value.converter.schema.registry.url": "http://schema-registry-europe:8081",

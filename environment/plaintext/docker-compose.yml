@@ -474,8 +474,8 @@ services:
       # KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
       # KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
       # KSQL_KSQL_LOGGING_PROCESSING_ROWS_INCLUDE: 'true'
-      KSQL_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
-      KSQL_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      # KSQL_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      # KSQL_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
       # KSQL_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
       # KSQL_CONFLUENT_TELEMETRY_ENABLED: 'true'
       # KSQL_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
