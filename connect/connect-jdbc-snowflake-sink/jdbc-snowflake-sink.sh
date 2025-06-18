@@ -5,6 +5,41 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 logwarn "Using JDBC with snowflake comes with caveats, see https://github.com/vdesabou/kafka-docker-playground/blob/084a41e82b2bb4ef0f2c98e46bd68cf2a9bf780d/connect/connect-jdbc-snowflake-source/README.md?plain=1#L8C1-L8C11"
+logwarn "the example is no longer working with CP 8.0 getting:"
+
+echo "
+[2025-06-18 12:17:21,116] ERROR [jdbc-snowflake-source|task-0] Failed to get current time from DB using Generic and query 'SELECT CURRENT_TIMESTAMP' (io.confluent.connect.jdbc.dialect.GenericDatabaseDialect:587)
+net.snowflake.client.jdbc.SnowflakeSQLLoggedException: JDBC driver internal error: Fail to retrieve row count for first arrow chunk: sun.misc.Unsafe or java.nio.DirectByteBuffer.<init>(long, int) not available.
+        at net.snowflake.client.jdbc.SnowflakeResultSetSerializableV1.setFirstChunkRowCountForArrow(SnowflakeResultSetSerializableV1.java:1079) ~[snowflake-jdbc-3.13.16.jar:3.13.16]
+        at net.snowflake.client.jdbc.SnowflakeResultSetSerializableV1.create(SnowflakeResultSetSerializableV1.java:562) ~[snowflake-jdbc-3.13.16.jar:3.13.16]
+        at net.snowflake.client.jdbc.SnowflakeResultSetSerializableV1.create(SnowflakeResultSetSerializableV1.java:479) ~[snowflake-jdbc-3.13.16.jar:3.13.16]
+        at net.snowflake.client.core.SFResultSetFactory.getResultSet(SFResultSetFactory.java:29) ~[snowflake-jdbc-3.13.16.jar:3.13.16]
+        at net.snowflake.client.core.SFStatement.executeQueryInternal(SFStatement.java:220) ~[snowflake-jdbc-3.13.16.jar:3.13.16]
+        at net.snowflake.client.core.SFStatement.executeQuery(SFStatement.java:135) ~[snowflake-jdbc-3.13.16.jar:3.13.16]
+        at net.snowflake.client.core.SFStatement.execute(SFStatement.java:767) ~[snowflake-jdbc-3.13.16.jar:3.13.16]
+        at net.snowflake.client.core.SFStatement.execute(SFStatement.java:677) ~[snowflake-jdbc-3.13.16.jar:3.13.16]
+        at net.snowflake.client.jdbc.SnowflakeStatementV1.executeQueryInternal(SnowflakeStatementV1.java:238) ~[snowflake-jdbc-3.13.16.jar:3.13.16]
+        at net.snowflake.client.jdbc.SnowflakeStatementV1.executeQuery(SnowflakeStatementV1.java:133) ~[snowflake-jdbc-3.13.16.jar:3.13.16]
+        at io.confluent.connect.jdbc.dialect.GenericDatabaseDialect.currentTimeOnDB(GenericDatabaseDialect.java:577) ~[kafka-connect-jdbc-10.8.4.jar:?]
+        at io.confluent.connect.jdbc.source.TimestampIncrementingTableQuerier.endTimestampValue(TimestampIncrementingTableQuerier.java:258) ~[kafka-connect-jdbc-10.8.4.jar:?]
+        at io.confluent.connect.jdbc.source.TimestampIncrementingCriteria.setQueryParametersTimestampIncrementing(TimestampIncrementingCriteria.java:147) ~[kafka-connect-jdbc-10.8.4.jar:?]
+        at io.confluent.connect.jdbc.source.TimestampIncrementingCriteria.setQueryParameters(TimestampIncrementingCriteria.java:134) ~[kafka-connect-jdbc-10.8.4.jar:?]
+        at io.confluent.connect.jdbc.source.TimestampIncrementingTableQuerier.executeQuery(TimestampIncrementingTableQuerier.java:218) ~[kafka-connect-jdbc-10.8.4.jar:?]
+        at io.confluent.connect.jdbc.source.TimestampIncrementingTableQuerier.maybeStartQuery(TimestampIncrementingTableQuerier.java:169) ~[kafka-connect-jdbc-10.8.4.jar:?]
+        at io.confluent.connect.jdbc.source.JdbcSourceTask.poll(JdbcSourceTask.java:503) ~[kafka-connect-jdbc-10.8.4.jar:?]
+        at org.apache.kafka.connect.runtime.AbstractWorkerSourceTask.poll(AbstractWorkerSourceTask.java:498) ~[connect_runtime_runtime-project.jar:?]
+        at org.apache.kafka.connect.runtime.AbstractWorkerSourceTask.execute(AbstractWorkerSourceTask.java:370) ~[connect_runtime_runtime-project.jar:?]
+        at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:266) ~[connect_runtime_runtime-project.jar:?]
+        at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:322) ~[connect_runtime_runtime-project.jar:?]
+        at org.apache.kafka.connect.runtime.AbstractWorkerSourceTask.run(AbstractWorkerSourceTask.java:83) ~[connect_runtime_runtime-project.jar:?]
+        at org.apache.kafka.connect.runtime.isolation.Plugins.lambda$withClassLoader$7(Plugins.java:356) ~[connect_runtime_runtime-project.jar:?]
+        at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572) ~[?:?]
+        at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317) ~[?:?]
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144) ~[?:?]
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642) ~[?:?]
+        at java.base/java.lang.Thread.run(Thread.java:1583) [?:?]"
+
+logwarn "upgrading driver fixes this issue, but then we get another issue with timestamp column, see below JDBC type 2014 (TIMESTAMPTZ) not currently supported"
 
 username=$(whoami)
 uppercase_username=$(echo $username | tr '[:lower:]' '[:upper:]')
