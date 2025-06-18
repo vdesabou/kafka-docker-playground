@@ -135,7 +135,7 @@ jobs:
                       "🚀 connect/connect-azure-cosmosdb-source connect/connect-azure-cosmosdb-sink connect/connect-jdbc-cockroachdb-source connect/connect-jdbc-ibmdb2-source connect/connect-jdbc-ibmdb2-sink connect/connect-jdbc-sybase-source connect/connect-jdbc-sybase-sink",
                       "🚀 environment/plaintext environment/2way-ssl environment/kerberos environment/ldap-authorizer-sasl-plain environment/ldap-sasl-plain environment/mdc-kerberos environment/mdc-plaintext environment/mdc-sasl-plain environment/rbac-sasl-plain environment/sasl-plain environment/sasl-scram environment/sasl-ssl environment/ssl_kerberos connect/connect-snowflake-sink",
                       "🚀 connect/connect-mapr-sink",
-                      "🚀 other/syslog-logstash-ksqldb connect/connect-filestream-source connect/connect-filestream-sink connect/connect-filepulse-source connect/connect-jdbc-mariadb-source connect/connect-jdbc-mariadb-sink",
+                      "🚀 other/syslog-logstash-ksqldb connect/connect-jdbc-snowflake-sink connect/connect-filestream-source connect/connect-filestream-sink connect/connect-filepulse-source connect/connect-jdbc-mariadb-source connect/connect-jdbc-mariadb-sink",
                       "🚀 connect/connect-jdbc-sap-hana-sink connect/connect-jdbc-sap-hana-source connect/connect-sap-hana-sink other/kafka-connect-jsonata",
 
                       # requiring ngrok
