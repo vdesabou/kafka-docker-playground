@@ -197,17 +197,17 @@ do
                 log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 4 days ago...re-running. Test url: $html_url"
                 log "####################################################"
                 aws s3 rm $s3_file --region us-east-1
+            elif [[ $force_test_connector_plugin_version == 1 ]]
+            then
+                log "####################################################"
+                log "🔌 Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, but there is a new connector plugin on hub...re-running. Test url: $html_url"
+                log "####################################################"
+                aws s3 rm $s3_file --region us-east-1
             # run at least every 14 days, even with no changes
             elif [[ $elapsed_time -gt 1209600 ]]
             then
                 log "####################################################"
                 log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 14 days ago...re-running. Test url: $html_url"
-                log "####################################################"
-                aws s3 rm $s3_file --region us-east-1
-            elif [[ $force_test_connector_plugin_version == 1 ]]
-            then
-                log "####################################################"
-                log "🔌 Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, but there is a new connector plugin on hub...re-running. Test url: $html_url"
                 log "####################################################"
                 aws s3 rm $s3_file --region us-east-1
             elif [ "$environment" != "plaintext" ] && [ "$environment" != "" ]
