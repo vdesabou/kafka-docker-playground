@@ -2419,6 +2419,27 @@
               "description": "🆕 Number of last versions to show\n\nConflicts with: --all\n"
             }
           ]
+        },
+        {
+          "name": "display-last-updated",
+          "description": "🆕 List last updated connector plugins from confluent hub https://www.confluent.io/hub/\n",
+          "usage": "playground connector-plugin display-last-updated [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--days"
+              ],
+              "argument": 3,
+              "description": "📅 Number of days to look back\n\nDefault is 3 days\n\nDefault value: 3\n"
+            },
+            {
+              "names": [
+                "--vendor"
+              ],
+              "argument": "VENDOR",
+              "description": "🏢 Only display results for this vendor\n"
+            }
+          ]
         }
       ]
     },

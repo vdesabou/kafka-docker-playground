@@ -2617,6 +2617,27 @@ subcommands:
             
             Conflicts with: --all
             
+      - name: display-last-updated
+        description: | 
+          🆕 List last updated connector plugins from confluent hub https://www.confluent.io/hub/
+        usage: playground connector-plugin display-last-updated [OPTIONS]
+        options:
+        - names:
+          - --days
+          argument: 3
+          description: | 
+            📅 Number of days to look back
+            
+            Default is 3 days
+            
+            Default value: 3
+            
+        - names:
+          - --vendor
+          argument: VENDOR
+          description: | 
+            🏢 Only display results for this vendor
+            
   - name: connector
     description: | 
         🔗 Connector commands

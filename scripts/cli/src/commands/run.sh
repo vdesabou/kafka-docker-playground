@@ -1585,6 +1585,24 @@ function cleanup {
   if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
   then
     playground connector versions
+
+    # playground connector-plugin display-last-updated
+    set +e
+    echo ""
+    # wait that process with "playground connector-plugin display-last-updated" is finished
+    set +e
+    while pgrep -f "playground connector-plugin display-last-updated" > /dev/null
+    do
+      log "⌛ wait for playground connector-plugin display-last-updated..."
+      sleep 10
+    done
+    set -e
+    if [ -f ${connector_plugin_display_last_updated_file} ]
+    then
+      cat ${connector_plugin_display_last_updated_file}
+    fi
+    set -e
+
     playground connector open-docs --only-show-url
   fi
   set -e
@@ -1593,6 +1611,18 @@ trap cleanup EXIT
 
 playground generate-fzf-find-files &
 generate_connector_versions > /dev/null 2>&1 &
+set +e
+
+connector_plugin_display_last_updated_file="/tmp/connector-plugin-display-last-updated-$(date +%Y-%m-%d).txt"
+connector_type=$(playground state get run.connector_type)
+if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
+then
+  if [ ! -f ${connector_plugin_display_last_updated_file} ]
+  then
+    playground connector-plugin display-last-updated --days 3 --vendor confluentinc > ${connector_plugin_display_last_updated_file} &
+  fi
+fi
+set -e
 touch /tmp/playground-run-command-used
 set +e
 bash $filename
