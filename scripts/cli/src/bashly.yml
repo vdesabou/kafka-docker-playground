@@ -3275,6 +3275,28 @@ commands:
     examples: |
       playground connector-plugin versions --connector-plugin confluentinc/kafka-connect-s3
 
+  - name: display-last-updated
+    help: 🆕 List last updated connector plugins from confluent hub https://www.confluent.io/hub/
+    flags:
+    - long: --days
+      arg: days
+      required: false
+      default: "3"
+      validate: integer
+      help: |-
+        📅 Number of days to look back
+
+        Default is 3 days
+    - long: --vendor
+      required: false
+      validate: not_empty
+      arg: vendor
+      help: |-
+        🏢 Only display results for this vendor
+    examples: |
+      playground connector-plugin display-last-updated --days 7
+      playground connector-plugin display-last-updated --days 7 --vendor confluentinc
+
 - name: connector
   expose: always
   group: Connector
