@@ -469,6 +469,21 @@
       "subcommands": null
     },
     {
+      "name": "remove-cp-docker-images",
+      "description": "🧹 Remove all Confluent Platform docker images related to a version (a confirmation will be required for every version present)\n",
+      "usage": "playground remove-cp-docker-images [OPTIONS]",
+      "options": [
+        {
+          "names": [
+            "--version"
+          ],
+          "argument": "VERSION",
+          "description": "🔢 Specific version to remove\n"
+        }
+      ],
+      "subcommands": null
+    },
+    {
       "name": "cleanup-cloud-details",
       "description": "🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)\n   use this command if you notice that the playground is using unexpected ccloud details\n",
       "usage": "playground cleanup-cloud-details",

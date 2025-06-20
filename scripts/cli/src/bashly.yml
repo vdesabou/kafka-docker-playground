@@ -978,6 +978,19 @@ commands:
   help: |-
     🧨 Remove all docker images (including docker volumes)
 
+- name: remove-cp-docker-images
+  group: Run
+  help: |-
+    🧹 Remove all Confluent Platform docker images related to a version (a confirmation will be required for every version present)
+  flags:
+    - long: --version
+      required: false
+      arg: version
+      completions:
+        - $(docker image ls | grep confluentinc | grep -v "<none>" | awk '{print $2}' | sort | uniq)
+      help: |-
+        🔢 Specific version to remove
+
 - name: cleanup-cloud-details
   group: Run
   help: |-
