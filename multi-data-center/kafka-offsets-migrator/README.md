@@ -21,7 +21,7 @@ $ seq -f "european_sale_%g ${RANDOM}" 20 | docker container exec -i connect-euro
 Consumer with group my-consumer-group reads 10 messages in Europe cluster
 
 ```bash
-$ docker container exec -i connect-europe bash -c "kafka-console-consumer --bootstrap-server broker-europe:9092 --include 'sales_EUROPE' --from-beginning --max-messages 10 --consumer-property interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor --consumer-property confluent.monitoring.interceptor.bootstrap.servers=broker-metrics:9092 --consumer-property group.id=my-consumer-group"
+$ docker container exec -i connect-europe bash -c "kafka-console-consumer --bootstrap-server broker-europe:9092 --include 'sales_EUROPE' --from-beginning --max-messages 10 --consumer-property group.id=my-consumer-group"
 ```
 
 Replicate from Europe to US
@@ -153,5 +153,5 @@ Offsets to be commited in destination cluster are:
 Consumer with group my-consumer-group reads 10 messages in US cluster, it should start from previous offset
 
 ```bash
-$ docker container exec -i connect-europe bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --include 'sales_EUROPE' --max-messages 10 --consumer-property interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor --consumer-property confluent.monitoring.interceptor.bootstrap.servers=broker-metrics:9092 --consumer-property group.id=my-consumer-group"
+$ docker container exec -i connect-europe bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --include 'sales_EUROPE' --max-messages 10 --consumer-property group.id=my-consumer-group"
 ```
