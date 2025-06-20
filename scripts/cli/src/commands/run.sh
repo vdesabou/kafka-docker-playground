@@ -1588,21 +1588,14 @@ function cleanup {
 
     # playground connector-plugin display-last-updated
     set +e
-    echo ""
-    # wait that process with "playground connector-plugin display-last-updated" is finished
-    set +e
-    while pgrep -f "playground connector-plugin display-last-updated" > /dev/null
-    do
-      log "⌛ wait for playground connector-plugin display-last-updated..."
-      sleep 10
-    done
-    set -e
-    if [ -f ${connector_plugin_display_last_updated_file} ]
+    if ! pgrep -f "playground connector-plugin display-last-updated" > /dev/null
     then
-      cat ${connector_plugin_display_last_updated_file}
+      if [ -f ${connector_plugin_display_last_updated_file} ]
+      then
+        cat ${connector_plugin_display_last_updated_file}
+      fi
     fi
     set -e
-
     playground connector open-docs --only-show-url
   fi
   set -e
