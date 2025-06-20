@@ -981,7 +981,7 @@ commands:
 - name: remove-cp-docker-images
   group: Run
   help: |-
-    🧹 Remove all Confluent Platform docker images related to a version (a confirmation will be required for every version present)
+    🧹 Remove all Confluent Platform docker images related to a version installed locally (a confirmation will be required for every version present)
   flags:
     - long: --version
       required: false
@@ -990,6 +990,19 @@ commands:
         - $(docker image ls | grep confluentinc | grep -v "<none>" | awk '{print $2}' | sort | uniq)
       help: |-
         🔢 Specific version to remove
+
+- name: refresh-cp-docker-images
+  group: Run
+  help: |-
+    🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a version installed locally
+  flags:
+    - long: --version
+      required: true
+      arg: version
+      completions:
+        - $(docker image ls | grep confluentinc | grep -v "<none>" | awk '{print $2}' | sort | uniq)
+      help: |-
+        🔢 Specific version to pull 
 
 - name: cleanup-cloud-details
   group: Run

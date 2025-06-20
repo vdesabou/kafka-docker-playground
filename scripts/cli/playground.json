@@ -470,7 +470,7 @@
     },
     {
       "name": "remove-cp-docker-images",
-      "description": "🧹 Remove all Confluent Platform docker images related to a version (a confirmation will be required for every version present)\n",
+      "description": "🧹 Remove all Confluent Platform docker images related to a version installed locally (a confirmation will be required for every version present)\n",
       "usage": "playground remove-cp-docker-images [OPTIONS]",
       "options": [
         {
@@ -479,6 +479,21 @@
           ],
           "argument": "VERSION",
           "description": "🔢 Specific version to remove\n"
+        }
+      ],
+      "subcommands": null
+    },
+    {
+      "name": "refresh-cp-docker-images",
+      "description": "🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a version installed locally\n",
+      "usage": "playground refresh-cp-docker-images [OPTIONS]",
+      "options": [
+        {
+          "names": [
+            "--version"
+          ],
+          "argument": "VERSION",
+          "description": "🔢 Specific version to pull \n\nRequired: ✓ Yes\n"
         }
       ],
       "subcommands": null

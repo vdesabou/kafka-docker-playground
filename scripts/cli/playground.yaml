@@ -600,7 +600,7 @@ subcommands:
 
   - name: remove-cp-docker-images
     description: | 
-        🧹 Remove all Confluent Platform docker images related to a version (a confirmation will be required for every version present)
+        🧹 Remove all Confluent Platform docker images related to a version installed locally (a confirmation will be required for every version present)
     usage: playground remove-cp-docker-images [OPTIONS]
     options:
     - names:
@@ -608,6 +608,21 @@ subcommands:
       argument: VERSION
       description: | 
         🔢 Specific version to remove
+        
+    subcommands:
+
+  - name: refresh-cp-docker-images
+    description: | 
+        🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a version installed locally
+    usage: playground refresh-cp-docker-images [OPTIONS]
+    options:
+    - names:
+      - --version
+      argument: VERSION
+      description: | 
+        🔢 Specific version to pull 
+        
+        Required: ✓ Yes
         
     subcommands:
 
