@@ -12,19 +12,19 @@ fi
 
 cd ../../connect/connect-gcp-google-pubsub-source
 
-if [ ! -f ${DIR}/pubsub-group-kafka-connector-1.2.0.jar ]
+if [ ! -f ${DIR}/pubsub-group-kafka-connector-1.3.2.jar ]
 then
-     wget -q https://repo1.maven.org/maven2/com/google/cloud/pubsub-group-kafka-connector/1.2.0/pubsub-group-kafka-connector-1.2.0.jar
+     wget -q https://repo1.maven.org/maven2/com/google/cloud/pubsub-group-kafka-connector/1.3.2/pubsub-group-kafka-connector-1.3.2.jar
 fi
 
-if [ ! -f ${DIR}/grpc-netty-1.54.0.jar ]
+if [ ! -f ${DIR}/grpc-netty-1.70.0.jar ]
 then
-     wget -q https://repo1.maven.org/maven2/io/grpc/grpc-netty/1.54.0/grpc-netty-1.54.0.jar
+     wget -q https://repo1.maven.org/maven2/io/grpc/grpc-netty/1.70.0/grpc-netty-1.70.0.jar
 fi
 
-if [ ! -f ${DIR}/grpc-rls-1.55.3.jar ]
+if [ ! -f ${DIR}/grpc-rls-1.70.0.jar ]
 then
-     wget -q https://repo1.maven.org/maven2/io/grpc/grpc-rls/1.55.3/grpc-rls-1.55.3.jar
+     wget -q https://repo1.maven.org/maven2/io/grpc/grpc-rls/1.70.0/grpc-rls-1.70.0.jar
 fi
 
 GCP_KEYFILE="${PWD}/keyfile.json"
