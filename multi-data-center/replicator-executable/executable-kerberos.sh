@@ -10,7 +10,7 @@ if ! version_gt $TAG_BASE "5.3.99"; then
     head -n -1 replication-us.properties > /tmp/temp.properties ; mv /tmp/temp.properties replication-us.properties
 fi
 
-${DIR}/../../environment/mdc-kerberos/start.sh "${PWD}/docker-compose.mdc-kerberos.yml"
+playground start-environment --environment mdc-kerberos --docker-compose-override-file "${PWD}/docker-compose.mdc-kerberos.replicator.yml"
 
 log "Sending sales in Europe cluster"
 seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --bootstrap-server broker-europe:9092 --topic sales_EUROPE --producer.config /etc/kafka/producer-europe.properties'
@@ -18,14 +18,14 @@ seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i client bash -c
 log "Sending sales in US cluster"
 seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --bootstrap-server broker-us:9092 --topic sales_US --producer.config /etc/kafka/producer-us.properties'
 
-log "Starting replicator instances"
-docker compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml -f docker-compose.mdc-kerberos.replicator.yml up -d --quiet-pull
-
 docker container exec -i replicator-us bash -c 'kinit -k -t /var/lib/secret/kafka-connect.key connect'
 docker container exec -i replicator-europe bash -c 'kinit -k -t /var/lib/secret/kafka-connect.key connect'
 
-wait_container_ready  replicator-us
-wait_container_ready  replicator-europe
+playground container restart -c replicator-europe
+playground container restart -c replicator-us
+
+wait_container_ready replicator-us
+wait_container_ready replicator-europe
 
 sleep 120
 

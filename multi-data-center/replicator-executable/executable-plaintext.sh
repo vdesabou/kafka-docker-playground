@@ -10,7 +10,7 @@ if ! version_gt $TAG_BASE "5.3.99"; then
     head -n -1 replication-us.properties > /tmp/temp.properties ; mv /tmp/temp.properties replication-us.properties
 fi
 
-${DIR}/../../environment/mdc-plaintext/start.sh "${PWD}/docker-compose.mdc-plaintext.yml"
+playground start-environment --environment mdc-plaintext --docker-compose-override-file "${PWD}/docker-compose.mdc-plaintext.replicator.yml"
 
 log "Sending sales in Europe cluster"
 seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe kafka-console-producer --bootstrap-server localhost:9092 --topic sales_EUROPE
@@ -18,11 +18,11 @@ seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe 
 log "Sending sales in US cluster"
 seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-us kafka-console-producer --bootstrap-server localhost:9092 --topic sales_US
 
-log "Starting replicator instances"
-docker compose -f ../../environment/mdc-plaintext/docker-compose.yml -f docker-compose.mdc-plaintext.replicator.yml up -d --quiet-pull
+playground container restart -c replicator-europe
+playground container restart -c replicator-us
 
-wait_container_ready  replicator-us
-wait_container_ready  replicator-europe
+wait_container_ready replicator-us
+wait_container_ready replicator-europe
 
 sleep 120
 

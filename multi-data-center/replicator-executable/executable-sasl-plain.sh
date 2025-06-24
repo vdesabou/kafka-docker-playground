@@ -10,7 +10,7 @@ if ! version_gt $TAG_BASE "5.3.99"; then
     head -n -1 replication-us.properties > /tmp/temp.properties ; mv /tmp/temp.properties replication-us.properties
 fi
 
-${DIR}/../../environment/mdc-sasl-plain/start.sh "${PWD}/docker-compose.mdc-sasl-plain.yml"
+playground start-environment --environment sasl-plain --docker-compose-override-file "${PWD}/docker-compose.mdc-sasl-plain.replicator.yml"
 
 log "Sending sales in Europe cluster"
 seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe kafka-console-producer --bootstrap-server localhost:9092 --topic sales_EUROPE --producer.config /etc/kafka/client.properties
@@ -18,11 +18,11 @@ seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe 
 log "Sending sales in US cluster"
 seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-us kafka-console-producer --bootstrap-server localhost:9092 --topic sales_US --producer.config /etc/kafka/client.properties
 
-log "Starting replicator instances"
-docker compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../environment/mdc-sasl-plain/docker-compose.sasl-plain.yml -f docker-compose.mdc-sasl-plain.replicator.yml up -d --quiet-pull
+playground container restart -c replicator-europe
+playground container restart -c replicator-us
 
-wait_container_ready  replicator-us
-wait_container_ready  replicator-europe
+wait_container_ready replicator-us
+wait_container_ready replicator-europe
 
 sleep 120
 
