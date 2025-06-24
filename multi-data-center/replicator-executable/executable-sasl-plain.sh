@@ -10,7 +10,7 @@ if ! version_gt $TAG_BASE "5.3.99"; then
     head -n -1 replication-us.properties > /tmp/temp.properties ; mv /tmp/temp.properties replication-us.properties
 fi
 
-playground start-environment --environment sasl-plain --docker-compose-override-file "${PWD}/docker-compose.mdc-sasl-plain.replicator.yml"
+playground start-environment --environment mdc-sasl-plain --docker-compose-override-file "${PWD}/docker-compose.mdc-sasl-plain.replicator.yml"
 
 log "Sending sales in Europe cluster"
 seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe kafka-console-producer --bootstrap-server localhost:9092 --topic sales_EUROPE --producer.config /etc/kafka/client.properties
