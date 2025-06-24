@@ -46,21 +46,21 @@ EOF
 log "Creating JMS TIBCO EMS sink connector"
 playground connector create-or-update --connector jms-tibco-ems-sink  << EOF
 {
-               "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
-                    "tasks.max": "1",
-                    "topics": "sink-messages",
-                    "java.naming.provider.url": "tibjmsnaming://tibco-ems:7222",
-                    "java.naming.factory.initial": "com.tibco.tibjms.naming.TibjmsInitialContextFactory",
-                    "jndi.connection.factory": "QueueConnectionFactory",
-                    "java.naming.security.principal": "admin",
-                    "java.naming.security.credentials": "",
-                    "jms.destination.type": "queue",
-                    "jms.destination.name": "connector-quickstart",
-                    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }
+     "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
+     "tasks.max": "1",
+     "topics": "sink-messages",
+     "java.naming.provider.url": "tibjmsnaming://tibco-ems:7222",
+     "java.naming.factory.initial": "com.tibco.tibjms.naming.TibjmsInitialContextFactory",
+     "jndi.connection.factory": "QueueConnectionFactory",
+     "java.naming.security.principal": "admin",
+     "java.naming.security.credentials": "",
+     "jms.destination.type": "queue",
+     "jms.destination.name": "connector-quickstart",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 5
@@ -74,6 +74,6 @@ CLASSPATH=${TIBEMS_JAVA}/jms-2.0.jar:${CLASSPATH}
 CLASSPATH=.:${TIBEMS_JAVA}/tibjms.jar:${TIBEMS_JAVA}/tibjmsadmin.jar:${CLASSPATH}
 export CLASSPATH
 javac *.java
-java tibjmsMsgConsumer -user admin -queue connector-quickstart -nbmessages 10' > /tmp/result.log  2>&1
+java tibjmsMsgConsumer -user admin -queue connector-quickstart -nbmessages 10 -timeout 10000' > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "Text=" /tmp/result.log
