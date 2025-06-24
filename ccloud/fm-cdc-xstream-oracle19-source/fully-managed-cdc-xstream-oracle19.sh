@@ -279,6 +279,8 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
+sleep 10
+
 log "Insert 2 customers in CUSTOMERS table"
 docker exec -i oracle sqlplus c\#\#cfltuser/password@//localhost:1521/ORCLCDB << EOF
      insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Frantz', 'Kafka', 'fkafka@confluent.io', 'Male', 'bronze', 'Evil is whatever distracts');
