@@ -20,4 +20,10 @@ LISTENER =
 )
 
 DEDICATED_THROUGH_BROKER_LISTENER=ON
-DIAG_ADR_ENABLED = off
+
+# uncomment the following to enable verbose Oracle network/TLS debugging
+#DIAG_ADR_ENABLED = off
+#TRACE_LEVEL_LISTENER = SUPPORT
+#TRACE_DIRECTORY_LISTENER = /tmp
+#TRACE_FILE_LISTENER = listener_ssl.trc
+#LOGGING_LISTENER = on

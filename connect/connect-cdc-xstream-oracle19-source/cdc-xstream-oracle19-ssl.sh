@@ -34,14 +34,17 @@ fi
 cd ../../connect/connect-cdc-xstream-oracle19-source
 if [ ! -d "lib/instantclient" ]
 then
-     if [ `uname -m` = "arm64" ]
+     if [ -z "${ZIP_FILE}" ]
      then
-          ZIP_FILE="instantclient_19_25_arm64.zip"
-     else
-          ZIP_FILE="instantclient_19_25_x86.zip"
+          if [ `uname -m` = "arm64" ]
+          then
+               ZIP_FILE="instantclient_19_25_arm64.zip"
+          else
+               ZIP_FILE="instantclient_19_25_x86.zip"
+          fi
+          get_3rdparty_file "${ZIP_FILE}"
      fi
 
-     get_3rdparty_file "${ZIP_FILE}"
      if [ ! -f ${PWD}/${ZIP_FILE} ]
      then
           logerror "❌ ${PWD}/${ZIP_FILE} is missing. It must be downloaded manually in order to acknowledge user agreement"
@@ -50,7 +53,7 @@ then
      fi
 
      unzip ${ZIP_FILE} -d lib
-     mv lib/instantclient_19_25 lib/instantclient
+     mv lib/instantclient_* lib/instantclient
 fi
 cd -
 
@@ -266,6 +269,21 @@ BEGIN
           server_name     =>  'xout',
           table_names     =>  tables,
           schema_names    =>  schemas);
+END;
+/
+EOF
+
+if [ ! -f orclcdc_readiness.sql ]
+then
+     log "Downloading orclcdc_readiness.sql"
+     wget https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/_downloads/35f0e2f456c5dae965ee476492943e9e/orclcdc_readiness.sql
+fi
+
+log "Running orclcdc_readiness.sql, see https://docs.confluent.io/cloud/current/connectors/cc-oracle-xstream-cdc-source/oracle-xstream-cdc-setup-includes/prereqs-validation.html#validate-prerequisites-completion"
+docker cp orclcdc_readiness.sql oracle:/orclcdc_readiness.sql
+docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+     CONNECT sys/Admin123 AS SYSDBA
+     @/orclcdc_readiness.sql C##CFLTADMIN C##CFLTUSER XOUT ''
 END;
 /
 EOF
