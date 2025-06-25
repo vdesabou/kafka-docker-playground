@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  couchbase:
+    addr: couchbase:11210
+    proto: tcp
