@@ -4,7 +4,7 @@
 
 ## Objective
 
-Quickly test [MQTT Sink](https://docs.confluent.io/current/connect/kafka-connect-mqtt/mqtt-sink-connector/mqtt_sink_connector_quickstart.html#example-configure-mqtt-sink-connector-for-eclipse-mosquitto-broker) connector.
+Quickly test [MQTT Sink](https://docs.confluent.io/kafka-connectors/mqtt/current/mqtt-sink-connector/overview.html) connector.
 
 
 ## How to run
