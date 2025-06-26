@@ -195,6 +195,7 @@ NA/-NA-
 neo4j/kafka-connect-neo4j
 newrelic/newrelic-kafka-connector
 onewayautomation/ogamma-visual-logger-for-opc
+onibex/clickhouse-sink-connector
 onibex/onibex-databricks-sink-connector
 onibex/snowflake-sink-connector
 opencredo/kafka-connect-venafi
