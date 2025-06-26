@@ -24,7 +24,14 @@ Then go to `Connect` menu and copy the *Public Connection String*:
 
 ![connect](screenshot3.png)
 
-That will give you environment variable `COUCHBASE_CONNECTION_URL` 
+That will give you environment variable `COUCHBASE_HOSTNAME`  (remove `couchbases://` to get hostname)
+
+Then go to `Data Tools` menu and import sample data called *travel-sample*:
+
+![travel sample](screenshot4.png)
+
+
+N.B: After a period of inactivity (72 hours), your [free tier cluster will automatically turn off](https://docs.couchbase.com/cloud/get-started/create-account.html#:~:text=Only%201%20free%20tier%20operational%20cluster%20is%20available%20per%20organization%20and%20it%20automatically%20turns%20off%20after%2072%20hours%20of%20inactivity)
 
 ## How to run
 
