@@ -4,9 +4,28 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-NGROK_AUTH_TOKEN=${NGROK_AUTH_TOKEN:-$1}
 
-display_ngrok_warning
+COUCHBASE_USERNAME=${COUCHBASE_USERNAME:-$1}
+COUCHBASE_PASSWORD=${COUCHBASE_PASSWORD:-$2}
+COUCHBASE_CONNECTION_URL=${COUCHBASE_CONNECTION_URL:-$3}
+
+if [ -z "$COUCHBASE_USERNAME" ]
+then
+     logerror "COUCHBASE_USERNAME is not set. Export it as environment variable or pass it as argument"
+     exit 1
+fi
+
+if [ -z "$COUCHBASE_PASSWORD" ]
+then
+     logerror "COUCHBASE_PASSWORD is not set. Export it as environment variable or pass it as argument"
+     exit 1
+fi
+
+if [ -z "$COUCHBASE_CONNECTION_URL" ]
+then
+     logerror "COUCHBASE_CONNECTION_URL is not set. Export it as environment variable or pass it as argument"
+     exit 1
+fi
 
 bootstrap_ccloud_environment
 
@@ -15,46 +34,6 @@ playground topic delete --topic test-travel-sample
 sleep 3
 playground topic create --topic test-travel-sample --nb-partitions 1
 set -e
-
-docker compose build
-docker compose down -v --remove-orphans
-docker compose up -d --quiet-pull
-
-sleep 15
-
-
-
-log "Waiting for ngrok to start"
-while true
-do
-  container_id=$(docker ps -q -f name=ngrok)
-  if [ -n "$container_id" ]
-  then
-    status=$(docker inspect --format '{{.State.Status}}' $container_id)
-    if [ "$status" = "running" ]
-    then
-      log "Getting ngrok hostname and port"
-      NGROK_URL=$(curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-      NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
-      NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
-
-      if ! [[ $NGROK_PORT =~ ^[0-9]+$ ]]
-      then
-        log "NGROK_PORT is not a valid number, keep retrying..."
-        continue
-      else 
-        break
-      fi
-    fi
-  fi
-  log "Waiting for container ngrok to start..."
-  sleep 5
-done
-
-log "Creating Couchbase cluster"
-docker exec couchbase bash -c "/opt/couchbase/bin/couchbase-cli cluster-init --cluster-username Administrator --cluster-password password --services=data,index,query"
-log "Install Couchbase bucket example travel-sample"
-curl -X POST -u Administrator:password http://localhost:8091/sampleBuckets/install -d '["travel-sample"]'
 
 connector_name="CouchbaseSource_$USER"
 set +e
@@ -70,11 +49,11 @@ playground connector create-or-update --connector $connector_name << EOF
   "kafka.api.key": "$CLOUD_KEY",
   "kafka.api.secret": "$CLOUD_SECRET",
   "output.data.format": "JSON",
-  "couchbase.seed.nodes": "$NGROK_HOSTNAME:$NGROK_PORT",
+  "couchbase.seed.nodes": "$COUCHBASE_CONNECTION_URL",
   "couchbase.bucket": "travel-sample",
   "couchbase.topic": "test-travel-sample",
-  "couchbase.username": "Administrator",
-  "couchbase.password": "password",
+  "couchbase.username": "$COUCHBASE_USERNAME",
+  "couchbase.password": "$COUCHBASE_PASSWORD",
   "couchbase.source.handler": "com.couchbase.connect.kafka.handler.source.DefaultSchemaSourceHandler",
   "couchbase.stream.from": "SAVED_OFFSET_OR_BEGINNING",
   "tasks.max" : "1"
