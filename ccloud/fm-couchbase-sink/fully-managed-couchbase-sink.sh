@@ -27,18 +27,7 @@ then
      exit 1
 fi
 
-# sed -e "s|:COUCHBASE_HOSTNAME:|$COUCHBASE_HOSTNAME|g" \
-#     -e "s|:COUCHBASE_USERNAME:|$COUCHBASE_USERNAME|g" \
-#     -e "s|:COUCHBASE_PASSWORD:|$COUCHBASE_PASSWORD|g" \
-#     ../../ccloud/fm-couchbase-sink/cbsh-config.template > ../../ccloud/fm-couchbase-sink/cbsh-config
-
 bootstrap_ccloud_environment
-
-
-# log "Creating Couchbase bucket travel-data"
-# cd ../../ccloud/fm-couchbase-sink
-# docker run -t -v $PWD/cbsh-config:/home/nonroot/.cbsh/config -v $PWD/create-bucket:/tmp/command vdesabou/cbsh:latest --script /tmp/command
-# cd -
 
 set +e
 playground topic delete --topic test-travel-sample
