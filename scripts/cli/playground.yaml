@@ -1604,6 +1604,72 @@ subcommands:
             
             Allowed values: enable, disable
             
+      - name: jscissors
+        description: | 
+          ✂️ jscissors is an instrumentation framework and can help to analyse control flow and perform some specific logging
+            
+            * Control Flow Tracing: By dynamically instrumenting Java code, the tool meticulously tracks the precise sequence of executed methods at runtime. This capability offers invaluable insights into how an application navigates its logic. The tool provides a way to generate a stack trace when a method is called. 
+            * Additional Logging: This enhanced logging capability provides a way to print the input arguments to a method and return value from a method. 
+            * Delve into heap area: Generating heap dump at a method call will be crucial to analyze the state of JVM at a given point. The tool has capabilities to generate thread dump as well to track the state of all the threads when a method is called. 
+        usage: playground debug jscissors [OPTIONS]
+        options:
+        - names:
+          - --container
+          - -c
+          argument: connect
+          description: | 
+            🐳 Container name
+            
+            Default value: connect
+            
+        - names:
+          - --operation
+          argument: [VALUES, RETURN_VALUE, THREADS, HEAP, STACK, EXCEPTION_HEAP, DELAY]
+          description: | 
+            🥼 operation to perform:
+            
+            * VALUES: print method input arguments
+            * RETURN_VALUE: print method return value
+            * THREADS: print thread dump when method is called
+            * HEAP: print heap dump when method is called
+            * STACK: print stack trace when method is called
+            * EXCEPTION_HEAP: print heap dump when an exception is thrown during method execution
+            * DELAY: print time taken for method execution
+            
+            🎓 Tip: you can pass multiple operations by specifying --operation multiple times
+            
+            Required: ✓ Yes
+            
+            Repeatable: ✓ Yes
+            
+            Allowed values: VALUES, RETURN_VALUE, THREADS, HEAP, STACK, EXCEPTION_HEAP, DELAY
+            
+        - names:
+          - --class
+          argument: CLASS
+          description: | 
+            class name to instrument (it supports regex like oracle.jdbc.*)
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --method
+          argument: .*
+          description: | 
+            method name to instrument (it supports regex like .*find.*)
+            
+            Default value: .*
+            
+        - names:
+          - --action
+          argument: enable
+          description: | 
+            🟢 enable or disable
+            
+            Default value: enable
+            
+            Allowed values: enable, disable
+            
       - name: flight-recorder
         description: | 
           🛩️ Record flight recorder
@@ -1624,13 +1690,13 @@ subcommands:
             
         - names:
           - --action
-          argument: [start, stop]
+          argument: enable
           description: | 
-            🟢 start or stop
+            🟢 enable or disable
             
-            Required: ✓ Yes
+            Default value: enable
             
-            Allowed values: start, stop
+            Allowed values: enable, disable
             
       - name: log-level
         description: | 
@@ -1989,6 +2055,12 @@ subcommands:
             🧽 Restore back original values before any changes was made
             
             Conflicts with: --env
+            
+        - names:
+          - --mount-jscissors-files
+          argument: ""
+          description: | 
+            Mount jscissors files for debugging
             
   - name: topic
     description: | 

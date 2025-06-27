@@ -1,12 +1,13 @@
 container="${args[--container]}"
 restore_original_values="${args[--restore-original-values]}"
+mount_jscissors_files="${args[--mount-jscissors-files]}"
 
 # Convert the space delimited string to an array
 eval "env_array=(${args[--env]})"
 
 if [[ ! -n "$restore_original_values" ]]
 then
-    # check if ebv_arrya is empty
+    # check if env_array is empty
     if [ ${#env_array[@]} -eq 0 ]
     then
         logerror "❌ No environment variables provided with --env option"
@@ -59,6 +60,15 @@ EOF
 
     done
 
+    if [[ -n "$mount_jscissors_files" ]]
+    then
+    cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
+    volumes:
+      - ${root_folder}/scripts/cli/src/jscissors/jscissors-1.0-SNAPSHOT.jar:/tmp/jscissors-1.0-SNAPSHOT.jar
+      - /tmp/:/tmp/
+EOF
+
+    fi
     log "📦 enabling container $container with environment variables $env_list"
     echo "$docker_command" > $tmp_dir/playground-command-java-env
     sed -i -E -e "s|up -d --quiet-pull|-f $tmp_dir/docker-compose.override.java.env.yml up -d --quiet-pull|g" $tmp_dir/playground-command-java-env

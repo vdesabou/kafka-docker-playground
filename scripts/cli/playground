@@ -109,6 +109,7 @@ playground_usage() {
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "debug tcp-dump")                            "
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "debug block-traffic")                       "
   printf "  %s   🤎 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "debug java-debug")                          "
+  printf "  %s   ✂️ jscissors is an instrumentation framework and can help to analyse control flow and perform some specific logging\n" "$(green "debug jscissors")                           "
   printf "  %s   🛩️ Record flight recorder\n" "$(green "debug flight-recorder")                     "
   printf "  %s   🧬 Set log level for any package\n" "$(green "debug log-level")                           "
   echo
@@ -3600,6 +3601,7 @@ playground_debug_usage() {
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "tcp-dump")               "
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "block-traffic")          "
   printf "  %s   🤎 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "java-debug")             "
+  printf "  %s   ✂️ jscissors is an instrumentation framework and can help to analyse control flow and perform some specific logging\n" "$(green "jscissors")              "
   printf "  %s   🛩️ Record flight recorder\n" "$(green "flight-recorder")        "
   printf "  %s   🧬 Set log level for any package\n" "$(green "log-level")              "
   echo
@@ -3965,6 +3967,69 @@ playground_debug_java_debug_usage() {
 }
 
 # :command.usage
+playground_debug_jscissors_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground debug jscissors\n\n"
+    printf "  ✂️ jscissors is an instrumentation framework and can help to analyse control\n  flow and perform some specific logging\n  \n  * Control Flow Tracing: By dynamically instrumenting Java code, the tool\n  meticulously tracks the precise sequence of executed methods at runtime. This\n  capability offers invaluable insights into how an application navigates its\n  logic. The tool provides a way to generate a stack trace when a method is\n  called.\n  * Additional Logging: This enhanced logging capability provides a way to print\n  the input arguments to a method and return value from a method.\n  * Delve into heap area: Generating heap dump at a method call will be crucial\n  to analyze the state of JVM at a given point. The tool has capabilities to\n  generate thread dump as well to track the state of all the threads when a\n  method is called.\n\n"
+  else
+    printf "playground debug jscissors - ✂️ jscissors is an instrumentation framework and can help to analyse control flow and perform some specific logging\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground debug jscissors [OPTIONS]\n"
+  printf "  playground debug jscissors --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
+    printf "    🐳 Container name\n"
+    printf "    %s\n" "Default: connect"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--operation OPERATION (required) (repeatable)")"
+    printf "    🥼 operation to perform:\n    \n    * VALUES: print method input arguments\n    * RETURN_VALUE: print method return value\n    * THREADS: print thread dump when method is called\n    * HEAP: print heap dump when method is called\n    * STACK: print stack trace when method is called\n    * EXCEPTION_HEAP: print heap dump when an exception is thrown during method\n    execution\n    * DELAY: print time taken for method execution\n    \n    🎓 Tip: you can pass multiple operations by specifying --operation multiple\n    times\n"
+    printf "    %s\n" "Allowed: VALUES, RETURN_VALUE, THREADS, HEAP, STACK, EXCEPTION_HEAP, DELAY"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--class CLASS (required)")"
+    printf "    class name to instrument (it supports regex like oracle.jdbc.*)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--method METHOD")"
+    printf "    method name to instrument (it supports regex like .*find.*)\n"
+    printf "    %s\n" "Default: .*"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--action ACTION")"
+    printf "    🟢 enable or disable\n"
+    printf "    %s\n" "Allowed: enable, disable"
+    printf "    %s\n" "Default: enable"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground debug jscissors\n"
+    printf "  playground debug jscissors --container broker\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_debug_flight_recorder_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground debug flight-recorder\n\n"
@@ -3990,9 +4055,10 @@ playground_debug_flight_recorder_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--action ACTION (required)")"
-    printf "    🟢 start or stop\n"
-    printf "    %s\n" "Allowed: start, stop"
+    printf "  %s\n" "$(magenta "--action ACTION")"
+    printf "    🟢 enable or disable\n"
+    printf "    %s\n" "Allowed: enable, disable"
+    printf "    %s\n" "Default: enable"
     echo
 
     # :command.usage_fixed_flags
@@ -10297,8 +10363,8 @@ function remove_cdb_oracle_image() {
 }
 
 function create_or_get_oracle_image() {
-  ZIP_FILE="$1"
-  SETUP_FOLDER="$2"
+  local ZIP_FILE="$1"
+  local SETUP_FOLDER="$2"
 
   if [ "$ZIP_FILE" == "linuxx64_12201_database.zip" ]
   then
@@ -21024,6 +21090,40 @@ playground_debug_java_debug_command() {
 }
 
 # :command.function
+playground_debug_jscissors_command() {
+
+  # src/commands/debug/jscissors.sh
+  container="${args[--container]}"
+  # Convert the space delimited string to an array
+  eval "operations=(${args[--operation]})"
+  class="${args[--class]}"
+  method="${args[--method]}"
+  action="${args[--action]}"
+
+  if [[ "$action" == "enable" ]]
+  then
+      operation_string=$(printf "+%s" "${operations[@]}")
+      # remove + at beginning and end of operation_string
+      operation_string=${operation_string%+}
+      operation_string=${operation_string#+}
+
+      log "🔧 enabling jscissors for container ${container} with operation(s) ${operation_string}, class ${class} and method ${method}"
+      echo "${class}{${method}}=$operation_string" > /tmp/scissors.props
+
+      playground container set-environment-variables --container "${container}" --env "_JAVA_OPTIONS: -javaagent:/tmp/jscissors-1.0-SNAPSHOT.jar=configFile=/tmp/scissors.props" --mount-jscissors-files
+
+      playground container logs --container "${container}" --wait-for-log "Core Logger" --max-wait 30
+
+      scissors_file=$(playground --output-level WARN container logs --container "${container}" --wait-for-log "Core Logger" | tail -1 | cut -d " " -f 4)
+
+      log "✂️ jscissors file is available ${scissors_file}"
+      playground open --file "${scissors_file}"
+  else
+      playground container set-environment-variables --container "${container}" --restore-original-values
+  fi
+}
+
+# :command.function
 playground_debug_flight_recorder_command() {
 
   # src/commands/debug/flight-recorder.sh
@@ -21423,13 +21523,14 @@ playground_container_set_environment_variables_command() {
   # src/commands/container/set-environment-variables.sh
   container="${args[--container]}"
   restore_original_values="${args[--restore-original-values]}"
+  mount_jscissors_files="${args[--mount-jscissors-files]}"
 
   # Convert the space delimited string to an array
   eval "env_array=(${args[--env]})"
 
   if [[ ! -n "$restore_original_values" ]]
   then
-      # check if ebv_arrya is empty
+      # check if env_array is empty
       if [ ${#env_array[@]} -eq 0 ]
       then
           logerror "❌ No environment variables provided with --env option"
@@ -21481,6 +21582,15 @@ EOF
 
       done
 
+      if [[ -n "$mount_jscissors_files" ]]
+      then
+      cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
+    volumes:
+      - ${root_folder}/scripts/cli/src/jscissors/jscissors-1.0-SNAPSHOT.jar:/tmp/jscissors-1.0-SNAPSHOT.jar
+      - /tmp/:/tmp/
+EOF
+
+      fi
       log "📦 enabling container $container with environment variables $env_list"
       echo "$docker_command" > $tmp_dir/playground-command-java-env
       sed -i -E -e "s|up -d --quiet-pull|-f $tmp_dir/docker-compose.override.java.env.yml up -d --quiet-pull|g" $tmp_dir/playground-command-java-env
@@ -35615,6 +35725,13 @@ playground_debug_parse_requirements() {
       shift $#
       ;;
 
+    jscissors)
+      action="jscissors"
+      shift
+      playground_debug_jscissors_parse_requirements "$@"
+      shift $#
+      ;;
+
     flight-recorder)
       action="flight-recorder"
       shift
@@ -36321,6 +36438,155 @@ playground_debug_java_debug_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_debug_jscissors_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_debug_jscissors_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="debug jscissors"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --container | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--container']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--container requires an argument: --container, -c CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --operation)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--operation']+x} ]]; then
+            args['--operation']="$escaped"
+          elif [[ -z "${unique_lookup["--operation:${escaped}"]:-}" ]]; then
+            args['--operation']="${args['--operation']} $escaped"
+          fi
+          unique_lookup["--operation:${escaped}"]=1
+          shift
+          shift
+        else
+          printf "%s\n" "--operation requires an argument: --operation OPERATION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --class)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--class']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--class requires an argument: --class CLASS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --method)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--method']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--method requires an argument: --method METHOD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --action)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--action']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--action requires an argument: --action ACTION" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--operation']+x} ]]; then
+    printf "missing required flag: --operation OPERATION\n" >&2
+    exit 1
+  fi
+  if [[ -z ${args['--class']+x} ]]; then
+    printf "missing required flag: --class CLASS\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--container']:-} ]] || args['--container']="connect"
+  [[ -n ${args['--method']:-} ]] || args['--method']=".*"
+  [[ -n ${args['--action']:-} ]] || args['--action']="enable"
+
+  # :command.whitelist_filter
+  input_array=''
+  eval "input_array=(${args[--operation]})"
+  for i in "${input_array[@]}"; do
+    if [[ ! $i =~ ^(VALUES|RETURN_VALUE|THREADS|HEAP|STACK|EXCEPTION_HEAP|DELAY)$ ]]; then
+      printf "%s\n" "--operation must be one of: VALUES, RETURN_VALUE, THREADS, HEAP, STACK, EXCEPTION_HEAP, DELAY" >&2
+      exit 1
+    fi
+  done
+  if [[ ${args['--action']:-} ]] && [[ ! ${args['--action']:-} =~ ^(enable|disable)$ ]]; then
+    printf "%s\n" "--action must be one of: enable, disable" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
 playground_debug_flight_recorder_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
@@ -36390,18 +36656,13 @@ playground_debug_flight_recorder_parse_requirements() {
     esac
   done
 
-  # :command.required_flags_filter
-  if [[ -z ${args['--action']+x} ]]; then
-    printf "missing required flag: --action ACTION\n" >&2
-    exit 1
-  fi
-
   # :command.default_assignments
   [[ -n ${args['--container']:-} ]] || args['--container']="connect"
+  [[ -n ${args['--action']:-} ]] || args['--action']="enable"
 
   # :command.whitelist_filter
-  if [[ ${args['--action']:-} ]] && [[ ! ${args['--action']:-} =~ ^(start|stop)$ ]]; then
-    printf "%s\n" "--action must be one of: start, stop" >&2
+  if [[ ${args['--action']:-} ]] && [[ ! ${args['--action']:-} =~ ^(enable|disable)$ ]]; then
+    printf "%s\n" "--action must be one of: enable, disable" >&2
     exit 1
   fi
 
@@ -37906,6 +38167,14 @@ playground_container_set_environment_variables_parse_requirements() {
 
         # :flag.case_no_arg
         args['--restore-original-values']=1
+        shift
+        ;;
+
+      # :flag.case
+      --mount-jscissors-files)
+
+        # :flag.case_no_arg
+        args['--mount-jscissors-files']=1
         shift
         ;;
 
@@ -43126,6 +43395,7 @@ run() {
     "debug tcp-dump") playground_debug_tcp_dump_command ;;
     "debug block-traffic") playground_debug_block_traffic_command ;;
     "debug java-debug") playground_debug_java_debug_command ;;
+    "debug jscissors") playground_debug_jscissors_command ;;
     "debug flight-recorder") playground_debug_flight_recorder_command ;;
     "debug log-level") playground_debug_log_level_command ;;
     "debug log-level get") playground_debug_log_level_get_command ;;

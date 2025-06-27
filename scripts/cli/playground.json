@@ -1455,6 +1455,57 @@
           ]
         },
         {
+          "name": "jscissors",
+          "description": "✂️ jscissors is an instrumentation framework and can help to analyse control flow and perform some specific logging\n  \n  * Control Flow Tracing: By dynamically instrumenting Java code, the tool meticulously tracks the precise sequence of executed methods at runtime. This capability offers invaluable insights into how an application navigates its logic. The tool provides a way to generate a stack trace when a method is called. \n  * Additional Logging: This enhanced logging capability provides a way to print the input arguments to a method and return value from a method. \n  * Delve into heap area: Generating heap dump at a method call will be crucial to analyze the state of JVM at a given point. The tool has capabilities to generate thread dump as well to track the state of all the threads when a method is called. \n",
+          "usage": "playground debug jscissors [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--container",
+                "-c"
+              ],
+              "argument": "connect",
+              "description": "🐳 Container name\n\nDefault value: connect\n"
+            },
+            {
+              "names": [
+                "--operation"
+              ],
+              "argument": [
+                "VALUES",
+                "RETURN_VALUE",
+                "THREADS",
+                "HEAP",
+                "STACK",
+                "EXCEPTION_HEAP",
+                "DELAY"
+              ],
+              "description": "🥼 operation to perform:\n\n* VALUES: print method input arguments\n* RETURN_VALUE: print method return value\n* THREADS: print thread dump when method is called\n* HEAP: print heap dump when method is called\n* STACK: print stack trace when method is called\n* EXCEPTION_HEAP: print heap dump when an exception is thrown during method execution\n* DELAY: print time taken for method execution\n\n🎓 Tip: you can pass multiple operations by specifying --operation multiple times\n\nRequired: ✓ Yes\n\nRepeatable: ✓ Yes\n\nAllowed values: VALUES, RETURN_VALUE, THREADS, HEAP, STACK, EXCEPTION_HEAP, DELAY\n"
+            },
+            {
+              "names": [
+                "--class"
+              ],
+              "argument": "CLASS",
+              "description": "class name to instrument (it supports regex like oracle.jdbc.*)\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--method"
+              ],
+              "argument": ".*",
+              "description": "method name to instrument (it supports regex like .*find.*)\n\nDefault value: .*\n"
+            },
+            {
+              "names": [
+                "--action"
+              ],
+              "argument": "enable",
+              "description": "🟢 enable or disable\n\nDefault value: enable\n\nAllowed values: enable, disable\n"
+            }
+          ]
+        },
+        {
           "name": "flight-recorder",
           "description": "🛩️ Record flight recorder\n  \n  Read more about it at https://www.baeldung.com/java-flight-recorder-monitoring\n  \n  Open the jfr file with JDK Mission Control JMC(https://jdk.java.net/jmc/)\n",
           "usage": "playground debug flight-recorder [OPTIONS]",
@@ -1471,11 +1522,8 @@
               "names": [
                 "--action"
               ],
-              "argument": [
-                "start",
-                "stop"
-              ],
-              "description": "🟢 start or stop\n\nRequired: ✓ Yes\n\nAllowed values: start, stop\n"
+              "argument": "enable",
+              "description": "🟢 enable or disable\n\nDefault value: enable\n\nAllowed values: enable, disable\n"
             }
           ]
         },
@@ -1835,6 +1883,13 @@
               ],
               "argument": "",
               "description": "🧽 Restore back original values before any changes was made\n\nConflicts with: --env\n"
+            },
+            {
+              "names": [
+                "--mount-jscissors-files"
+              ],
+              "argument": "",
+              "description": "Mount jscissors files for debugging\n"
             }
           ]
         }
