@@ -43,20 +43,9 @@ jobs:
           AZURE_SUBSCRIPTION_NAME: ${{ secrets.AZURE_SUBSCRIPTION_NAME}}
           CONFLUENT_CLOUD_EMAIL: ${{ secrets.CONFLUENT_CLOUD_EMAIL}}
           CONFLUENT_CLOUD_PASSWORD: ${{ secrets.CONFLUENT_CLOUD_PASSWORD}}
-          ENVIRONMENT: ${{ secrets.ENVIRONMENT}}
-          CLUSTER_NAME: ${{ secrets.CLUSTER_NAME}}
           CLUSTER_CREDS: ${{ secrets.CLUSTER_CREDS}}
-          AWS_DATABRICKS_CLUSTER_NAME: ${{ secrets.AWS_DATABRICKS_CLUSTER_NAME}}
-          AWS_DATABRICKS_CLUSTER_REGION: ${{ secrets.AWS_DATABRICKS_CLUSTER_REGION}}
-          AWS_DATABRICKS_CLUSTER_CLOUD: ${{ secrets.AWS_DATABRICKS_CLUSTER_CLOUD}}
           AWS_DATABRICKS_CLUSTER_CREDS: ${{ secrets.AWS_DATABRICKS_CLUSTER_CREDS}}
-          GCP_CLUSTER_NAME: ${{ secrets.GCP_CLUSTER_NAME}}
-          GCP_CLUSTER_REGION: ${{ secrets.GCP_CLUSTER_REGION}}
-          GCP_CLUSTER_CLOUD: ${{ secrets.GCP_CLUSTER_CLOUD}}
           GCP_CLUSTER_CREDS: ${{ secrets.GCP_CLUSTER_CREDS}}
-          AZURE_CLUSTER_NAME: ${{ secrets.AZURE_CLUSTER_NAME}}
-          AZURE_CLUSTER_REGION: ${{ secrets.AZURE_CLUSTER_REGION}}
-          AZURE_CLUSTER_CLOUD: ${{ secrets.AZURE_CLUSTER_CLOUD}}
           AZURE_CLUSTER_CREDS: ${{ secrets.AZURE_CLUSTER_CREDS}}
           SCHEMA_REGISTRY_CREDS: ${{ secrets.SCHEMA_REGISTRY_CREDS}}
           SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_ACCOUNT_NAME}}
@@ -66,7 +55,6 @@ jobs:
           GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          AWS_REGION: ${{ secrets.AWS_REGION}}
           CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY}}
           CLOUD_API_SECRET: ${{ secrets.CLOUD_API_SECRET}}
           SALESFORCE_USERNAME: ${{ secrets.SALESFORCE_USERNAME}}
@@ -533,20 +521,9 @@ jobs:
           AZURE_SUBSCRIPTION_NAME: ${{ secrets.AZURE_SUBSCRIPTION_NAME}}
           CONFLUENT_CLOUD_EMAIL: ${{ secrets.CONFLUENT_CLOUD_EMAIL}}
           CONFLUENT_CLOUD_PASSWORD: ${{ secrets.CONFLUENT_CLOUD_PASSWORD}}
-          ENVIRONMENT: ${{ secrets.ENVIRONMENT}}
-          CLUSTER_CLOUD: ${{ secrets.CLUSTER_CLOUD}}
           CLUSTER_CREDS: ${{ secrets.CLUSTER_CREDS}}
-          AWS_DATABRICKS_CLUSTER_NAME: ${{ secrets.AWS_DATABRICKS_CLUSTER_NAME}}
-          AWS_DATABRICKS_CLUSTER_REGION: ${{ secrets.AWS_DATABRICKS_CLUSTER_REGION}}
-          AWS_DATABRICKS_CLUSTER_CLOUD: ${{ secrets.AWS_DATABRICKS_CLUSTER_CLOUD}}
           AWS_DATABRICKS_CLUSTER_CREDS: ${{ secrets.AWS_DATABRICKS_CLUSTER_CREDS}}
-          GCP_CLUSTER_NAME: ${{ secrets.GCP_CLUSTER_NAME}}
-          GCP_CLUSTER_REGION: ${{ secrets.GCP_CLUSTER_REGION}}
-          GCP_CLUSTER_CLOUD: ${{ secrets.GCP_CLUSTER_CLOUD}}
           GCP_CLUSTER_CREDS: ${{ secrets.GCP_CLUSTER_CREDS}}
-          AZURE_CLUSTER_NAME: ${{ secrets.AZURE_CLUSTER_NAME}}
-          AZURE_CLUSTER_REGION: ${{ secrets.AZURE_CLUSTER_REGION}}
-          AZURE_CLUSTER_CLOUD: ${{ secrets.AZURE_CLUSTER_CLOUD}}
           AZURE_CLUSTER_CREDS: ${{ secrets.AZURE_CLUSTER_CREDS}}
           SCHEMA_REGISTRY_CREDS: ${{ secrets.SCHEMA_REGISTRY_CREDS}}
           SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_ACCOUNT_NAME}}
@@ -556,7 +533,6 @@ jobs:
           GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          AWS_REGION: ${{ secrets.AWS_REGION}}
           CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY}}
           CLOUD_API_SECRET: ${{ secrets.CLOUD_API_SECRET}}
           SALESFORCE_USERNAME: ${{ secrets.SALESFORCE_USERNAME}}
@@ -585,7 +561,6 @@ jobs:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          AWS_REGION: ${{ secrets.AWS_REGION}}
 
       - name: Pushes docs
         uses: dmnemec/copy_file_to_another_repo_action@main
