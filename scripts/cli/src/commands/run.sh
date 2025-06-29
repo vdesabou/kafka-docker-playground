@@ -1595,8 +1595,8 @@ function cleanup {
         cat ${connector_plugin_display_last_updated_file}
       fi
     fi
-    set -e
     playground connector open-docs --only-show-url
+    set -e
   fi
   set -e
 }
@@ -1637,11 +1637,13 @@ else
   logerror "🔥 RESULT: FAILURE for $filename ($ELAPSED - $CUMULATED)"
   logerror "####################################################"
 
-  log "🧑‍🚒 you can troubleshoot the issue by running:"
-  echo "playground container display-error-all-containers"
-  log "🧑‍🚒 open full logs with '<playground container logs --open --container <container>', example:"
-  echo "playground container logs --open --container connect"
-
+  if [[ $test_file != *"fully-managed"* ]]
+  then
+    log "🧑‍🚒 you can troubleshoot the issue by running:"
+    echo "playground container display-error-all-containers"
+    log "🧑‍🚒 open full logs with '<playground container logs --open --container <container>', example:"
+    echo "playground container logs --open --container connect"
+  fi
   exit 1
 fi
 check_for_ec2_instance_running
