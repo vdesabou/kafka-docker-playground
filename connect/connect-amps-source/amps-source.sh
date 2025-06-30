@@ -4,6 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if version_gt $TAG_BASE "7.9.99"
+then
+     logwarn "preview connectors are no longer supported with CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 # Need to create the AMPS image using https://support.crankuptheamps.com/hc/en-us/articles/360047510833-How-do-I-run-AMPS-in-a-Docker-container-
 
 cd ${DIR}/docker-amps/
