@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.9.99"
 then
-    logwarn "WARN: this example does not support CP versions < 6.0.0 as JDK 11 was used to create keystore (error would be Invalid keystore format)"
+    logwarn "this example does not support CP versions < 6.0.0 as JDK 11 was used to create keystore (error would be Invalid keystore format)"
     exit 111
 fi
 

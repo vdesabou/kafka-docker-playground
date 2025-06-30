@@ -6,7 +6,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.3.99"; then
-    logwarn "WARN: Broker Validation is available since CP 5.4 only"
+    logwarn "Broker Validation is available since CP 5.4 only"
     exit 111
 fi
 

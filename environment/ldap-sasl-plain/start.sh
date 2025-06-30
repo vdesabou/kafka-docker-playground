@@ -6,7 +6,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.3.99"; then
-    logwarn "WARN: Kafka Client Authentication with LDAP was added in CP 5.4"
+    logwarn "Kafka Client Authentication with LDAP was added in CP 5.4"
     exit 111
 fi
 

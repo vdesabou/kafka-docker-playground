@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.2.99"; then
-    logwarn "WARN: Connect Secret Registry is available since CP 5.3 only"
+    logwarn "Connect Secret Registry is available since CP 5.3 only"
     exit 111
 fi
 

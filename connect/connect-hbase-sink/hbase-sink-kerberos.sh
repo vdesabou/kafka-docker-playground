@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-logwarn "WARN: This is not working due to https://github.com/vdesabou/kafka-docker-playground/issues/6628#issuecomment-2909737532"
+logwarn "This is not working due to https://github.com/vdesabou/kafka-docker-playground/issues/6628#issuecomment-2909737532"
 exit 111
 
 if version_gt $TAG_BASE "7.9.99" && ! version_gt $CONNECTOR_TAG "1.9.9"

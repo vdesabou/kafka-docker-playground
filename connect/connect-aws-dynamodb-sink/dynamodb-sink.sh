@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.9.99" && version_gt $CONNECTOR_TAG "1.2.99"
 then
-    logwarn "WARN: connector version >= 1.3.0 do not support CP versions < 6.0.0"
+    logwarn "connector version >= 1.3.0 do not support CP versions < 6.0.0"
     exit 111
 fi
 

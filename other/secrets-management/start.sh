@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.2.99"; then
-    logwarn "WARN: Confluent Secrets is available since CP 5.3 only"
+    logwarn "Confluent Secrets is available since CP 5.3 only"
     exit 111
 fi
 

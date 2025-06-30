@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.9.99"
 then
-    logwarn "WARN: This connector does not support CP versions < 6.0.0"
+    logwarn "This connector does not support CP versions < 6.0.0"
     logwarn "see https://github.com/vdesabou/kafka-docker-playground/issues/2753#issuecomment-1194115633"
     exit 111
 fi

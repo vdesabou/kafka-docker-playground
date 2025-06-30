@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 # https://github.com/aws/aws-sdk-java/issues/2558
-logwarn "WARN: This is not working due to https://github.com/aws/aws-sdk-java/issues/2558"
+logwarn "This is not working due to https://github.com/aws/aws-sdk-java/issues/2558"
 exit 111
 
 if version_gt $TAG_BASE "7.9.99" && ! version_gt $CONNECTOR_TAG "10.5.99"

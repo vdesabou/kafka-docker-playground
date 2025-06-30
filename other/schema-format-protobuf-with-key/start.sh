@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.4.99"; then
-    logwarn "WARN: Protobuf is available since CP 5.5 only"
+    logwarn "Protobuf is available since CP 5.5 only"
     exit 111
 fi
 

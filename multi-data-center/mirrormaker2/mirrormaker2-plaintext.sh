@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.3.99"; then
-    logwarn "WARN: This example is working starting from CP 5.4 only"
+    logwarn "This example is working starting from CP 5.4 only"
     exit 111
 fi
 

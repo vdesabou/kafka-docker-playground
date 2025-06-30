@@ -6,7 +6,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.9.9"; then
-    logwarn "WARN: Schema Registry plugin before 6.x requires zookeeper"
+    logwarn "Schema Registry plugin before 6.x requires zookeeper"
     exit 111
 fi
 
