@@ -4,6 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if version_gt $TAG_BASE "7.9.99" && ! version_gt $CONNECTOR_TAG "2.5.5"
+then
+     logwarn "minimal supported connector version is 2.5.6 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 SERVICENOW_URL=${SERVICENOW_URL:-$1}
 SERVICENOW_PASSWORD=${SERVICENOW_PASSWORD:-$2}
 

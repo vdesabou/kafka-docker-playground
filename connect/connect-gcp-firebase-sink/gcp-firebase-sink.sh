@@ -3,6 +3,14 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
+
+if version_gt $TAG_BASE "7.9.99" && ! version_gt $CONNECTOR_TAG "1.2.6"
+then
+     logwarn "minimal supported connector version is 1.2.7 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 if [ -z "$GCP_PROJECT" ]
 then
      logerror "GCP_PROJECT is not set. Export it as environment variable or pass it as argument"
@@ -35,17 +43,17 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 log "Creating GCP Firebase Sink connector"
 playground connector create-or-update --connector firebase-sink  << EOF
 {
-     "connector.class" : "io.confluent.connect.firebase.FirebaseSinkConnector",
-     "tasks.max" : "1",
-     "topics":"artists,songs",
-     "gcp.firebase.credentials.path": "/tmp/keyfile.json",
-     "gcp.firebase.database.reference": "https://$GCP_PROJECT.firebaseio.com/musicBlog",
-     "insert.mode":"update",
-     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-     "value.converter" : "io.confluent.connect.avro.AvroConverter",
-     "value.converter.schema.registry.url":"http://schema-registry:8081",
-     "confluent.topic.bootstrap.servers": "broker:9092",
-     "confluent.topic.replication.factor": "1"
+  "connector.class" : "io.confluent.connect.firebase.FirebaseSinkConnector",
+  "tasks.max" : "1",
+  "topics":"artists,songs",
+  "gcp.firebase.credentials.path": "/tmp/keyfile.json",
+  "gcp.firebase.database.reference": "https://$GCP_PROJECT.firebaseio.com/musicBlog",
+  "insert.mode":"update",
+  "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+  "value.converter" : "io.confluent.connect.avro.AvroConverter",
+  "value.converter.schema.registry.url":"http://schema-registry:8081",
+  "confluent.topic.bootstrap.servers": "broker:9092",
+  "confluent.topic.replication.factor": "1"
 }
 EOF
 

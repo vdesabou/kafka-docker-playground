@@ -8,6 +8,13 @@ source ${DIR}/../../scripts/utils.sh
 logwarn "WARN: This is not working due to https://github.com/aws/aws-sdk-java/issues/2558"
 exit 111
 
+if version_gt $TAG_BASE "7.9.99" && ! version_gt $CONNECTOR_TAG "10.5.99"
+then
+     logwarn "minimal supported connector version is 10.6.0 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 export AWS_CREDENTIALS_FILE_NAME=$HOME/.aws/credentials-with-assuming-iam-role
 if [ ! -f $AWS_CREDENTIALS_FILE_NAME ]
 then

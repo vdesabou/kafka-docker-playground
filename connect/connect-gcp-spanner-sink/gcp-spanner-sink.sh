@@ -10,6 +10,13 @@ then
      exit 1
 fi
 
+if version_gt $TAG_BASE "7.9.99" && ! version_gt $CONNECTOR_TAG "1.1.0"
+then
+     logwarn "minimal supported connector version is 1.1.1 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 GCP_SPANNER_INSTANCE="spanner-instance-$USER"
 GCP_SPANNER_DATABASE="spanner-db-$USER"
 GCP_SPANNER_REGION=${1:-europe-west2}

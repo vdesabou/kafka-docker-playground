@@ -10,6 +10,13 @@ then
     exit 111
 fi
 
+if version_gt $TAG_BASE "7.9.99" && ! version_gt $CONNECTOR_TAG "1.2.99"
+then
+     logwarn "minimal supported connector version is 1.3.0 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 export AWS_CREDENTIALS_FILE_NAME=$HOME/.aws/credentials-with-assuming-iam-role
 if [ ! -f $AWS_CREDENTIALS_FILE_NAME ]
 then

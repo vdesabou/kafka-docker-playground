@@ -4,6 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if version_gt $TAG_BASE "7.9.99" && ! version_gt $CONNECTOR_TAG "1.2.99"
+then
+     logwarn "minimal supported connector version is 1.3.0 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 cd ../../connect/connect-azure-service-bus-source
 # https://docs.microsoft.com/en-us/azure/service-bus-messaging/service-bus-quickstart-cli#send-and-receive-messages
 for component in QueuesGettingStarted

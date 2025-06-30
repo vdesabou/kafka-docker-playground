@@ -4,6 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if version_gt $TAG_BASE "7.9.99" && ! version_gt $CONNECTOR_TAG "12.1.99"
+then
+     logwarn "minimal supported connector version is 12.2.0 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 cd ../../connect/connect-active-mq-source/security
 log "🔐 Generate keys and certificates used for SSL using rmohr/activemq:5.15.9 image"
 docker run -u0 --rm -v $PWD:/tmp rmohr/activemq:5.15.9 bash -c "/tmp/certs-create.sh > /dev/null 2>&1 && chown -R $(id -u $USER):$(id -g $USER) /tmp/"

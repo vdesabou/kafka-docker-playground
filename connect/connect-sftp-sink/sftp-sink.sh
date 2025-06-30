@@ -4,30 +4,37 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if version_gt $TAG_BASE "7.9.99" && ! version_gt $CONNECTOR_TAG "3.1.99"
+then
+     logwarn "minimal supported connector version is 3.2.0 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating SFTP Sink connector"
 playground connector create-or-update --connector sftp-sink  << EOF
 {
-               "topics": "test_sftp_sink",
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.sftp.SftpSinkConnector",
-               "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
-               "schema.generator.class": "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator",
-               "flush.size": "3",
-               "schema.compatibility": "NONE",
-               "format.class": "io.confluent.connect.sftp.sink.format.avro.AvroFormat",
-               "storage.class": "io.confluent.connect.sftp.sink.storage.SftpSinkStorage",
-               "sftp.host": "sftp-server",
-               "sftp.port": "22",
-               "sftp.username": "foo",
-               "sftp.password": "pass",
-               "sftp.working.dir": "/upload",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+  "topics": "test_sftp_sink",
+  "tasks.max": "1",
+  "connector.class": "io.confluent.connect.sftp.SftpSinkConnector",
+  "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
+  "schema.generator.class": "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator",
+  "flush.size": "3",
+  "schema.compatibility": "NONE",
+  "format.class": "io.confluent.connect.sftp.sink.format.avro.AvroFormat",
+  "storage.class": "io.confluent.connect.sftp.sink.storage.SftpSinkStorage",
+  "sftp.host": "sftp-server",
+  "sftp.port": "22",
+  "sftp.username": "foo",
+  "sftp.password": "pass",
+  "sftp.working.dir": "/upload",
+  "confluent.license": "",
+  "confluent.topic.bootstrap.servers": "broker:9092",
+  "confluent.topic.replication.factor": "1"
+}
 EOF
 
 

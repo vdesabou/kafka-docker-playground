@@ -4,6 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if version_gt $TAG_BASE "7.9.99" && ! version_gt $CONNECTOR_TAG "2.14.8"
+then
+     logwarn "minimal supported connector version is 2.14.9 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 # THIS TEST IS SKIPPED AS NOT WORKING, see #833 Oracle CDC: mTLS with DB authentication cannot work with PDB #833 https://github.com/vdesabou/kafka-docker-playground/issues/833
 
 if [ ! -z "$GITHUB_RUN_NUMBER" ]

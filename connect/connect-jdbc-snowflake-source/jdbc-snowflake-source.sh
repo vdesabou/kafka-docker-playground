@@ -4,6 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if version_gt $TAG_BASE "7.9.99" && ! version_gt $CONNECTOR_TAG "10.7.99"
+then
+     logwarn "minimal supported connector version is 10.8.0 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 logwarn "Using JDBC with snowflake comes with caveats, see https://github.com/vdesabou/kafka-docker-playground/blob/084a41e82b2bb4ef0f2c98e46bd68cf2a9bf780d/connect/connect-jdbc-snowflake-source/README.md?plain=1#L8C1-L8C11"
 logwarn "the example is no longer working with CP 8.0 getting:"
 
