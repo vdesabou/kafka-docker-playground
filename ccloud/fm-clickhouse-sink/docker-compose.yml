@@ -1,0 +1,34 @@
+---
+services:
+  # https://hub.docker.com/r/clickhouse/clickhouse-server/
+  clickhouse:
+    image: clickhouse/clickhouse-server
+    container_name: clickhouse
+    hostname: clickhouse
+    environment:
+      CLICKHOUSE_USER: myuser
+      CLICKHOUSE_PASSWORD: mypassword
+    # volumes:
+    #   - ../../ccloud/fm-clickhouse-sink/clickhouse-config.xml:/etc/clickhouse-server/config.xml
+
+
+  # https://ngrok.com/docs/using-ngrok-with/docker/
+  ngrok:
+    image: ngrok/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    ports:
+      - 4040:4040
+    restart: unless-stopped
+    links:
+      - clickhouse
+    command:
+      - "start"
+      - "--all"
+      - "--log=stdout"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ../../ccloud/fm-clickhouse-sink/ngrok.yml:/etc/ngrok.yml
+    environment:
+      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN

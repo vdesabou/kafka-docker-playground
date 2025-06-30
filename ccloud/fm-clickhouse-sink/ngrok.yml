@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  clickhouse:
+    addr: clickhouse:8123
+    proto: tcp
