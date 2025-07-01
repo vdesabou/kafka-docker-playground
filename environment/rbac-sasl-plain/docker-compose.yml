@@ -80,6 +80,9 @@ services:
                     username="admin" \
                     password="admin-secret" \
                     user_admin="admin-secret" \
+                    user_alice="alice-secret" \
+                    user_barnie="barnie-secret" \
+                    user_charlie="charlie-secret" \
                     user_mds="mds-secret";
 
             KAFKA_ZOOKEEPER_SET_ACL: 'true'

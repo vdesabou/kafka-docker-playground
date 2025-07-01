@@ -28,6 +28,9 @@ KSQLDB_USER="User:ksqlDBUser"
 KSQLDB_SERVER="User:controlCenterAndKsqlDBServer"
 CLIENT_AVRO_PRINCIPAL="User:clientAvroCli"
 LICENSE_RESOURCE="Topic:_confluent-license" # starting from 6.2.3 and 7.0.2, it is replaced by _confluent-command
+ALICE="User:alice"
+BARNIE="User:barnie"
+CHARLIE="User:charlie"
 
 mds_login $MDS_URL ${SUPER_USER} ${SUPER_USER_PASSWORD} || exit 1
 
@@ -395,6 +398,24 @@ confluent iam rolebinding create \
     --kafka-cluster-id $KAFKA_CLUSTER_ID \
     --schema-registry-cluster-id $SR
 
+################################### Client Users CLI ###################################
+echo "Creating role bindings for the custom users"
+
+confluent iam rolebinding create \
+    --principal $ALICE  \
+    --role SystemAdmin \
+    --kafka-cluster-id $KAFKA_CLUSTER_ID
+
+confluent iam rolebinding create \
+    --principal $BARNIE  \
+    --role ClusterAdmin	 \
+    --kafka-cluster-id $KAFKA_CLUSTER_ID
+
+confluent iam rolebinding create \
+    --principal $CHARLIE  \
+    --role UserAdmin \
+    --kafka-cluster-id $KAFKA_CLUSTER_ID
+
 ######################### Print #########################
 
 echo "Cluster IDs:"
@@ -417,6 +438,6 @@ echo "    ksqlDB User: $KSQLDB_USER"
 echo "    ksqlDB Server: $KSQLDB_SERVER"
 echo "    C3 Admin: $C3_ADMIN"
 echo "    Client Avro CLI Principal: $CLIENT_AVRO_PRINCIPAL"
-echo
-
-
+echo "    SystemAdmin User: $ALICE"
+echo "    ClusterAdmin User: $BARNIE"
+echo "    UserAdmin User: $CHARLIE"

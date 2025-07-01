@@ -3,28 +3,32 @@ services:
 
   controller:
     environment:
-      # FIXTHIS:
-      # org.apache.kafka.common.KafkaException: Class io.confluent.metrics.reporter.ConfluentMetricsReporter cannot be found
       KAFKA_METRIC_REPORTERS: ""
-      # KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
-      # KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter;User:ksqldb;User:conduktor;User:controller;User:ANONYMOUS
-
+      KAFKA_AUTHORIZER_CLASS_NAME: io.confluent.kafka.security.authorizer.ConfluentServerAuthorizer
+      KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter;User:ksqldb;User:conduktor;User:controller;User:ANONYMOUS
+      KAFKA_CONFLUENT_AUTHORIZER_ACCESS_RULE_PROVIDERS: CONFLUENT, KRAFT_ACL
+      KAFKA_CONFLUENT_METADATA_SERVER_KRAFT_CONTROLLER_ENABLED: true
+      KAFKA_CONFLUENT_METADATA_BOOTSTRAP_SERVERS: broker:9092
+      KAFKA_CONFLUENT_METADATA_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      KAFKA_CONFLUENT_METADATA_SASL_MECHANISM: PLAIN 
+      KAFKA_CONFLUENT_METADATA_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password="admin-secret";
+      # KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=DEBUG,io.confluent.rest-utils=DEBUG,io.confluent.rbacapi=DEBUG,io.confluent.tokenapi=DEBUG,io.confluent.security.auth=DEBUG,io.confluent.security.store=DEBUG,io.confluent.common.security.jetty=DEBUG"
   broker:
     environment:
-      KAFKA_CONFLUENT_AUTHORIZER_ACCESS_RULE_PROVIDERS: CONFLUENT
+      KAFKA_CONFLUENT_AUTHORIZER_ACCESS_RULE_PROVIDERS: CONFLUENT, KRAFT_ACL
       # FIXTHIS:
       # org.apache.kafka.common.KafkaException: Class io.confluent.metrics.reporter.ConfluentMetricsReporter cannot be found
       KAFKA_METRIC_REPORTERS: ""
 
   broker2:
-    environment:
-      KAFKA_CONFLUENT_AUTHORIZER_ACCESS_RULE_PROVIDERS: CONFLUENT
-      # FIXTHIS:
-      # org.apache.kafka.common.KafkaException: Class io.confluent.metrics.reporter.ConfluentMetricsReporter cannot be found
-      KAFKA_METRIC_REPORTERS: ""
+      environment:
+        KAFKA_CONFLUENT_AUTHORIZER_ACCESS_RULE_PROVIDERS: CONFLUENT, KRAFT_ACL
+        # FIXTHIS:
+        # org.apache.kafka.common.KafkaException: Class io.confluent.metrics.reporter.ConfluentMetricsReporter cannot be found
+        KAFKA_METRIC_REPORTERS: ""
   broker3:
     environment:
-      KAFKA_CONFLUENT_AUTHORIZER_ACCESS_RULE_PROVIDERS: CONFLUENT
+      KAFKA_CONFLUENT_AUTHORIZER_ACCESS_RULE_PROVIDERS: CONFLUENT, KRAFT_ACL
       # FIXTHIS:
       # org.apache.kafka.common.KafkaException: Class io.confluent.metrics.reporter.ConfluentMetricsReporter cannot be found
       KAFKA_METRIC_REPORTERS: ""
