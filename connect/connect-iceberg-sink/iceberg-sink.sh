@@ -7,6 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
+playground topic create -t control-iceberg 
 
 log "Sending messages to topic payments"
 playground topic produce -t payments --nb-messages $(wc -l <"../../connect/connect-iceberg-sink/data/transactions.json") --value ../../connect/connect-iceberg-sink/data/transactions.json
