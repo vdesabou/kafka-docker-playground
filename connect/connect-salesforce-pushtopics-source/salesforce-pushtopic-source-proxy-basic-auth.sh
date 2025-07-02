@@ -8,7 +8,7 @@ source ${DIR}/../../scripts/utils.sh
 logerror "This example is not supposed to work since the connector does not support it"
 exit 0
 
-if version_gt $TAG_BASE "7.9.99" && ! version_gt $CONNECTOR_TAG "2.0.28"
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "2.0.28"
 then
      logwarn "minimal supported connector version is 2.0.29 for CP 8.0"
      logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
