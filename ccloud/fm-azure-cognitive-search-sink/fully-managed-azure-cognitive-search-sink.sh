@@ -63,7 +63,7 @@ curl -X POST \
   ]
 }'
 
-bootstrap_ccloud_environment
+bootstrap_ccloud_environment "azure" "$AZURE_REGION"
 
 set +e
 playground topic delete --topic hotels-sample

@@ -1842,7 +1842,36 @@ function maybe_delete_ccloud_environment () {
   fi
 }
 
+function check_expected_ccloud_details () {
+  local expected_cloud="$1"
+  local expected_region="$2"
+
+  if [ -n "$expected_cloud" ] && [ -n "$expected_region" ]
+  then
+    expected_failed=0
+    if [ "$expected_cloud" != "$CLUSTER_CLOUD" ]
+    then
+      logerror "❌🌤 expected cloud for the example is $expected_cloud but you're using $CLUSTER_CLOUD"
+      expected_failed=1
+    fi
+
+    if [ "$expected_region" != "$CLUSTER_REGION" ]
+    then
+      logerror "❌🗺 expected region for the example is $expected_region but you're using $CLUSTER_REGION"
+      expected_failed=1
+    fi
+
+    if [ $expected_failed == 1 ]
+    then
+      exit 1
+    fi
+  fi
+}
+
 function bootstrap_ccloud_environment () {
+
+  local expected_cloud="$1"
+  local expected_region="$2"
 
   DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
   get_kafka_docker_playground_dir
@@ -2048,6 +2077,8 @@ function bootstrap_ccloud_environment () {
     log "🌤  CLUSTER_CLOUD is set with $CLUSTER_CLOUD"
     log "🗺  CLUSTER_REGION is set with $CLUSTER_REGION"
 
+    check_expected_ccloud_details "$expected_cloud" "$expected_region"
+
     log "💡 if you notice that the playground is using unexpected ccloud details, use <playground cleanup-cloud-details> to remove all caching and re-launch the example"
     
     for row in $(confluent kafka cluster list --output json | jq -r '.[] | @base64'); do
@@ -2077,6 +2108,8 @@ function bootstrap_ccloud_environment () {
 
     export WARMUP_TIME=0
   fi
+
+  check_expected_ccloud_details "$expected_cloud" "$expected_region"
 
   ccloud::create_ccloud_stack false  \
     && print_code_pass -c "ccloud::create_ccloud_stack false"

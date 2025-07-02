@@ -77,7 +77,7 @@ then
   log "🔐 PASSWORD is $PASSWORD" 
 fi
 
-bootstrap_ccloud_environment
+bootstrap_ccloud_environment "azure" "$AZURE_REGION"
 
 set +e
 playground topic delete --topic products

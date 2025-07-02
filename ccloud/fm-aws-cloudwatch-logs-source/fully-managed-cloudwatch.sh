@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 handle_aws_credentials
 
-bootstrap_ccloud_environment
+bootstrap_ccloud_environment "aws" "$AWS_REGION"
 
 LOG_GROUP=pgfm${USER}lg${TAG}
 LOG_GROUP=${LOG_GROUP//[-.]/}

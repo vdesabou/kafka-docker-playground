@@ -19,10 +19,6 @@ do
      set -e
 done
 
-bootstrap_ccloud_environment
-
-login_and_maybe_set_azure_subscription
-
 AZURE_NAME=pgfm${USER}sb${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 if [ ${#AZURE_NAME} -gt 24 ]; then
@@ -32,6 +28,10 @@ AZURE_RESOURCE_GROUP=$AZURE_NAME
 AZURE_SERVICE_BUS_NAMESPACE=$AZURE_NAME
 AZURE_SERVICE_BUS_QUEUE_NAME=$AZURE_NAME
 AZURE_REGION=westeurope
+
+bootstrap_ccloud_environment "azure" "$AZURE_REGION"
+
+login_and_maybe_set_azure_subscription
 
 set +e
 az group delete --name $AZURE_RESOURCE_GROUP --yes

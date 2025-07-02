@@ -102,7 +102,7 @@ az role assignment create --assignee $SERVICE_PRINCIPAL_ID --role "Storage Blob 
 # Ensure the role assignment has been applied
 sleep 30
 
-bootstrap_ccloud_environment
+bootstrap_ccloud_environment "azure" "$AZURE_REGION"
 
 set +e
 playground topic delete --topic datalake_topic

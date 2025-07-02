@@ -1624,7 +1624,7 @@ subcommands:
             
         - names:
           - --operation
-          argument: [VALUES, RETURN_VALUE, THREADS, HEAP, STACK, EXCEPTION_HEAP, DELAY]
+          argument: ["VALUES", "RETURN_VALUE", "DELAY", "STACK"]
           description: | 
             🥼 operation to perform:
             
@@ -1636,11 +1636,13 @@ subcommands:
             * EXCEPTION_HEAP: print heap dump when an exception is thrown during method execution
             * DELAY: print time taken for method execution
             
+            Default values: VALUES, RETURN_VALUE, DELAY and STACK
+            
             🎓 Tip: you can pass multiple operations by specifying --operation multiple times
             
-            Required: ✓ Yes
-            
             Repeatable: ✓ Yes
+            
+            Default value: ["VALUES", "RETURN_VALUE", "DELAY", "STACK"]
             
             Allowed values: VALUES, RETURN_VALUE, THREADS, HEAP, STACK, EXCEPTION_HEAP, DELAY
             

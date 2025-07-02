@@ -50,7 +50,7 @@ az storage container create \
     --name $AZURE_CONTAINER_NAME
 
 
-bootstrap_ccloud_environment
+bootstrap_ccloud_environment "azure" "$AZURE_REGION"
 
 set +e
 playground topic delete --topic blob_topic

@@ -49,7 +49,7 @@ AZURE_LOG_ANALYTICS_SHARED_KEY=$(az monitor log-analytics workspace get-shared-k
     --name $AZURE_LOGANALYTICS_WORKSPACE_NAME \
     --resource-group $AZURE_RESOURCE_GROUP | jq -r '.primarySharedKey')
 
-bootstrap_ccloud_environment
+bootstrap_ccloud_environment "azure" "$AZURE_REGION"
 
 set +e
 playground topic delete --topic log_analytics_topic

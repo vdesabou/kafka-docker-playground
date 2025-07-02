@@ -8,7 +8,7 @@ source ${DIR}/../../scripts/utils.sh
 
 handle_aws_credentials
 
-bootstrap_ccloud_environment
+bootstrap_ccloud_environment "aws" "$AWS_REGION"
 
 set +e
 playground topic delete --topic quick-start-topic

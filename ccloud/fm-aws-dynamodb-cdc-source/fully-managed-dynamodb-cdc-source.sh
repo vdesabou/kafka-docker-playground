@@ -55,7 +55,7 @@ function cleanup_cloud_resources {
 }
 trap cleanup_cloud_resources EXIT
 
-bootstrap_ccloud_environment
+bootstrap_ccloud_environment "aws" "$AWS_REGION"
 
 set +e
 playground topic delete --topic dynamo_cdc_input

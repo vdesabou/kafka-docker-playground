@@ -1976,8 +1976,10 @@ commands:
           * EXCEPTION_HEAP: print heap dump when an exception is thrown during method execution
           * DELAY: print time taken for method execution
 
+          Default values: VALUES, RETURN_VALUE, DELAY and STACK
+
           🎓 Tip: you can pass multiple operations by specifying --operation multiple times
-        required: true
+        required: false
         repeatable: true
         unique: true
         allowed: 
@@ -1988,6 +1990,11 @@ commands:
           - STACK
           - EXCEPTION_HEAP
           - DELAY
+        default:
+          - VALUES
+          - RETURN_VALUE
+          - DELAY
+          - STACK
       - long: --class
         arg: class
         required: true

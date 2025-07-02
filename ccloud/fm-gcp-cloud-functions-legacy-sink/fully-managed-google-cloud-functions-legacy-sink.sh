@@ -29,7 +29,7 @@ else
 fi
 cd -
 
-bootstrap_ccloud_environment
+bootstrap_ccloud_environment "gcp" "$GCP_FUNCTION_REGION"
 
 
 

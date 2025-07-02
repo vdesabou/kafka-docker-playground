@@ -3992,9 +3992,10 @@ playground_debug_jscissors_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--operation OPERATION (required) (repeatable)")"
-    printf "    🥼 operation to perform:\n    \n    * VALUES: print method input arguments\n    * RETURN_VALUE: print method return value\n    * THREADS: print thread dump when method is called\n    * HEAP: print heap dump when method is called\n    * STACK: print stack trace when method is called\n    * EXCEPTION_HEAP: print heap dump when an exception is thrown during method\n    execution\n    * DELAY: print time taken for method execution\n    \n    🎓 Tip: you can pass multiple operations by specifying --operation multiple\n    times\n"
+    printf "  %s\n" "$(magenta "--operation OPERATION (repeatable)")"
+    printf "    🥼 operation to perform:\n    \n    * VALUES: print method input arguments\n    * RETURN_VALUE: print method return value\n    * THREADS: print thread dump when method is called\n    * HEAP: print heap dump when method is called\n    * STACK: print stack trace when method is called\n    * EXCEPTION_HEAP: print heap dump when an exception is thrown during method\n    execution\n    * DELAY: print time taken for method execution\n    \n    Default values: VALUES, RETURN_VALUE, DELAY and STACK\n    \n    🎓 Tip: you can pass multiple operations by specifying --operation multiple\n    times\n"
     printf "    %s\n" "Allowed: VALUES, RETURN_VALUE, THREADS, HEAP, STACK, EXCEPTION_HEAP, DELAY"
+    printf "    %s\n" "Default: VALUES, RETURN_VALUE, DELAY, STACK"
     echo
 
     # :flag.usage
@@ -10670,7 +10671,36 @@ function maybe_delete_ccloud_environment () {
   fi
 }
 
+function check_expected_ccloud_details () {
+  local expected_cloud="$1"
+  local expected_region="$2"
+
+  if [ -n "$expected_cloud" ] && [ -n "$expected_region" ]
+  then
+    expected_failed=0
+    if [ "$expected_cloud" != "$CLUSTER_CLOUD" ]
+    then
+      logerror "❌🌤 expected cloud for the example is $expected_cloud but you're using $CLUSTER_CLOUD"
+      expected_failed=1
+    fi
+
+    if [ "$expected_region" != "$CLUSTER_REGION" ]
+    then
+      logerror "❌🗺 expected region for the example is $expected_region but you're using $CLUSTER_REGION"
+      expected_failed=1
+    fi
+
+    if [ $expected_failed == 1 ]
+    then
+      exit 1
+    fi
+  fi
+}
+
 function bootstrap_ccloud_environment () {
+
+  local expected_cloud="$1"
+  local expected_region="$2"
 
   DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
   get_kafka_docker_playground_dir
@@ -10879,6 +10909,8 @@ function bootstrap_ccloud_environment () {
     log "🌤  CLUSTER_CLOUD is set with $CLUSTER_CLOUD"
     log "🗺  CLUSTER_REGION is set with $CLUSTER_REGION"
 
+    check_expected_ccloud_details "$expected_cloud" "$expected_region"
+
     log "💡 if you notice that the playground is using unexpected ccloud details, use <playground cleanup-cloud-details> to remove all caching and re-launch the example"
 
     for row in $(confluent kafka cluster list --output json | jq -r '.[] | @base64'); do
@@ -10908,6 +10940,8 @@ function bootstrap_ccloud_environment () {
 
     export WARMUP_TIME=0
   fi
+
+  check_expected_ccloud_details "$expected_cloud" "$expected_region"
 
   ccloud::create_ccloud_stack false  \
     && print_code_pass -c "ccloud::create_ccloud_stack false"
@@ -16522,7 +16556,9 @@ playground_run_command() {
 
   increment_cli_metric nb_runs
   log "🚀 Number of examples ran so far: $(get_cli_metric nb_runs)"
+  set +e
   playground get-ci-result
+  set -e
   log "####################################################"
   log "🚀 Executing $filename in dir $test_file_directory"
   log "####################################################"
@@ -36558,10 +36594,6 @@ playground_debug_jscissors_parse_requirements() {
   done
 
   # :command.required_flags_filter
-  if [[ -z ${args['--operation']+x} ]]; then
-    printf "missing required flag: --operation OPERATION\n" >&2
-    exit 1
-  fi
   if [[ -z ${args['--class']+x} ]]; then
     printf "missing required flag: --class CLASS\n" >&2
     exit 1
@@ -36569,6 +36601,7 @@ playground_debug_jscissors_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['--container']:-} ]] || args['--container']="connect"
+  [[ -n ${args['--operation']:-} ]] || args['--operation']="VALUES RETURN_VALUE DELAY STACK"
   [[ -n ${args['--method']:-} ]] || args['--method']=".*"
   [[ -n ${args['--action']:-} ]] || args['--action']="enable"
 

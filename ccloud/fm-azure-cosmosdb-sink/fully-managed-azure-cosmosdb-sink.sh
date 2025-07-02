@@ -6,16 +6,6 @@ source ${DIR}/../../scripts/utils.sh
 
 login_and_maybe_set_azure_subscription
 
-
-bootstrap_ccloud_environment
-
-set +e
-playground topic delete --topic hotels
-sleep 3
-playground topic create --topic hotels --nb-partitions 1
-set -e
-
-
 # https://github.com/microsoft/kafka-connect-cosmosdb/blob/dev/doc/CosmosDB_Setup.md
 AZURE_NAME=pgfm${USER}cs${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
@@ -27,6 +17,14 @@ AZURE_RESOURCE_GROUP=$AZURE_NAME
 AZURE_COSMOSDB_SERVER_NAME=$AZURE_NAME
 AZURE_COSMOSDB_DB_NAME=$AZURE_NAME
 AZURE_COSMOSDB_CONTAINER_NAME=$AZURE_NAME
+
+bootstrap_ccloud_environment "azure" "$AZURE_REGION"
+
+set +e
+playground topic delete --topic hotels
+sleep 3
+playground topic create --topic hotels --nb-partitions 1
+set -e
 
 set +e
 log "Delete Cosmos DB instance and resource group (it might fail)"

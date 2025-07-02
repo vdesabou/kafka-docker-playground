@@ -1474,13 +1474,10 @@
               "argument": [
                 "VALUES",
                 "RETURN_VALUE",
-                "THREADS",
-                "HEAP",
-                "STACK",
-                "EXCEPTION_HEAP",
-                "DELAY"
+                "DELAY",
+                "STACK"
               ],
-              "description": "🥼 operation to perform:\n\n* VALUES: print method input arguments\n* RETURN_VALUE: print method return value\n* THREADS: print thread dump when method is called\n* HEAP: print heap dump when method is called\n* STACK: print stack trace when method is called\n* EXCEPTION_HEAP: print heap dump when an exception is thrown during method execution\n* DELAY: print time taken for method execution\n\n🎓 Tip: you can pass multiple operations by specifying --operation multiple times\n\nRequired: ✓ Yes\n\nRepeatable: ✓ Yes\n\nAllowed values: VALUES, RETURN_VALUE, THREADS, HEAP, STACK, EXCEPTION_HEAP, DELAY\n"
+              "description": "🥼 operation to perform:\n\n* VALUES: print method input arguments\n* RETURN_VALUE: print method return value\n* THREADS: print thread dump when method is called\n* HEAP: print heap dump when method is called\n* STACK: print stack trace when method is called\n* EXCEPTION_HEAP: print heap dump when an exception is thrown during method execution\n* DELAY: print time taken for method execution\n\nDefault values: VALUES, RETURN_VALUE, DELAY and STACK\n\n🎓 Tip: you can pass multiple operations by specifying --operation multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: [\"VALUES\", \"RETURN_VALUE\", \"DELAY\", \"STACK\"]\n\nAllowed values: VALUES, RETURN_VALUE, THREADS, HEAP, STACK, EXCEPTION_HEAP, DELAY\n"
             },
             {
               "names": [
