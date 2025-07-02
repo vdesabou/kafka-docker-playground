@@ -1851,13 +1851,13 @@ function check_expected_ccloud_details () {
     expected_failed=0
     if [ "$expected_cloud" != "$CLUSTER_CLOUD" ]
     then
-      logerror "❌🌤 expected cloud for the example is $expected_cloud but you're using $CLUSTER_CLOUD"
+      logerror "❌🌤 expected ccloud cloud provider for the example is $expected_cloud but you're using $CLUSTER_CLOUD"
       expected_failed=1
     fi
 
     if [ "$expected_region" != "$CLUSTER_REGION" ]
     then
-      logerror "❌🗺 expected region for the example is $expected_region but you're using $CLUSTER_REGION"
+      logerror "❌🗺 expected ccloud region for the example is $expected_region but you're using $CLUSTER_REGION"
       expected_failed=1
     fi
 
