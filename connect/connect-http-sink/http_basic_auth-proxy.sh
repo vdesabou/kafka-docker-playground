@@ -44,6 +44,7 @@ playground connector create-or-update --connector http  << EOF
      "reporter.error.topic.replication.factor": 1,
      "reporter.result.topic.name": "success-responses",
      "reporter.result.topic.replication.factor": 1,
+     "reporter.result.topic.value.format": "string",
      "http.api.url": "http://http-service-basic-auth:8080/api/messages",
      "http.proxy.host": "nginx-proxy",
      "http.proxy.port": "8888",

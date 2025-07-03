@@ -43,6 +43,7 @@ playground connector create-or-update --connector HttpSinkBasicAuth  << EOF
      "reporter.error.topic.replication.factor": 1,
      "reporter.result.topic.name": "success-responses",
      "reporter.result.topic.replication.factor": 1,
+     "reporter.result.topic.value.format": "string",
      "http.api.url": "http://http-service-basic-auth:8080/api/messages",
      "auth.type": "BASIC",
      "connection.user": "admin",

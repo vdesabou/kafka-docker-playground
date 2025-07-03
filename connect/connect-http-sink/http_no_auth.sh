@@ -68,6 +68,7 @@ playground connector create-or-update --connector http-sink  << EOF
      "reporter.error.topic.replication.factor": 1,
      "reporter.result.topic.name": "success-responses",
      "reporter.result.topic.replication.factor": 1,
+     "reporter.result.topic.value.format": "string",
      "http.api.url": "http://httpserver:9006",
      "request.body.format" : "json",
      "headers": "Content-Type: application/json"

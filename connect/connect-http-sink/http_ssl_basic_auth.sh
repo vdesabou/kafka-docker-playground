@@ -44,6 +44,7 @@ playground connector create-or-update --connector http-ssl-basic-auth-sink2  << 
      "reporter.error.topic.replication.factor": 1,
      "reporter.result.topic.name": "success-responses",
      "reporter.result.topic.replication.factor": 1,
+     "reporter.result.topic.value.format": "string",
      "http.api.url": "https://http-service-ssl-basic-auth:8443/api/messages",
      "auth.type": "BASIC",
      "connection.user": "admin",

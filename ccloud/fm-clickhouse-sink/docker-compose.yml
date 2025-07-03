@@ -8,9 +8,6 @@ services:
     environment:
       CLICKHOUSE_USER: myuser
       CLICKHOUSE_PASSWORD: mypassword
-    # volumes:
-    #   - ../../ccloud/fm-clickhouse-sink/clickhouse-config.xml:/etc/clickhouse-server/config.xml
-
 
   # https://ngrok.com/docs/using-ngrok-with/docker/
   ngrok:

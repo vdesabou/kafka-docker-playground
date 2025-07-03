@@ -43,6 +43,7 @@ playground connector create-or-update --connector http-mtls-sink  << EOF
      "reporter.error.topic.replication.factor": 1,
      "reporter.result.topic.name": "success-responses",
      "reporter.result.topic.replication.factor": 1,
+     "reporter.result.topic.value.format": "string",
      "http.api.url": "https://http-service-mtls-auth:8443/api/messages",
      "auth.type": "NONE",
      "ssl.enabled": "true",
