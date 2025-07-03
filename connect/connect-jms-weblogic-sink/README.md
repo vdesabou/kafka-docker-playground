@@ -8,6 +8,12 @@ Using Oracle WebLogic Server (Developer Tier, version `12.2.1.3`) Docker [image]
 
 ![image](screenshot3.jpg)
 
+Follow [this](https://docs.oracle.com/en/operating-systems/oracle-linux/podman/podman-UsingContainerRegistries.html#generating-an-authentication-key-for-use-with-oracle-container-registry) to get `ORACLE_CONTAINER_REGISTRY_PASSWORD`
+
+* In a web browser, sign in to the Oracle Container Registry using an Oracle account at https://container-registry.oracle.com.
+* Select the profile name, and in the profile menu that appears select Auth Token.
+* Select Generate Secret Key and note down the secret key. This is only displayed once, during the initial generation.
+
 ## How to run
 
 Simply run:
@@ -21,55 +27,3 @@ N.B: Weblogic console is reachable at [http://127.0.0.1:7001/console](http://127
 You can use it to see all JMS resources:
 
 ![console](screenshot1.jpg)
-
-## Details of what the script is doing
-
-### Queue example
-
-Creating JMS weblogic sink connector
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
-               "topics": "sink-messages",
-               "java.naming.factory.initial": "weblogic.jndi.WLInitialContextFactory",
-               "java.naming.provider.url": "t3://weblogic-jms:7001",
-               "java.naming.security.principal": "weblogic",
-               "java.naming.security.credentials": "welcome1",
-               "connection.factory.name": "myFactory",
-               "jms.destination.name": "myJMSServer/mySystemModule!myJMSServer@MyDistributedQueue",
-               "jms.destination.type": "queue",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/weblogic-topic-sink/config | jq .
-```
-
-Sending messages to topic sink-messages
-
-```bash
-$ docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic sink-messages << EOF
-This is my message
-EOF
-````
-
-Check the message has been received in destination queue:
-
-Results:
-
-```
-JMS Ready To Receive Messages...
-Message Received: This is my message
-```
-
-Or you can check using [http://127.0.0.1:7001/console](http://127.0.0.1:7001/console]) (`weblogic`/`welcome1`):
-
-![console](screenshot2.jpg)
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
-
