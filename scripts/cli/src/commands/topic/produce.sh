@@ -1006,9 +1006,9 @@ do
     get_connect_image
     if version_gt $CP_CONNECT_TAG "7.9.99"
     then
-        tool_log4j_jvm_arg="-Dlog4j2.configurationFile=file:/tmp/tools-log4j2.yaml"
+        tool_log4j_jvm_arg="-Dlog4j2.configurationFile=file:/etc/kafka/tools-log4j2.yaml"
     else
-        tool_log4j_jvm_arg="-Dlog4j.configuration=file:/tmp/tools-log4j.properties"
+        tool_log4j_jvm_arg="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties"
     fi
     switch_schema_type=""
     if [[ -n "$tombstone" ]]
@@ -1127,8 +1127,6 @@ do
             fi
             if [[ "$environment" == "ccloud" ]]
             then
-                cp $root_folder/scripts/cli/src/tools-log4j.properties /tmp/tools-log4j.properties > /dev/null 2>&1
-                cp $root_folder/scripts/cli/src/tools-log4j2.yaml /tmp/tools-log4j2.yaml > /dev/null 2>&1
                 if [ -f $key_schema_file ]
                 then
                     cp $key_schema_file /tmp/key_schema_file > /dev/null 2>&1
@@ -1214,8 +1212,6 @@ do
                 then
                     if [[ -n "$headers" ]]
                     then
-                        docker cp $root_folder/scripts/cli/src/tools-log4j.properties $container:/tmp/tools-log4j.properties > /dev/null 2>&1
-                        docker cp $root_folder/scripts/cli/src/tools-log4j2.yaml $container:/tmp/tools-log4j2.yaml > /dev/null 2>&1
                         if [ "$key_schema_type" = "avro" ] || [ "$key_schema_type" = "protobuf" ] || [ "$key_schema_type" = "json-schema" ]
                         then
                             if [[ -n "$verbose" ]]
@@ -1235,8 +1231,6 @@ do
                             head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema.file="/tmp/value_schema_file" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone
                         fi
                     else
-                        docker cp $root_folder/scripts/cli/src/tools-log4j.properties $container:/tmp/tools-log4j.properties > /dev/null 2>&1
-                        docker cp $root_folder/scripts/cli/src/tools-log4j2.yaml $container:/tmp/tools-log4j2.yaml > /dev/null 2>&1
                         if [ "$key_schema_type" = "avro" ] || [ "$key_schema_type" = "protobuf" ] || [ "$key_schema_type" = "json-schema" ]
                         then
                             if [[ -n "$verbose" ]]
@@ -1255,8 +1249,6 @@ do
                         fi
                     fi
                 else
-                    docker cp $root_folder/scripts/cli/src/tools-log4j.properties $container:/tmp/tools-log4j.properties > /dev/null 2>&1
-                    docker cp $root_folder/scripts/cli/src/tools-log4j2.yaml $container:/tmp/tools-log4j2.yaml > /dev/null 2>&1
                     if [[ -n "$headers" ]]
                     then
                         if [[ -n "$verbose" ]]
