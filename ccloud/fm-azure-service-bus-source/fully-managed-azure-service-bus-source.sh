@@ -37,6 +37,12 @@ set +e
 az group delete --name $AZURE_RESOURCE_GROUP --yes
 set -e
 
+set +e
+playground topic delete --topic servicebus-topic
+sleep 3
+playground topic create --topic servicebus-topic --nb-partitions 1
+set -e
+
 log "Creating Azure Resource Group $AZURE_RESOURCE_GROUP"
 az group create \
     --name $AZURE_RESOURCE_GROUP \
