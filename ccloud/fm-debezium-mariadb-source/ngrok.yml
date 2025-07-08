@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  mariadb:
+    addr: mariadb:3306
+    proto: tcp

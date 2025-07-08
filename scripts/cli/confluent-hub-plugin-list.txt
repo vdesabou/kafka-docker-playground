@@ -119,6 +119,7 @@ confluentinc/kafka-connect-tibco-source
 confluentinc/kafka-connect-vertica
 confluentinc/kafka-connect-weblogic
 confluentinc/kafka-connect-zendesk
+confluentinc/MariaDbCdcSource
 confluentinc/MicrosoftSqlServerSink
 confluentinc/MicrosoftSqlServerSource
 confluentinc/MySqlSink
