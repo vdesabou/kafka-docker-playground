@@ -4,9 +4,27 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-NGROK_AUTH_TOKEN=${NGROK_AUTH_TOKEN:-$1}
+CLICKHOUSE_CLOUD_USERNAME=${CLICKHOUSE_CLOUD_USERNAME:-$1}
+CLICKHOUSE_CLOUD_PASSWORD=${CLICKHOUSE_CLOUD_PASSWORD:-$2}
+CLICKHOUSE_CLOUD_HOSTNAME=${CLICKHOUSE_CLOUD_HOSTNAME:-$3}
 
-display_ngrok_warning
+if [ -z "$CLICKHOUSE_CLOUD_USERNAME" ]
+then
+     logerror "CLICKHOUSE_CLOUD_USERNAME is not set. Export it as environment variable or pass it as argument"
+     exit 1
+fi
+
+if [ -z "$CLICKHOUSE_CLOUD_PASSWORD" ]
+then
+     logerror "CLICKHOUSE_CLOUD_PASSWORD is not set. Export it as environment variable or pass it as argument"
+     exit 1
+fi
+
+if [ -z "$CLICKHOUSE_CLOUD_HOSTNAME" ]
+then
+     logerror "CLICKHOUSE_CLOUD_HOSTNAME is not set. Export it as environment variable or pass it as argument"
+     exit 1
+fi
 
 bootstrap_ccloud_environment
 
@@ -16,42 +34,20 @@ sleep 3
 playground topic create --topic clickhouse_measures --nb-partitions 1
 set -e
 
-docker compose build
-docker compose down -v --remove-orphans
-docker compose up -d --quiet-pull
 
 sleep 5
 
-log "Creating ClickHouse table"
-playground container exec --container "clickhouse" --command "clickhouse-client -u myuser --password mypassword -q \"CREATE DATABASE IF NOT EXISTS default\""
-playground container exec --container "clickhouse" --command "clickhouse-client -u myuser --password mypassword -q \"CREATE TABLE IF NOT EXISTS clickhouse_measures (measurement String, id Int32, product String, quantity Int32, price Float32) ENGINE = MergeTree() ORDER BY id\""
+set +e
+log "Removing ClickHouse database playground, if applicable"
+docker run -i --rm clickhouse/clickhouse-server bash -c "clickhouse-client --host $CLICKHOUSE_CLOUD_HOSTNAME --port 9440 --user $CLICKHOUSE_CLOUD_USERNAME --password \"${CLICKHOUSE_CLOUD_PASSWORD}\" --secure -q 'DROP DATABASE IF EXISTS playground'"
+set -e
 
-log "Waiting for ngrok to start"
-while true
-do
-  container_id=$(docker ps -q -f name=ngrok)
-  if [ -n "$container_id" ]
-  then
-    status=$(docker inspect --format '{{.State.Status}}' $container_id)
-    if [ "$status" = "running" ]
-    then
-      log "Getting ngrok hostname and port"
-      NGROK_URL=$(curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-      NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
-      NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
+log "Creating ClickHouse database called playground"
+docker run -i --rm clickhouse/clickhouse-server bash -c "clickhouse-client --host $CLICKHOUSE_CLOUD_HOSTNAME --port 9440 --user $CLICKHOUSE_CLOUD_USERNAME --password \"${CLICKHOUSE_CLOUD_PASSWORD}\" --secure -q 'CREATE DATABASE IF NOT EXISTS playground'"
 
-      if ! [[ $NGROK_PORT =~ ^[0-9]+$ ]]
-      then
-        log "NGROK_PORT is not a valid number, keep retrying..."
-        continue
-      else 
-        break
-      fi
-    fi
-  fi
-  log "Waiting for container ngrok to start..."
-  sleep 5
-done
+log "Creating ClickHouse table called clickhouse_measures"
+docker run -i --rm clickhouse/clickhouse-server bash -c "clickhouse-client --host $CLICKHOUSE_CLOUD_HOSTNAME --port 9440 --user $CLICKHOUSE_CLOUD_USERNAME --password \"${CLICKHOUSE_CLOUD_PASSWORD}\" --secure --database "playground" -q \"CREATE TABLE IF NOT EXISTS clickhouse_measures (measurement String, id Int32, product String, quantity Int32, price Float32) ENGINE = MergeTree() ORDER BY id\""
+
 
 log "Sending messages to topic clickhouse_measures"
 playground topic produce -t clickhouse_measures --nb-messages 1 --forced-value '{"measurement": "clickhouse_measures", "id": 999, "product": "foo", "quantity": 100, "price": 50}' << 'EOF'
@@ -97,11 +93,11 @@ playground connector create-or-update --connector $connector_name << EOF
   "kafka.api.key": "$CLOUD_KEY",
   "kafka.api.secret": "$CLOUD_SECRET",
   "input.data.format": "AVRO",
-  "hostname": "$NGROK_HOSTNAME",
-  "port": "$NGROK_PORT",
-  "ssl": "false",
-  "username": "myuser",
-  "password": "mypassword",
+  "hostname": "$CLICKHOUSE_CLOUD_HOSTNAME",
+  "port": "8443",
+  "username": "$CLICKHOUSE_CLOUD_USERNAME",
+  "password": "$CLICKHOUSE_CLOUD_PASSWORD",
+  "database": "playground",
   "topics": "clickhouse_measures",
   "tasks.max" : "1"
 }
@@ -111,10 +107,7 @@ wait_for_ccloud_connector_up $connector_name 180
 sleep 10
 
 log "Verify that data is in clickhouse"
-playground container exec --container "clickhouse" --command "clickhouse-client -u myuser --password mypassword -q \"SELECT * FROM clickhouse_measures\""
-
-# playground container exec --container "clickhouse" --command "cat /var/log/clickhouse-server/clickhouse-server.log"
-# playground container exec --container "clickhouse" --command "cat /var/log/clickhouse-server/clickhouse-server.err.log"
+docker run -i --rm clickhouse/clickhouse-server bash -c "clickhouse-client --host $CLICKHOUSE_CLOUD_HOSTNAME --port 9440 --user $CLICKHOUSE_CLOUD_USERNAME --password \"${CLICKHOUSE_CLOUD_PASSWORD}\" --secure --database "playground" --query \"SELECT * FROM clickhouse_measures\""
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
