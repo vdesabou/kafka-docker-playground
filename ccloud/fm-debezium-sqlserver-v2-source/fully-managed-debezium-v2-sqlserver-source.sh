@@ -74,6 +74,20 @@ do
   sleep 5
 done
 
+log "Waiting for SQL Server to be ready"
+set +e
+while true
+do
+  docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! -Q "SELECT 1" > /dev/null 2>&1
+  if [ $? -eq 0 ]; then
+    log "SQL Server is ready"
+    break
+  fi
+  log "SQL Server not ready yet, waiting..."
+  sleep 5
+done
+set -e
+
 log "Create table"
 docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
 -- Create the test database
