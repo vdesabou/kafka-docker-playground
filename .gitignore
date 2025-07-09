@@ -63,6 +63,7 @@ myenv
 ._secrets.properties
 secrets.properties
 secrets.tar
+variables.properties
 *.hprof
 *.pcap
 github_ssh_key_file

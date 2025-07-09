@@ -176,6 +176,8 @@ Resources:
 
                         set -o allexport;source secrets.properties;set +o allexport
 
+                        set -o allexport;source variables.properties;set +o allexport
+
                         mkdir -p ~/.aws
 
                         cp aws_credentials_with_assuming_iam_role ~/.aws/credentials-with-assuming-iam-role
