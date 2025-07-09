@@ -176,3 +176,8 @@ EOF
 
 log "Verifying topic server1.testDB.dbo.customers"
 playground topic consume --topic server1.testDB.dbo.customers --min-expected-messages 5 --timeout 60
+
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name
