@@ -156,6 +156,7 @@ hazelcast/hazelcast-jet-kafka
 hazelcast/kafka-connector
 hivemq/enterprise-extension
 ibm/data-replication
+iceberg/iceberg-kafka-connect
 imply/druid-kafka-indexing-service
 imply/imply-native-integration
 infoviewsystems/kafka-connect-as400
