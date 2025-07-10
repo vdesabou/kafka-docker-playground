@@ -323,7 +323,10 @@ jobs:
           COUCHBASE_HOSTNAME: ${{ secrets.COUCHBASE_HOSTNAME}}
           COUCHBASE_USERNAME: ${{ secrets.COUCHBASE_USERNAME}}
           COUCHBASE_PASSWORD: ${{ secrets.COUCHBASE_PASSWORD}}
-
+          CLICKHOUSE_CLOUD_HOSTNAME: ${{ secrets.CLICKHOUSE_CLOUD_HOSTNAME}}
+          CLICKHOUSE_CLOUD_USERNAME: ${{ secrets.CLICKHOUSE_CLOUD_USERNAME}}
+          CLICKHOUSE_CLOUD_PASSWORD: ${{ secrets.CLICKHOUSE_CLOUD_PASSWORD}}
+          
   execute_one_test:
     if: ${{ github.event.inputs.test_name != '' }}
     runs-on: ubuntu-latest
@@ -517,6 +520,9 @@ jobs:
           COUCHBASE_HOSTNAME: ${{ secrets.COUCHBASE_HOSTNAME}}
           COUCHBASE_USERNAME: ${{ secrets.COUCHBASE_USERNAME}}
           COUCHBASE_PASSWORD: ${{ secrets.COUCHBASE_PASSWORD}}
+          CLICKHOUSE_CLOUD_HOSTNAME: ${{ secrets.CLICKHOUSE_CLOUD_HOSTNAME}}
+          CLICKHOUSE_CLOUD_USERNAME: ${{ secrets.CLICKHOUSE_CLOUD_USERNAME}}
+          CLICKHOUSE_CLOUD_PASSWORD: ${{ secrets.CLICKHOUSE_CLOUD_PASSWORD}}
           
   post-build:
     name: Cleanup resources and Update README
