@@ -20,7 +20,7 @@ do
     then
         continue
     fi
-    output=$(playground connector-plugin versions --connector-plugin "$plugin" --force-refresh --last 1)
+    output=$(playground connector-plugin versions --connector-plugin "$plugin" --force-refresh --last 1 | head -n 1)
     set +e
     if [[ -n "$days" ]]
     then
@@ -30,7 +30,8 @@ do
             last_updated_days=$(echo $last_updated | tr -d '[:space:]')
             if [[ $last_updated_days -le $days ]]
             then
-                echo "🔌 $plugin - $output"
+                documentation_url=$(playground connector-plugin versions --connector-plugin "$plugin" --last 1 | tail -n 1)
+                echo "🔌 $plugin - $output - $documentation_url"
             fi
         fi
     fi

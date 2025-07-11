@@ -24141,7 +24141,7 @@ playground_connector_plugin_versions_command() {
               IFS=$'\n'
               arr=($(echo "$row" | jq -r '.version, .manifest_url, .release_date'))
               version="${arr[0]}"
-              #manifest_url="${arr[1]}"
+              manifest_url="${arr[1]}"
               release_date="${arr[2]}"
               if [ "$release_date" != "null" ]
               then
@@ -24160,6 +24160,22 @@ playground_connector_plugin_versions_command() {
                   echo "🔢 v$version - 📅 release date: <unknown>" >> $filename
               fi
           done <<< "$(echo "$curl_output" | jq -c '.[]')"
+
+          # documentation_url
+          set +e
+          curl_output=$(curl -s $manifest_url)
+          ret=$?
+          if [ $ret -eq 0 ]
+          then
+              documentation_url=$(echo "$curl_output" | jq -r '.documentation_url')
+          fi
+          set -e
+          if [[ -n "$documentation_url" && "$documentation_url" != "null" ]]
+          then
+              echo "🌐 documentation: $documentation_url" >> $filename
+          else
+              echo "🌐 documentation: <not available>" >> $filename
+          fi
       else
           logerror "❌ curl request failed with error code $ret!"
           exit 1
@@ -24174,6 +24190,7 @@ playground_connector_plugin_versions_command() {
 
   if [[ -n "$last" ]]
   then
+      last=$((last + 1))
       tail -${last} $filename
   else
       cat $filename
@@ -24206,7 +24223,7 @@ playground_connector_plugin_display_last_updated_command() {
       then
           continue
       fi
-      output=$(playground connector-plugin versions --connector-plugin "$plugin" --force-refresh --last 1)
+      output=$(playground connector-plugin versions --connector-plugin "$plugin" --force-refresh --last 1 | head -n 1)
       set +e
       if [[ -n "$days" ]]
       then
@@ -24216,7 +24233,8 @@ playground_connector_plugin_display_last_updated_command() {
               last_updated_days=$(echo $last_updated | tr -d '[:space:]')
               if [[ $last_updated_days -le $days ]]
               then
-                  echo "🔌 $plugin - $output"
+                  documentation_url=$(playground connector-plugin versions --connector-plugin "$plugin" --last 1 | tail -n 1)
+                  echo "🔌 $plugin - $output - $documentation_url"
               fi
           fi
       fi

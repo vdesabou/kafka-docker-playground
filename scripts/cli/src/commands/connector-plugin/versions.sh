@@ -78,7 +78,7 @@ then
             IFS=$'\n'
             arr=($(echo "$row" | jq -r '.version, .manifest_url, .release_date'))
             version="${arr[0]}"
-            #manifest_url="${arr[1]}"
+            manifest_url="${arr[1]}"
             release_date="${arr[2]}"
             if [ "$release_date" != "null" ]
             then
@@ -97,6 +97,22 @@ then
                 echo "🔢 v$version - 📅 release date: <unknown>" >> $filename
             fi
         done <<< "$(echo "$curl_output" | jq -c '.[]')"
+
+        # documentation_url
+        set +e
+        curl_output=$(curl -s $manifest_url)
+        ret=$?
+        if [ $ret -eq 0 ]
+        then
+            documentation_url=$(echo "$curl_output" | jq -r '.documentation_url')
+        fi
+        set -e
+        if [[ -n "$documentation_url" && "$documentation_url" != "null" ]]
+        then
+            echo "🌐 documentation: $documentation_url" >> $filename
+        else
+            echo "🌐 documentation: <not available>" >> $filename
+        fi
     else
         logerror "❌ curl request failed with error code $ret!"
         exit 1
@@ -111,6 +127,7 @@ fi
 
 if [[ -n "$last" ]]
 then
+    last=$((last + 1))
     tail -${last} $filename
 else
     cat $filename
