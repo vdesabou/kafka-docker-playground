@@ -39,7 +39,7 @@ else
 
         # latest
         latest=$(playground connector-plugin versions --connector-plugin $owner/$name --last 1)
-        latest_to_compare=$(echo "$latest" | sed 's/ ([0-9]* days ago)//')
+        latest_to_compare=$(echo "$latest" | head -n 1 | sed 's/ ([0-9]* days ago)//')
 
         ## current version
         manifest_file="$root_folder/confluent-hub/$full_connector_name/manifest.json"
