@@ -127,7 +127,7 @@ do
                     # check if newer connector plugin version is available on hub
                     output=$(playground connector-plugin versions --connector-plugin "$owner/$name" --force-refresh --last 1)
                     set +e
-                    last_updated=$(echo "$output" | grep -v "<unknown>" | cut -d "(" -f 2 | cut -d " " -f 1)
+                    last_updated=$(echo "$output" | head -n 1 | grep -v "<unknown>" | cut -d "(" -f 2 | cut -d " " -f 1)
                     if [[ -n "$last_updated" ]]
                     then
                         last_updated_days=$(echo $last_updated | tr -d '[:space:]')

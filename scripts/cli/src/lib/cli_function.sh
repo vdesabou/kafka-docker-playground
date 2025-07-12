@@ -754,7 +754,7 @@ function choose_connector_tag() {
 
   if [ ! -f $filename ]
   then
-    playground connector-plugin versions --connector-plugin $owner/$name > /dev/null 2>&1
+    playground connector-plugin versions --connector-plugin $owner/$name | grep -v "documentation" > /dev/null 2>&1
   fi
 
   if [ ! -f $filename ]
