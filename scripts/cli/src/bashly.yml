@@ -573,7 +573,23 @@ commands:
     completions:
       - $(playground get-tag-list "$cur")
     help: |-
-      🎯 Confluent Platform (CP) version to use
+      🎯 Confluent Platform (CP) version to use. Applies to all components (broker, connect, schema registry, ksqlDB, etc...)
+
+      It sets TAG environment variable
+
+      Must be greater or equal to 5.3.0
+
+      🎓 Tip: use <tab> completion to trigger fzf completion
+  - &connect-tag
+    long: --connect-tag
+    arg: connect_tag
+    required: false
+    completions:
+      - $(playground get-tag-list "$cur")
+    help: |-
+      🔗 Confluent Platform (CP) version to use. Applies to connect only.
+
+      It sets CP_CONNECT_TAG environment variable
 
       Must be greater or equal to 5.3.0
 

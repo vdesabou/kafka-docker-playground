@@ -6,6 +6,7 @@ test_file="${args[--file]}"
 open="${args[--open]}"
 environment="${args[--environment]}"
 tag="${args[--tag]}"
+connect_tag="${args[--connect-tag]}"
 connector_tag="${args[--connector-tag]}"
 connector_zip="${args[--connector-zip]}"
 connector_jar="${args[--connector-jar]}"
@@ -113,6 +114,16 @@ then
   fi
   array_flag_list+=("--tag=$tag")
   export TAG=$tag
+fi
+
+if [[ -n "$connect_tag" ]]
+then
+  if [[ $connect_tag == *"@"* ]]
+  then
+    connect_tag=$(echo "$connect_tag" | cut -d "@" -f 2)
+  fi
+  array_flag_list+=("--connect-tag=$connect_tag")
+  export CP_CONNECT_TAG=$connect_tag
 fi
 
 if [[ -n "$environment" ]]
@@ -507,8 +518,9 @@ then
   set -e
   # readonly MENU_SEPARATOR="--------------------------------------------------" #4
 
-  MENU_TAG="🎯 CP version $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_TAG})) ' ') --tag" #5
-  MENU_CONNECTOR_TAG="🔗 Connector version $(printf '%*s' $((${MAX_LENGTH}-20-${#MENU_CONNECTOR_TAG})) ' ') --connector-tag"
+  MENU_TAG="🎯 CP version (all components) $(printf '%*s' $((${MAX_LENGTH}-30-${#MENU_TAG})) ' ') --tag" #5
+  MENU_CONNECT_TAG="🔗 CP version (connect only) $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_CONNECT_TAG})) ' ') --connect-tag"
+  MENU_CONNECTOR_TAG="🔌 Connector version $(printf '%*s' $((${MAX_LENGTH}-20-${#MENU_CONNECTOR_TAG})) ' ') --connector-tag"
   MENU_CONNECTOR_ZIP="🤐 Connector zip $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CONNECTOR_ZIP})) ' ') --connector-zip"
   MENU_CONNECTOR_JAR="🤎 Connector jar $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CONNECTOR_JAR})) ' ') --connector-jar"
   MENU_ENVIRONMENT="🔐 Environment $(printf '%*s' $((${MAX_LENGTH}-14-${#MENU_ENVIRONMENT})) ' ') --environment" 
@@ -523,7 +535,7 @@ then
   MENU_ENABLE_BROKERS="3️⃣  Enabling multiple brokers $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_ENABLE_BROKERS})) ' ') --enable-multiple-brokers"
   MENU_ENABLE_CONNECT_WORKERS="🥉 Enabling multiple connect workers $(printf '%*s' $((${MAX_LENGTH}-36-${#MENU_ENABLE_CONNECT_WORKERS})) ' ') --enable-multiple-connect-workers"
   MENU_ENABLE_KCAT="🐈 Enabling kcat $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_ENABLE_KCAT})) ' ') --enable-kcat"
-  MENU_ENABLE_SQL_DATAGEN="🌪️  Enable SQL Datagen injection $(printf '%*s' $((${MAX_LENGTH}-32-${#MENU_ENABLE_SQL_DATAGEN})) ' ') --enable-sql-datagen" #19
+  MENU_ENABLE_SQL_DATAGEN="🌪️  Enable SQL Datagen injection $(printf '%*s' $((${MAX_LENGTH}-31-${#MENU_ENABLE_SQL_DATAGEN})) ' ') --enable-sql-datagen" #19
   MENU_ENABLE_FLINK="🐿️  Enable Flink $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_ENABLE_FLINK})) ' ') --enable-flink" #20
 
   readonly MENU_DISABLE_KSQLDB="❌🎏 Disable ksqlDB" #21
@@ -586,29 +598,29 @@ then
   while [ $stop != 1 ]
   do
     has_error=0
-    options=("$MENU_LETS_GO" "$MENU_PROBLEM" "$MENU_OPEN_FILE" "$MENU_OPEN_DOCS" "$MENU_SEPARATOR" "$MENU_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_ENVIRONMENT" "$MENU_SEPARATOR" "$MENU_ENABLE_KSQLDB" "$MENU_ENABLE_C3" "$MENU_ENABLE_CONDUKTOR" "$MENU_ENABLE_RP" "$MENU_ENABLE_GRAFANA" "$MENU_ENABLE_BROKERS" "$MENU_ENABLE_CONNECT_WORKERS" "$MENU_ENABLE_KCAT" "$MENU_ENABLE_SQL_DATAGEN" "$MENU_ENABLE_FLINK" "$MENU_DISABLE_KSQLDB" "$MENU_DISABLE_C3" "$MENU_DISABLE_CONDUKTOR" "$MENU_DISABLE_RP" "$MENU_DISABLE_GRAFANA" "$MENU_DISABLE_BROKERS" "$MENU_DISABLE_CONNECT_WORKERS" "$MENU_DISABLE_KCAT" "$MENU_DISABLE_SQL_DATAGEN" "$MENU_DISABLE_FLINK" "$MENU_SEPARATOR_FEATURES" "$MENU_CLUSTER_TYPE" "$MENU_CLUSTER_CLOUD" "$MENU_CLUSTER_REGION" "$MENU_CLUSTER_ENVIRONMENT" "$MENU_CLUSTER_NAME" "$MENU_CLUSTER_CREDS" "$MENU_CLUSTER_SR_CREDS" "$MENU_SEPARATOR_CLOUD" "$MENU_GO_BACK")
+    options=("$MENU_LETS_GO" "$MENU_PROBLEM" "$MENU_OPEN_FILE" "$MENU_OPEN_DOCS" "$MENU_SEPARATOR" "$MENU_TAG" "$MENU_CONNECT_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_ENVIRONMENT" "$MENU_SEPARATOR" "$MENU_ENABLE_KSQLDB" "$MENU_ENABLE_C3" "$MENU_ENABLE_CONDUKTOR" "$MENU_ENABLE_RP" "$MENU_ENABLE_GRAFANA" "$MENU_ENABLE_BROKERS" "$MENU_ENABLE_CONNECT_WORKERS" "$MENU_ENABLE_KCAT" "$MENU_ENABLE_SQL_DATAGEN" "$MENU_ENABLE_FLINK" "$MENU_DISABLE_KSQLDB" "$MENU_DISABLE_C3" "$MENU_DISABLE_CONDUKTOR" "$MENU_DISABLE_RP" "$MENU_DISABLE_GRAFANA" "$MENU_DISABLE_BROKERS" "$MENU_DISABLE_CONNECT_WORKERS" "$MENU_DISABLE_KCAT" "$MENU_DISABLE_SQL_DATAGEN" "$MENU_DISABLE_FLINK" "$MENU_SEPARATOR_FEATURES" "$MENU_CLUSTER_TYPE" "$MENU_CLUSTER_CLOUD" "$MENU_CLUSTER_REGION" "$MENU_CLUSTER_ENVIRONMENT" "$MENU_CLUSTER_NAME" "$MENU_CLUSTER_CREDS" "$MENU_CLUSTER_SR_CREDS" "$MENU_SEPARATOR_CLOUD" "$MENU_GO_BACK")
 
     if [[ $test_file == *"ccloud"* ]] || [ "$PLAYGROUND_ENVIRONMENT" == "ccloud" ]
     then
       if [[ $test_file == *"fully-managed"* ]]
       then
-        for((i=5;i<19;i++)); do
+        for((i=5;i<20;i++)); do
           unset "options[$i]"
         done
 
-        for((i=20;i<32;i++)); do
+        for((i=21;i<33;i++)); do
           unset "options[$i]"
         done
       fi
-      unset 'options[14]'
       unset 'options[15]'
       unset 'options[16]'
       unset 'options[17]'
+      unset 'options[18]'
 
-      unset 'options[24]'
       unset 'options[25]'
       unset 'options[26]'
       unset 'options[27]'
+      unset 'options[28]'
 
       if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
       then
@@ -745,7 +757,6 @@ then
         fi
       fi
     else # end of ccloud
-      unset 'options[32]'
       unset 'options[33]'
       unset 'options[34]'
       unset 'options[35]'
@@ -753,19 +764,20 @@ then
       unset 'options[37]'
       unset 'options[38]'
       unset 'options[39]'
+      unset 'options[40]'
 
-      unset 'options[41]'
       unset 'options[42]'
       unset 'options[43]'
       unset 'options[44]'
+      unset 'options[45]'
     fi
 
     if [ $connector_example == 0 ]
     then
-      unset 'options[6]'
       unset 'options[7]'
       unset 'options[8]'
       unset 'options[9]'
+      unset 'options[10]'
     fi
 
     if [ $docs_available == 0 ]
@@ -775,68 +787,68 @@ then
 
     if [ $sql_datagen == 0 ]
     then
-      unset 'options[19]'
+      unset 'options[20]'
     fi
 
     if [ ! -z $ENABLE_KSQLDB ]
-    then
-      unset 'options[11]'
-    else
-      unset 'options[21]'
-    fi
-    if [ ! -z $ENABLE_CONTROL_CENTER ]
     then
       unset 'options[12]'
     else
       unset 'options[22]'
     fi
-    if [ ! -z $ENABLE_CONDUKTOR ]
+    if [ ! -z $ENABLE_CONTROL_CENTER ]
     then
       unset 'options[13]'
     else
       unset 'options[23]'
     fi
-    if [ ! -z $ENABLE_RESTPROXY ]
+    if [ ! -z $ENABLE_CONDUKTOR ]
     then
       unset 'options[14]'
     else
       unset 'options[24]'
     fi
-    if [ ! -z $ENABLE_JMX_GRAFANA ]
+    if [ ! -z $ENABLE_RESTPROXY ]
     then
       unset 'options[15]'
     else
       unset 'options[25]'
     fi
-    if [ ! -z $ENABLE_KAFKA_NODES ]
+    if [ ! -z $ENABLE_JMX_GRAFANA ]
     then
       unset 'options[16]'
     else
       unset 'options[26]'
     fi
-    if [ ! -z $ENABLE_CONNECT_NODES ]
+    if [ ! -z $ENABLE_KAFKA_NODES ]
     then
       unset 'options[17]'
     else
       unset 'options[27]'
     fi
-    if [ ! -z $ENABLE_KCAT ]
+    if [ ! -z $ENABLE_CONNECT_NODES ]
     then
       unset 'options[18]'
     else
       unset 'options[28]'
     fi
-    if [ ! -z $SQL_DATAGEN ]
+    if [ ! -z $ENABLE_KCAT ]
     then
       unset 'options[19]'
     else
       unset 'options[29]'
     fi
-    if [ ! -z $ENABLE_FLINK ]
+    if [ ! -z $SQL_DATAGEN ]
     then
       unset 'options[20]'
     else
       unset 'options[30]'
+    fi
+    if [ ! -z $ENABLE_FLINK ]
+    then
+      unset 'options[21]'
+    else
+      unset 'options[31]'
     fi
 
     missing_env=""
@@ -1199,6 +1211,19 @@ then
       fi
       array_flag_list+=("--tag=$tag")
       export TAG=$tag
+    fi
+
+    if [[ $res == *"$MENU_CONNECT_TAG"* ]]
+    then
+      maybe_remove_flag "--connect-tag"
+
+      connect_tag=$(playground get-tag-list)
+      if [[ $connect_tag == *"@"* ]]
+      then
+        connect_tag=$(echo "$connect_tag" | cut -d "@" -f 2)
+      fi
+      array_flag_list+=("--connect-tag=$connect_tag")
+      export CP_CONNECT_TAG=$connect_tag
     fi
 
     if [[ $res == *"$MENU_CONNECTOR_TAG"* ]]
