@@ -1341,7 +1341,7 @@ function display_interactive_menu_categories () {
   MENU_KSQL="🎏 ksqlDB $(printf '%*s' $((${MAX_LENGTH}-9-${#MENU_KSQL})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_ksql_only | awk '{print $1}') examples"
   MENU_SR="🔰 Schema registry $(printf '%*s' $((${MAX_LENGTH}-18-${#MENU_SR})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_schema_registry_only | awk '{print $1}') examples"
   MENU_RP="🧲 Rest proxy $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_RP})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_rest_proxy_only | awk '{print $1}') examples"
-  MENU_ACADEMY="🧑‍🎓 Academy $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_RP})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_academy_only | awk '{print $1}') examples"
+  MENU_ACADEMY="🧑‍🎓 Academy $(printf '%*s' $((${MAX_LENGTH}-10-${#MENU_ACADEMY})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_academy_only | awk '{print $1}') examples"
 
   if [ "$repro" == 1 ]
   then
