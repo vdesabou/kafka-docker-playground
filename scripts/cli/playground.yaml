@@ -277,6 +277,7 @@ subcommands:
         
         🎓 Tip: use <tab> completion to trigger fzf completion 
                 use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
+                use <option+enter> to use the value you typed manually
         
         Conflicts with: --connector-tag
         
@@ -290,6 +291,7 @@ subcommands:
         
         🎓 Tip: use <tab> completion to trigger fzf completion 
                 use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
+                use <option+enter> to use the value you typed manually
         
     - names:
       - --enable-ksqldb
@@ -564,6 +566,7 @@ subcommands:
         
         🎓 Tip: use <tab> completion to trigger fzf completion 
                 use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
+                use <option+enter> to use the value you typed manually
         
         Conflicts with: --connector-tag
         
@@ -577,6 +580,7 @@ subcommands:
         
         🎓 Tip: use <tab> completion to trigger fzf completion 
                 use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
+                use <option+enter> to use the value you typed manually
         
     subcommands:
 
@@ -597,6 +601,7 @@ subcommands:
         ❕ It must be absolute full path
         
         🎓 Tip: use <tab> completion to trigger fzf completion
+                use <option+enter> to use the value you typed manually
         
     - names:
       - --open-docker-compose
@@ -1385,6 +1390,7 @@ subcommands:
             ❕ It must be absolute full path
             
             🎓 Tip: use <tab> completion to trigger fzf completion
+                    use <option+enter> to use the value you typed manually
             
       - name: read-parquet-file
         description: | 
@@ -1401,6 +1407,7 @@ subcommands:
             ❕ It must be absolute full path
             
             🎓 Tip: use <tab> completion to trigger fzf completion
+                    use <option+enter> to use the value you typed manually
             
       - name: certs-create
         description: | 

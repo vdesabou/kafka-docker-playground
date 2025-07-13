@@ -623,6 +623,7 @@ commands:
 
       🎓 Tip: use <tab> completion to trigger fzf completion 
               use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
+              use <option+enter> to use the value you typed manually
 
   - &connector-jar
     long: --connector-jar
@@ -639,6 +640,7 @@ commands:
 
       🎓 Tip: use <tab> completion to trigger fzf completion 
               use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
+              use <option+enter> to use the value you typed manually
 
   - &enable-ksqldb
     long: --enable-ksqldb
@@ -977,6 +979,8 @@ commands:
       ❕ It must be absolute full path
 
       🎓 Tip: use <tab> completion to trigger fzf completion
+              use <option+enter> to use the value you typed manually
+
   - long: --open-docker-compose
     required: false
     help: |-
@@ -1752,6 +1756,7 @@ commands:
         ❕ It must be absolute full path
 
         🎓 Tip: use <tab> completion to trigger fzf completion
+                use <option+enter> to use the value you typed manually
 
   - name: read-parquet-file
     help: |-
@@ -1770,6 +1775,7 @@ commands:
         ❕ It must be absolute full path
 
         🎓 Tip: use <tab> completion to trigger fzf completion
+                use <option+enter> to use the value you typed manually
 
   - name: certs-create
     help: |-

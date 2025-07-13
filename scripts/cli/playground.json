@@ -207,14 +207,14 @@
             "--connector-zip"
           ],
           "argument": "CONNECTOR_ZIP",
-          "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n\nConflicts with: --connector-tag\n"
+          "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n        use <option+enter> to use the value you typed manually\n\nConflicts with: --connector-tag\n"
         },
         {
           "names": [
             "--connector-jar"
           ],
           "argument": "CONNECTOR_JAR",
-          "description": "🤎 Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n"
+          "description": "🤎 Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n        use <option+enter> to use the value you typed manually\n"
         },
         {
           "names": [
@@ -426,14 +426,14 @@
             "--connector-zip"
           ],
           "argument": "CONNECTOR_ZIP",
-          "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n\nConflicts with: --connector-tag\n"
+          "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n        use <option+enter> to use the value you typed manually\n\nConflicts with: --connector-tag\n"
         },
         {
           "names": [
             "--connector-jar"
           ],
           "argument": "CONNECTOR_JAR",
-          "description": "🤎 Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n"
+          "description": "🤎 Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n        use <option+enter> to use the value you typed manually\n"
         }
       ],
       "subcommands": null
@@ -449,7 +449,7 @@
             "-f"
           ],
           "argument": "FILE",
-          "description": "🔎 Search any file and open it.\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+          "description": "🔎 Search any file and open it.\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n        use <option+enter> to use the value you typed manually\n"
         },
         {
           "names": [
@@ -1216,7 +1216,7 @@
                 "-f"
               ],
               "argument": "FILE",
-              "description": "🔖 Avro file to read\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+              "description": "🔖 Avro file to read\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n        use <option+enter> to use the value you typed manually\n"
             }
           ]
         },
@@ -1231,7 +1231,7 @@
                 "-f"
               ],
               "argument": "FILE",
-              "description": "🔖 Parquet file to read\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+              "description": "🔖 Parquet file to read\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n        use <option+enter> to use the value you typed manually\n"
             }
           ]
         },
