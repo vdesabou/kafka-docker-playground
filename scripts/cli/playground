@@ -44,7 +44,7 @@ playground_usage() {
   printf "  %s   🏰 Get an history of the examples which were run with run command and run it again\n" "$(green "history")                                   "
   printf "  %s   🌩️  Switch to ccloud environment.\n" "$(green "switch-ccloud")                             "
   printf "  %s   💺  Switch back from previous environment before switch-ccloud was called.\n" "$(green "switch-back")                               "
-  printf "  %s   ✨ Update current confluent platform or connector(s) with new version(s)\n" "$(green "update-version")                            "
+  printf "  %s   ✨ Update current confluent platform components (all with --tag or only connect with --connect-tag) or connector(s) with new version(s)\n" "$(green "update-version")                            "
   printf "  %s   👐 When --file is not provided, simply open last example you ran with <playground run>\n" "$(green "open")                                      "
   printf "  %s   🛑 Stop currently running example\n" "$(green "stop")                                      "
   printf "  %s   🧨 Remove all docker images (including docker volumes)\n" "$(green "remove-all-docker-images")                  "
@@ -1820,12 +1820,12 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--tag TAG")"
-    printf "    🎯 Confluent Platform (CP) version to use\n    \n    Must be greater or equal to 5.3.0\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🎯 Confluent Platform (CP) version to use. Applies to all components (broker,\n    connect, schema registry, ksqlDB, etc...)\n    \n    It sets TAG environment variable\n    \n    Must be greater or equal to 5.3.0\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connect-tag CONNECT_TAG")"
-    printf "    🔗 Kafka Connect version to use (sets CP_CONNECT_TAG)\n    \n    Must be greater or equal to 5.3.0\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🔗 Confluent Platform (CP) version to use. Applies to connect only.\n    \n    It sets CP_CONNECT_TAG environment variable\n    \n    Must be greater or equal to 5.3.0\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -2112,7 +2112,7 @@ playground_switch_back_usage() {
 
 # :command.usage
 playground_update_version_usage() {
-  printf "playground update-version - ✨ Update current confluent platform or connector(s) with new version(s)\n\n"
+  printf "playground update-version - ✨ Update current confluent platform components (all with --tag or only connect with --connect-tag) or connector(s) with new version(s)\n\n"
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground update-version [OPTIONS]\n"
@@ -2126,7 +2126,12 @@ playground_update_version_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--tag TAG")"
-    printf "    🎯 Confluent Platform (CP) version to use\n    \n    Must be greater or equal to 5.3.0\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🎯 Confluent Platform (CP) version to use. Applies to all components (broker,\n    connect, schema registry, ksqlDB, etc...)\n    \n    It sets TAG environment variable\n    \n    Must be greater or equal to 5.3.0\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connect-tag CONNECT_TAG")"
+    printf "    🔗 Confluent Platform (CP) version to use. Applies to connect only.\n    \n    It sets CP_CONNECT_TAG environment variable\n    \n    Must be greater or equal to 5.3.0\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -2155,6 +2160,7 @@ playground_update_version_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground update-version (interactive mode)\n"
     printf "  playground update-version --tag 6.2.0 --connector-tag=2.5.12,10.5.7\n"
+    printf "  playground update-version --connect-tag 6.2.0 --connector-tag=2.5.12,10.5.7\n"
     echo
 
   fi
@@ -17009,6 +17015,7 @@ playground_update_version_command() {
 
   # src/commands/update-version.sh
   tag="${args[--tag]}"
+  connect_tag="${args[--connect-tag]}"
   connector_tag="${args[--connector-tag]}"
   connector_zip="${args[--connector-zip]}"
   connector_jar="${args[--connector-jar]}"
@@ -17033,11 +17040,17 @@ playground_update_version_command() {
     docker_compose_file_available=0
   fi
 
-  current_tag=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
-
+  current_tag=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
   if [ "$current_tag" == "" ]
   then
-    logerror "❌ Could not retrieve current cp version (--tag or TAG) being used"
+    logerror "❌ Could not retrieve current cp version (using broker container)"
+    exit 1
+  fi
+
+  current_connect_tag=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+  if [ "$current_connect_tag" == "" ]
+  then
+    logerror "❌ Could not retrieve current cp connect version (using connect container)"
     exit 1
   fi
 
@@ -17050,6 +17063,16 @@ playground_update_version_command() {
     fi
     array_flag_list+=("--tag=$tag")
     export TAG=$tag
+  fi
+
+  if [[ -n "$connect_tag" ]]
+  then
+    if [[ $connect_tag == *"@"* ]]
+    then
+      connect_tag=$(echo "$connect_tag" | cut -d "@" -f 2)
+    fi
+    array_flag_list+=("--connect-tag=$connect_tag")
+    export CP_CONNECT_TAG=$connect_tag
   fi
 
   if [[ -n "$connector_tag" ]]
@@ -17208,8 +17231,9 @@ playground_update_version_command() {
     fi
     set -e
     readonly MENU_SEPARATOR="--------------------------------------------------" #3
-    MENU_TAG="🎯 CP version (current $current_tag) $(printf '%*s' $((${MAX_LENGTH}-29-${#MENU_TAG})) ' ') --tag" #4
-    MENU_CONNECTOR_TAG="🔗 Connector version (current $current_versions) $(printf '%*s' $((${MAX_LENGTH}-44-${#MENU_CONNECTOR_TAG})) ' ') --connector-tag"
+    MENU_TAG="🎯 CP version (all components) (current $current_tag) $(printf '%*s' $((${MAX_LENGTH}-46-${#MENU_TAG})) ' ') --tag" #4
+    MENU_CONNECT_TAG="🔗 CP version (connect only) (current $current_connect_tag) $(printf '%*s' $((${MAX_LENGTH}-44-${#MENU_CONNECT_TAG})) ' ') --connect-tag"
+    MENU_CONNECTOR_TAG="🔌 Connector version (current $current_versions) $(printf '%*s' $((${MAX_LENGTH}-37-${#MENU_CONNECTOR_TAG})) ' ') --connector-tag"
     MENU_CONNECTOR_ZIP="🤐 Connector zip $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CONNECTOR_ZIP})) ' ') --connector-zip"
     MENU_CONNECTOR_JAR="🤎 Connector jar $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CONNECTOR_JAR})) ' ') --connector-jar"
 
@@ -17228,24 +17252,24 @@ playground_update_version_command() {
       else
         MENU_LETS_GO="🚀 Run the example !" #0
       fi
-      options=("$MENU_LETS_GO" "$MENU_OPEN_FILE" "$MENU_OPEN_DOCS" "$MENU_SEPARATOR" "$MENU_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_GO_BACK")
+      options=("$MENU_LETS_GO" "$MENU_OPEN_FILE" "$MENU_OPEN_DOCS" "$MENU_SEPARATOR" "$MENU_TAG" "$MENU_CONNECT_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_GO_BACK")
 
       if [[ $test_file == *"ccloud"* ]] || [ "$PLAYGROUND_ENVIRONMENT" == "ccloud" ]
       then
         if [[ $test_file == *"fully-managed"* ]]
         then
-          unset 'options[4]'
           unset 'options[5]'
           unset 'options[6]'
           unset 'options[7]'
+          unset 'options[8]'
         fi
       fi
 
       if [ $connector_example == 0 ] || [ $docker_compose_file_available == 0 ]
       then
-        unset 'options[5]'
         unset 'options[6]'
         unset 'options[7]'
+        unset 'options[8]'
       fi
 
       if [ $docs_available == 0 ]
@@ -17300,6 +17324,23 @@ playground_update_version_command() {
           maybe_remove_flag "--tag"
           array_flag_list+=("--tag=$tag")
           export TAG=$tag
+        fi
+      fi
+
+      if [[ $res == *"$MENU_CONNECT_TAG"* ]]
+      then
+        connect_tag=$(playground get-tag-list)
+        if [[ $connect_tag == *"@"* ]]
+        then
+          connect_tag=$(echo "$connect_tag" | cut -d "@" -f 2)
+        fi
+
+        if [ "$current_connect_tag" != "$connect_tag" ]
+        then
+          change_detected=1
+          maybe_remove_flag "--connect-tag"
+          array_flag_list+=("--connect-tag=$connect_tag")
+          export CP_CONNECT_TAG=$connect_tag
         fi
       fi
 
@@ -17384,11 +17425,11 @@ playground_update_version_command() {
   IFS=' ' flag_list="${array_flag_list[*]}"
   if [[ -n "$tag" ]]
   then
-    current_tag=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+    current_tag=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
 
     if [ "$current_tag" == "" ]
     then
-      logerror "❌ Could not retrieve current cp version (--tag or TAG) being used"
+      logerror "❌ Could not retrieve current cp version (using broker container)"
       exit 1
     fi
 
@@ -17396,6 +17437,25 @@ playground_update_version_command() {
     then
       logwarn "--tag=$tag is same as current tag, ignoring..."
       array_flag_list=("${array_flag_list[@]/"--tag"}")
+    else
+      tag_changed=1
+    fi
+  fi
+
+  if [[ -n "$connect_tag" ]]
+  then
+    current_connect_tag=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+
+    if [ "$current_connect_tag" == "" ]
+    then
+      logerror "❌ Could not retrieve current cp version (using connect container)"
+      exit 1
+    fi
+
+    if [ "$current_connect_tag" == "$connect_tag" ]
+    then
+      logwarn "--connect-tag=$connect_tag is same as current connect-tag, ignoring..."
+      array_flag_list=("${array_flag_list[@]/"--connect-tag"}")
     else
       tag_changed=1
     fi
@@ -32078,6 +32138,20 @@ playground_update_version_parse_requirements() {
           shift
         else
           printf "%s\n" "--tag requires an argument: --tag TAG" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connect-tag)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connect-tag']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connect-tag requires an argument: --connect-tag CONNECT_TAG" >&2
           exit 1
         fi
         ;;

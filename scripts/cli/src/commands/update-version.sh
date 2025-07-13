@@ -1,4 +1,5 @@
 tag="${args[--tag]}"
+connect_tag="${args[--connect-tag]}"
 connector_tag="${args[--connector-tag]}"
 connector_zip="${args[--connector-zip]}"
 connector_jar="${args[--connector-jar]}"
@@ -22,11 +23,17 @@ then
   docker_compose_file_available=0
 fi
 
-current_tag=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
-
+current_tag=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
 if [ "$current_tag" == "" ]
 then
-  logerror "❌ Could not retrieve current cp version (--tag or TAG) being used"
+  logerror "❌ Could not retrieve current cp version (using broker container)"
+  exit 1
+fi
+
+current_connect_tag=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+if [ "$current_connect_tag" == "" ]
+then
+  logerror "❌ Could not retrieve current cp connect version (using connect container)"
   exit 1
 fi
 
@@ -39,6 +46,16 @@ then
   fi
   array_flag_list+=("--tag=$tag")
   export TAG=$tag
+fi
+
+if [[ -n "$connect_tag" ]]
+then
+  if [[ $connect_tag == *"@"* ]]
+  then
+    connect_tag=$(echo "$connect_tag" | cut -d "@" -f 2)
+  fi
+  array_flag_list+=("--connect-tag=$connect_tag")
+  export CP_CONNECT_TAG=$connect_tag
 fi
 
 if [[ -n "$connector_tag" ]]
@@ -198,8 +215,9 @@ then
   fi
   set -e
   readonly MENU_SEPARATOR="--------------------------------------------------" #3
-  MENU_TAG="🎯 CP version (current $current_tag) $(printf '%*s' $((${MAX_LENGTH}-29-${#MENU_TAG})) ' ') --tag" #4
-  MENU_CONNECTOR_TAG="🔗 Connector version (current $current_versions) $(printf '%*s' $((${MAX_LENGTH}-44-${#MENU_CONNECTOR_TAG})) ' ') --connector-tag"
+  MENU_TAG="🎯 CP version (all components) (current $current_tag) $(printf '%*s' $((${MAX_LENGTH}-46-${#MENU_TAG})) ' ') --tag" #4
+  MENU_CONNECT_TAG="🔗 CP version (connect only) (current $current_connect_tag) $(printf '%*s' $((${MAX_LENGTH}-44-${#MENU_CONNECT_TAG})) ' ') --connect-tag"
+  MENU_CONNECTOR_TAG="🔌 Connector version (current $current_versions) $(printf '%*s' $((${MAX_LENGTH}-37-${#MENU_CONNECTOR_TAG})) ' ') --connector-tag"
   MENU_CONNECTOR_ZIP="🤐 Connector zip $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CONNECTOR_ZIP})) ' ') --connector-zip"
   MENU_CONNECTOR_JAR="🤎 Connector jar $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_CONNECTOR_JAR})) ' ') --connector-jar"
 
@@ -218,24 +236,24 @@ then
     else
       MENU_LETS_GO="🚀 Run the example !" #0
     fi
-    options=("$MENU_LETS_GO" "$MENU_OPEN_FILE" "$MENU_OPEN_DOCS" "$MENU_SEPARATOR" "$MENU_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_GO_BACK")
+    options=("$MENU_LETS_GO" "$MENU_OPEN_FILE" "$MENU_OPEN_DOCS" "$MENU_SEPARATOR" "$MENU_TAG" "$MENU_CONNECT_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_GO_BACK")
 
     if [[ $test_file == *"ccloud"* ]] || [ "$PLAYGROUND_ENVIRONMENT" == "ccloud" ]
     then
       if [[ $test_file == *"fully-managed"* ]]
       then
-        unset 'options[4]'
         unset 'options[5]'
         unset 'options[6]'
         unset 'options[7]'
+        unset 'options[8]'
       fi
     fi
 
     if [ $connector_example == 0 ] || [ $docker_compose_file_available == 0 ]
     then
-      unset 'options[5]'
       unset 'options[6]'
       unset 'options[7]'
+      unset 'options[8]'
     fi
 
     if [ $docs_available == 0 ]
@@ -290,6 +308,23 @@ then
         maybe_remove_flag "--tag"
         array_flag_list+=("--tag=$tag")
         export TAG=$tag
+      fi
+    fi
+
+    if [[ $res == *"$MENU_CONNECT_TAG"* ]]
+    then
+      connect_tag=$(playground get-tag-list)
+      if [[ $connect_tag == *"@"* ]]
+      then
+        connect_tag=$(echo "$connect_tag" | cut -d "@" -f 2)
+      fi
+
+      if [ "$current_connect_tag" != "$connect_tag" ]
+      then
+        change_detected=1
+        maybe_remove_flag "--connect-tag"
+        array_flag_list+=("--connect-tag=$connect_tag")
+        export CP_CONNECT_TAG=$connect_tag
       fi
     fi
 
@@ -375,11 +410,11 @@ tag_changed=0
 IFS=' ' flag_list="${array_flag_list[*]}"
 if [[ -n "$tag" ]]
 then
-  current_tag=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+  current_tag=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
 
   if [ "$current_tag" == "" ]
   then
-    logerror "❌ Could not retrieve current cp version (--tag or TAG) being used"
+    logerror "❌ Could not retrieve current cp version (using broker container)"
     exit 1
   fi
   
@@ -387,6 +422,25 @@ then
   then
     logwarn "--tag=$tag is same as current tag, ignoring..."
     array_flag_list=("${array_flag_list[@]/"--tag"}")
+  else
+    tag_changed=1
+  fi
+fi
+
+if [[ -n "$connect_tag" ]]
+then
+  current_connect_tag=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+
+  if [ "$current_connect_tag" == "" ]
+  then
+    logerror "❌ Could not retrieve current cp version (using connect container)"
+    exit 1
+  fi
+
+  if [ "$current_connect_tag" == "$connect_tag" ]
+  then
+    logwarn "--connect-tag=$connect_tag is same as current connect-tag, ignoring..."
+    array_flag_list=("${array_flag_list[@]/"--connect-tag"}")
   else
     tag_changed=1
   fi

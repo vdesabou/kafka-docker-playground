@@ -943,15 +943,17 @@ commands:
 - name: update-version
   group: Run
   help: |-
-    ✨ Update current confluent platform or connector(s) with new version(s)
+    ✨ Update current confluent platform components (all with --tag or only connect with --connect-tag) or connector(s) with new version(s)
   flags:
   - *tag
+  - *connect-tag
   - *connector-tag
   - *connector-zip
   - *connector-jar
   examples:
   - playground update-version (interactive mode)
   - playground update-version --tag 6.2.0 --connector-tag=2.5.12,10.5.7
+  - playground update-version --connect-tag 6.2.0 --connector-tag=2.5.12,10.5.7
 
 - name: open
   group: Run

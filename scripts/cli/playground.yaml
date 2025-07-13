@@ -235,7 +235,9 @@ subcommands:
       - --tag
       argument: TAG
       description: | 
-        🎯 Confluent Platform (CP) version to use
+        🎯 Confluent Platform (CP) version to use. Applies to all components (broker, connect, schema registry, ksqlDB, etc...)
+        
+        It sets TAG environment variable
         
         Must be greater or equal to 5.3.0
         
@@ -245,7 +247,9 @@ subcommands:
       - --connect-tag
       argument: CONNECT_TAG
       description: | 
-        🔗 Kafka Connect version to use (sets CP_CONNECT_TAG)
+        🔗 Confluent Platform (CP) version to use. Applies to connect only.
+        
+        It sets CP_CONNECT_TAG environment variable
         
         Must be greater or equal to 5.3.0
         
@@ -511,14 +515,28 @@ subcommands:
 
   - name: update-version
     description: | 
-        ✨ Update current confluent platform or connector(s) with new version(s)
+        ✨ Update current confluent platform components (all with --tag or only connect with --connect-tag) or connector(s) with new version(s)
     usage: playground update-version [OPTIONS]
     options:
     - names:
       - --tag
       argument: TAG
       description: | 
-        🎯 Confluent Platform (CP) version to use
+        🎯 Confluent Platform (CP) version to use. Applies to all components (broker, connect, schema registry, ksqlDB, etc...)
+        
+        It sets TAG environment variable
+        
+        Must be greater or equal to 5.3.0
+        
+        🎓 Tip: use <tab> completion to trigger fzf completion
+        
+    - names:
+      - --connect-tag
+      argument: CONNECT_TAG
+      description: | 
+        🔗 Confluent Platform (CP) version to use. Applies to connect only.
+        
+        It sets CP_CONNECT_TAG environment variable
         
         Must be greater or equal to 5.3.0
         

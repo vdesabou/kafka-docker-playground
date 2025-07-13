@@ -186,14 +186,14 @@
             "--tag"
           ],
           "argument": "TAG",
-          "description": "🎯 Confluent Platform (CP) version to use\n\nMust be greater or equal to 5.3.0\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+          "description": "🎯 Confluent Platform (CP) version to use. Applies to all components (broker, connect, schema registry, ksqlDB, etc...)\n\nIt sets TAG environment variable\n\nMust be greater or equal to 5.3.0\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
         },
         {
           "names": [
             "--connect-tag"
           ],
           "argument": "CONNECT_TAG",
-          "description": "🔗 Kafka Connect version to use (sets CP_CONNECT_TAG)\n\nMust be greater or equal to 5.3.0\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+          "description": "🔗 Confluent Platform (CP) version to use. Applies to connect only.\n\nIt sets CP_CONNECT_TAG environment variable\n\nMust be greater or equal to 5.3.0\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
         },
         {
           "names": [
@@ -397,7 +397,7 @@
     },
     {
       "name": "update-version",
-      "description": "✨ Update current confluent platform or connector(s) with new version(s)\n",
+      "description": "✨ Update current confluent platform components (all with --tag or only connect with --connect-tag) or connector(s) with new version(s)\n",
       "usage": "playground update-version [OPTIONS]",
       "options": [
         {
@@ -405,7 +405,14 @@
             "--tag"
           ],
           "argument": "TAG",
-          "description": "🎯 Confluent Platform (CP) version to use\n\nMust be greater or equal to 5.3.0\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+          "description": "🎯 Confluent Platform (CP) version to use. Applies to all components (broker, connect, schema registry, ksqlDB, etc...)\n\nIt sets TAG environment variable\n\nMust be greater or equal to 5.3.0\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+        },
+        {
+          "names": [
+            "--connect-tag"
+          ],
+          "argument": "CONNECT_TAG",
+          "description": "🔗 Confluent Platform (CP) version to use. Applies to connect only.\n\nIt sets CP_CONNECT_TAG environment variable\n\nMust be greater or equal to 5.3.0\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
         },
         {
           "names": [
