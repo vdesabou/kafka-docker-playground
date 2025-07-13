@@ -1209,6 +1209,10 @@ then
       then
         tag=$(echo "$tag" | cut -d "@" -f 2)
       fi
+      if [[ $tag == *" "* ]]
+      then
+        tag=$(echo "$tag" | cut -d " " -f 1)
+      fi
       array_flag_list+=("--tag=$tag")
       export TAG=$tag
     fi
@@ -1221,6 +1225,10 @@ then
       if [[ $connect_tag == *"@"* ]]
       then
         connect_tag=$(echo "$connect_tag" | cut -d "@" -f 2)
+      fi
+      if [[ $connect_tag == *" "* ]]
+      then
+        connect_tag=$(echo "$connect_tag" | cut -d " " -f 1)
       fi
       array_flag_list+=("--connect-tag=$connect_tag")
       export CP_CONNECT_TAG=$connect_tag

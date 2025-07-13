@@ -301,6 +301,10 @@ then
       then
         tag=$(echo "$tag" | cut -d "@" -f 2)
       fi
+      if [[ $tag == *" "* ]]
+      then
+        tag=$(echo "$tag" | cut -d " " -f 1)
+      fi
 
       if [ "$current_tag" != "$tag" ]
       then
@@ -317,6 +321,10 @@ then
       if [[ $connect_tag == *"@"* ]]
       then
         connect_tag=$(echo "$connect_tag" | cut -d "@" -f 2)
+      fi
+      if [[ $connect_tag == *" "* ]]
+      then
+        connect_tag=$(echo "$connect_tag" | cut -d " " -f 1)
       fi
 
       if [ "$current_connect_tag" != "$connect_tag" ]
