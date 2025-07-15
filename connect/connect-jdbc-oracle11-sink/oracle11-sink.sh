@@ -4,22 +4,15 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -z "$CONNECTOR_TAG" ]
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "10.7.99"
 then
-     JDBC_CONNECTOR_VERSION=$CONNECTOR_TAG
-else
-     JDBC_CONNECTOR_VERSION=$(docker run ${CP_CONNECT_IMAGE}:${CONNECT_TAG} cat /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/manifest.json | jq -r '.version')
+     logwarn "minimal supported connector version is 10.8.0 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
 fi
-log "JDBC Connector version is $JDBC_CONNECTOR_VERSION"
-if ! version_gt $JDBC_CONNECTOR_VERSION "9.9.9"; then
-     get_3rdparty_file "ojdbc6.jar"
-     PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
-else
-     log "ojdbc jar is shipped with connector (starting with 10.0.0)"
-     PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.no-ojdbc.yml"
-fi
 
 log "Creating JDBC Oracle sink connector"
 playground connector create-or-update --connector oracle-sink  << EOF

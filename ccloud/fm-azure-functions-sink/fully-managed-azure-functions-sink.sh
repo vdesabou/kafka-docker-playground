@@ -4,23 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
-then
-    log "Logging to Azure using environment variables AZ_USER and AZ_PASS"
-    set +e
-    az logout
-    set -e
-    az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
-else
-    log "Logging to Azure using browser"
-    az login
-fi
+login_and_maybe_set_azure_subscription
 
-# when AZURE_SUBSCRIPTION_NAME env var is set, we need to set the correct subscription
-maybe_set_azure_subscription
-
-AZURE_NAME=pg${USER}f${GITHUB_RUN_NUMBER}${TAG}
+AZURE_NAME=pgfm${USER}fm${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
+if [ ${#AZURE_NAME} -gt 24 ]; then
+  AZURE_NAME=${AZURE_NAME:0:24}
+fi
 AZURE_RESOURCE_GROUP=$AZURE_NAME
 AZURE_STORAGE_NAME=$AZURE_NAME
 AZURE_FUNCTIONS_NAME=$AZURE_NAME
@@ -65,21 +55,21 @@ fi
 
 log "Creating local functions project with HTTP trigger"
 # https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-first-azure-function-azure-cli?pivots=programming-language-javascript&tabs=bash%2Cbrowser
-docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node14-core-tools bash -c "func init LocalFunctionProj --javascript && cd LocalFunctionProj && func new --name HttpExample --template \"HTTP trigger\" --authlevel \"anonymous\""
+docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node20-core-tools bash -c "func init LocalFunctionProj --javascript && cd LocalFunctionProj && func new --name HttpExample --template \"HTTP trigger\" --authlevel \"anonymous\""
 
 log "Creating functions app $AZURE_FUNCTIONS_NAME"
-az functionapp create --consumption-plan-location $AZURE_REGION --name $AZURE_FUNCTIONS_NAME --resource-group $AZURE_RESOURCE_GROUP --runtime node --storage-account $AZURE_STORAGE_NAME --runtime-version 20 --functions-version 4 --tags owner_email=$AZ_USER --disable-app-insights true
+az functionapp create --consumption-plan-location $AZURE_REGION --name $AZURE_FUNCTIONS_NAME --resource-group $AZURE_RESOURCE_GROUP --runtime node --storage-account $AZURE_STORAGE_NAME --runtime-version 22 --functions-version 4 --tags owner_email=$AZ_USER --disable-app-insights true
 
 log "Publishing functions app, it will take a while"
 max_attempts="10"
 sleep_interval="60"
 attempt_num=1
 
-until docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node14-core-tools bash -c "az login -u \"$AZ_USER\" -p \"$AZ_PASS\" > /dev/null 2>&1 && cd LocalFunctionProj && func azure functionapp publish \"$AZURE_FUNCTIONS_NAME\""
+until docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node20-core-tools bash -c "az login -u \"$AZ_USER\" -p \"$AZ_PASS\" > /dev/null 2>&1 && cd LocalFunctionProj && func azure functionapp publish \"$AZURE_FUNCTIONS_NAME\""
 do
     if (( attempt_num == max_attempts ))
     then
-        logerror "ERROR: Failed after $attempt_num attempts. Please troubleshoot and run again."
+        logerror "❌ Failed after $attempt_num attempts. Please troubleshoot and run again."
         exit 1
     else
         log "Retrying after $sleep_interval seconds"
@@ -88,16 +78,32 @@ do
     fi
 done
 
+max_attempts="10"
+sleep_interval="30"
+attempt_num=1
 
-output=$(docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node14-core-tools bash -c "az login -u \"$AZ_USER\" -p \"$AZ_PASS\" > /dev/null 2>&1 && cd LocalFunctionProj && func azure functionapp list-functions $AZURE_FUNCTIONS_NAME --show-keys")
-FUNCTIONS_URL=$(echo $output | grep -Eo 'https://[^ >]+'|head -1)
+until [ ! -z "$FUNCTIONS_URL" ]
+do
+    output=$(docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node20-core-tools bash -c "az login -u \"$AZ_USER\" -p \"$AZ_PASS\" > /dev/null 2>&1 && cd LocalFunctionProj && func azure functionapp list-functions $AZURE_FUNCTIONS_NAME --show-keys")
+    FUNCTIONS_URL=$(echo "$output" | grep "Invoke url" | grep -Eo 'https://[^ >]+' | head -1)
 
-if [ -z "$GITHUB_RUN_NUMBER" ]
-then
-  log "Functions URL is $FUNCTIONS_URL"
-fi
+    if [ ! -z "$FUNCTIONS_URL" ]
+    then
+        log "Functions URL is $FUNCTIONS_URL"
+    else
+        if (( attempt_num == max_attempts ))
+        then
+            logerror "❌ Failed to retrieve FUNCTIONS_URL after $attempt_num attempts. Please troubleshoot and run again."
+            exit 1
+        else
+            log "Retrying to get FUNCTIONS_URL after $sleep_interval seconds"
+            ((attempt_num++))
+            sleep $sleep_interval
+        fi
+    fi
+done
 
-bootstrap_ccloud_environment
+bootstrap_ccloud_environment "azure" "$AZURE_REGION"
 
 set +e
 playground topic delete --topic functions-test

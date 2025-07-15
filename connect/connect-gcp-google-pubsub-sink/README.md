@@ -48,16 +48,16 @@ Doing gsutil authentication
 $ gcloud auth activate-service-account --key-file ${GCP_KEYFILE}
 ```
 
-Create a Pub/Sub topic called topic-1
+Create a Pub/Sub topic called $GCP_PUB_SUB_TOPIC
 
 ```bash
-$ gcloud pubsub topics create topic-1
+$ gcloud pubsub topics create $GCP_PUB_SUB_TOPIC
 ```
 
-Create a Pub/Sub subscription called subscription-1
+Create a Pub/Sub subscription called $GCP_PUB_SUB_SUBSCRIPTION
 
 ```bash
-$ gcloud pubsub subscriptions create --topic topic-1 subscription-1
+$ gcloud pubsub subscriptions create --topic $GCP_PUB_SUB_TOPIC $GCP_PUB_SUB_SUBSCRIPTION
 ```
 
 
@@ -71,7 +71,7 @@ $ curl -X PUT \
                "tasks.max" : "1",
                "topics" : "pubsub-topic",
                "cps.project" : "$GCP_PROJECT",
-               "cps.topic" : "topic-1",
+               "cps.topic" : "$GCP_PUB_SUB_TOPIC",
                "gcp.credentials.file.path" : "/tmp/keyfile.json",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",

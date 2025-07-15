@@ -2,7 +2,7 @@
 
 ## Objective
 
-Quickly test [Principal Propagation](https://docs.confluent.io/current/confluent-security-plugins/kafka-rest/principal_propagation.html#principal-propagation).
+Quickly test [Principal Propagation](https://docs.confluent.io/platform/current/kafka-rest/production-deployment/rest-proxy/security.html#kafka-rest-security-propagation).
 
 
 ## How to run
@@ -149,7 +149,7 @@ Security extension configuration
 ```yml
       # Security extension configuration
       # ZooKeeper required to validate trial license
-      KAFKA_REST_ZOOKEEPER_CONNECT: zookeeper:2181
+      # KAFKA_REST_ZOOKEEPER_CONNECT: zookeeper:2181
       # KAFKA_REST_SSL_CLIENT_AUTHENTICATION: "REQUIRED"
       KAFKA_REST_SSL_CLIENT_AUTH: "true" # deprecated, KAFKA_REST_SSL_CLIENT_AUTHENTICATION: "REQUIRED"
       KAFKA_REST_KAFKA_REST_RESOURCE_EXTENSION_CLASS: io.confluent.kafkarest.security.KafkaRestSecurityResourceExtension

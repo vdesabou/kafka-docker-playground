@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 
 check_docker_compose_version
 check_bash_version
-check_playground_version
+check_and_update_playground_version
 bootstrap_ccloud_environment
 
 # generate data file for externalizing secrets
@@ -48,12 +48,12 @@ fi
 
 docker compose -f ../../ccloud/environment/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} build
 docker compose -f ../../ccloud/environment/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} down -v --remove-orphans
-docker compose -f ../../ccloud/environment/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_conduktor_command} up -d --quiet-pull
-log "📝 To see the actual properties file, use cli command playground container get-properties -c <container>"
-command="source ${DIR}/../../scripts/utils.sh && docker compose -f ${DIR}/../../ccloud/environment/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_conduktor_command} up -d --quiet-pull"
+docker compose -f ../../ccloud/environment/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_conduktor_command} ${profile_grafana_command} up -d --quiet-pull
+log "📝 To see the actual properties file, use cli command 'playground container get-properties -c <container>'"
+command="source ${DIR}/../../scripts/utils.sh && docker compose -f ${DIR}/../../ccloud/environment/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_conduktor_command} ${profile_grafana_command} up -d --quiet-pull"
 playground state set run.docker_command "$command"
 playground state set run.environment "ccloud"
-log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command playground container recreate"
+log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command 'playground container recreate'"
 
 
 

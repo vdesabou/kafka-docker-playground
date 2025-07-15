@@ -56,7 +56,7 @@ $ docker exec broker kafka-topics --create --topic testtopic --partitions 1 --re
 Sending message to topic testtopic
 
 ```bash
-$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic << EOF
+$ docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic testtopic << EOF
 This is my message
 EOF
 ```
@@ -82,7 +82,7 @@ sleep 60
 Sending message to topic testtopic
 
 ```bash
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic << EOF
+docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic testtopic << EOF
 This is my message 2
 EOF
 ```
@@ -128,7 +128,7 @@ $ i=0
 while [ $i -le 50 ]
 do
   Sending message $i to topic testtopic
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic << EOF
+docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic testtopic << EOF
 This is my message
 EOF
   sleep 1
@@ -182,7 +182,7 @@ $ i=0
 while [ $i -le 50 ]
 do
   Sending message $i to topic testtopic
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic << EOF
+docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic testtopic << EOF
 This is my message
 EOF
   sleep 1

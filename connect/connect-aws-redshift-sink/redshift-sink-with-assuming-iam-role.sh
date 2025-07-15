@@ -4,29 +4,21 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-export AWS_CREDENTIALS_FILE_NAME=credentials-with-assuming-iam-role
-if [ ! -f $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME ]
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "1.1.99"
 then
-     logerror "ERROR: $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME is not set"
+     logwarn "minimal supported connector version is 1.2.0 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
+export AWS_CREDENTIALS_FILE_NAME=$HOME/.aws/credentials-with-assuming-iam-role
+if [ ! -f $AWS_CREDENTIALS_FILE_NAME ]
+then
+     logerror "❌ $AWS_CREDENTIALS_FILE_NAME is not set"
      exit 1
 fi
 
-if [ -z "$AWS_REGION" ]
-then
-     AWS_REGION=$(aws configure get region | tr '\r' '\n')
-     if [ "$AWS_REGION" == "" ]
-     then
-          logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
-          exit 1
-     fi
-fi
-
-if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
-then
-     export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
-else
-     export CONNECT_CONTAINER_HOME_DIR="/root"
-fi
+handle_aws_credentials
 
 PASSWORD=$(date +%s | cksum | base64 | head -c 32 ; echo)
 PASSWORD="${PASSWORD}1"
@@ -72,7 +64,7 @@ set -e
 
 log "Create AWS Redshift cluster"
 # https://docs.aws.amazon.com/redshift/latest/mgmt/getting-started-cli.html
-aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password "$PASSWORD" --node-type dc2.large --cluster-type single-node --publicly-accessible
+aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password "$PASSWORD" --node-type ra3.large --cluster-type single-node --publicly-accessible --tags Key=cflt_managed_by,Value=user Key=cflt_managed_id,Value="$USER"
 
 function cleanup_cloud_resources {
   set +e
@@ -94,7 +86,7 @@ while [[ ! $(cat /tmp/out.txt) =~ "available" ]]; do
      aws redshift describe-clusters --cluster-identifier $CLUSTER_NAME | jq .Clusters[0].ClusterStatus > /tmp/out.txt 2>&1
      CUR_WAIT=$(( CUR_WAIT+10 ))
      if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-          echo -e "\nERROR: The logs in ${CONTROL_CENTER_CONTAINER} container do not show 'available' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+          echo -e "\nERROR: The logs in ${CONTROL_CENTER_CONTAINER} container do not show 'available' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'playground container logs --open --container <container>'.\n"
           exit 1
      fi
 done

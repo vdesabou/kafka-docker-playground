@@ -378,12 +378,22 @@ cat $tmp_dir/intro > $tmp_dir/tmp_file
 cat $repro_test_file | grep -v "#!/bin/bash" >> $tmp_dir/tmp_file
 mv $tmp_dir/tmp_file $repro_test_file
 
-for file in README.md docker-compose*.yml keyfile.json stop.sh .gitignore sql-datagen
+for file in README.md docker-compose*.yml keyfile.json stop.sh sql-datagen
 do
   if [ -f $file ]
   then
     cd $repro_dir > /dev/null
     ln -sf ../../$dir2/$file .
+    cd - > /dev/null
+  fi
+done
+
+for file in .gitignore
+do
+  if [ -f $file ]
+  then
+    cd $repro_dir > /dev/null
+    cp ../../$dir2/$file .
     cd - > /dev/null
   fi
 done
@@ -462,29 +472,9 @@ then
     #### schema_file_key
     if [[ -n "$schema_file_key" ]]
     then
+      log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
+      playground open --file "$tmp_dir/key_schema" --wait
 
-
-
-      editor=$(playground config get editor)
-      if [ "$editor" != "" ]
-      then
-        log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
-        if [ "$editor" = "code" ]
-        then
-          code --wait $tmp_dir/key_schema
-        else
-          $editor $tmp_dir/key_schema
-        fi
-      else
-        if [[ $(type code 2>&1) =~ "not found" ]]
-        then
-          logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
-          exit 1
-        else
-          log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
-          code --wait $tmp_dir/key_schema
-        fi
-      fi
       case "${producer}" in
         avro-with-key)
           original_namespace=$(cat $tmp_dir/key_schema | jq -r .namespace)
@@ -561,28 +551,9 @@ then
     #### schema_file_value
     if [[ -n "$schema_file_value" ]]
     then
-
-      editor=$(playground config get editor)
-      if [ "$editor" != "" ]
-      then
-        log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
-        if [ "$editor" = "code" ]
-        then
-          code --wait $tmp_dir/value_schema
-        else
-          $editor $tmp_dir/value_schema
-        fi
-      else
-        if [[ $(type code 2>&1) =~ "not found" ]]
-        then
-          logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
-          exit 1
-        else
-          log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
-          code --wait $tmp_dir/value_schema
-        fi
-      fi
-
+      log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
+      playground open --file "$tmp_dir/value_schema" --wait
+      
       case "${producer}" in
         avro|avro-with-key)
           original_namespace=$(cat $tmp_dir/value_schema | jq -r .namespace)
@@ -758,7 +729,7 @@ do
     docker run -i --rm -e KAFKA_CLIENT_TAG=\$KAFKA_CLIENT_TAG -e TAG=\$TAG_BASE -v "\${DIR}/\${component}":/usr/src/mymaven -v "\$HOME/.m2":/root/.m2 -v "\$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "\${DIR}/\${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=\$TAG -Dkafka.client.tag=\$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
     if [ \$? != 0 ]
     then
-        logerror "ERROR: failed to build java component $component"
+        logerror "❌ failed to build java component $component"
         tail -500 /tmp/result.log
         exit 1
     fi
@@ -774,14 +745,14 @@ EOF
 
   kafka_cli_producer_error=0
   kafka_cli_producer_eof=0
-  line_kafka_cli_producer=$(egrep -n "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $repro_test_file | cut -d ":" -f 1 | tail -n1)
+  line_kafka_cli_producer=$(grep -En "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $repro_test_file | cut -d ":" -f 1 | tail -n1)
   if [ $? != 0 ] || [ "$line_kafka_cli_producer" == "" ]
   then
       logwarn "Could not find kafka cli producer!"
       kafka_cli_producer_error=1
   fi
   set +e
-  egrep "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $repro_test_file | grep EOF > /dev/null
+  grep -E "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $repro_test_file | grep EOF > /dev/null
   if [ $? = 0 ]
   then
       kafka_cli_producer_eof=1
@@ -932,7 +903,7 @@ do
     docker run -i --rm -e KAFKA_CLIENT_TAG=\$KAFKA_CLIENT_TAG -e TAG=\$TAG_BASE -v "\${DIR}/\${component}":/usr/src/mymaven -v "\$HOME/.m2":/root/.m2 -v "\$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "\${DIR}/\${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=\$TAG -Dkafka.client.tag=\$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
     if [ \$? != 0 ]
     then
-        logerror "ERROR: failed to build java component $component"
+        logerror "❌ failed to build java component $component"
         tail -500 /tmp/result.log
         exit 1
     fi
@@ -1185,14 +1156,14 @@ for sink_file in "${pipeline_array[@]}"; do
     # need to remove cli which produces and change topic
     kafka_cli_producer_error=0
     kafka_cli_producer_eof=0
-    line_kafka_cli_producer=$(egrep -n "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
+    line_kafka_cli_producer=$(grep -En "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
     if [ $? != 0 ]
     then
         logwarn "Could not find kafka cli producer!"
         kafka_cli_producer_error=1
     fi
     set +e
-    egrep "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | grep EOF > /dev/null
+    grep -E "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | grep EOF > /dev/null
     if [ $? = 0 ]
     then
         kafka_cli_producer_eof=1
@@ -1290,28 +1261,14 @@ then
     if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
     then
         echo "playground run -f $repro_dir/$repro_test_filename"| pbcopy
-        log "📋 command to run generated example has been copied to the clipboard (disable with 'playground config set clipboard false')"
+        log "📋 command to run generated example has been copied to the clipboard (disable with 'playground config clipboard false')"
     fi
 fi
 
 playground state set run.test_file "$repro_dir/$repro_test_filename"
 playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
 
-editor=$(playground config get editor)
-if [ "$editor" != "" ]
-then
-  log "📖 Opening ${repro_test_filename} using configured editor $editor"
-  $editor $repro_dir/$repro_test_filename
-else
-    if [[ $(type code 2>&1) =~ "not found" ]]
-    then
-        logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
-        exit 1
-    else
-        log "📖 Opening ${repro_test_filename} with code (default) - you can change editor by using playground config editor <editor>"
-        code $repro_dir/$repro_test_filename
-    fi
-fi
+playground open --file "$repro_dir/$repro_test_filename"
 
 increment_cli_metric nb_reproduction_models
 log "👷 Number of repro models created so far: $(get_cli_metric nb_reproduction_models)"
@@ -1322,4 +1279,22 @@ log "🛠️ Number of repro models available: $(get_cli_metric nb_existing_repr
 
 playground generate-fzf-find-files &
 playground open-docs --only-show-url
-playground run -f $repro_dir/$repro_test_filename --force-interactive-repro $flag_list
+
+if [[ "$repro_test_filename" == *"perf"* ]]
+then
+  if [[ $test_file == *"connect-debezium-sqlserver"* ]] || [[ $test_file == *"connect-debezium-mysql"* ]] || [[ $test_file == *"connect-debezium-postgresql"* ]] || [[ $test_file == *"connect-debezium-oracle"* ]] || [[ $test_file == *"connect-cdc-oracle"* ]] || [[ $test_file == *"connect-jdbc-sqlserver"* ]] || [[ $test_file == *"connect-jdbc-mysql"* ]] || [[ $test_file == *"connect-jdbc-postgresql"* ]] || [[ $test_file == *"connect-jdbc-oracle"* ]] || [[ $test_file == *"connect-cdc-xstream"* ]]
+  then
+    log "🌪️ automatically enabling SQL Datagen injection as repro name contains <perf>"
+    playground run -f $repro_dir/$repro_test_filename --enable-sql-datagen --force-interactive-repro $flag_list
+  else
+    if [[ $test_file != *"fully-managed"* ]]
+    then
+      log "📊 automatically enabling Grafana as repro name contains <perf>"
+      playground run -f $repro_dir/$repro_test_filename --enable-jmx-grafana --force-interactive-repro $flag_list
+    else 
+      playground run -f $repro_dir/$repro_test_filename --force-interactive-repro $flag_list
+    fi
+  fi
+else
+  playground run -f $repro_dir/$repro_test_filename --force-interactive-repro $flag_list
+fi

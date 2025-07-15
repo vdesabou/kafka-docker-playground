@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.4.99"; then
-    logwarn "WARN: JSON Schema is available since CP 5.5 only"
+    logwarn "JSON Schema is available since CP 5.5 only"
     exit 111
 fi
 
@@ -16,7 +16,7 @@ do
     docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${PWD}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "${PWD}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
     if [ $? != 0 ]
     then
-        logerror "ERROR: failed to build java component $component"
+        logerror "❌ failed to build java component $component"
         tail -500 /tmp/result.log
         exit 1
     fi
@@ -33,7 +33,7 @@ log "Verify we have received the json-schema data in customer-json-schema topic"
 playground topic consume --topic customer-json-schema --min-expected-messages 5 --timeout 60
 
 log "Produce json-schema data using kafka-json-schema-console-producer"
-seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic json-schema-topic --property value.schema='{"type":"object","properties":{"f1":{"type":"string"}}}'
+seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-json-schema-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic json-schema-topic --property value.schema='{"type":"object","properties":{"f1":{"type":"string"}}}'
 
 log "Verify we have received the json-schema data in json-schema-topic topic"
 playground topic consume --topic json-schema-topic --min-expected-messages 5 --timeout 60

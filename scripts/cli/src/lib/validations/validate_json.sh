@@ -28,6 +28,6 @@ validate_json() {
               bat $json_file --highlight-line $error_line
           fi
       fi
-      exit 1
+      return
   fi
 }

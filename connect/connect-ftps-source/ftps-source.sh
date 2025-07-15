@@ -4,14 +4,21 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-cd ${DIR}/security
-log "🔐 Generate keys and certificates used for SSL"
-docker run -u0 --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "/tmp/certs-create.sh > /dev/null 2>&1 && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
-cd ${DIR}
-
-if [ ! -z "$GITHUB_RUN_NUMBER" ]
+if version_gt $TAG_BASE "7.9.99"
 then
-     # running with github actions
+     logwarn "preview connectors are no longer supported with CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
+cd ../../connect/connect-ftps-source/security
+playground tools certs-create --output-folder "$PWD" --container ftps-server
+docker run --quiet --rm -v $PWD:/tmp alpine/openssl req -x509 -nodes -days 365 -newkey rsa:1024 -keyout /tmp/vsftpd.pem -out /tmp/vsftpd.pem  -config /tmp/cert_config -reqexts 'my server exts'
+cd -
+
+if [[ "$(uname)" != "Darwin" ]]
+then
+     # Linux
      sudo chown root ${DIR}/config/vsftpd.conf
      sudo chown root ${DIR}/security/vsftpd.pem
 fi

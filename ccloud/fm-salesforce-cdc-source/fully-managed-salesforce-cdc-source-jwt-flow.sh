@@ -30,12 +30,6 @@ then
      exit 1
 fi
 
-if [ -z "$SALESFORCE_CONSUMER_PASSWORD_WITH_JWT" ]
-then
-     logerror "SALESFORCE_CONSUMER_PASSWORD_WITH_JWT is not set. Export it as environment variable or pass it as argument. Check README !"
-     exit 1
-fi
-
 if [ -z "$SALESFORCE_SECURITY_TOKEN" ]
 then
      logerror "SALESFORCE_SECURITY_TOKEN is not set. Export it as environment variable or pass it as argument"
@@ -50,7 +44,7 @@ fi
 if [ ! -f ${PWD}/salesforce-confluent.keystore.jks ]
 then
      # not running with github actions
-     logerror "ERROR: ${PWD}/salesforce-confluent.keystore.jks is missing. Check README !"
+     logerror "❌ ${PWD}/salesforce-confluent.keystore.jks is missing. Check README !"
      exit 1
 fi
 

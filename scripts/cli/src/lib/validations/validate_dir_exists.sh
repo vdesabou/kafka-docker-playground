@@ -1,4 +1,6 @@
 ## [@bashly-upgrade validations]
 validate_dir_exists() {
-  [[ -d "$1" ]] || logerror "<$1> must be an existing directory"
+  if [[ ! -d "$1" ]]; then
+    logerror "must be an existing directory"
+  fi
 }

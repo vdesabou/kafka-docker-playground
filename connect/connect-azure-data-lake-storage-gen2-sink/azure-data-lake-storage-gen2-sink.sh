@@ -4,23 +4,20 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "1.5.99"
 then
-    log "Logging to Azure using environment variables AZ_USER and AZ_PASS"
-    set +e
-    az logout
-    set -e
-    az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
-else
-    log "Logging to Azure using browser"
-    az login
+     logwarn "minimal supported connector version is 1.6.0 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
 fi
 
-# when AZURE_SUBSCRIPTION_NAME env var is set, we need to set the correct subscription
-maybe_set_azure_subscription
+login_and_maybe_set_azure_subscription
 
 AZURE_NAME=pg${USER}dl${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
+if [ ${#AZURE_NAME} -gt 24 ]; then
+  AZURE_NAME=${AZURE_NAME:0:24}
+fi
 AZURE_RESOURCE_GROUP=$AZURE_NAME
 AZURE_DATALAKE_ACCOUNT_NAME=$AZURE_NAME
 AZURE_AD_APP_NAME=pg${USER}
@@ -55,6 +52,16 @@ AZURE_RESOURCE_GROUP_ID=$(az group show --name $AZURE_RESOURCE_GROUP | jq -r '.i
 set +e
 log "Registering active directory App $AZURE_AD_APP_NAME, it might fail if already exist"
 AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --is-fallback-public-client false --sign-in-audience AzureADandPersonalMicrosoftAccount --query appId -o tsv)
+if [ $? != 0 ]
+then
+    log "Failed to create Azure AD App. Attempting to delete existing app and recreate."
+    EXISTING_APP_ID=$(az ad app list --display-name "$AZURE_AD_APP_NAME" --query "[0].appId" -o tsv)
+    if [ ! -z "$EXISTING_APP_ID" ]
+    then
+        az ad app delete --id "$EXISTING_APP_ID"
+        AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --is-fallback-public-client false --sign-in-audience AzureADandPersonalMicrosoftAccount --query appId -o tsv)
+    fi
+fi
 AZURE_DATALAKE_CLIENT_PASSWORD=$(az ad app credential reset --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.password')
 set -e
 
@@ -98,6 +105,9 @@ sleep 20
 
 log "Assigning Storage Blob Data Owner role to Service Principal $SERVICE_PRINCIPAL_ID"
 az role assignment create --assignee $SERVICE_PRINCIPAL_ID --role "Storage Blob Data Owner" --scope $AZURE_RESOURCE_GROUP_ID
+
+# Ensure the role assignment has been applied
+sleep 30
 
 # generate data file for externalizing secrets
 sed -e "s|:AZURE_DATALAKE_CLIENT_ID:|$AZURE_DATALAKE_CLIENT_ID|g" \

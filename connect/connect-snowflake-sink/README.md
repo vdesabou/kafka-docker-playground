@@ -12,23 +12,11 @@ Quickly test [Snowflake Sink](https://docs.snowflake.com/en/user-guide/kafka-con
 
 Go to [Snowflake](https://www.snowflake.com) and register an account. You'll receive an email to setup your account and access to a 30 day trial instance.
 
-To get the `SNOWFLAKE_ACCOUNT_NAME`, go there and click on url:
+To get the `SNOWFLAKE_ACCOUNT_NAME`, get the *Account Locator* from:
 
-![ui](ui.jpg)
+![ui](ui.png)
 
-This will give you an url like:
-
-```
-https://<SNOWFLAKE_ACCOUNT_NAME>.snowflakecomputing.com
-```
-
-Example:
-
-```
-https://of77992.eu-west-2.aws.snowflakecomputing.com
-```
-
-`SNOWFLAKE_ACCOUNT_NAME` should be set with `of77992.eu-west-2.aws`
+`SNOWFLAKE_ACCOUNT_NAME` should be set with `<account_locator>.<region_id>.<cloud_provider>` (for example `XXXXX.eu-west-3.aws`)
 
 ## How to run
 
@@ -66,6 +54,7 @@ GRANT USAGE ON SCHEMA $PLAYGROUND_DB.PUBLIC TO ROLE ACCOUNTADMIN;
 GRANT CREATE TABLE ON SCHEMA $PLAYGROUND_DB.PUBLIC TO ROLE $PLAYGROUND_CONNECTOR_ROLE;
 GRANT CREATE STAGE ON SCHEMA $PLAYGROUND_DB.PUBLIC TO ROLE $PLAYGROUND_CONNECTOR_ROLE;
 GRANT CREATE PIPE ON SCHEMA $PLAYGROUND_DB.PUBLIC TO ROLE $PLAYGROUND_CONNECTOR_ROLE;
+GRANT ROLE $PLAYGROUND_CONNECTOR_ROLE TO ROLE ACCOUNTADMIN;
 EOF
 ```
 
@@ -105,17 +94,12 @@ CREATE USER $PLAYGROUND_USER
 USE ROLE SECURITYADMIN;
 GRANT ROLE $PLAYGROUND_CONNECTOR_ROLE TO USER $PLAYGROUND_USER;
 EOF
-
-docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
-USE ROLE SYSADMIN;
-GRANT ROLE $PLAYGROUND_CONNECTOR_ROLE TO ROLE ACCOUNTADMIN;
-EOF
 ```
 
 Sending messages to topic `test_table`
 
 ```bash
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_table --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},
+docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_table --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},
 {"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' << EOF
 {"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
 {"u_name": "tape", "u_price": 0.99, "u_quantity": 10}

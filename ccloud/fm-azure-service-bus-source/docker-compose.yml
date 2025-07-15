@@ -5,8 +5,8 @@ services:
     build:
       context: ../../ccloud/fm-azure-service-bus-source/QueuesGettingStarted/
       args:
-        TAG: ${TAG}
-        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
+        CP_CONNECT_TAG: ${CP_CONNECT_TAG}
+        CP_CONNECT_IMAGE: ${CP_CONNECT_IMAGE}
         KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
     hostname: simple-send
     container_name: simple-send

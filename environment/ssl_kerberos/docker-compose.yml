@@ -20,7 +20,7 @@ services:
       context: ../../environment/ssl_kerberos/client
       args:
         CP_CONNECT_IMAGE: ${CP_CONNECT_IMAGE}
-        TAG: ${TAG}
+        CP_CONNECT_TAG: ${CP_CONNECT_TAG}
     container_name: client
     hostname: client.kerberos-demo.local
     depends_on:
@@ -54,7 +54,6 @@ services:
   broker:
     hostname: broker.kerberos-demo.local
     depends_on:
-      - zookeeper
       - kdc
     # Required to wait for the keytab to get generated
     restart: on-failure
@@ -65,7 +64,7 @@ services:
       - ../../environment/ssl_kerberos/security:/etc/kafka/secrets
     environment:
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL${CONTROLLER_SECURITY_PROTOCOL_MAP}
       KAFKA_LISTENERS: SASL_SSL://:9092
       KAFKA_ADVERTISED_LISTENERS: SASL_SSL://broker.kerberos-demo.local:9092
       # Kerberos / GSSAPI Authentication mechanism
@@ -108,7 +107,6 @@ services:
   broker2:
     hostname: broker2.kerberos-demo.local
     depends_on:
-      - zookeeper
       - kdc
     # Required to wait for the keytab to get generated
     restart: on-failure
@@ -119,7 +117,7 @@ services:
       - ../../environment/ssl_kerberos/security:/etc/kafka/secrets
     environment:
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL${CONTROLLER_SECURITY_PROTOCOL_MAP}
       KAFKA_LISTENERS: SASL_SSL://:9092
       KAFKA_ADVERTISED_LISTENERS: SASL_SSL://broker2.kerberos-demo.local:9092
       # Kerberos / GSSAPI Authentication mechanism
@@ -162,7 +160,6 @@ services:
   broker3:
     hostname: broker3.kerberos-demo.local
     depends_on:
-      - zookeeper
       - kdc
     # Required to wait for the keytab to get generated
     restart: on-failure
@@ -173,7 +170,7 @@ services:
       - ../../environment/ssl_kerberos/security:/etc/kafka/secrets
     environment:
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL${CONTROLLER_SECURITY_PROTOCOL_MAP}
       KAFKA_LISTENERS: SASL_SSL://:9092
       KAFKA_ADVERTISED_LISTENERS: SASL_SSL://broker3.kerberos-demo.local:9092
       # Kerberos / GSSAPI Authentication mechanism
@@ -240,7 +237,7 @@ services:
       # Confluent Monitoring Interceptors for Control Center Streams Monitoring
       # producer
       CONNECT_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
-      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: $CONNECT_PRODUCER_INTERCEPTOR_CLASSES
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_SSL
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
         useKeyTab=true \
@@ -256,7 +253,7 @@ services:
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SSL_KEYSTORE_PASSWORD: confluent
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SSL_KEY_PASSWORD: confluent
       # consumer
-      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: $CONNECT_CONSUMER_INTERCEPTOR_CLASSES
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_SSL
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
         useKeyTab=true \
@@ -328,7 +325,7 @@ services:
       # Confluent Monitoring Interceptors for Control Center Streams Monitoring
       # producer
       CONNECT_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
-      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: $CONNECT_PRODUCER_INTERCEPTOR_CLASSES
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_SSL
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
         useKeyTab=true \
@@ -344,7 +341,7 @@ services:
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SSL_KEYSTORE_PASSWORD: confluent
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SSL_KEY_PASSWORD: confluent
       # consumer
-      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: $CONNECT_CONSUMER_INTERCEPTOR_CLASSES
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_SSL
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
         useKeyTab=true \
@@ -416,7 +413,7 @@ services:
       # Confluent Monitoring Interceptors for Control Center Streams Monitoring
       # producer
       CONNECT_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
-      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: $CONNECT_PRODUCER_INTERCEPTOR_CLASSES
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_SSL
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
         useKeyTab=true \
@@ -432,7 +429,7 @@ services:
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SSL_KEYSTORE_PASSWORD: confluent
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SSL_KEY_PASSWORD: confluent
       # consumer
-      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: $CONNECT_CONSUMER_INTERCEPTOR_CLASSES
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_SSL
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
         useKeyTab=true \
@@ -563,21 +560,45 @@ services:
       CONTROL_CENTER_KAFKA_MYCLUSTER_SSL_KEYSTORE_PASSWORD: confluent
       CONTROL_CENTER_KAFKA_MYCLUSTER_SSL_KEY_PASSWORD: confluent
 
-    # https://github.com/conduktor/conduktor-platform/blob/main/doc/Configuration.md
-  conduktor:
+  conduktor-postgresql:
+    image: postgres:14
+    hostname: conduktor-postgresql
+    container_name: conduktor-postgresql
+    environment:
+      POSTGRES_DB: "conduktor"
+      POSTGRES_USER: "conduktor"
+      POSTGRES_PASSWORD: "change_me"
+    profiles:
+      - "conduktor"
+
+  conduktor-console:
+    image: conduktor/conduktor-console:1.30.0
     hostname: conduktor.kerberos-demo.local
+    container_name: conduktor-console
+    depends_on:
+      - conduktor-postgresql
+    ports:
+      - "8080:8080"
     volumes:
       - ../../environment/ssl_kerberos/conduktor/platform-config.yaml:/tmp/platform-config.yaml
       - secret:/var/lib/secret
-      - ../../environment/ssl_kerberos/kdc/krb5.conf:/etc/kdc/krb5.conf
+      - ../../environment/ssl_kerberos/kdc/krb5.conf:/etc/krb5.conf
       - ../../environment/ssl_kerberos/security:/etc/kafka/secrets
-# FIXTHIS: Caused by: org.apache.kafka.common.KafkaException: javax.security.auth.login.LoginException: Cannot locate KDC
-#         at org.apache.kafka.common.network.SaslChannelBuilder.configure(SaslChannelBuilder.java:172)
-#         at org.apache.kafka.common.network.ChannelBuilders.create(ChannelBuilders.java:157)
-#         at org.apache.kafka.common.network.ChannelBuilders.clientChannelBuilder(ChannelBuilders.java:73)
-#         at org.apache.kafka.clients.ClientUtils.createChannelBuilder(ClientUtils.java:105)
-#         at org.apache.kafka.clients.consumer.KafkaConsumer.<init>(KafkaConsumer.java:743)
-#         ... 25 common frames omitted
+    environment:
+      CDK_IN_CONF_FILE: /tmp/platform-config.yaml
+      KRB5_CONFIG: /etc/krb5.conf
+    profiles:
+      - "conduktor"
+
+  conduktor-monitoring:
+    image: conduktor/conduktor-console-cortex:1.30.0
+    hostname: conduktor-monitoring
+    container_name: conduktor-monitoring
+    environment:
+      # Connection to the Console container
+      CDK_CONSOLE-URL: "http://conduktor-console:8080"
+    profiles:
+      - "conduktor"
 
 volumes:
   secret: {}

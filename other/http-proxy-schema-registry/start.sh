@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.3.99"; then
-    logwarn "WARN: proxy options are available since CP 5.4 only"
+    logwarn "proxy options are available since CP 5.4 only"
     exit 111
 fi
 
@@ -16,7 +16,7 @@ do
     docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${PWD}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "${PWD}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
     if [ $? != 0 ]
     then
-        logerror "ERROR: failed to build java component $component"
+        logerror "❌ failed to build java component $component"
         tail -500 /tmp/result.log
         exit 1
     fi
@@ -31,10 +31,10 @@ log "Blocking schema-registry $IP from connect to make sure proxy is used"
 docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
 
 log "producing using --property proxy.host=nginx-proxy -property proxy.port=8888"
-seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property proxy.host=nginx-proxy -property proxy.port=8888 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property proxy.host=nginx-proxy -property proxy.port=8888 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 log "producing using --property schema.registry.proxy.host=nginx-proxy -property schema.registry.proxy.port=8888"
-seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property schema.registry.proxy.host=nginx-proxy -property schema.registry.proxy.port=8888 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property schema.registry.proxy.host=nginx-proxy -property schema.registry.proxy.port=8888 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 log "Verify data was sent to broker using --property proxy.host=nginx-proxy -property proxy.port=8888"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property proxy.host=nginx-proxy -property proxy.port=8888 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --from-beginning --max-messages 20

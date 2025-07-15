@@ -3,6 +3,14 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
+
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "1.2.6"
+then
+     logwarn "minimal supported connector version is 1.2.7 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 if [ -z "$GCP_PROJECT" ]
 then
      logerror "GCP_PROJECT is not set. Export it as environment variable or pass it as argument"
@@ -13,7 +21,7 @@ cd ../../connect/connect-gcp-firebase-source
 GCP_KEYFILE="${PWD}/keyfile.json"
 if [ ! -f ${GCP_KEYFILE} ] && [ -z "$GCP_KEYFILE_CONTENT" ]
 then
-     logerror "ERROR: either the file ${GCP_KEYFILE} is not present or environment variable GCP_KEYFILE_CONTENT is not set!"
+     logerror "❌ either the file ${GCP_KEYFILE} is not present or environment variable GCP_KEYFILE_CONTENT is not set!"
      exit 1
 else 
     if [ -f ${GCP_KEYFILE} ]
@@ -39,16 +47,16 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 log "Creating GCP Firebase Source connector"
 playground connector create-or-update --connector firebase-source  << EOF
 {
-     "connector.class" : "io.confluent.connect.firebase.FirebaseSourceConnector",
-     "tasks.max" : "1",
-     "gcp.firebase.credentials.path": "/tmp/keyfile.json",
-     "gcp.firebase.database.reference": "https://$GCP_PROJECT.firebaseio.com/musicBlog",
-     "gcp.firebase.snapshot":"true",
-     "confluent.topic.bootstrap.servers": "broker:9092",
-     "confluent.topic.replication.factor": "1",
-     "errors.tolerance": "all",
-     "errors.log.enable": "true",
-     "errors.log.include.messages": "true"
+    "connector.class" : "io.confluent.connect.firebase.FirebaseSourceConnector",
+    "tasks.max" : "1",
+    "gcp.firebase.credentials.path": "/tmp/keyfile.json",
+    "gcp.firebase.database.reference": "https://$GCP_PROJECT.firebaseio.com/musicBlog",
+    "gcp.firebase.snapshot":"true",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1",
+    "errors.tolerance": "all",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
 }
 EOF
 

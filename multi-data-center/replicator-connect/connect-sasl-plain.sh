@@ -7,10 +7,10 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/mdc-sasl-plain/start.sh "${PWD}/docker-compose.mdc-sasl-plain.yml"
 
 log "Sending sales in Europe cluster"
-seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe kafka-console-producer --broker-list localhost:9092 --topic sales_EUROPE --producer.config /etc/kafka/client.properties
+seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe kafka-console-producer --bootstrap-server localhost:9092 --topic sales_EUROPE --producer.config /etc/kafka/client.properties
 
 log "Sending sales in US cluster"
-seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-us kafka-console-producer --broker-list localhost:9092 --topic sales_US --producer.config /etc/kafka/client.properties
+seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-us kafka-console-producer --bootstrap-server localhost:9092 --topic sales_US --producer.config /etc/kafka/client.properties
 
 log "Consolidating all sales in the US"
 
@@ -72,8 +72,8 @@ curl -X PUT \
 sleep 120
 
 log "Verify we have received the data in all the sales_ topics in EUROPE"
-docker container exec broker-europe kafka-console-consumer --bootstrap-server localhost:9092 --whitelist "sales_.*" --from-beginning --max-messages 20 --property metadata.max.age.ms 30000 --consumer.config /etc/kafka/client.properties
+docker container exec broker-europe kafka-console-consumer --bootstrap-server localhost:9092 --include "sales_.*" --from-beginning --max-messages 20 --property metadata.max.age.ms 30000 --consumer.config /etc/kafka/client.properties
 
 log "Verify we have received the data in all the sales_ topics in the US"
-docker container exec broker-us kafka-console-consumer --bootstrap-server localhost:9092 --whitelist "sales_.*" --from-beginning --max-messages 20 --property metadata.max.age.ms 30000 --consumer.config /etc/kafka/client.properties
+docker container exec broker-us kafka-console-consumer --bootstrap-server localhost:9092 --include "sales_.*" --from-beginning --max-messages 20 --property metadata.max.age.ms 30000 --consumer.config /etc/kafka/client.properties
 

@@ -15,7 +15,7 @@ log "Checking the schema existence in the schema registry"
 docker exec -i connect curl -s GET http://schema-registry:8081/subjects/orders-value/versions/1
 
 log "Sending messages to topic orders"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema.id=1 << EOF
+docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema.id=1 << EOF
 {"id": 111, "product": "foo1", "quantity": 101, "description": {"string":"my-first-command"}}
 {"id": 222, "product": "foo2", "quantity": 102, "description": null}
 EOF
@@ -84,7 +84,7 @@ log "Produce records to alltypes topic"
 # Configure the Avro serializer to use your Avro union for serialization, and not the event type, by configuring the following properties in your producer application:
 # auto.register.schemas=false
 # use.latest.version=true
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic alltypes --property value.schema.id=4 --property auto.register=false --property use.latest.version=true << EOF
+docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic alltypes --property value.schema.id=4 --property auto.register=false --property use.latest.version=true << EOF
 { "io.confluent.examples.avro.Product": { "product_id": 1, "product_name" : "rice", "product_price" : 100.00 } }
 { "io.confluent.examples.avro.Customer": { "customer_id": 100, "customer_name": "acme", "customer_email": "acme@google.com", "customer_address": "1 Main St" } }
 EOF

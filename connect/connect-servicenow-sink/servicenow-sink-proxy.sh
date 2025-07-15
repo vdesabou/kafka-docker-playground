@@ -4,27 +4,12 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-
-
-function wait_for_end_of_hibernation () {
-     MAX_WAIT=600
-     CUR_WAIT=0
-     set +e
-     log "⌛ Waiting up to $MAX_WAIT seconds for end of hibernation to happen (it can take several minutes)"
-     curl -X POST "${SERVICENOW_URL}/api/now/table/incident" --user admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{"short_description": "This is test"}' > /tmp/out.txt 2>&1
-     while [[ $(cat /tmp/out.txt) =~ "Sign in to the site to wake your instance" ]]
-     do
-          sleep 10
-          curl -X POST "${SERVICENOW_URL}/api/now/table/incident" --user admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{"short_description": "This is test"}' > /tmp/out.txt 2>&1
-          CUR_WAIT=$(( CUR_WAIT+10 ))
-          if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-               echo -e "\nERROR: The logs still show 'Sign in to the site to wake your instance' after $MAX_WAIT seconds.\n"
-               exit 1
-          fi
-     done
-     log "The instance is ready !"
-     set -e
-}
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "2.5.5"
+then
+     logwarn "minimal supported connector version is 2.5.6 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
 
 SERVICENOW_URL=${SERVICENOW_URL:-$1}
 SERVICENOW_PASSWORD=${SERVICENOW_PASSWORD:-$2}
@@ -128,4 +113,4 @@ docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICE
     -H 'Content-Type: application/json' \
     -H 'cache-control: no-cache'" | jq . > /tmp/result.log  2>&1
 cat /tmp/result.log
-grep "u_name" /tmp/result.log
+grep -i "u_name" /tmp/result.log

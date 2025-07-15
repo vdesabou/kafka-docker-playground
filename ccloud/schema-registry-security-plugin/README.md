@@ -24,7 +24,7 @@ Confluent Schema Registry Security Plugin is configured with `JETTY_AUTH`
 
 ```yml
   schema-registry:
-    image: confluentinc/cp-schema-registry:${TAG}
+    image: ${CP_SCHEMA_REGISTRY_IMAGE}:${TAG}
     hostname: schema-registry
     container_name: schema-registry
     ports:

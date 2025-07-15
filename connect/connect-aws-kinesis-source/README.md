@@ -49,7 +49,7 @@ $ just use <playground run> command and search for kinesis-source-with-assuming-
 Create a Kinesis stream `kafka_docker_playground` in $AWS_REGION region:
 
 ```
-$ aws kinesis create-stream --stream-name $KINESIS_STREAM_NAME --shard-count 1 --region $AWS_REGION
+$ aws kinesis create-stream --stream-name $KINESIS_STREAM_NAME --shard-count 1 --region $AWS_REGION --tags "cflt_managed_by=user,cflt_managed_id=$USER"
 ```
 
 Insert records in Kinesis stream:

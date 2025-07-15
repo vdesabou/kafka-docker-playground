@@ -14,7 +14,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 log "Create a topic named play-events-json"
 docker exec -i connect kafka-topics --create --bootstrap-server broker:9092 --topic play-events-json --partitions 1
 log "Produce records to play-events-json"
-docker exec -i connect kafka-console-producer --broker-list broker:9092 --topic play-events-json << EOF
+docker exec -i connect kafka-console-producer --bootstrap-server broker:9092 --topic play-events-json << EOF
 {"id": 111, "product": "foo1", "quantity": 101}
 {"id": 222, "product": "foo2", "quantity": 102}
 EOF
@@ -33,7 +33,7 @@ docker exec -i connect kafka-topics --create --bootstrap-server broker:9092 --to
 log "Register the Avro Schema"
 docker exec -i connect curl -s -H "Content-Type: application/vnd.schemaregistry.v1+json" -X POST http://schema-registry:8081/subjects/play-events-avro-value/versions --data '{"schema":"{\"type\":\"record\",\"name\":\"myrecord\",\"fields\":[{\"name\":\"id\",\"type\":\"int\"},{\"name\":\"product\",\"type\":\"string\"},{\"name\":\"quantity\",\"type\":\"int\"}]}"}'
 log "Produce records to play-events-avro"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic play-events-avro --property value.schema.id=1 << EOF
+docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic play-events-avro --property value.schema.id=1 << EOF
 {"id": 111, "product": "foo1", "quantity": 101}
 {"id": 222, "product": "foo2", "quantity": 102}
 EOF

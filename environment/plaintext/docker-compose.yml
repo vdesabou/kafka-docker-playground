@@ -2,10 +2,12 @@
 services:
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
     hostname: zookeeper
     container_name: zookeeper
     restart: always
+    profiles:
+    - zookeeper
     volumes:
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
     ports:
@@ -21,7 +23,7 @@ services:
       PYROSCOPE_APPLICATION_NAME: "zookeeper"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
   broker:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker
     container_name: broker
     restart: always
@@ -41,7 +43,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
       # Confluent Metrics Reporter for Control Center Cluster Monitoring
-      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_METRIC_REPORTERS: $KAFKA_METRIC_REPORTERS
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker:9092
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_ENABLE: 'true'
@@ -51,6 +53,7 @@ services:
       KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_CLUSTER_LINK_METADATA_TOPIC_REPLICATION_FACTOR: 1
       # # For Confluent Telemetry Reporter (proactive support)
       # KAFKA_CONFLUENT_TELEMETRY_ENABLED: 'true'
       # KAFKA_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
@@ -58,11 +61,28 @@ services:
       EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
       PYROSCOPE_APPLICATION_NAME: "broker"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
+
+      # Control Center 2.0
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_TYPE: "http"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_ENABLED: "true"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_METRICS_INCLUDE: "io.confluent.kafka.server.request.(?!.*delta).*|io.confluent.kafka.server.server.broker.state|io.confluent.kafka.server.replica.manager.leader.count|io.confluent.kafka.server.request.queue.size|io.confluent.kafka.server.broker.topic.failed.produce.requests.rate.1.min|io.confluent.kafka.server.tier.archiver.total.lag|io.confluent.kafka.server.request.total.time.ms.p99|io.confluent.kafka.server.broker.topic.failed.fetch.requests.rate.1.min|io.confluent.kafka.server.broker.topic.total.fetch.requests.rate.1.min|io.confluent.kafka.server.partition.caught.up.replicas.count|io.confluent.kafka.server.partition.observer.replicas.count|io.confluent.kafka.server.tier.tasks.num.partitions.in.error|io.confluent.kafka.server.broker.topic.bytes.out.rate.1.min|io.confluent.kafka.server.request.total.time.ms.p95|io.confluent.kafka.server.controller.active.controller.count|io.confluent.kafka.server.session.expire.listener.zookeeper.disconnects.total|io.confluent.kafka.server.request.total.time.ms.p999|io.confluent.kafka.server.controller.active.broker.count|io.confluent.kafka.server.request.handler.pool.request.handler.avg.idle.percent.rate.1.min|io.confluent.kafka.server.session.expire.listener.zookeeper.disconnects.rate.1.min|io.confluent.kafka.server.controller.unclean.leader.elections.rate.1.min|io.confluent.kafka.server.replica.manager.partition.count|io.confluent.kafka.server.controller.unclean.leader.elections.total|io.confluent.kafka.server.partition.replicas.count|io.confluent.kafka.server.broker.topic.total.produce.requests.rate.1.min|io.confluent.kafka.server.controller.offline.partitions.count|io.confluent.kafka.server.socket.server.network.processor.avg.idle.percent|io.confluent.kafka.server.partition.under.replicated|io.confluent.kafka.server.log.log.start.offset|io.confluent.kafka.server.log.tier.size|io.confluent.kafka.server.log.size|io.confluent.kafka.server.tier.fetcher.bytes.fetched.total|io.confluent.kafka.server.request.total.time.ms.p50|io.confluent.kafka.server.tenant.consumer.lag.offsets|io.confluent.kafka.server.session.expire.listener.zookeeper.expires.rate.1.min|io.confluent.kafka.server.log.log.end.offset|io.confluent.kafka.server.broker.topic.bytes.in.rate.1.min|io.confluent.kafka.server.partition.under.min.isr|io.confluent.kafka.server.partition.in.sync.replicas.count|io.confluent.telemetry.http.exporter.batches.dropped|io.confluent.telemetry.http.exporter.items.total|io.confluent.telemetry.http.exporter.items.succeeded|io.confluent.telemetry.http.exporter.send.time.total.millis|io.confluent.kafka.server.controller.leader.election.rate.(?!.*delta).*|io.confluent.telemetry.http.exporter.batches.failed"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_CLIENT_BASE_URL: "http://prometheus-c3-v2:9090/api/v1/otlp"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_CLIENT_COMPRESSION: "gzip"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_API_KEY: "dummy"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_API_SECRET: "dummy"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_BUFFER_PENDING_BATCHES_MAX: "80"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_BUFFER_BATCH_ITEMS_MAX: "4000"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_BUFFER_INFLIGHT_SUBMISSIONS_MAX: "10"
+      KAFKA_CONFLUENT_TELEMETRY_METRICS_COLLECTOR_INTERVAL_MS: "60000"
+      KAFKA_CONFLUENT_TELEMETRY_REMOTECONFIG_CONFLUENT_ENABLED: "false"
+      KAFKA_CONFLUENT_CONSUMER_LAG_EMITTER_ENABLED: "true"
+      # https://support.confluent.io/hc/en-us/articles/38120641503380--Action-required-Confluent-Platform-7-9-x-Important-Note-on-Group-Coordinator-in-Confluent-Platform-7-9-x
+      KAFKA_GROUP_COORDINATOR_NEW_ENABLE: "false"
     volumes:
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
 
   broker2:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker2
     container_name: broker2
     restart: always
@@ -83,7 +103,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
       # Confluent Metrics Reporter for Control Center Cluster Monitoring
-      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_METRIC_REPORTERS: $KAFKA_METRIC_REPORTERS
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker2:9092
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_ENABLE: 'true'
@@ -93,6 +113,7 @@ services:
       KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_CLUSTER_LINK_METADATA_TOPIC_REPLICATION_FACTOR: 1
       # # For Confluent Telemetry Reporter (proactive support)
       # KAFKA_CONFLUENT_TELEMETRY_ENABLED: 'true'
       # KAFKA_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
@@ -100,11 +121,28 @@ services:
       EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
       PYROSCOPE_APPLICATION_NAME: "broker2"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
+
+      # Control Center 2.0
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_TYPE: "http"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_ENABLED: "true"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_METRICS_INCLUDE: "io.confluent.kafka.server.request.(?!.*delta).*|io.confluent.kafka.server.server.broker.state|io.confluent.kafka.server.replica.manager.leader.count|io.confluent.kafka.server.request.queue.size|io.confluent.kafka.server.broker.topic.failed.produce.requests.rate.1.min|io.confluent.kafka.server.tier.archiver.total.lag|io.confluent.kafka.server.request.total.time.ms.p99|io.confluent.kafka.server.broker.topic.failed.fetch.requests.rate.1.min|io.confluent.kafka.server.broker.topic.total.fetch.requests.rate.1.min|io.confluent.kafka.server.partition.caught.up.replicas.count|io.confluent.kafka.server.partition.observer.replicas.count|io.confluent.kafka.server.tier.tasks.num.partitions.in.error|io.confluent.kafka.server.broker.topic.bytes.out.rate.1.min|io.confluent.kafka.server.request.total.time.ms.p95|io.confluent.kafka.server.controller.active.controller.count|io.confluent.kafka.server.session.expire.listener.zookeeper.disconnects.total|io.confluent.kafka.server.request.total.time.ms.p999|io.confluent.kafka.server.controller.active.broker.count|io.confluent.kafka.server.request.handler.pool.request.handler.avg.idle.percent.rate.1.min|io.confluent.kafka.server.session.expire.listener.zookeeper.disconnects.rate.1.min|io.confluent.kafka.server.controller.unclean.leader.elections.rate.1.min|io.confluent.kafka.server.replica.manager.partition.count|io.confluent.kafka.server.controller.unclean.leader.elections.total|io.confluent.kafka.server.partition.replicas.count|io.confluent.kafka.server.broker.topic.total.produce.requests.rate.1.min|io.confluent.kafka.server.controller.offline.partitions.count|io.confluent.kafka.server.socket.server.network.processor.avg.idle.percent|io.confluent.kafka.server.partition.under.replicated|io.confluent.kafka.server.log.log.start.offset|io.confluent.kafka.server.log.tier.size|io.confluent.kafka.server.log.size|io.confluent.kafka.server.tier.fetcher.bytes.fetched.total|io.confluent.kafka.server.request.total.time.ms.p50|io.confluent.kafka.server.tenant.consumer.lag.offsets|io.confluent.kafka.server.session.expire.listener.zookeeper.expires.rate.1.min|io.confluent.kafka.server.log.log.end.offset|io.confluent.kafka.server.broker.topic.bytes.in.rate.1.min|io.confluent.kafka.server.partition.under.min.isr|io.confluent.kafka.server.partition.in.sync.replicas.count|io.confluent.telemetry.http.exporter.batches.dropped|io.confluent.telemetry.http.exporter.items.total|io.confluent.telemetry.http.exporter.items.succeeded|io.confluent.telemetry.http.exporter.send.time.total.millis|io.confluent.kafka.server.controller.leader.election.rate.(?!.*delta).*|io.confluent.telemetry.http.exporter.batches.failed"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_CLIENT_BASE_URL: "http://prometheus-c3-v2:9090/api/v1/otlp"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_CLIENT_COMPRESSION: "gzip"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_API_KEY: "dummy"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_API_SECRET: "dummy"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_BUFFER_PENDING_BATCHES_MAX: "80"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_BUFFER_BATCH_ITEMS_MAX: "4000"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_BUFFER_INFLIGHT_SUBMISSIONS_MAX: "10"
+      KAFKA_CONFLUENT_TELEMETRY_METRICS_COLLECTOR_INTERVAL_MS: "60000"
+      KAFKA_CONFLUENT_TELEMETRY_REMOTECONFIG_CONFLUENT_ENABLED: "false"
+      KAFKA_CONFLUENT_CONSUMER_LAG_EMITTER_ENABLED: "true"
+      # https://support.confluent.io/hc/en-us/articles/38120641503380--Action-required-Confluent-Platform-7-9-x-Important-Note-on-Group-Coordinator-in-Confluent-Platform-7-9-x
+      KAFKA_GROUP_COORDINATOR_NEW_ENABLE: "false"
     volumes:
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
 
   broker3:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker3
     container_name: broker3
     restart: always
@@ -125,7 +163,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
       # Confluent Metrics Reporter for Control Center Cluster Monitoring
-      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_METRIC_REPORTERS: $KAFKA_METRIC_REPORTERS
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker3:9092
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_ENABLE: 'true'
@@ -135,6 +173,7 @@ services:
       KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_CLUSTER_LINK_METADATA_TOPIC_REPLICATION_FACTOR: 1
       # # For Confluent Telemetry Reporter (proactive support)
       # KAFKA_CONFLUENT_TELEMETRY_ENABLED: 'true'
       # KAFKA_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
@@ -142,13 +181,30 @@ services:
       EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
       PYROSCOPE_APPLICATION_NAME: "broker3"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
+
+      # Control Center 2.0
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_TYPE: "http"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_ENABLED: "true"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_METRICS_INCLUDE: "io.confluent.kafka.server.request.(?!.*delta).*|io.confluent.kafka.server.server.broker.state|io.confluent.kafka.server.replica.manager.leader.count|io.confluent.kafka.server.request.queue.size|io.confluent.kafka.server.broker.topic.failed.produce.requests.rate.1.min|io.confluent.kafka.server.tier.archiver.total.lag|io.confluent.kafka.server.request.total.time.ms.p99|io.confluent.kafka.server.broker.topic.failed.fetch.requests.rate.1.min|io.confluent.kafka.server.broker.topic.total.fetch.requests.rate.1.min|io.confluent.kafka.server.partition.caught.up.replicas.count|io.confluent.kafka.server.partition.observer.replicas.count|io.confluent.kafka.server.tier.tasks.num.partitions.in.error|io.confluent.kafka.server.broker.topic.bytes.out.rate.1.min|io.confluent.kafka.server.request.total.time.ms.p95|io.confluent.kafka.server.controller.active.controller.count|io.confluent.kafka.server.session.expire.listener.zookeeper.disconnects.total|io.confluent.kafka.server.request.total.time.ms.p999|io.confluent.kafka.server.controller.active.broker.count|io.confluent.kafka.server.request.handler.pool.request.handler.avg.idle.percent.rate.1.min|io.confluent.kafka.server.session.expire.listener.zookeeper.disconnects.rate.1.min|io.confluent.kafka.server.controller.unclean.leader.elections.rate.1.min|io.confluent.kafka.server.replica.manager.partition.count|io.confluent.kafka.server.controller.unclean.leader.elections.total|io.confluent.kafka.server.partition.replicas.count|io.confluent.kafka.server.broker.topic.total.produce.requests.rate.1.min|io.confluent.kafka.server.controller.offline.partitions.count|io.confluent.kafka.server.socket.server.network.processor.avg.idle.percent|io.confluent.kafka.server.partition.under.replicated|io.confluent.kafka.server.log.log.start.offset|io.confluent.kafka.server.log.tier.size|io.confluent.kafka.server.log.size|io.confluent.kafka.server.tier.fetcher.bytes.fetched.total|io.confluent.kafka.server.request.total.time.ms.p50|io.confluent.kafka.server.tenant.consumer.lag.offsets|io.confluent.kafka.server.session.expire.listener.zookeeper.expires.rate.1.min|io.confluent.kafka.server.log.log.end.offset|io.confluent.kafka.server.broker.topic.bytes.in.rate.1.min|io.confluent.kafka.server.partition.under.min.isr|io.confluent.kafka.server.partition.in.sync.replicas.count|io.confluent.telemetry.http.exporter.batches.dropped|io.confluent.telemetry.http.exporter.items.total|io.confluent.telemetry.http.exporter.items.succeeded|io.confluent.telemetry.http.exporter.send.time.total.millis|io.confluent.kafka.server.controller.leader.election.rate.(?!.*delta).*|io.confluent.telemetry.http.exporter.batches.failed"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_CLIENT_BASE_URL: "http://prometheus-c3-v2:9090/api/v1/otlp"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_CLIENT_COMPRESSION: "gzip"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_API_KEY: "dummy"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_API_SECRET: "dummy"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_BUFFER_PENDING_BATCHES_MAX: "80"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_BUFFER_BATCH_ITEMS_MAX: "4000"
+      KAFKA_CONFLUENT_TELEMETRY_EXPORTER_C3PLUSPLUS_BUFFER_INFLIGHT_SUBMISSIONS_MAX: "10"
+      KAFKA_CONFLUENT_TELEMETRY_METRICS_COLLECTOR_INTERVAL_MS: "60000"
+      KAFKA_CONFLUENT_TELEMETRY_REMOTECONFIG_CONFLUENT_ENABLED: "false"
+      KAFKA_CONFLUENT_CONSUMER_LAG_EMITTER_ENABLED: "true"
+      # https://support.confluent.io/hc/en-us/articles/38120641503380--Action-required-Confluent-Platform-7-9-x-Important-Note-on-Group-Coordinator-in-Confluent-Platform-7-9-x
+      KAFKA_GROUP_COORDINATOR_NEW_ENABLE: "false"
     volumes:
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
 
 
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:${TAG}
+    image: ${CP_SCHEMA_REGISTRY_IMAGE}:${CP_SCHEMA_REGISTRY_TAG}
     hostname: schema-registry
     container_name: schema-registry
     restart: always
@@ -176,7 +232,7 @@ services:
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
   connect:
-    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     hostname: connect
     container_name: connect
     restart: always
@@ -212,9 +268,9 @@ services:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3 # only load one connector to speed up deployment (it is overidden in connect tests)
       CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR
       # Confluent Monitoring Interceptors for Control Center Streams Monitoring
-      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: $CONNECT_PRODUCER_INTERCEPTOR_CLASSES
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
-      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: $CONNECT_CONSUMER_INTERCEPTOR_CLASSES
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
       # Externalizing Secrets
       CONNECT_CONFIG_PROVIDERS: 'file'
@@ -234,6 +290,7 @@ services:
       # JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
       # uncomment when investigating class not found issue, see https://kafka-docker-playground.io/#/reusables?id=🔬-class-loading
       # KAFKA_OPTS: '-verbose:class'
+      KAFKA_OPTS: -Ddynamic.worker.config.file=/dev/null
       # Reduce Connect memory utilization
       EXTRA_ARGS: ${GRAFANA_AGENT_CONNECT}
       # KAFKA_JVM_PERFORMANCE_OPTS: -server -XX:+UseG1GC -XX:GCTimeRatio=1
@@ -244,7 +301,7 @@ services:
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
   connect2:
-    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     hostname: connect2
     container_name: connect2
     restart: always
@@ -283,9 +340,9 @@ services:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components
       CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR
       # Confluent Monitoring Interceptors for Control Center Streams Monitoring
-      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: $CONNECT_PRODUCER_INTERCEPTOR_CLASSES
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
-      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: $CONNECT_CONSUMER_INTERCEPTOR_CLASSES
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
       # Externalizing Secrets
       CONNECT_CONFIG_PROVIDERS: 'file'
@@ -305,6 +362,7 @@ services:
       # JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
       # uncomment when investigating class not found issue, see https://kafka-docker-playground.io/#/reusables?id=🔬-class-loading
       # KAFKA_OPTS: '-verbose:class'
+      KAFKA_OPTS: -Ddynamic.worker.config.file=/dev/null
       # Reduce Connect memory utilization
       EXTRA_ARGS: ${GRAFANA_AGENT_CONNECT}
       # KAFKA_JVM_PERFORMANCE_OPTS: -server -XX:+UseG1GC -XX:GCTimeRatio=1
@@ -315,7 +373,7 @@ services:
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
   connect3:
-    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     hostname: connect3
     container_name: connect3
     restart: always
@@ -354,9 +412,9 @@ services:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components # to avoid overwriting all docker-compose in each directory, we base this path from the source command being issued when the environment starts. See start.sh in plain
       CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR
       # Confluent Monitoring Interceptors for Control Center Streams Monitoring
-      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: $CONNECT_PRODUCER_INTERCEPTOR_CLASSES
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
-      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: $CONNECT_CONSUMER_INTERCEPTOR_CLASSES
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
       # Externalizing Secrets
       CONNECT_CONFIG_PROVIDERS: 'file'
@@ -376,6 +434,7 @@ services:
       # JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
       # uncomment when investigating class not found issue, see https://kafka-docker-playground.io/#/reusables?id=🔬-class-loading
       # KAFKA_OPTS: '-verbose:class'
+      KAFKA_OPTS: -Ddynamic.worker.config.file=/dev/null
       # Reduce Connect memory utilization
       EXTRA_ARGS: ${GRAFANA_AGENT_CONNECT}
       # KAFKA_JVM_PERFORMANCE_OPTS: -server -XX:+UseG1GC -XX:GCTimeRatio=1
@@ -386,7 +445,7 @@ services:
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
   ksqldb-server:
-    image: ${CP_KSQL_IMAGE}:${TAG}
+    image: ${CP_KSQL_IMAGE}:${CP_KSQL_TAG}
     hostname: ksqldb-server
     container_name: ksqldb-server
     depends_on:
@@ -418,8 +477,8 @@ services:
       # KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
       # KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
       # KSQL_KSQL_LOGGING_PROCESSING_ROWS_INCLUDE: 'true'
-      KSQL_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
-      KSQL_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      # KSQL_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      # KSQL_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
       # KSQL_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
       # KSQL_CONFLUENT_TELEMETRY_ENABLED: 'true'
       # KSQL_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
@@ -429,7 +488,7 @@ services:
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
   ksqldb-cli:
-    image: ${CP_KSQL_CLI_IMAGE}
+    image: ${CP_KSQL_CLI_IMAGE}:${CP_KSQL_CLI_TAG}
     container_name: ksqldb-cli
     depends_on:
       - broker
@@ -441,7 +500,7 @@ services:
     tty: true
 
   control-center:
-    image: confluentinc/cp-enterprise-control-center:${TAG}
+    image: ${CP_CONTROL_CENTER_IMAGE}:${CP_CONTROL_CENTER_TAG}
     hostname: control-center
     container_name: control-center
     restart: always
@@ -453,6 +512,12 @@ services:
       - "${C3_PORT:-9021}:9021"
     profiles:
     - control-center
+    volumes:
+      - ../../environment/plaintext/control-center-v2-config:/mnt/config
+
+    # needed for c3 next gen
+    command: "bash -c 'dub template /etc/confluent/docker/control-center.properties.template /etc/confluent-control-center/control-center.properties && \
+                          /etc/confluent/docker/run'"
     environment:
       CONTROL_CENTER_BOOTSTRAP_SERVERS: 'broker:9092'
       CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper:2181'
@@ -479,8 +544,35 @@ services:
       # starting from 7.0
       #CONTROL_CENTER_MODE_ENABLE: management
       # CONTROL_CENTER_ID: 32
+
+      # https://docs.confluent.io/control-center/2.0/installation/overview.html
+      # https://github.com/confluentinc/cp-all-in-one/blob/f062fd7f11134a13c17634f58d592a436f56a11e/cp-all-in-one/docker-compose.yml
+      CONTROL_CENTER_PROMETHEUS_ENABLE: true
+      CONTROL_CENTER_PROMETHEUS_URL: http://prometheus-c3-v2:9090
+      CONTROL_CENTER_PROMETHEUS_RULES_FILE: /mnt/config/trigger_rules-generated.yml
+      CONTROL_CENTER_ALERTMANAGER_URL: http://alertmanager-c3-v2:9093
+      CONTROL_CENTER_ALERTMANAGER_CONFIG_FILE: /mnt/config/alertmanager.yml
+
+  prometheus-c3-v2:
+    image: confluentinc/cp-enterprise-prometheus:2.0.0
+    hostname: prometheus-c3-v2
+    container_name: prometheus-c3-v2
+    volumes:
+      - ../../environment/plaintext/control-center-v2-config:/mnt/config
+    command: "--config.file=/mnt/config/prometheus.yml --enable-feature=otlp-write-receiver --web.enable-lifecycle"
+
+  alertmanager-c3-v2:
+    image: confluentinc/cp-enterprise-alertmanager:2.0.0
+    hostname: alertmanager-c3-v2
+    container_name: alertmanager-c3-v2
+    depends_on:
+      - prometheus-c3-v2
+    volumes:
+      - ../../environment/plaintext/control-center-v2-config:/mnt/config
+    command: "--web.external-url=http://localhost --config.file=/etc/alertmanager/alertmanager.yml"
+
   rest-proxy:
-    image: confluentinc/cp-kafka-rest:${TAG}
+    image: ${CP_REST_PROXY_IMAGE}:${CP_REST_PROXY_TAG}
     hostname: rest-proxy
     container_name: rest-proxy
     restart: always
@@ -578,20 +670,39 @@ services:
     profiles:
       - "kcat"
 
-  # https://github.com/conduktor/conduktor-platform/blob/main/doc/Configuration.md
-  conduktor:
-    image: conduktor/conduktor-platform:latest
-    hostname: conduktor
-    container_name: conduktor
+  conduktor-postgresql:
+    image: postgres:14
+    hostname: conduktor-postgresql
+    container_name: conduktor-postgresql
+    environment:
+      POSTGRES_DB: "conduktor"
+      POSTGRES_USER: "conduktor"
+      POSTGRES_PASSWORD: "change_me"
+    profiles:
+      - "conduktor"
+
+  conduktor-console:
+    image: conduktor/conduktor-console:1.30.0
+    hostname: conduktor-console
+    container_name: conduktor-console
     depends_on:
-      - broker
+      - conduktor-postgresql
     ports:
-      - 8080:80
+      - "8080:8080"
     volumes:
       - ../../environment/plaintext/conduktor/platform-config.yaml:/tmp/platform-config.yaml
     environment:
       CDK_IN_CONF_FILE: /tmp/platform-config.yaml
-      RUN_MODE: "nano"
+    profiles:
+      - "conduktor"
+
+  conduktor-monitoring:
+    image: conduktor/conduktor-console-cortex:1.30.0
+    hostname: conduktor-monitoring
+    container_name: conduktor-monitoring
+    environment:
+      # Connection to the Console container
+      CDK_CONSOLE-URL: "http://conduktor-console:8080"
     profiles:
       - "conduktor"
 
@@ -606,3 +717,64 @@ services:
     command:
       - "server"
       - "-no-self-profiling"
+
+  # Flink JobManager
+  jobmanager:
+    image: flink:${FLINK_TAG}
+    hostname: jobmanager
+    container_name: jobmanager
+    profiles:
+      - flink
+    ports:
+      - "18081:18081"  # REST API and Web UI
+      - "9091:9090"    # Prometheus metrics
+    entrypoint: >
+      sh -c "$flink_connectors exec /docker-entrypoint.sh jobmanager"
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        rest.port: 18081
+        taskmanager.numberOfTaskSlots: 4
+        ${GRAFANA_FLINK}
+  
+  # Flink TaskManager
+  taskmanager:
+    image: flink:${FLINK_TAG}
+    hostname: taskmanager
+    container_name: taskmanager
+    profiles:
+      - flink
+    depends_on:
+      - jobmanager
+    entrypoint: >
+      sh -c "$flink_connectors exec /docker-entrypoint.sh taskmanager"
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        rest.address: jobmanager
+        rest.port: 18081
+        taskmanager.numberOfTaskSlots: 4
+        ${GRAFANA_FLINK}
+  # Flink SQL Client
+  sql-client:
+    image: flink:${FLINK_TAG}
+    hostname: sql-client
+    container_name: sql-client
+    profiles:
+      - flink
+    depends_on:
+      - jobmanager
+    stdin_open: true
+    tty: true
+    entrypoint: >
+      sh -c "$flink_connectors exec /docker-entrypoint.sh bin/sql-client.sh"
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        rest.address: jobmanager
+        rest.port: 18081
+        deployment.gateway-address: jobmanager
+        deployment.gateway-port: 18081

@@ -4,39 +4,27 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
-then
-    log "Logging to Azure using environment variables AZ_USER and AZ_PASS"
-    set +e
-    az logout
-    set -e
-    az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
-else
-    log "Logging to Azure using browser"
-    az login
+login_and_maybe_set_azure_subscription
+
+# https://github.com/microsoft/kafka-connect-cosmosdb/blob/dev/doc/CosmosDB_Setup.md
+AZURE_NAME=pgfm${USER}cs${GITHUB_RUN_NUMBER}${TAG}
+AZURE_NAME=${AZURE_NAME//[-._]/}
+if [ ${#AZURE_NAME} -gt 24 ]; then
+  AZURE_NAME=${AZURE_NAME:0:24}
 fi
+AZURE_REGION=westeurope
+AZURE_RESOURCE_GROUP=$AZURE_NAME
+AZURE_COSMOSDB_SERVER_NAME=$AZURE_NAME
+AZURE_COSMOSDB_DB_NAME=$AZURE_NAME
+AZURE_COSMOSDB_CONTAINER_NAME=$AZURE_NAME
 
-# when AZURE_SUBSCRIPTION_NAME env var is set, we need to set the correct subscription
-maybe_set_azure_subscription
-
-
-bootstrap_ccloud_environment
+bootstrap_ccloud_environment "azure" "$AZURE_REGION"
 
 set +e
 playground topic delete --topic hotels
 sleep 3
 playground topic create --topic hotels --nb-partitions 1
 set -e
-
-
-# https://github.com/microsoft/kafka-connect-cosmosdb/blob/dev/doc/CosmosDB_Setup.md
-AZURE_NAME=pg${USER}cs${GITHUB_RUN_NUMBER}${TAG}
-AZURE_NAME=${AZURE_NAME//[-._]/}
-AZURE_REGION=westeurope
-AZURE_RESOURCE_GROUP=$AZURE_NAME
-AZURE_COSMOSDB_SERVER_NAME=$AZURE_NAME
-AZURE_COSMOSDB_DB_NAME=$AZURE_NAME
-AZURE_COSMOSDB_CONTAINER_NAME=$AZURE_NAME
 
 set +e
 log "Delete Cosmos DB instance and resource group (it might fail)"

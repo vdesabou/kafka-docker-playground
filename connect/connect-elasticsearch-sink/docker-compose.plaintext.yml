@@ -2,7 +2,7 @@
 services:
 
   elasticsearch:
-    image: elasticsearch:7.12.0
+    image: elasticsearch:8.18.2
     hostname: elasticsearch
     container_name: elasticsearch
     ports:
@@ -10,7 +10,10 @@ services:
       - "9300:9300"
     environment:
       discovery.type: single-node
-
+      xpack.security.enabled: "false"
+      xpack.security.http.ssl.enabled: "false"
+      xpack.security.transport.ssl.enabled: "false"
+      
   connect:
     depends_on:
       - elasticsearch

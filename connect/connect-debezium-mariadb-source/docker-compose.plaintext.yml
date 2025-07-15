@@ -1,0 +1,34 @@
+---
+services:
+
+  sql-datagen:
+    build:
+      context: ../../connect/connect-debezium-mariadb-source/mysql-datagen/
+    hostname: sql-datagen
+    container_name: sql-datagen
+    profiles:
+    - sql_datagen
+    volumes:
+      - ../../connect/connect-debezium-mariadb-source/mysql-datagen/target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
+
+  mariadb:
+    image: mariadb:latest
+    hostname: mariadb
+    container_name: mariadb
+    volumes:
+      - ../../connect/connect-debezium-mariadb-source/mysql.cnf:/etc/mysql/conf.d/custom.cnf
+      - ../../connect/connect-debezium-mariadb-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_HOST: 172.%  # Allow docker containers to connect to mysql
+
+  connect:
+    depends_on:
+      - mariadb
+    volumes:
+      - ../../connect/connect-debezium-mariadb-source/debezium-connector-mariadb:/usr/share/confluent-hub-components/debezium-connector-mariadb/jars
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components

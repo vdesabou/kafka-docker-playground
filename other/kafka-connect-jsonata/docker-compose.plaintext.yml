@@ -1,0 +1,5 @@
+---
+services:
+  connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/filestream-connectors,/usr/share/confluent-hub-components/rayokota-kafka-connect-jsonata

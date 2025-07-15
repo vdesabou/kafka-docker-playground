@@ -6,10 +6,9 @@ services:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-http-source
 
   httpserver:
-    image: vdesabou/http-sink-demo
+    build:
+      context: ../../connect/connect-http-sink/httpserver
     hostname: httpserver
     container_name: httpserver
     ports:
-      - "18080:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: 'simple-auth'
+      - "9006:9006"

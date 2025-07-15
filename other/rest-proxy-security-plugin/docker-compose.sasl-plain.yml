@@ -20,10 +20,9 @@ services:
               user_client="client-secret";
 
   restproxy:
-    image: confluentinc/cp-kafka-rest:${TAG}
+    image: ${CP_REST_PROXY_IMAGE}:${CP_REST_PROXY_TAG}
     restart: always
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
     hostname: restproxy
@@ -32,6 +31,7 @@ services:
       - 8086:8086
     volumes:
       - ../../other/rest-proxy-security-plugin/sasl-plain-with-basic-auth.properties:/etc/kafka/sasl-plain-with-basic-auth.properties
+      - ../../other/rest-proxy-security-plugin/sasl-plain-with-basic-auth-8-plus.properties:/etc/kafka/sasl-plain-with-basic-auth-8-plus.properties
       - ../../other/rest-proxy-security-plugin/password.properties:/tmp/password.properties
     environment:
       KAFKA_REST_HOST_NAME: restproxy
@@ -50,11 +50,11 @@ services:
               password=\"clientrestproxy-secret\";"
       # Security extension configuration
       # ZooKeeper required to validate trial license
-      KAFKA_REST_ZOOKEEPER_CONNECT: zookeeper:2181
+      # KAFKA_REST_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_REST_KAFKA_REST_RESOURCE_EXTENSION_CLASS: io.confluent.kafkarest.security.KafkaRestSecurityResourceExtension
       # HTTP Basic Authentication
       # https://docs.confluent.io/platform/current/kafka-rest/production-deployment/rest-proxy/security.html#http-basic-authentication
-      KAFKAREST_OPTS: "-Djava.security.auth.login.config=/etc/kafka/sasl-plain-with-basic-auth.properties"
+      KAFKAREST_OPTS: "-Djava.security.auth.login.config=$PROPERTIES_CONFIG_FILE"
       # This is required for dub kafka-ready tool only (Docker specific)
       # This is required when KAFKA_REST_CLIENT_SASL_JAAS_CONFIG is not set
       # KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/sasl-plain-with-basic-auth.properties"

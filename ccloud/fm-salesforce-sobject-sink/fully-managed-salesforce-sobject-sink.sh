@@ -82,6 +82,9 @@ fi
 
 PUSH_TOPICS_NAME=MyLeadPushTopics${TAG}
 PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME//[-._]/}
+if [ ${#PUSH_TOPICS_NAME} -gt 25 ]; then
+  PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME:0:25}
+fi
 
 sed -e "s|:PUSH_TOPIC_NAME:|$PUSH_TOPICS_NAME|g" \
     ../../ccloud/fm-salesforce-sobject-sink/MyLeadPushTopics-template.apex > ../../ccloud/fm-salesforce-sobject-sink/MyLeadPushTopics.apex

@@ -16,7 +16,7 @@ ${DIR}/wait_container_ready "connect3"
 docker exec broker1 kafka-topics --create --topic test-topic --partitions 10 --replication-factor 3 --bootstrap-server broker:9092
 
 log "Sending messages to topic test-topic"
-seq 10 | docker exec -i broker1 kafka-console-producer --broker-list broker1:9092 --topic test-topic
+seq 10 | docker exec -i broker1 kafka-console-producer --bootstrap-server broker1:9092 --topic test-topic
 
 log "Creating Replicator connector"
 playground connector create-or-update --connector replicator  << EOF

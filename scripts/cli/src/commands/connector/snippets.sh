@@ -85,17 +85,17 @@ then
                 then
                     source $root_folder/.ccloud/env.delta
                 else
-                    logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
+                    logerror "❌ $root_folder/.ccloud/env.delta has not been generated"
                     exit 1
                 fi
                 echo -e "    \"key.converter\": \"$converter_class\"," >> $converter_file
                 echo -e "    \"key.converter.schema.registry.url\": \"$SCHEMA_REGISTRY_URL\"," >> $converter_file
                 echo -e "    \"key.converter.basic.auth.credentials.source\": \"USER_INFO\"," >> $converter_file
-                echo -e "    \"key.converter.basic.auth.user.info\": \"\${file:/data:schema.registry.basic.auth.user.info}\"," >> $converter_file
+                echo -e "    \"key.converter.basic.auth.user.info\": \"\${file:/datacloud:schema.registry.basic.auth.user.info}\"," >> $converter_file
                 echo -e "    \"value.converter\": \"$converter_class\"," >> $converter_file
                 echo -e "    \"value.converter.schema.registry.url\": \"$SCHEMA_REGISTRY_URL\"," >> $converter_file
                 echo -e "    \"value.converter.basic.auth.credentials.source\": \"USER_INFO\"," >> $converter_file
-                echo -e "    \"value.converter.basic.auth.user.info\": \"\${file:/data:schema.registry.basic.auth.user.info}\"," >> $converter_file
+                echo -e "    \"value.converter.basic.auth.user.info\": \"\${file:/datacloud:schema.registry.basic.auth.user.info}\"," >> $converter_file
                 ;;
 
             sasl-ssl|2way-ssl)
@@ -163,7 +163,7 @@ then
         if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
         then
             cat $clipboard_file | pbcopy
-            log "📋 config has been copied to the clipboard (disable with 'playground config set clipboard false')"
+            log "📋 config has been copied to the clipboard (disable with 'playground config clipboard false')"
         fi
     fi
 fi

@@ -6,8 +6,15 @@ source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.9.99" && version_gt $CONNECTOR_TAG "1.9.9"
 then
-    logwarn "WARN: connector version >= 2.0.0 do not support CP versions < 6.0.0"
+    logwarn "connector version >= 2.0.0 do not support CP versions < 6.0.0"
     exit 111
+fi
+
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "2.4.99"
+then
+     logwarn "minimal supported connector version is 2.5.0 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
 fi
 
 if [ ! -z "$SQL_DATAGEN" ]
@@ -21,7 +28,7 @@ then
      docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${PWD}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "${PWD}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
      if [ $? != 0 ]
      then
-          logerror "ERROR: failed to build java component "
+          logerror "❌ failed to build java component "
           tail -500 /tmp/result.log
           exit 1
      fi
@@ -37,7 +44,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 
 log "Create table"
-docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
+docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
 -- Create the test database
 CREATE DATABASE testDB;
 GO
@@ -92,7 +99,7 @@ EOF
 
 sleep 5
 
-docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
+docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
 USE testDB;
 INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@office.com');
 GO
@@ -105,5 +112,5 @@ if [ ! -z "$SQL_DATAGEN" ]
 then
      DURATION=10
      log "Injecting data for $DURATION minutes"
-     docker exec -d sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --username sa --password 'Password!' --connectionUrl 'jdbc:sqlserver://sqlserver:1433;databaseName=testDB;encrypt=false' --maxPoolSize 10 --durationTimeMin $DURATION"
+     docker exec sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --username sa --password 'Password!' --connectionUrl 'jdbc:sqlserver://sqlserver:1433;databaseName=testDB;encrypt=false' --maxPoolSize 10 --durationTimeMin $DURATION"
 fi

@@ -37,18 +37,18 @@ EOF
 log "Creating Replicator connector"
 playground connector create-or-update --connector duplicate-topic  << EOF
 {
-         "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
-               "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
-               "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
-               "header.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
-               "src.consumer.group.id": "duplicate-topic",
-               "confluent.topic.replication.factor": 1,
-               "provenance.header.enable": true,
-               "topic.whitelist": "test-topic",
-               "topic.rename.format": "test-topic-duplicate",
-               "dest.kafka.bootstrap.servers": "broker:9092",
-               "src.kafka.bootstrap.servers": "broker:9092"
-           }
+     "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
+     "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
+     "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
+     "header.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
+     "src.consumer.group.id": "duplicate-topic",
+     "confluent.topic.replication.factor": 1,
+     "provenance.header.enable": true,
+     "topic.whitelist": "test-topic",
+     "topic.rename.format": "test-topic-duplicate",
+     "dest.kafka.bootstrap.servers": "broker:9092",
+     "src.kafka.bootstrap.servers": "broker:9092"
+}
 EOF
 
 sleep 10
@@ -60,4 +60,4 @@ playground topic consume --topic test-topic-duplicate --min-expected-messages 10
 log "Generating some data to a perf-test topic"
 docker exec broker kafka-producer-perf-test --topic perf-test --num-records 200000 --record-size 1000 --throughput 100000 --producer-props bootstrap.servers=broker:9092
 
-docker exec broker kafka-consumer-perf-test --topic perf-test --messages 200000  --broker-list broker:9092
+docker exec broker kafka-consumer-perf-test --topic perf-test --messages 200000  --bootstrap-server broker:9092

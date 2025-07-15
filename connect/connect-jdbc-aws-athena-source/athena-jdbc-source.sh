@@ -4,6 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "10.7.99"
+then
+     logwarn "minimal supported connector version is 10.8.0 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 cd ../../connect/connect-jdbc-aws-athena-source
 if [ ! -f ${PWD}/AthenaJDBC42-2.1.3.1002.jar ]
 then
@@ -13,7 +20,7 @@ cd -
 
 if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
 then
-     logerror "ERROR: either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
+     logerror "❌ either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
      exit 1
 else
     if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
@@ -34,7 +41,7 @@ else
         AWS_REGION=$(aws configure get region | tr '\r' '\n')
         if [ "$AWS_REGION" == "" ]
         then
-            logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+            logerror "❌ either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
             exit 1
         fi
     fi

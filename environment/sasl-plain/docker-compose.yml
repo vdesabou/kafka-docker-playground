@@ -20,7 +20,7 @@ services:
             - ../../environment/sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
             - ../../environment/sasl-plain/client.properties:/tmp/client.properties
         environment:
-            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:SASL_PLAINTEXT,HOST:SASL_PLAINTEXT
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:SASL_PLAINTEXT,HOST:SASL_PLAINTEXT${CONTROLLER_SECURITY_PROTOCOL_MAP}
             KAFKA_LISTENER_NAME_BROKER_SASL_ENABLED_MECHANISMS: PLAIN
             KAFKA_LISTENER_NAME_BROKER_PLAIN_SASL_JAAS_CONFIG: |
                     org.apache.kafka.common.security.plain.PlainLoginModule required \
@@ -59,7 +59,7 @@ services:
             - ../../environment/sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
             - ../../environment/sasl-plain/client.properties:/tmp/client.properties
         environment:
-            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:SASL_PLAINTEXT,HOST:SASL_PLAINTEXT
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:SASL_PLAINTEXT,HOST:SASL_PLAINTEXT${CONTROLLER_SECURITY_PROTOCOL_MAP}
             KAFKA_LISTENER_NAME_BROKER_SASL_ENABLED_MECHANISMS: PLAIN
             KAFKA_LISTENER_NAME_BROKER_PLAIN_SASL_JAAS_CONFIG: |
                     org.apache.kafka.common.security.plain.PlainLoginModule required \
@@ -98,7 +98,7 @@ services:
             - ../../environment/sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
             - ../../environment/sasl-plain/client.properties:/tmp/client.properties
         environment:
-            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:SASL_PLAINTEXT,HOST:SASL_PLAINTEXT
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:SASL_PLAINTEXT,HOST:SASL_PLAINTEXT${CONTROLLER_SECURITY_PROTOCOL_MAP}
             KAFKA_LISTENER_NAME_BROKER_SASL_ENABLED_MECHANISMS: PLAIN
             KAFKA_LISTENER_NAME_BROKER_PLAIN_SASL_JAAS_CONFIG: |
                     org.apache.kafka.common.security.plain.PlainLoginModule required \
@@ -285,7 +285,38 @@ services:
                 password=\"client-secret\";"
             CONTROL_CENTER_KAFKA_MYCLUSTER_SASL_MECHANISM: PLAIN
 
-    # https://github.com/conduktor/conduktor-platform/blob/main/doc/Configuration.md
-    conduktor:
+    conduktor-postgresql:
+        image: postgres:14
+        hostname: conduktor-postgresql
+        container_name: conduktor-postgresql
+        environment:
+            POSTGRES_DB: "conduktor"
+            POSTGRES_USER: "conduktor"
+            POSTGRES_PASSWORD: "change_me"
+        profiles:
+        - "conduktor"
+
+    conduktor-console:
+        image: conduktor/conduktor-console:1.30.0
+        hostname: conduktor-console
+        container_name: conduktor-console
+        depends_on:
+        - conduktor-postgresql
+        ports:
+        - "8080:8080"
         volumes:
-            - ../../environment/sasl-plain/conduktor/platform-config.yaml:/tmp/platform-config.yaml
+        - ../../environment/sasl-plain/conduktor/platform-config.yaml:/tmp/platform-config.yaml
+        environment:
+          CDK_IN_CONF_FILE: /tmp/platform-config.yaml
+        profiles:
+        - "conduktor"
+
+    conduktor-monitoring:
+        image: conduktor/conduktor-console-cortex:1.30.0
+        hostname: conduktor-monitoring
+        container_name: conduktor-monitoring
+        environment:
+        # Connection to the Console container
+          CDK_CONSOLE-URL: "http://conduktor-console:8080"
+        profiles:
+        - "conduktor"

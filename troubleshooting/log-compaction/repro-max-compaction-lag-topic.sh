@@ -21,7 +21,7 @@ do
   key=$(($i % 2))
   timestamp=$(date +%s)
   log "$timestamp - Sending message key: $key and value $i to topic testtopic"
-  docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --property parse.key=true --property key.separator=, << EOF
+  docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic testtopic --property parse.key=true --property key.separator=, << EOF
   $key,$i
 EOF
   sleep 1  

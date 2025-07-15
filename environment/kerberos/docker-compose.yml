@@ -20,7 +20,7 @@ services:
       context: ../../environment/kerberos/client
       args:
         CP_CONNECT_IMAGE: ${CP_CONNECT_IMAGE}
-        TAG: ${TAG}
+        CP_CONNECT_TAG: ${CP_CONNECT_TAG}
     container_name: client
     hostname: client.kerberos-demo.local
     depends_on:
@@ -53,7 +53,6 @@ services:
   broker:
     hostname: broker.kerberos-demo.local
     depends_on:
-      - zookeeper
       - kdc
     # Required to wait for the keytab to get generated
     restart: on-failure
@@ -63,7 +62,7 @@ services:
       - ../../environment/kerberos/kafka/broker.sasl.jaas.config:/etc/kafka/broker.sasl.jaas.config
     environment:
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT${CONTROLLER_SECURITY_PROTOCOL_MAP}
       KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://broker.kerberos-demo.local:9092
       KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
       # Kerberos / GSSAPI Authentication mechanism
@@ -92,11 +91,10 @@ services:
         principal=\"admin/for-kafka@TEST.CONFLUENT.IO\";"
 
   broker2:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker2.kerberos-demo.local
     container_name: broker2
     depends_on:
-      - zookeeper
       - kdc
     profiles:
       - "kafka_nodes"
@@ -109,7 +107,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 2
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT${CONTROLLER_SECURITY_PROTOCOL_MAP}
       KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
       KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://broker2.kerberos-demo.local:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -137,7 +135,7 @@ services:
                   # -Dsun.security.krb5.disableReferrals=true
 
       # Confluent Metrics Reporter for Control Center Cluster Monitoring
-      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_METRIC_REPORTERS: $KAFKA_METRIC_REPORTERS
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker2:9092
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: GSSAPI
@@ -151,11 +149,10 @@ services:
       CONFLUENT_METRICS_ENABLE: 'true'
 
   broker3:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker3.kerberos-demo.local
     container_name: broker3
     depends_on:
-      - zookeeper
       - kdc
     profiles:
       - "kafka_nodes"
@@ -168,7 +165,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 3
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT${CONTROLLER_SECURITY_PROTOCOL_MAP}
       KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
       KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://broker3.kerberos-demo.local:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -196,7 +193,7 @@ services:
                   # -Dsun.security.krb5.disableReferrals=true
 
       # Confluent Metrics Reporter for Control Center Cluster Monitoring
-      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_METRIC_REPORTERS: $KAFKA_METRIC_REPORTERS
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker3:9092
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: GSSAPI
@@ -211,7 +208,6 @@ services:
 
   connect:
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
     # Required to wait for the keytab to get generated
@@ -233,7 +229,7 @@ services:
       # Confluent Monitoring Interceptors for Control Center Streams Monitoring
       # producer
       CONNECT_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
-      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: $CONNECT_PRODUCER_INTERCEPTOR_CLASSES
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
         useKeyTab=true \
@@ -243,7 +239,7 @@ services:
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: GSSAPI
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
       # consumer
-      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: $CONNECT_CONSUMER_INTERCEPTOR_CLASSES
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
         useKeyTab=true \
@@ -273,7 +269,6 @@ services:
 
   connect2:
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
     # Required to wait for the keytab to get generated
@@ -295,7 +290,7 @@ services:
       # Confluent Monitoring Interceptors for Control Center Streams Monitoring
       # producer
       CONNECT_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
-      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: $CONNECT_PRODUCER_INTERCEPTOR_CLASSES
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
         useKeyTab=true \
@@ -305,7 +300,7 @@ services:
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: GSSAPI
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
       # consumer
-      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: $CONNECT_CONSUMER_INTERCEPTOR_CLASSES
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
         useKeyTab=true \
@@ -335,7 +330,6 @@ services:
 
   connect3:
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
     # Required to wait for the keytab to get generated
@@ -357,7 +351,7 @@ services:
       # Confluent Monitoring Interceptors for Control Center Streams Monitoring
       # producer
       CONNECT_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
-      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: $CONNECT_PRODUCER_INTERCEPTOR_CLASSES
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
         useKeyTab=true \
@@ -367,7 +361,7 @@ services:
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: GSSAPI
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
       # consumer
-      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: $CONNECT_CONSUMER_INTERCEPTOR_CLASSES
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
         useKeyTab=true \
@@ -432,7 +426,6 @@ services:
     # Required to wait for the keytab to get generated
     restart: on-failure
     depends_on:
-      - zookeeper
       - broker
       - connect
     volumes:
@@ -458,20 +451,44 @@ services:
       CONTROL_CENTER_KAFKA_MYCLUSTER_SASL_MECHANISM: GSSAPI
       CONTROL_CENTER_KAFKA_MYCLUSTER_SASL_KERBEROS_SERVICE_NAME: kafka
 
-    # https://github.com/conduktor/conduktor-platform/blob/main/doc/Configuration.md
-  conduktor:
+  conduktor-postgresql:
+    image: postgres:14
+    hostname: conduktor-postgresql
+    container_name: conduktor-postgresql
+    environment:
+      POSTGRES_DB: "conduktor"
+      POSTGRES_USER: "conduktor"
+      POSTGRES_PASSWORD: "change_me"
+    profiles:
+      - "conduktor"
+
+  conduktor-console:
+    image: conduktor/conduktor-console:1.30.0
     hostname: conduktor.kerberos-demo.local
+    container_name: conduktor-console
+    depends_on:
+      - conduktor-postgresql
+    ports:
+      - "8080:8080"
     volumes:
       - ../../environment/kerberos/conduktor/platform-config.yaml:/tmp/platform-config.yaml
       - secret:/var/lib/secret
-      - ../../environment/kerberos/kdc/krb5.conf:/etc/kdc/krb5.conf
-# FIXTHIS: Caused by: org.apache.kafka.common.KafkaException: javax.security.auth.login.LoginException: Cannot locate KDC
-#         at org.apache.kafka.common.network.SaslChannelBuilder.configure(SaslChannelBuilder.java:172)
-#         at org.apache.kafka.common.network.ChannelBuilders.create(ChannelBuilders.java:157)
-#         at org.apache.kafka.common.network.ChannelBuilders.clientChannelBuilder(ChannelBuilders.java:73)
-#         at org.apache.kafka.clients.ClientUtils.createChannelBuilder(ClientUtils.java:105)
-#         at org.apache.kafka.clients.consumer.KafkaConsumer.<init>(KafkaConsumer.java:743)
-#         ... 25 common frames omitted
+      - ../../environment/kerberos/kdc/krb5.conf:/etc/krb5.conf
+    environment:
+      CDK_IN_CONF_FILE: /tmp/platform-config.yaml
+      KRB5_CONFIG: /etc/krb5.conf
+    profiles:
+      - "conduktor"
+
+  conduktor-monitoring:
+    image: conduktor/conduktor-console-cortex:1.30.0
+    hostname: conduktor-monitoring
+    container_name: conduktor-monitoring
+    environment:
+      # Connection to the Console container
+      CDK_CONSOLE-URL: "http://conduktor-console:8080"
+    profiles:
+      - "conduktor"
 
 volumes:
   secret: {}

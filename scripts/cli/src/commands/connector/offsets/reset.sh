@@ -13,7 +13,7 @@ then
     fi
 fi
 
-if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [ "$environment" == "ccloud" ]
 then
   get_ccloud_connect
   get_kafka_docker_playground_dir
@@ -23,12 +23,12 @@ then
   then
       source $DELTA_CONFIGS_ENV
   else
-      logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+      logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
       exit 1
   fi
   if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
   then
-      logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
+      logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
       exit 1
   fi
 else
@@ -37,7 +37,7 @@ fi
 
 if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
 then
-    tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+    tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
     if [ $? != 0 ] || [ "$tag" == "" ]
     then
         logerror "❌ could not find current CP version from docker ps"
@@ -135,7 +135,7 @@ do
             fi
             playground connector offsets get --connector $connector
         else
-            docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION
+            docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security | grep -v PARTITION
 
             if version_gt $tag "7.4.99"
             then
@@ -145,7 +145,7 @@ do
                 playground connector delete --connector $connector
             fi
 
-            docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --to-earliest --reset-offsets --all-topics --execute
+            docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector $security --to-earliest --reset-offsets --all-topics --execute
 
             if version_gt $tag "7.4.99"
             then

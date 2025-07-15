@@ -5,8 +5,8 @@ services:
     build:
       context: ../../other/jms-client/jms-client/
       args:
-        TAG: ${TAG}
-        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
+        CP_CONNECT_TAG: ${CP_CONNECT_TAG}
+        CP_CONNECT_IMAGE: ${CP_CONNECT_IMAGE}
     hostname: jms-client
     container_name: jms-client
     volumes:

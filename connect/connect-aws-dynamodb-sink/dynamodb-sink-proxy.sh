@@ -6,55 +6,18 @@ source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.9.99" && version_gt $CONNECTOR_TAG "1.2.99"
 then
-    logwarn "WARN: connector version >= 1.3.0 do not support CP versions < 6.0.0"
+    logwarn "connector version >= 1.3.0 do not support CP versions < 6.0.0"
     exit 111
 fi
 
-if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "1.4.99"
 then
-     logerror "ERROR: either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
-     exit 1
-else
-    if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
-    then
-        log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
-        export AWS_ACCESS_KEY_ID
-        export AWS_SECRET_ACCESS_KEY
-    else
-        if [ -f $HOME/.aws/credentials ]
-        then
-            logwarn "💭 AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
-            export AWS_ACCESS_KEY_ID=$( grep "^aws_access_key_id" $HOME/.aws/credentials | head -1 | awk -F'=' '{print $2;}' )
-            export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/credentials | head -1 | awk -F'=' '{print $2;}' ) 
-        fi
-    fi
-    if [ -z "$AWS_REGION" ]
-    then
-        AWS_REGION=$(aws configure get region | tr '\r' '\n')
-        if [ "$AWS_REGION" == "" ]
-        then
-            logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
-            exit 1
-        fi
-    fi
+     logwarn "minimal supported connector version is 1.5.0 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
 fi
 
-export AWS_CREDENTIALS_FILE_NAME=credentials
-if [ ! -f $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME ]
-then
-    log "generating $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME"
-    mkdir -p $HOME/.aws
-    sed -e "s|:AWS_ACCESS_KEY_ID:|$AWS_ACCESS_KEY_ID|g" \
-        -e "s|:AWS_SECRET_ACCESS_KEY:|$AWS_SECRET_ACCESS_KEY|g" \
-        ../../connect/connect-aws-dynamodb-sink/aws-credentials.template > $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME
-fi
-
-if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
-then
-     export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
-else
-     export CONNECT_CONTAINER_HOME_DIR="/root"
-fi
+handle_aws_credentials
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.proxy.yml"

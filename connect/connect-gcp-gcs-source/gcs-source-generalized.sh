@@ -6,14 +6,21 @@ source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $CONNECTOR_TAG "2.0.99"; then
     # skipped
-    logwarn "WARN: skipped as it requires connector version 2.1.0"
+    logwarn "skipped as it requires connector version 2.1.0"
     exit 111
 fi
 
 if ! version_gt $TAG_BASE "5.9.99" && version_gt $CONNECTOR_TAG "1.9.9"
 then
-    logwarn "WARN: connector version >= 2.0.0 do not support CP versions < 6.0.0"
+    logwarn "connector version >= 2.0.0 do not support CP versions < 6.0.0"
     exit 111
+fi
+
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "2.6.15"
+then
+     logwarn "minimal supported connector version is 2.6.16 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
 fi
 
 if [ -z "$GCP_PROJECT" ]
@@ -26,7 +33,7 @@ cd ../../connect/connect-gcp-gcs-source
 GCP_KEYFILE="${PWD}/keyfile.json"
 if [ ! -f ${GCP_KEYFILE} ] && [ -z "$GCP_KEYFILE_CONTENT" ]
 then
-     logerror "ERROR: either the file ${GCP_KEYFILE} is not present or environment variable GCP_KEYFILE_CONTENT is not set!"
+     logerror "❌ either the file ${GCP_KEYFILE} is not present or environment variable GCP_KEYFILE_CONTENT is not set!"
      exit 1
 else 
     if [ -f ${GCP_KEYFILE} ]

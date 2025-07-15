@@ -4,23 +4,20 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "1.1.7"
 then
-    log "Logging to Azure using environment variables AZ_USER and AZ_PASS"
-    set +e
-    az logout
-    set -e
-    az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
-else
-    log "Logging to Azure using browser"
-    az login
+     logwarn "minimal supported connector version is 1.1.8 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
 fi
 
-# when AZURE_SUBSCRIPTION_NAME env var is set, we need to set the correct subscription
-maybe_set_azure_subscription
+login_and_maybe_set_azure_subscription
 
 AZURE_NAME=pg${USER}s${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
+if [ ${#AZURE_NAME} -gt 24 ]; then
+  AZURE_NAME=${AZURE_NAME:0:24}
+fi
 AZURE_RESOURCE_GROUP=$AZURE_NAME
 AZURE_SEARCH_SERVICE_NAME=$AZURE_NAME
 AZURE_REGION=westeurope

@@ -63,6 +63,7 @@ myenv
 ._secrets.properties
 secrets.properties
 secrets.tar
+variables.properties
 *.hprof
 *.pcap
 github_ssh_key_file
@@ -76,3 +77,8 @@ playground_config.ini
 .connector_config
 hsperfdata_appuser
 *.lck
+reproduction-models
+**/bin/
+**/obj
+zazkia
+ccloud/connect-csfle-examples

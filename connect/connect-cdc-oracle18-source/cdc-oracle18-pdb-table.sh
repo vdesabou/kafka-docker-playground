@@ -4,6 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "2.14.8"
+then
+     logwarn "minimal supported connector version is 2.14.9 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 if [ ! -z "$GITHUB_RUN_NUMBER" ]
 then
      # running with github actions
@@ -23,7 +30,7 @@ then
      docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${PWD}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "${PWD}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
      if [ $? != 0 ]
      then
-          logerror "ERROR: failed to build java component "
+          logerror "❌ failed to build java component "
           tail -500 /tmp/result.log
           exit 1
      fi
@@ -38,7 +45,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.pdb-table.yml"
 
 
-playground --output-level WARN container logs --container oracle --wait-for-log "DATABASE IS READY TO USE" --max-wait 900
+playground container logs --container oracle --wait-for-log "DATABASE IS READY TO USE" --max-wait 900
 log "Oracle DB has started!"
 log "Setting up Oracle Database Prerequisites"
 docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
@@ -128,6 +135,7 @@ log "Creating Oracle source connector"
 playground connector create-or-update --connector cdc-oracle-source-pdb --package "io.confluent.connect.oracle.cdc.util.metrics.MetricsReporter" --level DEBUG  << EOF
 {
                "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
+     "log.sensitive.data": "true",
                "tasks.max":2,
                "key.converter": "io.confluent.connect.avro.AvroConverter",
                "key.converter.schema.registry.url": "http://schema-registry:8081",
@@ -151,6 +159,7 @@ playground connector create-or-update --connector cdc-oracle-source-pdb --packag
                "numeric.mapping": "best_fit",
                "connection.pool.max.size": 20,
                "redo.log.row.fetch.size":1,
+               "topic.creation.groups": "redo",
                "topic.creation.redo.include": "redo-log-topic",
                "topic.creation.redo.replication.factor": 1,
                "topic.creation.redo.partitions": 1,
@@ -217,5 +226,5 @@ if [ ! -z "$SQL_DATAGEN" ]
 then
      DURATION=10
      log "Injecting data for $DURATION minutes"
-     docker exec -d sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username C##MYUSER --password mypassword --sidOrServerName sid --sidOrServerNameVal ORCLCDB --maxPoolSize 10 --durationTimeMin $DURATION"
+     docker exec sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username C##MYUSER --password mypassword --sidOrServerName sid --sidOrServerNameVal ORCLCDB --maxPoolSize 10 --durationTimeMin $DURATION"
 fi

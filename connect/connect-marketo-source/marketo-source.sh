@@ -4,7 +4,19 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if version_gt $TAG_BASE "7.9.99"
+then
+     logwarn "preview connectors are no longer supported with CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
 
+cd ../../connect/connect-marketo-source/
+if [ ! -f jcl-over-slf4j-2.0.7.jar ]
+then
+     wget -q https://repo1.maven.org/maven2/org/slf4j/jcl-over-slf4j/2.0.7/jcl-over-slf4j-2.0.7.jar
+fi
+cd -
 
 MARKETO_ENDPOINT_URL=${MARKETO_ENDPOINT_URL:-$1}
 MARKETO_CLIENT_ID=${MARKETO_CLIENT_ID:-$2}
@@ -39,28 +51,35 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 log "Creating an access token"
 ACCESS_TOKEN=$(docker exec connect \
-   curl -X GET \
+   curl -s -X GET \
     "${MARKETO_ENDPOINT_URL}/identity/oauth/token?grant_type=client_credentials&client_id=$MARKETO_CLIENT_ID&client_secret=$MARKETO_CLIENT_SECRET" | jq -r .access_token)
 
-log "Create one lead to Marketo"
-LEAD_FIRSTNAME=John_$RANDOM
-LEAD_LASTNAME=Doe_$RANDOM
-docker exec connect \
-   curl -X POST \
-    "${MARKETO_ENDPOINT_URL}/rest/v1/leads.json?access_token=$ACCESS_TOKEN" \
-    -H 'Accept: application/json' \
-    -H 'Content-Type: application/json' \
-    -H 'cache-control: no-cache' \
-    -d "{ \"action\":\"createOrUpdate\", \"lookupField\":\"email\", \"input\":[ { \"lastName\":\"$LEAD_LASTNAME\", \"firstName\":\"$LEAD_FIRSTNAME\", \"middleName\":null, \"email\":\"$LEAD_FIRSTNAME.$LEAD_LASTNAME@email.com\" } ]}"
+log "Create 3 leads to Marketo"
+for((i=0;i<3;i++))
+do
+     LEAD_FIRSTNAME="John_$RANDOM_${i}"
+     LEAD_LASTNAME="Doe_$RANDOM_${i}"
 
-# since last hour
+     log "Lead: $LEAD_FIRSTNAME $LEAD_LASTNAME"
+     docker exec connect \
+     curl -s -X POST \
+     "${MARKETO_ENDPOINT_URL}/rest/v1/leads.json?access_token=$ACCESS_TOKEN" \
+     -H 'Accept: application/json' \
+     -H 'Content-Type: application/json' \
+     -H 'cache-control: no-cache' \
+     -d "{ \"action\":\"createOrUpdate\", \"lookupField\":\"email\", \"input\":[ { \"lastName\":\"$LEAD_LASTNAME\", \"firstName\":\"$LEAD_FIRSTNAME\", \"middleName\":null, \"email\":\"$LEAD_FIRSTNAME.$LEAD_LASTNAME@email.com\" } ]}"
+done
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
-     SINCE=$(date -v-3H  +%Y-%m-%dT%H:%M:%SZ)
+     SINCE=$(date -v-8d  +%Y-%m-%dT%H:%M:%SZ)
 else
-     SINCE=$(date -d '3 hour ago'  +%Y-%m-%dT%H:%M:%SZ)
+     SINCE=$(date -d '8 days ago'  +%Y-%m-%dT%H:%M:%SZ)
 fi
+
+# playground debug log-level set --package "org.apache.http" --level TRACE
+
+playground topic create --topic marketo_leads
 
 log "Creating Marketo Source connector"
 playground connector create-or-update --connector marketo-source  << EOF

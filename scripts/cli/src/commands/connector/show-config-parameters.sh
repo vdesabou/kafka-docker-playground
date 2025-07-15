@@ -202,21 +202,7 @@ do
             echo "🔩 list of all available parameters for connector $connector ($class) and version $version (with default value when applicable)" >> $filename
         fi
 
-        editor=$(playground config get editor)
-        if [ "$editor" != "" ]
-        then
-            log "📖 Opening ${filename} using configured editor $editor"
-            $editor ${filename}
-        else
-            if [[ $(type code 2>&1) =~ "not found" ]]
-            then
-                logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
-                exit 1
-            else
-                log "📖 Opening ${filename} with code (default) - you can change editor by using playground config editor <editor>"
-                code ${filename}
-            fi
-        fi
+        playground open --file "${filename}"
     else
         if [[ -n "$only_show_json" ]] || [[ -n "$only_show_json_file_path" ]]
         then

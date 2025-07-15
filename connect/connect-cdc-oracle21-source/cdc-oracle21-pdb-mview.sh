@@ -4,6 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "2.14.8"
+then
+     logwarn "minimal supported connector version is 2.14.9 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 if [ ! -z "$GITHUB_RUN_NUMBER" ]
 then
      # running with github actions
@@ -16,7 +23,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.pdb-table.yml"
 
 
-playground --output-level WARN container logs --container oracle --wait-for-log "DATABASE IS READY TO USE" --max-wait 2500
+playground container logs --container oracle --wait-for-log "DATABASE IS READY TO USE" --max-wait 600
 log "Oracle DB has started!"
 log "Setting up Oracle Database Prerequisites"
 docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
@@ -115,6 +122,7 @@ log "Creating Oracle source connector"
 playground connector create-or-update --connector cdc-oracle-source-pdb-mview --package "io.confluent.connect.oracle.cdc.util.metrics.MetricsReporter" --level DEBUG  << EOF
 {
      "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
+     "log.sensitive.data": "true",
      "tasks.max":2,
      "key.converter": "io.confluent.connect.avro.AvroConverter",
      "key.converter.schema.registry.url": "http://schema-registry:8081",
@@ -137,8 +145,8 @@ playground connector create-or-update --connector cdc-oracle-source-pdb-mview --
      "table.topic.name.template": "\${databaseName}.\${schemaName}.\${tableName}",
      "numeric.mapping": "best_fit",
      "connection.pool.max.size": 20,
-     "redo.log.row.fetch.size":1,
      "oracle.dictionary.mode": "auto",
+     "topic.creation.groups": "redo",
      "topic.creation.redo.include": "redo-log-topic",
      "topic.creation.redo.replication.factor": 1,
      "topic.creation.redo.partitions": 1,
@@ -146,7 +154,8 @@ playground connector create-or-update --connector cdc-oracle-source-pdb-mview --
      "topic.creation.redo.retention.ms": 1209600000,
      "topic.creation.default.replication.factor": 1,
      "topic.creation.default.partitions": 1,
-     "topic.creation.default.cleanup.policy": "delete"
+     "topic.creation.default.cleanup.policy": "delete",
+     "use.transaction.begin.for.mining.session": "true"
 }
 EOF
 

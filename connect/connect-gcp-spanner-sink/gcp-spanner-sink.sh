@@ -10,6 +10,13 @@ then
      exit 1
 fi
 
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "1.1.0"
+then
+     logwarn "minimal supported connector version is 1.1.1 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 GCP_SPANNER_INSTANCE="spanner-instance-$USER"
 GCP_SPANNER_DATABASE="spanner-db-$USER"
 GCP_SPANNER_REGION=${1:-europe-west2}
@@ -18,7 +25,7 @@ cd ../../connect/connect-gcp-spanner-sink
 GCP_KEYFILE="${PWD}/keyfile.json"
 if [ ! -f ${GCP_KEYFILE} ] && [ -z "$GCP_KEYFILE_CONTENT" ]
 then
-     logerror "ERROR: either the file ${GCP_KEYFILE} is not present or environment variable GCP_KEYFILE_CONTENT is not set!"
+     logerror "❌ either the file ${GCP_KEYFILE} is not present or environment variable GCP_KEYFILE_CONTENT is not set!"
      exit 1
 else 
     if [ -f ${GCP_KEYFILE} ]

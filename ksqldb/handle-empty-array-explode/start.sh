@@ -14,7 +14,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 log "Create a topic named my-structure-json"
 docker exec -i connect kafka-topics --create --bootstrap-server broker:9092 --topic my-structure-json --partitions 1
 log "Produce records to my-structure-json"
-docker exec -i connect kafka-console-producer --broker-list broker:9092 --topic my-structure-json << EOF
+docker exec -i connect kafka-console-producer --bootstrap-server broker:9092 --topic my-structure-json << EOF
 {"field1":"value11","field2":[]}
 {"field1":"value12","field2":null}
 {"field1":"value13","field2":[{"field21":"value21","field22":"value22"}]}

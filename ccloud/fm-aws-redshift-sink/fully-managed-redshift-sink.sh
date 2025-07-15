@@ -4,34 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
-then
-     logerror "ERROR: either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
-     exit 1
-else
-    if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
-    then
-        log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
-        export AWS_ACCESS_KEY_ID
-        export AWS_SECRET_ACCESS_KEY
-    else
-        if [ -f $HOME/.aws/credentials ]
-        then
-            logwarn "💭 AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
-            export AWS_ACCESS_KEY_ID=$( grep "^aws_access_key_id" $HOME/.aws/credentials | head -1 | awk -F'=' '{print $2;}' )
-            export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/credentials | head -1 | awk -F'=' '{print $2;}' ) 
-        fi
-    fi
-    if [ -z "$AWS_REGION" ]
-    then
-        AWS_REGION=$(aws configure get region | tr '\r' '\n')
-        if [ "$AWS_REGION" == "" ]
-        then
-            logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
-            exit 1
-        fi
-    fi
-fi
+handle_aws_credentials
 
 bootstrap_ccloud_environment
 
@@ -41,7 +14,7 @@ sleep 3
 playground topic create --topic orders --nb-partitions 1
 set -e
 
-CLUSTER_NAME=pg${USER}redshift${TAG}
+CLUSTER_NAME=pgfm${USER}redshift${TAG}
 CLUSTER_NAME=${CLUSTER_NAME//[-._]/}
 
 PASSWORD=$(date +%s | cksum | base64 | head -c 32 ; echo)
@@ -79,7 +52,7 @@ set -e
 
 log "Create AWS Redshift cluster"
 # https://docs.aws.amazon.com/redshift/latest/mgmt/getting-started-cli.html
-aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password "$PASSWORD" --node-type dc2.large --cluster-type single-node --publicly-accessible
+aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password "$PASSWORD" --node-type ra3.large --cluster-type single-node --publicly-accessible --tags Key=cflt_managed_by,Value=user Key=cflt_managed_id,Value="$USER"
 
 function cleanup_cloud_resources {
   set +e
@@ -101,7 +74,7 @@ while [[ ! $(cat /tmp/out.txt) =~ "available" ]]; do
      aws redshift describe-clusters --cluster-identifier $CLUSTER_NAME | jq .Clusters[0].ClusterStatus > /tmp/out.txt 2>&1
      CUR_WAIT=$(( CUR_WAIT+10 ))
      if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-          echo -e "\nERROR: The logs in ${CONTROL_CENTER_CONTAINER} container do not show 'available' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+          echo -e "\nERROR: The logs in ${CONTROL_CENTER_CONTAINER} container do not show 'available' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'playground container logs --open --container <container>'.\n"
           exit 1
      fi
 done

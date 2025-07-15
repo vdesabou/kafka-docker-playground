@@ -2,6 +2,7 @@ connector="${args[--connector]}"
 verbose="${args[--verbose]}"
 
 connector_type=$(playground state get run.connector_type)
+get_environment_used
 
 if [[ ! -n "$connector" ]]
 then
@@ -13,7 +14,7 @@ then
     fi
 fi
 
-if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [ "$environment" == "ccloud" ]
 then
   get_ccloud_connect
   get_kafka_docker_playground_dir
@@ -23,12 +24,12 @@ then
   then
       source $DELTA_CONFIGS_ENV
   else
-      logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+      logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
       exit 1
   fi
   if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
   then
-      logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
+      logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
       exit 1
   fi
 else
@@ -37,7 +38,7 @@ fi
 
 if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
 then
-    tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+    tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
     if [ $? != 0 ] || [ "$tag" == "" ]
     then
         logerror "❌ could not find current CP version from docker ps"
@@ -65,26 +66,8 @@ function handle_first_class_offset() {
         jq 'del(.metadata)' $file > $file_tmp
         cp $file_tmp $file
 
-        editor=$(playground config get editor)
-        if [ "$editor" != "" ]
-        then
-            log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-            if [ "$editor" = "code" ]
-            then
-                code --wait $file
-            else
-                $editor $file
-            fi
-        else
-            if [[ $(type code 2>&1) =~ "not found" ]]
-            then
-                logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
-                exit 1
-            else
-                log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-                code --wait $file
-            fi
-        fi
+        log "✨ Update the connector offsets as per your needs, save and close the file to continue"
+        playground open --file "${file}" --wait
 
         handle_ccloud_connect_rest_api "curl -s --request POST -H \"Content-Type: application/json\" --data @$file \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request\" --header \"authorization: Basic $authorization\""
     else
@@ -99,26 +82,8 @@ function handle_first_class_offset() {
         file=$tmp_dir/offsets-$connector.json
         echo "$curl_output" | jq . > $file
 
-        editor=$(playground config get editor)
-        if [ "$editor" != "" ]
-        then
-            log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-            if [ "$editor" = "code" ]
-            then
-                code --wait $file
-            else
-                $editor $file
-            fi
-        else
-            if [[ $(type code 2>&1) =~ "not found" ]]
-            then
-                logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
-                exit 1
-            else
-                log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-                code --wait $file
-            fi
-        fi
+        log "✨ Update the connector offsets as per your needs, save and close the file to continue"
+        playground open --file "${file}" --wait
 
         playground connector stop --connector $connector
 
@@ -203,7 +168,7 @@ do
                 # if [[ -n "$verbose" ]]
                 # then
                 #     log "🐞 CLI command used"
-                #     echo "kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security"
+                #     echo "kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security"
                 # fi
                 get_environment_used
                 if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [[ "$environment" == "ccloud" ]]
@@ -222,35 +187,17 @@ do
                     fi
 
                     echo "topic,partition,current-offset" > $file
-                    docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --export --reset-offsets --to-current --all-topics --dry-run >> $file
+                    docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector $security --export --reset-offsets --to-current --all-topics --dry-run >> $file
 
-                    editor=$(playground config get editor)
-                    if [ "$editor" != "" ]
-                    then
-                        log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-                        if [ "$editor" = "code" ]
-                        then
-                            code --wait $file
-                        else
-                            $editor $file
-                        fi
-                    else
-                        if [[ $(type code 2>&1) =~ "not found" ]]
-                        then
-                            logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
-                            exit 1
-                        else
-                            log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-                            code --wait $file
-                        fi
-                    fi
+                    log "✨ Update the connector offsets as per your needs, save and close the file to continue"
+                    playground open --file "${file}" --wait
 
                     # remove any empty lines and header
                     grep -v '^$' "$file" > $tmp_dir/tmp && mv $tmp_dir/tmp "$file"
                     grep -v 'current-offset' "$file" > $tmp_dir/tmp && mv $tmp_dir/tmp "$file"
 
                     docker cp $file $container:/tmp/offsets.csv > /dev/null 2>&1
-                    docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector $security --reset-offsets --from-file /tmp/offsets.csv --execute
+                    docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector $security --reset-offsets --from-file /tmp/offsets.csv --execute
 
                     if version_gt $tag "7.4.99"
                     then

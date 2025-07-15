@@ -11,66 +11,59 @@ services:
 
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
     hostname: zookeeper
     container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
 
   broker1:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker1
     container_name: broker1
-    depends_on:
-      - zookeeper
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
       KAFKA_MIN_INSYNC_REPLICAS: 2
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker1:9092
-      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_METRIC_REPORTERS: $KAFKA_METRIC_REPORTERS
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker1:9092,broker2:9092,broker3:9092
 
 
   broker2:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker2
     container_name: broker2
-    depends_on:
-      - zookeeper
     environment:
       KAFKA_BROKER_ID: 2
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
       KAFKA_MIN_INSYNC_REPLICAS: 2
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker2:9092
-      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_METRIC_REPORTERS: $KAFKA_METRIC_REPORTERS
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker1:9092,broker2:9092,broker3:9092
 
 
   broker3:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker3
     container_name: broker3
-    depends_on:
-      - zookeeper
     environment:
       KAFKA_BROKER_ID: 3
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
       KAFKA_MIN_INSYNC_REPLICAS: 2
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker3:9092
-      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_METRIC_REPORTERS: $KAFKA_METRIC_REPORTERS
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker1:9092,broker2:9092,broker3:9092
 
   connect1:
-    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     hostname: connect1
     container_name: connect1
     # restart: always
     depends_on:
-      - zookeeper
       - broker1
       - broker2
       - broker3
@@ -97,20 +90,19 @@ services:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator
       CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
       # Confluent Monitoring Interceptors for Control Center Streams Monitoring
-      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: $CONNECT_PRODUCER_INTERCEPTOR_CLASSES
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker1:9092,broker2:9092,broker2:9092
-      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: $CONNECT_CONSUMER_INTERCEPTOR_CLASSES
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker1:9092,broker2:9092,broker2:9092
       CONNECT_CONNECT_PROTOCOL: "eager"
       # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
 
   connect2:
-    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     hostname: connect2
     container_name: connect2
     restart: always
     depends_on:
-      - zookeeper
       - broker1
       - broker2
       - broker3
@@ -137,20 +129,19 @@ services:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator
       CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
       # Confluent Monitoring Interceptors for Control Center Streams Monitoring
-      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: $CONNECT_PRODUCER_INTERCEPTOR_CLASSES
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker1:9092,broker2:9092,broker2:9092
-      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: $CONNECT_CONSUMER_INTERCEPTOR_CLASSES
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker1:9092,broker2:9092,broker2:9092
       CONNECT_CONNECT_PROTOCOL: "eager"
       # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
 
   connect3:
-    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     hostname: connect3
     container_name: connect3
     # restart: always
     depends_on:
-      - zookeeper
       - broker1
       - broker2
       - broker3
@@ -177,19 +168,18 @@ services:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator
       CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
       # Confluent Monitoring Interceptors for Control Center Streams Monitoring
-      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: $CONNECT_PRODUCER_INTERCEPTOR_CLASSES
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker1:9092,broker2:9092,broker2:9092
-      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: $CONNECT_CONSUMER_INTERCEPTOR_CLASSES
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker1:9092,broker2:9092,broker2:9092
       CONNECT_CONNECT_PROTOCOL: "eager"
       # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
 
   control-center:
-    image: confluentinc/cp-enterprise-control-center:${TAG}
+    image: ${CP_CONTROL_CENTER_IMAGE}:${CP_CONTROL_CENTER_TAG}
     hostname: control-center
     container_name: control-center
     depends_on:
-      - zookeeper
       - broker1
       - broker2
       - broker3

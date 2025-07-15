@@ -37,7 +37,7 @@ else
             if [[ $url =~ "http" ]]
             then
                 short_url=$(echo $url | cut -d '#' -f 1)
-                if [[ -n "$only_show_url" ]]
+                if [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]]
                 then
                     log "🌐 documentation for $connector_type connector $name is available at:"
                     echo "$short_url"

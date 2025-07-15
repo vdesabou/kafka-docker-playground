@@ -4,6 +4,7 @@ interval="${args[--interval]}"
 max_wait="${args[--max-wait]}"
 
 connector_type=$(playground state get run.connector_type)
+get_environment_used
 
 if [[ ! -n "$connector" ]]
 then
@@ -15,7 +16,7 @@ then
     fi
 fi
 
-if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [ "$environment" == "ccloud" ]
 then
   get_ccloud_connect
   get_kafka_docker_playground_dir
@@ -25,12 +26,12 @@ then
   then
       source $DELTA_CONFIGS_ENV
   else
-      logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+      logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
       exit 1
   fi
   if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
   then
-      logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
+      logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
       exit 1
   fi
 else
@@ -132,7 +133,7 @@ function log_up() {
 function log_same() {
   ORANGE='\033[0;33m'
   NC='\033[0m' # No Color
-  echo -e "$ORANGE`date +"%H:%M:%S"` 🔸$@$NC"
+  echo -e "$ORANGE$(date +"%H:%M:%S") 🔸$@$NC"
 }
 
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
@@ -194,7 +195,7 @@ do
   if [[ -n "$verbose" ]]
   then
       log "🐞 CLI command used"
-      echo "kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security"
+      echo "kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security"
   fi
 
   SECONDS=0
@@ -216,9 +217,9 @@ do
       else
         consumer_group="connect-$connector"
       fi
-      docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group $consumer_group --describe | grep -v PARTITION | sed '/^$/d' &> $lag_output
+      docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group $consumer_group --describe | grep -v PARTITION | sed '/^$/d' &> $lag_output
     else
-      docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d' &> $lag_output
+      docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d' &> $lag_output
     fi
 
     if grep -q "Warning" $lag_output

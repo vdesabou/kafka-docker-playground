@@ -4,9 +4,9 @@ export IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 
 if [[ ! -n "$ignore_current_versions" ]]
 then
-  # keep TAG and CONNECT_TAG
+  # keep TAG and CP_CONNECT_TAG
   export TAG=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
-  export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+  export CP_CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
 fi
 
 export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
@@ -16,6 +16,12 @@ if [ "$docker_command" == "" ]
 then
   logerror "docker_command retrieved from $root_folder/playground.ini is empty !"
   exit 1
+fi
+
+enable_flink=$(playground state get flags.ENABLE_FLINK)
+if [ "$enable_flink" != "1" ]
+then
+  export flink_connectors=""
 fi
 
 get_environment_used
@@ -28,7 +34,7 @@ then
     then
         source $DELTA_CONFIGS_ENV
     else
-        logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+        logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
         exit 1
     fi
 fi
@@ -36,3 +42,5 @@ fi
 echo "$docker_command" > /tmp/playground-command
 log "💫 Recreate container(s)"
 bash /tmp/playground-command
+
+wait_container_ready

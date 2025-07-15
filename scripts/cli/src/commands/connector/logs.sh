@@ -12,18 +12,26 @@ then
 fi
 
 opensearch_script="$root_folder/reproduction-models/_miscellaneous/opensearch/alfred-workflow/alfred-opensearch-connect-workflow/open-lcc-logs.ksh"
-datadog_script="$root_folder/reproduction-models/_miscellaneous/opensearch/alfred-workflow/alfred-opensearch-connect-workflow/open-lcc-datadog.ksh"
+grafana_script="$root_folder/reproduction-models/_miscellaneous/opensearch/alfred-workflow/alfred-opensearch-connect-workflow/open-lcc-grafana.ksh"
 
 if [[ -n "$lcc_id" ]]
 then
     if [ -f "$opensearch_script" ]
     then
-        # confluent employee
-        export number_of_days=4
-        export open_audit_logs=1
-        log "🐛 Opening dashboards for $CONNECTOR_TYPE_FULLY_MANAGED connector ($lcc_id)"
-        bash "$opensearch_script" "$lcc_id"
-        bash "$datadog_script" "$lcc_id"
+        set +e
+        cmd="tell application id \"com.runningwithcrayons.Alfred\" to run trigger \"open_opensearch\" in workflow \"com.vdesabou.opensearch\" with argument \"$lcc_id\""
+        osascript -e "$cmd" > /dev/null 2>&1
+        if [ $? -ne 0 ]
+        then
+            # confluent employee
+            export number_of_days=4
+            export open_audit_logs=1
+            export open_admin_dashboard=1
+            export open_both_results=0
+            log "🐛 Opening dashboards for $CONNECTOR_TYPE_FULLY_MANAGED connector ($lcc_id)"
+            bash "$opensearch_script" "$lcc_id"
+            bash "$grafana_script" "$lcc_id|\$__all"
+        fi
         exit 0
     else
         logerror "🚨 This command with --lcc-id is not supported for non Confluent employees ($$root_folder/reproduction-models does not contain required scripts)"
@@ -54,12 +62,21 @@ then
         fi
         export number_of_days=4
         export open_audit_logs=1
+        export open_admin_dashboard=1
+        export open_both_results=0
         for connector in "${items[@]}"
         do
             connectorId=$(get_ccloud_connector_lcc $connector)
-            log "🐛 Opening dashboards for $connector_type connector $connector ($connectorId)"
-            bash "$opensearch_script" "$connectorId"
-            bash "$datadog_script" "$connectorId"
+            set +e
+            cmd="tell application id \"com.runningwithcrayons.Alfred\" to run trigger \"open_opensearch\" in workflow \"com.vdesabou.opensearch\" with argument \"$connectorId\""
+            osascript -e "$cmd" > /dev/null 2>&1
+            if [ $? -ne 0 ]
+            then
+                log "🐛 Opening dashboards for $connector_type connector $connector ($connectorId)"
+                bash "$opensearch_script" "$connectorId"
+                bash "$grafana_script" "$connectorId|\$__all"
+            fi
+            set -e
         done
 
     else

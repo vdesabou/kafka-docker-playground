@@ -22,7 +22,7 @@ rm -f mssql.key
 #https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-docker-container-security?view=sql-server-ver15
 #https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-encrypted-connections?view=sql-server-ver15&preserve-view=true#client-initiated-encryption
 log "Create a self-signed certificate"
-docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} openssl req -x509 -nodes -newkey rsa:2048 -subj '/CN=sqlserver' -keyout /tmp/mssql.key -out /tmp/mssql.pem -days 365
+docker run --quiet --rm -v $PWD:/tmp alpine/openssl req -x509 -nodes -newkey rsa:2048 -subj '/CN=sqlserver' -keyout /tmp/mssql.key -out /tmp/mssql.pem -days 365
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
@@ -37,7 +37,7 @@ fi
 
 log "Creating JKS from pem files"
 rm -f truststore.jks
-docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} keytool -importcert -alias MSSQLCACert -noprompt -file /tmp/mssql.pem -keystore /tmp/truststore.jks -storepass confluent
+docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keytool -importcert -alias MSSQLCACert -noprompt -file /tmp/mssql.pem -keystore /tmp/truststore.jks -storepass confluent
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
@@ -98,8 +98,24 @@ do
   sleep 5
 done
 
+log "Waiting for SQL Server to be ready"
+set +e
+while true
+do
+  docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! -Q "SELECT 1" > /dev/null 2>&1
+  if [ $? -eq 0 ]; then
+    log "SQL Server is ready"
+    break
+  fi
+  log "SQL Server not ready yet, waiting..."
+  sleep 5
+done
+set -e
+
+sleep 5
+
 log "Create table"
-docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
+docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
 -- Create the test database
 CREATE DATABASE testDB;
 GO
@@ -153,7 +169,7 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
+docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
 USE testDB;
 INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@office.com');
 GO
@@ -161,3 +177,8 @@ EOF
 
 log "Verifying topic server1.dbo.customers"
 playground topic consume --topic server1.dbo.customers --min-expected-messages 5 --timeout 60
+
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name

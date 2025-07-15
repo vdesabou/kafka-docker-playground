@@ -14,7 +14,7 @@ cd ../../ccloud/fm-gcp-gcs-source
 GCP_KEYFILE="${PWD}/keyfile.json"
 if [ ! -f ${GCP_KEYFILE} ] && [ -z "$GCP_KEYFILE_CONTENT" ]
 then
-     logerror "ERROR: either the file ${GCP_KEYFILE} is not present or environment variable GCP_KEYFILE_CONTENT is not set!"
+     logerror "❌ either the file ${GCP_KEYFILE} is not present or environment variable GCP_KEYFILE_CONTENT is not set!"
      exit 1
 else 
     if [ -f ${GCP_KEYFILE} ]
@@ -27,17 +27,17 @@ else
 fi
 cd -
 
-bootstrap_ccloud_environment
+GCS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${TAG}
+GCS_BUCKET_NAME=${GCS_BUCKET_NAME//[-.]/}
+GCS_BUCKET_REGION=${1:-europe-west2}
+
+bootstrap_ccloud_environment "gcp" "$GCS_BUCKET_REGION"
 
 set +e
 playground topic delete --topic quick-start-topic
 sleep 3
 playground topic create --topic quick-start-topic --nb-partitions 1
 set -e
-
-GCS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${TAG}
-GCS_BUCKET_NAME=${GCS_BUCKET_NAME//[-.]/}
-GCS_BUCKET_REGION=${1:-europe-west2}
 
 log "Doing gsutil authentication"
 set +e

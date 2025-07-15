@@ -3,7 +3,7 @@ services:
 
 
   ksql-server:
-    image: ${CP_KSQL_IMAGE}:${TAG}
+    image: ${CP_KSQL_IMAGE}:${CP_KSQL_TAG}
     hostname: ksql-server
     container_name: ksql-server
     ports:
@@ -44,7 +44,7 @@ services:
       KSQL_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
 
   ksql-cli:
-    image: ${CP_KSQL_CLI_IMAGE}
+    image: ${CP_KSQL_CLI_IMAGE}:${CP_KSQL_CLI_TAG}
     container_name: ksql-cli
     entrypoint: /bin/sh
     tty: true

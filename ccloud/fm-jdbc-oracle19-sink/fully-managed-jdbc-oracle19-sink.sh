@@ -48,7 +48,7 @@ do
   sleep 5
 done
 
-playground --output-level WARN container logs --container oracle --wait-for-log "DATABASE IS READY TO USE" --max-wait 2500
+playground container logs --container oracle --wait-for-log "DATABASE IS READY TO USE" --max-wait 600
 log "Oracle DB has started!"
 
 log "Oracle DB has started!"

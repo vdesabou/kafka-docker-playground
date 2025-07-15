@@ -21,12 +21,12 @@ then
         then
             source $DELTA_CONFIGS_ENV
         else
-            logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+            logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
             exit 1
         fi
         if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
         then
-            logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
+            logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
             exit 1
         fi
         if [[ -n "$verbose" ]]
@@ -35,14 +35,14 @@ then
             echo "kafka-topics --create --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --partitions $nb_partitions ${other_args[*]}"
         fi
         get_connect_image
-        docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --create --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --partitions $nb_partitions ${other_args[*]}
+        docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-topics --create --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --partitions $nb_partitions ${other_args[*]}
     else
         if [[ -n "$verbose" ]]
         then
             log "🐞 CLI command used"
-            echo "kafka-topics --create --topic $topic --bootstrap-server broker:9092 --partitions $nb_partitions $security ${other_args[*]}"
+            echo "kafka-topics --create --topic $topic --bootstrap-server $bootstrap_server:9092 --partitions $nb_partitions $security ${other_args[*]}"
         fi
-        docker exec $container kafka-topics --create --topic $topic --bootstrap-server broker:9092 --partitions $nb_partitions $security ${other_args[*]}
+        docker exec $container kafka-topics --create --topic $topic --bootstrap-server $bootstrap_server:9092 --partitions $nb_partitions $security ${other_args[*]}
     fi
 else
     logerror "❌ topic $topic already exist !"

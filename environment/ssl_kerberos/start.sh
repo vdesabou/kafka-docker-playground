@@ -9,15 +9,9 @@ verify_docker_and_memory
 
 check_docker_compose_version
 check_bash_version
-check_playground_version
+check_and_update_playground_version
 
-
-OLDDIR=$PWD
-cd ${OLDDIR}/../../environment/ssl_kerberos/security
-log "🔐 Generate keys and certificates used for SSL"
-docker run -u0 --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "/tmp/certs-create.sh > /dev/null 2>&1 && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
-cd ${OLDDIR}/../../environment/ssl_kerberos
-
+playground tools certs-create --output-folder "${PWD}/../../environment/ssl_kerberos/security"
 
 # Starting kerberos,
 # Avoiding starting up all services at the begining to generate the keytab first
@@ -28,16 +22,25 @@ if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
   ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DOCKER_COMPOSE_FILE_OVERRIDE}"
   set +e
-  nb_connect_services=$(egrep -c "connect[0-9]+:" ${DOCKER_COMPOSE_FILE_OVERRIDE})
+  nb_connect_services=$(grep -Ec "connect[0-9]+:" ${DOCKER_COMPOSE_FILE_OVERRIDE})
   set -e
   check_arm64_support "${DIR}" "${DOCKER_COMPOSE_FILE_OVERRIDE}"
 fi
 set_profiles
 
-docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
-docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} build kdc
-docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} build client
-docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} up -d --quiet-pull kdc
+if [ ! -z $ENABLE_KRAFT ]
+then
+  # KRAFT mode
+  KRAFT_KERBEROS_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DIR}/../../environment/ssl_kerberos/docker-compose-kraft.yml"
+else
+  # Zookeeper mode
+  KRAFT_KERBEROS_DOCKER_COMPOSE_FILE_OVERRIDE=""
+fi
+
+docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/ssl_kerberos/docker-compose.yml ${KRAFT_KERBEROS_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE}  ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_conduktor_command} ${profile_kafka_nodes_command} ${profile_connect_nodes_command} down -v --remove-orphans
+docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/ssl_kerberos/docker-compose.yml ${KRAFT_KERBEROS_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE}  ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_conduktor_command} ${profile_kafka_nodes_command} ${profile_connect_nodes_command} build kdc
+docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/ssl_kerberos/docker-compose.yml ${KRAFT_KERBEROS_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE}  ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_conduktor_command} ${profile_kafka_nodes_command} ${profile_connect_nodes_command} build client
+docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/ssl_kerberos/docker-compose.yml ${KRAFT_KERBEROS_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} up -d --quiet-pull kdc
 
 docker exec -i kdc kadmin.local -w password -q "modprinc -maxrenewlife 11days +allow_renewable krbtgt/TEST.CONFLUENT.IO"  > /dev/null
 ### Create the required identities:
@@ -129,12 +132,12 @@ then
   docker exec -i kdc chmod a+r /var/lib/secret/kafka-conduktor.key
 fi
 # Starting zookeeper and kafka now that the keytab has been created with the required credentials and services
-docker compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_kafka_nodes_command} ${profile_connect_nodes_command} up -d --quiet-pull
-log "📝 To see the actual properties file, use cli command playground container get-properties -c <container>"
-command="source ${DIR}/../../scripts/utils.sh && docker compose -f ${DIR}/../../environment/plaintext/docker-compose.yml -f ${DIR}/../../environment/ssl_kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command}  ${profile_kafka_nodes_command} ${profile_connect_nodes_command} up -d --quiet-pull"
+docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/ssl_kerberos/docker-compose.yml ${KRAFT_KERBEROS_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_kafka_nodes_command} ${profile_connect_nodes_command} up -d --quiet-pull
+log "📝 To see the actual properties file, use cli command 'playground container get-properties -c <container>'"
+command="source ${DIR}/../../scripts/utils.sh && docker compose -f ${DIR}/../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ${DIR}/../../environment/ssl_kerberos/docker-compose.yml ${KRAFT_KERBEROS_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command}  ${profile_kafka_nodes_command} ${profile_connect_nodes_command} up -d --quiet-pull"
 playground state set run.docker_command "$command"
 playground state set run.environment "ssl_kerberos"
-log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command playground container recreate"
+log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command 'playground container recreate'"
 
 
 
@@ -155,7 +158,7 @@ docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/fo
 log "-----------------------------------------"
 log "Example configuration to access kafka:"
 log "-----------------------------------------"
-log "-> docker compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list broker:9092 --topic test --producer.config /etc/kafka/producer.properties'"
+log "-> docker compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --bootstrap-server broker:9092 --topic test --producer.config /etc/kafka/producer.properties'"
 log "-> docker compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker:9092 --topic test --consumer.config /etc/kafka/consumer.properties --from-beginning'"
 
 cd ${OLDDIR}

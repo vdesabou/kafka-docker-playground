@@ -18,7 +18,7 @@ then
     logwarn "❌ skipping as it is not an example with connector, but --connector-tag is set"
     exit 1
 else
-    current_tag=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
+    current_tag=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
     log "🎯 Version currently used for confluent platform"
     echo "$current_tag"
 
@@ -39,7 +39,7 @@ else
 
         # latest
         latest=$(playground connector-plugin versions --connector-plugin $owner/$name --last 1)
-        latest_to_compare=$(echo "$latest" | sed 's/ ([0-9]* days ago)//')
+        latest_to_compare=$(echo "$latest" | head -n 1 | sed 's/ ([0-9]* days ago)//')
 
         ## current version
         manifest_file="$root_folder/confluent-hub/$full_connector_name/manifest.json"

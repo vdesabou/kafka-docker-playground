@@ -8,7 +8,7 @@ skip_automatic_connector_config=${args[--skip-automatic-connector-config]}
 
 # keep TAG, CONNECT TAG and ORACLE_IMAGE
 export TAG=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
-export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+export CP_CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
 export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
 
 docker_command=$(playground state get run.docker_command)
@@ -70,9 +70,12 @@ bash /tmp/playground-command-zazkia
 
 log "💗 you can now use zazkia tcp proxy using <zazkia:49998>"
 log "🌐 zazkia UI is available on http://localhost:9191"
-set +e
-open "http://localhost:9191"
-set -e
+if [[ $(type -f open 2>&1) =~ "not found" ]]
+then
+  :
+else
+  open "http://localhost:9191"
+fi
 
 if [[ -n "$skip_automatic_connector_config" ]]
 then

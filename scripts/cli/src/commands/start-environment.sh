@@ -13,7 +13,19 @@ fi
 test_file_directory="$(dirname "${test_file}")"
 
 set +e
-playground container kill-all
+container_kill_all_before_run=$(playground config get container-kill-all-before-run)
+if [ "$container_kill_all_before_run" == "" ]
+then
+    playground config set container-kill-all-before-run false
+fi
+
+if [ "$container_kill_all_before_run" == "true" ] || [ "$container_kill_all_before_run" == "" ]
+then
+  log "💀 kill all docker containers (disable with 'playground config container-kill-all-before-run false')"
+  playground container kill-all
+else
+  playground stop
+fi
 set -e
 
 if [[ -n "$wait_for_control_center" ]]

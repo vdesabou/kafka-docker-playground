@@ -3,3 +3,8 @@ services:
   broker-europe:
       environment:
         KAFKA_CONFLUENT_CLUSTER_LINK_ENABLE : "true"
+        KAFKA_CONFLUENT_CLUSTER_LINK_METADATA_TOPIC_REPLICATION_FACTOR: "1"
+
+  broker-us:
+      environment:
+        KAFKA_CONFLUENT_CLUSTER_LINK_METADATA_TOPIC_REPLICATION_FACTOR: "1"

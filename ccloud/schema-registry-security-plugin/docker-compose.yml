@@ -2,7 +2,7 @@
 services:
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:${TAG}
+    image: ${CP_SCHEMA_REGISTRY_IMAGE}:${CP_SCHEMA_REGISTRY_TAG}
     hostname: schema-registry
     container_name: schema-registry
     ports:
@@ -24,10 +24,11 @@ services:
       SCHEMA_REGISTRY_AUTHENTICATION_METHOD: "BASIC"
       SCHEMA_REGISTRY_AUTHENTICATION_ROLES: "write,read,admin"
       SCHEMA_REGISTRY_AUTHENTICATION_REALM: "Schema"
-      SCHEMA_REGISTRY_OPTS: "-Djava.security.auth.login.config=/tmp/jaas_config.file"
+      SCHEMA_REGISTRY_OPTS: "-Djava.security.auth.login.config=$JAAS_CONFIG_FILE"
       SCHEMA_REGISTRY_CONFLUENT_SCHEMA_REGISTRY_AUTH_MECHANISM: "JETTY_AUTH"
       SCHEMA_REGISTRY_CONFLUENT_LICENSE_REPLICATION_FACTOR: 3
       # SCHEMA_REGISTRY_CONFLUENT_LICENSE: $CONFLUENT_LICENSE
     volumes:
       - ./jaas_config.file:/tmp/jaas_config.file
+      - ./jaas_config_8_plus.file:/tmp/jaas_config_8_plus.file
       - ./password-file:/tmp/password-file

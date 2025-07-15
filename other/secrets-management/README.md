@@ -29,7 +29,7 @@ confluent-v1 secret file encrypt --local-secrets-file /secrets/secret.txt --remo
 Sending messages to topic my-secret-value:
 
 ```bash
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic my-secret-value << EOF
+docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic my-secret-value << EOF
 {"customer_name":"Ed", "complaint_type":"Dirty car", "trip_cost": 29.10, "new_customer": false, "number_of_rides": 22}
 EOF
 ```

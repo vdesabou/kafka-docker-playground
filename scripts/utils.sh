@@ -13,7 +13,7 @@ then
     trap cleanup-workaround-file EXIT
     test_file="$PWD/$0"
     filename=$(basename $test_file)
-    if [ "$filename" != "playground-command" ]
+    if [[ "$filename" != "playground-command"* ]]
     then
       playground state set run.test_file "$test_file"
       playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
@@ -22,14 +22,20 @@ then
   fi
 fi
 
+if [ -z "$FLINK_TAG" ]
+then
+    # FLINK_TAG is not set, use default:
+    export FLINK_TAG=latest
+fi
+
 # Setting up TAG environment variable
 #
 if [ -z "$TAG" ]
 then
     # TAG is not set, use default:
-    export TAG=7.7.0 # default tag
+    export TAG=8.0.0 # default tag
     # to handle ubi8 images
-    export TAG_BASE=$TAG
+    export TAG_BASE="$TAG"
     if [ -z "$CP_KAFKA_IMAGE" ]
     then
       if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ] && [ -z "$DOCKER_COMPOSE_FILE_UPDATE_VERSION" ]
@@ -38,13 +44,100 @@ then
         log "🎓 Use --tag option to specify different version, see https://kafka-docker-playground.io/#/how-to-use?id=🎯-for-confluent-platform-cp"
       fi
     fi
-    export CP_KAFKA_IMAGE=confluentinc/cp-server
-    export CP_BASE_IMAGE=confluentinc/cp-base-new
-    export CP_KSQL_IMAGE=confluentinc/cp-ksqldb-server
-    export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-cli:latest
     export LEGACY_CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_SSL=""
     export CONNECT_USER="appuser"
-    export CP_CONNECT_IMAGE=confluentinc/cp-server-connect-base
+
+    if [ -z "$CP_ZOOKEEPER_IMAGE" ]
+    then
+      export CP_ZOOKEEPER_IMAGE=confluentinc/cp-zookeeper
+    fi
+
+    if [ -z "$CP_KAFKA_IMAGE" ]
+    then
+      export CP_KAFKA_IMAGE=confluentinc/cp-server
+    fi
+
+    if [ -z "$CP_CONNECT_IMAGE" ]
+    then
+      export CP_CONNECT_IMAGE=confluentinc/cp-server-connect-base
+    fi
+
+    if [ -z "$CP_SCHEMA_REGISTRY_IMAGE" ]
+    then
+      export CP_SCHEMA_REGISTRY_IMAGE=confluentinc/cp-schema-registry
+    fi
+
+    if [ -z "$CP_CONTROL_CENTER_IMAGE" ]
+    then
+      if [ ! -z "$ENABLE_LEGACY_CONTROL_CENTER" ]
+      then
+        log "💠👨‍🦳 ENABLE_LEGACY_CONTROL_CENTER is set, using legacy Control Center"
+        export CP_CONTROL_CENTER_IMAGE=confluentinc/cp-enterprise-control-center
+      else
+        log "💠⭐ Using CP Control Center Next Gen"
+        export CP_CONTROL_CENTER_IMAGE=confluentinc/cp-enterprise-control-center-next-gen
+      fi
+    fi
+
+    if [ -z "$CP_REST_PROXY_IMAGE" ]
+    then
+      export CP_REST_PROXY_IMAGE=confluentinc/cp-kafka-rest
+    fi
+
+    if [ -z "$CP_KSQL_IMAGE" ]
+    then
+      export CP_KSQL_IMAGE=confluentinc/cp-ksqldb-server
+    fi
+
+    if [ -z "$CP_KSQL_CLI_IMAGE" ]
+    then
+      export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-cli
+    fi
+
+    if [ -z "$CP_ZOOKEEPER_TAG" ]
+    then
+      export CP_ZOOKEEPER_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_KAFKA_TAG" ]
+    then
+      export CP_KAFKA_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_CONNECT_TAG" ]
+    then
+      export CP_CONNECT_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_SCHEMA_REGISTRY_TAG" ]
+    then
+      export CP_SCHEMA_REGISTRY_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_CONTROL_CENTER_TAG" ]
+    then
+      if [ ! -z "$ENABLE_LEGACY_CONTROL_CENTER" ]
+      then
+        export CP_CONTROL_CENTER_TAG="$TAG"
+      else
+        export CP_CONTROL_CENTER_TAG=latest
+      fi
+    fi
+
+    if [ -z "$CP_REST_PROXY_TAG" ]
+    then
+      export CP_REST_PROXY_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_KSQL_TAG" ]
+    then
+      export CP_KSQL_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_KSQL_CLI_TAG" ]
+    then
+      export CP_KSQL_CLI_TAG="latest"
+    fi
     set_kafka_client_tag
 else
     if [ -z "$CP_KAFKA_IMAGE" ]
@@ -54,6 +147,71 @@ else
         log "🚀 Using specified CP version $TAG"
       fi
     fi
+
+    if [ -z "$CP_ZOOKEEPER_IMAGE" ]
+    then
+      export CP_ZOOKEEPER_IMAGE=confluentinc/cp-zookeeper
+    fi
+    if [ -z "$CP_SCHEMA_REGISTRY_IMAGE" ]
+    then
+      export CP_SCHEMA_REGISTRY_IMAGE=confluentinc/cp-schema-registry
+    fi
+    if [ -z "$CP_REST_PROXY_IMAGE" ]
+    then
+      export CP_REST_PROXY_IMAGE=confluentinc/cp-kafka-rest
+    fi
+
+    if [ -z "$CP_CONTROL_CENTER_IMAGE" ]
+    then
+      if [ ! -z "$ENABLE_LEGACY_CONTROL_CENTER" ]
+      then
+        log "💠👨‍🦳 ENABLE_LEGACY_CONTROL_CENTER is set, using legacy Control Center"
+        export CP_CONTROL_CENTER_IMAGE=confluentinc/cp-enterprise-control-center
+      else
+        log "💠⭐ Using CP Control Center Next Gen"
+        export CP_CONTROL_CENTER_IMAGE=confluentinc/cp-enterprise-control-center-next-gen
+      fi
+    fi
+
+    if [ -z "$CP_ZOOKEEPER_TAG" ]
+    then
+      export CP_ZOOKEEPER_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_KAFKA_TAG" ]
+    then
+      export CP_KAFKA_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_CONNECT_TAG" ]
+    then
+      export CP_CONNECT_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_SCHEMA_REGISTRY_TAG" ]
+    then
+      export CP_SCHEMA_REGISTRY_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_CONTROL_CENTER_TAG" ]
+    then
+      if [ ! -z "$ENABLE_LEGACY_CONTROL_CENTER" ]
+      then
+        export CP_CONTROL_CENTER_TAG="$TAG"
+      else
+        export CP_CONTROL_CENTER_TAG=latest
+      fi
+    fi
+
+    if [ -z "$CP_REST_PROXY_TAG" ]
+    then
+      export CP_REST_PROXY_TAG="$TAG"
+    fi
+
+    if [ -z "$CP_KSQL_TAG" ]
+    then
+      export CP_KSQL_TAG="$TAG"
+    fi
     # to handle ubi8 images
     export TAG_BASE=$(echo $TAG | cut -d "-" -f1)
     first_version=${TAG_BASE}
@@ -61,27 +219,50 @@ else
     if version_gt $first_version $second_version; then
         if [ "$first_version" = "5.3.6" ]
         then
-          logwarn "Workaround for 5.3.6 image broker, using custom image vdesabou/cp-server !"
-          export CP_KAFKA_IMAGE=vdesabou/cp-server
+          if [ -z "$CP_KAFKA_IMAGE" ]
+          then
+            logwarn "Workaround for 5.3.6 image broker, using custom image vdesabou/cp-server !"
+            export CP_KAFKA_IMAGE=vdesabou/cp-server
+          fi
         else
-          export CP_KAFKA_IMAGE=confluentinc/cp-server
+          if [ -z "$CP_KAFKA_IMAGE" ]
+          then
+            export CP_KAFKA_IMAGE=confluentinc/cp-server
+          fi
         fi
     else
+      if [ -z "$CP_KAFKA_IMAGE" ]
+      then
         export CP_KAFKA_IMAGE=confluentinc/cp-enterprise-kafka
-    fi
-    second_version=5.3.99
-    if version_gt $first_version $second_version; then
-        export CP_BASE_IMAGE=confluentinc/cp-base-new
-    else
-        export CP_BASE_IMAGE=confluentinc/cp-base
+      fi
     fi
     second_version=5.4.99
     if version_gt $first_version $second_version; then
+      if [ -z "$CP_KSQL_IMAGE" ]
+      then
         export CP_KSQL_IMAGE=confluentinc/cp-ksqldb-server
-        export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-cli:${TAG_BASE}
+      fi
+      if [ -z "$CP_KSQL_CLI_IMAGE" ]
+      then
+        export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-cli
+      fi
+      if [ -z "$CP_KSQL_CLI_TAG" ]
+      then
+        export CP_KSQL_CLI_TAG=${TAG_BASE}
+      fi
     else
+      if [ -z "$CP_KSQL_IMAGE" ]
+      then
         export CP_KSQL_IMAGE=confluentinc/cp-ksql-server
-        export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksql-cli:${TAG_BASE}
+      fi
+      if [ -z "$CP_KSQL_CLI_IMAGE" ]
+      then
+        export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksql-cli
+      fi
+      if [ -z "$CP_KSQL_CLI_TAG" ]
+      then
+        export CP_KSQL_CLI_TAG=${TAG_BASE}
+      fi
     fi
     second_version=5.2.99
     if version_gt $first_version $second_version; then
@@ -90,10 +271,16 @@ else
           logwarn "Workaround for ST-6539, using custom image vdesabou/cp-server-connect-base !"
           export CP_CONNECT_IMAGE=vdesabou/cp-server-connect-base
         else
-          export CP_CONNECT_IMAGE=confluentinc/cp-server-connect-base
+          if [ -z "$CP_CONNECT_IMAGE" ]
+          then
+            export CP_CONNECT_IMAGE=confluentinc/cp-server-connect-base
+          fi
         fi
     else
-        export CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect-base
+        if [ -z "$CP_CONNECT_IMAGE" ]
+        then
+          export CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect-base
+        fi
     fi
     second_version=5.3.99
     if version_gt $first_version $second_version; then
@@ -119,6 +306,7 @@ then
   export GRAFANA_AGENT_CONSUMER=""
   export GRAFANA_AGENT_SR=""
   export GRAFANA_AGENT_KSQLDB=""
+  export GRAFANA_FLINK=""
 else
   export GRAFANA_AGENT_ZK="-javaagent:/usr/share/jmx_exporter/pyroscope-0.11.2.jar -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.20.0.jar=1234:/usr/share/jmx_exporter/zookeeper.yml"
   export GRAFANA_AGENT_BROKER="-javaagent:/usr/share/jmx_exporter/pyroscope-0.11.2.jar -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.20.0.jar=1234:/usr/share/jmx_exporter/kafka_broker.yml"
@@ -127,16 +315,9 @@ else
   export GRAFANA_AGENT_CONSUMER="-javaagent:/usr/share/jmx_exporter/pyroscope-0.11.2.jar -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.20.0.jar=1234:/usr/share/jmx_exporter/kafka-consumer.yml"
   export GRAFANA_AGENT_SR="-javaagent:/usr/share/jmx_exporter/pyroscope-0.11.2.jar -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.20.0.jar=1234:/usr/share/jmx_exporter/confluent_schemaregistry.yml"
   export GRAFANA_AGENT_KSQLDB="-javaagent:/usr/share/jmx_exporter/pyroscope-0.11.2.jar -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.20.0.jar=1234:/usr/share/jmx_exporter/confluent_ksql.yml"
+  export GRAFANA_FLINK="metrics.reporter.prom.factory.class: org.apache.flink.metrics.prometheus.PrometheusReporterFactory
+        metrics.reporter.prom.port: 9090"
 fi
-
-# Migrate SimpleAclAuthorizer to AclAuthorizer #1276
-if version_gt $TAG "5.3.99"
-then
-  export KAFKA_AUTHORIZER_CLASS_NAME="kafka.security.authorizer.AclAuthorizer"
-else
-  export KAFKA_AUTHORIZER_CLASS_NAME="kafka.security.auth.SimpleAclAuthorizer"
-fi
-
 
 if [ ! -z "$CONNECTOR_TAG" ] && [ ! -z "$CONNECTOR_ZIP" ]
 then
@@ -152,16 +333,16 @@ then
   if [[ $0 == *"environment"* ]]
   then
     # log "DEBUG: start.sh from environment folder. Skipping..."
-    if [ -z "$CONNECT_TAG" ]
+    if [ -z "$CP_CONNECT_TAG" ]
     then
-      export CONNECT_TAG="$TAG"
+      export CP_CONNECT_TAG="$TAG"
     fi
     :
   elif [[ $0 == *"stop.sh"* ]]
   then
-    if [ -z "$CONNECT_TAG" ]
+    if [ -z "$CP_CONNECT_TAG" ]
     then
-      export CONNECT_TAG="$TAG"
+      export CP_CONNECT_TAG="$TAG"
     fi
     :
   elif [[ $0 == *"run-tests"* ]]
@@ -187,9 +368,9 @@ then
       if [ "$connector_paths" == "" ]
       then
         # not a connector test
-        if [ -z "$CONNECT_TAG" ]
+        if [ -z "$CP_CONNECT_TAG" ]
         then
-          export CONNECT_TAG="$TAG"
+          export CP_CONNECT_TAG="$TAG"
         fi
       else
         ###
@@ -210,7 +391,7 @@ then
             logwarn "CONNECTOR_TAG (--connector-tag option) was not set for element $i, setting it to latest"
             CONNECTOR_VERSION="latest"
           fi
-          export CONNECT_TAG="$TAG"
+          export CP_CONNECT_TAG="$TAG"
 
           maybe_create_image
 
@@ -227,7 +408,7 @@ then
           fi
           log "🎱 Installing connector $owner/$name:$CONNECTOR_VERSION"
           set +e
-          docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "confluent-hub install --no-prompt $owner/$name:$CONNECTOR_VERSION && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" > /tmp/result.log 2>&1
+          docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "confluent-hub install --no-prompt $owner/$name:$CONNECTOR_VERSION && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" > /tmp/result.log 2>&1
           if [ $? != 0 ]
           then
               logerror "❌ failed to install connector $owner/$name:$CONNECTOR_VERSION"
@@ -281,16 +462,16 @@ then
         done
       fi
     else
-      if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ] && [ "$0" != "/tmp/playground-command" ] && [ "$0" != "/tmp/playground-command-debugging" ]
+      if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ] && [ "$0" != "/tmp/playground-command" ] && [ "$0" != "/tmp/playground-command-debugging" ] && [ "$0" != "/tmp/playground-command-zazkia" ]
       then
         logerror "📁 Could not determine docker-compose override file from $PWD/$0 !"
         logerror "👉 Please check you're running a connector example !"
         logerror "🎓 Check the related documentation https://kafka-docker-playground.io/#/how-it-works?id=🐳-docker-override"
         exit 1
       else
-        if [ -z "$CONNECT_TAG" ]
+        if [ -z "$CP_CONNECT_TAG" ]
         then
-          export CONNECT_TAG="$TAG"
+          export CP_CONNECT_TAG="$TAG"
         fi
       fi
     fi
@@ -301,16 +482,16 @@ else
   ###
   if [[ $0 == *"environment"* ]]
   then
-    if [ -z "$CONNECT_TAG" ]
+    if [ -z "$CP_CONNECT_TAG" ]
     then
-      export CONNECT_TAG="$TAG"
+      export CP_CONNECT_TAG="$TAG"
     fi
     :
   elif [[ $0 == *"stop.sh"* ]]
   then
-    if [ -z "$CONNECT_TAG" ]
+    if [ -z "$CP_CONNECT_TAG" ]
     then
-      export CONNECT_TAG="$TAG"
+      export CP_CONNECT_TAG="$TAG"
     fi
     CONNECTOR_TAG=$version
     :
@@ -332,9 +513,9 @@ else
       if [ "$connector_paths" == "" ]
       then
         # not a connector test
-        if [ -z "$CONNECT_TAG" ]
+        if [ -z "$CP_CONNECT_TAG" ]
         then
-          export CONNECT_TAG="$TAG"
+          export CP_CONNECT_TAG="$TAG"
           maybe_create_image
         fi
       else
@@ -360,15 +541,15 @@ else
           if [ "$name" == "" ]
           then
             # can happen for filestream
-            if [ -z "$CONNECT_TAG" ]
+            if [ -z "$CP_CONNECT_TAG" ]
             then
-              export CONNECT_TAG="$TAG"
+              export CP_CONNECT_TAG="$TAG"
               maybe_create_image
             fi
           else
-            if [ -z "$CONNECT_TAG" ]
+            if [ -z "$CP_CONNECT_TAG" ]
             then
-              export CONNECT_TAG="$TAG"
+              export CP_CONNECT_TAG="$TAG"
             fi
 
             ###
@@ -389,7 +570,7 @@ else
 
               log "🎱 Installing connector from zip $connector_zip_name"
               set +e
-              docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components  -v /tmp:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "confluent-hub install --no-prompt /tmp/${connector_zip_name} && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" > /tmp/result.log 2>&1
+              docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components  -v /tmp:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "confluent-hub install --no-prompt /tmp/${connector_zip_name} && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" > /tmp/result.log 2>&1
               if [ $? != 0 ]
               then
                   logerror "❌ failed to install connector from zip $connector_zip_name"
@@ -432,7 +613,7 @@ else
 
             log "🎱 Installing connector $owner/$name:$version_to_get_from_hub"
             set +e
-            docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "confluent-hub install --no-prompt $owner/$name:$version_to_get_from_hub && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" > /tmp/result.log 2>&1
+            docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "confluent-hub install --no-prompt $owner/$name:$version_to_get_from_hub && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" > /tmp/result.log 2>&1
             if [ $? != 0 ]
             then
                 logerror "❌ failed to install connector $owner/$name:$version_to_get_from_hub"
@@ -482,9 +663,9 @@ else
             #  Neither CONNECTOR_ZIP or CONNECTOR_JAR are set
             ###
             else
-              if [ -z "$CONNECT_TAG" ]
+              if [ -z "$CP_CONNECT_TAG" ]
               then
-                export CONNECT_TAG="$TAG"
+                export CP_CONNECT_TAG="$TAG"
               fi
               if [ "$first_loop" = true ]
               then
@@ -504,8 +685,11 @@ else
       fi
     fi
   fi
-  if [ -z "$CONNECT_TAG" ]
+  if [ -z "$CP_CONNECT_TAG" ]
   then
-    export CONNECT_TAG="$TAG"
+    export CP_CONNECT_TAG="$TAG"
   fi
 fi
+
+determine_kraft_mode
+get_ccs_or_ce_specifics

@@ -4,13 +4,20 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "12.1.99"
+then
+     logwarn "minimal supported connector version is 12.2.0 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 # Need to create the TIBCO EMS image using https://github.com/mikeschippers/docker-tibco
 cd ../../connect/connect-jms-tibco-source/docker-tibco/
 get_3rdparty_file "TIB_ems-ce_8.5.1_linux_x86_64.zip"
 cd -
 if [ ! -f ../../connect/connect-jms-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip ]
 then
-     logerror "ERROR: ../../connect/connect-jms-tibco-source/docker-tibco/ does not contain TIBCO EMS zip file TIB_ems-ce_8.5.1_linux_x86_64.zip"
+     logerror "❌ ../../connect/connect-jms-tibco-source/docker-tibco/ does not contain TIBCO EMS zip file TIB_ems-ce_8.5.1_linux_x86_64.zip"
      exit 1
 fi
 

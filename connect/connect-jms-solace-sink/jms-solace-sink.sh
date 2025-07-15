@@ -4,6 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "2.1.15"
+then
+     logwarn "minimal supported connector version is 2.1.16 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 function wait_for_solace () {
      MAX_WAIT=240
      CUR_WAIT=0
@@ -15,7 +22,7 @@ function wait_for_solace () {
           docker container logs solace > /tmp/out.txt 2>&1
           CUR_WAIT=$(( CUR_WAIT+10 ))
           if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-               echo -e "\nERROR: The logs in all connect containers do not show 'Running pre-startup checks' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+               echo -e "\nERROR: The logs in all connect containers do not show 'Running pre-startup checks' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'playground container logs --open --container <container>'.\n"
                exit 1
           fi
      done

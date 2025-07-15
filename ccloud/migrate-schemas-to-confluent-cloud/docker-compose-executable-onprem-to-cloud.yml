@@ -2,7 +2,7 @@
 services:
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
     hostname: zookeeper
     container_name: zookeeper
     environment:
@@ -12,11 +12,9 @@ services:
       KAFKA_OPTS: -Dzookeeper.4lw.commands.whitelist=*
 
   broker:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker
     container_name: broker
-    depends_on:
-      - zookeeper
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
@@ -24,7 +22,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
       # Confluent Metrics Reporter for Control Center Cluster Monitoring
-      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_METRIC_REPORTERS: $KAFKA_METRIC_REPORTERS
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker:9092
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_ENABLE: 'true'
@@ -36,7 +34,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:${TAG}
+    image: ${CP_SCHEMA_REGISTRY_IMAGE}:${CP_SCHEMA_REGISTRY_TAG}
     hostname: schema-registry
     container_name: schema-registry
     ports:
@@ -48,5 +46,5 @@ services:
       SCHEMA_REGISTRY_MODE_MUTABILITY: "true"
 
   connect:
-    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     entrypoint: ["sh", "-c", "sleep 2073600"]

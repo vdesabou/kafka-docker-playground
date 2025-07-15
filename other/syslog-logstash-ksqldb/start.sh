@@ -59,7 +59,7 @@ log "Create ssh logs"
 docker exec -i connect bash -c 'kafka-topics --bootstrap-server broker:9092 --topic ssh_logs --partitions 1 --replication-factor 1 --create'
 
 log "Create the ksqlDB stream"
-docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [[ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ]] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
+timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 

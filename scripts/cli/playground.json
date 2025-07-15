@@ -48,6 +48,24 @@
           "description": "when running a fully managed connector example, it opens the connector in browser\n  \n",
           "usage": "playground config open-ccloud-connector-in-browser COMMAND",
           "options": []
+        },
+        {
+          "name": "open-grafana-in-browser",
+          "description": "when running an example with --enable-jmx-grafana flag, it opens grafana in browser\n  \n",
+          "usage": "playground config open-grafana-in-browser COMMAND",
+          "options": []
+        },
+        {
+          "name": "container-kill-all-before-run",
+          "description": "when running an example, always call playground container kill-all first. If set to false, it will call playground stop instead.\n  \n",
+          "usage": "playground config container-kill-all-before-run [ENABLED]",
+          "options": []
+        },
+        {
+          "name": "check-and-update-repo-version",
+          "description": "when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.\n  \n",
+          "usage": "playground config check-and-update-repo-version [ENABLED]",
+          "options": []
         }
       ]
     },
@@ -72,8 +90,72 @@
       ]
     },
     {
+      "name": "open-grafana-in-browser",
+      "description": "when running an example with --enable-jmx-grafana flag, it opens grafana in browser\n",
+      "usage": "playground config open-grafana-in-browser COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "automatically",
+          "description": "automatically open grafana in browser\n",
+          "usage": "playground config open-grafana-in-browser automatically [AUTOMATICALLY]",
+          "options": []
+        },
+        {
+          "name": "browser",
+          "description": "browser to use\n",
+          "usage": "playground config open-grafana-in-browser browser [BROWSER]",
+          "options": []
+        }
+      ]
+    },
+    {
+      "name": "ccloud-costs",
+      "description": "💰  Retrieve ccloud costs for a range of dates\n\nAll you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n\nCost data can take up to 72 hours to become available.\n\nStart date can reach a maximum of one year into the past\n\nOne month is the maximum window between start and end dates\n\nFor accuracy, Confluent recommends using a start_date that is at least 72 hours prior to the current date and time.\n",
+      "usage": "playground ccloud-costs [OPTIONS]",
+      "options": [
+        {
+          "names": [
+            "--start-date"
+          ],
+          "argument": "START_DATE",
+          "description": "🗓️ start date in format yyyy-mm-dd\n\nDefault is 30 days ago\n"
+        },
+        {
+          "names": [
+            "--end-date"
+          ],
+          "argument": "END_DATE",
+          "description": "🗓️ end date in format yyyy-mm-dd\n\n  Default is 3 days ago\n"
+        },
+        {
+          "names": [
+            "--display-only-total-cost"
+          ],
+          "argument": "",
+          "description": "💰 display only total cost\n"
+        }
+      ],
+      "subcommands": null
+    },
+    {
+      "name": "ccloud-costs-history",
+      "description": "👛  Retrieve ccloud costs for each month since last year\n\nAll you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n\nBy default it will only display total cost in dollars. Use the --detailed flag to see more information.\n",
+      "usage": "playground ccloud-costs-history [OPTIONS]",
+      "options": [
+        {
+          "names": [
+            "--detailed"
+          ],
+          "argument": "",
+          "description": "💹 display all details for each month\n"
+        }
+      ],
+      "subcommands": null
+    },
+    {
       "name": "run",
-      "description": "🕹️ Run any example !\n\n🔥 It start an interactive mode where you'll be fully guided !\n\n\n⛅ When running Confluent Cloud (ccloud) example:\n\n  All you have to do is to be already logged in with confluent CLI.\n\n  By default, a new Confluent Cloud environment with a Cluster will be created.\n\n  You can configure the new cluster by setting:\n\n  --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: basic, standard and dedicated, default basic)\n  --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: aws, gcp and azure, default aws)\n  --cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use confluent kafka region list to get the list, default eu-west-2 for aws, westeurope for azure and europe-west2 for gcp)\n  --cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: txxxxx) \n\n  In case you want to use your own existing cluster, you need to setup, in addition to previous ones:\n\n  --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n  --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)\n  --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n\n❗ this command will kill all containers using playground container kill-all\n",
+      "description": "🕹️ Run any example !\n\n🔥 It start an interactive mode where you'll be fully guided !\n\n\n⛅ When running Confluent Cloud (ccloud) example:\n\n  All you have to do is to be already logged in with confluent CLI.\n\n  By default, a new Confluent Cloud environment with a Cluster will be created.\n\n  You can configure the new cluster by setting:\n\n  --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: basic, standard and dedicated, default basic)\n  --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: aws, gcp and azure, default aws)\n  --cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use confluent kafka region list to get the list, default eu-west-2 for aws, westeurope for azure and europe-west2 for gcp)\n  --cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: txxxxx) \n\n  In case you want to use your own existing cluster, you need to setup, in addition to previous ones:\n\n  --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n  --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)\n  --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n\n❗ this command will kill all containers using \"playground container kill-all\", you can disable this by running \"playground config container-kill-all-before-run false\"\n",
       "usage": "playground run [OPTIONS]",
       "options": [
         {
@@ -81,7 +163,7 @@
             "--environment"
           ],
           "argument": "plaintext",
-          "description": "🔐 The environment to start when running a connector example \n\n- plaintext\n- ccloud\n- 2way-ssl\n- kerberos\n- kraft-external-plaintext\n- kraft-plaintext\n- ldap-authorizer-sasl-plain\n- ldap-sasl-plain\n- rbac-sasl-plain\n- sasl-plain\n- sasl-scram\n- sasl-ssl\n- ssl_kerberos\n\nDefault is plaintext.\nThis is only supported when example is a connector example\n\nDefault value: plaintext\n\nAllowed values: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain\n"
+          "description": "🔐 The environment to start when running a connector example \n\n- plaintext\n- ccloud\n- 2way-ssl\n- kerberos\n- ldap-authorizer-sasl-plain\n- ldap-sasl-plain\n- rbac-sasl-plain\n- sasl-plain\n- sasl-scram\n- sasl-ssl\n- ssl_kerberos\n\nDefault is plaintext.\nThis is only supported when example is a connector example\n\nDefault value: plaintext\n\nAllowed values: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain\n"
         },
         {
           "names": [
@@ -97,14 +179,21 @@
             "-o"
           ],
           "argument": "",
-          "description": "📖 Opening example file with text editor set with playground config editor <editor> (default is code)\n"
+          "description": "📖 Opening example files (including docker-compose file) with text editor set with playground config editor <editor> (default is code)\n"
         },
         {
           "names": [
             "--tag"
           ],
           "argument": "TAG",
-          "description": "🎯 Confluent Platform (CP) version to use\n\nMust be greater or equal to 5.3.0\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+          "description": "🎯 Confluent Platform (CP) version to use. Applies to all components (broker, connect, schema registry, ksqlDB, etc...)\n\nIt sets TAG environment variable\n\nMust be greater or equal to 5.3.0\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+        },
+        {
+          "names": [
+            "--connect-tag"
+          ],
+          "argument": "CONNECT_TAG",
+          "description": "🔗 Confluent Platform (CP) version to use. Applies to connect only.\n\nIt sets CP_CONNECT_TAG environment variable\n\nMust be greater or equal to 5.3.0\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
         },
         {
           "names": [
@@ -118,14 +207,14 @@
             "--connector-zip"
           ],
           "argument": "CONNECTOR_ZIP",
-          "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n\nConflicts with: --connector-tag\n"
+          "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n        use <option+enter> to use the value you typed manually\n\nConflicts with: --connector-tag\n"
         },
         {
           "names": [
             "--connector-jar"
           ],
           "argument": "CONNECTOR_JAR",
-          "description": "🤎 Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n"
+          "description": "🤎 Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n        use <option+enter> to use the value you typed manually\n"
         },
         {
           "names": [
@@ -147,6 +236,13 @@
           ],
           "argument": "",
           "description": "💠 Enable Control Center\n\nBy default, control-center container is not started for every test\n\nControl Center is reachable at http://127.0.0.1:9021\n"
+        },
+        {
+          "names": [
+            "--enable-flink"
+          ],
+          "argument": "",
+          "description": "🐿️ Enable Flink\n\nBy default, flink is not started for every test\n\nOnce enabled, the CLI will ask if you need to download any connectors. Based on the response, you can download one or more connectors from Flink maven repository.\n\nFlink UI is reacheable using http://127.0.0.1:8081 within the flink child directory. If you enable Flink by starting connector deployment, http://127.0.0.1:18081 will be used.\n"
         },
         {
           "names": [
@@ -272,6 +368,13 @@
       "subcommands": null
     },
     {
+      "name": "get-ci-result",
+      "description": "🤖 get CI result for current example\n",
+      "usage": "playground get-ci-result",
+      "options": [],
+      "subcommands": null
+    },
+    {
       "name": "history",
       "description": "🏰 Get an history of the examples which were run with run command and run it again\n",
       "usage": "playground history",
@@ -294,7 +397,7 @@
     },
     {
       "name": "update-version",
-      "description": "✨ Update current confluent platform or connector(s) with new version(s)\n",
+      "description": "✨ Update current confluent platform components (all with --tag or only connect with --connect-tag) or connector(s) with new version(s)\n",
       "usage": "playground update-version [OPTIONS]",
       "options": [
         {
@@ -302,7 +405,14 @@
             "--tag"
           ],
           "argument": "TAG",
-          "description": "🎯 Confluent Platform (CP) version to use\n\nMust be greater or equal to 5.3.0\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+          "description": "🎯 Confluent Platform (CP) version to use. Applies to all components (broker, connect, schema registry, ksqlDB, etc...)\n\nIt sets TAG environment variable\n\nMust be greater or equal to 5.3.0\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+        },
+        {
+          "names": [
+            "--connect-tag"
+          ],
+          "argument": "CONNECT_TAG",
+          "description": "🔗 Confluent Platform (CP) version to use. Applies to connect only.\n\nIt sets CP_CONNECT_TAG environment variable\n\nMust be greater or equal to 5.3.0\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
         },
         {
           "names": [
@@ -316,14 +426,14 @@
             "--connector-zip"
           ],
           "argument": "CONNECTOR_ZIP",
-          "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n\nConflicts with: --connector-tag\n"
+          "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n        use <option+enter> to use the value you typed manually\n\nConflicts with: --connector-tag\n"
         },
         {
           "names": [
             "--connector-jar"
           ],
           "argument": "CONNECTOR_JAR",
-          "description": "🤎 Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n"
+          "description": "🤎 Connector jar to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n        use <option+enter> to use the value you typed manually\n"
         }
       ],
       "subcommands": null
@@ -339,7 +449,21 @@
             "-f"
           ],
           "argument": "FILE",
-          "description": "🔎 Search any file and open it.\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+          "description": "🔎 Search any file and open it.\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n        use <option+enter> to use the value you typed manually\n"
+        },
+        {
+          "names": [
+            "--open-docker-compose"
+          ],
+          "argument": "",
+          "description": "🐳 Also open associated docker-compose file for the current example\n"
+        },
+        {
+          "names": [
+            "--wait"
+          ],
+          "argument": "",
+          "description": "😴 Wait\n"
         }
       ],
       "subcommands": null
@@ -359,6 +483,36 @@
       "subcommands": null
     },
     {
+      "name": "remove-cp-docker-images",
+      "description": "🧹 Remove all Confluent Platform docker images related to a version installed locally (a confirmation will be required for every version present)\n",
+      "usage": "playground remove-cp-docker-images [OPTIONS]",
+      "options": [
+        {
+          "names": [
+            "--version"
+          ],
+          "argument": "VERSION",
+          "description": "🔢 Specific version to remove\n"
+        }
+      ],
+      "subcommands": null
+    },
+    {
+      "name": "refresh-cp-docker-images",
+      "description": "🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a version installed locally\n",
+      "usage": "playground refresh-cp-docker-images [OPTIONS]",
+      "options": [
+        {
+          "names": [
+            "--version"
+          ],
+          "argument": "VERSION",
+          "description": "🔢 Specific version to pull \n\nRequired: ✓ Yes\n"
+        }
+      ],
+      "subcommands": null
+    },
+    {
       "name": "cleanup-cloud-details",
       "description": "🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)\n   use this command if you notice that the playground is using unexpected ccloud details\n",
       "usage": "playground cleanup-cloud-details",
@@ -369,6 +523,21 @@
       "name": "open-docs",
       "description": "🧑‍🎓 Open Confluent documentation of currently running example\n",
       "usage": "playground open-docs [OPTIONS]",
+      "options": [
+        {
+          "names": [
+            "--only-show-url"
+          ],
+          "argument": "",
+          "description": "🌐 Only show url\n"
+        }
+      ],
+      "subcommands": null
+    },
+    {
+      "name": "open-changelog",
+      "description": "📜 Open playground changelog (https://kafka-docker-playground.io/#/changelog)\n",
+      "usage": "playground open-changelog [OPTIONS]",
       "options": [
         {
           "names": [
@@ -565,6 +734,13 @@
               ],
               "argument": "",
               "description": "🧟 Include soft deleted subjects\n\nConflicts with: id\n"
+            },
+            {
+              "names": [
+                "--store-in-tmp"
+              ],
+              "argument": "FOLDER",
+              "description": "store in /tmp folder\n"
             }
           ]
         },
@@ -601,6 +777,13 @@
               ],
               "argument": "ID",
               "description": "☢️ Force schema id\n\n❗it will replace any schema which already exists at given id\n"
+            },
+            {
+              "names": [
+                "--metadata-property"
+              ],
+              "argument": "METADATA-PROPERTY",
+              "description": "🟡 Add metadata properties to schema contract\n\nSee docs: https://docs.confluent.io/platform/current/schema-registry/fundamentals/data-contracts.html#metadata-properties\n\n🎓 Tip: you can pass multiple properties by specifying --metadata-property multiple times\n\nExample: --metadata-property \"metadata1=value\" --metadata-property \"metadata2=value\"\n\nRepeatable: ✓ Yes\n"
             }
           ]
         },
@@ -719,6 +902,31 @@
           ]
         },
         {
+          "name": "set-normalize",
+          "description": "🧽 Set normalize at schema registry level\n  \n  See https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#schema-normalization\n",
+          "usage": "playground schema set-normalize [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
+                "--value"
+              ],
+              "argument": [
+                true,
+                false
+              ],
+              "description": "true or false\n\nRequired: ✓ Yes\n\nAllowed values: true, false\n"
+            }
+          ]
+        },
+        {
           "name": "delete",
           "description": "🧟 Delete schema\n",
           "usage": "playground schema delete [OPTIONS]",
@@ -735,14 +943,7 @@
                 "--version"
               ],
               "argument": "VERSION",
-              "description": "🔢 Schema version of the provided subject to delete\n\nCan only be used when --subject is provided\n\nConflicts with: --id\n"
-            },
-            {
-              "names": [
-                "--id"
-              ],
-              "argument": "ID",
-              "description": "🫵 Schema id\n\nCan only be used when --subject is provided\n\nConflicts with: --version\n"
+              "description": "🔢 Schema version of the provided subject to delete\n\nCan only be used when --subject is provided\n"
             },
             {
               "names": [
@@ -758,6 +959,27 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        },
+        {
+          "name": "derive-schema",
+          "description": "🪄 Derive a schema based on payload\n",
+          "usage": "playground schema derive-schema [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--payload"
+              ],
+              "argument": "PAYLOAD",
+              "description": "📦 Payload to derive schema from\n\nDefault value: -\n"
+            },
+            {
+              "names": [
+                "--schema-type"
+              ],
+              "argument": "AVRO",
+              "description": "🧩 Schema Registry schema \"type\":\n\n- AVRO\n- JSON (json schema)\n- PROTOBUF\n\nDefault is AVRO\n\nDefault value: AVRO\n\nAllowed values: AVRO, JSON, PROTOBUF\n"
             }
           ]
         }
@@ -962,6 +1184,12 @@
               "description": "🧲 Zazkia TCP connection id\n      \n"
             }
           ]
+        },
+        {
+          "name": "open-ui",
+          "description": "🌐 Just open Zazkia UI (http://localhost:9191) in your browser\n",
+          "usage": "playground tcp-proxy open-ui",
+          "options": []
         }
       ]
     },
@@ -988,7 +1216,7 @@
                 "-f"
               ],
               "argument": "FILE",
-              "description": "🔖 Avro file to read\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+              "description": "🔖 Avro file to read\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n        use <option+enter> to use the value you typed manually\n"
             }
           ]
         },
@@ -1003,7 +1231,50 @@
                 "-f"
               ],
               "argument": "FILE",
-              "description": "🔖 Parquet file to read\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n"
+              "description": "🔖 Parquet file to read\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n        use <option+enter> to use the value you typed manually\n"
+            }
+          ]
+        },
+        {
+          "name": "certs-create",
+          "description": "🔐 Generate keys and certificates used for SSL\n",
+          "usage": "playground tools certs-create [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--container"
+              ],
+              "argument": [
+                "broker",
+                "broker2",
+                "broker3",
+                "client",
+                "schema-registry",
+                "restproxy",
+                "connect",
+                "connect2",
+                "connect3",
+                "control-center",
+                "clientrestproxy",
+                "ksqldb-server",
+                "conduktor"
+              ],
+              "description": "🐳 container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: [\"broker\", \"broker2\", \"broker3\", \"client\", \"schema-registry\", \"restproxy\", \"connect\", \"connect2\", \"connect3\", \"control-center\", \"clientrestproxy\", \"ksqldb-server\", \"conduktor\"]\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
+                "--output-folder"
+              ],
+              "argument": "FOLDER",
+              "description": "📁 Folder where certificates are created\n\nRequired: ✓ Yes\n"
             }
           ]
         }
@@ -1068,7 +1339,7 @@
         },
         {
           "name": "heap-dump",
-          "description": "👻 Take a heap dump\n  \n  🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/) can be used to read the file.\n",
+          "description": "👻 Take a heap dump\n  \n  🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/) can be used to read the file.\n  \n  It will run a full gc first. If you don't want this, use \n",
           "usage": "playground debug heap-dump [OPTIONS]",
           "options": [
             {
@@ -1078,6 +1349,20 @@
               ],
               "argument": "connect",
               "description": "🐳 Container name\n\nDefault value: connect\n"
+            },
+            {
+              "names": [
+                "--live"
+              ],
+              "argument": "",
+              "description": "🧬 dump only live objects; if not specified, all objects in the heap are dumped\n"
+            },
+            {
+              "names": [
+                "--histo"
+              ],
+              "argument": "",
+              "description": "📊 print histogram of java object heap\n"
             }
           ]
         },
@@ -1184,6 +1469,54 @@
           ]
         },
         {
+          "name": "jscissors",
+          "description": "✂️ jscissors is an instrumentation framework and can help to analyse control flow and perform some specific logging\n  \n  * Control Flow Tracing: By dynamically instrumenting Java code, the tool meticulously tracks the precise sequence of executed methods at runtime. This capability offers invaluable insights into how an application navigates its logic. The tool provides a way to generate a stack trace when a method is called. \n  * Additional Logging: This enhanced logging capability provides a way to print the input arguments to a method and return value from a method. \n  * Delve into heap area: Generating heap dump at a method call will be crucial to analyze the state of JVM at a given point. The tool has capabilities to generate thread dump as well to track the state of all the threads when a method is called. \n",
+          "usage": "playground debug jscissors [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--container",
+                "-c"
+              ],
+              "argument": "connect",
+              "description": "🐳 Container name\n\nDefault value: connect\n"
+            },
+            {
+              "names": [
+                "--operation"
+              ],
+              "argument": [
+                "VALUES",
+                "RETURN_VALUE",
+                "DELAY",
+                "STACK"
+              ],
+              "description": "🥼 operation to perform:\n\n* VALUES: print method input arguments\n* RETURN_VALUE: print method return value\n* THREADS: print thread dump when method is called\n* HEAP: print heap dump when method is called\n* STACK: print stack trace when method is called\n* EXCEPTION_HEAP: print heap dump when an exception is thrown during method execution\n* DELAY: print time taken for method execution\n\nDefault values: VALUES, RETURN_VALUE, DELAY and STACK\n\n🎓 Tip: you can pass multiple operations by specifying --operation multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: [\"VALUES\", \"RETURN_VALUE\", \"DELAY\", \"STACK\"]\n\nAllowed values: VALUES, RETURN_VALUE, THREADS, HEAP, STACK, EXCEPTION_HEAP, DELAY\n"
+            },
+            {
+              "names": [
+                "--class"
+              ],
+              "argument": "CLASS",
+              "description": "class name to instrument (it supports regex like oracle.jdbc.*)\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--method"
+              ],
+              "argument": ".*",
+              "description": "method name to instrument (it supports regex like .*find.*)\n\nDefault value: .*\n"
+            },
+            {
+              "names": [
+                "--action"
+              ],
+              "argument": "enable",
+              "description": "🟢 enable or disable\n\nDefault value: enable\n\nAllowed values: enable, disable\n"
+            }
+          ]
+        },
+        {
           "name": "flight-recorder",
           "description": "🛩️ Record flight recorder\n  \n  Read more about it at https://www.baeldung.com/java-flight-recorder-monitoring\n  \n  Open the jfr file with JDK Mission Control JMC(https://jdk.java.net/jmc/)\n",
           "usage": "playground debug flight-recorder [OPTIONS]",
@@ -1200,11 +1533,8 @@
               "names": [
                 "--action"
               ],
-              "argument": [
-                "start",
-                "stop"
-              ],
-              "description": "🟢 start or stop\n\nRequired: ✓ Yes\n\nAllowed values: start, stop\n"
+              "argument": "enable",
+              "description": "🟢 enable or disable\n\nDefault value: enable\n\nAllowed values: enable, disable\n"
             }
           ]
         },
@@ -1386,6 +1716,12 @@
           ]
         },
         {
+          "name": "display-error-all-containers",
+          "description": "🔥 Display all ERROR/FATAL logs in all containers. Useful for quick troubleshooting\n",
+          "usage": "playground container display-error-all-containers",
+          "options": []
+        },
+        {
           "name": "ssh",
           "description": "🛬 SSH into container\n",
           "usage": "playground container ssh [OPTIONS]",
@@ -1558,6 +1894,13 @@
               ],
               "argument": "",
               "description": "🧽 Restore back original values before any changes was made\n\nConflicts with: --env\n"
+            },
+            {
+              "names": [
+                "--mount-jscissors-files"
+              ],
+              "argument": "",
+              "description": "Mount jscissors files for debugging\n"
             }
           ]
         }
@@ -1692,7 +2035,7 @@
                 "--max-messages"
               ],
               "argument": 100,
-              "description": "Max number of messages to display (default is 100)\n\nDefault value: 100\n"
+              "description": "Max number of messages to display (default is 100)\n\nYou can use -1 to display all messages\n\nDefault value: 100\n"
             },
             {
               "names": [
@@ -1720,7 +2063,7 @@
                 "--tail"
               ],
               "argument": "",
-              "description": "Tail on logs.\n\nConflicts with: --min-expected-messages, --max-messages\n"
+              "description": "Tail on logs.\n\nConflicts with: --min-expected-messages, --max-messages, --open\n"
             },
             {
               "names": [
@@ -1749,6 +2092,14 @@
               ],
               "argument": 3000,
               "description": "Max characters per message to display (default is 3000)\n\nDefault value: 3000\n"
+            },
+            {
+              "names": [
+                "--open",
+                "-o"
+              ],
+              "argument": "",
+              "description": "🔖 Save full dump of topic to a file and open with text editor set with playground config editor <editor> (default is code)\n\nConflicts with: --max-characters, --tail, --min-expected-messages\n"
             }
           ]
         },
@@ -1808,6 +2159,13 @@
               ],
               "argument": 300000,
               "description": "🔼 Max number of messages to send per batch when --nb-messages > --max-nb-messages-per-batch\n   if --nb-messages is set to -1, this is the number of messages sent per batch\n   default is 300000\n\nDefault value: 300000\n"
+            },
+            {
+              "names": [
+                "--max-nb-messages-to-generate"
+              ],
+              "argument": "MAX-NB-MESSAGES-TO-GENERATE",
+              "description": "🔨 Max number of different messages to generate.\n\n   - when protobuf is used, default is 50 as protobuf generation is really slow\n   - when --record-size is set, default is 100\n   --when nb-messages is set to -1, default is 1000\n   - otherwise default is 100000\n"
             },
             {
               "names": [
@@ -1913,6 +2271,28 @@
               ],
               "argument": "",
               "description": "☑️ Validate schema according to connect sink converter used\n"
+            },
+            {
+              "names": [
+                "--derive-key-schema-as"
+              ],
+              "argument": [
+                "AVRO",
+                "JSON",
+                "PROTOBUF"
+              ],
+              "description": "🪄 Use playground schema derive-schema command to deduce schema from key payload\n\nPossible values:\n\n- AVRO\n- JSON (json schema)\n- PROTOBUF\n\nAllowed values: AVRO, JSON, PROTOBUF\n"
+            },
+            {
+              "names": [
+                "--derive-value-schema-as"
+              ],
+              "argument": [
+                "AVRO",
+                "JSON",
+                "PROTOBUF"
+              ],
+              "description": "🪄 Use playground schema derive-schema command to deduce schema from value payload\n\nPossible values:\n\n- AVRO\n- JSON (json schema)\n- PROTOBUF\n\nAllowed values: AVRO, JSON, PROTOBUF\n"
             },
             {
               "names": [
@@ -2135,6 +2515,27 @@
               "description": "🆕 Number of last versions to show\n\nConflicts with: --all\n"
             }
           ]
+        },
+        {
+          "name": "display-last-updated",
+          "description": "🆕 List last updated connector plugins from confluent hub https://www.confluent.io/hub/\n",
+          "usage": "playground connector-plugin display-last-updated [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--days"
+              ],
+              "argument": 3,
+              "description": "📅 Number of days to look back\n\nDefault is 3 days\n\nDefault value: 3\n"
+            },
+            {
+              "names": [
+                "--vendor"
+              ],
+              "argument": "VENDOR",
+              "description": "🏢 Only display results for this vendor\n"
+            }
+          ]
         }
       ]
     },
@@ -2249,7 +2650,7 @@
         },
         {
           "name": "stop",
-          "description": "🛑 Stop connector (only available if CP > 7.5 )\n",
+          "description": "🛑 Stop connector (only available if CP > 7.5)\n",
           "usage": "playground connector stop [OPTIONS]",
           "options": [
             {
@@ -2671,6 +3072,17 @@
               ],
               "argument": "OFFSETS",
               "description": "📍 Create connector with offsets (https://docs.confluent.io/cloud/current/connectors/offsets.html#create-connectors-with-offsets)\n\n⚠️ Only available for ccloud connectors, the connector should not really exists\n"
+            },
+            {
+              "names": [
+                "--initial-state"
+              ],
+              "argument": [
+                "RUNNING",
+                "PAUSED",
+                "STOPPED"
+              ],
+              "description": "🪵 Create connector with specific status (https://cwiki.apache.org/confluence/display/KAFKA/KIP-980%3A+Allow+creating+connectors+in+a+stopped+state)\n\nOnly available if CP > 7.7\n\n⚠️ not available for ccloud connectors\n\nAllowed values: RUNNING, PAUSED, STOPPED\n"
             }
           ]
         },
@@ -2855,10 +3267,10 @@
             },
             {
               "names": [
-                "--disable-sync-repro-folder"
+                "--enable-sync-repro-folder"
               ],
               "argument": "",
-              "description": "🚫 Disable sync reproduction-models folder between local and ec2 instance\n"
+              "description": "👉 Enable sync reproduction-models folder between local and ec2 instance\n"
             }
           ]
         },

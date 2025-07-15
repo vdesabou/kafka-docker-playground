@@ -2,7 +2,6 @@
 services:
   ksqldb-server:
     depends_on:
-      - zookeeper
       - broker
     volumes:
       - ../../ksqldb/udf-logging/log4j.template.properties:/etc/confluent/docker/log4j.properties.template

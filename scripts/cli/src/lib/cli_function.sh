@@ -2,14 +2,49 @@ function get_environment_used() {
   environment=$(playground state get run.environment)
 }
 
+function is_container_running() {
+  container_name=$1
+  docker inspect -f '{{.State.Running}}' "$container_name" 2>/dev/null | grep -q "true"
+}
+
+function get_connect_container() {
+  for worker in connect connect2 connect3 connect-us connect-europe
+  do
+    if is_container_running $worker
+    then
+      connect_container=$worker
+      break
+    fi
+  done
+}
+
 function get_connect_url_and_security() {
   get_environment_used
 
-  connect_url="http://localhost:8083"
+  connect_port="8083"
+
+  if ! is_container_running "connect" && ! is_container_running "connect-us"
+  then
+    if is_container_running "connect2" || is_container_running "connect-europe"
+    then
+      connect_port="8283"
+      # log "💫 using connect rest api for connect2 as connect rest api on port 8083 is not available"
+    elif is_container_running "connect3"
+    then
+      connect_port="8383"
+      # log "💫 using connect rest api for connect3 as connect rest api on port 8083 and connect2 rest api on port 8283 are not available"
+    else
+      logerror "❌ No available port found for connect rest api, none of containers connect, connect2 or connect3 are running!"
+      exit 1
+    fi
+  fi
+
+  connect_url="http://localhost:$connect_port"
+
   security=""
   if [[ "$environment" == "sasl-ssl" ]] || [[ "$environment" == "2way-ssl" ]]
   then
-      connect_url="https://localhost:8083"
+      connect_url="https://localhost:$connect_port"
       DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
       security="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
@@ -273,7 +308,7 @@ function get_ccloud_connect() {
 
   if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
   then
-      logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
+      logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
       exit 1
   fi
 
@@ -328,7 +363,7 @@ function get_sr_url_and_security() {
     then
         source $root_folder/.ccloud/env.delta
     else
-        logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
+        logerror "❌ $root_folder/.ccloud/env.delta has not been generated"
         exit 1
     fi
     sr_url=$SCHEMA_REGISTRY_URL
@@ -336,12 +371,24 @@ function get_sr_url_and_security() {
   fi
 }
 
+function get_broker_container() {
+  for broker in broker broker2 broker3 broker-us broker-europe
+  do
+    if is_container_running $broker
+    then
+      broker_container=$broker
+      break
+    fi
+  done
+}
+
 function get_security_broker() {
   config_file_name="$1"
   get_environment_used
 
+  get_broker_container
+  container="$broker_container"
 
-  container="broker"
   security=""
   if [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
   then
@@ -422,7 +469,7 @@ function get_zip_or_jar_with_fzf() {
   folder_zip_or_jar=${folder_zip_or_jar//\~/$HOME}
   folder_zip_or_jar=${folder_zip_or_jar//,/ }
   
-  res=$(find $folder_zip_or_jar $PWD -name \*.$type ! -path '*/\.*' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🤐" --header="select zip or jar file" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+  res=$(find $folder_zip_or_jar $PWD -name \*.$type ! -path '*/\.*' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🤐" --header="select zip or jar file (use option+enter to use the value you typed manually)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query --bind "alt-enter:print-query");echo "$cur@$res"
 }
 
 function get_specific_file_extension() {
@@ -441,7 +488,7 @@ function get_specific_file_extension() {
     fzf_option_rounded=""
   fi
   
-  res=$(find $PWD -name \*.$extension ! -path '*/\.*' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔖" --header="select $extension file" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+  res=$(find $PWD -name \*.$extension ! -path '*/\.*' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔖" --header="select $extension file (use option+enter to use the value you typed manually)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query --bind "alt-enter:print-query");echo "$cur@$res"
 }
 
 function get_playground_repro_export_with_fzf() {
@@ -649,7 +696,7 @@ function get_any_files_with_fzf() {
     fzf_option_rounded=""
   fi
   
-  res=$(cat $root_folder/scripts/cli/get_any_files_with_fzf | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="📃" --header="select file" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+  res=$(cat /tmp/get_any_files_with_fzf | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="📃" --header="select file" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query --bind "alt-enter:print-query");echo "$cur@$res"
 }
 
 function get_predefined_schemas_with_fzf() {
@@ -729,7 +776,7 @@ function choose_connector_tag() {
     fzf_option_rounded=""
   fi
 
-  cat $filename | sed '1!G;h;$!d' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔢" --header="select connector version for $owner/$name" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer
+  cat $filename | grep -v "documentation"| sed '1!G;h;$!d' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔢" --header="select connector version for $owner/$name" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer
 }
 
 function filter_not_mdc_environment() {
@@ -754,9 +801,15 @@ function filter_ccloud_environment() {
 function filter_schema_registry_running() {
   get_sr_url_and_security
 
-  curl $sr_security -s "${sr_url}/config" > /dev/null 2>&1
-  if [ $? != 0 ]
-  then
+  for i in {1..30}; do
+    curl $sr_security -s "${sr_url}/config" > /dev/null 2>&1
+    if [ $? == 0 ]; then
+      break
+    fi
+    sleep 1
+  done
+
+  if [ $? != 0 ]; then
     logerror "schema registry rest api should be running to run this command"
   fi
 }
@@ -814,6 +867,14 @@ function add_connector_config_based_on_environment () {
 
   echo "$json_content" > $tmp_dir/1.json
 
+  if [ -n "$AWS_SHORT_LIVE_CREDENTIALS_USED" ]
+  then
+    log "💫 removing aws.access.key.id and aws.secret.access.key from config"
+    echo "$json_content" > $tmp_dir/input.json
+    jq 'del(.["aws.access.key.id"], .["aws.secret.access.key"])' $tmp_dir/input.json > $tmp_dir/output.json
+    json_content=$(cat $tmp_dir/output.json)
+  fi
+
   case "${environment}" in
     plaintext)
       # nothing to do
@@ -824,7 +885,7 @@ function add_connector_config_based_on_environment () {
       then
           source $root_folder/.ccloud/env.delta
       else
-          logerror "ERROR: $root_folder/.ccloud/env.delta has not been generated"
+          logerror "❌ $root_folder/.ccloud/env.delta has not been generated"
           exit 1
       fi
 
@@ -839,7 +900,7 @@ function add_connector_config_based_on_environment () {
           # log "replacing $prefix config for environment $environment"
 
           echo "$json_content" > $tmp_dir/input.json
-          jq ".[\"$prefix.bootstrap.servers\"] = \"\${file:/data:bootstrap.servers}\" | .[\"$prefix.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"$prefix.security.protocol\"] = \"SASL_SSL\" | .[\"$prefix.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
+          jq ".[\"$prefix.bootstrap.servers\"] = \"\${file:/datacloud:bootstrap.servers}\" | .[\"$prefix.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"$prefix.security.protocol\"] = \"SASL_SSL\" | .[\"$prefix.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
           json_content=$(cat $tmp_dir/output.json)
 
           if [ "$prefix" == "confluent.topic" ]
@@ -858,7 +919,7 @@ function add_connector_config_based_on_environment () {
           # log "replacing $prefix.converter.schema.registry.url config for environment $environment"
 
           echo "$json_content" > $tmp_dir/input.json
-          jq ".[\"$prefix.converter.schema.registry.url\"] = \"$SCHEMA_REGISTRY_URL\" | .[\"$prefix.converter.basic.auth.user.info\"] = \"\${file:/data:schema.registry.basic.auth.user.info}\" | .[\"$prefix.converter.basic.auth.credentials.source\"] = \"USER_INFO\"" $tmp_dir/input.json > $tmp_dir/output.json
+          jq ".[\"$prefix.converter.schema.registry.url\"] = \"$SCHEMA_REGISTRY_URL\" | .[\"$prefix.converter.basic.auth.user.info\"] = \"\${file:/datacloud:schema.registry.basic.auth.user.info}\" | .[\"$prefix.converter.basic.auth.credentials.source\"] = \"USER_INFO\"" $tmp_dir/input.json > $tmp_dir/output.json
           json_content=$(cat $tmp_dir/output.json)
         fi
       done
@@ -868,7 +929,7 @@ function add_connector_config_based_on_environment () {
         # log "replacing database.history.kafka.bootstrap.servers config for environment $environment"
 
         echo "$json_content" > $tmp_dir/input.json
-        jq ".[\"database.history.kafka.bootstrap.servers\"] = \"\${file:/data:bootstrap.servers}\" | .[\"database.history.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"database.history.producer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.producer.sasl.mechanism\"] = \"PLAIN\" | .[\"database.history.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"database.history.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.consumer.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
+        jq ".[\"database.history.kafka.bootstrap.servers\"] = \"\${file:/datacloud:bootstrap.servers}\" | .[\"database.history.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"database.history.producer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.producer.sasl.mechanism\"] = \"PLAIN\" | .[\"database.history.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"database.history.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.consumer.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
         json_content=$(cat $tmp_dir/output.json)
       fi
 
@@ -877,7 +938,7 @@ function add_connector_config_based_on_environment () {
         # log "replacing schema.history.internal.kafka.bootstrap.servers config for environment $environment"
 
         echo "$json_content" > $tmp_dir/input.json
-        jq ".[\"schema.history.internal.kafka.bootstrap.servers\"] = \"\${file:/data:bootstrap.servers}\" | .[\"schema.history.internal.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"schema.history.internal.producer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.producer.sasl.mechanism\"] = \"PLAIN\" | .[\"schema.history.internal.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"schema.history.internal.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.consumer.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
+        jq ".[\"schema.history.internal.kafka.bootstrap.servers\"] = \"\${file:/datacloud:bootstrap.servers}\" | .[\"schema.history.internal.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"schema.history.internal.producer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.producer.sasl.mechanism\"] = \"PLAIN\" | .[\"schema.history.internal.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"schema.history.internal.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.consumer.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
         json_content=$(cat $tmp_dir/output.json)
       fi
 
@@ -886,7 +947,7 @@ function add_connector_config_based_on_environment () {
         # log "replacing reporter.bootstrap.servers config for environment $environment"
 
         echo "$json_content" > $tmp_dir/input.json
-        jq ".[\"reporter.bootstrap.servers\"] = \"\${file:/data:bootstrap.servers}\" | .[\"reporter.result.topic.replication.factor\"] = \"3\" | .[\"reporter.error.topic.replication.factor\"] = \"3\" | .[\"reporter.admin.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"reporter.admin.security.protocol\"] = \"SASL_SSL\" | .[\"reporter.admin.sasl.mechanism\"] = \"PLAIN\" | .[\"reporter.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/data:sasl.username}\\\" password=\\\"\${file:/data:sasl.password}\\\";\" | .[\"reporter.producer.security.protocol\"] = \"SASL_SSL\" | .[\"reporter.producer.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
+        jq ".[\"reporter.bootstrap.servers\"] = \"\${file:/datacloud:bootstrap.servers}\" | .[\"reporter.result.topic.replication.factor\"] = \"3\" | .[\"reporter.error.topic.replication.factor\"] = \"3\" | .[\"reporter.admin.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"reporter.admin.security.protocol\"] = \"SASL_SSL\" | .[\"reporter.admin.sasl.mechanism\"] = \"PLAIN\" | .[\"reporter.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"\${file:/datacloud:sasl.username}\\\" password=\\\"\${file:/datacloud:sasl.password}\\\";\" | .[\"reporter.producer.security.protocol\"] = \"SASL_SSL\" | .[\"reporter.producer.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
         json_content=$(cat $tmp_dir/output.json)
       fi
     ;;
@@ -934,7 +995,7 @@ function add_connector_config_based_on_environment () {
     ;;
 
     sasl-ssl)
-    
+      get_broker_container
       for prefix in {"confluent.topic","redo.log.consumer"}
       do
         if echo "$json_content" | jq ". | has(\"$prefix.bootstrap.servers\")" 2> /dev/null | grep -q true 
@@ -942,7 +1003,7 @@ function add_connector_config_based_on_environment () {
           # log "replacing $prefix config for environment $environment"
 
           echo "$json_content" > $tmp_dir/input.json
-          jq ".[\"$prefix.bootstrap.servers\"] = \"broker:9092\" | .[\"$prefix.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"$prefix.security.protocol\"] = \"SASL_SSL\" | .[\"$prefix.sasl.mechanism\"] = \"PLAIN\" | .[\"$prefix.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"$prefix.ssl.truststore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
+          jq ".[\"$prefix.bootstrap.servers\"] = \"$broker_container:9092\" | .[\"$prefix.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"$prefix.security.protocol\"] = \"SASL_SSL\" | .[\"$prefix.sasl.mechanism\"] = \"PLAIN\" | .[\"$prefix.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"$prefix.ssl.truststore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
           json_content=$(cat $tmp_dir/output.json)
         fi
       done
@@ -964,7 +1025,7 @@ function add_connector_config_based_on_environment () {
         # log "replacing database.history.kafka.bootstrap.servers config for environment $environment"
 
         echo "$json_content" > $tmp_dir/input.json
-        jq ".[\"database.history.kafka.bootstrap.servers\"] = \"broker:9092\" | .[\"database.history.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"database.history.producer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.producer.sasl.mechanism\"] = \"PLAIN\" | .[\"database.history.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"database.history.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.consumer.sasl.mechanism\"] = \"PLAIN\" | .[\"database.history.producer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"database.history.producer.ssl.truststore.password\"] = \"confluent\" | .[\"database.history.consumer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"database.history.consumer.ssl.truststore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
+        jq ".[\"database.history.kafka.bootstrap.servers\"] = \"$broker_container:9092\" | .[\"database.history.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"database.history.producer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.producer.sasl.mechanism\"] = \"PLAIN\" | .[\"database.history.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"database.history.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"database.history.consumer.sasl.mechanism\"] = \"PLAIN\" | .[\"database.history.producer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"database.history.producer.ssl.truststore.password\"] = \"confluent\" | .[\"database.history.consumer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"database.history.consumer.ssl.truststore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
         json_content=$(cat $tmp_dir/output.json)
       fi
 
@@ -973,7 +1034,7 @@ function add_connector_config_based_on_environment () {
         # log "replacing schema.history.internal.kafka.bootstrap.servers config for environment $environment"
 
         echo "$json_content" > $tmp_dir/input.json
-        jq ".[\"schema.history.internal.kafka.bootstrap.servers\"] = \"broker:9092\" | .[\"schema.history.internal.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"schema.history.internal.producer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.producer.sasl.mechanism\"] = \"PLAIN\" | .[\"schema.history.internal.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"schema.history.internal.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.consumer.sasl.mechanism\"] = \"PLAIN\" | .[\"schema.history.internal.producer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"schema.history.internal.producer.ssl.truststore.password\"] = \"confluent\" | .[\"schema.history.internal.consumer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"schema.history.internal.consumer.ssl.truststore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
+        jq ".[\"schema.history.internal.kafka.bootstrap.servers\"] = \"$broker_container:9092\" | .[\"schema.history.internal.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"schema.history.internal.producer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.producer.sasl.mechanism\"] = \"PLAIN\" | .[\"schema.history.internal.consumer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"schema.history.internal.consumer.security.protocol\"] = \"SASL_SSL\" | .[\"schema.history.internal.consumer.sasl.mechanism\"] = \"PLAIN\" | .[\"schema.history.internal.producer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"schema.history.internal.producer.ssl.truststore.password\"] = \"confluent\" | .[\"schema.history.internal.consumer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"schema.history.internal.consumer.ssl.truststore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
         json_content=$(cat $tmp_dir/output.json)
       fi
 
@@ -988,7 +1049,7 @@ function add_connector_config_based_on_environment () {
     ;;
 
     2way-ssl)
-    
+      get_broker_container
       for prefix in {"confluent.topic","redo.log.consumer"}
       do
         if echo "$json_content" | jq ". | has(\"$prefix.bootstrap.servers\")" 2> /dev/null | grep -q true 
@@ -996,7 +1057,7 @@ function add_connector_config_based_on_environment () {
           # log "replacing $prefix config for environment $environment"
 
           echo "$json_content" > $tmp_dir/input.json
-          jq ".[\"$prefix.bootstrap.servers\"] = \"broker:9092\" | .[\"$prefix.security.protocol\"] = \"SSL\" | .[\"$prefix.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"$prefix.ssl.truststore.password\"] = \"confluent\" | .[\"$prefix.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"$prefix.ssl.keystore.password\"] = \"confluent\" | .[\"$prefix.ssl.key.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
+          jq ".[\"$prefix.bootstrap.servers\"] = \"$broker_container:9092\" | .[\"$prefix.security.protocol\"] = \"SSL\" | .[\"$prefix.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"$prefix.ssl.truststore.password\"] = \"confluent\" | .[\"$prefix.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"$prefix.ssl.keystore.password\"] = \"confluent\" | .[\"$prefix.ssl.key.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
           json_content=$(cat $tmp_dir/output.json)
         fi
       done
@@ -1018,7 +1079,7 @@ function add_connector_config_based_on_environment () {
         # log "replacing database.history.kafka.bootstrap.servers config for environment $environment"
 
         echo "$json_content" > $tmp_dir/input.json
-        jq ".[\"database.history.kafka.bootstrap.servers\"] = \"broker:9092\" | .[\"database.history.producer.security.protocol\"] = \"SSL\" | .[\"database.history.consumer.security.protocol\"] = \"SSL\" | .[\"database.history.producer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"database.history.producer.ssl.truststore.password\"] = \"confluent\" | .[\"database.history.producer.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"database.history.producer.ssl.keystore.password\"] = \"confluent\" | .[\"database.history.producer.ssl.keystore.password\"] = \"confluent\" | .[\"database.history.consumer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"database.history.consumer.ssl.truststore.password\"] = \"confluent\" | .[\"database.history.consumer.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"database.history.consumer.ssl.keystore.password\"] = \"confluent\" | .[\"database.history.consumer.ssl.keystore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
+        jq ".[\"database.history.kafka.bootstrap.servers\"] = \"$broker_container:9092\" | .[\"database.history.producer.security.protocol\"] = \"SSL\" | .[\"database.history.consumer.security.protocol\"] = \"SSL\" | .[\"database.history.producer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"database.history.producer.ssl.truststore.password\"] = \"confluent\" | .[\"database.history.producer.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"database.history.producer.ssl.keystore.password\"] = \"confluent\" | .[\"database.history.producer.ssl.keystore.password\"] = \"confluent\" | .[\"database.history.consumer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"database.history.consumer.ssl.truststore.password\"] = \"confluent\" | .[\"database.history.consumer.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"database.history.consumer.ssl.keystore.password\"] = \"confluent\" | .[\"database.history.consumer.ssl.keystore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
         json_content=$(cat $tmp_dir/output.json)
       fi
 
@@ -1027,7 +1088,7 @@ function add_connector_config_based_on_environment () {
         # log "replacing schema.history.internal.kafka.bootstrap.servers config for environment $environment"
 
         echo "$json_content" > $tmp_dir/input.json
-        jq ".[\"schema.history.internal.kafka.bootstrap.servers\"] = \"broker:9092\" | .[\"schema.history.internal.producer.security.protocol\"] = \"SSL\" | .[\"schema.history.internal.consumer.security.protocol\"] = \"SSL\" | .[\"schema.history.internal.producer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"schema.history.internal.producer.ssl.truststore.password\"] = \"confluent\" | .[\"schema.history.internal.producer.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"schema.history.internal.producer.ssl.keystore.password\"] = \"confluent\" | .[\"schema.history.internal.producer.ssl.keystore.password\"] = \"confluent\" | .[\"schema.history.internal.consumer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"schema.history.internal.consumer.ssl.truststore.password\"] = \"confluent\" | .[\"schema.history.internal.consumer.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"schema.history.internal.consumer.ssl.keystore.password\"] = \"confluent\" | .[\"schema.history.internal.consumer.ssl.keystore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
+        jq ".[\"schema.history.internal.kafka.bootstrap.servers\"] = \"$broker_container:9092\" | .[\"schema.history.internal.producer.security.protocol\"] = \"SSL\" | .[\"schema.history.internal.consumer.security.protocol\"] = \"SSL\" | .[\"schema.history.internal.producer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"schema.history.internal.producer.ssl.truststore.password\"] = \"confluent\" | .[\"schema.history.internal.producer.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"schema.history.internal.producer.ssl.keystore.password\"] = \"confluent\" | .[\"schema.history.internal.producer.ssl.keystore.password\"] = \"confluent\" | .[\"schema.history.internal.consumer.ssl.truststore.location\"] = \"/etc/kafka/secrets/kafka.connect.truststore.jks\" | .[\"schema.history.internal.consumer.ssl.truststore.password\"] = \"confluent\" | .[\"schema.history.internal.consumer.ssl.keystore.location\"] = \"/etc/kafka/secrets/kafka.connect.keystore.jks\" | .[\"schema.history.internal.consumer.ssl.keystore.password\"] = \"confluent\" | .[\"schema.history.internal.consumer.ssl.keystore.password\"] = \"confluent\"" $tmp_dir/input.json > $tmp_dir/output.json
         json_content=$(cat $tmp_dir/output.json)
       fi
 
@@ -1280,7 +1341,7 @@ function display_interactive_menu_categories () {
   MENU_KSQL="🎏 ksqlDB $(printf '%*s' $((${MAX_LENGTH}-9-${#MENU_KSQL})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_ksql_only | awk '{print $1}') examples"
   MENU_SR="🔰 Schema registry $(printf '%*s' $((${MAX_LENGTH}-18-${#MENU_SR})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_schema_registry_only | awk '{print $1}') examples"
   MENU_RP="🧲 Rest proxy $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_RP})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_rest_proxy_only | awk '{print $1}') examples"
-  MENU_ACADEMY="🧑‍🎓 Academy $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_RP})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_academy_only | awk '{print $1}') examples"
+  MENU_ACADEMY="🧑‍🎓 Academy $(printf '%*s' $((${MAX_LENGTH}-10-${#MENU_ACADEMY})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_academy_only | awk '{print $1}') examples"
 
   if [ "$repro" == 1 ]
   then
@@ -1556,7 +1617,71 @@ function check_for_ec2_instance_running() {
     # loop through the list
     for instance in $(echo $current_list | tr "|" "\n")
     do
-      log "🤑👛 you have an ec2 instance $instance running"
+      echo ""
+      echo ""
+      log "💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸"
+      log "🤑 you have an ec2 instance $instance running !"
+      log "💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸💸"
     done
   fi
+}
+
+function open_file_with_editor() {
+  filename="$1"
+  wait="$2"
+
+  editor=$(playground config get editor)
+  if [ "$editor" != "" ] && command -v "$editor" > /dev/null
+  then
+    log "📖 opening ${filename} using configured editor \"$editor\" (you can change editor by using \"playground config set editor <editor>\")"
+    if [ "$editor" = "code" ] && [ "$wait" != "" ]
+    then
+      code --wait ${filename}
+    else
+      $editor ${filename}
+    fi
+  else
+    logerror "❌ editor \"$editor\" is not installed - you can change editor by using \"playground config set editor <editor>\""
+    exit 1
+  fi
+}
+
+function arm64_support() {
+
+  test_file=$(playground state get run.test_file)
+
+  if [ ! -f $test_file ]
+  then 
+    return
+  fi
+
+  set +e
+  if [ "$(uname -m)" = "arm64" ]
+  then
+    base_folder=$(basename $(dirname $(dirname $test_file)))
+    base_test=$(basename $(dirname $test_file))
+    if [ "$base_folder" == "reproduction-models" ]
+    then
+      base_test=${base_test#*-}
+    fi
+
+    grep "${base_test}" ${root_folder}/scripts/arm64-support-none.txt > /dev/null
+    if [ $? = 0 ]
+    then
+      echo "❌🖥️ this example is not working with ARM64 !"
+      echo "❌🖥️ it is highly recommended to use 'playground ec2 command' to run the example on ubuntu ec2 instance"
+      echo "❌🖥️ you can also use gitpod"
+      return
+    fi
+
+    grep "${base_test}" ${root_folder}/scripts/arm64-support-with-emulation.txt > /dev/null
+    if [ $? = 0 ]
+    then
+        echo "☑️🖥️ this example is working with ARM64 but requires emulation"
+        return
+    fi
+
+    echo "✅🖥️ this example should work natively with ARM64"
+  fi
+  set -e
 }

@@ -7,11 +7,21 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 let errorCode = 200;
 let delay = 0; // response delay in ms
 let responseBody = {}; // response body
+let closeConnection = false; // flag to track connection closure
 
 app.use((req, res, next) => {
   setTimeout(() => {
     next();
   }, delay);
+});
+
+app.use((req, res, next) => {
+  if (closeConnection) {
+    console.log(`[${new Date().toISOString()}] Closing connection for ${req.method} to ${req.url}`);
+    req.socket.destroy(); // Close the connection without sending a response
+  } else {
+    next();
+  }
 });
 
 app.use((req, res, next) => {
@@ -21,7 +31,10 @@ app.use((req, res, next) => {
 });
 
 app.get('/', (req, res) => {
-  res.status(errorCode).json(responseBody);
+  res.status(errorCode)
+    .set('Content-Type', 'application/json')
+    .set('Custom-Header', 'Hello')
+    .json(responseBody);
   console.log("headers:");
   console.log(req.headers);
   console.log("body:");
@@ -30,7 +43,10 @@ app.get('/', (req, res) => {
 });
 
 app.post('/', (req, res) => {
-  res.status(errorCode).json(responseBody);
+  res.status(errorCode)
+    .set('Content-Type', 'application/json')
+    .set('Custom-Header', 'Hello')
+    .json(responseBody);
   console.log("headers:");
   console.log(req.headers);
   console.log("body:");
@@ -39,7 +55,10 @@ app.post('/', (req, res) => {
 });
 
 app.put('/', (req, res) => {
-  res.status(errorCode).json(responseBody);
+  res.status(errorCode)
+    .set('Content-Type', 'application/json')
+    .set('Custom-Header', 'Hello')
+    .json(responseBody);
   console.log("headers:");
   console.log(req.headers);
   console.log("body:");
@@ -48,7 +67,10 @@ app.put('/', (req, res) => {
 });
 
 app.delete('/', (req, res) => {
-  res.status(errorCode).json(responseBody);
+  res.status(errorCode)
+    .set('Content-Type', 'application/json')
+    .set('Custom-Header', 'Hello')
+    .json(responseBody);
   console.log("headers:");
   console.log(req.headers);
   console.log("body:");
@@ -81,6 +103,25 @@ app.put('/set-response-body', (req, res) => {
   } else {
     res.status(400).json({ message: 'Please provide response body as JSON'});
   }
+});
+
+app.put('/set-connection-closed', (req, res) => {
+  closeConnection = true;
+  console.log(`[${new Date().toISOString()}] Connection closure enabled`);
+  res.status(200).json({ message: 'Connection closure enabled' });
+});
+
+// Wildcard route to accept any path
+app.all('*', (req, res) => {
+  res.status(errorCode)
+    .set('Content-Type', 'application/json')
+    .set('Custom-Header', 'Hello')
+    .json(responseBody);
+  console.log("headers:");
+  console.log(req.headers);
+  console.log("body:");
+  console.log(req.body);
+  console.log(`[${new Date().toISOString()}] sending back ${errorCode}`); 
 });
 
 app.listen(9006, () => console.log('Server running...'));

@@ -10,7 +10,7 @@ services:
     - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
 
   zookeeper-europe2:
-    image: confluentinc/cp-zookeeper:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
     hostname: zookeeper-europe2
     container_name: zookeeper-europe2
     environment:
@@ -35,7 +35,7 @@ services:
     - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
 
   zookeeper-us2:
-    image: confluentinc/cp-zookeeper:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
     hostname: zookeeper-us2
     container_name: zookeeper-us2
     environment:
@@ -51,9 +51,6 @@ services:
     - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
 
   broker-europe:
-    depends_on:
-      - zookeeper-europe
-      - zookeeper-europe2
     environment:
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-europe:2181,zookeeper-europe2:2181'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -65,9 +62,6 @@ services:
     - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
 
   broker-us:
-    depends_on:
-      - zookeeper-us
-      - zookeeper-us2
     environment:
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-us:2181,zookeeper-us2:2181'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -178,8 +172,8 @@ services:
     build:
       context: ../../other/monitoring-demo/streams/
       args:
-        TAG: ${TAG}
-        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
+        CP_CONNECT_TAG: ${CP_CONNECT_TAG}
+        CP_CONNECT_IMAGE: ${CP_CONNECT_IMAGE}
     hostname: streams
     container_name: streams
     environment:
@@ -218,7 +212,7 @@ services:
 
       KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry-europe:8081"
 
-      KAFKA_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      # KAFKA_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
       KAFKA_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: "broker-europe:9092"
 
       #KAFKA_ENABLE_IDEMPOTENCE: "true"
@@ -252,7 +246,7 @@ services:
 
       KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry-europe:8081"
 
-      KAFKA_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      #KAFKA_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
       KAFKA_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: "broker-europe:9092"
       JAVA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-consumer.yml -Xmx256M -Xms256M
     volumes:

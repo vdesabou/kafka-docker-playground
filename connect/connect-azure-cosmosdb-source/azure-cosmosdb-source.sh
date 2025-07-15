@@ -6,28 +6,18 @@ source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.9.99"; then
     # skipped
-    logwarn "WARN: skipped as does not work with JDK 8, see https://github.com/microsoft/kafka-connect-cosmosdb/issues/413"
+    logwarn "skipped as does not work with JDK 8, see https://github.com/microsoft/kafka-connect-cosmosdb/issues/413"
     exit 111
 fi
 
-if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
-then
-    log "Logging to Azure using environment variables AZ_USER and AZ_PASS"
-    set +e
-    az logout
-    set -e
-    az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
-else
-    log "Logging to Azure using browser"
-    az login
-fi
-
-# when AZURE_SUBSCRIPTION_NAME env var is set, we need to set the correct subscription
-maybe_set_azure_subscription
+login_and_maybe_set_azure_subscription
 
 # https://github.com/microsoft/kafka-connect-cosmosdb/blob/dev/doc/CosmosDB_Setup.md
 AZURE_NAME=pg${USER}ck${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
+if [ ${#AZURE_NAME} -gt 24 ]; then
+  AZURE_NAME=${AZURE_NAME:0:24}
+fi
 AZURE_REGION=westeurope
 AZURE_RESOURCE_GROUP=$AZURE_NAME
 AZURE_COSMOSDB_SERVER_NAME=$AZURE_NAME

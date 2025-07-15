@@ -4,29 +4,22 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-export AWS_CREDENTIALS_FILE_NAME=credentials-with-assuming-iam-role
-if [ ! -f $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME ]
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "2.0.12"
 then
-     logerror "ERROR: $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME is not set"
+     logwarn "minimal supported connector version is 2.0.13 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
+
+export AWS_CREDENTIALS_FILE_NAME=$HOME/.aws/credentials-with-assuming-iam-role
+if [ ! -f $AWS_CREDENTIALS_FILE_NAME ]
+then
+     logerror "❌ $AWS_CREDENTIALS_FILE_NAME is not set"
      exit 1
 fi
 
-if [ -z "$AWS_REGION" ]
-then
-     AWS_REGION=$(aws configure get region | tr '\r' '\n')
-     if [ "$AWS_REGION" == "" ]
-     then
-          logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
-          exit 1
-     fi
-fi
-
-if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
-then
-     export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
-else
-     export CONNECT_CONTAINER_HOME_DIR="/root"
-fi
+handle_aws_credentials
 
 LAMBDA_ROLE_NAME=pg${USER}lambdabrole${TAG}
 LAMBDA_ROLE_NAME=${LAMBDA_ROLE_NAME//[-._]/}

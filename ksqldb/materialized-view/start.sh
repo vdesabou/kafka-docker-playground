@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.4.99"; then
-    logwarn "WARN: This example with connectors works since CP 5.5 only"
+    logwarn "This example with connectors works since CP 5.5 only"
     exit 111
 fi
 
@@ -23,7 +23,7 @@ docker exec mysql bash -c "mysql --user=root --password=password --database=mydb
 
 
 log "Create source connector"
-timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
+timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 
@@ -56,7 +56,7 @@ EOF
 sleep 5
 
 log "Check topic"
-timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
+timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 
@@ -66,7 +66,7 @@ DESCRIBE CONNECTOR calls_reader;
 EOF
 
 log "Create the ksqlDB calls stream"
-timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
+timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 
@@ -78,7 +78,7 @@ EOF
 
 
 log "Create the materialized views"
-timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
+timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 
@@ -104,7 +104,7 @@ sleep 5
 if ! version_gt $TAG_BASE "5.9.9"; then
     # with 5.5.x, we need to use ROWKEY
     log "Query the materialized views"
-timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
+timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 
@@ -118,7 +118,7 @@ WHERE ROWKEY = 'michael';
 EOF
 else
     log "Query the materialized views"
-timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
+timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 

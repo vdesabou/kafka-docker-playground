@@ -1,0 +1,48 @@
+---
+services:
+
+  sql-datagen:
+    build:
+      context: ../../ccloud/fm-debezium-mariadb-source/mysql-datagen/
+    hostname: sql-datagen
+    container_name: sql-datagen
+    profiles:
+    - sql_datagen
+    volumes:
+      - ../../ccloud/fm-debezium-mariadb-source/mysql-datagen/target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
+
+  mariadb:
+    image: mariadb:latest
+    hostname: mariadb
+    container_name: mariadb
+    volumes:
+      - ../../ccloud/fm-debezium-mariadb-source/mysql.cnf:/etc/mysql/conf.d/custom.cnf
+      - ../../ccloud/fm-debezium-mariadb-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_HOST: 172.%  # Allow docker containers to connect to mysql
+
+
+  # https://ngrok.com/docs/using-ngrok-with/docker/
+  ngrok:
+    image: ngrok/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    ports:
+      - 4040:4040
+    restart: unless-stopped
+    links:
+      - mariadb
+    command:
+      - "start"
+      - "--all"
+      - "--log=stdout"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ../../ccloud/fm-debezium-mariadb-source/ngrok.yml:/etc/ngrok.yml
+    environment:
+      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN

@@ -21,3 +21,13 @@ snowflake-sink-snowpipe-streaming.sh
 # no need to test in CI
 azure-cognitive-search-sink-proxy.sh
 s3-sink-with-short-lived-creds.sh
+
+# hostname validation
+fully-managed-mqtt-source-mtls.sh
+fully-managed-http-v2-sink-mtls-auth.sh
+
+# does not work
+gcp-spanner-sink-proxy.sh
+marketo-source-proxy.sh
+s3-sink-proxy-with-assuming-iam-role.sh
+hbase-sink-kerberos.sh

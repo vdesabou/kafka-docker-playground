@@ -42,7 +42,7 @@ while [ $i -le 4 ]
 do
   Sending message key: <key$(($i % 2))> and value <value$i> to topic testtopic
 
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --property parse.key=true --property key.separator=, << EOF
+docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic testtopic --property parse.key=true --property key.separator=, << EOF
 key$(($i % 2)),value$i
 EOF
   sleep 1
@@ -117,7 +117,7 @@ key0,value4
 Inject one more message
 
 ```bash
-$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --property parse.key=true --property key.separator=, << EOF
+$ docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic testtopic --property parse.key=true --property key.separator=, << EOF
 key1,value5
 EOF
 ```

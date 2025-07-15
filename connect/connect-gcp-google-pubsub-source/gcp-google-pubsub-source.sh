@@ -12,20 +12,25 @@ fi
 
 cd ../../connect/connect-gcp-google-pubsub-source
 
-if [ ! -f ${DIR}/pubsub-group-kafka-connector-1.2.0.jar ]
+if [ ! -f ${DIR}/pubsub-group-kafka-connector-1.3.2.jar ]
 then
-     wget -q https://repo1.maven.org/maven2/com/google/cloud/pubsub-group-kafka-connector/1.2.0/pubsub-group-kafka-connector-1.2.0.jar
+     wget -q https://repo1.maven.org/maven2/com/google/cloud/pubsub-group-kafka-connector/1.3.2/pubsub-group-kafka-connector-1.3.2.jar
 fi
 
-if [ ! -f ${DIR}/grpc-netty-1.54.0.jar ]
+if [ ! -f ${DIR}/grpc-netty-1.70.0.jar ]
 then
-     wget -q https://repo1.maven.org/maven2/io/grpc/grpc-netty/1.54.0/grpc-netty-1.54.0.jar
+     wget -q https://repo1.maven.org/maven2/io/grpc/grpc-netty/1.70.0/grpc-netty-1.70.0.jar
+fi
+
+if [ ! -f ${DIR}/grpc-rls-1.70.0.jar ]
+then
+     wget -q https://repo1.maven.org/maven2/io/grpc/grpc-rls/1.70.0/grpc-rls-1.70.0.jar
 fi
 
 GCP_KEYFILE="${PWD}/keyfile.json"
 if [ ! -f ${GCP_KEYFILE} ] && [ -z "$GCP_KEYFILE_CONTENT" ]
 then
-     logerror "ERROR: either the file ${GCP_KEYFILE} is not present or environment variable GCP_KEYFILE_CONTENT is not set!"
+     logerror "❌ either the file ${GCP_KEYFILE} is not present or environment variable GCP_KEYFILE_CONTENT is not set!"
      exit 1
 else
     if [ -f ${GCP_KEYFILE} ]
@@ -47,35 +52,37 @@ docker rm -f gcloud-config
 set -e
 docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --project ${GCP_PROJECT} --key-file /tmp/keyfile.json
 
+GCP_PUB_SUB_TOPIC="topic-1-$GITHUB_RUN_NUMBER"
+GCP_PUB_SUB_SUBSCRIPTION="subscription-1-$GITHUB_RUN_NUMBER"
 
 # cleanup if required
 set +e
-log "Delete topic and subscription, if required"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics delete topic-1
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions delete subscription-1
+log "Delete topic $GCP_PUB_SUB_TOPIC and subscription $GCP_PUB_SUB_SUBSCRIPTION, if required"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics delete $GCP_PUB_SUB_TOPIC
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions delete $GCP_PUB_SUB_SUBSCRIPTION
 set -e
 
-log "Create a Pub/Sub topic called topic-1"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics create topic-1
+log "Create a Pub/Sub topic called $GCP_PUB_SUB_TOPIC"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics create $GCP_PUB_SUB_TOPIC
 
-log "Create a Pub/Sub subscription called subscription-1"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions create --topic topic-1 subscription-1 --ack-deadline 60
+log "Create a Pub/Sub subscription called $GCP_PUB_SUB_SUBSCRIPTION"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions create --topic $GCP_PUB_SUB_TOPIC $GCP_PUB_SUB_SUBSCRIPTION --ack-deadline 60
 
 function cleanup_cloud_resources {
     set +e
-    log "Delete GCP PubSub topic and subscription"
+    log "Delete GCP PubSub topic $GCP_PUB_SUB_TOPIC and subscription $GCP_PUB_SUB_SUBSCRIPTION"
     check_if_continue
-    docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics delete topic-1
-    docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions delete subscription-1
+    docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics delete $GCP_PUB_SUB_TOPIC
+    docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions delete $GCP_PUB_SUB_SUBSCRIPTION
 
     docker rm -f gcloud-config
 }
 trap cleanup_cloud_resources EXIT
 
-log "Publish three messages to topic-1"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics publish topic-1 --message "Peter"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics publish topic-1 --message "Megan"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics publish topic-1 --message "Erin"
+log "Publish three messages to $GCP_PUB_SUB_TOPIC"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics publish $GCP_PUB_SUB_TOPIC --message "Peter"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics publish $GCP_PUB_SUB_TOPIC --message "Megan"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics publish $GCP_PUB_SUB_TOPIC --message "Erin"
 
 sleep 10
 
@@ -86,8 +93,8 @@ playground connector create-or-update --connector pubsub-source  << EOF
      "tasks.max" : "1",
      "kafka.topic" : "pubsub-topic",
      "cps.project" : "$GCP_PROJECT",
-     "cps.topic" : "topic-1",
-     "cps.subscription" : "subscription-1",
+     "cps.topic" : "$GCP_PUB_SUB_TOPIC",
+     "cps.subscription" : "$GCP_PUB_SUB_SUBSCRIPTION",
      "gcp.credentials.file.path" : "/tmp/keyfile.json",
      "errors.tolerance": "all",
      "errors.log.enable": "true",

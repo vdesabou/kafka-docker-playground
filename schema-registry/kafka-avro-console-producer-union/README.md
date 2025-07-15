@@ -73,7 +73,7 @@ and
 
 You will need to specify which type you are using. For example:
 ```
-./bin/kafka-avro-console-producer --broker-list localhost:9092 --topic all-types --property value.schema.id={id} --property auto.register=false --property use.latest.version=true
+./bin/kafka-avro-console-producer --bootstrap-server localhost:9092 --topic all-types --property value.schema.id={id} --property auto.register=false --property use.latest.version=true
 
 { "io.confluent.examples.avro.Product": { "product_id": 1, "product_name" : "rice", "product_price" : 100.00 } }
 { "io.confluent.examples.avro.Customer": { "customer_id": 100, "customer_name": "acme", "customer_email": "acme@google.com", "customer_address": "1 Main St" } }

@@ -19,11 +19,9 @@ services:
         volumes:
             - ../../environment/sasl-scram/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
             - ../../environment/sasl-scram/client.properties:/tmp/client.properties
-        depends_on:
-        - zookeeper
         environment:
             KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
-            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT${CONTROLLER_SECURITY_PROTOCOL_MAP}
             KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://broker:9092
             KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
             KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-256
@@ -39,11 +37,9 @@ services:
         volumes:
             - ../../environment/sasl-scram/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
             - ../../environment/sasl-scram/client.properties:/tmp/client.properties
-        depends_on:
-        - zookeeper
         environment:
             KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
-            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT${CONTROLLER_SECURITY_PROTOCOL_MAP}
             KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://broker2:9092
             KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
             KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-256
@@ -59,11 +55,9 @@ services:
         volumes:
             - ../../environment/sasl-scram/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
             - ../../environment/sasl-scram/client.properties:/tmp/client.properties
-        depends_on:
-        - zookeeper
         environment:
             KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
-            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT${CONTROLLER_SECURITY_PROTOCOL_MAP}
             KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://broker3:9092
             KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
             KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-256
@@ -79,8 +73,6 @@ services:
     connect:
         volumes:
             - ../../environment/sasl-scram/client.properties:/tmp/client.properties
-        depends_on:
-        - zookeeper
         environment:
             # Configure the Connect workers to use SASL/SCRAM-SHA-256.
             CONNECT_SASL_MECHANISM: SCRAM-SHA-256
@@ -117,8 +109,6 @@ services:
     connect2:
         volumes:
             - ../../environment/sasl-scram/client.properties:/tmp/client.properties
-        depends_on:
-        - zookeeper
         environment:
             # Configure the Connect workers to use SASL/SCRAM-SHA-256.
             CONNECT_SASL_MECHANISM: SCRAM-SHA-256
@@ -155,8 +145,6 @@ services:
     connect3:
         volumes:
             - ../../environment/sasl-scram/client.properties:/tmp/client.properties
-        depends_on:
-        - zookeeper
         environment:
             # Configure the Connect workers to use SASL/SCRAM-SHA-256.
             CONNECT_SASL_MECHANISM: SCRAM-SHA-256
@@ -234,7 +222,38 @@ services:
                 password=\"client-secret\";"
             CONTROL_CENTER_KAFKA_MYCLUSTER_SASL_MECHANISM: SCRAM-SHA-256
 
-    # https://github.com/conduktor/conduktor-platform/blob/main/doc/Configuration.md
-    conduktor:
+    conduktor-postgresql:
+        image: postgres:14
+        hostname: conduktor-postgresql
+        container_name: conduktor-postgresql
+        environment:
+            POSTGRES_DB: "conduktor"
+            POSTGRES_USER: "conduktor"
+            POSTGRES_PASSWORD: "change_me"
+        profiles:
+        - "conduktor"
+
+    conduktor-console:
+        image: conduktor/conduktor-console:1.30.0
+        hostname: conduktor-console
+        container_name: conduktor-console
+        depends_on:
+        - conduktor-postgresql
+        ports:
+        - "8080:8080"
         volumes:
-            - ../../environment/sasl-scram/conduktor/platform-config.yaml:/tmp/platform-config.yaml
+        - ../../environment/sasl-scram/conduktor/platform-config.yaml:/tmp/platform-config.yaml
+        environment:
+          CDK_IN_CONF_FILE: /tmp/platform-config.yaml
+        profiles:
+        - "conduktor"
+
+    conduktor-monitoring:
+        image: conduktor/conduktor-console-cortex:1.30.0
+        hostname: conduktor-monitoring
+        container_name: conduktor-monitoring
+        environment:
+        # Connection to the Console container
+          CDK_CONSOLE-URL: "http://conduktor-console:8080"
+        profiles:
+        - "conduktor"

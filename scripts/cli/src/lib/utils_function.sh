@@ -113,6 +113,21 @@ function version_gt() {
 
 function set_kafka_client_tag()
 {
+    if [[ $TAG_BASE = 8.0.* ]]
+    then
+      export KAFKA_CLIENT_TAG="4.0.0"
+    fi
+
+    if [[ $TAG_BASE = 7.9.* ]]
+    then
+      export KAFKA_CLIENT_TAG="3.9.0"
+    fi
+    
+    if [[ $TAG_BASE = 7.8.* ]]
+    then
+      export KAFKA_CLIENT_TAG="3.8.0"
+    fi
+
     if [[ $TAG_BASE = 7.7.* ]]
     then
       export KAFKA_CLIENT_TAG="3.7.0"
@@ -244,19 +259,29 @@ function maybe_create_image()
     return
   fi
   set +e
-  log "🧰 Checking if Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG} contains additional tools"
+  log "🧰 Checking if Docker image ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} contains additional tools"
   log "⏳ it can take a while if image is downloaded for the first time"
-  docker run --quiet --rm ${CP_CONNECT_IMAGE}:${CONNECT_TAG} type unzip > /dev/null 2>&1
+  docker run --quiet --rm ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} type unzip > /dev/null 2>&1
   if [ $? != 0 ]
   then
     if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
     then
       export CONNECT_USER="appuser"
-      if [ `uname -m` = "arm64" ]
+      if [ "$(uname -m)" = "arm64" ]
       then
-        CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && rpm -i --nosignature https://koji.mbox.centos.org/kojifiles/packages/tcpdump/4.9.3/3.el8/aarch64/tcpdump-4.9.3-3.el8.aarch64.rpm && touch /tmp/done; fi"
+        if version_gt $TAG_BASE "7.9.9"
+        then
+          CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then yum -y install bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && rpm -i --nosignature https://yum.oracle.com/repo/OracleLinux/OL9/appstream/aarch64/getPackage/tcpdump-4.99.0-9.el9.aarch64.rpm && touch /tmp/done; fi"
+        else
+          CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && rpm -i --nosignature https://yum.oracle.com/repo/OracleLinux/OL8/appstream/aarch64/getPackage/tcpdump-4.9.3-3.el8.aarch64.rpm && touch /tmp/done; fi"
+        fi
       else
-        CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then curl https://download.rockylinux.org/pub/rocky/8/AppStream/x86_64/kickstart/Packages/t/tcpdump-4.9.3-5.el8.x86_64.rpm -o tcpdump-4.9.3-1.el8.x86_64.rpm && rpm -Uvh tcpdump-4.9.3-1.el8.x86_64.rpm && yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && touch /tmp/done; fi"
+        if version_gt $TAG_BASE "7.9.9"
+        then
+          CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then yum -y install bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && rpm -i --nosignature https://yum.oracle.com/repo/OracleLinux/OL9/appstream/x86_64/getPackage/tcpdump-4.99.0-9.el9.x86_64.rpm && touch /tmp/done; fi"
+        else
+          CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then curl https://download.rockylinux.org/pub/rocky/8/AppStream/x86_64/kickstart/Packages/t/tcpdump-4.9.3-5.el8.x86_64.rpm -o tcpdump-4.9.3-1.el8.x86_64.rpm && rpm -Uvh tcpdump-4.9.3-1.el8.x86_64.rpm && yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && touch /tmp/done; fi"
+        fi
       fi
     else
       export CONNECT_USER="root"
@@ -271,13 +296,15 @@ else
     log "🐛📂 not deleting tmp dir $tmp_dir"
 fi
 cat << EOF > $tmp_dir/Dockerfile
-FROM ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+FROM ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
 USER root
+# https://github.com/confluentinc/common-docker/pull/743 and https://github.com/adoptium/adoptium-support/issues/1285
+RUN if [ -f /etc/yum.repos.d/adoptium.repo ]; then sed -i "s/packages\.adoptium\.net/adoptium\.jfrog\.io/g" /etc/yum.repos.d/adoptium.repo; fi
 RUN ${CONNECT_3RDPARTY_INSTALL}
 USER ${CONNECT_USER}
 EOF
-    log "👷📦 Re-building Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG} to include additional tools"
-    docker build -t ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $tmp_dir
+    log "👷📦 Re-building Docker image ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} to include additional tools"
+    docker build -t ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $tmp_dir
     rm -rf $tmp_dir
   fi
   set -e
@@ -361,7 +388,7 @@ function check_if_continue()
   case "$choice" in
   y|Y ) ;;
   n|N ) exit 1;;
-  * ) logerror "invalid response <$choice>!";exit 1;;
+  * ) logwarn "invalid response <$choice>! Please enter y or n."; check_if_continue;;
   esac
 }
 
@@ -373,12 +400,11 @@ function check_if_skip() {
   else
     read -p "Do you want to skip this command? (y/n) " reply
 
-    if [[ $reply != 'y' ]] 
-    then
-      eval "$1"
-    else
-      log "Skipping command..."
-    fi
+    case "$reply" in
+    y|Y ) log "Skipping command...";;
+    n|N ) eval "$1";;
+    * ) logwarn "invalid response <$reply>! Please enter y or n."; check_if_skip;;
+    esac
   fi
 }
 
@@ -444,34 +470,138 @@ function check_bash_version() {
   fi
 }
 
-function check_playground_version() {
-  set +e
-  X=3
-  git fetch
-  latest_commit_date=$(git log -1 --format=%cd --date=short)
-  remote_commit_date=$(git log -1 --format=%cd --date=short origin/master)
-
-  if [[ "$OSTYPE" == "darwin"* ]]
+function check_and_update_playground_version() {
+  check_repo_version=$(playground config get check-and-update-repo-version)
+  if [ "$check_repo_version" == "" ]
   then
-    latest_commit_date_seconds=$(date -j -f "%Y-%m-%d" "$latest_commit_date" +%s)
-    remote_commit_date_seconds=$(date -j -f "%Y-%m-%d" "$remote_commit_date" +%s)
+      playground config set check-and-update-repo-version true
+  fi
+
+  if [ "$check_repo_version" == "true" ] || [ "$check_repo_version" == "" ]
+  then
+    set +e
+    X=3
+    git fetch
+    latest_commit_date=$(git log -1 --format=%cd --date=short)
+    remote_commit_date=$(git log -1 --format=%cd --date=short origin/master)
+
+    if [[ "$OSTYPE" == "darwin"* ]]
+    then
+      latest_commit_date_seconds=$(date -j -f "%Y-%m-%d" "$latest_commit_date" +%s)
+      remote_commit_date_seconds=$(date -j -f "%Y-%m-%d" "$remote_commit_date" +%s)
+    else
+      latest_commit_date_seconds=$(date -d "$latest_commit_date" +%s)
+      remote_commit_date_seconds=$(date -d "$remote_commit_date" +%s)
+    fi
+
+    difference=$(( (remote_commit_date_seconds - latest_commit_date_seconds) / (60*60*24) ))
+
+    if [ $difference -gt $X ]
+    then
+        logwarn "🥶 The current repo version is older than $X days ($difference days), now trying to refresh your version using git pull (disable with 'playground config check-and-update-repo-version false')"
+        set +e
+        git pull
+        if [ $? -ne 0 ]
+        then
+          logerror "❌ Error while pulling the latest version of the repo. Please check your git configuration/error message, do you still want to continue using outdated version ?"
+          check_if_continue
+        else
+          log "🔄 The repo version is now up to date, calling <playground re-run> to restart your example now."
+          playground re-run
+        fi
+    fi
+    set -e
+  fi
+}
+
+function get_ccs_or_ce_specifics() {
+  if [[ $CP_CONNECT_IMAGE == *"cp-kafka-"* ]]
+  then
+    log "Ⓜ️ detected connect community image used, disabling Monitoring Interceptors"
+    export CONNECT_CONSUMER_INTERCEPTOR_CLASSES=""
+    export CONNECT_PRODUCER_INTERCEPTOR_CLASSES=""
+  elif version_gt $TAG_BASE "7.9.9"
+  then
+    log "Ⓜ️ disabling Monitoring Interceptors as CP image is > 8"
+    export CONNECT_CONSUMER_INTERCEPTOR_CLASSES=""
+    export CONNECT_PRODUCER_INTERCEPTOR_CLASSES=""
   else
-    latest_commit_date_seconds=$(date -d "$latest_commit_date" +%s)
-    remote_commit_date_seconds=$(date -d "$remote_commit_date" +%s)
+    export CONNECT_CONSUMER_INTERCEPTOR_CLASSES="io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+    export CONNECT_PRODUCER_INTERCEPTOR_CLASSES="io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
   fi
 
-  difference=$(( (remote_commit_date_seconds - latest_commit_date_seconds) / (60*60*24) ))
-
-  if [ $difference -gt $X ]
+  if [[ $CP_KAFKA_IMAGE == *"cp-kafka" ]]
   then
-      logwarn "🥶 The current repo version is older than $X days ($difference days), please refresh your version using git pull !"
-      check_if_continue
+    log "Ⓜ️ detected kafka community image used, disabling Metrics Reporter"
+    export KAFKA_METRIC_REPORTERS=""
+  else
+    export KAFKA_METRIC_REPORTERS="io.confluent.metrics.reporter.ConfluentMetricsReporter"
   fi
-  set -e
+}
+
+function determine_kraft_mode() {
+  TAG_BASE=$(echo $TAG | cut -d "-" -f1)
+  first_version=${TAG_BASE}
+  if [[ -n $ENABLE_KRAFT ]] || version_gt $first_version "7.9.99"
+  then
+    if [[ -n $ENABLE_KRAFT ]]
+    then
+      log "🛰️ Starting up Confluent Platform in Kraft mode as ENABLE_KRAFT environment variable is set"
+      if ! version_gt $TAG_BASE "7.3.99"
+      then
+        logerror "❌ Kraft mode is not supported with playground for CP version < 7.4, please use Zookeeper mode"
+        exit 1
+      fi
+    else
+      log "🛰️ Starting up Confluent Platform in Kraft mode as CP version is > 8"
+    fi
+    export ENABLE_KRAFT="true"
+    export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DIR_UTILS}/../environment/plaintext/docker-compose-kraft.yml"
+    export MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DIR_UTILS}/../environment/mdc-plaintext/docker-compose-kraft.yml"
+    export CONTROLLER_SECURITY_PROTOCOL_MAP=",CONTROLLER:PLAINTEXT"
+    export KAFKA_AUTHORIZER_CLASS_NAME="org.apache.kafka.metadata.authorizer.StandardAuthorizer"
+  else
+    log "👨‍🦳 Starting up Confluent Platform in Zookeeper mode"
+    export ENABLE_ZOOKEEPER="true"
+    export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE=""
+    export MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE=""
+    export CONTROLLER_SECURITY_PROTOCOL_MAP=""
+
+    # Migrate SimpleAclAuthorizer to AclAuthorizer #1276
+    if version_gt $TAG "5.3.99"
+    then
+      export KAFKA_AUTHORIZER_CLASS_NAME="kafka.security.authorizer.AclAuthorizer"
+    else
+      export KAFKA_AUTHORIZER_CLASS_NAME="kafka.security.auth.SimpleAclAuthorizer"
+    fi
+  fi
 }
 
 function set_profiles() {
   # https://docs.docker.com/compose/profiles/
+  profile_zookeeper_command=""
+  if [ -z "$ENABLE_ZOOKEEPER" ]
+  then
+    log "🛑 zookeeper is disabled"
+    playground state del flags.ENABLE_ZOOKEEPER
+  else
+    log "👨‍⚕️ zookeeper is enabled"
+    profile_zookeeper_command="--profile zookeeper"
+    playground state set flags.ENABLE_ZOOKEEPER 1
+  fi
+
+  # profile_kraft_command=""
+  # if [ -z "$ENABLE_KRAFT" ]
+  # then
+  #   log "🛑 kraft is disabled"
+  #   playground state del flags.ENABLE_KRAFT
+  # else
+  #   log "🛰️ kraft is enabled"
+  #   profile_kraft_command="--profile kraft"
+  #   playground state set flags.ENABLE_KRAFT 1
+  # fi
+
+
   profile_control_center_command=""
   if [ -z "$ENABLE_CONTROL_CENTER" ]
   then
@@ -482,6 +612,20 @@ function set_profiles() {
     log "Use http://localhost:9021 to login"
     profile_control_center_command="--profile control-center"
     playground state set flags.ENABLE_CONTROL_CENTER 1
+  fi
+
+  # Check if ENABLE_FLINK is set to true
+  profile_flink=""
+  if [ -z "$ENABLE_FLINK" ] 
+  then
+    log "🛑 Starting services without Flink"
+    playground state del flags.ENABLE_FLINK
+    export flink_connectors=""
+  else
+    log "🐿️ Starting services with Flink"
+    profile_flink="--profile flink"
+    playground state set flags.ENABLE_FLINK 1
+    source ${DIR}/../../scripts/flink_download_connectors.sh
   fi
 
   profile_ksqldb_command=""
@@ -536,7 +680,7 @@ function set_profiles() {
     playground state del flags.ENABLE_CONDUKTOR
   else
     log "🐺 conduktor is enabled"
-    log "Use http://localhost:8080/console (admin/admin) to login"
+    log "Use http://localhost:8080/console to login"
     profile_conduktor_command="--profile conduktor"
     playground state set flags.ENABLE_CONDUKTOR 1
   fi
@@ -594,7 +738,7 @@ function get_ansible_version() {
 }
 
 function check_confluent_version() {
-  REQUIRED_CONFLUENT_VER=${1:-"3.0.0"}
+  REQUIRED_CONFLUENT_VER=${1:-"4.0.0"}
   CONFLUENT_VER=$(get_confluent_version)
 
   if version_gt $REQUIRED_CONFLUENT_VER $CONFLUENT_VER; then
@@ -633,30 +777,17 @@ function remove_partition() {
 }
 
 function aws() {
-
-    if [ -z "$AWS_ACCESS_KEY_ID" ] && [ -z "$AWS_SECRET_ACCESS_KEY" ] && [ ! -f $HOME/.aws/credentials ]
-    then
-      logerror 'ERROR: Neither AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY or $HOME/.aws/credentials are set. AWS credentials must be set !'
-      if [ -z "$AWS_ACCESS_KEY_ID" ]
-      then
-        log 'AWS_ACCESS_KEY_ID environment variable is not set.'
-      fi
-      if [ -z "$AWS_SECRET_ACCESS_KEY" ]
-      then
-        log 'AWS_SECRET_ACCESS_KEY environment variable is not set.'
-      fi
-      if [ ! -f $HOME/.aws/credentials ]
-      then
-        log '$HOME/.aws/credentials does not exist.'
-      fi
-      return 1
-    fi
-
     if [ ! -z "$AWS_REGION" ]
     then
       if [ ! -f $HOME/.aws/config ]
       then
         aws_tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+        if [ -z "$PG_VERBOSE_MODE" ]
+        then
+            trap 'rm -rf $aws_tmp_dir' EXIT
+        else
+            log "🐛📂 not deleting aws tmp dir $aws_tmp_dir"
+        fi
 cat << EOF > $aws_tmp_dir/config
 [default]
 region = $AWS_REGION
@@ -672,15 +803,14 @@ EOF
       # log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
       if [ -f $aws_tmp_dir/config ]
       then
-        docker run --quiet --rm -iv $aws_tmp_dir/config:/root/.aws/config -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
-        rm -rf $aws_tmp_dir
+        docker run --quiet --rm -iv $aws_tmp_dir/config:/root/.aws/config -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
       else
-        docker run --quiet --rm -iv $HOME/.aws/config:/root/.aws/config -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
+        docker run --quiet --rm -iv $HOME/.aws/config:/root/.aws/config -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
       fi
     else
       if [ ! -f $HOME/.aws/credentials ]
       then
-        logerror '$HOME/.aws/credentials does not exist.'
+        logerror "❌ $HOME/.aws/credentials does not exist"
       else
         # log "💭 AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
         docker run --quiet --rm -iv $HOME/.aws:/root/.aws -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
@@ -702,29 +832,37 @@ function timeout() {
 
 function get_connect_image() {
   set +e
-  CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+  CP_CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
   set -e
-  if [ "$CONNECT_TAG" == "" ]
+  if [ "$CP_CONNECT_TAG" == "" ]
   then
-    CONNECT_TAG=$(grep "export TAG" $root_folder/scripts/utils.sh | head -1 | cut -d "=" -f 2 | cut -d " " -f 1)
+    if [ -z "$TAG" ]
+    then
+      CP_CONNECT_TAG=$(grep "export TAG" $root_folder/scripts/utils.sh | head -1 | cut -d "=" -f 2 | cut -d " " -f 1)
+    else
+      CP_CONNECT_TAG=$TAG
+    fi
 
-    if [ "$CONNECT_TAG" == "" ]
+    if [ "$CP_CONNECT_TAG" == "" ]
     then
       logerror "Error while getting default TAG in get_connect_image()"
       exit 1
     fi
   fi
 
-  if version_gt $CONNECT_TAG 5.2.99
+  if [ -z "$CP_CONNECT_IMAGE" ]
   then
-    CP_CONNECT_IMAGE=confluentinc/cp-server-connect-base
-  else
-    CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect-base
+    if version_gt $CP_CONNECT_TAG 5.2.99
+    then
+      CP_CONNECT_IMAGE=confluentinc/cp-server-connect-base
+    else
+      CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect-base
+    fi
   fi
 }
 
 function az() {
-  docker run --quiet --rm -v /tmp:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli:cbl-mariner2.0 az "$@"
+  docker run --quiet --rm -v /tmp:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli:azurelinux3.0 az "$@"
 }
 
 function display_docker_container_error_log() {
@@ -733,19 +871,19 @@ function display_docker_container_error_log() {
   logerror "🐳 docker ps"
   docker ps
   logerror "####################################################"
-  for container in $(docker ps  --format="{{.Names}}")
+  while IFS= read -r container
   do
-      logerror "####################################################"
-      logerror "$container logs"
-      if [[ "$container" == "connect" ]] || [[ "$container" == "sap" ]]
-      then
-          # always show all logs for connect
-          docker container logs --tail=500 $container 2>&1 | grep -v "was supplied but isn't a known config"
-      else
-          docker container logs $container 2>&1 | egrep "ERROR|FATAL"
-      fi
-      logwarn "####################################################"
-  done
+    logerror "####################################################"
+    logerror "$container logs"
+    if [[ "$container" == "connect" ]] || [[ "$container" == "sap" ]]
+    then
+        # always show all logs for connect
+        docker container logs --tail=250 $container 2>&1 | grep -v "was supplied but isn't a known config"
+    else
+        docker container logs $container 2>&1 | grep -E "ERROR|FATAL"
+    fi
+    logwarn "####################################################"
+  done < <(docker ps --format="{{.Names}}")
 }
 
 function retry() {
@@ -1012,9 +1150,13 @@ function wait_container_ready() {
   then
     log "⌛ Waiting up to $MAX_WAIT seconds for ${CONTROL_CENTER_CONTAINER} to start"
     playground --output-level WARN container logs --container $CONTROL_CENTER_CONTAINER --wait-for-log "Started NetworkTrafficServerConnector" --max-wait $MAX_WAIT
+  elif [[ $CONNECT_CONTAINER == connect* ]]
+  then
+    log "⌛ Waiting up to $MAX_WAIT seconds for ${CONNECT_CONTAINER} to start"
+    playground container wait-for-connect-rest-api-ready --max-wait $MAX_WAIT
   else
     log "⌛ Waiting up to $MAX_WAIT seconds for ${CONNECT_CONTAINER} to start"
-    playground --output-level WARN container logs --container $CONNECT_CONTAINER --wait-for-log "Finished starting connectors and tasks" --max-wait $MAX_WAIT
+    playground container logs --container $CONNECT_CONTAINER --wait-for-log "Finished starting connectors and tasks" --max-wait $MAX_WAIT
   fi
   # Verify Docker containers started
   if [[ $(docker container ps) =~ "Exit 137" ]]
@@ -1034,6 +1176,12 @@ function display_jmx_info() {
     log "🛡️ Prometheus is reachable at http://127.0.0.1:9090"
     log "📛 Pyroscope is reachable at http://127.0.0.1:4040"
     log "📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/password) or JMX metrics are available locally on those ports:"
+  fi
+  if [ ! -z $ENABLE_KRAFT ]
+  then
+    log "    - kraft-controller : 10005"
+  else
+    log "    - zookeeper       : 9999"
   fi
   log "    - zookeeper       : 9999"
   log "    - broker          : 10000"
@@ -1069,6 +1217,9 @@ function get_jmx_metrics() {
   case "$container" in
   zookeeper )
     port=9999
+  ;;
+  controller )
+    port=10005
   ;;
   broker )
     port=10000
@@ -1121,21 +1272,7 @@ done
 
   if [[ -n "$open" ]]
   then
-    editor=$(playground config get editor)
-    if [ "$editor" != "" ]
-    then
-      log "📖 Opening /tmp/jmx_metrics.log using configured editor $editor"
-      $editor /tmp/jmx_metrics.log
-    else
-        if [[ $(type code 2>&1) =~ "not found" ]]
-        then
-            logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
-            exit 1
-        else
-            log "📖 Opening /tmp/jmx_metrics.log with code (default) - you can change editor by using playground config editor <editor>"
-            code /tmp/jmx_metrics.log
-        fi
-    fi
+    playground open --file "/tmp/jmx_metrics.log"
   fi
 }
 
@@ -1383,7 +1520,7 @@ function remove_cdb_oracle_image() {
 
   SETUP_FILE=${SETUP_FOLDER}/01_user-setup.sh
   SETUP_FILE_CKSUM=$(cksum $SETUP_FILE | awk '{ print $1 }')
-  if [ `uname -m` = "arm64" ]
+  if [ "$(uname -m)" = "arm64" ]
   then
       export ORACLE_IMAGE="db-prebuilt-arm64-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
   else
@@ -1398,8 +1535,8 @@ function remove_cdb_oracle_image() {
 }
 
 function create_or_get_oracle_image() {
-  ZIP_FILE="$1"
-  SETUP_FOLDER="$2"
+  local ZIP_FILE="$1"
+  local SETUP_FOLDER="$2"
 
   if [ "$ZIP_FILE" == "linuxx64_12201_database.zip" ]
   then
@@ -1411,7 +1548,7 @@ function create_or_get_oracle_image() {
   then
       ORACLE_VERSION="21.3.0-ee"
   else
-      if [ `uname -m` = "arm64" ]
+      if [ "$(uname -m)" = "arm64" ]
       then
           ZIP_FILE="LINUX.ARM64_1919000_db_home.zip"
       else
@@ -1426,7 +1563,7 @@ function create_or_get_oracle_image() {
   SETUP_FILE=${SETUP_FOLDER}/01_user-setup.sh
   SETUP_FILE_CKSUM=$(cksum $SETUP_FILE | awk '{ print $1 }')
 
-  if [ `uname -m` = "arm64" ]
+  if [ "$(uname -m)" = "arm64" ]
   then
       export ORACLE_IMAGE="db-prebuilt-arm64-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
   else
@@ -1439,6 +1576,7 @@ function create_or_get_oracle_image() {
     set +e
     log "attempting to get the Oracle prebuilt docker image from Confluent S3 bucket (only works for Confluent employees)..."
     log "command is <aws s3 ls s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar>"
+    handle_aws_credentials
     aws s3 ls s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar
     if [ $? -eq 0 ]
     then
@@ -1485,6 +1623,7 @@ function create_or_get_oracle_image() {
   if test -z "$(docker images -q $BASE_ORACLE_IMAGE)"
   then
     set +e
+    handle_aws_credentials
     aws s3 ls s3://kafka-docker-playground/3rdparty/oracle_database_$ORACLE_VERSION.tar > /dev/null 2>&1
     if [ $? -eq 0 ]
     then
@@ -1522,6 +1661,7 @@ function create_or_get_oracle_image() {
       if [ ! -f ${ZIP_FILE} ]
       then
           set +e
+          handle_aws_credentials
           aws s3 ls s3://kafka-docker-playground/3rdparty/${ZIP_FILE} > /dev/null 2>&1
           if [ $? -eq 0 ]
           then
@@ -1542,7 +1682,7 @@ function create_or_get_oracle_image() {
       fi
       if [ ! -f ${ZIP_FILE} ]
       then
-          logerror "ERROR: ${ZIP_FILE} is missing. It must be downloaded manually in order to acknowledge user agreement"
+          logerror "❌ ${ZIP_FILE} is missing. It must be downloaded manually in order to acknowledge user agreement"
           exit 1
       fi
       log "👷 Building $BASE_ORACLE_IMAGE docker image..it can take a while...(more than 15 minutes!)"
@@ -1574,7 +1714,7 @@ function create_or_get_oracle_image() {
       docker container logs ${TEMP_CONTAINER} > /tmp/out.txt 2>&1
       CUR_WAIT=$(( CUR_WAIT+10 ))
       if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-            logerror "ERROR: The logs in ${TEMP_CONTAINER} container do not show 'DATABASE IS READY TO USE' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+            logerror "❌ The logs in ${TEMP_CONTAINER} container do not show 'DATABASE IS READY TO USE' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'playground container logs --open --container <container>'.\n"
             exit 1
       fi
       done
@@ -1672,7 +1812,7 @@ function maybe_delete_ccloud_environment () {
   then
     source $DELTA_CONFIGS_ENV
   else
-    logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+    logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
     exit 1
   fi
 
@@ -1683,7 +1823,7 @@ function maybe_delete_ccloud_environment () {
     #
     log "🧹❌ Confluent Cloud cluster will be deleted..."
     verify_installed "confluent"
-    check_confluent_version 2.0.0 || exit 1
+    check_confluent_version 4.0.0 || exit 1
     verify_confluent_login  "confluent kafka cluster list"
 
     export QUIET=true
@@ -1702,7 +1842,36 @@ function maybe_delete_ccloud_environment () {
   fi
 }
 
+function check_expected_ccloud_details () {
+  local expected_cloud="$1"
+  local expected_region="$2"
+
+  if [ -n "$expected_cloud" ] && [ -n "$expected_region" ]
+  then
+    expected_failed=0
+    if [ "$expected_cloud" != "$CLUSTER_CLOUD" ]
+    then
+      logerror "❌🌤 expected ccloud cloud provider for the example is $expected_cloud but you're using $CLUSTER_CLOUD"
+      expected_failed=1
+    fi
+
+    if [ "$expected_region" != "$CLUSTER_REGION" ]
+    then
+      logerror "❌🗺 expected ccloud region for the example is $expected_region but you're using $CLUSTER_REGION"
+      expected_failed=1
+    fi
+
+    if [ $expected_failed == 1 ]
+    then
+      exit 1
+    fi
+  fi
+}
+
 function bootstrap_ccloud_environment () {
+
+  local expected_cloud="$1"
+  local expected_region="$2"
 
   DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
   get_kafka_docker_playground_dir
@@ -1724,6 +1893,8 @@ function bootstrap_ccloud_environment () {
     log "⛺ log in to Confluent Cloud"
     confluent login --save
   fi
+
+  playground ccloud-costs-history > /tmp/ccloud-costs-history.txt &
 
   suggest_use_previous_example_ccloud=1
   test_file=$(playground state get run.test_file)
@@ -1883,6 +2054,7 @@ function bootstrap_ccloud_environment () {
     export WARMUP_TIME=15
     export QUIET=true
 
+    log "💡 if you notice that the playground is using unexpected ccloud details, use <playground cleanup-cloud-details> to remove all caching and re-launch the example"
     check_if_continue
   else
     #
@@ -1905,6 +2077,10 @@ function bootstrap_ccloud_environment () {
     log "🌤  CLUSTER_CLOUD is set with $CLUSTER_CLOUD"
     log "🗺  CLUSTER_REGION is set with $CLUSTER_REGION"
 
+    check_expected_ccloud_details "$expected_cloud" "$expected_region"
+
+    log "💡 if you notice that the playground is using unexpected ccloud details, use <playground cleanup-cloud-details> to remove all caching and re-launch the example"
+    
     for row in $(confluent kafka cluster list --output json | jq -r '.[] | @base64'); do
         _jq() {
         echo ${row} | base64 -d | jq -r ${1}
@@ -1933,6 +2109,8 @@ function bootstrap_ccloud_environment () {
     export WARMUP_TIME=0
   fi
 
+  check_expected_ccloud_details "$expected_cloud" "$expected_region"
+
   ccloud::create_ccloud_stack false  \
     && print_code_pass -c "ccloud::create_ccloud_stack false"
 
@@ -1947,7 +2125,7 @@ function bootstrap_ccloud_environment () {
   then
     source $DELTA_CONFIGS_ENV
   else
-    logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+    logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
     exit 1
   fi
 
@@ -2082,7 +2260,7 @@ function wait_for_log () {
   docker container logs ${container} > /tmp/out.txt 2>&1
   cur_wait=$(( cur_wait+10 ))
   if [[ "$cur_wait" -gt "$max_wait" ]]; then
-    logerror "The logs in $container container do not show '$message' after $max_wait seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'."
+    logerror "The logs in $container container do not show '$message' after $max_wait seconds. Please troubleshoot with 'docker container ps' and 'playground container logs --open --container <container>'."
     return 1
   fi
   done
@@ -2097,7 +2275,7 @@ function wait_for_log () {
 
 
 
-CLI_MIN_VERSION=${CLI_MIN_VERSION:-2.5.0}
+CLI_MIN_VERSION=${CLI_MIN_VERSION:-4.0.0}
 
 # --------------------------------------------------------------
 # Library
@@ -2723,7 +2901,7 @@ function ccloud::validate_ccloud_ksqldb_endpoint_ready() {
 }
 
 function ccloud::validate_ccloud_cluster_ready() {
-  confluent kafka topic list &>/dev/null
+  confluent kafka topic list --cluster "$CLUSTER" #&>/dev/null
   return $?
 }
 
@@ -2925,7 +3103,7 @@ function ccloud::set_kafka_cluster_use() {
 # https://docs.confluent.io/platform/current/tutorials/examples/ccloud/docs/ccloud-stack.html
 #
 function ccloud::create_ccloud_stack() {
-  #ccloud::validate_version_cli $CLI_MIN_VERSION || exit 1
+  ccloud::validate_version_cli $CLI_MIN_VERSION || exit 1
   QUIET="${QUIET:-false}"
   REPLICATION_FACTOR=${REPLICATION_FACTOR:-3}
   enable_ksqldb=${1:-false}
@@ -3003,8 +3181,9 @@ function ccloud::create_ccloud_stack() {
   fi
 
   MAX_WAIT=720
+  confluent kafka cluster use $CLUSTER
   echo ""
-  echo "Waiting up to $MAX_WAIT seconds for Confluent Cloud cluster to be ready"
+  echo "Waiting up to $MAX_WAIT seconds for Confluent Cloud cluster $CLUSTER to be ready"
   ccloud::retry $MAX_WAIT ccloud::validate_ccloud_cluster_ready || exit 1
 
   # VINC: added
@@ -3938,7 +4117,7 @@ function check_arm64_support() {
   DIR="$1"
   DOCKER_COMPOSE_FILE="$2"
   set +e
-  if [ `uname -m` = "arm64" ]
+  if [ "$(uname -m)" = "arm64" ]
   then
     test=$(echo "$DOCKER_COMPOSE_FILE" | awk -F"/" '{ print $(NF-2)"/"$(NF-1) }')
     base_folder=$(echo $test | cut -d "/" -f 1)
@@ -3952,8 +4131,9 @@ function check_arm64_support() {
     if [ $? = 0 ]
     then
         logerror "🖥️ This example is not working with ARM64 !"
-        log "It is highly recommended to use playground ec2 command (https://kafka-docker-playground.io/#/playground%20ec2) to run the example on ubuntu ec2 instance"
-        log "Do you want to start test anyway ?"
+        log "It is highly recommended to use 'playground ec2 command' (https://kafka-docker-playground.io/#/playground%20ec2) to run the example on ubuntu ec2 instance"
+        log "You can also use gitpod https://gitpod.io/#https://github.com/vdesabou/kafka-docker-playground"
+        log "Do you want to start the example anyway ?"
         check_if_continue
         return
     fi
@@ -3974,7 +4154,16 @@ function playground() {
   verbose_begin
   if [[ $(type -f playground 2>&1) =~ "not found" ]]
   then
-    ../../scripts/cli/playground "$@"
+    if [ -f ../../scripts/cli/playground ]
+    then
+      ../../scripts/cli/playground "$@"
+    elif [ -f ../../../scripts/cli/playground ]
+    then
+      ../../../scripts/cli/playground "$@"
+    else
+      logerror "🔍 playground command not found, add it to your PATH https://kafka-docker-playground.io/#/cli?id=🦶-setup-path"
+      exit 1
+    fi
   else
     $(which playground) "$@"
   fi
@@ -4003,7 +4192,7 @@ fi
 }
 
 function load_env_variables () {
-  for item in {ENABLE_CONTROL_CENTER,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,SQL_DATAGEN,ENABLE_KAFKA_NODES,ENABLE_CONNECT_NODES}
+  for item in {ENABLE_CONTROL_CENTER,ENABLE_FLINK,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,SQL_DATAGEN,ENABLE_KAFKA_NODES,ENABLE_CONNECT_NODES}
   do
     i=$(playground state get "flags.${item}")
     if [ "$i" != "" ]
@@ -4056,15 +4245,15 @@ function generate_connector_versions () {
   fi
 }
 
-readonly CONNECTOR_TYPE_FULLY_MANAGED="🌤️🤖fully managed"
-readonly CONNECTOR_TYPE_CUSTOM="🌤️🛃custom"
-readonly CONNECTOR_TYPE_SELF_MANAGED="⛈️👷self managed"
-readonly CONNECTOR_TYPE_ONPREM="🌎onprem"
+CONNECTOR_TYPE_FULLY_MANAGED="🌤️🤖fully managed"
+CONNECTOR_TYPE_CUSTOM="🌤️🛃custom"
+CONNECTOR_TYPE_SELF_MANAGED="⛈️👷self managed"
+CONNECTOR_TYPE_ONPREM="🌎onprem"
 
-readonly EC2_INSTANCE_STATE_STOPPED="🛑stopped"
-readonly EC2_INSTANCE_STATE_RUNNING="✅running"
-readonly EC2_INSTANCE_STATE_STOPPING="⌛stopping"
-readonly EC2_INSTANCE_STATE_PENDING="⌛pending"
+EC2_INSTANCE_STATE_STOPPED="🛑stopped"
+EC2_INSTANCE_STATE_RUNNING="✅running"
+EC2_INSTANCE_STATE_STOPPING="⌛stopping"
+EC2_INSTANCE_STATE_PENDING="⌛pending"
 
 function get_connector_type () {
   get_connector_paths
@@ -4107,7 +4296,7 @@ function handle_ccloud_connect_rest_api () {
       if [ "$curl_output" == "[]" ]
       then
         # logerror "No connector running"
-        # exit 1
+        # return 1
         echo ""
         return
       fi
@@ -4123,18 +4312,18 @@ function handle_ccloud_connect_rest_api () {
         fi
         logerror "Command failed with error code $code"
         logerror "$message"
-        exit 1
+        return 1
       elif echo "$curl_output" | jq 'has("errors")' 2> /dev/null | grep -q true
       then
         code=$(echo "$curl_output" | jq -r '.errors[0].status')
         message=$(echo "$curl_output" | jq -r '.errors[0].detail')
         logerror "Command failed with error code $code"
         logerror "$message"
-        exit 1
+        return 1
       fi
   else
     logerror "❌ curl request failed with error code $ret!"
-    exit 1
+    return 1
   fi
 }
 
@@ -4152,7 +4341,7 @@ function handle_onprem_connect_rest_api () {
       if [ "$curl_output" == "[]" ]
       then
         # logerror "No connector running"
-        # exit 1
+        # return 1
         echo ""
         return
       fi
@@ -4162,11 +4351,11 @@ function handle_onprem_connect_rest_api () {
         message=$(echo "$curl_output" | jq -r .message)
         logerror "Command failed with error code $error_code"
         logerror "$message"
-        exit 1
+        return 1
       fi
   else
       logerror "❌ curl request failed with error code $ret!"
-      exit 1
+      return 1
   fi
 }
 
@@ -4210,7 +4399,21 @@ function display_ngrok_warning () {
   check_if_continue
 }
 
-function maybe_set_azure_subscription () {
+function login_and_maybe_set_azure_subscription () {
+
+  if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
+  then
+    log "🫐 Logging to Azure using environment variables AZ_USER and AZ_PASS "
+    set +e
+    az logout
+    set -e
+    az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
+  else
+    logerror "❌ AZ_USER and AZ_PASS environment variables are not set (for Confluent employees, that is simply your Confluent email address and Okta password)"
+    exit 1
+  fi
+
+  # when AZURE_SUBSCRIPTION_NAME env var is set, we need to set the correct subscription
   if [ ! -z "$AZURE_SUBSCRIPTION_NAME" ]
   then
     log "💙 AZURE_SUBSCRIPTION_NAME ($AZURE_SUBSCRIPTION_NAME) is set, searching for subscription id..."
@@ -4241,4 +4444,163 @@ function maybe_set_azure_subscription () {
     default_subscription=$(az account list --query "[?isDefault].name" | jq -r '.[0]')
     log "💎 AZURE_SUBSCRIPTION_NAME is not set, using default subscription $default_subscription"
   fi
+}
+
+function handle_aws_credentials () {
+  rm -rf /tmp/aws_credentials
+  export AWS_CREDENTIALS_FILE_NAME="/tmp/aws_credentials"
+
+  if [ -z "$AWS_SESSION_TOKEN" ]
+  then
+    if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
+    then
+      logerror "❌ either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
+      exit 1
+    else
+      if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
+      then
+          log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
+          export AWS_ACCESS_KEY_ID
+          export AWS_SECRET_ACCESS_KEY
+      else
+          if [ -f $HOME/.aws/credentials ]
+          then
+              logwarn "💭 AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
+              export AWS_ACCESS_KEY_ID=$( grep "^aws_access_key_id" $HOME/.aws/credentials | head -1 | awk -F'=' '{print $2;}' )
+              export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/credentials | head -1 | awk -F'=' '{print $2;}' ) 
+          fi
+      fi
+
+      cat << EOF > $AWS_CREDENTIALS_FILE_NAME
+[default]
+aws_access_key_id=$AWS_ACCESS_KEY_ID
+aws_secret_access_key=$AWS_SECRET_ACCESS_KEY
+EOF
+      if [ -z "$AWS_REGION" ]
+      then
+          AWS_REGION=$(aws configure get region | tr '\r' '\n')
+          if [ "$AWS_REGION" == "" ]
+          then
+              logerror "❌ either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+              exit 1
+          fi
+      fi
+    fi
+  else
+    if [ ! -z $AWS_PROFILE ] && [ -z "$AWS_SESSION_TOKEN" ]
+    then
+      logwarn "💭 AWS_PROFILE environment variable is set with $AWS_PROFILE"
+      logwarn "🚀 run manually this command and re-run the example again:"
+      echo "source <(aws configure export-credentials --profile $AWS_PROFILE --format env)"
+      exit 1
+    fi
+
+    #
+    # AWS short live credentials
+    #
+    if [ ! -z $AWS_SESSION_TOKEN ] || grep -q "aws_session_token" $HOME/.aws/credentials
+    then
+      if [ ! -z $AWS_SESSION_TOKEN ]
+      then
+          log "🔏 AWS_SESSION_TOKEN environment variable is set, using AWS short live credentials"
+      else
+          log "🔏 the file $HOME/.aws/credentials contains aws_session_token, using AWS short live credentials"
+      fi
+
+      connector_type=$(playground state get run.connector_type)
+      
+      if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+      then
+        logerror "❌ AWS short live credentials are not supported for fully managed connectors or custom connectors"
+        exit 1
+      fi
+
+      if [ ! -z $AWS_ACCESS_KEY_ID ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ] && [ ! -z "$AWS_SESSION_TOKEN" ]
+      then
+          log "💭 Using environment variables AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_SESSION_TOKEN"
+          export AWS_ACCESS_KEY_ID
+          export AWS_SECRET_ACCESS_KEY
+          export AWS_SESSION_TOKEN
+
+      cat << EOF > $AWS_CREDENTIALS_FILE_NAME
+[default]
+aws_access_key_id=$AWS_ACCESS_KEY_ID
+aws_secret_access_key=$AWS_SECRET_ACCESS_KEY
+aws_session_token=$AWS_SESSION_TOKEN
+EOF
+      elif grep -q "aws_session_token" $HOME/.aws/credentials
+      then
+          head -4 $HOME/.aws/credentials > $AWS_CREDENTIALS_FILE_NAME
+
+          set +e
+          grep -q default $AWS_CREDENTIALS_FILE_NAME
+          if [ $? != 0 ]
+          then
+              logerror "$HOME/.aws/credentials does not have expected format, the 4 first lines must be:"
+              echo "[default]"
+              echo "aws_access_key_id=<AWS_ACCESS_KEY_ID>"
+              echo "aws_secret_access_key=<AWS_SECRET_ACCESS_KEY>"
+              echo "aws_session_token=<AWS_SESSION_TOKEN>"
+              exit 1
+          fi
+          grep -q aws_session_token $AWS_CREDENTIALS_FILE_NAME
+          if [ $? != 0 ]
+          then
+              logerror "$HOME/.aws/credentials does not have expected format, the 4 first lines must be:"
+              echo "[default]"
+              echo "aws_access_key_id=<AWS_ACCESS_KEY_ID>"
+              echo "aws_secret_access_key=<AWS_SECRET_ACCESS_KEY>"
+              echo "aws_session_token=<AWS_SESSION_TOKEN>"
+              exit 1
+          fi
+          set +e
+      fi
+
+      log "✨ Using AWS short live with credentials file $AWS_CREDENTIALS_FILE_NAME"
+      export AWS_SHORT_LIVE_CREDENTIALS_USED=1
+    else
+      if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
+      then
+        logerror "❌ either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
+        exit 1
+      fi
+    fi
+  fi
+
+  if [ -z "$AWS_REGION" ]
+  then
+      AWS_REGION=$(aws configure get region | tr '\r' '\n')
+      if [ "$AWS_REGION" == "" ]
+      then
+          logerror "❌ either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+          exit 1
+      fi
+  fi
+
+  if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
+  then
+      export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
+  else
+      export CONNECT_CONTAINER_HOME_DIR="/root"
+  fi
+}
+
+function wait_for_end_of_hibernation () {
+     MAX_WAIT=600
+     CUR_WAIT=0
+     set +e
+     log "⌛ Waiting up to $MAX_WAIT seconds for end of hibernation to happen (it can take several minutes)"
+     curl -X POST "${SERVICENOW_URL}/api/now/table/incident" --user admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{"short_description": "This is test"}' > /tmp/out.txt 2>&1
+     while [[ $(cat /tmp/out.txt) =~ "Sign in to the site to wake your instance" ]] || ! [[ $(cat /tmp/out.txt) =~ "made_sla" ]]
+     do
+          sleep 10
+          curl -X POST "${SERVICENOW_URL}/api/now/table/incident" --user admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{"short_description": "This is test"}' > /tmp/out.txt 2>&1
+          CUR_WAIT=$(( CUR_WAIT+10 ))
+          if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
+               echo -e "\nERROR: The logs still show 'Sign in to the site to wake your instance' after $MAX_WAIT seconds.\n"
+               exit 1
+          fi
+     done
+     log "The instance is ready !"
+     set -e
 }

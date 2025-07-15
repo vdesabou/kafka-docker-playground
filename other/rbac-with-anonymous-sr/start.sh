@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.3.99"; then
-    logwarn "WARN: Audit logs is only available from Confluent Platform 5.4.0"
+    logwarn "Audit logs is only available from Confluent Platform 5.4.0"
     exit 111
 fi
 

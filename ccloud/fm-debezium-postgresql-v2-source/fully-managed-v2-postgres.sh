@@ -15,7 +15,7 @@ then
      docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${PWD}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "${PWD}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
      if [ $? != 0 ]
      then
-          logerror "ERROR: failed to build java component "
+          logerror "❌ failed to build java component "
           tail -500 /tmp/result.log
           exit 1
      fi
@@ -38,9 +38,10 @@ set +e
 playground topic delete --topic asgard.public.customers
 set -e
 
+set_profiles
 docker compose build
-docker compose down -v --remove-orphans
-docker compose up -d --quiet-pull
+docker compose ${profile_sql_datagen_command} down -v --remove-orphans
+docker compose ${profile_sql_datagen_command} up -d --quiet-pull
 
 sleep 5
 
@@ -175,7 +176,7 @@ if [ ! -z "$SQL_DATAGEN" ]
 then
      DURATION=10
      log "Injecting data for $DURATION minutes"
-     docker exec -d sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --connectionUrl 'jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false' --maxPoolSize 10 --durationTimeMin $DURATION"
+     docker exec sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --connectionUrl 'jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false' --maxPoolSize 10 --durationTimeMin $DURATION"
 fi
 
 log "Do you want to delete the fully managed connector $connector_name ?"

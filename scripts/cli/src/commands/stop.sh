@@ -5,11 +5,17 @@ then
     logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
     exit 1
 fi
+export flink_connectors=""
 filename=$(basename -- "$test_file")
 test_file_directory="$(dirname "${test_file}")"
 
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-trap 'rm -rf $tmp_dir' EXIT
+if [ -z "$PG_VERBOSE_MODE" ]
+then
+    trap 'rm -rf $tmp_dir' EXIT
+else
+    log "🐛📂 not deleting tmp dir $tmp_dir"
+fi
 
 log "🛑 Stopping example $filename in dir $test_file_directory"
 docker_command=$(playground state get run.docker_command)

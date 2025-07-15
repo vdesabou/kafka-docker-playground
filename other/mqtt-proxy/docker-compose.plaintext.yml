@@ -12,7 +12,6 @@ services:
     hostname: mqtt-proxy
     container_name: mqtt-proxy
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
       - mosquitto

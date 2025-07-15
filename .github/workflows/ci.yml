@@ -43,22 +43,22 @@ jobs:
           AZURE_SUBSCRIPTION_NAME: ${{ secrets.AZURE_SUBSCRIPTION_NAME}}
           CONFLUENT_CLOUD_EMAIL: ${{ secrets.CONFLUENT_CLOUD_EMAIL}}
           CONFLUENT_CLOUD_PASSWORD: ${{ secrets.CONFLUENT_CLOUD_PASSWORD}}
-          ENVIRONMENT: ${{ secrets.ENVIRONMENT}}
-          CLUSTER_NAME: ${{ secrets.CLUSTER_NAME}}
-          CLUSTER_REGION: ${{ secrets.CLUSTER_REGION}}
-          CLUSTER_CLOUD: ${{ secrets.CLUSTER_CLOUD}}
+          ENVIRONMENT: ${{ vars.ENVIRONMENT}}
+          CLUSTER_NAME: ${{ vars.CLUSTER_NAME}}
+          CLUSTER_REGION: ${{ vars.CLUSTER_REGION}}
+          CLUSTER_CLOUD: ${{ vars.CLUSTER_CLOUD}}
           CLUSTER_CREDS: ${{ secrets.CLUSTER_CREDS}}
-          AWS_DATABRICKS_CLUSTER_NAME: ${{ secrets.AWS_DATABRICKS_CLUSTER_NAME}}
-          AWS_DATABRICKS_CLUSTER_REGION: ${{ secrets.AWS_DATABRICKS_CLUSTER_REGION}}
-          AWS_DATABRICKS_CLUSTER_CLOUD: ${{ secrets.AWS_DATABRICKS_CLUSTER_CLOUD}}
+          AWS_DATABRICKS_CLUSTER_NAME: ${{ vars.AWS_DATABRICKS_CLUSTER_NAME}}
+          AWS_DATABRICKS_CLUSTER_REGION: ${{ vars.AWS_DATABRICKS_CLUSTER_REGION}}
+          AWS_DATABRICKS_CLUSTER_CLOUD: ${{ vars.AWS_DATABRICKS_CLUSTER_CLOUD}}
           AWS_DATABRICKS_CLUSTER_CREDS: ${{ secrets.AWS_DATABRICKS_CLUSTER_CREDS}}
-          GCP_CLUSTER_NAME: ${{ secrets.GCP_CLUSTER_NAME}}
-          GCP_CLUSTER_REGION: ${{ secrets.GCP_CLUSTER_REGION}}
-          GCP_CLUSTER_CLOUD: ${{ secrets.GCP_CLUSTER_CLOUD}}
+          GCP_CLUSTER_NAME: ${{ vars.GCP_CLUSTER_NAME}}
+          GCP_CLUSTER_REGION: ${{ vars.GCP_CLUSTER_REGION}}
+          GCP_CLUSTER_CLOUD: ${{ vars.GCP_CLUSTER_CLOUD}}
           GCP_CLUSTER_CREDS: ${{ secrets.GCP_CLUSTER_CREDS}}
-          AZURE_CLUSTER_NAME: ${{ secrets.AZURE_CLUSTER_NAME}}
-          AZURE_CLUSTER_REGION: ${{ secrets.AZURE_CLUSTER_REGION}}
-          AZURE_CLUSTER_CLOUD: ${{ secrets.AZURE_CLUSTER_CLOUD}}
+          AZURE_CLUSTER_NAME: ${{ vars.AZURE_CLUSTER_NAME}}
+          AZURE_CLUSTER_REGION: ${{ vars.AZURE_CLUSTER_REGION}}
+          AZURE_CLUSTER_CLOUD: ${{ vars.AZURE_CLUSTER_CLOUD}}
           AZURE_CLUSTER_CREDS: ${{ secrets.AZURE_CLUSTER_CREDS}}
           SCHEMA_REGISTRY_CREDS: ${{ secrets.SCHEMA_REGISTRY_CREDS}}
           SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_ACCOUNT_NAME}}
@@ -68,7 +68,7 @@ jobs:
           GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          AWS_REGION: ${{ secrets.AWS_REGION}}
+          AWS_REGION: ${{ vars.AWS_REGION}}
           CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY}}
           CLOUD_API_SECRET: ${{ secrets.CLOUD_API_SECRET}}
           SALESFORCE_USERNAME: ${{ secrets.SALESFORCE_USERNAME}}
@@ -91,27 +91,27 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: ["7.7.0"]
+        tag: ["8.0.0"]
         test_list : [
                       # requiring ngrok
                       "🚀1️⃣ ccloud/fm-debezium-mysql-legacy-source ccloud/fm-debezium-postgresql-legacy-source ccloud/fm-debezium-mysql-v2-source ccloud/fm-debezium-sqlserver-legacy-source ccloud/fm-debezium-sqlserver-v2-source ccloud/fm-elasticsearch-sink ccloud/fm-jdbc-sqlserver-sink ccloud/fm-jdbc-sqlserver-source ccloud/fm-ibm-mq-source ccloud/fm-jdbc-mysql-source ccloud/fm-jdbc-postgresql-sink ccloud/fm-mqtt-source ccloud/fm-debezium-postgresql-v2-source ccloud/fm-jdbc-postgresql-source",
                       
-                      "🚀 ccloud/fm-aws-cloudwatch-logs-source ccloud/fm-aws-s3-sink ccloud/fm-aws-s3-source ccloud/fm-azure-event-hubs-source ccloud/fm-azure-service-bus-source ccloud/fm-databricks-delta-lake-sink ccloud/fm-gcp-gcs-sink ccloud/fm-gcp-gcs-source ccloud/fm-aws-dynamodb-sink ccloud/fm-azure-data-lake-storage-gen2-sink ccloud/fm-azure-functions-sink ccloud/fm-azure-synapse-analytics-sink ccloud/fm-azure-cosmosdb-sink ccloud/fm-azure-cosmosdb-source ccloud/fully-managed-datadog-metrics-sink",
+                      "🚀 ccloud/fm-aws-cloudwatch-logs-source ccloud/fm-aws-s3-sink ccloud/fm-aws-s3-source ccloud/fm-azure-event-hubs-source ccloud/fm-azure-service-bus-source ccloud/fm-databricks-delta-lake-sink ccloud/fm-gcp-gcs-sink ccloud/fm-gcp-gcs-source ccloud/fm-aws-dynamodb-sink ccloud/fm-azure-data-lake-storage-gen2-sink ccloud/fm-azure-functions-sink ccloud/fm-azure-synapse-analytics-sink ccloud/fm-azure-cosmosdb-sink ccloud/fm-azure-cosmosdb-v2-sink ccloud/fm-azure-cosmosdb-source ccloud/fm-azure-cosmosdb-v2-source ccloud/fully-managed-datadog-metrics-sink",
 
-                      "🚀 ccloud/fm-salesforce-cdc-source ccloud/fm-salesforce-platform-events-sink ccloud/fm-salesforce-pushtopics-source ccloud/fm-salesforce-sobject-sink ccloud/fm-snowflake-sink ccloud/fm-gcp-pubsub-source ccloud/fm-gcp-spanner-sink ccloud/fm-aws-cloudwatch-metrics-sink ccloud/fm-gcp-bigquery-legacy-sink ccloud/fm-gcp-bigquery-v2-sink ccloud/fm-github-source ccloud/fm-jira-source ccloud/fm-gcp-cloud-functions-sink ccloud/fm-gcp-bigtable-sink ccloud/fm-pagerduty-sink ccloud/fm-azure-log-analytics-sink",
+                      "🚀 ccloud/fm-salesforce-cdc-source ccloud/fm-salesforce-platform-events-sink ccloud/fm-salesforce-pushtopics-source ccloud/fm-salesforce-sobject-sink ccloud/fm-snowflake-sink ccloud/fm-snowflake-source ccloud/fm-gcp-pubsub-source ccloud/fm-gcp-spanner-sink ccloud/fm-aws-cloudwatch-metrics-sink ccloud/fm-gcp-bigquery-legacy-sink ccloud/fm-gcp-bigquery-v2-sink ccloud/fm-github-source ccloud/fm-jira-source ccloud/fm-gcp-cloud-functions-legacy-sink ccloud/fm-gcp-cloud-functions-gen2-sink ccloud/fm-gcp-bigtable-sink ccloud/fm-pagerduty-sink ccloud/fm-azure-log-analytics-sink",
 
                       "🚀 ccloud/fm-aws-kinesis-source ccloud/fm-aws-redshift-sink ccloud/fm-aws-sqs-source ccloud/fm-aws-lambda-sink ccloud/fm-azure-blob-storage-sink ccloud/fm-azure-blob-storage-source ccloud/fm-azure-cognitive-search-sink ccloud/fm-mongodb-atlas-source ccloud/fm-mongodb-atlas-sink ccloud/fm-salesforce-bulkapi-source ccloud/fm-salesforce-bulkapi-2-0-source ccloud/custom-connector-connect-aws-s3-sink",
 
-                      "🚀 ccloud/fm-datadog-metrics-sink ccloud/fm-salesforce-bulkapi-2-0-sink ccloud/fm-salesforce-platform-events-source ccloud/fm-servicenow-source ccloud/fm-servicenow-sink ccloud/fm-aws-dynamodb-cdc-source",
+                      "🚀 ccloud/fm-datadog-metrics-sink ccloud/fm-salesforce-bulkapi-2-0-sink ccloud/fm-salesforce-platform-events-source ccloud/fm-servicenow-source ccloud/fm-servicenow-v2-source ccloud/fm-servicenow-sink ccloud/fm-aws-dynamodb-cdc-source ccloud/fm-datagen-source ccloud/fm-couchbase-source ccloud/fm-couchbase-sink",
 
                       "🚀 connect/connect-servicenow-sink connect/connect-servicenow-source connect/connect-datagen-source",
                       "🚀 connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source",
                       "🚀 connect/connect-splunk-sink connect/connect-splunk-source connect/connect-splunk-s2s-source connect/connect-spool-dir-source connect/connect-syslog-source other/connect-override-policy-sftp-sink other/connect-override-policy-sftp-source",
-                      "🚀 connect/connect-minio-s3-sink connect/connect-marketo-source connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-lenses-active-mq-source connect/connect-cassandra-sink connect/connect-couchbase-sink connect/connect-couchbase-source connect/connect-hbase-sink",
-                      "🚀 connect/connect-jms-tibco-sink connect/connect-jms-tibco-source connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source connect/connect-elasticsearch-sink connect/connect-datadiode-source-sink connect/connect-jms-sag-um-source connect/connect-jms-sag-um-sink",
-                      "🚀 connect/connect-hdfs2-sink connect/connect-hdfs2-source connect/connect-hdfs3-sink connect/connect-hdfs3-source connect/connect-ibm-mq-sink connect/connect-ibm-mq-source connect/connect-snmp-source connect/connect-omnisci-sink",
+                      "🚀 connect/connect-minio-s3-sink connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-lenses-active-mq-source connect/connect-cassandra-sink connect/connect-couchbase-sink connect/connect-couchbase-source connect/connect-hbase-sink",
+                      "🚀 connect/connect-jms-tibco-sink connect/connect-jms-tibco-source connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source connect/connect-elasticsearch-sink connect/connect-datadiode-source-sink",
+                      "🚀 connect/connect-hdfs2-sink connect/connect-hdfs2-source connect/connect-hdfs3-sink connect/connect-hdfs3-source connect/connect-ibm-mq-sink connect/connect-ibm-mq-source connect/connect-snmp-source connect/connect-heavy-ai-sink",
                       "🚀 connect/connect-cdc-oracle11-source connect/connect-jdbc-oracle11-sink connect/connect-jdbc-oracle11-source connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source connect/connect-jdbc-sqlserver-sink",
-                      "🚀 connect/connect-jdbc-sqlserver-source connect/connect-jdbc-vertica-sink connect/connect-singlestore-sink connect/connect-jdbc-singlestore-source connect/connect-jms-active-mq-source connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink connect/connect-jms-solace-source connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-tibco-sink connect/connect-tibco-source",
+                      "🚀 connect/connect-jdbc-sqlserver-source connect/connect-jdbc-vertica-sink connect/connect-singlestore-sink connect/connect-jdbc-singlestore-source connect/connect-jms-active-mq-source connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink connect/connect-jms-solace-source connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink connect/connect-mqtt-source connect/connect-tibco-sink connect/connect-tibco-source",
                       "🚀 connect/connect-jdbc-oracle12-source connect/connect-jdbc-oracle12-sink",
                       "🚀 connect/connect-jdbc-oracle19-source connect/connect-jdbc-oracle19-sink connect/connect-jms-oracle19-sink connect/connect-jms-oracle19-source",
                       "🚀 connect/connect-jdbc-oracle21-source connect/connect-jdbc-oracle21-sink connect/connect-jms-oracle21-sink connect/connect-jms-oracle21-source",
@@ -120,27 +120,26 @@ jobs:
                       "🚀 connect/connect-gcp-bigquery-sink connect-jdbc-gcp-bigquery-source connect/connect-gcp-cloud-functions-sink connect/connect-vertica-sink connect/connect-prometheus-sink connect/connect-aws-sqs-source connect/connect-aws-s3-sink connect/connect-aws-s3-source connect/connect-databricks-delta-lake-sink",
                       "🚀 connect/connect-gcp-pubsub-source connect/connect-gcp-google-pubsub-source connect/connect-gcp-google-pubsub-sink connect/connect-gcp-gcs-sink connect/connect-gcp-gcs-source connect/connect-gcp-bigtable-sink connect/connect-kudu-source connect/connect-kudu-sink",
                       "🚀 connect/connect-azure-data-lake-storage-gen2-sink connect/connect-azure-event-hubs-source connect/connect-azure-cognitive-search-sink connect/connect-azure-functions-sink connect/connect-azure-service-bus-source connect/connect-azure-blob-storage-source",
-                      "🚀 connect/connect-ftps-source connect/connect-ftps-sink connect/connect-rabbitmq-sink connect/connect-amps-source connect/connect-jira-source connect/connect-github-source connect/connect-pivotal-gemfire-sink connect/connect-azure-blob-storage-sink connect/connect-azure-synapse-analytics-sink connect/connect-jdbc-azure-synapse-analytics-source",
+                      "🚀 connect/connect-rabbitmq-sink connect/connect-jira-source connect/connect-github-source connect/connect-pivotal-gemfire-sink connect/connect-azure-blob-storage-sink connect/connect-azure-synapse-analytics-sink connect/connect-jdbc-azure-synapse-analytics-source",
                       "🚀 connect/connect-http-sink connect/connect-iceberg-sink",
                       "🚀 multi-data-center/replicator-connect",
                       "🚀 multi-data-center/replicator-executable",
                       "🚀 multi-data-center/mirrormaker2 connect/connect-pagerduty-sink connect/connect-zendesk-source connect/connect-datadog-metrics-sink connect/connect-gcp-spanner-sink connect/connect-gcp-firebase-source connect/connect-gcp-firebase-sink",
                       "🚀 other/filebeat-to-kafka other/rest-proxy-security-plugin other/tiered-storage-with-aws other/write-logs-to-files other/audit-logs schema-registry/multiple-event-types-in-topic other/broker-schema-validation other/schema-registry-security-plugin multi-data-center/cluster-linking other/secrets-management other/connect-secret-registry other/schema-format-protobuf other/schema-format-json-schema other/schema-format-avro",
-                      "🚀 ccloud/replicator ccloud/rest-proxy-security-plugin ccloud/schema-registry-security-plugin ccloud/audit-log-connector",
+                      "🚀 ccloud/rest-proxy-security-plugin ccloud/schema-registry-security-plugin ccloud/audit-log-connector",
                       "🚀 connect/connect-cdc-oracle12-source",
-                      "🚀 connect/connect-cdc-oracle19-source",
+                      "🚀 connect/connect-cdc-oracle19-source connect/connect-cdc-xstream-oracle19-source",
                       "🚀 connect/connect-cdc-oracle18-source",
                       "🚀 connect/connect-cdc-oracle21-source",
-                      "🚀 connect/connect-weblogic-source connect/connect-jms-weblogic-sink connect/connect-jms-weblogic-source",
+                      "🚀 connect/connect-jms-weblogic-sink connect/connect-jms-weblogic-source",
                       "🚀 connect/connect-azure-cosmosdb-source connect/connect-azure-cosmosdb-sink connect/connect-jdbc-cockroachdb-source connect/connect-jdbc-ibmdb2-source connect/connect-jdbc-ibmdb2-sink connect/connect-jdbc-sybase-source connect/connect-jdbc-sybase-sink",
-                      "🚀 environment/plaintext environment/2way-ssl environment/kerberos environment/ldap-authorizer-sasl-plain environment/ldap-sasl-plain environment/mdc-kerberos environment/mdc-plaintext environment/mdc-sasl-plain environment/rbac-sasl-plain environment/sasl-plain environment/sasl-scram environment/sasl-ssl environment/ssl_kerberos environment/kraft-plaintext connect/connect-snowflake-sink",
-                      "🚀 connect/connect-mapr-sink",
-                      "🚀 other/syslog-logstash-ksqldb other/mqtt-proxy connect/connect-jdbc-snowflake-source connect/connect-jdbc-snowflake-sink connect/connect-filestream-source connect/connect-filestream-sink connect/connect-filepulse-source connect/connect-jdbc-mariadb-source connect/connect-jdbc-mariadb-sink",
-                      "🚀 connect/connect-jdbc-sap-hana-sink connect/connect-jdbc-sap-hana-source connect/connect-sap-hana-sink",
+                      "🚀 environment/plaintext environment/2way-ssl environment/kerberos environment/ldap-authorizer-sasl-plain environment/ldap-sasl-plain environment/mdc-kerberos environment/mdc-plaintext environment/mdc-sasl-plain environment/rbac-sasl-plain environment/sasl-plain environment/sasl-scram environment/sasl-ssl environment/ssl_kerberos connect/connect-snowflake-sink",
+                      "🚀 other/syslog-logstash-ksqldb connect/connect-jdbc-snowflake-sink connect/connect-filestream-source connect/connect-filestream-sink connect/connect-filepulse-source connect/connect-jdbc-mariadb-source connect/connect-jdbc-mariadb-sink",
+                      "🚀 connect/connect-jdbc-sap-hana-sink connect/connect-jdbc-sap-hana-source connect/connect-sap-hana-sink other/kafka-connect-jsonata",
 
                       # requiring ngrok
-                      "🚀2️⃣ ccloud/fm-influxdb2-sink ccloud/fm-influxdb2-source ccloud/fm-jdbc-oracle19-source ccloud/fm-jdbc-oracle19-sink ccloud/fm-cdc-oracle19-source ccloud/fm-rabbitmq-source ccloud/fm-zendesk-source ccloud/fm-splunk-sink ccloud/fm-rabbitmq-sink ccloud/fm-jdbc-mysql-sink ccloud/fm-sftp-source ccloud/fm-http-sink ccloud/fm-http-source",
-                      "🚀3️⃣ ccloud/fm-cdc-oracle11-source ccloud/fm-solace-sink ccloud/fm-opensearch-sink ccloud/fm-sftp-sink ccloud/fm-redis-sink"
+                      "🚀2️⃣ ccloud/fm-influxdb2-sink ccloud/fm-influxdb2-source ccloud/fm-jdbc-oracle19-source ccloud/fm-jdbc-oracle19-sink ccloud/fm-cdc-oracle19-source ccloud/fm-cdc-xstream-oracle19-source ccloud/fm-rabbitmq-source ccloud/fm-zendesk-source ccloud/fm-splunk-sink ccloud/fm-rabbitmq-sink ccloud/fm-jdbc-mysql-sink ccloud/fm-sftp-source ccloud/fm-http-sink ccloud/fm-http-v2-sink ccloud/fm-http-source ccloud/fm-http-v2-source",
+                      "🚀3️⃣ ccloud/fm-cdc-oracle11-source ccloud/fm-solace-sink ccloud/fm-opensearch-sink ccloud/fm-sftp-sink ccloud/fm-redis-sink ccloud/fm-active-mq-source ccloud/fm-clickhouse-sink ccloud/fm-debezium-mariadb-source"
                     ]
     steps:
 
@@ -165,6 +164,7 @@ jobs:
           df -h
           sudo apt-get -qq purge build-essential ghc*
           sudo apt-get clean
+          sudo apt-get update
           sudo apt-get install expect fzf coreutils -y
           docker system prune -af
           sudo rm -rf /usr/share/dotnet
@@ -223,11 +223,14 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
       - name: Build and Test
-        run: bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
+        run: |
+          export PATH=$PATH:$GITHUB_WORKSPACE/scripts/cli
+          bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          AWS_REGION: ${{ secrets.AWS_REGION}}
+          S3_PROVIDER_INTEGRATION_ID: ${{ secrets.S3_PROVIDER_INTEGRATION_ID}}
+          AWS_REGION: ${{ vars.AWS_REGION}}
           AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID}}
           AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY}}
           AWS_STS_ROLE_ARN: ${{ secrets.AWS_STS_ROLE_ARN}}
@@ -236,22 +239,22 @@ jobs:
           AZURE_SUBSCRIPTION_NAME: ${{ secrets.AZURE_SUBSCRIPTION_NAME}}
           CONFLUENT_CLOUD_EMAIL: ${{ secrets.CONFLUENT_CLOUD_EMAIL}}
           CONFLUENT_CLOUD_PASSWORD: ${{ secrets.CONFLUENT_CLOUD_PASSWORD}}
-          ENVIRONMENT: ${{ secrets.ENVIRONMENT}}
-          CLUSTER_NAME: ${{ secrets.CLUSTER_NAME}}
-          CLUSTER_REGION: ${{ secrets.CLUSTER_REGION}}
-          CLUSTER_CLOUD: ${{ secrets.CLUSTER_CLOUD}}
+          ENVIRONMENT: ${{ vars.ENVIRONMENT}}
+          CLUSTER_NAME: ${{ vars.CLUSTER_NAME}}
+          CLUSTER_REGION: ${{ vars.CLUSTER_REGION}}
+          CLUSTER_CLOUD: ${{ vars.CLUSTER_CLOUD}}
           CLUSTER_CREDS: ${{ secrets.CLUSTER_CREDS}}
-          AWS_DATABRICKS_CLUSTER_NAME: ${{ secrets.AWS_DATABRICKS_CLUSTER_NAME}}
-          AWS_DATABRICKS_CLUSTER_REGION: ${{ secrets.AWS_DATABRICKS_CLUSTER_REGION}}
-          AWS_DATABRICKS_CLUSTER_CLOUD: ${{ secrets.AWS_DATABRICKS_CLUSTER_CLOUD}}
+          AWS_DATABRICKS_CLUSTER_NAME: ${{ vars.AWS_DATABRICKS_CLUSTER_NAME}}
+          AWS_DATABRICKS_CLUSTER_REGION: ${{ vars.AWS_DATABRICKS_CLUSTER_REGION}}
+          AWS_DATABRICKS_CLUSTER_CLOUD: ${{ vars.AWS_DATABRICKS_CLUSTER_CLOUD}}
           AWS_DATABRICKS_CLUSTER_CREDS: ${{ secrets.AWS_DATABRICKS_CLUSTER_CREDS}}
-          GCP_CLUSTER_NAME: ${{ secrets.GCP_CLUSTER_NAME}}
-          GCP_CLUSTER_REGION: ${{ secrets.GCP_CLUSTER_REGION}}
-          GCP_CLUSTER_CLOUD: ${{ secrets.GCP_CLUSTER_CLOUD}}
+          GCP_CLUSTER_NAME: ${{ vars.GCP_CLUSTER_NAME}}
+          GCP_CLUSTER_REGION: ${{ vars.GCP_CLUSTER_REGION}}
+          GCP_CLUSTER_CLOUD: ${{ vars.GCP_CLUSTER_CLOUD}}
           GCP_CLUSTER_CREDS: ${{ secrets.GCP_CLUSTER_CREDS}}
-          AZURE_CLUSTER_NAME: ${{ secrets.AZURE_CLUSTER_NAME}}
-          AZURE_CLUSTER_REGION: ${{ secrets.AZURE_CLUSTER_REGION}}
-          AZURE_CLUSTER_CLOUD: ${{ secrets.AZURE_CLUSTER_CLOUD}}
+          AZURE_CLUSTER_NAME: ${{ vars.AZURE_CLUSTER_NAME}}
+          AZURE_CLUSTER_REGION: ${{ vars.AZURE_CLUSTER_REGION}}
+          AZURE_CLUSTER_CLOUD: ${{ vars.AZURE_CLUSTER_CLOUD}}
           AZURE_CLUSTER_CREDS: ${{ secrets.AZURE_CLUSTER_CREDS}}
           SCHEMA_REGISTRY_CREDS: ${{ secrets.SCHEMA_REGISTRY_CREDS}}
           CONFLUENT_LICENSE: ${{ secrets.CONFLUENT_LICENSE}}
@@ -267,7 +270,6 @@ jobs:
           SALESFORCE_CONSUMER_KEY_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_KEY_ACCOUNT2}}
           SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2}}
           SALESFORCE_CONSUMER_KEY_WITH_JWT: ${{ secrets.SALESFORCE_CONSUMER_KEY_WITH_JWT}}
-          SALESFORCE_CONSUMER_PASSWORD_WITH_JWT: ${{ secrets.SALESFORCE_CONSUMER_PASSWORD_WITH_JWT}}
           DD_API_KEY: ${{ secrets.DD_API_KEY}}
           DD_APP_KEY: ${{ secrets.DD_APP_KEY}}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
@@ -318,7 +320,13 @@ jobs:
           MONGODB_ATLAS_HOST: ${{ secrets.MONGODB_ATLAS_HOST}}
           MONGODB_ATLAS_USER: ${{ secrets.MONGODB_ATLAS_USER}}
           MONGODB_ATLAS_PASSWORD: ${{ secrets.MONGODB_ATLAS_PASSWORD}}
-
+          COUCHBASE_HOSTNAME: ${{ secrets.COUCHBASE_HOSTNAME}}
+          COUCHBASE_USERNAME: ${{ secrets.COUCHBASE_USERNAME}}
+          COUCHBASE_PASSWORD: ${{ secrets.COUCHBASE_PASSWORD}}
+          CLICKHOUSE_CLOUD_HOSTNAME: ${{ secrets.CLICKHOUSE_CLOUD_HOSTNAME}}
+          CLICKHOUSE_CLOUD_USERNAME: ${{ secrets.CLICKHOUSE_CLOUD_USERNAME}}
+          CLICKHOUSE_CLOUD_PASSWORD: ${{ secrets.CLICKHOUSE_CLOUD_PASSWORD}}
+          
   execute_one_test:
     if: ${{ github.event.inputs.test_name != '' }}
     runs-on: ubuntu-latest
@@ -326,7 +334,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: ["7.7.0"]
+        tag: ["8.0.0"]
         test_list : [
                       "🚀 ${{ github.event.inputs.test_name }}"
                     ]
@@ -353,6 +361,7 @@ jobs:
           df -h
           sudo apt-get -qq purge build-essential ghc*
           sudo apt-get clean
+          sudo apt-get update
           sudo apt-get install expect fzf coreutils -y
           docker system prune -af
           sudo rm -rf /usr/share/dotnet
@@ -411,11 +420,14 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
       - name: Build and Test
-        run: bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
+        run: |
+          export PATH=$PATH:$GITHUB_WORKSPACE/scripts/cli
+          bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          AWS_REGION: ${{ secrets.AWS_REGION}}
+          S3_PROVIDER_INTEGRATION_ID: ${{ secrets.S3_PROVIDER_INTEGRATION_ID}}
+          AWS_REGION: ${{ vars.AWS_REGION}}
           AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID}}
           AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY}}
           AWS_STS_ROLE_ARN: ${{ secrets.AWS_STS_ROLE_ARN}}
@@ -424,22 +436,22 @@ jobs:
           AZURE_SUBSCRIPTION_NAME: ${{ secrets.AZURE_SUBSCRIPTION_NAME}}
           CONFLUENT_CLOUD_EMAIL: ${{ secrets.CONFLUENT_CLOUD_EMAIL}}
           CONFLUENT_CLOUD_PASSWORD: ${{ secrets.CONFLUENT_CLOUD_PASSWORD}}
-          ENVIRONMENT: ${{ secrets.ENVIRONMENT}}
-          CLUSTER_NAME: ${{ secrets.CLUSTER_NAME}}
-          CLUSTER_REGION: ${{ secrets.CLUSTER_REGION}}
-          CLUSTER_CLOUD: ${{ secrets.CLUSTER_CLOUD}}
+          ENVIRONMENT: ${{ vars.ENVIRONMENT}}
+          CLUSTER_NAME: ${{ vars.CLUSTER_NAME}}
+          CLUSTER_REGION: ${{ vars.CLUSTER_REGION}}
+          CLUSTER_CLOUD: ${{ vars.CLUSTER_CLOUD}}
           CLUSTER_CREDS: ${{ secrets.CLUSTER_CREDS}}
-          AWS_DATABRICKS_CLUSTER_NAME: ${{ secrets.AWS_DATABRICKS_CLUSTER_NAME}}
-          AWS_DATABRICKS_CLUSTER_REGION: ${{ secrets.AWS_DATABRICKS_CLUSTER_REGION}}
-          AWS_DATABRICKS_CLUSTER_CLOUD: ${{ secrets.AWS_DATABRICKS_CLUSTER_CLOUD}}
+          AWS_DATABRICKS_CLUSTER_NAME: ${{ vars.AWS_DATABRICKS_CLUSTER_NAME}}
+          AWS_DATABRICKS_CLUSTER_REGION: ${{ vars.AWS_DATABRICKS_CLUSTER_REGION}}
+          AWS_DATABRICKS_CLUSTER_CLOUD: ${{ vars.AWS_DATABRICKS_CLUSTER_CLOUD}}
           AWS_DATABRICKS_CLUSTER_CREDS: ${{ secrets.AWS_DATABRICKS_CLUSTER_CREDS}}
-          GCP_CLUSTER_NAME: ${{ secrets.GCP_CLUSTER_NAME}}
-          GCP_CLUSTER_REGION: ${{ secrets.GCP_CLUSTER_REGION}}
-          GCP_CLUSTER_CLOUD: ${{ secrets.GCP_CLUSTER_CLOUD}}
+          GCP_CLUSTER_NAME: ${{ vars.GCP_CLUSTER_NAME}}
+          GCP_CLUSTER_REGION: ${{ vars.GCP_CLUSTER_REGION}}
+          GCP_CLUSTER_CLOUD: ${{ vars.GCP_CLUSTER_CLOUD}}
           GCP_CLUSTER_CREDS: ${{ secrets.GCP_CLUSTER_CREDS}}
-          AZURE_CLUSTER_NAME: ${{ secrets.AZURE_CLUSTER_NAME}}
-          AZURE_CLUSTER_REGION: ${{ secrets.AZURE_CLUSTER_REGION}}
-          AZURE_CLUSTER_CLOUD: ${{ secrets.AZURE_CLUSTER_CLOUD}}
+          AZURE_CLUSTER_NAME: ${{ vars.AZURE_CLUSTER_NAME}}
+          AZURE_CLUSTER_REGION: ${{ vars.AZURE_CLUSTER_REGION}}
+          AZURE_CLUSTER_CLOUD: ${{ vars.AZURE_CLUSTER_CLOUD}}
           AZURE_CLUSTER_CREDS: ${{ secrets.AZURE_CLUSTER_CREDS}}
           SCHEMA_REGISTRY_CREDS: ${{ secrets.SCHEMA_REGISTRY_CREDS}}
           CONFLUENT_LICENSE: ${{ secrets.CONFLUENT_LICENSE}}
@@ -455,7 +467,6 @@ jobs:
           SALESFORCE_CONSUMER_KEY_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_KEY_ACCOUNT2}}
           SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2}}
           SALESFORCE_CONSUMER_KEY_WITH_JWT: ${{ secrets.SALESFORCE_CONSUMER_KEY_WITH_JWT}}
-          SALESFORCE_CONSUMER_PASSWORD_WITH_JWT: ${{ secrets.SALESFORCE_CONSUMER_PASSWORD_WITH_JWT}}
           DD_API_KEY: ${{ secrets.DD_API_KEY}}
           DD_APP_KEY: ${{ secrets.DD_APP_KEY}}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
@@ -506,7 +517,13 @@ jobs:
           MONGODB_ATLAS_HOST: ${{ secrets.MONGODB_ATLAS_HOST}}
           MONGODB_ATLAS_USER: ${{ secrets.MONGODB_ATLAS_USER}}
           MONGODB_ATLAS_PASSWORD: ${{ secrets.MONGODB_ATLAS_PASSWORD}}
-
+          COUCHBASE_HOSTNAME: ${{ secrets.COUCHBASE_HOSTNAME}}
+          COUCHBASE_USERNAME: ${{ secrets.COUCHBASE_USERNAME}}
+          COUCHBASE_PASSWORD: ${{ secrets.COUCHBASE_PASSWORD}}
+          CLICKHOUSE_CLOUD_HOSTNAME: ${{ secrets.CLICKHOUSE_CLOUD_HOSTNAME}}
+          CLICKHOUSE_CLOUD_USERNAME: ${{ secrets.CLICKHOUSE_CLOUD_USERNAME}}
+          CLICKHOUSE_CLOUD_PASSWORD: ${{ secrets.CLICKHOUSE_CLOUD_PASSWORD}}
+          
   post-build:
     name: Cleanup resources and Update README
     runs-on: ubuntu-latest
@@ -552,22 +569,22 @@ jobs:
           AZURE_SUBSCRIPTION_NAME: ${{ secrets.AZURE_SUBSCRIPTION_NAME}}
           CONFLUENT_CLOUD_EMAIL: ${{ secrets.CONFLUENT_CLOUD_EMAIL}}
           CONFLUENT_CLOUD_PASSWORD: ${{ secrets.CONFLUENT_CLOUD_PASSWORD}}
-          ENVIRONMENT: ${{ secrets.ENVIRONMENT}}
-          CLUSTER_NAME: ${{ secrets.CLUSTER_NAME}}
-          CLUSTER_REGION: ${{ secrets.CLUSTER_REGION}}
-          CLUSTER_CLOUD: ${{ secrets.CLUSTER_CLOUD}}
+          ENVIRONMENT: ${{ vars.ENVIRONMENT}}
+          CLUSTER_NAME: ${{ vars.CLUSTER_NAME}}
+          CLUSTER_REGION: ${{ vars.CLUSTER_REGION}}
+          CLUSTER_CLOUD: ${{ vars.CLUSTER_CLOUD}}
           CLUSTER_CREDS: ${{ secrets.CLUSTER_CREDS}}
-          AWS_DATABRICKS_CLUSTER_NAME: ${{ secrets.AWS_DATABRICKS_CLUSTER_NAME}}
-          AWS_DATABRICKS_CLUSTER_REGION: ${{ secrets.AWS_DATABRICKS_CLUSTER_REGION}}
-          AWS_DATABRICKS_CLUSTER_CLOUD: ${{ secrets.AWS_DATABRICKS_CLUSTER_CLOUD}}
+          AWS_DATABRICKS_CLUSTER_NAME: ${{ vars.AWS_DATABRICKS_CLUSTER_NAME}}
+          AWS_DATABRICKS_CLUSTER_REGION: ${{ vars.AWS_DATABRICKS_CLUSTER_REGION}}
+          AWS_DATABRICKS_CLUSTER_CLOUD: ${{ vars.AWS_DATABRICKS_CLUSTER_CLOUD}}
           AWS_DATABRICKS_CLUSTER_CREDS: ${{ secrets.AWS_DATABRICKS_CLUSTER_CREDS}}
-          GCP_CLUSTER_NAME: ${{ secrets.GCP_CLUSTER_NAME}}
-          GCP_CLUSTER_REGION: ${{ secrets.GCP_CLUSTER_REGION}}
-          GCP_CLUSTER_CLOUD: ${{ secrets.GCP_CLUSTER_CLOUD}}
+          GCP_CLUSTER_NAME: ${{ vars.GCP_CLUSTER_NAME}}
+          GCP_CLUSTER_REGION: ${{ vars.GCP_CLUSTER_REGION}}
+          GCP_CLUSTER_CLOUD: ${{ vars.GCP_CLUSTER_CLOUD}}
           GCP_CLUSTER_CREDS: ${{ secrets.GCP_CLUSTER_CREDS}}
-          AZURE_CLUSTER_NAME: ${{ secrets.AZURE_CLUSTER_NAME}}
-          AZURE_CLUSTER_REGION: ${{ secrets.AZURE_CLUSTER_REGION}}
-          AZURE_CLUSTER_CLOUD: ${{ secrets.AZURE_CLUSTER_CLOUD}}
+          AZURE_CLUSTER_NAME: ${{ vars.AZURE_CLUSTER_NAME}}
+          AZURE_CLUSTER_REGION: ${{ vars.AZURE_CLUSTER_REGION}}
+          AZURE_CLUSTER_CLOUD: ${{ vars.AZURE_CLUSTER_CLOUD}}
           AZURE_CLUSTER_CREDS: ${{ secrets.AZURE_CLUSTER_CREDS}}
           SCHEMA_REGISTRY_CREDS: ${{ secrets.SCHEMA_REGISTRY_CREDS}}
           SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_ACCOUNT_NAME}}
@@ -577,7 +594,7 @@ jobs:
           GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          AWS_REGION: ${{ secrets.AWS_REGION}}
+          AWS_REGION: ${{ vars.AWS_REGION}}
           CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY}}
           CLOUD_API_SECRET: ${{ secrets.CLOUD_API_SECRET}}
           SALESFORCE_USERNAME: ${{ secrets.SALESFORCE_USERNAME}}
@@ -592,36 +609,29 @@ jobs:
           SALESFORCE_CONSUMER_KEY_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_KEY_ACCOUNT2}}
           SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2}}
 
+      - name: Update DOCS
+        run: |
+          sudo gem install bashly
+          cd ./scripts/cli
+          ./playground update-docs
+
       - name: Update README
         run: |
           cd ./scripts/cli
-          ./playground update-readme --tags "7.7.0"
+          ./playground update-readme --tags "8.0.0"
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          AWS_REGION: ${{ secrets.AWS_REGION}}
+          AWS_REGION: ${{ vars.AWS_REGION}}
 
-      - name: Pushes content.md
+      - name: Pushes docs
         uses: dmnemec/copy_file_to_another_repo_action@main
         env:
           API_TOKEN_GITHUB: ${{ secrets.CI_GITHUB_TOKEN }}
         with:
-          source_file: './docs/content.md'
+          source_file: './docs'
           destination_repo: 'vdesabou/kafka-docker-playground-docs'
-          destination_folder: 'docs'
-          user_email: 'vincent.desaboulin@gmail.com'
-          user_name: 'vdesabou'
-          commit_message: 'updating with latest versions'
-
-      - name: Pushes introduction.md
-        uses: dmnemec/copy_file_to_another_repo_action@main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.CI_GITHUB_TOKEN }}
-        with:
-          source_file: './docs/introduction.md'
-          destination_repo: 'vdesabou/kafka-docker-playground-docs'
-          destination_folder: 'docs'
           user_email: 'vincent.desaboulin@gmail.com'
           user_name: 'vdesabou'
           commit_message: 'updating with latest versions'

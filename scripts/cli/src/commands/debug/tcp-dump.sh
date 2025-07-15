@@ -4,23 +4,37 @@ duration="${args[--duration]}"
 filename="tcp-dump-$container-$port-`date '+%Y-%m-%d-%H-%M-%S'`.pcap"
 
 set +e
-docker exec $container whereis tcpdump > /dev/null 2>&1
+docker exec $container type tcpdump > /dev/null 2>&1
 if [ $? != 0 ]
 then
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+  output_install_log="$tmp_dir/output_install.log"
+
   logwarn "tcpdump is not installed on container $container, attempting to install it"
-  docker exec --privileged --user root $container bash -c "rpm -i --nosignature https://rpmfind.net/linux/centos/8-stream/AppStream/aarch64/os/Packages/tcpdump-4.9.3-2.el8.aarch64.rpm" > /dev/null 2>&1
-  docker exec --privileged --user root $container bash -c "yum update -y && yum install tcpdump -y" > /dev/null 2>&1
+  echo "using rpm" > $output_install_log
+  docker exec --privileged --user root $container bash -c "rpm -i --nosignature https://rpmfind.net/linux/centos/8-stream/AppStream/aarch64/os/Packages/tcpdump-4.9.3-2.el8.aarch64.rpm" >> $output_install_log 2>&1
+  echo "using yum" >> $output_install_log
+  docker exec --privileged --user root $container bash -c "yum update -y && yum install tcpdump -y" >> $output_install_log 2>&1
 
   if [ "$container" == "ngrok" ]
   then
-    playground container exec -c ngrok --command "adduser --force-badname --system --no-create-home _apt" --root > /dev/null 2>&1
+    playground container exec -c ngrok --command "adduser --force-badname --system --no-create-home _apt --gid 1000" --root >> $output_install_log 2>&1
   fi
-  docker exec --privileged --user root $container bash -c "apt-get update && echo tcpdump | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*" > /dev/null 2>&1
+  echo "using apt-get" >> $output_install_log
+  docker exec --privileged --user root $container bash -c "apt-get update && echo tcpdump | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*" >> $output_install_log 2>&1
 fi
-docker exec $container whereis tcpdump > /dev/null 2>&1
+docker exec $container type tcpdump > /dev/null 2>&1
 if [ $? != 0 ]
 then
-    logerror "❌ tcpdump could not be installed"
+    logerror "❌ tcpdump could not be installed, see output below"
+    cat $output_install_log
     exit 1
 fi
 set -e

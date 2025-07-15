@@ -17,7 +17,7 @@ docker exec zookeeper kafka-topics --describe --topic testtopic --bootstrap-serv
 sleep 1
 
 log "Sending message to topic testtopic"
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic << EOF
+docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic testtopic << EOF
 This is my message
 EOF
 
@@ -26,7 +26,7 @@ docker exec broker ls -lrt /var/lib/kafka/data/testtopic-0/
 sleep 60
 
 log "Sending message to topic testtopic"
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic << EOF
+docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic testtopic << EOF
 This is my message 2
 EOF
 

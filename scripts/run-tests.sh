@@ -36,6 +36,8 @@ then
     test_list=$(grep "🚀" ${DIR}/../.github/workflows/ci.yml | cut -d '"' -f 2 | tr '\n' ' ')
 fi
 
+playground config container-kill-all-before-run true
+
 for dir in $test_list
 do
     if [ ! -d $dir ]
@@ -51,6 +53,7 @@ do
     curl -s https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o /tmp/README.txt
     for script in *.sh
     do
+        force_test_connector_plugin_version=0
         if [[ "$script" = "stop.sh" ]]
         then
             continue
@@ -120,6 +123,20 @@ do
                             THE_CONNECTOR_TAG=${TAG}
                         fi
                     fi
+                    
+                    # check if newer connector plugin version is available on hub
+                    output=$(playground connector-plugin versions --connector-plugin "$owner/$name" --force-refresh --last 1)
+                    set +e
+                    last_updated=$(echo "$output" | head -n 1 | grep -v "<unknown>" | cut -d "(" -f 2 | cut -d " " -f 1)
+                    if [[ -n "$last_updated" ]]
+                    then
+                        last_updated_days=$(echo $last_updated | tr -d '[:space:]')
+                        if [[ $last_updated_days -le 1 ]]
+                        then
+                            force_test_connector_plugin_version=1
+                        fi
+                    fi
+                    set -e
                 fi
             fi
         fi
@@ -178,6 +195,12 @@ do
             then
                 log "####################################################"
                 log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 4 days ago...re-running. Test url: $html_url"
+                log "####################################################"
+                aws s3 rm $s3_file --region us-east-1
+            elif [[ $force_test_connector_plugin_version == 1 ]]
+            then
+                log "####################################################"
+                log "🔌 Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, but there is a new connector plugin on hub...re-running. Test url: $html_url"
                 log "####################################################"
                 aws s3 rm $s3_file --region us-east-1
             # run at least every 14 days, even with no changes

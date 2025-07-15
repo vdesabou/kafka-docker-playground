@@ -8,7 +8,7 @@ source ${DIR}/../../scripts/utils.sh
 
 if [ ! -f ${DIR}/docker-appdynamics-metrics/machine-agent.zip ]
 then
-     logerror "ERROR: ${DIR}/docker-appdynamics-metrics/ does not contain file machine-agent.zip"
+     logerror "❌ ${DIR}/docker-appdynamics-metrics/ does not contain file machine-agent.zip"
      exit 1
 fi
 

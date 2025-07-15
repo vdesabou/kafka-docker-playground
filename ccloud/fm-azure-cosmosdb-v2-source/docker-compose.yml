@@ -1,0 +1,8 @@
+---
+services:
+  # https://pypi.org/project/azure-cosmos/
+  azure-cosmos-client:
+    build:
+      context: ../../ccloud/fm-azure-cosmosdb-source/azure-cosmos-client
+    hostname: azure-cosmos-client
+    container_name: azure-cosmos-client

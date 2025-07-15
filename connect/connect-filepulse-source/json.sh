@@ -3,7 +3,7 @@ set -e
 
 if [ -z "$CONNECTOR_TAG" ]
 then
-    CONNECTOR_TAG=2.9.0
+    CONNECTOR_TAG=2.15.0
 fi
 
 if [ ! -f streamthoughts-kafka-connect-file-pulse-${CONNECTOR_TAG}.zip ]

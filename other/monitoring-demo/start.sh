@@ -18,7 +18,7 @@ do
      docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${PWD}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "${PWD}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
      if [ $? != 0 ]
      then
-          logerror "ERROR: failed to build java component $component"
+          logerror "❌ failed to build java component $component"
           tail -500 /tmp/result.log
           exit 1
      fi
@@ -143,10 +143,10 @@ fi
 
 log "Sending sales in Europe cluster"
 
-seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i connect-europe bash -c "KAFKA_OPTS="";export CLASSPATH=/usr/share/java/monitoring-interceptors/monitoring-interceptors-${TAG_BASE}.jar; kafka-console-producer --broker-list broker-europe:9092 --topic sales_EUROPE --producer-property interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor --producer-property confluent.monitoring.interceptor.bootstrap.servers=broker-metrics:9092"
+seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i connect-europe bash -c "KAFKA_OPTS="";kafka-console-producer --bootstrap-server broker-europe:9092 --topic sales_EUROPE"
 
 log "Sending sales in US cluster"
-seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "KAFKA_OPTS="";export CLASSPATH=/usr/share/java/monitoring-interceptors/monitoring-interceptors-${TAG_BASE}.jar; kafka-console-producer --broker-list broker-us:9092 --topic sales_US --producer-property interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor --producer-property confluent.monitoring.interceptor.bootstrap.servers=broker-metrics:9092"
+seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "KAFKA_OPTS="";kafka-console-producer --bootstrap-server broker-us:9092 --topic sales_US"
 
 
 log "Consolidating all sales in the US"
@@ -159,8 +159,6 @@ playground connector create-or-update --connector replicate-europe-to-us  << EOF
           "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "header.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "src.consumer.group.id": "replicate-europe-to-us",
-          "src.consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
-          "src.consumer.confluent.monitoring.interceptor.bootstrap.servers": "broker-metrics:9092",
           "src.kafka.bootstrap.servers": "broker-europe:9092",
           "dest.kafka.bootstrap.servers": "broker-us:9092",
           "confluent.topic.replication.factor": 1,
@@ -180,8 +178,6 @@ playground connector create-or-update --connector replicate-us-to-europe  << EOF
           "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "header.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "src.consumer.group.id": "replicate-us-to-europe",
-          "src.consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
-          "src.consumer.confluent.monitoring.interceptor.bootstrap.servers": "broker-metrics:9092",
           "src.kafka.bootstrap.servers": "broker-us:9092",
           "dest.kafka.bootstrap.servers": "broker-europe:9092",
           "confluent.topic.replication.factor": 1,
@@ -193,10 +189,10 @@ EOF
 sleep 120
 
 log "Verify we have received the data in all the sales_ topics in EUROPE"
-docker container exec -i connect-europe bash -c "KAFKA_OPTS="";export CLASSPATH=/usr/share/java/monitoring-interceptors/monitoring-interceptors-${TAG_BASE}.jar; kafka-console-consumer --bootstrap-server broker-europe:9092 --whitelist 'sales_.*' --from-beginning --max-messages 20 --property metadata.max.age.ms 30000 --consumer-property interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor --consumer-property confluent.monitoring.interceptor.bootstrap.servers=broker-metrics:9092"
+docker container exec -i connect-europe bash -c "KAFKA_OPTS="";kafka-console-consumer --bootstrap-server broker-europe:9092 --include 'sales_.*' --from-beginning --max-messages 20 --property metadata.max.age.ms 30000"
 
 log "Verify we have received the data in all the sales_ topics in the US"
-docker container exec -i connect-us bash -c "KAFKA_OPTS="";export CLASSPATH=/usr/share/java/monitoring-interceptors/monitoring-interceptors-${TAG_BASE}.jar;  kafka-console-consumer --bootstrap-server broker-us:9092 --whitelist 'sales_.*' --from-beginning --max-messages 20 --property metadata.max.age.ms 30000 --consumer-property interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor --consumer-property confluent.monitoring.interceptor.bootstrap.servers=broker-metrics:9092"
+docker container exec -i connect-us bash -c "KAFKA_OPTS=""; kafka-console-consumer --bootstrap-server broker-us:9092 --include 'sales_.*' --from-beginning --max-messages 20 --property metadata.max.age.ms 30000"
 
 if [ ! -z "$GITHUB_RUN_NUMBER" ]
 then

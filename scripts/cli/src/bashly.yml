@@ -240,6 +240,20 @@ commands:
     - long: --generate-for-kb
       required: false
 
+- name: force-ci
+  private: true
+  args:
+  - name: filename
+    help: pattern of file to remove. A confirmation will be asked
+  flags:
+    - long: --all
+      required: false
+    - long: --force
+      required: false
+
+- name: update-docs
+  private: true
+
 - name: bashly-reload
   private: true
   dependencies:
@@ -382,6 +396,102 @@ commands:
         examples:
         - playground config open-ccloud-connector-in-browser browser Safari
 
+  - name: open-grafana-in-browser
+    help: |
+      when running an example with --enable-jmx-grafana flag, it opens grafana in browser
+    commands:
+      - name: automatically
+        help: automatically open grafana in browser
+        args:
+        - name: automatically
+          required: false
+          default: "true"
+        examples:
+        - playground config open-grafana-in-browser automatically false
+        - playground config open-grafana-in-browser automatically true
+      - name: browser
+        help: browser to use
+        args:
+        - name: browser
+          required: false
+          default: ""
+        examples:
+        - playground config open-grafana-in-browser browser Safari
+
+  - name: container-kill-all-before-run
+    help: |
+      when running an example, always call playground container kill-all first. If set to false, it will call playground stop instead.
+    args:
+    - name: enabled
+      required: false
+      default: "false"
+    examples:
+    - playground config container-kill-all-before-run false
+    - playground config container-kill-all-before-run true
+
+  - name: check-and-update-repo-version
+    help: |
+      when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.
+    args:
+    - name: enabled
+      required: false
+      default: "true"
+    examples:
+    - playground config check-and-update-repo-version false
+    - playground config check-and-update-repo-version true
+
+- name: ccloud-costs
+  dependencies:
+    confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+  help: |-
+    💰  Retrieve ccloud costs for a range of dates
+    
+    All you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates
+
+    Cost data can take up to 72 hours to become available.
+
+    Start date can reach a maximum of one year into the past
+
+    One month is the maximum window between start and end dates
+
+    For accuracy, Confluent recommends using a start_date that is at least 72 hours prior to the current date and time.
+  flags:
+    - long: --start-date
+      arg: start_date
+      validate: date_format
+      required: false
+      help: |- 
+        🗓️ start date in format yyyy-mm-dd
+
+        Default is 30 days ago
+    - long: --end-date
+      arg: end_date
+      validate: date_format
+      required: false
+      help: |- 
+        🗓️ end date in format yyyy-mm-dd
+
+          Default is 3 days ago
+    - long: --display-only-total-cost
+      private: true
+      help: |-
+        💰 display only total cost
+
+- name: ccloud-costs-history
+  dependencies:
+    confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+  help: |-
+    👛  Retrieve ccloud costs for each month since last year
+    
+    All you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates
+
+    By default it will only display total cost in dollars. Use the --detailed flag to see more information.
+
+  flags:
+    - long: --detailed
+      help: |-
+        💹 display all details for each month
+
 - name: run
   group: Run
   dependencies:
@@ -411,7 +521,7 @@ commands:
       --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)
       --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)
 
-    ❗ this command will kill all containers using playground container kill-all
+    ❗ this command will kill all containers using "playground container kill-all", you can disable this by running "playground config container-kill-all-before-run false"
 
   flags:
   - &environment-run
@@ -419,7 +529,7 @@ commands:
     required: false
     default: "plaintext"
     arg: environment
-    allowed: [ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kraft-external-plaintext, kraft-plaintext, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain]
+    allowed: [ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain]
     help: |-
       🔐 The environment to start when running a connector example 
       
@@ -427,8 +537,6 @@ commands:
       - ccloud
       - 2way-ssl
       - kerberos
-      - kraft-external-plaintext
-      - kraft-plaintext
       - ldap-authorizer-sasl-plain
       - ldap-sasl-plain
       - rbac-sasl-plain
@@ -456,7 +564,7 @@ commands:
   - long: --open
     
     short: -o
-    help: 📖 Opening example file with text editor set with playground config editor <editor> (default is code)
+    help: 📖 Opening example files (including docker-compose file) with text editor set with playground config editor <editor> (default is code)
   - &tag
     long: --tag
     
@@ -465,7 +573,23 @@ commands:
     completions:
       - $(playground get-tag-list "$cur")
     help: |-
-      🎯 Confluent Platform (CP) version to use
+      🎯 Confluent Platform (CP) version to use. Applies to all components (broker, connect, schema registry, ksqlDB, etc...)
+
+      It sets TAG environment variable
+
+      Must be greater or equal to 5.3.0
+
+      🎓 Tip: use <tab> completion to trigger fzf completion
+  - &connect-tag
+    long: --connect-tag
+    arg: connect_tag
+    required: false
+    completions:
+      - $(playground get-tag-list "$cur")
+    help: |-
+      🔗 Confluent Platform (CP) version to use. Applies to connect only.
+
+      It sets CP_CONNECT_TAG environment variable
 
       Must be greater or equal to 5.3.0
 
@@ -499,6 +623,7 @@ commands:
 
       🎓 Tip: use <tab> completion to trigger fzf completion 
               use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
+              use <option+enter> to use the value you typed manually
 
   - &connector-jar
     long: --connector-jar
@@ -515,6 +640,7 @@ commands:
 
       🎓 Tip: use <tab> completion to trigger fzf completion 
               use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
+              use <option+enter> to use the value you typed manually
 
   - &enable-ksqldb
     long: --enable-ksqldb
@@ -546,6 +672,18 @@ commands:
       By default, control-center container is not started for every test
 
       Control Center is reachable at http://127.0.0.1:9021
+  - &enable-flink
+    long: --enable-flink
+    required: false
+    
+    help: |-
+      🐿️ Enable Flink
+
+      By default, flink is not started for every test
+
+      Once enabled, the CLI will ask if you need to download any connectors. Based on the response, you can download one or more connectors from Flink maven repository.
+
+      Flink UI is reacheable using http://127.0.0.1:8081 within the flink child directory. If you enable Flink by starting connector deployment, http://127.0.0.1:18081 will be used.
   - &enable-conduktor
     long: --enable-conduktor
     required: false
@@ -716,6 +854,10 @@ commands:
   examples:
   - playground re-run (interactive mode)
 
+- name: get-ci-result
+  group: Run
+  help: 🤖 get CI result for current example
+  
 - name: history
   group: Run
   help: |-
@@ -732,8 +874,6 @@ commands:
     - ccloud
     - 2way-ssl
     - kerberos
-    - kraft-external-plaintext
-    - kraft-plaintext
     - ldap-authorizer-sasl-plain
     - ldap-sasl-plain
     - mdc-kerberos
@@ -753,15 +893,13 @@ commands:
       required: false
       default: "plaintext"
       arg: environment
-      allowed: [ccloud, 2way-ssl, kerberos, kraft-external-plaintext, kraft-plaintext, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos]
+      allowed: [ccloud, 2way-ssl, kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos]
       help: |-
         🔐 The environment to start . 
         
         - ccloud
         - 2way-ssl
         - kerberos
-        - kraft-external-plaintext
-        - kraft-plaintext
         - ldap-authorizer-sasl-plain
         - ldap-sasl-plain
         - mdc-kerberos
@@ -807,15 +945,17 @@ commands:
 - name: update-version
   group: Run
   help: |-
-    ✨ Update current confluent platform or connector(s) with new version(s)
+    ✨ Update current confluent platform components (all with --tag or only connect with --connect-tag) or connector(s) with new version(s)
   flags:
   - *tag
+  - *connect-tag
   - *connector-tag
   - *connector-zip
   - *connector-jar
   examples:
   - playground update-version (interactive mode)
   - playground update-version --tag 6.2.0 --connector-tag=2.5.12,10.5.7
+  - playground update-version --connect-tag 6.2.0 --connector-tag=2.5.12,10.5.7
 
 - name: open
   group: Run
@@ -839,6 +979,16 @@ commands:
       ❕ It must be absolute full path
 
       🎓 Tip: use <tab> completion to trigger fzf completion
+              use <option+enter> to use the value you typed manually
+
+  - long: --open-docker-compose
+    required: false
+    help: |-
+      🐳 Also open associated docker-compose file for the current example
+  - long: --wait
+    private: true
+    help: |- 
+      😴 Wait
 
 - name: stop
   group: Run
@@ -849,6 +999,32 @@ commands:
   group: Run
   help: |-
     🧨 Remove all docker images (including docker volumes)
+
+- name: remove-cp-docker-images
+  group: Run
+  help: |-
+    🧹 Remove all Confluent Platform docker images related to a version installed locally (a confirmation will be required for every version present)
+  flags:
+    - long: --version
+      required: false
+      arg: version
+      completions:
+        - $(docker image ls | grep confluentinc | grep -v "<none>" | awk '{print $2}' | sort | uniq)
+      help: |-
+        🔢 Specific version to remove
+
+- name: refresh-cp-docker-images
+  group: Run
+  help: |-
+    🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a version installed locally
+  flags:
+    - long: --version
+      required: true
+      arg: version
+      completions:
+        - $(docker image ls | grep confluentinc | grep -v "<none>" | awk '{print $2}' | sort | uniq)
+      help: |-
+        🔢 Specific version to pull 
 
 - name: cleanup-cloud-details
   group: Run
@@ -861,6 +1037,15 @@ commands:
   group: Run
   help: |-
     🧑‍🎓 Open Confluent documentation of currently running example
+  flags:
+  - long: --only-show-url
+    help: |-
+      🌐 Only show url
+
+- name: open-changelog
+  group: Run
+  help: |-
+    📜 Open playground changelog (https://kafka-docker-playground.io/#/changelog)
   flags:
   - long: --only-show-url
     help: |-
@@ -1116,6 +1301,11 @@ commands:
           - "id"
         help: |-
           🧟 Include soft deleted subjects
+
+      - long: --store-in-tmp
+        help: store in /tmp folder
+        arg: folder
+        private: true
     examples:
     - playground schema get
     - playground schema get --subject <SUBJECT>
@@ -1159,6 +1349,19 @@ commands:
 
           ❗it will replace any schema which already exists at given id
 
+      - long: --metadata-property
+        arg: metadata-property
+        help: |-
+          🟡 Add metadata properties to schema contract
+          
+          See docs: https://docs.confluent.io/platform/current/schema-registry/fundamentals/data-contracts.html#metadata-properties
+
+          🎓 Tip: you can pass multiple properties by specifying --metadata-property multiple times
+
+          Example: --metadata-property "metadata1=value" --metadata-property "metadata2=value"
+        required: false
+        repeatable: true
+
     examples: |
       playground schema register --subject test-protobuf << 'EOF'
       syntax = "proto3";
@@ -1173,7 +1376,7 @@ commands:
       }
       EOF
 
-      playground schema register --subject test-avro << 'EOF'
+      playground schema register --subject test-avro --metadata-property test=test --metadata-property test2=test << 'EOF'
       {
           "type": "record",
           "namespace": "com.github.vdesabou",
@@ -1272,6 +1475,26 @@ commands:
       help: |-
         Schema Registry mode
 
+  - name: set-normalize
+    filters:
+    - not_mdc_environment
+    - schema_registry_running
+    group: Schema
+    help: |-
+      🧽 Set normalize at schema registry level
+
+      See https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#schema-normalization
+    flags:
+    - *verbose
+    - long: --value
+      arg: value
+      allowed: 
+        - "true"
+        - "false"
+      required: true
+      help: |-
+        true or false
+
   - name: delete
     filters:
     - not_mdc_environment
@@ -1294,20 +1517,8 @@ commands:
       required: false
       validate: integer
       arg: version
-      conflicts:
-        - "--id"
       help: |-
         🔢 Schema version of the provided subject to delete
-
-        Can only be used when --subject is provided
-    - long: --id
-      required: false
-      validate: integer
-      arg: id
-      conflicts:
-        - "--version"
-      help: |-
-        🫵 Schema id
 
         Can only be used when --subject is provided
     - long: --permanent
@@ -1316,6 +1527,42 @@ commands:
         💀 Hard delete (default is soft delete)
     - *verbose
 
+  - name: derive-schema
+    group: Schema
+    help: |-
+      🪄 Derive a schema based on payload
+    flags:
+      - long: --payload
+        arg: payload
+        default: "-"
+        required: false
+        help: |-
+          📦 Payload to derive schema from
+      - long: --schema-type
+        required: false
+        default: "AVRO"
+        arg: schema-type
+        help: |-
+            🧩 Schema Registry schema "type":
+
+            - AVRO
+            - JSON (json schema)
+            - PROTOBUF
+
+            Default is AVRO
+        allowed: 
+          - AVRO
+          - JSON
+          - PROTOBUF
+    examples: |
+        playground schema derive-schema << EOF
+        {"name": "Foo", "Age": {"int": 12}}
+        {"name": "Bar", "Age": {"string": "12"}}
+        {"sport": "Football"}
+        {"_id":{"key":"AA"},"duration":{"numberInt":"240"},"employeeNumber":{"numberInt":"12345"},"isActive":"Y","plannedAbsenceKey":"AA","startTimeMin":{"numberLong":"11599920"}}
+        EOF
+
+        playground schema derive-schema --payload '{"sport": "Football"}' --schema-type PROTOBUF
 
 - name: tcp-proxy
   expose: always
@@ -1467,6 +1714,10 @@ commands:
     flags:
       - *connection-id
 
+  - name: open-ui
+    help: |-
+        🌐 Just open Zazkia UI (http://localhost:9191) in your browser
+
 - name: tools
   expose: always
   group: Tools
@@ -1505,6 +1756,7 @@ commands:
         ❕ It must be absolute full path
 
         🎓 Tip: use <tab> completion to trigger fzf completion
+                use <option+enter> to use the value you typed manually
 
   - name: read-parquet-file
     help: |-
@@ -1523,6 +1775,41 @@ commands:
         ❕ It must be absolute full path
 
         🎓 Tip: use <tab> completion to trigger fzf completion
+                use <option+enter> to use the value you typed manually
+
+  - name: certs-create
+    help: |-
+      🔐 Generate keys and certificates used for SSL
+    flags:
+    - long: --container
+      arg: container
+      help: |-
+        🐳 container name
+
+        🎓 Tip: you can pass multiple containers by specifying --container multiple times
+      required: false
+      repeatable: true
+      unique: true
+      default:
+        - broker 
+        - broker2 
+        - broker3
+        - client 
+        - schema-registry 
+        - restproxy
+        - connect
+        - connect2
+        - connect3
+        - control-center
+        - clientrestproxy
+        - ksqldb-server
+        - conduktor
+    - *verbose
+    - long: --output-folder
+      required: true
+      arg: folder
+      help: |-
+        📁 Folder where certificates are created
 
 - name: debug
   expose: always
@@ -1596,8 +1883,18 @@ commands:
       👻 Take a heap dump
 
       🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/) can be used to read the file.
+
+      It will run a full gc first. If you don't want this, use 
     flags:
       - *container
+      - long: --live
+        required: false
+        help: |-
+          🧬 dump only live objects; if not specified, all objects in the heap are dumped
+      - long: --histo
+        required: false
+        help: |-
+          📊 print histogram of java object heap
     examples:
     - playground debug heap-dump
     - playground debug heap-dump --container broker
@@ -1668,7 +1965,8 @@ commands:
           - ssl_handshake: Enable SSL handshake debugging, i.e -Djavax.net.debug=ssl:handshake
           - class_loading: Enable class loading debugging, i.e -verbose:class
           - kerberos: Enable Kerberos debugging, i.e -Dsun.security.krb5.debug=true
-      - long: --action
+      - &action
+        long: --action
         allowed: [enable, disable]
         arg: action
         required: false
@@ -1678,6 +1976,65 @@ commands:
     examples:
     - playground debug java-debug --type class_loading
     - playground debug java-debug --container broker --action start
+
+  - name: jscissors
+    help: |-
+      ✂️ jscissors is an instrumentation framework and can help to analyse control flow and perform some specific logging
+
+      * Control Flow Tracing: By dynamically instrumenting Java code, the tool meticulously tracks the precise sequence of executed methods at runtime. This capability offers invaluable insights into how an application navigates its logic. The tool provides a way to generate a stack trace when a method is called. 
+      * Additional Logging: This enhanced logging capability provides a way to print the input arguments to a method and return value from a method. 
+      * Delve into heap area: Generating heap dump at a method call will be crucial to analyze the state of JVM at a given point. The tool has capabilities to generate thread dump as well to track the state of all the threads when a method is called. 
+
+    flags:
+      - *container
+      - long: --operation
+        arg: operation
+        help: |-
+          🥼 operation to perform:
+
+          * VALUES: print method input arguments
+          * RETURN_VALUE: print method return value
+          * THREADS: print thread dump when method is called
+          * HEAP: print heap dump when method is called
+          * STACK: print stack trace when method is called
+          * EXCEPTION_HEAP: print heap dump when an exception is thrown during method execution
+          * DELAY: print time taken for method execution
+
+          Default values: VALUES, RETURN_VALUE, DELAY and STACK
+
+          🎓 Tip: you can pass multiple operations by specifying --operation multiple times
+        required: false
+        repeatable: true
+        unique: true
+        allowed: 
+          - VALUES
+          - RETURN_VALUE
+          - THREADS
+          - HEAP
+          - STACK
+          - EXCEPTION_HEAP
+          - DELAY
+        default:
+          - VALUES
+          - RETURN_VALUE
+          - DELAY
+          - STACK
+      - long: --class
+        arg: class
+        required: true
+        help: |-
+          class name to instrument (it supports regex like oracle.jdbc.*)
+      - long: --method
+        arg: method
+        required: false
+        default: ".*"
+        help: |-
+          method name to instrument (it supports regex like .*find.*)
+      - *action
+    examples:
+    - playground debug jscissors
+    - playground debug jscissors --container broker
+
 
   - name: flight-recorder
     help: |-
@@ -1846,6 +2203,11 @@ commands:
       - playground container logs -c connect --open
       - playground container logs -c connect --wait-for-log "StackOverflowError"
 
+    - name: display-error-all-containers
+      group: Container
+      help: |-
+        🔥 Display all ERROR/FATAL logs in all containers. Useful for quick troubleshooting
+
     - name: ssh
       group: Container
       help: |-
@@ -1992,6 +2354,24 @@ commands:
         required: false
         help: |-
           🧽 Restore back original values before any changes was made
+      - long: --mount-jscissors-files
+        required: false
+        private: true
+        help: |-
+          Mount jscissors files for debugging
+
+    - name: wait-for-connect-rest-api-ready
+      group: Container
+      private: true
+      help: |-
+        🚏 wait-for-connect-rest-api-ready
+      flags:
+        - long: --max-wait
+          arg: max_wait
+          validate: integer
+          default: "300"
+          help: |- 
+            ⏳ Max time in seconds to wait
 
 - name: topic
   expose: always
@@ -2067,6 +2447,9 @@ commands:
         default: "100"
         help: |-
           Max number of messages to display (default is 100)
+
+          You can use -1 to display all messages
+          
       - long: --min-expected-messages
         arg: min-expected-messages
         validate: integer
@@ -2095,7 +2478,7 @@ commands:
         required: false
         help: |-
           Tail on logs.
-        conflicts: [--min-expected-messages, --max-messages]
+        conflicts: [--min-expected-messages, --max-messages, --open]
 
       - long: --plot-latencies-timestamp-field
         required: false
@@ -2130,6 +2513,12 @@ commands:
         default: "3000"
         help: |-
           Max characters per message to display (default is 3000)
+
+      - long: --open
+        short: -o
+        help: |- 
+          🔖 Save full dump of topic to a file and open with text editor set with playground config editor <editor> (default is code)
+        conflicts: [--max-characters, --tail, --min-expected-messages]
 
     - name: produce
       filters:
@@ -2223,6 +2612,17 @@ commands:
           🔼 Max number of messages to send per batch when --nb-messages > --max-nb-messages-per-batch
              if --nb-messages is set to -1, this is the number of messages sent per batch
              default is 300000
+      - long: --max-nb-messages-to-generate
+        arg: max-nb-messages-to-generate
+        validate: integer
+        required: false
+        help: |-
+          🔨 Max number of different messages to generate.
+
+             - when protobuf is used, default is 50 as protobuf generation is really slow
+             - when --record-size is set, default is 100
+             --when nb-messages is set to -1, default is 1000
+             - otherwise default is 100000
       - long: --sleep-time-between-batch
         arg: sleep-time-between-batch
         validate: integer
@@ -2327,6 +2727,38 @@ commands:
         required: false
         help: |-
           ☑️ Validate schema according to connect sink converter used
+
+      - long: --derive-key-schema-as
+        required: false
+        arg: derive-key-schema-as
+        help: |-
+            🪄 Use playground schema derive-schema command to deduce schema from key payload
+
+            Possible values:
+
+            - AVRO
+            - JSON (json schema)
+            - PROTOBUF
+        allowed: 
+          - AVRO
+          - JSON
+          - PROTOBUF
+
+      - long: --derive-value-schema-as
+        required: false
+        arg: derive-value-schema-as
+        help: |-
+            🪄 Use playground schema derive-schema command to deduce schema from value payload
+
+            Possible values:
+
+            - AVRO
+            - JSON (json schema)
+            - PROTOBUF
+        allowed: 
+          - AVRO
+          - JSON
+          - PROTOBUF
 
       - long: --no-null
         required: false
@@ -2444,7 +2876,7 @@ commands:
             "email": "faker.internet.exampleEmail()",
             "phone": "faker.phone.imei()",
             "website": "faker.internet.domainName()",
-            "city": "faker.address.city()",
+            "city": "faker.location.city()",
             "company": "faker.company.name()"
         }
         EOF
@@ -2832,6 +3264,11 @@ commands:
 
         # json schema references
         playground topic produce --value /path/to/scripts/cli/predefined-schemas/json-schema/schema-reference/customer.json --reference /path/to/scripts/cli/predefined-schemas/json-schema/schema-reference/address.json --reference /path/to/scripts/cli/predefined-schemas/json-schema/schema-reference/email.json --topic customers
+
+        # --derive-value-schema-as
+        playground topic produce --topic tocpic --derive-value-schema-as PROTOBUF --derive-key-schema-as PROTOBUF --key '{"id": "1"}' << 'EOF'
+        {"name": "Foo", "Age": {"int": 12}}
+        EOF
     - name: create
       group: Topic
       help: |-
@@ -2953,6 +3390,28 @@ commands:
     examples: |
       playground connector-plugin versions --connector-plugin confluentinc/kafka-connect-s3
 
+  - name: display-last-updated
+    help: 🆕 List last updated connector plugins from confluent hub https://www.confluent.io/hub/
+    flags:
+    - long: --days
+      arg: days
+      required: false
+      default: "3"
+      validate: integer
+      help: |-
+        📅 Number of days to look back
+
+        Default is 3 days
+    - long: --vendor
+      required: false
+      validate: not_empty
+      arg: vendor
+      help: |-
+        🏢 Only display results for this vendor
+    examples: |
+      playground connector-plugin display-last-updated --days 7
+      playground connector-plugin display-last-updated --days 7 --vendor confluentinc
+
 - name: connector
   expose: always
   group: Connector
@@ -3043,7 +3502,7 @@ commands:
     - *connector
 
   - name: stop
-    help: 🛑 Stop connector (only available if CP > 7.5 )
+    help: 🛑 Stop connector (only available if CP > 7.5)
     flags:
     - *verbose
     - *connector
@@ -3266,6 +3725,20 @@ commands:
 
         ⚠️ Only available for ccloud connectors, the connector should not really exists
 
+    - long: --initial-state
+      arg: initial-state
+      allowed: 
+        - RUNNING
+        - PAUSED
+        - STOPPED
+      required: false
+      help: |-
+        🪵 Create connector with specific status (https://cwiki.apache.org/confluence/display/KAFKA/KIP-980%3A+Allow+creating+connectors+in+a+stopped+state)
+
+        Only available if CP > 7.7
+
+        ⚠️ not available for ccloud connectors
+
     examples: |
       playground connector create-or-update -c filestream-sink << EOF
       {
@@ -3418,10 +3891,10 @@ commands:
           🖥️ ec2 instance (need to use completion to get all required details)
 
           🎓 Tip: If not specified, the command will apply to all ec2 instances
-      - long: --disable-sync-repro-folder
+      - long: --enable-sync-repro-folder
         required: false
         help: |-
-          🚫 Disable sync reproduction-models folder between local and ec2 instance
+          👉 Enable sync reproduction-models folder between local and ec2 instance
 
   - name: allow-my-ip
     private: true

@@ -4,6 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "0.0.99"
+then
+     logwarn "minimal supported connector version is 1.0.0 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 if test -z "$(docker images -q pivotal-gemfire:latest)"
 then
      # Need to create the docker image using https://github.com/GSSJacky/gemfire-docker
@@ -13,7 +20,7 @@ then
 
      if [ ! -f ${DIR}/docker-pivotal-gemfire/pivotal-gemfire.tgz ]
      then
-          logerror "ERROR: ${DIR}/docker-pivotal-gemfire/ does not contain file pivotal-gemfire.tgz"
+          logerror "❌ ${DIR}/docker-pivotal-gemfire/ does not contain file pivotal-gemfire.tgz"
           exit 1
      fi
      log "Building pivotal-gemfire docker image..it can take a while..."

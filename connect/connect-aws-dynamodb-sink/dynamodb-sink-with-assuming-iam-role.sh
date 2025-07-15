@@ -6,33 +6,25 @@ source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.9.99" && version_gt $CONNECTOR_TAG "1.2.99"
 then
-    logwarn "WARN: connector version >= 1.3.0 do not support CP versions < 6.0.0"
+    logwarn "connector version >= 1.3.0 do not support CP versions < 6.0.0"
     exit 111
 fi
 
-export AWS_CREDENTIALS_FILE_NAME=credentials-with-assuming-iam-role
-if [ ! -f $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME ]
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "1.4.99"
 then
-     logerror "ERROR: $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME is not set"
+     logwarn "minimal supported connector version is 1.5.0 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
+export AWS_CREDENTIALS_FILE_NAME=$HOME/.aws/credentials-with-assuming-iam-role
+if [ ! -f $AWS_CREDENTIALS_FILE_NAME ]
+then
+     logerror "❌ $AWS_CREDENTIALS_FILE_NAME is not set"
      exit 1
 fi
 
-if [ -z "$AWS_REGION" ]
-then
-     AWS_REGION=$(aws configure get region | tr '\r' '\n')
-     if [ "$AWS_REGION" == "" ]
-     then
-          logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
-          exit 1
-     fi
-fi
-
-if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
-then
-     export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
-else
-     export CONNECT_CONTAINER_HOME_DIR="/root"
-fi
+handle_aws_credentials
 
 DYNAMODB_TABLE="pg${USER}dynamo${TAG}"
 DYNAMODB_ENDPOINT="https://dynamodb.$AWS_REGION.amazonaws.com"

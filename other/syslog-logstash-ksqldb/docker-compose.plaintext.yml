@@ -44,7 +44,6 @@ services:
       LS_JAVA_OPTS: "-Xmx1G -Xms1G"
     command: bash -c "bin/logstash-plugin install logstash-integration-kafka && logstash -f /usr/share/logstash/pipeline/logstash.conf "
     depends_on:
-      - zookeeper
       - broker
       - elasticsearch
 

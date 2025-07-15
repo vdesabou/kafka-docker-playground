@@ -10,5 +10,5 @@ then
   logerror 'ERROR: Could not determine properties file!'
   exit 1
 fi
-cat \$propertie_file | grep -v None | grep . | sort
+cat \$propertie_file | grep -v None | grep .
 EOF

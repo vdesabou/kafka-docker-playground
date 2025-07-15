@@ -4,10 +4,15 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+JAAS_CONFIG_FILE="/tmp/jaas_config.file"
+if version_gt $TAG_BASE "7.9.9"; then
+  export JAAS_CONFIG_FILE="/tmp/jaas_config_8_plus.file"
+fi
+
 ${DIR}/../../environment/mdc-plaintext/start.sh "docker-compose.plaintext.avro-with-sr-basic-auth.yml"
 
 log "Sending products in Europe cluster"
-docker exec -i connect-europe bash -c "kafka-avro-console-producer --broker-list broker-europe:9092 --property schema.registry.url=http://schema-registry-europe:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info='admin:admin' --topic products_EUROPE --property value.schema='{\"type\":\"record\",\"name\":\"myrecord\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},
+docker exec -i connect-europe bash -c "kafka-avro-console-producer --bootstrap-server broker-europe:9092 --property schema.registry.url=http://schema-registry-europe:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info='admin:admin' --topic products_EUROPE --property value.schema='{\"type\":\"record\",\"name\":\"myrecord\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},
 {\"name\":\"price\", \"type\": \"float\"}, {\"name\":\"quantity\", \"type\": \"int\"}]}' "<< EOF
 {"name": "scissors", "price": 2.75, "quantity": 3}
 {"name": "tape", "price": 0.99, "quantity": 10}
@@ -26,8 +31,6 @@ curl -X PUT \
           "value.converter.basic.auth.credentials.source": "USER_INFO",
           "value.converter.connect.meta.data": "false",
           "src.consumer.group.id": "replicate-europe-to-us",
-          "src.consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
-          "src.consumer.confluent.monitoring.interceptor.bootstrap.servers": "broker-metrics:9092",
           "src.kafka.bootstrap.servers": "broker-europe:9092",
           "src.value.converter": "io.confluent.connect.avro.AvroConverter",
           "src.value.converter.schema.registry.url": "http://schema-registry-europe:8081",

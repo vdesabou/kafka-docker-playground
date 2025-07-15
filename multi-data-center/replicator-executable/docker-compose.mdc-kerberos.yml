@@ -1,6 +1,0 @@
----
-services:
-  control-center:
-     environment:
-      CONTROL_CENTER_CONNECT_EUROPE_CLUSTER: http://connect-europe:18083 # rest api for the replicator executables
-      CONTROL_CENTER_CONNECT_US_CLUSTER: http://connect-us:18083 #

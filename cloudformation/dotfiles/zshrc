@@ -120,10 +120,10 @@ if [ "$(whoami)" = "vsaboulin" ]
 then
     export ENABLE_CONTROL_CENTER=1
     export C3_PORT=9022
-    export AWS_CREDENTIALS_FILE_NAME="credentials"
     export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
     cd ~/kafka-docker-playground
     set -o allexport;source secrets.properties;set +o allexport
+    set -o allexport;source variables.properties;set +o allexport
     echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin > /dev/null 2>&1
     cd -
 fi

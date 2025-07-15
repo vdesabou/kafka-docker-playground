@@ -1,5 +1,21 @@
 organization:
-  name: kafka-docker-playground
+  name: conduktor
+
+database:
+  hosts: 
+   - host: 'conduktor-postgresql'
+     port: 5432
+  name: 'conduktor'
+  username: 'conduktor'
+  password: 'change_me'
+  connection_timeout: 30 # in seconds
+
+monitoring:
+  cortex-url: 'http://conduktor-monitoring:9009/'
+  alert-manager-url: 'http://conduktor-monitoring:9010/'
+  callback-url: 'http://conduktor-console:8080/monitoring/api/'
+  notifications-callback-url: 'http://localhost:8080'
+
 clusters:
   - id: local
     name: My Cluster
@@ -28,10 +44,4 @@ clusters:
     kafkaConnects:
       - url: "http://connect:8083"
         id: kafka-connect
-        name: kafkConnect
-auth:
-  demo-users:
-    - email: admin
-      password: admin
-      groups:
-        - ADMIN
+        name: kafkaConnect

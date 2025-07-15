@@ -196,7 +196,7 @@ docker run confluentinc/cp-kafkacat:${TAG} kafkacat -b $PKC_ENDPOINT_WITH_PORT -
 nb_broker=$(docker run confluentinc/cp-kafkacat:${TAG} kafkacat -b $PKC_ENDPOINT_WITH_PORT -L -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN -X sasl.username=$CLOUD_KEY -X sasl.password=$CLOUD_SECRET | grep "pkc" | grep " at " | wc -l)
 if [ $nb_broker -eq 0 ]
 then
-    logerror "ERROR: No broker could be discovered using Kafkacat"
+    logerror "❌ No broker could be discovered using Kafkacat"
     exit 1
 fi
 

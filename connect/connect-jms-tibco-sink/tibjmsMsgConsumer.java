@@ -60,6 +60,7 @@ public class tibjmsMsgConsumer
      boolean          useTopic    = true;
      int              ackMode     = Session.AUTO_ACKNOWLEDGE;
      int              nbmessages  = Integer.MAX_VALUE;
+     long             timeout     = 0; // 0 means wait forever
 
      /*-----------------------------------------------------------------------
       * Variables
@@ -120,6 +121,7 @@ public class tibjmsMsgConsumer
         System.err.println(" -queue    <queue-name> - queue name, no default");
         System.err.println(" -ackmode  <ack-mode>   - acknowledge mode, default is AUTO");
         System.err.println(" -nbmessages  <nbmessages>   - number of messages to get, default is infinite");
+        System.err.println(" -timeout  <timeout-ms> - max wait time per message in milliseconds, default is 0 (wait forever)");
         System.err.println("                          other modes: CLIENT, DUPS_OK, NO,");
         System.err.println("                          EXPLICIT_CLIENT and EXPLICIT_CLIENT_DUPS_OK");
         System.err.println(" -help-ssl              - help on ssl parameters\n");
@@ -201,6 +203,13 @@ public class tibjmsMsgConsumer
                 i += 2;
             }
             else
+            if (args[i].compareTo("-timeout")==0)
+            {
+                if ((i+1) >= args.length) usage();
+                timeout = Long.parseLong(args[i+1]);
+                i += 2;
+            }
+            else
             if (args[i].compareTo("-help")==0)
             {
                 usage();
@@ -271,7 +280,7 @@ public class tibjmsMsgConsumer
         while (messages <= nbmessages)
         {
             /* receive the message */
-            msg = msgConsumer.receive();
+            msg = (timeout > 0) ? msgConsumer.receive(timeout) : msgConsumer.receive();
             if (msg == null)
                break;
 

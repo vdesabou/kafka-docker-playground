@@ -14,7 +14,7 @@ log "Create topics"
 docker exec -i connect kafka-topics --create --bootstrap-server broker:9092 --topic orders --partitions 1 --config retention.ms=-1 --config retention.bytes=-1
 docker exec -i connect kafka-topics --create --bootstrap-server broker:9092 --topic customers --partitions 1 --config retention.ms=-1 --config retention.bytes=-1
 log "Produce records to the stream"
-docker exec -i connect kafka-console-producer --broker-list broker:9092 --topic orders << EOF
+docker exec -i connect kafka-console-producer --bootstrap-server broker:9092 --topic orders << EOF
 {"id":101,"customer_id":1,"total":56.03,"order_date":1696340019}
 {"id":102,"customer_id":2,"total":89.03,"order_date":1696340080}
 {"id":103,"customer_id":3,"total":19.03,"order_date":1696346959}
@@ -71,7 +71,7 @@ EOF
 log "The rowtime of order 103 is after the rowtime of table, so the join will be successful"
 
 log "Produce more records to the stream with ROWTIME after the rowtime of table"
-docker exec -i connect kafka-console-producer --broker-list broker:9092 --topic orders << EOF
+docker exec -i connect kafka-console-producer --bootstrap-server broker:9092 --topic orders << EOF
 {"id":104,"customer_id":1,"total":18,"order_date":1696346959}
 {"id":105,"customer_id":2,"total":45.56,"order_date":1696346969}
 {"id":106,"customer_id":3,"total":78.96,"order_date":1696346979}

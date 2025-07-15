@@ -1,0 +1,37 @@
+---
+services:
+
+  mosquitto:
+    image: eclipse-mosquitto:1.6.13
+    hostname: mosquitto
+    container_name: mosquitto
+    ports:
+      - 9001:9001
+      - 1883:1883
+    volumes:
+      - ../../ccloud/fm-mqtt-source/mtls/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ../../ccloud/fm-mqtt-source/password:/etc/mosquitto/passwd
+      - ../../ccloud/fm-mqtt-source/security/snakeoil-ca-1.crt:/tmp/ca.crt
+      - ../../ccloud/fm-mqtt-source/security/mosquitto.certificate.pem:/tmp/server.crt
+      - ../../ccloud/fm-mqtt-source/security/mosquitto.key:/tmp/server.key
+
+  # https://ngrok.com/docs/using-ngrok-with/docker/
+  ngrok:
+    image: ngrok/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    ports:
+      - 4040:4040
+    restart: unless-stopped
+    links:
+      - mosquitto
+    command:
+      - "start"
+      - "--all"
+      - "--log=stdout"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ../../ccloud/fm-mqtt-source/ngrok.yml:/etc/ngrok.yml
+    environment:
+      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN

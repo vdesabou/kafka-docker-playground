@@ -12,37 +12,26 @@ do
      docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${PWD}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "${PWD}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
      if [ $? != 0 ]
      then
-          logerror "ERROR: failed to build java component $component"
+          logerror "❌ failed to build java component $component"
           tail -500 /tmp/result.log
           exit 1
      fi
      set -e
 done
 
-
-
-bootstrap_ccloud_environment
-
-
-
-if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
-then
-    log "Logging to Azure using environment variables AZ_USER and AZ_PASS"
-    set +e
-    az logout
-    set -e
-    az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
-else
-    log "Logging to Azure using browser"
-    az login
-fi
-
-AZURE_NAME=pg${USER}feh${GITHUB_RUN_NUMBER}${TAG}
+AZURE_NAME=pgfm${USER}feh${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
+if [ ${#AZURE_NAME} -gt 24 ]; then
+  AZURE_NAME=${AZURE_NAME:0:24}
+fi
 AZURE_RESOURCE_GROUP=$AZURE_NAME
 AZURE_EVENT_HUBS_NAMESPACE=ns$AZURE_NAME
 AZURE_EVENT_HUBS_NAME=hub$AZURE_NAME
 AZURE_REGION=westeurope
+
+bootstrap_ccloud_environment "azure" "$AZURE_REGION"
+
+login_and_maybe_set_azure_subscription
 
 set +e
 az group delete --name $AZURE_RESOURCE_GROUP --yes

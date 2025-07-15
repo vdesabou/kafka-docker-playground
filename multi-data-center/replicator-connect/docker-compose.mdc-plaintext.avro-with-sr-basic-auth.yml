@@ -5,9 +5,10 @@ services:
       SCHEMA_REGISTRY_AUTHENTICATION_METHOD: "BASIC"
       SCHEMA_REGISTRY_AUTHENTICATION_ROLES: "write,read,admin"
       SCHEMA_REGISTRY_AUTHENTICATION_REALM: "Schema"
-      SCHEMA_REGISTRY_OPTS: "-Djava.security.auth.login.config=/tmp/jaas_config.file"
+      SCHEMA_REGISTRY_OPTS: "-Djava.security.auth.login.config=$JAAS_CONFIG_FILE"
     volumes:
       - ../../multi-data-center/replicator-connect/jaas_config.file:/tmp/jaas_config.file
+      - ../../multi-data-center/replicator-connect/jaas_config_8_plus.file:/tmp/jaas_config_8_plus.file
       - ../../multi-data-center/replicator-connect/password-file:/tmp/password-file
 
   schema-registry-europe:
@@ -15,7 +16,8 @@ services:
       SCHEMA_REGISTRY_AUTHENTICATION_METHOD: "BASIC"
       SCHEMA_REGISTRY_AUTHENTICATION_ROLES: "write,read,admin"
       SCHEMA_REGISTRY_AUTHENTICATION_REALM: "Schema"
-      SCHEMA_REGISTRY_OPTS: "-Djava.security.auth.login.config=/tmp/jaas_config.file"
+      SCHEMA_REGISTRY_OPTS: "-Djava.security.auth.login.config=$JAAS_CONFIG_FILE"
     volumes:
       - ../../multi-data-center/replicator-connect/jaas_config.file:/tmp/jaas_config.file
+      - ../../multi-data-center/replicator-connect/jaas_config_8_plus.file:/tmp/jaas_config_8_plus.file
       - ../../multi-data-center/replicator-connect/password-file:/tmp/password-file

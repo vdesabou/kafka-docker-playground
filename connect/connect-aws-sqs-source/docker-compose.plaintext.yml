@@ -1,5 +1,8 @@
 ---
 services:
   connect:
+    volumes:
+      - ${AWS_CREDENTIALS_FILE_NAME:-/dev/null}:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials 
+      - $HOME/.aws/config:$CONNECT_CONTAINER_HOME_DIR/.aws/config
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-sqs

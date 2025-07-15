@@ -4,7 +4,7 @@ services:
     ports:
       - "5439:5439"
     volumes:
-      - $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials
+      - ${AWS_CREDENTIALS_FILE_NAME:-/dev/null}:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials 
       - $HOME/.aws/config:$CONNECT_CONTAINER_HOME_DIR/.aws/config
       - ../../connect/connect-aws-redshift-sink/data:/data
     environment:

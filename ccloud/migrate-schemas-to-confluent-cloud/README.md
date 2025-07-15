@@ -32,7 +32,7 @@ $ curl -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO -X PUT -H "Content-Type: applica
 Sending messages to topic executable-products on source OnPREM cluster:
 
 ```bash
-$ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic executable-products --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"name","type":"string"},
+$ docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic executable-products --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"name","type":"string"},
 {"name":"price", "type": "float"}, {"name":"quantity", "type": "int"}]}' << EOF
 {"name": "scissors", "price": 2.75, "quantity": 3}
 {"name": "tape", "price": 0.99, "quantity": 10}
@@ -44,7 +44,7 @@ Starting replicator executable (logs are in /tmp/replicator.log):
 
 ```bash
 # run in detach mode -d
-docker exec -d connect bash -c 'export CLASSPATH=/etc/kafka-connect/jars/replicator-rest-extension-*.jar; replicator --consumer.config /etc/kafka/executable-onprem-to-cloud-consumer.properties --producer.config /etc/kafka/executable-onprem-to-cloud-producer.properties  --replication.config /etc/kafka/executable-onprem-to-cloud-replicator.properties  --cluster.id executable-onprem-to-cloud --whitelist _schemas > /tmp/replicator.log 2>&1'
+docker exec -d connect bash -c 'export CLASSPATH=/etc/kafka-connect/jars/replicator-rest-extension-*.jar; replicator --consumer.config /etc/kafka/executable-onprem-to-cloud-consumer.properties --producer.config /etc/kafka/executable-onprem-to-cloud-producer.properties  --replication.config /etc/kafka/executable-onprem-to-cloud-replicator.properties  --cluster.id executable-onprem-to-cloud --include _schemas > /tmp/replicator.log 2>&1'
 ```
 
 Verify we have the schema:

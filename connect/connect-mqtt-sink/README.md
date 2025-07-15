@@ -4,7 +4,7 @@
 
 ## Objective
 
-Quickly test [MQTT Sink](https://docs.confluent.io/current/connect/kafka-connect-mqtt/mqtt-sink-connector/mqtt_sink_connector_quickstart.html#example-configure-mqtt-sink-connector-for-eclipse-mosquitto-broker) connector.
+Quickly test [MQTT Sink](https://docs.confluent.io/kafka-connectors/mqtt/current/mqtt-sink-connector/overview.html) connector.
 
 
 ## How to run
@@ -32,7 +32,7 @@ $ mosquitto_passwd -c password myuser
 Sending messages to topic sink-messages
 
 ```bash
-$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages << EOF
+$ docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic sink-messages << EOF
 This is my message
 EOF
 ```

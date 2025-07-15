@@ -66,7 +66,7 @@ then
      exit 1
 fi
 
-PUSH_TOPICS_NAME=MyLeadPushTopics${TAG}
+PUSH_TOPICS_NAME=MyLeadPushTopicsV2${TAG}
 PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME//[-._]/}
 
 sed -e "s|:PUSH_TOPIC_NAME:|$PUSH_TOPICS_NAME|g" \

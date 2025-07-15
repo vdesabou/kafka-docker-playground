@@ -1,0 +1,8 @@
+---
+services:
+
+  controller:
+    hostname: controller.kerberos-demo.local
+    environment:
+      KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
+      KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter;User:ksqldb;User:conduktor;User:controller;User:ANONYMOUS

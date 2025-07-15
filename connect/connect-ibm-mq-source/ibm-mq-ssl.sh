@@ -4,13 +4,20 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "12.1.99"
+then
+     logwarn "minimal supported connector version is 12.2.0 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 cd ../../connect/connect-ibm-mq-source
 get_3rdparty_file "IBM-MQ-Install-Java-All.jar"
 
 if [ ! -f ${PWD}/IBM-MQ-Install-Java-All.jar ]
 then
      # not running with github actions
-     logerror "ERROR: ${PWD}/IBM-MQ-Install-Java-All.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
+     logerror "❌ ${PWD}/IBM-MQ-Install-Java-All.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
      exit 1
 fi
 
@@ -31,10 +38,10 @@ then
 fi
 cd -
 
-cd ${DIR}/security
-log "🔐 Generate keys and certificates used for SSL"
-docker run -u0 --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "/tmp/certs-create.sh > /dev/null 2>&1 && chown -R $(id -u $USER):$(id -g $USER) /tmp/ && chmod a+r /tmp/*"
-cd ${DIR}
+mkdir -p ../../connect/connect-ibm-mq-source/security
+cd ../../connect/connect-ibm-mq-source/security
+playground tools certs-create --output-folder "$PWD" --container connect --container ibmmq
+cd -
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssl.yml"
@@ -56,6 +63,7 @@ playground connector create-or-update --connector ibm-mq-source-ssl  << EOF
      "mq.channel": "DEV.APP.SVRCONN",
      "mq.username": "app",
      "mq.password": "passw0rd",
+     "max.retry.time": "10000",
      "jms.destination.name": "DEV.QUEUE.1",
      "jms.destination.type": "queue",
      "mq.tls.truststore.location": "/tmp/truststore.jks",

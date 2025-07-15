@@ -5,11 +5,11 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "6.9.9"; then
-    logwarn "WARN: Cluster Linking is GA since CP 7.0 only"
+    logwarn "Cluster Linking is GA since CP 7.0 only"
     exit 111
 fi
 
-${DIR}/../../environment/mdc-plaintext/start.sh "${PWD}/docker-compose.mdc-plaintext-migrate-sink-connector.yml"
+playground start-environment --environment mdc-plaintext --docker-compose-override-file "${PWD}/docker-compose.mdc-plaintext-migrate-sink-connector.yml"
 
 
 log "Create topic demo"
@@ -26,7 +26,7 @@ log "Check the replica status on the destination"
 docker exec broker-europe kafka-replica-status --topics demo --include-linked --bootstrap-server broker-europe:9092
 
 log "Sending messages to topic demo"
-docker exec -i broker-us kafka-console-producer --broker-list broker-us:9092 --topic demo << EOF
+docker exec -i broker-us kafka-console-producer --bootstrap-server broker-us:9092 --topic demo << EOF
 {"customer_name":"Ed", "complaint_type":"Dirty car", "trip_cost": 29.10, "new_customer": false, "number_of_rides": 22}
 EOF
 
@@ -92,7 +92,7 @@ log "Verify we have not received the data in file, since offset is 1"
 docker exec connect-europe cat /tmp/output.json
 
 log "Sending another message to topic demo"
-docker exec -i broker-us kafka-console-producer --broker-list broker-us:9092 --topic demo << EOF
+docker exec -i broker-us kafka-console-producer --bootstrap-server broker-us:9092 --topic demo << EOF
 {"customer_name":"Ed2", "complaint_type":"Dirty car2", "trip_cost": 29.10, "new_customer": true, "number_of_rides": 22}
 EOF
 

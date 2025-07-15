@@ -20,7 +20,7 @@ sleep 3
 playground topic create --topic splunk-qs --nb-partitions 3
 set -e
 
-playground --output-level WARN container logs --container splunk --wait-for-log "Ansible playbook complete, will begin streaming splunkd_stderr.log" --max-wait 2500
+playground container logs --container splunk --wait-for-log "Ansible playbook complete, will begin streaming splunkd_stderr.log" --max-wait 600
 log "SPLUNK has started!"
 
 

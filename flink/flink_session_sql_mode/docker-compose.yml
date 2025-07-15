@@ -1,0 +1,122 @@
+services:
+  # Flink JobManager
+  jobmanager:
+    image: flink:${FLINK_TAG}
+    hostname: jobmanager
+    container_name: jobmanager
+    ports:
+      - "8081:8081"
+    entrypoint: >
+      sh -c "$flink_connectors exec /docker-entrypoint.sh jobmanager"
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        ${GRAFANA_FLINK}
+
+  # Flink TaskManager
+  taskmanager:
+    image: flink:${FLINK_TAG}
+    hostname: taskmanager
+    container_name: taskmanager
+    depends_on:
+      - jobmanager
+    entrypoint: >
+      sh -c "$flink_connectors exec /docker-entrypoint.sh taskmanager"
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        rest.address: jobmanager
+        taskmanager.numberOfTaskSlots: 4
+        ${GRAFANA_FLINK}
+
+  # Flink SQL Client
+  sql-client:
+    image: flink:${FLINK_TAG}
+    hostname: sql-client
+    container_name: sql-client
+    depends_on:
+      - jobmanager
+    stdin_open: true
+    tty: true
+    # command: bin/sql-client.sh
+    entrypoint: >
+      sh -c "$flink_connectors exec /docker-entrypoint.sh bin/sql-client.sh"
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        rest.address: jobmanager
+        deployment.gateway-address: jobmanager
+    
+  prometheus:
+    image: prom/prometheus:v2.29.2
+    hostname: prometheus
+    container_name: prometheus
+    profiles:
+      - "grafana"
+    ports:
+      - 9090:9090
+    volumes:
+      - ../../environment/plaintext/prometheus/:/etc/prometheus/
+    depends_on:
+      - node-exporter
+      - kafka-lag-exporter
+      - alertmanager
+
+  grafana:
+    image: grafana/grafana:8.5.27
+    hostname: grafana
+    container_name: grafana
+    profiles:
+      - "grafana"
+    environment:
+      - "GF_SECURITY_ADMIN_USER=admin"
+      - "GF_SECURITY_ADMIN_PASSWORD=password"
+      - "GF_USERS_ALLOW_SIGN_UP=false"
+    ports:
+      - 3000:3000
+    volumes:
+      - ../../environment/plaintext/grafana/provisioning/:/etc/grafana/provisioning/
+      - ../../environment/plaintext/grafana/config/grafana.ini:/etc/grafana/grafana.ini
+    depends_on:
+      - prometheus
+
+  node-exporter:
+    image: prom/node-exporter:v1.2.2
+    hostname: node-exporter
+    container_name: node-exporter
+    profiles:
+      - "grafana"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.ignored-mount-points"
+      - "^(aufs|proc|nsfs|shm|cgroup|tmpfs|binfmt_misc|debugfs|devpts|fusectl|hugetlbfs|fuse.lxcfs|mqueue|pstore|securityfs|sysfs|autofs|devtmpfs|configfs)"
+
+  kafka-lag-exporter:
+    image: seglo/kafka-lag-exporter:0.7.1
+    hostname: kafka-lag-exporter
+    container_name: kafka-lag-exporter
+    profiles:
+      - "grafana"
+    restart: always
+    ports:
+      - 9998:9998
+    volumes:
+      - ../../environment/plaintext/kafka-lag-exporter/application.conf:/opt/docker/conf/application.conf
+      - ../../environment/plaintext/kafka-lag-exporter/logback.xml:/opt/docker/conf/logback.xml
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    hostname: alertmanager
+    container_name: alertmanager
+    profiles:
+      - "grafana"
+    ports:
+      - 9093:9093

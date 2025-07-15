@@ -4,7 +4,12 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "2.0.28"
+then
+     logwarn "minimal supported connector version is 2.0.29 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
 
 SALESFORCE_USERNAME=${SALESFORCE_USERNAME:-$1}
 SALESFORCE_PASSWORD=${SALESFORCE_PASSWORD:-$2}
@@ -84,6 +89,9 @@ fi
 
 PUSH_TOPICS_NAME=MyLeadPushTopics${TAG}
 PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME//[-._]/}
+if [ ${#PUSH_TOPICS_NAME} -gt 25 ]; then
+  PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME:0:25}
+fi
 
 sed -e "s|:PUSH_TOPIC_NAME:|$PUSH_TOPICS_NAME|g" \
     ../../connect/connect-salesforce-sobject-sink/MyLeadPushTopics-template.apex > ../../connect/connect-salesforce-sobject-sink/MyLeadPushTopics.apex

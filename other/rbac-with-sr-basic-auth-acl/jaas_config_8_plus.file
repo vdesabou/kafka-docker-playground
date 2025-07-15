@@ -1,0 +1,6 @@
+SchemaRegistry {
+  org.eclipse.jetty.security.jaas.spi.PropertyFileLoginModule required
+  file="/tmp/password-file"
+  debug="false";
+};
+

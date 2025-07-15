@@ -1,108 +1,95 @@
 ---
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:${TAG}
+    image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
     hostname: zookeeper
     container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
 
   broker1:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker1
     container_name: broker1
-    depends_on:
-      - zookeeper
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_BROKER_RACK: rack-a
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker1:9092
-      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_METRIC_REPORTERS: $KAFKA_METRIC_REPORTERS
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker1:9092
 
 
   broker2:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker2
     container_name: broker2
-    depends_on:
-      - zookeeper
     environment:
       KAFKA_BROKER_ID: 2
       KAFKA_BROKER_RACK: rack-a
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker2:9192
-      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_METRIC_REPORTERS: $KAFKA_METRIC_REPORTERS
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker2:9192
 
 
   broker3:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker3
     container_name: broker3
-    depends_on:
-      - zookeeper
     environment:
       KAFKA_BROKER_ID: 3
       KAFKA_BROKER_RACK: rack-a
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker3:9292
-      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_METRIC_REPORTERS: $KAFKA_METRIC_REPORTERS
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker3:9292
 
 
   broker4:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker4
     container_name: broker4
-    depends_on:
-      - zookeeper
     environment:
       KAFKA_BROKER_ID: 4
       KAFKA_BROKER_RACK: rack-b
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker4:10092
-      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_METRIC_REPORTERS: $KAFKA_METRIC_REPORTERS
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker4:10092
 
 
   broker5:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker5
     container_name: broker5
-    depends_on:
-      - zookeeper
     environment:
       KAFKA_BROKER_ID: 5
       KAFKA_BROKER_RACK: rack-b
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker5:11092
-      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_METRIC_REPORTERS: $KAFKA_METRIC_REPORTERS
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker5:11092
 
 
   broker6:
-    image: ${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker6
     container_name: broker6
-    depends_on:
-      - zookeeper
     environment:
       KAFKA_BROKER_ID: 6
       KAFKA_BROKER_RACK: rack-b
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker6:12092
-      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_METRIC_REPORTERS: $KAFKA_METRIC_REPORTERS
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker6:12092
 
 
   control-center:
-    image: confluentinc/cp-enterprise-control-center:${TAG}
+    image: ${CP_CONTROL_CENTER_IMAGE}:${CP_CONTROL_CENTER_TAG}
     hostname: control-center
     container_name: control-center
     depends_on:
-      - zookeeper
       - broker1
       - broker2
       - broker3

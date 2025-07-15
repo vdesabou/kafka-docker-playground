@@ -6,7 +6,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.9.9"; then
-    logwarn "WARN: Schema Registry plugin before 6.x requires zookeeper"
+    logwarn "Schema Registry plugin before 6.x requires zookeeper"
     exit 111
 fi
 
@@ -18,6 +18,11 @@ set +e
 log "Cleanup schemas-security-plugin topic"
 playground topic delete --topic schemas-security-plugin
 set -e
+
+JAAS_CONFIG_FILE="/tmp/jaas_config.file"
+if version_gt $TAG_BASE "7.9.9"; then
+  export JAAS_CONFIG_FILE="/tmp/jaas_config_8_plus.file"
+fi
 
 docker compose -f "${PWD}/docker-compose.yml" down
 docker compose -f "${PWD}/docker-compose.yml" up -d --quiet-pull

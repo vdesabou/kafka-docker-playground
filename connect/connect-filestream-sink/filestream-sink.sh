@@ -26,7 +26,7 @@ playground topic produce -t filestream --nb-messages 5 << 'EOF'
         "email": "faker.internet.exampleEmail()",
         "phone": "faker.phone.imei()",
         "website": "faker.internet.domainName()",
-        "city": "faker.address.city()",
+        "city": "faker.location.city()",
         "company": "faker.company.name()"
     }
 ]

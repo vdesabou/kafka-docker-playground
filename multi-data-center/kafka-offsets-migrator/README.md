@@ -15,13 +15,13 @@ $ just use <playground run> command and search for start.sh in this folder
 Sending 20 records in Europe cluster
 
 ```bash
-$ seq -f "european_sale_%g ${RANDOM}" 20 | docker container exec -i connect-europe bash -c "kafka-console-producer --broker-list broker-europe:9092 --topic sales_EUROPE --producer-property interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor --producer-property confluent.monitoring.interceptor.bootstrap.servers=broker-metrics:9092"
+$ seq -f "european_sale_%g ${RANDOM}" 20 | docker container exec -i connect-europe bash -c "kafka-console-producer --bootstrap-server broker-europe:9092 --topic sales_EUROPE"
 ```
 
 Consumer with group my-consumer-group reads 10 messages in Europe cluster
 
 ```bash
-$ docker container exec -i connect-europe bash -c "kafka-console-consumer --bootstrap-server broker-europe:9092 --whitelist 'sales_EUROPE' --from-beginning --max-messages 10 --consumer-property interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor --consumer-property confluent.monitoring.interceptor.bootstrap.servers=broker-metrics:9092 --consumer-property group.id=my-consumer-group"
+$ docker container exec -i connect-europe bash -c "kafka-console-consumer --bootstrap-server broker-europe:9092 --include 'sales_EUROPE' --from-beginning --max-messages 10 --consumer-property group.id=my-consumer-group"
 ```
 
 Replicate from Europe to US
@@ -35,8 +35,6 @@ playground connector create-or-update --connector replicate-europe-to-us  << EOF
           "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "header.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "src.consumer.group.id": "replicate-europe-to-us",
-          "src.consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
-          "src.consumer.confluent.monitoring.interceptor.bootstrap.servers": "broker-metrics:9092",
           "src.kafka.bootstrap.servers": "broker-europe:9092",
           "dest.kafka.bootstrap.servers": "broker-us:9092",
           "confluent.topic.replication.factor": 1,
@@ -155,5 +153,5 @@ Offsets to be commited in destination cluster are:
 Consumer with group my-consumer-group reads 10 messages in US cluster, it should start from previous offset
 
 ```bash
-$ docker container exec -i connect-europe bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --whitelist 'sales_EUROPE' --max-messages 10 --consumer-property interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor --consumer-property confluent.monitoring.interceptor.bootstrap.servers=broker-metrics:9092 --consumer-property group.id=my-consumer-group"
+$ docker container exec -i connect-europe bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --include 'sales_EUROPE' --max-messages 10 --consumer-property group.id=my-consumer-group"
 ```

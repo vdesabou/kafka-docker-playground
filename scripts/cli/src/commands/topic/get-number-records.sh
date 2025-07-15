@@ -44,7 +44,7 @@ do
             PROTOBUF)
             value_type="protobuf"
             ;;
-            null)
+            AVRO|null)
             value_type="avro"
             ;;
         esac
@@ -52,7 +52,7 @@ do
 
         if [ ! -f $root_folder/.ccloud/librdkafka.delta ]
         then
-            logerror "ERROR: $root_folder/.ccloud/librdkafka.delta has not been generated"
+            logerror "❌ $root_folder/.ccloud/librdkafka.delta has not been generated"
             exit 1
         fi
         tr -d '"' < $root_folder/.ccloud/librdkafka.delta > $root_folder/.ccloud/librdkafka_no_quotes_tmp.delta
@@ -86,22 +86,33 @@ do
         esac
         wc -l /tmp/result.log | awk '{print $1}'
     else
-        tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+        tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
         if [ $? != 0 ] || [ "$tag" == "" ]
         then
             logerror "Could not find current CP version from docker ps"
             exit 1
         fi
+        get_broker_container
         if ! version_gt $tag "6.9.9" && [ "$security" != "" ]
         then
             # GetOffsetShell does not support security before 7.x
             get_security_broker "--consumer.config"
             
             set +e
-            docker exec $container timeout 15 kafka-console-consumer --bootstrap-server broker:9092 --topic $topic $security --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
+            docker exec $container timeout 15 kafka-console-consumer --bootstrap-server $broker_container:9092 --topic $topic $security --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
             set -e
         else
-            docker exec $container kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 $security --topic $topic --time -1 | awk -F ":" '{sum += $3} END {print sum}'
+            class_name="kafka.tools.GetOffsetShell"
+            if version_gt $tag "7.6.9"
+            then
+                class_name="org.apache.kafka.tools.GetOffsetShell"
+            fi
+            parameter_for_list_broker="--bootstrap-server"
+            if ! version_gt $tag "5.3.99"
+            then
+                parameter_for_list_broker="--broker-list"
+            fi
+            docker exec $broker_container kafka-run-class $class_name $parameter_for_list_broker $broker_container:9092 $security --topic $topic --time -1 | grep -v "No configuration found" | awk -F ":" '{sum += $3} END {print sum}'
         fi
     fi
 done

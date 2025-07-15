@@ -1,4 +1,6 @@
 test_file="${args[--file]}"
+wait="${args[--wait]}"
+open_docker_compose="${args[--open-docker-compose]}"
 
 if [[ -n "$test_file" ]]
 then
@@ -16,18 +18,25 @@ else
   fi
 fi
 
-editor=$(playground config get editor)
-if [ "$editor" != "" ]
+do_wait=""
+if [[ -n "$wait" ]]
 then
-  log "📖 Opening ${test_file} using configured editor $editor"
-  $editor ${test_file}
-else
-  if [[ $(type code 2>&1) =~ "not found" ]]
-  then
-    logerror "Could not determine an editor to use as default code is not found - you can change editor by using playground config editor <editor>"
-    exit 1
-  else
-    log "📖 Opening ${test_file} with code (default) - you can change editor by using playground config editor <editor>"
-    code ${test_file}
-  fi
+  do_wait="wait"
 fi
+
+if [[ -n "$open_docker_compose" ]]
+then
+  # determining the docker-compose file from from test_file
+  docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
+  test_file_directory="$(dirname "${test_file}")"
+  docker_compose_file="${test_file_directory}/${docker_compose_file}"
+  if [ ! -f $docker_compose_file ]
+  then
+    logwarn "--open-docker-compose is set but docker compose file could not be retrieved from $test_file"
+  else
+    open_file_with_editor "${docker_compose_file}"
+  fi
+
+fi
+
+open_file_with_editor "${test_file}" "${do_wait}"

@@ -3,6 +3,7 @@ schema="${args[--schema]}"
 id="${args[--id]}"
 verbose="${args[--verbose]}"
 
+eval "metadata_property=(${args[--metadata-property]})"
 get_sr_url_and_security
 
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
@@ -64,6 +65,15 @@ else
     json_new=$(echo $json | jq --arg content "$content" '. + { "schema": $content }')
 fi
 
+# Check if the array contains multiple results
+if [ "${#metadata_property[@]}" -gt 1 ]
+then
+    log "🟡 schema metadata are present, adding them"
+    # Construct metadata_json using jq
+    metadata_json=$(jq -n --argjson props "$(printf '%s\n' "${metadata_property[@]}" | jq -R 'split("=") | { (.[0]): .[1] }' | jq -s 'add')" '{properties: $props}')
+    json_new=$(echo $json_new | jq --argjson metadata "$metadata_json" '. + { "metadata": $metadata }')
+fi
+
 if [[ -n "$id" ]]
 then
     function set_back_read_write {
@@ -73,8 +83,11 @@ then
     }
     trap set_back_read_write EXIT
 
-    log "Deleting 🫵 id ${id} for subject 🔰 ${subject} permanently"
-    playground schema delete --subject "${subject}" --id ${id} --permanent > /dev/null 2>&1
+    # backup
+    playground schema get --subject "${subject}" --store-in-tmp "$tmp_dir" > /dev/null 2>&1
+
+    log "Deleting subject 🔰 ${subject}"
+    playground schema delete --subject "${subject}" --permanent > /dev/null 2>&1
 
     log "Setting mode to IMPORT"
     curl_output=$(curl $sr_security --request PUT -s "${sr_url}/mode/${subject}" --header 'Content-Type: application/json' --data '{"mode": "IMPORT"}' | jq .)
@@ -142,37 +155,44 @@ then
         exit 1
     fi
     echo "$curl_output"
+
+    for schema_file in $tmp_dir/schema_*.txt
+    do
+        [ -e "$schema_file" ] || continue
+        log "Restoring schema from $schema_file"
+        playground schema register --subject "${subject}" --schema "$(cat $schema_file)"
+    done
     exit 0
 fi
 
 # check if schema already exists
 # https://docs.confluent.io/platform/current/schema-registry/develop/api.html#post--subjects-(string-%20subject)
-curl_output=$(curl $sr_security --request POST -s "${sr_url}/subjects/${subject}" \
---header 'Content-Type: application/vnd.schemaregistry.v1+json' \
---data "$json_new" | jq .)
-ret=$?
-if [ $ret -eq 0 ]
-then
-    if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true 
-    then
-        error_code=$(echo "$curl_output" | jq -r .error_code)
-        if [ "$error_code" != "40403" ] && [ "$error_code" != "40401" ]
-        then
-            message=$(echo "$curl_output" | jq -r .message)
-            logerror "Command failed with error code $error_code"
-            logerror "$message"
-            exit 1
-        fi
-    else
-        id=$(echo "$curl_output" | jq -r .id)
-        version=$(echo "$curl_output" | jq -r .version)
-        log "🚪 Skipping as schema already exists with id $id (version $version)"
-        exit 0
-    fi
-else
-    logerror "❌ curl request failed with error code $ret!"
-    exit 1
-fi
+# curl_output=$(curl $sr_security --request POST -s "${sr_url}/subjects/${subject}" \
+# --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
+# --data "$json_new" | jq .)
+# ret=$?
+# if [ $ret -eq 0 ]
+# then
+#     if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true 
+#     then
+#         error_code=$(echo "$curl_output" | jq -r .error_code)
+#         if [ "$error_code" != "40403" ] && [ "$error_code" != "40401" ]
+#         then
+#             message=$(echo "$curl_output" | jq -r .message)
+#             logerror "Command failed with error code $error_code"
+#             logerror "$message"
+#             exit 1
+#         fi
+#     else
+#         id=$(echo "$curl_output" | jq -r .id)
+#         version=$(echo "$curl_output" | jq -r .version)
+#         log "🚪 Skipping as schema already exists with id $id (version $version)"
+#         exit 0
+#     fi
+# else
+#     logerror "❌ curl request failed with error code $ret!"
+#     exit 1
+# fi
 
 log "⏺️ Registering schema to subject ${subject}"
 if [[ -n "$verbose" ]]

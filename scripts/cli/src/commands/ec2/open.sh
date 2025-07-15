@@ -1,5 +1,5 @@
 instance="${args[--instance]}"
-disable_sync_repro_folder="${args[--disable-sync-repro-folder]}"
+enable_sync_repro_folder="${args[--enable-sync-repro-folder]}"
 
 if [[ $(type code 2>&1) =~ "not found" ]]
 then
@@ -42,7 +42,7 @@ do
 
     playground ec2 allow-my-ip --instance "$instance"
 
-    if [[ ! -n "$disable_sync_repro_folder" ]]
+    if [[ -n "$enable_sync_repro_folder" ]]
     then
         instance="$(playground ec2 status --instance "$name" --all)"
         playground ec2 sync-repro-folder local-to-ec2 --instance "$instance" 

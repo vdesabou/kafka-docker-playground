@@ -11,8 +11,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <google.protobuf.version>3.16.3</google.protobuf.version>
-        <protoc.jar.maven.plugin>3.11.4</protoc.jar.maven.plugin>
+        <google.protobuf.version>4.29.3</google.protobuf.version>
         <kafka.tag>6.2.0</kafka.tag>
         <kafka.client.tag>2.8.0</kafka.client.tag>
     </properties>
@@ -54,13 +53,22 @@
             <artifactId>monitoring-interceptors</artifactId>
             <version>${kafka.tag}</version>
         </dependency>
-
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
             <version>${google.protobuf.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protoc</artifactId>
+            <version>${google.protobuf.version}</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>com.google.api.grpc</groupId>
+            <artifactId>proto-google-common-protos</artifactId>
+            <version>2.53.0</version>
+        </dependency>
 
         <!--for logging purposes-->
         <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
@@ -90,6 +98,13 @@
         </dependency>
     </dependencies>
     <build>
+    <extensions>
+      <extension>
+        <groupId>kr.motd.maven</groupId>
+        <artifactId>os-maven-plugin</artifactId>
+        <version>1.6.1</version>
+      </extension>
+    </extensions>
         <defaultGoal>install</defaultGoal>
         <plugins>
             <plugin>
@@ -105,29 +120,18 @@
 
             <!--for specific record-->
             <plugin>
-                <groupId>com.github.os72</groupId>
-                <artifactId>protoc-jar-maven-plugin</artifactId>
-                <version>${protoc.jar.maven.plugin}</version>
+                <groupId>org.xolstice.maven.plugins</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <version>0.6.1</version>
+                <configuration>
+                    <protocArtifact>com.google.protobuf:protoc:${google.protobuf.version}:exe:${os.detected.classifier}</protocArtifact>
+                </configuration>
                 <executions>
                     <execution>
                         <phase>generate-sources</phase>
                         <goals>
-                            <goal>run</goal>
+                            <goal>compile</goal>
                         </goals>
-                        <configuration>
-                            <includeStdTypes>true</includeStdTypes>
-                            <protocVersion>3.15.0</protocVersion>
-                            <inputDirectories>
-                                <include>src/main/resources/schema/</include>
-                            </inputDirectories>
-                            <outputTargets>
-                                <outputTarget>
-                                    <type>java</type>
-                                    <addSources>none</addSources>
-                                    <outputDirectory>src/main/java/</outputDirectory>
-                                </outputTarget>
-                            </outputTargets>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

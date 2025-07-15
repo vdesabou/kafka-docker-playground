@@ -6,7 +6,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "6.9.9"; then
-    logwarn "WARN: Cluster Linking is GA since CP 7.0 only"
+    logwarn "Cluster Linking is GA since CP 7.0 only"
     exit 111
 fi
 

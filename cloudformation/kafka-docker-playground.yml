@@ -149,6 +149,8 @@ Resources:
 
                       git clone https://github.com/vdesabou/kafka-docker-playground.git
 
+                      rm -rf ~/kafka-docker-playground/reproduction-models/.git
+
                       mkdir -p ~/.config/
                       
                       wget -q https://github.com/vdesabou/kafka-docker-playground/raw/master/cloudformation/dotfiles/starship.toml -o ~/.config/starship.toml
@@ -173,6 +175,8 @@ Resources:
                         tar xvf secrets.tar
 
                         set -o allexport;source secrets.properties;set +o allexport
+
+                        set -o allexport;source variables.properties;set +o allexport
 
                         mkdir -p ~/.aws
 

@@ -4,15 +4,22 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "2.14.8"
+then
+     logwarn "minimal supported connector version is 2.14.9 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 create_or_get_oracle_image "LINUX.X64_213000_db_home.zip" "../../connect/connect-cdc-oracle21-source/ora-setup-scripts-cdb-table"
 
 # required to make utils.sh script being able to work, do not remove:
 # PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 #playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.cdb-table.yml"
 log "Starting up oracle container to get generated cert from oracle server wallet"
-docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.cdb-table-mtls.yml" up -d oracle
+docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f "${PWD}/docker-compose.plaintext.cdb-table-mtls.yml" up -d oracle
 
-playground --output-level WARN container logs --container oracle --wait-for-log "DATABASE IS READY TO USE" --max-wait 2500
+playground container logs --container oracle --wait-for-log "DATABASE IS READY TO USE" --max-wait 600
 log "Oracle DB has started!"
 log "Setting up Oracle Database Prerequisites"
 docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
@@ -131,10 +138,10 @@ fi
 log "Create a JKS keystore"
 # Create a new private/public key pair for 'CN=connect,C=US'
 rm -f keystore.jks
-docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} keytool -genkey -alias testclient -dname 'CN=connect,C=US' -storepass 'welcome123' -storetype JKS -keystore /tmp/keystore.jks -keyalg RSA
+docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keytool -genkey -alias testclient -dname 'CN=connect,C=US' -storepass 'welcome123' -storetype JKS -keystore /tmp/keystore.jks -keyalg RSA
 
 # Generate a CSR (Certificate Signing Request):
-docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} keytool -certreq -alias testclient -file /tmp/csr.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
+docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keytool -certreq -alias testclient -file /tmp/csr.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
 # Sign the client certificate using the test CA (root)
 docker cp csr.txt oracle:/tmp/csr.txt
 docker exec oracle bash -c "orapki cert create -wallet /tmp/root -request /tmp/csr.txt -cert /tmp/cert.txt -validity 3650 -pwd WalletPasswd123"
@@ -150,7 +157,7 @@ else
     sudo chmod -R a+rw .
     ls -lrt
 fi
-docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} keytool -import -v -noprompt -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
+docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keytool -import -v -noprompt -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
 # Import the signed certificate
 docker cp oracle:/tmp/cert.txt cert.txt
 if [[ "$OSTYPE" == "darwin"* ]]
@@ -163,16 +170,16 @@ else
     sudo chmod -R a+rw .
     ls -lrt
 fi
-docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} keytool -import -v -alias testclient -file /tmp/cert.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
+docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keytool -import -v -alias testclient -file /tmp/cert.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
 log "Displaying keystore"
-docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} keytool -list -keystore /tmp/keystore.jks -storepass 'welcome123' -v
+docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keytool -list -keystore /tmp/keystore.jks -storepass 'welcome123' -v
 
 log "Create a JKS truststore"
 rm -f truststore.jks
 # We import the test CA certificate
-docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} keytool -import -v -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/truststore.jks -storetype JKS -storepass 'welcome123' -noprompt
+docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keytool -import -v -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/truststore.jks -storetype JKS -storepass 'welcome123' -noprompt
 log "Displaying truststore"
-docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} keytool -list -keystore /tmp/truststore.jks -storepass 'welcome123' -v
+docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keytool -list -keystore /tmp/truststore.jks -storepass 'welcome123' -v
 
 cd ${DIR}
 
@@ -196,11 +203,12 @@ EOF
 log "Sleeping 60 seconds"
 sleep 60
 
-docker compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.cdb-table-mtls.yml" up -d --quiet-pull
-command="source ${DIR}/../../scripts/utils.sh && docker compose -f ../../environment/plaintext/docker-compose.yml -f ${PWD}/docker-compose.plaintext.cdb-table-mtls.yml up -d ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} up -d"
+set_profiles
+docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f "${PWD}/docker-compose.plaintext.cdb-table-mtls.yml" ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} up -d --quiet-pull
+command="source ${DIR}/../../scripts/utils.sh && docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ${PWD}/docker-compose.plaintext.cdb-table-mtls.yml ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} up -d"
 playground state set run.docker_command "$command"
 playground state set run.environment "plaintext"
-log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command playground container recreate"
+log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command 'playground container recreate'"
 
 wait_container_ready
 
@@ -209,45 +217,46 @@ sleep 15
 log "Creating Oracle source connector"
 playground connector create-or-update --connector cdc-oracle-source-cdb --package "io.confluent.connect.oracle.cdc.util.metrics.MetricsReporter" --level DEBUG  << EOF
 {
-                "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
-                "tasks.max":1,
-                "key.converter": "io.confluent.connect.avro.AvroConverter",
-                "key.converter.schema.registry.url": "http://schema-registry:8081",
-                "value.converter": "io.confluent.connect.avro.AvroConverter",
-                "value.converter.schema.registry.url": "http://schema-registry:8081",
-                "confluent.license": "",
-                "confluent.topic.bootstrap.servers": "broker:9092",
-                "confluent.topic.replication.factor": "1",
-                "oracle.server": "oracle",
-                "oracle.port": 1532,
-                "oracle.sid": "ORCLCDB",
-                "oracle.ssl.truststore.file": "/tmp/truststore.jks",
-                "oracle.ssl.truststore.password": "welcome123",
-                "oracle.connection.javax.net.ssl.keyStore": "/tmp/keystore.jks",
-                "oracle.connection.javax.net.ssl.keyStorePassword": "welcome123",
-                "oracle.connection.oracle.net.authentication_services": "(TCPS)",
-                "start.from":"snapshot",
-                "redo.log.topic.name": "redo-log-topic",
-                "redo.log.consumer.bootstrap.servers":"broker:9092",
-                "table.inclusion.regex": ".*CUSTOMERS.*",
-                "table.topic.name.template": "\${databaseName}.\${schemaName}.\${tableName}",
-                "numeric.mapping": "best_fit",
-                "connection.pool.max.size": 20,
-                "redo.log.row.fetch.size":1,
-                "oracle.dictionary.mode": "auto",
-                "errors.tolerance": "all",
-                "errors.log.enable": "true",
-                "errors.log.include.messages": "true",
-                "topic.creation.groups": "redo",
-                "topic.creation.redo.include": "redo-log-topic",
-                "topic.creation.redo.replication.factor": 1,
-                "topic.creation.redo.partitions": 1,
-                "topic.creation.redo.cleanup.policy": "delete",
-                "topic.creation.redo.retention.ms": 1209600000,
-                "topic.creation.default.replication.factor": 1,
-                "topic.creation.default.partitions": 1,
-                "topic.creation.default.cleanup.policy": "delete"
-          }
+    "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
+    "log.sensitive.data": "true",
+    "tasks.max":1,
+    "key.converter": "io.confluent.connect.avro.AvroConverter",
+    "key.converter.schema.registry.url": "http://schema-registry:8081",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://schema-registry:8081",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1",
+    "oracle.server": "oracle",
+    "oracle.port": 1532,
+    "oracle.sid": "ORCLCDB",
+    "oracle.ssl.truststore.file": "/tmp/truststore.jks",
+    "oracle.ssl.truststore.password": "welcome123",
+    "oracle.connection.javax.net.ssl.keyStore": "/tmp/keystore.jks",
+    "oracle.connection.javax.net.ssl.keyStorePassword": "welcome123",
+    "oracle.connection.oracle.net.authentication_services": "(TCPS)",
+    "start.from":"snapshot",
+    "redo.log.topic.name": "redo-log-topic",
+    "redo.log.consumer.bootstrap.servers":"broker:9092",
+    "table.inclusion.regex": ".*CUSTOMERS.*",
+    "table.topic.name.template": "\${databaseName}.\${schemaName}.\${tableName}",
+    "numeric.mapping": "best_fit",
+    "connection.pool.max.size": 20,
+    "oracle.dictionary.mode": "auto",
+    "errors.tolerance": "all",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true",
+    "topic.creation.groups": "redo",
+    "topic.creation.redo.include": "redo-log-topic",
+    "topic.creation.redo.replication.factor": 1,
+    "topic.creation.redo.partitions": 1,
+    "topic.creation.redo.cleanup.policy": "delete",
+    "topic.creation.redo.retention.ms": 1209600000,
+    "topic.creation.default.replication.factor": 1,
+    "topic.creation.default.partitions": 1,
+    "topic.creation.default.cleanup.policy": "delete",
+    "use.transaction.begin.for.mining.session": "true"
+}
 EOF
 
 log "Waiting 20s for connector to read existing data"

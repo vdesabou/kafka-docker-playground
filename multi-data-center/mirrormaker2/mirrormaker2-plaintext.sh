@@ -5,17 +5,17 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.3.99"; then
-    logwarn "WARN: This example is working starting from CP 5.4 only"
+    logwarn "This example is working starting from CP 5.4 only"
     exit 111
 fi
 
 ${DIR}/../../environment/mdc-plaintext/start.sh "${PWD}/docker-compose.mdc-plaintext.yml"
 
 log "Sending sales in Europe cluster"
-seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe kafka-console-producer --broker-list localhost:9092 --topic sales_EUROPE
+seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe kafka-console-producer --bootstrap-server localhost:9092 --topic sales_EUROPE
 
 log "Sending sales in US cluster"
-seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-us kafka-console-producer --broker-list localhost:9092 --topic sales_US
+seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-us kafka-console-producer --bootstrap-server localhost:9092 --topic sales_US
 
 log "Consolidating all sales (logs are in /tmp/mirrormaker.log):"
 

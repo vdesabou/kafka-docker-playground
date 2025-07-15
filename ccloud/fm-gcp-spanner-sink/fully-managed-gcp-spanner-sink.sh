@@ -18,7 +18,7 @@ cd ../../ccloud/fm-gcp-spanner-sink
 GCP_KEYFILE="${PWD}/keyfile.json"
 if [ ! -f ${GCP_KEYFILE} ] && [ -z "$GCP_KEYFILE_CONTENT" ]
 then
-     logerror "ERROR: either the file ${GCP_KEYFILE} is not present or environment variable GCP_KEYFILE_CONTENT is not set!"
+     logerror "❌ either the file ${GCP_KEYFILE} is not present or environment variable GCP_KEYFILE_CONTENT is not set!"
      exit 1
 else 
     if [ -f ${GCP_KEYFILE} ]
@@ -31,7 +31,7 @@ else
 fi
 cd -
 
-bootstrap_ccloud_environment
+bootstrap_ccloud_environment "gcp" "$GCP_SPANNER_REGION"
 
 set +e
 playground topic delete --topic products

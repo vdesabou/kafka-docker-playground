@@ -25,12 +25,12 @@ then
     then
         source $DELTA_CONFIGS_ENV
     else
-        logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+        logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
         exit 1
     fi
     if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
     then
-        logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
+        logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
         exit 1
     fi
     if [[ -n "$verbose" ]]
@@ -39,14 +39,14 @@ then
         echo "kafka-topics --delete --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
     fi
     get_connect_image
-    docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --delete --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
+    docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-topics --delete --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
 else
     if [[ -n "$verbose" ]]
     then
         log "🐞 CLI command used"
-        echo "kafka-topics --delete --topic $topic --bootstrap-server broker:9092 $security"
+        echo "kafka-topics --delete --topic $topic --bootstrap-server $bootstrap_server:9092 $security"
     fi
-    docker exec $container kafka-topics --delete --topic $topic --bootstrap-server broker:9092 $security
+    docker exec $container kafka-topics --delete --topic $topic --bootstrap-server $bootstrap_server:9092 $security
 fi
 
 if [[ -n "$skip_delete_schema" ]]

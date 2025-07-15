@@ -32,13 +32,13 @@ sleep 30
 Sending messages in A cluster (OnPrem)
 
 ```bash
-seq -f "A_sale_%g ${RANDOM}" 20 | docker container exec -i broker1 kafka-console-producer --broker-list localhost:9092 --topic sales_A
+seq -f "A_sale_%g ${RANDOM}" 20 | docker container exec -i broker1 kafka-console-producer --bootstrap-server localhost:9092 --topic sales_A
 ```
 
 Consumer with group my-consumer-group reads 10 messages in A cluster (OnPrem)
 
 ```bash
-docker exec -i connect bash -c "kafka-console-consumer --bootstrap-server broker1:9092 --whitelist 'sales_A' --from-beginning --max-messages 10 --consumer-property group.id=my-consumer-group"
+docker exec -i connect bash -c "kafka-console-consumer --bootstrap-server broker1:9092 --include 'sales_A' --from-beginning --max-messages 10 --consumer-property group.id=my-consumer-group"
 ```
 
 sleeping 70 seconds

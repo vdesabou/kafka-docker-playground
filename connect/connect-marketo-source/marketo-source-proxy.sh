@@ -4,8 +4,15 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-logwarn "WARN: skipped as it does not work"
+logwarn "skipped as it does not work"
 exit 111
+
+if version_gt $TAG_BASE "7.9.99"
+then
+     logwarn "preview connectors are no longer supported with CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
 
 MARKETO_ENDPOINT_URL=${MARKETO_ENDPOINT_URL:-$1}
 MARKETO_CLIENT_ID=${MARKETO_CLIENT_ID:-$2}

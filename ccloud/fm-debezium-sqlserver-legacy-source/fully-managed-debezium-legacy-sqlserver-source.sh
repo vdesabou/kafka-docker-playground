@@ -16,7 +16,7 @@ then
      docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${PWD}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "${PWD}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
      if [ $? != 0 ]
      then
-          logerror "ERROR: failed to build java component "
+          logerror "❌ failed to build java component "
           tail -500 /tmp/result.log
           exit 1
      fi
@@ -40,9 +40,10 @@ set +e
 playground topic delete --topic server1.dbo.customers
 set -e
 
+set_profiles
 docker compose build
-docker compose down -v --remove-orphans
-docker compose up -d --quiet-pull
+docker compose ${profile_sql_datagen_command} down -v --remove-orphans
+docker compose ${profile_sql_datagen_command} up -d --quiet-pull
 
 sleep 5
 
@@ -73,8 +74,22 @@ do
   sleep 5
 done
 
+log "Waiting for SQL Server to be ready"
+set +e
+while true
+do
+  docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! -Q "SELECT 1" > /dev/null 2>&1
+  if [ $? -eq 0 ]; then
+    log "SQL Server is ready"
+    break
+  fi
+  log "SQL Server not ready yet, waiting..."
+  sleep 5
+done
+set -e
+
 log "Create table"
-docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
+docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
 -- Create the test database
 CREATE DATABASE testDB;
 GO
@@ -127,7 +142,7 @@ EOF
 wait_for_ccloud_connector_up $connector_name 180
 
 
-docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
+docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
 USE testDB;
 INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@office.com');
 GO
@@ -140,5 +155,10 @@ if [ ! -z "$SQL_DATAGEN" ]
 then
      DURATION=10
      log "Injecting data for $DURATION minutes"
-     docker exec -d sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --username sa --password 'Password!' --connectionUrl 'jdbc:sqlserver://sqlserver:1433;databaseName=testDB;encrypt=false' --maxPoolSize 10 --durationTimeMin $DURATION"
+     docker exec sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --username sa --password 'Password!' --connectionUrl 'jdbc:sqlserver://sqlserver:1433;databaseName=testDB;encrypt=false' --maxPoolSize 10 --durationTimeMin $DURATION"
 fi
+
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name

@@ -238,7 +238,7 @@ kubectl -n kafka-dest exec -i replicator-0 -- curl -k -X PUT \
      https://localhost:8083/connectors/test-replicator/config | jq
 
 log "produce data on topic example on kafka-src cluster"
-kubectl -n kafka-src exec -i kafka-0 -- bash -c 'seq 10 | kafka-console-producer --broker-list kafka:9071 --topic example'
+kubectl -n kafka-src exec -i kafka-0 -- bash -c 'seq 10 | kafka-console-producer --bootstrap-server kafka:9071 --topic example'
 
 sleep 5
 

@@ -1,8 +1,0 @@
----
-services:
-  connect:
-    volumes:
-      - $TMP_CREDENTIALS_FILE:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials
-      - $HOME/.aws/config:$CONNECT_CONTAINER_HOME_DIR/.aws/config
-    environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3

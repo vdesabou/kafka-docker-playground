@@ -61,7 +61,7 @@ EOF
 Sending messages to topic sink-messages:
 
 ```bash
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages << EOF
+docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic sink-messages << EOF
 This is my message 1
 This is my message 2
 EOF

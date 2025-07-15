@@ -5,41 +5,18 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $CONNECTOR_TAG "2.5.0"; then
-    logwarn "WARN: this is available since version 2.5.1 only"
+    logwarn "this is available since version 2.5.1 only"
     exit 1
 fi
 
-AWS_STS_ROLE_ARN=${AWS_STS_ROLE_ARN:-$1}
-
-# this is only used for AWS CLI
-if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "2.6.15"
 then
-     logerror "ERROR: either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
-     exit 1
-else
-    if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
-    then
-        log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
-        export AWS_ACCESS_KEY_ID
-        export AWS_SECRET_ACCESS_KEY
-    else
-        if [ -f $HOME/.aws/credentials ]
-        then
-            logwarn "💭 AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
-            export AWS_ACCESS_KEY_ID=$( grep "^aws_access_key_id" $HOME/.aws/credentials | head -1 | awk -F'=' '{print $2;}' )
-            export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/credentials | head -1 | awk -F'=' '{print $2;}' ) 
-        fi
-    fi
-    if [ -z "$AWS_REGION" ]
-    then
-        AWS_REGION=$(aws configure get region | tr '\r' '\n')
-        if [ "$AWS_REGION" == "" ]
-        then
-            logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
-            exit 1
-        fi
-    fi
+     logwarn "minimal supported connector version is 2.6.16 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
 fi
+
+AWS_STS_ROLE_ARN=${AWS_STS_ROLE_ARN:-$1}
 
 if [ -z "$AWS_STS_ROLE_ARN" ]
 then
@@ -59,14 +36,8 @@ then
      exit 1
 fi
 
-if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
-then
-     export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
-else
-     export CONNECT_CONTAINER_HOME_DIR="/root"
-fi
+handle_aws_credentials
 
-# credentials file is not mounted in connect container
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.backup-and-restore.with-assuming-iam-role-config.yml"
 
@@ -145,24 +116,26 @@ rm -f s3_topic+0+0000000000.avro
 log "Creating Backup and Restore S3 Source connector with bucket name <$AWS_BUCKET_NAME>"
 playground connector create-or-update --connector s3-source  << EOF
 {
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
-               "s3.region": "$AWS_REGION",
-               "s3.bucket.name": "$AWS_BUCKET_NAME",
-               "topics.dir": "$TAG",
-               "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "s3.credentials.provider.class": "io.confluent.connect.s3.auth.AwsAssumeRoleCredentialsProvider",
-               "s3.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
-               "s3.credentials.provider.sts.role.session.name": "session-name",
-               "s3.credentials.provider.sts.role.external.id": "123",
-               "transforms": "AddPrefix",
-               "transforms.AddPrefix.type": "org.apache.kafka.connect.transforms.RegexRouter",
-               "transforms.AddPrefix.regex": ".*",
-               "transforms.AddPrefix.replacement": "copy_of_\$0"
-          }
+  "tasks.max": "1",
+  "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
+  "s3.region": "$AWS_REGION",
+  "s3.bucket.name": "$AWS_BUCKET_NAME",
+  "topics.dir": "$TAG",
+  "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
+  "confluent.license": "",
+  "confluent.topic.bootstrap.servers": "broker:9092",
+  "confluent.topic.replication.factor": "1",
+  "s3.credentials.provider.class": "io.confluent.connect.s3.auth.AwsAssumeRoleCredentialsProvider",
+  "s3.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
+  "s3.credentials.provider.sts.role.session.name": "session-name",
+  "s3.credentials.provider.sts.role.external.id": "123",
+  "s3.credentials.provider.aws.access.key.id": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID",
+  "s3.credentials.provider.aws.secret.access.key": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY",
+  "transforms": "AddPrefix",
+  "transforms.AddPrefix.type": "org.apache.kafka.connect.transforms.RegexRouter",
+  "transforms.AddPrefix.regex": ".*",
+  "transforms.AddPrefix.replacement": "copy_of_\$0"
+}
 EOF
 
 sleep 10

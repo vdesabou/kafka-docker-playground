@@ -6,11 +6,23 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.3.99"; then
-    logwarn "WARN: Broker Validation is available since CP 5.4 only"
+    logwarn "Broker Validation is available since CP 5.4 only"
     exit 111
 fi
 
-playground start-environment --environment 2way-ssl --docker-compose-override-file "${PWD}/docker-compose.2way-ssl.security-plugin.yml"
+JAAS_CONFIG_FILE="/tmp/jaas_config.file"
+if version_gt $TAG_BASE "7.9.9"; then
+  export JAAS_CONFIG_FILE="/tmp/jaas_config_8_plus.file"
+fi
+
+if [ ! -z $ENABLE_KRAFT ]
+then
+  # KRAFT mode
+  playground start-environment --environment 2way-ssl --docker-compose-override-file "${PWD}/docker-compose.2way-ssl.security-plugin-kraft.yml"
+else
+  # Zookeeper mode
+  playground start-environment --environment 2way-ssl --docker-compose-override-file "${PWD}/docker-compose.2way-ssl.security-plugin.yml"
+fi
 
 docker exec schema-registry sr-acl-cli --config /etc/schema-registry/schema-registry.properties --add -s '*' -p read -o SUBJECT_READ
 docker exec schema-registry sr-acl-cli --config /etc/schema-registry/schema-registry.properties --add -s '*' -p write -o SUBJECT_WRITE
@@ -53,7 +65,7 @@ curl -X POST \
 log "Sending a non-Avro record, it should fail"
 docker exec -i connect kafka-console-producer \
      --topic topic-validation \
-     --broker-list broker:9092 \
+     --bootstrap-server broker:9092 \
      --producer.config /etc/kafka/secrets/client_without_interceptors.config << EOF
 {"userid":1,"username":"RODRIGUEZ"}
 EOF
@@ -61,9 +73,9 @@ EOF
 log "Sending a Avro record, it should work"
 docker exec -i connect kafka-avro-console-producer \
      --topic topic-validation \
-     --broker-list broker:9092 \
+     --bootstrap-server broker:9092 \
      --property basic.auth.credentials.source=USER_INFO \
-     --property schema.registry.basic.auth.user.info="write:write" \
+     --property basic.auth.user.info="write:write" \
      --property schema.registry.url=https://schema-registry:8081 \
      --property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks \
      --property schema.registry.ssl.truststore.password=confluent \

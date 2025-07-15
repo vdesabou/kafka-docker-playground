@@ -4,6 +4,10 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+PROPERTIES_CONFIG_FILE="/etc/kafka/sasl-plain-with-basic-auth.properties"
+if version_gt $TAG_BASE "7.9.9"; then
+  export PROPERTIES_CONFIG_FILE="/etc/kafka/sasl-plain-with-basic-auth-8-plus.properties"
+fi
 
 playground start-environment --environment sasl-plain --docker-compose-override-file "${PWD}/docker-compose.sasl-plain.yml"
 

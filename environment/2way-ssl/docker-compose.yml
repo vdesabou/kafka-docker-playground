@@ -22,7 +22,7 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: SSL
       KAFKA_ADVERTISED_LISTENERS: SSL://broker:9092
       KAFKA_LISTENERS: SSL://:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SSL:SSL
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SSL:SSL${CONTROLLER_SECURITY_PROTOCOL_MAP}
       CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SSL
       CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.client.truststore.jks
       CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_PASSWORD: confluent
@@ -46,7 +46,7 @@ services:
     environment:
       KAFKA_INTER_BROKER_LISTENER_NAME: SSL
       KAFKA_LISTENERS: SSL://:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SSL:SSL
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SSL:SSL${CONTROLLER_SECURITY_PROTOCOL_MAP}
       KAFKA_ADVERTISED_LISTENERS: SSL://broker2:9092
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: "broker2:9092"
       CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SSL
@@ -72,7 +72,7 @@ services:
     environment:
       KAFKA_INTER_BROKER_LISTENER_NAME: SSL
       KAFKA_LISTENERS: SSL://:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SSL:SSL
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SSL:SSL${CONTROLLER_SECURITY_PROTOCOL_MAP}
       KAFKA_ADVERTISED_LISTENERS: SSL://broker3:9092
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: "broker3:9092"
       CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SSL
@@ -94,7 +94,6 @@ services:
 
   schema-registry:
     depends_on:
-      - zookeeper
       - broker
     volumes:
       - ../../environment/2way-ssl/security:/etc/kafka/secrets
@@ -120,7 +119,6 @@ services:
 
   connect:
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
     volumes:
@@ -179,7 +177,6 @@ services:
 
   connect2:
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
     volumes:
@@ -238,7 +235,6 @@ services:
 
   connect3:
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
     volumes:
@@ -323,7 +319,6 @@ services:
 
   control-center:
     depends_on:
-      - zookeeper
       - broker
       - connect
     ports:
@@ -366,8 +361,39 @@ services:
                   -Djavax.net.ssl.keyStore=/etc/kafka/secrets/kafka.control-center.keystore.jks
                   -Djavax.net.ssl.keyStorePassword=confluent
 
-    # https://github.com/conduktor/conduktor-platform/blob/main/doc/Configuration.md
-  conduktor:
+  conduktor-postgresql:
+    image: postgres:14
+    hostname: conduktor-postgresql
+    container_name: conduktor-postgresql
+    environment:
+      POSTGRES_DB: "conduktor"
+      POSTGRES_USER: "conduktor"
+      POSTGRES_PASSWORD: "change_me"
+    profiles:
+      - "conduktor"
+
+  conduktor-console:
+    image: conduktor/conduktor-console:1.30.0
+    hostname: conduktor-console
+    container_name: conduktor-console
+    depends_on:
+      - conduktor-postgresql
+    ports:
+      - "8080:8080"
     volumes:
       - ../../environment/2way-ssl/conduktor/platform-config.yaml:/tmp/platform-config.yaml
       - ../../environment/2way-ssl/security:/etc/kafka/secrets
+    environment:
+      CDK_IN_CONF_FILE: /tmp/platform-config.yaml
+    profiles:
+      - "conduktor"
+
+  conduktor-monitoring:
+    image: conduktor/conduktor-console-cortex:1.30.0
+    hostname: conduktor-monitoring
+    container_name: conduktor-monitoring
+    environment:
+      # Connection to the Console container
+      CDK_CONSOLE-URL: "http://conduktor-console:8080"
+    profiles:
+      - "conduktor"

@@ -4,6 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "1.9.99"
+then
+     logwarn "minimal supported connector version is 2.0.0 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 if [ -z "$GCP_PROJECT" ]
 then
      logerror "GCP_PROJECT is not set. Export it as environment variable or pass it as argument"
@@ -17,7 +24,7 @@ cd ../../connect/connect-gcp-bigtable-sink
 GCP_KEYFILE="${PWD}/keyfile.json"
 if [ ! -f ${GCP_KEYFILE} ] && [ -z "$GCP_KEYFILE_CONTENT" ]
 then
-     logerror "ERROR: either the file ${GCP_KEYFILE} is not present or environment variable GCP_KEYFILE_CONTENT is not set!"
+     logerror "❌ either the file ${GCP_KEYFILE} is not present or environment variable GCP_KEYFILE_CONTENT is not set!"
      exit 1
 else 
     if [ -f ${GCP_KEYFILE} ]
@@ -121,9 +128,19 @@ playground connector create-or-update --connector gcp-bigtable-sink  << EOF
 }
 EOF
 
-sleep 30
+playground connector show-lag --connector gcp-bigtable-sink --max-wait 360
 
-log "Verify data is in GCP BigTable"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE read kafka_big_query_stats > /tmp/result.log  2>&1
-cat /tmp/result.log
-grep "Bob" /tmp/result.log
+if [ -z "$GITHUB_RUN_NUMBER" ]
+then
+  # not running with github actions
+  log "Doing gsutil authentication"
+  set +e
+  docker rm -f gcloud-config
+  set -e
+  docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --project ${GCP_PROJECT} --key-file /tmp/keyfile.json
+
+  log "Verify data is in GCP BigTable"
+  docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE read kafka_big_query_stats > /tmp/result.log  2>&1
+  cat /tmp/result.log
+  grep "Bob" /tmp/result.log
+fi

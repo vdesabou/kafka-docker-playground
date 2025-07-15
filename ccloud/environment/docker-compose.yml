@@ -1,14 +1,14 @@
 ---
 services:
   connect:
-    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     hostname: connect
     container_name: connect
     ports:
       - "8083:8083"
       - "5005:5005"
     volumes:
-      - ../../ccloud/environment/data:/data
+      - ../../ccloud/environment/data:/datacloud
       - ../../confluent-hub:/usr/share/confluent-hub-components
     environment:
       CONNECT_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
@@ -45,7 +45,7 @@ services:
       CONNECT_PRODUCER_SECURITY_PROTOCOL: SASL_SSL
       CONNECT_PRODUCER_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
       CONNECT_PRODUCER_SASL_MECHANISM: PLAIN
-      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: $CONNECT_PRODUCER_INTERCEPTOR_CLASSES
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_SSL
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
@@ -53,7 +53,7 @@ services:
       CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_SSL
       CONNECT_CONSUMER_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
       CONNECT_CONSUMER_SASL_MECHANISM: PLAIN
-      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: $CONNECT_CONSUMER_INTERCEPTOR_CLASSES
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_SSL
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
@@ -69,7 +69,7 @@ services:
       CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
 
   control-center:
-    image: confluentinc/cp-enterprise-control-center:${TAG}
+    image: ${CP_CONTROL_CENTER_IMAGE}:${CP_CONTROL_CENTER_TAG}
     hostname: control-center
     container_name: control-center
     depends_on:
@@ -78,6 +78,9 @@ services:
       - "${C3_PORT:-9021}:9021"
     profiles:
     - control-center
+    # needed for c3 next gen
+    command: "bash -c 'dub template /etc/confluent/docker/control-center.properties.template /etc/confluent-control-center/control-center.properties && \
+                          /etc/confluent/docker/run'"
     environment:
       CONTROL_CENTER_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
       CONTROL_CENTER_KSQL_URL: "http://ksql-server:8089"
@@ -140,9 +143,53 @@ services:
     profiles:
       - "conduktor"
 
+  prometheus:
+    image: prom/prometheus:v2.29.2
+    hostname: prometheus
+    container_name: prometheus
+    profiles:
+      - "grafana"
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    hostname: grafana
+    container_name: grafana
+    profiles:
+      - "grafana"
+    environment:
+      - "GF_SECURITY_ADMIN_USER=admin"
+      - "GF_SECURITY_ADMIN_PASSWORD=password"
+      - "GF_USERS_ALLOW_SIGN_UP=false"
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+      - ./grafana/config/grafana.ini:/etc/grafana/grafana.ini
+      - ./grafana/confluent:/usr/share/grafana/public/img/icons/confluent
+    depends_on:
+      - prometheus
+
+  confluent_cost_exporter:
+    profiles:
+      - "grafana"
+    image: docker.io/mcolomerc/confluent-costs-exporter:latest
+    #platform: linux/amd64
+    container_name: confluent_cost_exporter
+    environment:
+    - CONFLUENT_CLOUD_API_KEY=$CLOUD_API_KEY
+    - CONFLUENT_CLOUD_API_SECRET=$CLOUD_API_SECRET
+    - CACHE_EXPIRATION=240m
+    - PORT=7979 
+    ports:
+      - 7979:7979
+
   # 75147
   # schema-registry:
-  #   image: confluentinc/cp-schema-registry:${TAG}
+  #   image: ${CP_SCHEMA_REGISTRY_IMAGE}:${CP_SCHEMA_REGISTRY_TAG}
   #   hostname: schema-registry
   #   container_name: schema-registry
   #   ports:

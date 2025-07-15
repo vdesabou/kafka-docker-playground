@@ -4,13 +4,20 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "2.1.15"
+then
+     logwarn "minimal supported connector version is 2.1.16 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 # Need to create the TIBCO EMS image using https://github.com/mikeschippers/docker-tibco
 cd ../../connect/connect-tibco-sink/docker-tibco/
 get_3rdparty_file "TIB_ems-ce_8.5.1_linux_x86_64.zip"
 cd -
 if [ ! -f ../../connect/connect-tibco-sink/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip ]
 then
-     logerror "ERROR: ../../connect/connect-tibco-sink/docker-tibco/ does not contain TIBCO EMS zip file TIB_ems-ce_8.5.1_linux_x86_64.zip"
+     logerror "❌ ../../connect/connect-tibco-sink/docker-tibco/ does not contain TIBCO EMS zip file TIB_ems-ce_8.5.1_linux_x86_64.zip"
      exit 1
 fi
 
@@ -71,6 +78,6 @@ CLASSPATH=${TIBEMS_JAVA}/jms-2.0.jar:${CLASSPATH}
 CLASSPATH=.:${TIBEMS_JAVA}/tibjms.jar:${TIBEMS_JAVA}/tibjmsadmin.jar:${CLASSPATH}
 export CLASSPATH
 javac *.java
-java tibjmsMsgConsumer -user admin -queue connector-quickstart -nbmessages 10' > /tmp/result.log  2>&1
+java tibjmsMsgConsumer -user admin -queue connector-quickstart -nbmessages 10 -timeout 10000' > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "Text=" /tmp/result.log

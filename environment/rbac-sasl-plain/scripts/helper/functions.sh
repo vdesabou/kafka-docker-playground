@@ -2,9 +2,9 @@
 
 get_kafka_cluster_id_from_container()
 {
-  KAFKA_CLUSTER_ID=$(zookeeper-shell zookeeper:2181 get /cluster/id 2> /dev/null | grep \"version\" | jq -r .id)
+  KAFKA_CLUSTER_ID=$(confluent cluster describe --url http://broker:8091 --output json | jq -r .scope[0].id)
   if [ -z "$KAFKA_CLUSTER_ID" ]; then
-    echo "Failed to retrieve Kafka cluster id from ZooKeeper"
+    echo "Failed to retrieve Kafka cluster id from confluent cluster describe command"
     exit 1
   fi
   echo $KAFKA_CLUSTER_ID

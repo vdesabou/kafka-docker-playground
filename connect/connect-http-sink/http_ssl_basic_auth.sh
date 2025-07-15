@@ -4,6 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "1.7.9"
+then
+     logwarn "minimal supported connector version is 1.7.10 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 cd ../../connect/connect-http-sink/
 if [ ! -f jcl-over-slf4j-2.0.7.jar ]
 then
@@ -37,6 +44,7 @@ playground connector create-or-update --connector http-ssl-basic-auth-sink2  << 
      "reporter.error.topic.replication.factor": 1,
      "reporter.result.topic.name": "success-responses",
      "reporter.result.topic.replication.factor": 1,
+     "reporter.result.topic.value.format": "string",
      "http.api.url": "https://http-service-ssl-basic-auth:8443/api/messages",
      "auth.type": "BASIC",
      "connection.user": "admin",

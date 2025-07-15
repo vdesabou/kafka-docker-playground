@@ -4,6 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "1.7.9"
+then
+     logwarn "minimal supported connector version is 1.7.10 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     exit 111
+fi
+
 cd ../../connect/connect-http-sink/
 if [ ! -f jcl-over-slf4j-2.0.7.jar ]
 then
@@ -32,7 +39,7 @@ playground topic produce -t http-messages --nb-messages 10 << 'EOF'
     "email": "faker.internet.exampleEmail()",
     "phone": "faker.phone.imei()",
     "website": "faker.internet.domainName()",
-    "city": "faker.address.city()",
+    "city": "faker.location.city()",
     "company": "faker.company.name()"
 }
 EOF
@@ -41,8 +48,9 @@ playground debug log-level set --package "org.apache.http" --level TRACE
 
 log "Set webserver to reply with 200"
 curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006/set-response-error-code
+curl -X PUT -H "Content-Type: application/json" --data '{"message":"Hello, World!"}' http://localhost:9006/set-response-body
+
 # curl -X PUT -H "Content-Type: application/json" --data '{"delay": 2000}' http://localhost:9006/set-response-time
-# curl -X PUT -H "Content-Type: application/json" --data '{"message":"Hello, World!"}' http://localhost:9006/set-response-body
 
 log "Creating http-sink connector"
 playground connector create-or-update --connector http-sink  << EOF
@@ -60,6 +68,7 @@ playground connector create-or-update --connector http-sink  << EOF
      "reporter.error.topic.replication.factor": 1,
      "reporter.result.topic.name": "success-responses",
      "reporter.result.topic.replication.factor": 1,
+     "reporter.result.topic.value.format": "string",
      "http.api.url": "http://httpserver:9006",
      "request.body.format" : "json",
      "headers": "Content-Type: application/json"

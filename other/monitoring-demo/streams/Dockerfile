@@ -1,6 +1,6 @@
-ARG TAG
-ARG CP_BASE_IMAGE
-FROM ${CP_BASE_IMAGE}:${TAG}
+ARG CP_CONNECT_TAG
+ARG CP_CONNECT_IMAGE
+FROM ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
 COPY ./target/*.jar ./
 ENV JAVA_OPTS ""
 CMD [ "bash", "-c", "cub sr-ready schema-registry-europe 8081 120 && java ${JAVA_OPTS} -jar *-jar-with-dependencies.jar" ]

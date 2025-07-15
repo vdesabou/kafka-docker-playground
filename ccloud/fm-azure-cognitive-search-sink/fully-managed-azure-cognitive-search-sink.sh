@@ -4,27 +4,17 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
-then
-    log "Logging to Azure using environment variables AZ_USER and AZ_PASS"
-    set +e
-    az logout
-    set -e
-    az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
-else
-    log "Logging to Azure using browser"
-    az login
-fi
+login_and_maybe_set_azure_subscription
 
-# when AZURE_SUBSCRIPTION_NAME env var is set, we need to set the correct subscription
-maybe_set_azure_subscription
-
-AZURE_NAME=pg${USER}s${GITHUB_RUN_NUMBER}${TAG}
+AZURE_NAME=pgfm${USER}s${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
+if [ ${#AZURE_NAME} -gt 24 ]; then
+  AZURE_NAME=${AZURE_NAME:0:24}
+fi
 AZURE_RESOURCE_GROUP=$AZURE_NAME
 AZURE_SEARCH_SERVICE_NAME=$AZURE_NAME
 AZURE_REGION=westeurope
-AZURE_AD_APP=pg${USER}
+AZURE_AD_APP=pgfm${USER}
 
 set +e
 az group delete --name $AZURE_RESOURCE_GROUP --yes
@@ -73,7 +63,7 @@ curl -X POST \
   ]
 }'
 
-bootstrap_ccloud_environment
+bootstrap_ccloud_environment "azure" "$AZURE_REGION"
 
 set +e
 playground topic delete --topic hotels-sample

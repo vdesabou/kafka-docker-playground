@@ -6,11 +6,18 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.3.99"; then
-    logwarn "WARN: Broker Validation is available since CP 5.4 only"
+    logwarn "Broker Validation is available since CP 5.4 only"
     exit 111
 fi
 
-playground start-environment --environment 2way-ssl --docker-compose-override-file "${PWD}/docker-compose.2way-ssl.yml"
+if [ ! -z $ENABLE_KRAFT ]
+then
+  # KRAFT mode
+  playground start-environment --environment 2way-ssl --docker-compose-override-file "${PWD}/docker-compose.2way-ssl-kraft.yml"
+else
+  # Zookeeper mode
+  playground start-environment --environment 2way-ssl --docker-compose-override-file "${PWD}/docker-compose.2way-ssl.yml"
+fi
 
 log "Create topic topic-validation"
 docker exec broker kafka-topics --bootstrap-server broker:9092 --create --topic topic-validation --partitions 1 --replication-factor 1 --command-config /etc/kafka/secrets/client_without_interceptors.config --config confluent.key.schema.validation=true --config confluent.value.schema.validation=true
@@ -32,7 +39,7 @@ curl -X POST \
 log "Sending a non-Avro record, it should fail"
 docker exec -i connect kafka-console-producer \
      --topic topic-validation \
-     --broker-list broker:9092 \
+     --bootstrap-server broker:9092 \
      --producer.config /etc/kafka/secrets/client_without_interceptors.config << EOF
 {"userid":1,"username":"RODRIGUEZ"}
 EOF
@@ -40,7 +47,7 @@ EOF
 log "Sending a Avro record, it should work"
 docker exec -i connect kafka-avro-console-producer \
      --topic topic-validation \
-     --broker-list broker:9092 \
+     --bootstrap-server broker:9092 \
      --property schema.registry.url=https://schema-registry:8081 \
      --property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks \
      --property schema.registry.ssl.truststore.password=confluent \

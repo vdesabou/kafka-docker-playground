@@ -15,7 +15,7 @@ services:
       SCHEMA_REGISTRY_PUBLIC_KEY_PATH: /tmp/conf/public.pem
 
       # Just BASIC Auth
-      SCHEMA_REGISTRY_OPTS: "-Djava.security.auth.login.config=/tmp/jaas_config.file"
+      SCHEMA_REGISTRY_OPTS: "-Djava.security.auth.login.config=$JAAS_CONFIG_FILE"
       SCHEMA_REGISTRY_AUTHENTICATION_METHOD: BASIC
       SCHEMA_REGISTRY_AUTHENTICATION_REALM: SchemaRegistry
       SCHEMA_REGISTRY_AUTHENTICATION_ROLES: admin,developer,user,sr-user
@@ -27,11 +27,12 @@ services:
 
     volumes:
       - ../../other/rbac-with-sr-basic-auth-acl/jaas_config.file:/tmp/jaas_config.file
+      - ../../other/rbac-with-sr-basic-auth-acl/jaas_config_8_plus.file:/tmp/jaas_config_8_plus.file
       - ../../other/rbac-with-sr-basic-auth-acl/password-file:/tmp/password-file
       - ../../other/rbac-with-sr-basic-auth-acl/scripts/create-acls.sh:/tmp/create-acls.sh
 
   schema-registry2:
-    image: confluentinc/cp-schema-registry:${TAG}
+    image: ${CP_SCHEMA_REGISTRY_IMAGE}:${CP_SCHEMA_REGISTRY_TAG}
     hostname: schema-registry2
     container_name: schema-registry2
     restart: always

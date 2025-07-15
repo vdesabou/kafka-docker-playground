@@ -2,6 +2,7 @@ connector="${args[--connector]}"
 verbose="${args[--verbose]}"
 
 connector_type=$(playground state get run.connector_type)
+get_environment_used
 
 if [[ ! -n "$connector" ]]
 then
@@ -13,7 +14,7 @@ then
     fi
 fi
 
-if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [ "$environment" == "ccloud" ]
 then
   get_ccloud_connect
   get_kafka_docker_playground_dir
@@ -23,12 +24,12 @@ then
   then
       source $DELTA_CONFIGS_ENV
   else
-      logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+      logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
       exit 1
   fi
   if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
   then
-      logerror "ERROR: $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
+      logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
       exit 1
   fi
 else
@@ -37,7 +38,7 @@ fi
 
 if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
 then
-    tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+    tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
     if [ $? != 0 ] || [ "$tag" == "" ]
     then
         logerror "❌ could not find current CP version from docker ps"
@@ -101,7 +102,7 @@ do
         if [[ -n "$verbose" ]]
         then
             log "🐞 CLI command used"
-            echo "kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security"
+            echo "kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security"
         fi
         get_environment_used
         if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [[ "$environment" == "ccloud" ]]
@@ -116,7 +117,7 @@ do
                     continue
                 fi
             else
-                docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security 
+                docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security 
             fi
         fi
     fi

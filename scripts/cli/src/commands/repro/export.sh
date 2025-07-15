@@ -25,7 +25,7 @@ fi
 set +e
 if [[ -n "$all" ]]
 then
-    if [ -d .git ]
+    if [ -e .git ]
     then
         new_files=$(git status --porcelain 2>/dev/null  | grep "^?? " | cut -d " " -f2-)
         if [[ -n "$new_files" ]]
@@ -76,7 +76,7 @@ else
         exit 1
     fi
 
-    if [ -d .git ]
+    if [ -e .git ]
     then
         cd $test_file_directory
 

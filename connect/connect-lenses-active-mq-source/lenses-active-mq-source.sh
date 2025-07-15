@@ -4,11 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+cd ../../connect/connect-lenses-active-mq-source
 if [ ! -f ${DIR}/activemq-all-5.15.4.jar ]
 then
      log "Downloading activemq-all-5.15.4.jar"
      wget -q https://repo1.maven.org/maven2/org/apache/activemq/activemq-all/5.15.4/activemq-all-5.15.4.jar
 fi
+cd -
 
 if [ -z "$CONNECTOR_TAG" ]
 then
@@ -29,10 +31,15 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 
 log "Creating Lenses JMS ActiveMQ source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data @lenses-active-mq-source.json \
-     http://localhost:8083/connectors/lenses-active-mq-source/config | jq .
+playground connector create-or-update --connector lenses-active-mq-source << EOF
+{
+     "connector.class": "com.datamountaineer.streamreactor.connect.jms.source.JMSSourceConnector",
+     "connect.jms.kcql": "INSERT INTO MyKafkaTopicName SELECT * FROM myqueue WITHTYPE QUEUE WITHCONVERTER=\`com.datamountaineer.streamreactor.connect.converters.source.JsonSimpleConverter\`",
+     "connect.jms.url": "tcp://activemq:61616",
+     "connect.jms.initial.context.factory": "org.apache.activemq.jndi.ActiveMQInitialContextFactory",
+     "connect.jms.connection.factory": "ConnectionFactory"
+}
+EOF
 
 sleep 5
 

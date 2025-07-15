@@ -17,7 +17,7 @@ cd ../../ccloud/fm-gcp-bigtable-sink
 GCP_KEYFILE="${PWD}/keyfile.json"
 if [ ! -f ${GCP_KEYFILE} ] && [ -z "$GCP_KEYFILE_CONTENT" ]
 then
-     logerror "ERROR: either the file ${GCP_KEYFILE} is not present or environment variable GCP_KEYFILE_CONTENT is not set!"
+     logerror "❌ either the file ${GCP_KEYFILE} is not present or environment variable GCP_KEYFILE_CONTENT is not set!"
      exit 1
 else 
     if [ -f ${GCP_KEYFILE} ]
@@ -32,11 +32,11 @@ cd -
 
 bootstrap_ccloud_environment
 
-log "Creating big_query_stats topic"
+log "Creating big_query_cloud_stats topic"
 set +e
-playground topic delete --topic big_query_stats
+playground topic delete --topic big_query_cloud_stats
 sleep 3
-playground topic create --topic big_query_stats
+playground topic create --topic big_query_cloud_stats
 set -e
 
 log "Doing gsutil authentication"
@@ -56,9 +56,9 @@ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtab
 
 
 function cleanup_cloud_resources {
-  log "Delete GCP BigTable table kafka_big_query_stats"
+  log "Delete GCP BigTable table kafka_big_query_cloud_stats"
   check_if_continue
-  docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE deletetable kafka_big_query_stats
+  docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE deletetable kafka_big_query_cloud_stats
 
   log "Delete GCP BigTable instance $GCP_BIGTABLE_INSTANCE"
   check_if_continue
@@ -71,8 +71,8 @@ EOF
 trap cleanup_cloud_resources EXIT
 
 
-log "Sending messages to topic big_query_stats"
-playground topic produce -t big_query_stats --nb-messages 1 --forced-value '{"users": {"name":"Bob","friends": "1000"}}' --key "simple-key-1" << 'EOF'
+log "Sending messages to topic big_query_cloud_stats"
+playground topic produce -t big_query_cloud_stats --nb-messages 1 --forced-value '{"users": {"name":"Bob","friends": "1000"}}' --key "simple-key-1" << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -97,10 +97,10 @@ playground topic produce -t big_query_stats --nb-messages 1 --forced-value '{"us
   ]
 }
 EOF
-playground topic produce -t big_query_stats --nb-messages 1 --forced-value '{"users": {"name":"Jess","friends": "10000"}}' --key "simple-key-2" << 'EOF'
+playground topic produce -t big_query_cloud_stats --nb-messages 1 --forced-value '{"users": {"name":"Jess","friends": "10000"}}' --key "simple-key-2" << 'EOF'
 {"type":"record","name":"myrecord","fields":[{"name":"users","type":{"name":"columnfamily","type":"record","fields":[{"name":"name","type":"string"},{"name":"friends","type":"string"}]}}]}
 EOF
-playground topic produce -t big_query_stats --nb-messages 1 --forced-value '{"users": {"name":"John","friends": "10000"}}' --key "simple-key-3" << 'EOF'
+playground topic produce -t big_query_cloud_stats --nb-messages 1 --forced-value '{"users": {"name":"John","friends": "10000"}}' --key "simple-key-3" << 'EOF'
 {"type":"record","name":"myrecord","fields":[{"name":"users","type":{"name":"columnfamily","type":"record","fields":[{"name":"name","type":"string"},{"name":"friends","type":"string"}]}}]}
 EOF
 
@@ -118,7 +118,7 @@ playground connector create-or-update --connector $connector_name << EOF
   "kafka.auth.mode": "KAFKA_API_KEY",
   "kafka.api.key": "$CLOUD_KEY",
   "kafka.api.secret": "$CLOUD_SECRET",
-  "topics": "big_query_stats",
+  "topics": "big_query_cloud_stats",
   "gcp.bigtable.credentials.json" : "$GCP_KEYFILE_CONTENT",
   "gcp.bigtable.instance.id": "$GCP_BIGTABLE_INSTANCE",
   "gcp.bigtable.project.id": "$GCP_PROJECT",
@@ -132,12 +132,22 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-sleep 30
+playground connector show-lag --connector $connector_name --max-wait 360
 
-log "Verify data is in GCP BigTable"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE read kafka_big_query_stats > /tmp/result.log  2>&1
-cat /tmp/result.log
-grep "Bob" /tmp/result.log
+if [ -z "$GITHUB_RUN_NUMBER" ]
+then
+  # not running with github actions
+  log "Doing gsutil authentication"
+  set +e
+  docker rm -f gcloud-config
+  set -e
+  docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --project ${GCP_PROJECT} --key-file /tmp/keyfile.json
+
+  log "Verify data is in GCP BigTable"
+  docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE read kafka_big_query_cloud_stats > /tmp/result.log  2>&1
+  cat /tmp/result.log
+  grep "Bob" /tmp/result.log
+fi
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
