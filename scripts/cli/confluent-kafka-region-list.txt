@@ -87,6 +87,7 @@ Taiwan(asia-east1)/asia-east1
 TelAviv(il-central-1)/il-central-1
 TelAviv(me-west1)/me-west1
 Texas(southcentralus)/southcentralus
+Thailand(ap-southeast-7)/ap-southeast-7
 Tokyo(ap-northeast-1)/ap-northeast-1
 Tokyo(asia-northeast1)/asia-northeast1
 Tokyo(japaneast)/japaneast
