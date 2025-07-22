@@ -116,6 +116,11 @@ commands:
   - name: cur
     required: false
     help: correspond to completion $cur
+  flags:
+  - long: --connect-only
+    required: false
+    help: |-
+      connect only
 
 - name: get-kafka-region-list
   help: Return some completion for confluent cloud kafka cluster region list
@@ -585,7 +590,7 @@ commands:
     arg: connect_tag
     required: false
     completions:
-      - $(playground get-tag-list "$cur")
+      - $(playground get-tag-list "$cur" --connect-only)
     help: |-
       🔗 Confluent Platform (CP) version to use. Applies to connect only.
 

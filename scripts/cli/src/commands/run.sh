@@ -1221,7 +1221,7 @@ then
     then
       maybe_remove_flag "--connect-tag"
 
-      connect_tag=$(playground get-tag-list)
+      connect_tag=$(playground get-tag-list --connect-only)
       if [[ $connect_tag == *"@"* ]]
       then
         connect_tag=$(echo "$connect_tag" | cut -d "@" -f 2)

@@ -557,13 +557,19 @@ playground_get_tag_list_usage() {
   printf "playground get-tag-list - Return some completion for confluent platform tag\n\n"
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground get-tag-list [CUR]\n"
+  printf "  playground get-tag-list [CUR] [OPTIONS]\n"
   printf "  playground get-tag-list --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n "$long_usage" ]]; then
     printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connect-only")"
+    printf "    connect only\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -7593,6 +7599,14 @@ function get_ec2_cloudformation_list_with_fzf() {
 
 function get_tag_list_with_fzf() {
   cur="$1"
+  connect_only="$2"
+
+  if [[ "$connect_only" == "1" ]]
+  then
+    txt_file="connect-tag-list.txt"
+  else
+    txt_file="tag-list.txt"
+  fi
 
   fzf_version=$(get_fzf_version)
   if version_gt $fzf_version "0.38"
@@ -7606,7 +7620,7 @@ function get_tag_list_with_fzf() {
     fzf_option_rounded=""
   fi
 
-  res=$(cat $root_folder/scripts/cli/tag-list.txt | sed '1!G;h;$!d' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🎯" --header="select cp version" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+  res=$(cat $root_folder/scripts/cli/$txt_file | sed '1!G;h;$!d' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🎯" --header="select cp version" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
 }
 
 function get_any_files_with_fzf() {
@@ -13736,14 +13750,25 @@ playground_generate_tag_list_command() {
 
   listAllTags "confluentinc/cp-server-connect-base" | grep -v "ubi8" | grep -v "ubi9" | grep -v "arm64" | grep -v "amd64" | grep -v "latest" | grep -v "deb8" > /tmp/tmp_tags
 
+  rm -f $root_folder/scripts/cli/tag-list.txt
+  rm -f $root_folder/scripts/cli/connect-tag-list.txt
+
   for tag in $(cat /tmp/tmp_tags)
   do
       # check if docker image locally exists
-      if docker image inspect "confluentinc/cp-server-connect-base:${tag}" > /dev/null 2>&1
+      if docker image inspect "confluentinc/cp-schema-registry:${tag}" > /dev/null 2>&1
       then
           echo "${tag} - already installed 💻" >> $root_folder/scripts/cli/tag-list.txt
       else
           echo "${tag} - not installed, will be downloaded🛜" >> $root_folder/scripts/cli/tag-list.txt
+      fi
+
+      # check if docker connect image locally exists
+      if docker image inspect "confluentinc/cp-server-connect-base:${tag}" > /dev/null 2>&1
+      then
+          echo "${tag} - already installed 💻" >> $root_folder/scripts/cli/connect-tag-list.txt
+      else
+          echo "${tag} - not installed, will be downloaded🛜" >> $root_folder/scripts/cli/connect-tag-list.txt
       fi
   done
 }
@@ -13799,8 +13824,15 @@ playground_get_tag_list_command() {
 
   # src/commands/get-tag-list.sh
   cur="${args[cur]}"
+  connect_only="${args[--connect-only]}"
 
-  get_tag_list_with_fzf "$cur"
+  if [[ -n "$connect_only" ]]
+  then
+      get_tag_list_with_fzf "$cur" "1"
+  else
+      get_tag_list_with_fzf "$cur" "0"
+  fi
+
 }
 
 # :command.function
@@ -16251,7 +16283,7 @@ playground_run_command() {
       then
         maybe_remove_flag "--connect-tag"
 
-        connect_tag=$(playground get-tag-list)
+        connect_tag=$(playground get-tag-list --connect-only)
         if [[ $connect_tag == *"@"* ]]
         then
           connect_tag=$(echo "$connect_tag" | cut -d "@" -f 2)
@@ -17352,7 +17384,7 @@ playground_update_version_command() {
 
       if [[ $res == *"$MENU_CONNECT_TAG"* ]]
       then
-        connect_tag=$(playground get-tag-list)
+        connect_tag=$(playground get-tag-list --connect-only)
         if [[ $connect_tag == *"@"* ]]
         then
           connect_tag=$(echo "$connect_tag" | cut -d "@" -f 2)
@@ -28927,6 +28959,13 @@ playground_get_tag_list_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --connect-only)
+
+        # :flag.case_no_arg
+        args['--connect-only']=1
+        shift
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2

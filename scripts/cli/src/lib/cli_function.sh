@@ -665,6 +665,14 @@ function get_ec2_cloudformation_list_with_fzf() {
 
 function get_tag_list_with_fzf() {
   cur="$1"
+  connect_only="$2"
+
+  if [[ "$connect_only" == "1" ]]
+  then
+    txt_file="connect-tag-list.txt"
+  else
+    txt_file="tag-list.txt"
+  fi
 
   fzf_version=$(get_fzf_version)
   if version_gt $fzf_version "0.38"
@@ -678,7 +686,7 @@ function get_tag_list_with_fzf() {
     fzf_option_rounded=""
   fi
   
-  res=$(cat $root_folder/scripts/cli/tag-list.txt | sed '1!G;h;$!d' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🎯" --header="select cp version" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+  res=$(cat $root_folder/scripts/cli/$txt_file | sed '1!G;h;$!d' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🎯" --header="select cp version" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
 }
 
 function get_any_files_with_fzf() {
