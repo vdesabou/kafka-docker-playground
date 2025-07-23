@@ -1,0 +1,134 @@
+---
+networks:
+  default:
+    name: mynetwork
+
+services:
+
+  connect:
+    depends_on:
+      - broker
+      - schema-registry
+      - namenode
+      - hive-metastore
+      - hive-server
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs3
+      KAFKA_OPTS: "--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.util.concurrent=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.math=ALL-UNNAMED --add-opens=java.sql/java.sql=ALL-UNNAMED"
+
+
+  namenode:
+    image: kdp/hadoop:3.3.6
+    container_name: namenode
+    hostname: namenode
+    environment:
+      - HADOOP_CONF_DIR=/etc/hadoop
+    command: >
+      bash -c "
+        if [ ! -d /hadoop/dfs/name/current ]; then
+          echo 'Formatting NameNode...';
+          hdfs namenode -format -force -nonInteractive;
+        fi;
+        exec hadoop namenode
+      "
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    volumes:
+      - ../../connect/connect-hdfs3-sink/hadoop-config:/etc/hadoop/ # Mount the config directory
+
+  datanode:
+    image: kdp/hadoop:3.3.6
+    container_name: datanode
+    hostname: datanode
+    environment:
+      - HADOOP_CONF_DIR=/etc/hadoop
+    command: >
+      bash -c "
+        echo 'Cleaning DataNode data directory...' &&
+        rm -rf /hadoop/dfs/data/* &&
+        echo 'Starting DataNode...' &&
+        exec hadoop datanode
+      "
+    volumes:
+      - ../../connect/connect-hdfs3-sink/hadoop-config:/etc/hadoop/ # Mount the config directory
+    depends_on:
+      - namenode
+
+  resourcemanager:
+    image: kdp/hadoop:3.3.6
+    container_name: resourcemanager
+    hostname: resourcemanager
+    environment:
+      - HADOOP_CONF_DIR=/etc/hadoop
+    command: ["yarn", "resourcemanager"]
+    ports:
+      - "8088:8088"
+    volumes:
+      - ../../connect/connect-hdfs3-sink/hadoop-config:/etc/hadoop/ # Mount the config directory
+    depends_on:
+      - namenode
+      - datanode
+
+  nodemanager:
+    image: kdp/hadoop:3.3.6
+    container_name: nodemanager
+    hostname: nodemanager
+    environment:
+      - HADOOP_CONF_DIR=/etc/hadoop
+    command: ["yarn", "nodemanager"]
+    volumes:
+      - ../../connect/connect-hdfs3-sink/hadoop-config:/etc/hadoop/ # Mount the config directory
+    depends_on:
+      - resourcemanager
+
+  hive-metastore:
+    image: apache/hive:4.0.1
+    container_name: hive-metastore
+    hostname: hive-metastore
+    environment:
+      - SERVICE_NAME=metastore
+    volumes:
+      - ../../connect/connect-hdfs3-sink/hadoop-config:/opt/hive/conf
+    ports:
+      - "9083:9083"
+    depends_on:
+      - namenode
+
+  hive-server:
+    image: apache/hive:4.0.1
+    container_name: hive-server
+    hostname: hive-server
+    environment:
+      - SERVICE_NAME=hiveserver2
+      - HIVE_CONF_hive.metastore.uris=thrift://hive-metastore:9083
+      - HIVE_CONF_fs.defaultfs=hdfs://namenode:9000
+      - HADOOP_USER_NAME=hive
+    volumes:
+      - ../../connect/connect-hdfs3-sink/hadoop-config:/opt/hive/conf
+    ports:
+      - "10003:10000"
+      - "10004:10002"
+    depends_on:
+      - hive-metastore
+      - resourcemanager
+
+  hive-init-action:
+    image: kdp/hadoop:3.3.6
+    container_name: hive-init
+    hostname: hive-init
+    volumes:
+      - ../../connect/connect-hdfs3-sink/hadoop-config:/etc/hadoop/ # Mount the config directory
+    environment:
+      - HADOOP_CONF_DIR=/etc/hadoop
+    command: >
+      bash -c "
+        until hdfs dfs -ls /; do
+          echo 'Waiting for HDFS...'; sleep 5;
+        done;
+        hdfs dfs -mkdir -p /tmp /user/hive/warehouse;
+        hdfs dfs -chmod g+w /tmp /user/hive/warehouse;
+        echo 'HDFS initialization complete.';
+      "
+    depends_on:
+      - namenode

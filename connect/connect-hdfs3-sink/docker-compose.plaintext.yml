@@ -11,7 +11,7 @@ services:
     environment:
       - CLUSTER_NAME=test
     env_file:
-      - ../../connect/connect-hdfs3-sink/hadoop.env
+      - hadoop.env
 
   datanode:
     image: bde2020/hadoop-datanode:2.0.0-hadoop3.1.2-java8
@@ -20,7 +20,7 @@ services:
     volumes:
       - datanode:/hadoop/dfs/data
     env_file:
-      - ../../connect/connect-hdfs3-sink/hadoop.env
+      - hadoop.env
     environment:
       SERVICE_PRECONDITION: "namenode:9870"
 
@@ -31,7 +31,7 @@ services:
     environment:
       SERVICE_PRECONDITION: "namenode:9870 datanode:9864"
     env_file:
-      - ../../connect/connect-hdfs3-sink/hadoop.env
+      - hadoop.env
 
   nodemanager:
     image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.1.2-java8
@@ -40,7 +40,7 @@ services:
     environment:
       SERVICE_PRECONDITION: "namenode:9870 datanode:9864 resourcemanager:8088"
     env_file:
-      - ../../connect/connect-hdfs3-sink/hadoop.env
+      - hadoop.env
 
   historyserver:
     image: bde2020/hadoop-historyserver:2.0.0-hadoop3.1.2-java8
@@ -51,14 +51,14 @@ services:
     environment:
       SERVICE_PRECONDITION: "namenode:9870 datanode:9864 resourcemanager:8088"
     env_file:
-      - ../../connect/connect-hdfs3-sink/hadoop.env
+      - hadoop.env
 
   hive-server:
     hostname: hive-server
     container_name: hive-server
     image: vdesabou/hive:3.1.2-postgresql-metastore # https://github.com/vdesabou/docker-hive
     env_file:
-      - ../../connect/connect-hdfs3-sink/hadoop-hive.env
+      - hadoop-hive.env
     environment:
       HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:postgresql://hive-metastore/metastore"
       SERVICE_PRECONDITION: "hive-metastore:9083"
@@ -68,7 +68,7 @@ services:
     container_name: hive-metastore
     image: vdesabou/hive:3.1.2-postgresql-metastore # https://github.com/vdesabou/docker-hive
     env_file:
-      - ../../connect/connect-hdfs3-sink/hadoop-hive.env
+      - hadoop-hive.env
     command: /opt/hive/bin/hive --service metastore
     environment:
       SERVICE_PRECONDITION: "namenode:9870 datanode:9864 hive-metastore-postgresql:5432"
@@ -100,7 +100,7 @@ services:
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs3
       # JDK 17
-      KAFKA_OPTS: --add-opens java.base/java.net=ALL-UNNAMED
+      KAFKA_OPTS: "--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.util.concurrent=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.math=ALL-UNNAMED --add-opens=java.sql/java.sql=ALL-UNNAMED"
 
 volumes:
   datanode:
