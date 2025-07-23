@@ -125,12 +125,3 @@ else
     log "❌ ERROR: Hive database not found"
 fi
 
-log "Querying records from test_hdfs table"
-docker exec hive-server beeline -u "jdbc:hive2://hive-server:10000" -e "
-USE testhive;
-SELECT 'Total Records:' as info, COUNT(*) as count FROM test_hdfs
-UNION ALL
-SELECT 'Sample Records:', '' as count;
-SELECT f1, partition FROM test_hdfs LIMIT 10;
-"
-
