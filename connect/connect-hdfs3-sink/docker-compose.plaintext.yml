@@ -58,7 +58,7 @@ services:
     container_name: hive-server
     image: vdesabou/hive:3.1.2-postgresql-metastore # https://github.com/vdesabou/docker-hive
     env_file:
-      - hadoop-hive.env
+      - ../../connect/connect-hdfs3-sink/hadoop-hive.env
     environment:
       HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:postgresql://hive-metastore/metastore"
       SERVICE_PRECONDITION: "hive-metastore:9083"
@@ -68,7 +68,7 @@ services:
     container_name: hive-metastore
     image: vdesabou/hive:3.1.2-postgresql-metastore # https://github.com/vdesabou/docker-hive
     env_file:
-      - hadoop-hive.env
+      - ../../connect/connect-hdfs3-sink/hadoop-hive.env
     command: /opt/hive/bin/hive --service metastore
     environment:
       SERVICE_PRECONDITION: "namenode:9870 datanode:9864 hive-metastore-postgresql:5432"
