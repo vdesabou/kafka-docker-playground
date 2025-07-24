@@ -499,7 +499,7 @@
     },
     {
       "name": "refresh-cp-docker-images",
-      "description": "🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a version installed locally\n",
+      "description": "🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a version installed locally\n\n    It also refreshes images for aws, gcp and azure cli\n",
       "usage": "playground refresh-cp-docker-images [OPTIONS]",
       "options": [
         {

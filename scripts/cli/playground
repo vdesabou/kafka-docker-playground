@@ -2280,7 +2280,12 @@ playground_remove_cp_docker_images_usage() {
 
 # :command.usage
 playground_refresh_cp_docker_images_usage() {
-  printf "playground refresh-cp-docker-images - 🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a version installed locally\n\n"
+  if [[ -n $long_usage ]]; then
+    printf "playground refresh-cp-docker-images\n\n"
+    printf "  🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a\n  version installed locally\n  \n      It also refreshes images for aws, gcp and azure cli\n\n"
+  else
+    printf "playground refresh-cp-docker-images - 🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a version installed locally\n\n"
+  fi
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground refresh-cp-docker-images [OPTIONS]\n"
@@ -17699,16 +17704,16 @@ playground_refresh_cp_docker_images_command() {
   # src/commands/refresh-cp-docker-images.sh
   version=${args[--version]}
 
+  docker pull amazon/aws-cli
+  docker pull mcr.microsoft.com/azure-cli:azurelinux3.0
+  docker pull google/cloud-sdk:latest
+
   if [[ -n "$version" ]]
   then
       log "🔄 Pulling Confluent Platform docker images for $version"
       docker image ls | grep confluentinc | grep $version | awk '{print $1":"$2}' | xargs -I {} docker pull {}
       exit 0
   fi
-
-  docker pull amazon/aws-cli
-  docker pull mcr.microsoft.com/azure-cli:azurelinux3.0
-  docker pull google/cloud-sdk:latest
 }
 
 # :command.function

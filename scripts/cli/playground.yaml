@@ -647,6 +647,8 @@ subcommands:
   - name: refresh-cp-docker-images
     description: | 
         🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a version installed locally
+        
+            It also refreshes images for aws, gcp and azure cli
     usage: playground refresh-cp-docker-images [OPTIONS]
     options:
     - names:
