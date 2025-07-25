@@ -42,8 +42,9 @@ then
         connectorId=$(get_ccloud_connector_lcc $connector)
         if [[ -n "$open" ]]
         then
-            playground container logs --open --container connect
-        elif [[ -n "$log" ]]
+            filename="/tmp/${connector}-$(date '+%Y-%m-%d-%H-%M-%S').log"
+        fi
+        if [[ -n "$log" ]]
         then
             if [[ -n "$verbose" ]]
             then
@@ -70,9 +71,15 @@ then
                     break
                 fi
                 
-                # Display the logs
-                echo "$output"
-                
+                if [[ -n "$open" ]]
+                then
+                    # Save the logs to a file
+                    echo "$output" >> "$filename"
+                else
+                    # Display the logs
+                    echo "$output"
+                fi
+
                 # Check if there are more pages by looking for log entries
                 if [ -z "$(echo "$output" | grep -E '\[INFO\]|\[WARN\]|\[ERROR\]')" ]; then
                     log "✅ No more log entries found (total pages: $page_num)"
@@ -89,6 +96,10 @@ then
                 
                 sleep 1  # Small delay between requests
             done
+        fi
+        if [[ -n "$open" ]]
+        then
+            playground open --file "${filename}"
         fi
     done
 else
