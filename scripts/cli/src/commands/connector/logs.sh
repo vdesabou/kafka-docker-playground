@@ -1,7 +1,7 @@
 open="${args[--open]}"
 log="${args[--wait-for-log]}"
-max_wait="${args[--max-wait]}"
-lcc_id="${args[--lcc-id]}"
+connector="${args[--connector]}"
+verbose="${args[--verbose]}"
 
 connector_type=$(playground state get run.connector_type)
 
@@ -11,85 +11,93 @@ then
     exit 1
 fi
 
-opensearch_script="$root_folder/reproduction-models/_miscellaneous/opensearch/alfred-workflow/alfred-opensearch-connect-workflow/open-lcc-logs.ksh"
-grafana_script="$root_folder/reproduction-models/_miscellaneous/opensearch/alfred-workflow/alfred-opensearch-connect-workflow/open-lcc-grafana.ksh"
-
-if [[ -n "$lcc_id" ]]
-then
-    if [ -f "$opensearch_script" ]
-    then
-        set +e
-        cmd="tell application id \"com.runningwithcrayons.Alfred\" to run trigger \"open_opensearch\" in workflow \"com.vdesabou.opensearch\" with argument \"$lcc_id\""
-        osascript -e "$cmd" > /dev/null 2>&1
-        if [ $? -ne 0 ]
-        then
-            # confluent employee
-            export number_of_days=4
-            export open_audit_logs=1
-            export open_admin_dashboard=1
-            export open_both_results=0
-            log "🐛 Opening dashboards for $CONNECTOR_TYPE_FULLY_MANAGED connector ($lcc_id)"
-            bash "$opensearch_script" "$lcc_id"
-            bash "$grafana_script" "$lcc_id|\$__all"
-        fi
-        exit 0
-    else
-        logerror "🚨 This command with --lcc-id is not supported for non Confluent employees ($$root_folder/reproduction-models does not contain required scripts)"
-        exit 1
-    fi
-fi
-
 if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
 then
-    if [ -f "$opensearch_script" ]
+
+    if [[ ! -n "$connector" ]]
     then
-        # confluent employee
-        if [[ ! -n "$lcc_id" ]]
+        connector=$(playground get-connector-list)
+        if [ "$connector" == "" ]
         then
-            connector=$(playground get-connector-list)
-            if [ "$connector" == "" ]
-            then
-                log "💤 No $connector_type connector is running !"
-                exit 1
-            fi
+            log "💤 No $connector_type connector is running !"
+            exit 1
         fi
-
-        items=($connector)
-        length=${#items[@]}
-        if ((length > 1))
-        then
-            log "✨ --lcc-id flag was not provided, applying command to all $CONNECTOR_TYPE_FULLY_MANAGED connectors"
-        fi
-        export number_of_days=4
-        export open_audit_logs=1
-        export open_admin_dashboard=1
-        export open_both_results=0
-        for connector in "${items[@]}"
-        do
-            connectorId=$(get_ccloud_connector_lcc $connector)
-            set +e
-            cmd="tell application id \"com.runningwithcrayons.Alfred\" to run trigger \"open_opensearch\" in workflow \"com.vdesabou.opensearch\" with argument \"$connectorId\""
-            osascript -e "$cmd" > /dev/null 2>&1
-            if [ $? -ne 0 ]
-            then
-                log "🐛 Opening dashboards for $connector_type connector $connector ($connectorId)"
-                bash "$opensearch_script" "$connectorId"
-                bash "$grafana_script" "$connectorId|\$__all"
-            fi
-            set -e
-        done
-
-    else
-        logerror "🚨 This command is not supported for fully managed connectors or non Confluent employees ($$root_folder/reproduction-models does not contain required scripts)"
-        exit 1
     fi
+
+    items=($connector)
+    length=${#items[@]}
+    if ((length > 1))
+    then
+        log "✨ --connector flag was not provided, applying command to all connectors"
+    fi
+    # macOS (BSD date) vs Linux (GNU date) compatibility
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        start_time=$(date -u -v-71H +"%Y-%m-%dT%H:%M:%SZ")
+    else
+        start_time=$(date -u -d "71 hours ago" +"%Y-%m-%dT%H:%M:%SZ")
+    fi
+    end_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    for connector in "${items[@]}"
+    do
+        connectorId=$(get_ccloud_connector_lcc $connector)
+        if [[ -n "$open" ]]
+        then
+            playground container logs --open --container connect
+        elif [[ -n "$log" ]]
+        then
+            if [[ -n "$verbose" ]]
+            then
+                log "🐞 CLI command used"
+                echo "confluent connect logs \"$connectorId\" --level \"ERROR|WARN|INFO\" --start-time \"$start_time\" --end-time \"$end_time\" --search-text \"$log\""
+            fi
+            confluent connect logs "$connectorId" --level "ERROR|WARN|INFO" --start-time "$start_time" --end-time "$end_time" --search-text "$log"
+        else
+            if [[ -n "$verbose" ]]
+            then
+                log "🐞 CLI command used"
+                echo "confluent connect logs \"$connectorId\" --level \"ERROR|WARN|INFO\" --start-time \"$start_time\" --end-time \"$end_time\" --next"
+            fi
+            
+            log "📄 Fetching connector logs for $connector (this may take a while for large log sets)..."
+            page_num=1
+            while true; do
+                log "📖 Fetching page $page_num..."
+                output=$(confluent connect logs "$connectorId" --level "ERROR|WARN|INFO" --start-time "$start_time" --end-time "$end_time" --next 2>&1)
+                
+                # Check if no logs found
+                if echo "$output" | grep -q "No logs found for the current query"; then
+                    log "✅ Finished fetching all log pages (total pages: $((page_num-1)))"
+                    break
+                fi
+                
+                # Display the logs
+                echo "$output"
+                
+                # Check if there are more pages by looking for log entries
+                if [ -z "$(echo "$output" | grep -E '\[INFO\]|\[WARN\]|\[ERROR\]')" ]; then
+                    log "✅ No more log entries found (total pages: $page_num)"
+                    break
+                fi
+                
+                page_num=$((page_num + 1))
+                
+                # Safety limit to prevent infinite loops
+                if [ $page_num -gt 100 ]; then
+                    logwarn "⚠️  Reached maximum page limit (100), stopping pagination"
+                    break
+                fi
+                
+                sleep 1  # Small delay between requests
+            done
+        fi
+    done
 else
     if [[ -n "$open" ]]
     then
         playground container logs --open --container connect
     elif [[ -n "$log" ]]
     then
-        playground container logs --container connect --wait-for-log "$log" --max-wait "$max_wait"
+        playground container logs --container connect --wait-for-log "$log"
     else 
         playground container logs --container connect
     fi

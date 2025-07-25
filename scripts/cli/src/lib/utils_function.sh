@@ -1823,7 +1823,7 @@ function maybe_delete_ccloud_environment () {
     #
     log "🧹❌ Confluent Cloud cluster will be deleted..."
     verify_installed "confluent"
-    check_confluent_version 4.0.0 || exit 1
+    check_confluent_version 4.32.0 || exit 1
     verify_confluent_login  "confluent kafka cluster list"
 
     export QUIET=true
@@ -1881,7 +1881,7 @@ function bootstrap_ccloud_environment () {
   then
     # not running with CI
     verify_installed "confluent"
-    check_confluent_version 4.0.0 || exit 1
+    check_confluent_version 4.32.0 || exit 1
     verify_confluent_login  "confluent kafka cluster list"
   else
     if [ ! -f /usr/local/bin/confluent ]

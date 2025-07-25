@@ -6302,7 +6302,7 @@ playground_connector_log_level_usage() {
 playground_connector_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector logs\n\n"
-    printf "  🕵️  Tail and follow connect logs\n  \n  This is basically a shortcut for \"playground container logs --container\n  connect\"\n  \n  It does not work for Fully Managed connectors, except if you're a Confluent\n  employee, this will open log in our internal tools (make sure to follow this\n  first\n  https://github.com/confluentinc/kafka-docker-playground-internal#how-to-use)\n\n"
+    printf "  🕵️  Tail and follow connect logs\n  \n  For onprem connectors, this is basically a shortcut for \"playground container\n  logs --container connect\", --connector flag is not relevant\n  \n  For Fully Managed connectors, limitations apply (see\n  https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli)\n\n"
   else
     printf "playground connector logs - 🕵️  Tail and follow connect logs\n\n"
   fi
@@ -6318,6 +6318,11 @@ playground_connector_logs_usage() {
 
     # :command.usage_flags
     # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--open, -o")"
     printf "    🔖 Save output to a file and open with text editor set with playground config\n    editor <editor> (default is code)\n"
     printf "    %s\n" "Conflicts: --wait-for-log"
@@ -6330,15 +6335,8 @@ playground_connector_logs_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--max-wait, -m MAX_WAIT")"
-    printf "    ⏳ Max time in seconds to wait when using --wait-for-log (default 600s)\n"
-    printf "    %s\n" "Default: 600"
-    printf "    %s\n" "Conflicts: --open"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--lcc-id LCC-ID")"
-    printf "    ☁️ Fully Managed lcc id (only for Confluent employees)\n"
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
     echo
 
     # :command.usage_fixed_flags
@@ -7408,20 +7406,7 @@ function get_zip_or_jar_with_fzf() {
   folder_zip_or_jar=${folder_zip_or_jar//\~/$HOME}
   folder_zip_or_jar=${folder_zip_or_jar//,/ }
 
-  fzf_output=$(find $folder_zip_or_jar $PWD -name \*.$type ! -path '*/\.*' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🤐" --header="select zip or jar file (use option+enter to use the value you typed manually)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query --bind "alt-enter:print-query")
-  
-  # Parse fzf output: first line is query, second line is selection (or query again if alt-enter was used)
-  query_line=$(echo "$fzf_output" | head -n1)
-  selected_line=$(echo "$fzf_output" | tail -n1)
-  
-  # If both lines are the same, user pressed alt-enter (use typed value)
-  if [ "$query_line" = "$selected_line" ]; then
-    res="$query_line"
-  else
-    res="$selected_line"
-  fi
-  
-  echo "$cur@$res"
+  res=$(find $folder_zip_or_jar $PWD -name \*.$type ! -path '*/\.*' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🤐" --header="select zip or jar file (use option+enter to use the value you typed manually)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query --bind "alt-enter:print-query");echo "$cur@$res"
 }
 
 function get_specific_file_extension() {
@@ -7440,20 +7425,7 @@ function get_specific_file_extension() {
     fzf_option_rounded=""
   fi
 
-  fzf_output=$(find $PWD -name \*.$extension ! -path '*/\.*' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔖" --header="select $extension file (use option+enter to use the value you typed manually)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query --bind "alt-enter:print-query")
-  
-  # Parse fzf output: first line is query, second line is selection (or query again if alt-enter was used)
-  query_line=$(echo "$fzf_output" | head -n1)
-  selected_line=$(echo "$fzf_output" | tail -n1)
-  
-  # If both lines are the same, user pressed alt-enter (use typed value)
-  if [ "$query_line" = "$selected_line" ]; then
-    res="$query_line"
-  else
-    res="$selected_line"
-  fi
-  
-  echo "$cur@$res"
+  res=$(find $PWD -name \*.$extension ! -path '*/\.*' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔖" --header="select $extension file (use option+enter to use the value you typed manually)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query --bind "alt-enter:print-query");echo "$cur@$res"
 }
 
 function get_playground_repro_export_with_fzf() {
@@ -7669,20 +7641,7 @@ function get_any_files_with_fzf() {
     fzf_option_rounded=""
   fi
 
-  fzf_output=$(cat /tmp/get_any_files_with_fzf | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="📃" --header="select file" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query --bind "alt-enter:print-query")
-  
-  # Parse fzf output: first line is query, second line is selection (or query again if alt-enter was used)
-  query_line=$(echo "$fzf_output" | head -n1)
-  selected_line=$(echo "$fzf_output" | tail -n1)
-  
-  # If both lines are the same, user pressed alt-enter (use typed value)
-  if [ "$query_line" = "$selected_line" ]; then
-    res="$query_line"
-  else
-    res="$selected_line"
-  fi
-  
-  echo "$cur@$res"
+  res=$(cat /tmp/get_any_files_with_fzf | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="📃" --header="select file" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query --bind "alt-enter:print-query");echo "$cur@$res"
 }
 
 function get_predefined_schemas_with_fzf() {
@@ -10721,7 +10680,7 @@ function maybe_delete_ccloud_environment () {
     #
     log "🧹❌ Confluent Cloud cluster will be deleted..."
     verify_installed "confluent"
-    check_confluent_version 4.0.0 || exit 1
+    check_confluent_version 4.32.0 || exit 1
     verify_confluent_login  "confluent kafka cluster list"
 
     export QUIET=true
@@ -10779,7 +10738,7 @@ function bootstrap_ccloud_environment () {
   then
     # not running with CI
     verify_installed "confluent"
-    check_confluent_version 4.0.0 || exit 1
+    check_confluent_version 4.32.0 || exit 1
     verify_confluent_login  "confluent kafka cluster list"
   else
     if [ ! -f /usr/local/bin/confluent ]
@@ -26617,8 +26576,8 @@ playground_connector_logs_command() {
   # src/commands/connector/logs.sh
   open="${args[--open]}"
   log="${args[--wait-for-log]}"
-  max_wait="${args[--max-wait]}"
-  lcc_id="${args[--lcc-id]}"
+  connector="${args[--connector]}"
+  verbose="${args[--verbose]}"
 
   connector_type=$(playground state get run.connector_type)
 
@@ -26628,85 +26587,93 @@ playground_connector_logs_command() {
       exit 1
   fi
 
-  opensearch_script="$root_folder/reproduction-models/_miscellaneous/opensearch/alfred-workflow/alfred-opensearch-connect-workflow/open-lcc-logs.ksh"
-  grafana_script="$root_folder/reproduction-models/_miscellaneous/opensearch/alfred-workflow/alfred-opensearch-connect-workflow/open-lcc-grafana.ksh"
-
-  if [[ -n "$lcc_id" ]]
-  then
-      if [ -f "$opensearch_script" ]
-      then
-          set +e
-          cmd="tell application id \"com.runningwithcrayons.Alfred\" to run trigger \"open_opensearch\" in workflow \"com.vdesabou.opensearch\" with argument \"$lcc_id\""
-          osascript -e "$cmd" > /dev/null 2>&1
-          if [ $? -ne 0 ]
-          then
-              # confluent employee
-              export number_of_days=4
-              export open_audit_logs=1
-              export open_admin_dashboard=1
-              export open_both_results=0
-              log "🐛 Opening dashboards for $CONNECTOR_TYPE_FULLY_MANAGED connector ($lcc_id)"
-              bash "$opensearch_script" "$lcc_id"
-              bash "$grafana_script" "$lcc_id|\$__all"
-          fi
-          exit 0
-      else
-          logerror "🚨 This command with --lcc-id is not supported for non Confluent employees ($$root_folder/reproduction-models does not contain required scripts)"
-          exit 1
-      fi
-  fi
-
   if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
   then
-      if [ -f "$opensearch_script" ]
+
+      if [[ ! -n "$connector" ]]
       then
-          # confluent employee
-          if [[ ! -n "$lcc_id" ]]
+          connector=$(playground get-connector-list)
+          if [ "$connector" == "" ]
           then
-              connector=$(playground get-connector-list)
-              if [ "$connector" == "" ]
-              then
-                  log "💤 No $connector_type connector is running !"
-                  exit 1
-              fi
+              log "💤 No $connector_type connector is running !"
+              exit 1
           fi
-
-          items=($connector)
-          length=${#items[@]}
-          if ((length > 1))
-          then
-              log "✨ --lcc-id flag was not provided, applying command to all $CONNECTOR_TYPE_FULLY_MANAGED connectors"
-          fi
-          export number_of_days=4
-          export open_audit_logs=1
-          export open_admin_dashboard=1
-          export open_both_results=0
-          for connector in "${items[@]}"
-          do
-              connectorId=$(get_ccloud_connector_lcc $connector)
-              set +e
-              cmd="tell application id \"com.runningwithcrayons.Alfred\" to run trigger \"open_opensearch\" in workflow \"com.vdesabou.opensearch\" with argument \"$connectorId\""
-              osascript -e "$cmd" > /dev/null 2>&1
-              if [ $? -ne 0 ]
-              then
-                  log "🐛 Opening dashboards for $connector_type connector $connector ($connectorId)"
-                  bash "$opensearch_script" "$connectorId"
-                  bash "$grafana_script" "$connectorId|\$__all"
-              fi
-              set -e
-          done
-
-      else
-          logerror "🚨 This command is not supported for fully managed connectors or non Confluent employees ($$root_folder/reproduction-models does not contain required scripts)"
-          exit 1
       fi
+
+      items=($connector)
+      length=${#items[@]}
+      if ((length > 1))
+      then
+          log "✨ --connector flag was not provided, applying command to all connectors"
+      fi
+      # macOS (BSD date) vs Linux (GNU date) compatibility
+      if [[ "$OSTYPE" == "darwin"* ]]; then
+          start_time=$(date -u -v-71H +"%Y-%m-%dT%H:%M:%SZ")
+      else
+          start_time=$(date -u -d "71 hours ago" +"%Y-%m-%dT%H:%M:%SZ")
+      fi
+      end_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+      for connector in "${items[@]}"
+      do
+          connectorId=$(get_ccloud_connector_lcc $connector)
+          if [[ -n "$open" ]]
+          then
+              playground container logs --open --container connect
+          elif [[ -n "$log" ]]
+          then
+              if [[ -n "$verbose" ]]
+              then
+                  log "🐞 CLI command used"
+                  echo "confluent connect logs \"$connectorId\" --level \"ERROR|WARN|INFO\" --start-time \"$start_time\" --end-time \"$end_time\" --search-text \"$log\""
+              fi
+              confluent connect logs "$connectorId" --level "ERROR|WARN|INFO" --start-time "$start_time" --end-time "$end_time" --search-text "$log"
+          else
+              if [[ -n "$verbose" ]]
+              then
+                  log "🐞 CLI command used"
+                  echo "confluent connect logs \"$connectorId\" --level \"ERROR|WARN|INFO\" --start-time \"$start_time\" --end-time \"$end_time\" --next"
+              fi
+
+              log "📄 Fetching connector logs for $connector (this may take a while for large log sets)..."
+              page_num=1
+              while true; do
+                  log "📖 Fetching page $page_num..."
+                  output=$(confluent connect logs "$connectorId" --level "ERROR|WARN|INFO" --start-time "$start_time" --end-time "$end_time" --next 2>&1)
+
+                  # Check if no logs found
+                  if echo "$output" | grep -q "No logs found for the current query"; then
+                      log "✅ Finished fetching all log pages (total pages: $((page_num-1)))"
+                      break
+                  fi
+
+                  # Display the logs
+                  echo "$output"
+
+                  # Check if there are more pages by looking for log entries
+                  if [ -z "$(echo "$output" | grep -E '\[INFO\]|\[WARN\]|\[ERROR\]')" ]; then
+                      log "✅ No more log entries found (total pages: $page_num)"
+                      break
+                  fi
+
+                  page_num=$((page_num + 1))
+
+                  # Safety limit to prevent infinite loops
+                  if [ $page_num -gt 100 ]; then
+                      logwarn "⚠️  Reached maximum page limit (100), stopping pagination"
+                      break
+                  fi
+
+                  sleep 1  # Small delay between requests
+              done
+          fi
+      done
   else
       if [[ -n "$open" ]]
       then
           playground container logs --open --container connect
       elif [[ -n "$log" ]]
       then
-          playground container logs --container connect --wait-for-log "$log" --max-wait "$max_wait"
+          playground container logs --container connect --wait-for-log "$log"
       else
 
           playground container logs --container connect
@@ -42159,6 +42126,20 @@ playground_connector_logs_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --open | -o)
         # :flag.conflicts
         if [[ -n "${args['--wait-for-log']:-}" ]]; then
@@ -42191,36 +42172,11 @@ playground_connector_logs_parse_requirements() {
         ;;
 
       # :flag.case
-      --max-wait | -m)
-        # :flag.conflicts
-        if [[ -n "${args['--open']:-}" ]]; then
-          printf "conflicting options: %s cannot be used with %s\n" "$key" "--open" >&2
-          exit 1
-        fi
+      --verbose | -v)
 
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          args['--max-wait']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--max-wait requires an argument: --max-wait, -m MAX_WAIT" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
-      --lcc-id)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          args['--lcc-id']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--lcc-id requires an argument: --lcc-id LCC-ID" >&2
-          exit 1
-        fi
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
         ;;
 
       -?*)
@@ -42239,24 +42195,12 @@ playground_connector_logs_parse_requirements() {
     esac
   done
 
-  # :command.default_assignments
-  [[ -n ${args['--max-wait']:-} ]] || args['--max-wait']="600"
-
   # :command.validations
   # :flag.validations
   if [[ -v args['--wait-for-log'] ]]; then
     validation_output="$(validate_not_empty "${args['--wait-for-log']:-}")"
     if [[ -n "${validation_output}" ]]; then
       printf "validation error in %s:\n%s\n" "--wait-for-log, -w LOG" "$validation_output" >&2
-      exit 1
-    fi
-  fi
-
-  # :flag.validations
-  if [[ -v args['--max-wait'] ]]; then
-    validation_output="$(validate_integer "${args['--max-wait']:-}")"
-    if [[ -n "${validation_output}" ]]; then
-      printf "validation error in %s:\n%s\n" "--max-wait, -m MAX_WAIT" "$validation_output" >&2
       exit 1
     fi
   fi

@@ -3652,19 +3652,14 @@ commands:
     help: |-
       🕵️  Tail and follow connect logs
 
-      This is basically a shortcut for "playground container logs --container connect"
+      For onprem connectors, this is basically a shortcut for "playground container logs --container connect", --connector flag is not relevant
 
-      It does not work for Fully Managed connectors, except if you're a Confluent employee, this will open log in our internal tools (make sure to follow this first https://github.com/confluentinc/kafka-docker-playground-internal#how-to-use)
-
+      For Fully Managed connectors, limitations apply (see https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli)
     flags:
+    - *connector
     - *logsopen
     - *logswaitforlog
-    - *logsmaxwait
-    - long: --lcc-id
-      required: false
-      arg: lcc-id
-      help: |-
-        ☁️ Fully Managed lcc id (only for Confluent employees)
+    - *verbose
 
   - name: open-ccloud-connector-in-browser
     group: Connect
