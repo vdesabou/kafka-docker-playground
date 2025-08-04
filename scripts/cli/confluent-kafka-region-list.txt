@@ -36,6 +36,7 @@ London(europe-west2)/europe-west2
 London(uksouth)/uksouth
 LosAngeles(us-west2)/us-west2
 Madrid(europe-southwest1)/europe-southwest1
+Malaysia(ap-southeast-5)/ap-southeast-5
 Melbourne(ap-southeast-4)/ap-southeast-4
 Melbourne/australia-southeast2
 (australia-southeast2)/
