@@ -18,7 +18,7 @@ then
 fi
 
 GCP_BIGTABLE_REGION=${1:-europe-west2-a}
-GCP_BIGTABLE_INSTANCE="bigtable-$USER"
+GCP_BIGTABLE_INSTANCE="pg${USER}bg${TAG}"
 
 cd ../../connect/connect-gcp-bigtable-sink
 GCP_KEYFILE="${PWD}/keyfile.json"
