@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<configuration>
+    <!-- Use Derby embedded database in /tmp (writable location) -->
+    <property>
+        <name>javax.jdo.option.ConnectionURL</name>
+        <value>jdbc:derby:/tmp/metastore_db;create=true</value>
+        <description>JDBC connect string for Derby metastore in temp directory</description>
+    </property>
+
+    <property>
+        <name>javax.jdo.option.ConnectionDriverName</name>
+        <value>org.apache.derby.jdbc.EmbeddedDriver</value>
+        <description>Driver class name for Derby metastore</description>
+    </property>
+
+    <!-- Metastore service settings -->
+    <property>
+        <name>hive.metastore.uris</name>
+        <value>thrift://hive-metastore:9083</value>
+        <description>Thrift URI for the remote metastore</description>
+    </property>
+
+    <!-- Warehouse and filesystem settings -->
+    <property>
+        <name>hive.metastore.warehouse.dir</name>
+        <value>hdfs://namenode:9000/user/hive/warehouse</value>
+        <description>Location of default database for the warehouse</description>
+    </property>
+
+    <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://namenode:9000</value>
+        <description>Default filesystem</description>
+    </property>
+
+    <!-- Basic settings for Derby -->
+    <property>
+        <name>hive.metastore.schema.verification</name>
+        <value>false</value>
+        <description>Disable schema verification for Derby</description>
+    </property>
+
+    <property>
+        <name>datanucleus.autoCreateSchema</name>
+        <value>true</value>
+        <description>Auto-create schema for Derby</description>
+    </property>
+
+    <property>
+        <name>datanucleus.autoCreateTables</name>
+        <value>true</value>
+        <description>Auto-create tables for Derby</description>
+    </property>
+
+    <property>
+        <name>datanucleus.autoCreateColumns</name>
+        <value>true</value>
+        <description>Auto-create columns for Derby</description>
+    </property>
+
+    <property>
+        <name>datanucleus.fixedDatastore</name>
+        <value>false</value>
+        <description>Allow schema modifications for Derby</description>
+    </property>
+
+    <!-- Performance settings -->
+    <property>
+        <name>hive.exec.dynamic.partition.mode</name>
+        <value>nonstrict</value>
+        <description>Allow dynamic partitioning</description>
+    </property>
+</configuration>

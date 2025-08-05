@@ -4,7 +4,7 @@
 
 ## Objective
 
-Quickly test [MQTT Source](https://docs.confluent.io/current/connect/kafka-connect-mqtt/mqtt-source-connector/mqtt_source_connector_quickstart.html#example-configure-mqtt-source-connector-for-eclipse-mosquitto-broker) connector.
+Quickly test [MQTT Source](https://docs.confluent.io/kafka-connectors/mqtt/current/mqtt-source-connector/overview.html) connector.
 
 
 ## How to run
