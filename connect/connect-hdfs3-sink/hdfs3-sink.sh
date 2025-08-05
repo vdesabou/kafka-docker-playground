@@ -11,6 +11,14 @@ then
      exit 111
 fi
 
+HIVE_INTEGRATION="true"
+if version_gt $CONNECTOR_TAG "1.9.99"
+then
+  logwarn "HDFS3 Sink Connector versions 2.0.0 and above are compatible only with Hive Metastore versions 4.0.1 and later. Use hdfs3-sink-hive4.sh if you require hive integration"
+  logwarn "skipping Hive integration in this example"
+  HIVE_INTEGRATION="false"
+fi
+
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
@@ -32,7 +40,7 @@ playground connector create-or-update --connector hdfs3-sink  << EOF
   "rotate.interval.ms":"120000",
   "hadoop.home":"/opt/hadoop-3.1.3/share/hadoop/common",
   "logs.dir":"/tmp",
-  "hive.integration": "true",
+  "hive.integration": "$HIVE_INTEGRATION",
   "hive.metastore.uris": "thrift://hive-metastore:9083",
   "hive.database": "testhive",
   "confluent.license": "",
