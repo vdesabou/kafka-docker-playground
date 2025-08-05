@@ -12,6 +12,7 @@ fi
 
 GCP_BIGTABLE_REGION=${1:-europe-west2-a}
 GCP_BIGTABLE_INSTANCE="pg${USER}bg${TAG}"
+GCP_BIGTABLE_INSTANCE=${GCP_BIGTABLE_INSTANCE//[-.]/}
 
 cd ../../ccloud/fm-gcp-bigtable-sink
 GCP_KEYFILE="${PWD}/keyfile.json"
