@@ -79,14 +79,17 @@ docker cp namenode:/tmp/test_hdfs+0+0000000000+0000000002.avro /tmp/
 playground  tools read-avro-file --file /tmp/test_hdfs+0+0000000000+0000000002.avro
 
 
-sleep 60
-log "Check data with beeline"
-docker exec -i hive-server beeline > /tmp/result.log  2>&1 <<-EOF
+if ! version_gt $CONNECTOR_TAG "1.9.99"
+then
+  sleep 60
+  log "Check data with beeline"
+  docker exec -i hive-server beeline > /tmp/result.log  2>&1 <<-EOF
 !connect jdbc:hive2://hive-server:10000/testhive
 hive
 hive
 show create table test_hdfs;
 select * from test_hdfs;
 EOF
-cat /tmp/result.log
-grep "value1" /tmp/result.log
+  cat /tmp/result.log
+  grep "value1" /tmp/result.log
+fi
