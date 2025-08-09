@@ -139,8 +139,8 @@ if [[ -n "$tombstone" ]]
 then
     if [[ ! -n "$key" ]] && [[ ! -n "$forced_key" ]]
     then
-        logerror "❌ --tombstone is set but neither --key or --forced-key are set!"
-        exit 1
+        logwarn "--tombstone is set but neither --key or --forced-key are set, forcing key to NULL."
+        key="NULL"
     fi
     get_connect_image
     if ! version_gt $CP_CONNECT_TAG "7.1.99"

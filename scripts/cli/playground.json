@@ -2263,7 +2263,7 @@
                 "--tombstone"
               ],
               "argument": "",
-              "description": "⚰️ Generate tombstone (record with null value). \n\n--key must be set when this flag is used.\n\nNote: CP 7.2+ is required.\n"
+              "description": "⚰️ Generate tombstone (record with null value). \n\nSetting --key is recommended when this flag is used. \nIf not set, the key will also be null, hence generating a null record (both key and value being null)\n\nNote: CP 7.2+ is required.\n"
             },
             {
               "names": [

@@ -5190,7 +5190,7 @@ playground_topic_produce_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--tombstone")"
-    printf "    ⚰️ Generate tombstone (record with null value). \n    \n    --key must be set when this flag is used.\n    \n    Note: CP 7.2+ is required.\n"
+    printf "    ⚰️ Generate tombstone (record with null value). \n    \n    Setting --key is recommended when this flag is used. \n    If not set, the key will also be null, hence generating a null record (both\n    key and value being null)\n    \n    Note: CP 7.2+ is required.\n"
     echo
 
     # :flag.usage
@@ -17992,7 +17992,8 @@ EOF
 Y
 EOF
 
-      GCP_BIGTABLE_INSTANCE="bigtable-$USER"
+      GCP_BIGTABLE_INSTANCE="pg${USER}bg${TAG}"
+      GCP_BIGTABLE_INSTANCE=${GCP_BIGTABLE_INSTANCE//[-.]/}
       log "Delete BigTable table kafka_big_query_stats"
       docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE deletetable kafka_big_query_stats
 
@@ -22805,8 +22806,8 @@ playground_topic_produce_command() {
   then
       if [[ ! -n "$key" ]] && [[ ! -n "$forced_key" ]]
       then
-          logerror "❌ --tombstone is set but neither --key or --forced-key are set!"
-          exit 1
+          logwarn "--tombstone is set but neither --key or --forced-key are set, forcing key to NULL."
+          key="NULL"
       fi
       get_connect_image
       if ! version_gt $CP_CONNECT_TAG "7.1.99"
