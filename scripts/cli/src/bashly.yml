@@ -116,6 +116,11 @@ commands:
   - name: cur
     required: false
     help: correspond to completion $cur
+  flags:
+  - long: --connect-only
+    required: false
+    help: |-
+      connect only
 
 - name: get-kafka-region-list
   help: Return some completion for confluent cloud kafka cluster region list
@@ -585,7 +590,7 @@ commands:
     arg: connect_tag
     required: false
     completions:
-      - $(playground get-tag-list "$cur")
+      - $(playground get-tag-list "$cur" --connect-only)
     help: |-
       🔗 Confluent Platform (CP) version to use. Applies to connect only.
 
@@ -1017,6 +1022,8 @@ commands:
   group: Run
   help: |-
     🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a version installed locally
+
+        It also refreshes images for aws, gcp and azure cli
   flags:
     - long: --version
       required: true
@@ -2720,7 +2727,8 @@ commands:
         help: |-
           ⚰️ Generate tombstone (record with null value). 
           
-          --key must be set when this flag is used.
+          Setting --key is recommended when this flag is used. 
+          If not set, the key will also be null, hence generating a null record (both key and value being null)
 
           Note: CP 7.2+ is required.
       - long: --validate
@@ -3645,19 +3653,14 @@ commands:
     help: |-
       🕵️  Tail and follow connect logs
 
-      This is basically a shortcut for "playground container logs --container connect"
+      For onprem connectors, this is basically a shortcut for "playground container logs --container connect", --connector flag is not relevant
 
-      It does not work for Fully Managed connectors, except if you're a Confluent employee, this will open log in our internal tools (make sure to follow this first https://github.com/confluentinc/kafka-docker-playground-internal#how-to-use)
-
+      For Fully Managed connectors, limitations apply (see https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli)
     flags:
+    - *connector
     - *logsopen
     - *logswaitforlog
-    - *logsmaxwait
-    - long: --lcc-id
-      required: false
-      arg: lcc-id
-      help: |-
-        ☁️ Fully Managed lcc id (only for Confluent employees)
+    - *verbose
 
   - name: open-ccloud-connector-in-browser
     group: Connect

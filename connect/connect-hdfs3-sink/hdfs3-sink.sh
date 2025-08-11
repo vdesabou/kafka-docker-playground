@@ -11,6 +11,14 @@ then
      exit 111
 fi
 
+HIVE_INTEGRATION="true"
+if version_gt $CONNECTOR_TAG "1.9.99"
+then
+  logwarn "HDFS3 Sink Connector versions 2.0.0 and above are compatible only with Hive Metastore versions 4.0.1 and later. Use hdfs3-sink-hive4.sh if you require hive integration"
+  logwarn "skipping Hive integration in this example"
+  HIVE_INTEGRATION="false"
+fi
+
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
@@ -32,7 +40,7 @@ playground connector create-or-update --connector hdfs3-sink  << EOF
   "rotate.interval.ms":"120000",
   "hadoop.home":"/opt/hadoop-3.1.3/share/hadoop/common",
   "logs.dir":"/tmp",
-  "hive.integration": "true",
+  "hive.integration": "$HIVE_INTEGRATION",
   "hive.metastore.uris": "thrift://hive-metastore:9083",
   "hive.database": "testhive",
   "confluent.license": "",
@@ -71,14 +79,17 @@ docker cp namenode:/tmp/test_hdfs+0+0000000000+0000000002.avro /tmp/
 playground  tools read-avro-file --file /tmp/test_hdfs+0+0000000000+0000000002.avro
 
 
-sleep 60
-log "Check data with beeline"
-docker exec -i hive-server beeline > /tmp/result.log  2>&1 <<-EOF
+if ! version_gt $CONNECTOR_TAG "1.9.99"
+then
+  sleep 60
+  log "Check data with beeline"
+  docker exec -i hive-server beeline > /tmp/result.log  2>&1 <<-EOF
 !connect jdbc:hive2://hive-server:10000/testhive
 hive
 hive
 show create table test_hdfs;
 select * from test_hdfs;
 EOF
-cat /tmp/result.log
-grep "value1" /tmp/result.log
+  cat /tmp/result.log
+  grep "value1" /tmp/result.log
+fi

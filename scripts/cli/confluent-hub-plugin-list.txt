@@ -185,6 +185,7 @@ kinetica/kinetica-connector
 konghq/kong-kafka-upstream-plugin
 levyx/xenon-connector
 lightstreamer/kafka-connect-lightstreamer
+littlehorse/lh-kafka-connect
 llofberg/kafka-connect-aws-lambda
 marklogic/kafka-marklogic-connector
 markteehan/file-chunk-sink
@@ -246,4 +247,5 @@ vertica/vertica-analytics-platform
 waterstreamsrl/waterstream-kafka-mqtt
 Weaviate/kafka-connect-weaviate
 wepay/kafka-connect-bigquery
+yugabyte/yugabytedb-source-connector
 zilliz/kafka-connect-milvus

@@ -14,10 +14,6 @@ Go to Settings->Allowed IP Addresses and add your confluent cloud cluster egress
 
 ![egress](screenshot1.png)
 
-Then go to Security->Cluster Access and create cluster access (allow access to bucket `travel-sample`):
-
-![egress](screenshot2.png)
-
 That will give you environment variable `COUCHBASE_USERNAME` and `COUCHBASE_PASSWORD`
 
 Then go to `Connect` menu and copy the *Public Connection String*:
@@ -30,6 +26,9 @@ Then go to `Data Tools` menu and create bucket called *travel-data* as below:
 
 ![travel sample](screenshot4.png)
 
+Then go to Security->Cluster Access and create cluster access (allow access to bucket `travel-data`):
+
+![egress](screenshot2.png)
 
 N.B: After a period of inactivity (72 hours), your [free tier cluster will automatically turn off](https://docs.couchbase.com/cloud/get-started/create-account.html#:~:text=Only%201%20free%20tier%20operational%20cluster%20is%20available%20per%20organization%20and%20it%20automatically%20turns%20off%20after%2072%20hours%20of%20inactivity)
 

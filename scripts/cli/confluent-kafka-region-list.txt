@@ -36,6 +36,7 @@ London(europe-west2)/europe-west2
 London(uksouth)/uksouth
 LosAngeles(us-west2)/us-west2
 Madrid(europe-southwest1)/europe-southwest1
+Malaysia(ap-southeast-5)/ap-southeast-5
 Melbourne(ap-southeast-4)/ap-southeast-4
 Melbourne/australia-southeast2
 (australia-southeast2)/
@@ -87,6 +88,7 @@ Taiwan(asia-east1)/asia-east1
 TelAviv(il-central-1)/il-central-1
 TelAviv(me-west1)/me-west1
 Texas(southcentralus)/southcentralus
+Thailand(ap-southeast-7)/ap-southeast-7
 Tokyo(ap-northeast-1)/ap-northeast-1
 Tokyo(asia-northeast1)/asia-northeast1
 Tokyo(japaneast)/japaneast
