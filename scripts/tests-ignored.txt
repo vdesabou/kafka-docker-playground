@@ -31,3 +31,6 @@ gcp-spanner-sink-proxy.sh
 marketo-source-proxy.sh
 s3-sink-proxy-with-assuming-iam-role.sh
 hbase-sink-kerberos.sh
+
+# too flaky
+hdfs3-sink-ha-kerberos.sh
