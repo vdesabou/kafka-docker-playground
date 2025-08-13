@@ -87,4 +87,4 @@ services:
     depends_on:
       - spark-iceberg
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/tabular-iceberg-kafka-connect
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/iceberg-iceberg-kafka-connect
