@@ -9,6 +9,16 @@ help: |-
 filters:
 - docker_running
 
+# Use bash code here directly or a function name that references code elsewhere.
+help_header_override: |
+  echo
+  echo $'██████  ██       █████  ██    ██  ██████  ██████   ██████  ██    ██ ███    ██ ██████  '
+  echo $'██   ██ ██      ██   ██  ██  ██  ██       ██   ██ ██    ██ ██    ██ ████   ██ ██   ██ '
+  echo $'██████  ██      ███████   ████   ██   ███ ██████  ██    ██ ██    ██ ██ ██  ██ ██   ██ '
+  echo $'██      ██      ██   ██    ██    ██    ██ ██   ██ ██    ██ ██    ██ ██  ██ ██ ██   ██ '
+  echo $'██      ███████ ██   ██    ██     ██████  ██   ██  ██████   ██████  ██   ████ ██████  '
+  echo
+  
 flags:
 - long: --vvv
   short: -v
