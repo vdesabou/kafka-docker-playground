@@ -1,0 +1,46 @@
+---
+services:
+
+  mongodb:
+    image: mongo:latest
+    hostname: mongodb
+    container_name: mongodb
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: myuser
+      MONGO_INITDB_ROOT_PASSWORD: mypassword
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "myuser" ]
+
+  mongo-express:
+    image: mongo-express:latest
+    hostname: mongo-express
+    container_name: mongo-express
+    restart: always
+    ports:
+      - 18081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: myuser
+      ME_CONFIG_MONGODB_ADMINPASSWORD: mypassword
+      ME_CONFIG_MONGODB_URL: mongodb://myuser:mypassword@mongodb:27017/
+
+  # https://ngrok.com/docs/using-ngrok-with/docker/
+  ngrok:
+    image: ngrok/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    ports:
+      - 4040:4040
+    restart: unless-stopped
+    links:
+      - mongodb
+    command:
+      - "start"
+      - "--all"
+      - "--log=stdout"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ../../ccloud/fm-mongodb-source/ngrok.yml:/etc/ngrok.yml
+    environment:
+      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN
