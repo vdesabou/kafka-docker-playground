@@ -188,8 +188,6 @@ lightstreamer/kafka-connect-lightstreamer
 littlehorse/lh-kafka-connect
 llofberg/kafka-connect-aws-lambda
 marklogic/kafka-marklogic-connector
-markteehan/file-chunk-sink
-markteehan/file-chunk-source
 microsoft/kafka-connect-iothub
 microsoftcorporation/kafka-connect-cosmos
 microsoftcorporation/kafka-sink-azure-kusto
@@ -238,7 +236,6 @@ streamsets/streamsets-sdc
 swim/swim-kafka-connect
 symetryml/kafka-connector
 synthesis/synthesis-fix-connector
-tabular/iceberg-kafka-connect
 thomaskwscott/kafka-connect-shell-sink
 thomaskwscott/kafka-connect-shell-source
 timeplus/kafka-timeplus-connector-sink
