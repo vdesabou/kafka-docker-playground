@@ -47,6 +47,26 @@ log "Delete table, this might fail"
 aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION
 set -e
 
+log "Create dynamodb table $DYNAMODB_TABLE"
+aws dynamodb create-table \
+    --table-name "$DYNAMODB_TABLE" \
+    --attribute-definitions AttributeName=first_name,AttributeType=S AttributeName=last_name,AttributeType=S \
+    --key-schema AttributeName=first_name,KeyType=HASH AttributeName=last_name,KeyType=RANGE \
+    --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
+    --endpoint-url https://dynamodb.$AWS_REGION.amazonaws.com \
+    --tags Key=cflt_managed_by,Value=user Key=cflt_managed_id,Value="$USER"
+
+log "Waiting for table to be created"
+while true
+do
+    table_status=$(aws dynamodb describe-table --table-name "$DYNAMODB_TABLE" --region $AWS_REGION --query 'Table.TableStatus' --output text)
+    if [ "$table_status" == "ACTIVE" ]
+    then
+        break
+    fi
+    sleep 5
+done
+
 function cleanup_cloud_resources {
     set +e
     log "Delete table $DYNAMODB_TABLE"
