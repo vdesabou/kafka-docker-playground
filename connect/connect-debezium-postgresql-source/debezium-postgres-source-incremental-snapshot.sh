@@ -167,8 +167,8 @@ playground connector create-or-update --connector debezium-postgres-source  << E
   "signal.data.collection": "public.debezium_signal",
 
   "_comment:": "remove _ to use ExtractNewRecordState smt",
-  "_transforms": "unwrap",
-  "_transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
+  "transforms": "unwrap",
+  "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
 }
 EOF
 
@@ -185,26 +185,28 @@ set -e
 log "Creating Debezium PostgreSQL source connector with customers and customers2 table"
 playground connector create-or-update --connector debezium-postgres-source  << EOF
 {
-              "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-              "tasks.max": "1",
-              "database.hostname": "postgres",
-              "database.port": "5432",
-              "database.user": "myuser",
-              "database.password": "mypassword",
-              "database.dbname" : "postgres",
+  "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+  "tasks.max": "1",
+  "database.hostname": "postgres",
+  "database.port": "5432",
+  "database.user": "myuser",
+  "database.password": "mypassword",
+  "database.dbname" : "postgres",
 
-              "_comment": "old version before 2.x",
-              "database.server.name": "asgard",
-              "_comment": "new version since 2.x",
-              "topic.prefix": "asgard",
-              
-              "key.converter" : "io.confluent.connect.avro.AvroConverter",
-              "key.converter.schema.registry.url": "http://schema-registry:8081",
-              "value.converter" : "io.confluent.connect.avro.AvroConverter",
-              "value.converter.schema.registry.url": "http://schema-registry:8081",
-              "table.include.list" : "public.customers,public.debezium_signal,public.customers2",
-              "signal.data.collection": "public.debezium_signal"
-          }
+  "_comment": "old version before 2.x",
+  "database.server.name": "asgard",
+  "_comment": "new version since 2.x",
+  "topic.prefix": "asgard",
+  
+  "key.converter" : "io.confluent.connect.avro.AvroConverter",
+  "key.converter.schema.registry.url": "http://schema-registry:8081",
+  "value.converter" : "io.confluent.connect.avro.AvroConverter",
+  "value.converter.schema.registry.url": "http://schema-registry:8081",
+  "table.include.list" : "public.customers,public.debezium_signal,public.customers2",
+  "signal.data.collection": "public.debezium_signal",
+  "transforms": "unwrap",
+  "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
+}
 EOF
 
 sleep 10
@@ -216,7 +218,7 @@ EOF
 
 log "Verifying topic asgard.public.customers2 : there will be only the new record"
 set +e
-playground topic consume --topic asgard.public.customers2 --min-expected-messages 6 --timeout 60
+playground topic consume --topic asgard.public.customers2 --min-expected-messages 1 --timeout 60
 set -e
 
 sleep 10

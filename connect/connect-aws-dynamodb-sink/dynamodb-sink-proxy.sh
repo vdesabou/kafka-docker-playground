@@ -32,8 +32,8 @@ then
   log "Delete table, this might fail"
   aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION
   while true; do
-      table_status=$(aws dynamodb describe-table --table-name "$DYNAMODB_TABLE" --region $AWS_REGION --query 'Table.TableStatus' --output text 2>/dev/null || echo "DELETING")
-      if [ "$table_status" == "DELETED" ]
+      aws dynamodb describe-table --table-name "$DYNAMODB_TABLE" --region $AWS_REGION --query 'Table.TableStatus' --output text 2>/dev/null
+      if [ $? -ne 0 ]
       then
           break
       fi
@@ -71,18 +71,24 @@ function cleanup_cloud_resources {
 trap cleanup_cloud_resources EXIT
 
 log "Sending messages to topic $DYNAMODB_TABLE"
-playground topic produce -t $DYNAMODB_TABLE --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+playground topic produce -t $DYNAMODB_TABLE --nb-messages 10 << 'EOF'
 {
-  "type": "record",
-  "name": "myrecord",
   "fields": [
     {
-      "name": "f1",
+      "name": "first_name",
+      "type": "string"
+    },
+    {
+      "name": "last_name",
       "type": "string"
     }
-  ]
+  ],
+  "name": "Customer",
+  "namespace": "com.github.vdesabou",
+  "type": "record"
 }
 EOF
+
 
 log "Creating AWS DynamoDB Sink connector"
 playground connector create-or-update --connector dynamodb-sink  << EOF
@@ -99,10 +105,11 @@ playground connector create-or-update --connector dynamodb-sink  << EOF
 }
 EOF
 
-log "Sleeping 120 seconds, waiting for table to be created"
-sleep 120
+sleep 10
+
+playground connector show-lag --max-wait 300
 
 log "Verify data is in DynamoDB"
 aws dynamodb scan --table-name $DYNAMODB_TABLE --region $AWS_REGION  > /tmp/result.log  2>&1
 cat /tmp/result.log
-grep "value1" /tmp/result.log
+grep "first_name" /tmp/result.log

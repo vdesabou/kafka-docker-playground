@@ -21,8 +21,8 @@ then
   log "Delete table, this might fail"
   aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION
   while true; do
-      table_status=$(aws dynamodb describe-table --table-name "$DYNAMODB_TABLE" --region $AWS_REGION --query 'Table.TableStatus' --output text 2>/dev/null || echo "DELETING")
-      if [ "$table_status" == "DELETED" ]
+      aws dynamodb describe-table --table-name "$DYNAMODB_TABLE" --region $AWS_REGION --query 'Table.TableStatus' --output text 2>/dev/null
+      if [ $? -ne 0 ]
       then
           break
       fi
@@ -68,16 +68,21 @@ playground topic create --topic $DYNAMODB_TABLE --nb-partitions 1
 set -e
 
 log "Sending messages to topic $DYNAMODB_TABLE"
-playground topic produce -t $DYNAMODB_TABLE --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+playground topic produce -t $DYNAMODB_TABLE --nb-messages 10 << 'EOF'
 {
-  "type": "record",
-  "name": "myrecord",
   "fields": [
     {
-      "name": "f1",
+      "name": "first_name",
+      "type": "string"
+    },
+    {
+      "name": "last_name",
       "type": "string"
     }
-  ]
+  ],
+  "name": "Customer",
+  "namespace": "com.github.vdesabou",
+  "type": "record"
 }
 EOF
 
@@ -104,13 +109,14 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-log "Sleeping 120 seconds, waiting for table to be created"
-sleep 120
+sleep 10
+
+playground connector show-lag --max-wait 300
 
 log "Verify data is in DynamoDB"
 aws dynamodb scan --table-name $DYNAMODB_TABLE --region $AWS_REGION  > /tmp/result.log  2>&1
 cat /tmp/result.log
-grep "value1" /tmp/result.log
+grep "first_name" /tmp/result.log
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue

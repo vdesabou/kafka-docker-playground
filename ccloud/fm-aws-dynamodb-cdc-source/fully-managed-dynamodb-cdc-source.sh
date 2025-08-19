@@ -15,12 +15,19 @@ handle_aws_credentials
 DYNAMODB_TABLE="pgfm${USER}dynamocdc${TAG}"
 
 set +e
-log "Delete table, this might fail"
-aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION
+aws dynamodb describe-table --table-name "$DYNAMODB_TABLE" --region $AWS_REGION --query 'Table.TableStatus' --output text 2>/dev/null
 if [ $? -eq 0 ]
 then
-    log "Deleted table $DYNAMODB_TABLE"
-    sleep 10
+  log "Delete table, this might fail"
+  aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION
+  while true; do
+      aws dynamodb describe-table --table-name "$DYNAMODB_TABLE" --region $AWS_REGION --query 'Table.TableStatus' --output text 2>/dev/null
+      if [ $? -ne 0 ]
+      then
+          break
+      fi
+      sleep 5
+  done
 fi
 set -e
 
@@ -110,12 +117,14 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-sleep 30
+sleep 10
+
+playground connector show-lag --max-wait 300
 
 log "Verify data is in DynamoDB"
 aws dynamodb scan --table-name $DYNAMODB_TABLE --region $AWS_REGION  > /tmp/result.log  2>&1
 cat /tmp/result.log
-
+grep "first_name" /tmp/result.log
 
 connector_name2="DynamoDbCdcSource_$USER"
 set +e
