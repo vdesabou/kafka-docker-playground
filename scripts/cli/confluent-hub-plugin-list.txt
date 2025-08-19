@@ -30,6 +30,8 @@ confluentinc/DynamoDbCdcSource
 confluentinc/GoogleCloudFunctionsGen2Sink
 confluentinc/HttpSinkV2
 confluentinc/HttpSourceV2
+confluentinc/InfluxDB2Sink
+confluentinc/InfluxDB2Source
 confluentinc/kafka-connect-activemq
 confluentinc/kafka-connect-activemq-sink
 confluentinc/kafka-connect-amps
