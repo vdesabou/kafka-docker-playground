@@ -30,8 +30,20 @@ DYNAMODB_TABLE="pg${USER}dynamo${TAG}"
 DYNAMODB_ENDPOINT="https://dynamodb.$AWS_REGION.amazonaws.com"
 
 set +e
-log "Delete table, this might fail"
-aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION
+aws dynamodb describe-table --table-name "$DYNAMODB_TABLE" --region $AWS_REGION --query 'Table.TableStatus' --output text 2>/dev/null
+if [ $? -eq 0 ]
+then
+  log "Delete table, this might fail"
+  aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION
+  while true; do
+      table_status=$(aws dynamodb describe-table --table-name "$DYNAMODB_TABLE" --region $AWS_REGION --query 'Table.TableStatus' --output text 2>/dev/null || echo "DELETING")
+      if [ "$table_status" == "DELETED" ]
+      then
+          break
+      fi
+      sleep 5
+  done
+fi
 set -e
 
 log "Create dynamodb table $DYNAMODB_TABLE"
