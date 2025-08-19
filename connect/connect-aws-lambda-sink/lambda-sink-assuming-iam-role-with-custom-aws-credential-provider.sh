@@ -60,7 +60,7 @@ aws iam delete-role --role-name $LAMBDA_ROLE_NAME
 aws lambda delete-function --function-name $LAMBDA_FUNCTION_NAME
 set -e
 log "Creating AWS role $LAMBDA_ROLE_NAME"
-LAMBDA_ROLE=$(aws iam create-role --role-name $LAMBDA_ROLE_NAME --assume-role-policy-document '{"Version": "2012-10-17","Statement": [{ "Effect": "Allow", "Principal": {"Service": "lambda.amazonaws.com"}, "Action": "sts:AssumeRole"}]}' --output text --query 'Role.Arn')
+LAMBDA_ROLE=$(aws iam create-role --role-name $LAMBDA_ROLE_NAME --assume-role-policy-document '{"Version": "2012-10-17","Statement": [{ "Effect": "Allow", "Principal": {"Service": "lambda.amazonaws.com"}, "Action": "sts:AssumeRole"}]}' --tags Key=cflt_managed_by,Value=user Key=cflt_managed_id,Value="$USER" --output text --query 'Role.Arn')
 if [ "$LAMBDA_ROLE" = "" ]
 then
      logerror "Cannot create Lambda role"
@@ -74,7 +74,7 @@ cd ../../connect/connect-aws-lambda-sink/my-add-function
 rm -f add.zip
 zip add.zip add.py
 cp add.zip /tmp/
-aws lambda create-function --function-name "$LAMBDA_FUNCTION_NAME" --zip-file fileb:///tmp/add.zip --handler add.lambda_handler --runtime python3.8 --role "$LAMBDA_ROLE"
+aws lambda create-function --function-name "$LAMBDA_FUNCTION_NAME" --zip-file fileb:///tmp/add.zip --handler add.lambda_handler --runtime python3.8 --role "$LAMBDA_ROLE" --tags "cflt_managed_by=user,cflt_managed_id=$USER"
 cd -
 
 function cleanup_cloud_resources {
@@ -123,7 +123,7 @@ playground connector create-or-update --connector aws-lambda  << EOF
     "aws.credentials.provider.sts.role.external.id": "123",
     "aws.credentials.provider.sts.aws.access.key.id": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID",
     "aws.credentials.provider.sts.aws.secret.key.id": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY",
-    
+
     "behavior.on.error" : "fail",
     "reporter.bootstrap.servers": "broker:9092",
     "reporter.error.topic.name": "error-responses",
