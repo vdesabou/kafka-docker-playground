@@ -2,3 +2,5 @@
 *.txt
 lib
 orclcdc_readiness.sql
+orclcdc_diag.sql
+orclcdc_diag.html

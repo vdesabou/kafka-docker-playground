@@ -195,20 +195,31 @@ END;
 /
 EOF
 
-if [ ! -f orclcdc_readiness.sql ]
-then
-     log "Downloading orclcdc_readiness.sql"
-     wget https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/_downloads/35f0e2f456c5dae965ee476492943e9e/orclcdc_readiness.sql
-fi
 
-log "Running orclcdc_readiness.sql, see https://docs.confluent.io/cloud/current/connectors/cc-oracle-xstream-cdc-source/oracle-xstream-cdc-setup-includes/prereqs-validation.html#validate-prerequisites-completion"
-docker cp orclcdc_readiness.sql oracle:/orclcdc_readiness.sql
+log "Running Connector diagnostics script, see https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script"
+set +e
+if [ ! -f orclcdc_diag.sql ]
+then
+     log "Downloading orclcdc_diag.sql"
+     wget https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/_downloads/6d672a473a3153a88f9c67de5e0b558f/orclcdc_diag.sql
+     
+fi
+docker cp orclcdc_diag.sql oracle:/orclcdc_diag.sql
 docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
      CONNECT sys/Admin123 AS SYSDBA
-     @/orclcdc_readiness.sql C##CFLTADMIN C##CFLTUSER XOUT ''
+     @/orclcdc_diag.sql C##CFLTADMIN C##CFLTUSER XOUT ''
 END;
 /
 EOF
+playground container exec --container oracle --command "mv /home/oracle/orclcdc_diag_*.html /home/oracle/orclcdc_diag.html"
+docker cp oracle:/home/oracle/orclcdc_diag.html .
+if [ -f orclcdc_diag.html ]
+then
+     log "⚙️ Connector diagnostics report is available at $(pwd)/orclcdc_diag.html"
+else
+     logwarn "❌ Connector diagnostics report is not available"
+fi
+set -e
 
 docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
      CONNECT sys/Admin123 AS SYSDBA
@@ -275,7 +286,7 @@ playground connector create-or-update --connector cdc-xstream-oracle-source << E
      "confluent.topic.replication.factor": "1",
 
      "_comment:": "remove _ to use ExtractNewRecordState smt",
-     "_transforms": "unwrap,RemoveDots",
+     "_transforms": "unwrap",
      "_transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
 }
 EOF
