@@ -4604,3 +4604,15 @@ function wait_for_end_of_hibernation () {
      log "The instance is ready !"
      set -e
 }
+
+function connect_cp_version_greater_than_8 () {
+  if [ ! -z "$CP_CONNECT_TAG" ] && version_gt $CP_CONNECT_TAG "7.9.99"
+  then
+    return 1
+  elif [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99"
+  then
+    return 1
+  else
+    return 0
+  fi
+}

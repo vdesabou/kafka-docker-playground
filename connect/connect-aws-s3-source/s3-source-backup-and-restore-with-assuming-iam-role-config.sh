@@ -9,7 +9,7 @@ if ! version_gt $CONNECTOR_TAG "2.5.0"; then
     exit 1
 fi
 
-if [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99" && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "2.6.15"
+if connect_cp_version_greater_than_8 && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "2.6.15"
 then
      logwarn "minimal supported connector version is 2.6.16 for CP 8.0"
      logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
