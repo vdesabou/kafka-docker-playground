@@ -195,6 +195,16 @@ END;
 /
 EOF
 
+docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+     CONNECT sys/Admin123 AS SYSDBA
+BEGIN
+     DBMS_XSTREAM_ADM.ALTER_OUTBOUND(
+     server_name  => 'xout',
+     connect_user => 'c##cfltuser');
+END;
+/
+EOF
+
 log "Create CUSTOMERS table and inserting initial data"
 docker exec -i oracle sqlplus c\#\#cfltuser/password@//localhost:1521/ORCLCDB << EOF
 
