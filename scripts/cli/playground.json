@@ -2569,6 +2569,12 @@
           ]
         },
         {
+          "name": "oracle-cdc-xstream",
+          "description": "🅾️ Specific Oracle CDC Xstream commands\n  \n",
+          "usage": "playground connector oracle-cdc-xstream COMMAND",
+          "options": []
+        },
+        {
           "name": "offsets",
           "description": "💈 Handle source and sink connectors offsets\n  \n    Note: First-class offsets (KIP-875) is only available if CP > 7.6\n  \n",
           "usage": "playground connector offsets COMMAND",
@@ -3101,6 +3107,20 @@
               "description": "🔗 Connector name\n\n🎓 Tip: If not specified, the command will apply to all connectors\n"
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "oracle-cdc-xstream",
+      "description": "🅾️ Specific Oracle CDC Xstream commands\n",
+      "usage": "playground connector oracle-cdc-xstream COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "generate-report",
+          "description": "⚙️ Generate and open oracle cdc xstream connector diagnostics, see https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script\n  \n",
+          "usage": "playground connector oracle-cdc-xstream generate-report",
+          "options": []
         }
       ]
     },

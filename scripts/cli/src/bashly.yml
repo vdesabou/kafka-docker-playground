@@ -3455,6 +3455,16 @@ commands:
 
         🎓 Tip: If not specified, the command will apply to all connectors
 
+  - name: oracle-cdc-xstream
+    help: |
+      🅾️ Specific Oracle CDC Xstream commands
+    filters:
+    - oracle_running
+    commands:
+    - name: generate-report
+      help: |
+        ⚙️ Generate and open oracle cdc xstream connector diagnostics, see https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script
+
   - name: offsets
     help: |
       💈 Handle source and sink connectors offsets

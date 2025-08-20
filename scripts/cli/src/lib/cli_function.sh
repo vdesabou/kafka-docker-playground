@@ -822,6 +822,13 @@ function filter_schema_registry_running() {
   fi
 }
 
+function filter_oracle_running() {
+  docker ps --filter "name=oracle" --filter "status=running" --format "{{.Names}}" | grep -q "oracle"
+  if [ $? != 0 ]; then
+    logerror "oracle docker container should be running to run this command"
+  fi
+}
+
 function filter_connect_running() {
   get_connect_url_and_security
 
