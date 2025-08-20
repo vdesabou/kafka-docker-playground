@@ -3464,6 +3464,9 @@ commands:
     - name: generate-report
       help: |
         ⚙️ Generate and open oracle cdc xstream connector diagnostics, see https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script
+    - name: debug
+      help: |
+        🐞 Execute various SQL commands to debug xstream components
 
   - name: offsets
     help: |

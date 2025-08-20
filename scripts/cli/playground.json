@@ -3121,6 +3121,12 @@
           "description": "⚙️ Generate and open oracle cdc xstream connector diagnostics, see https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script\n  \n",
           "usage": "playground connector oracle-cdc-xstream generate-report",
           "options": []
+        },
+        {
+          "name": "debug",
+          "description": "🐞 Execute various SQL commands to debug xstream components\n  \n",
+          "usage": "playground connector oracle-cdc-xstream debug",
+          "options": []
         }
       ]
     },

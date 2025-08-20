@@ -3327,6 +3327,12 @@ subcommands:
             
         usage: playground connector oracle-cdc-xstream generate-report
         options: []
+      - name: debug
+        description: | 
+          🐞 Execute various SQL commands to debug xstream components
+            
+        usage: playground connector oracle-cdc-xstream debug
+        options: []
   - name: offsets
     description: | 
         💈 Handle source and sink connectors offsets
