@@ -278,6 +278,8 @@ fi
 
 description_kebab_case="${description// /-}"
 description_kebab_case=$(echo "$description_kebab_case" | tr '[:upper:]' '[:lower:]')
+# only keep alphanumeric characters and hyphens
+description_kebab_case=$(echo "$description_kebab_case" | tr -cd '[:alnum:]-')
 repro_test_file="$repro_dir/$filename-repro-$description_kebab_case.$extension"
 
 # determining the docker-compose file from from test_file

@@ -13495,6 +13495,18 @@ function wait_for_end_of_hibernation () {
      set -e
 }
 
+function connect_cp_version_greater_than_8 () {
+  if [ ! -z "$CP_CONNECT_TAG" ] && version_gt $CP_CONNECT_TAG "7.9.99"
+  then
+    return 1
+  elif [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99"
+  then
+    return 1
+  else
+    return 0
+  fi
+}
+
 # src/lib/validations/validate_date_format.sh
 validate_date_format() {
   if [[ ! "$1" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]
@@ -18655,6 +18667,8 @@ playground_repro_bootstrap_command() {
 
   description_kebab_case="${description// /-}"
   description_kebab_case=$(echo "$description_kebab_case" | tr '[:upper:]' '[:lower:]')
+  #only keep alphanumeric characters and hyphens
+  description_kebab_case=$(echo "$description_kebab_case" | tr -cd '[:alnum:]-')
   repro_test_file="$repro_dir/$filename-repro-$description_kebab_case.$extension"
 
   # determining the docker-compose file from from test_file
