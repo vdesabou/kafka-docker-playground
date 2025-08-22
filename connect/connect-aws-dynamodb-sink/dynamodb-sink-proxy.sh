@@ -26,9 +26,41 @@ DYNAMODB_TABLE="pg${USER}dynamo${TAG}"
 DYNAMODB_ENDPOINT="https://dynamodb.$AWS_REGION.amazonaws.com"
 
 set +e
-log "Delete table, this might fail"
-aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION
+aws dynamodb describe-table --table-name "$DYNAMODB_TABLE" --region $AWS_REGION --query 'Table.TableStatus' --output text 2>/dev/null
+if [ $? -eq 0 ]
+then
+  log "Delete table, this might fail"
+  aws dynamodb delete-table --table-name $DYNAMODB_TABLE --region $AWS_REGION
+  while true; do
+      aws dynamodb describe-table --table-name "$DYNAMODB_TABLE" --region $AWS_REGION --query 'Table.TableStatus' --output text 2>/dev/null
+      if [ $? -ne 0 ]
+      then
+          break
+      fi
+      sleep 5
+  done
+fi
 set -e
+
+log "Create dynamodb table $DYNAMODB_TABLE"
+aws dynamodb create-table \
+    --table-name "$DYNAMODB_TABLE" \
+    --attribute-definitions AttributeName=f1,AttributeType=S AttributeName=offset,AttributeType=N \
+    --key-schema AttributeName=f1,KeyType=HASH AttributeName=offset,KeyType=RANGE \
+    --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
+    --endpoint-url https://dynamodb.$AWS_REGION.amazonaws.com \
+    --tags Key=cflt_managed_by,Value=user Key=cflt_managed_id,Value="$USER"
+
+log "Waiting for table to be created"
+while true
+do
+    table_status=$(aws dynamodb describe-table --table-name "$DYNAMODB_TABLE" --region $AWS_REGION --query 'Table.TableStatus' --output text)
+    if [ "$table_status" == "ACTIVE" ]
+    then
+        break
+    fi
+    sleep 5
+done
 
 function cleanup_cloud_resources {
     set +e
@@ -67,8 +99,9 @@ playground connector create-or-update --connector dynamodb-sink  << EOF
 }
 EOF
 
-log "Sleeping 120 seconds, waiting for table to be created"
-sleep 120
+sleep 10
+
+playground connector show-lag --max-wait 300
 
 log "Verify data is in DynamoDB"
 aws dynamodb scan --table-name $DYNAMODB_TABLE --region $AWS_REGION  > /tmp/result.log  2>&1
