@@ -47,7 +47,7 @@ playground connector create-or-update --connector s3-sink-proxy-basic-auth  << E
     "flush.size": "3",
     "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
     "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
-    "s3.proxy.url": "https://squid:8888",
+    "s3.proxy.url": "http://squid:8888",
     "s3.proxy.user": "admin",
     "s3.proxy.password": "1234",
     "storage.class": "io.confluent.connect.s3.storage.S3Storage",
