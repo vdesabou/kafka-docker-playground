@@ -197,11 +197,11 @@ do
                 log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 4 days ago...re-running. Test url: $html_url"
                 log "####################################################"
                 aws s3 rm $s3_file --region us-east-1
-            # for couchbase tests, run tests at least every 3 days
-            elif [[ "$dir" == "ccloud/fm-couchbase-"* ]] && [[ $elapsed_time -gt 259200 ]]
+            # for couchbase tests, run tests at least every day
+            elif [[ "$dir" == "ccloud/fm-couchbase-"* ]] && [[ $elapsed_time -gt 86400 ]]
             then
                 log "####################################################"
-                log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 3 days ago...re-running. Test url: $html_url"
+                log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 1 day ago...re-running. Test url: $html_url"
                 log "####################################################"
                 aws s3 rm $s3_file --region us-east-1
             elif [[ $force_test_connector_plugin_version == 1 ]]
