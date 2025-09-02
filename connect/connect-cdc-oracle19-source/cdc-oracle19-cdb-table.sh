@@ -82,6 +82,20 @@ docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nol
      exit;
 EOF
 
+if [ ! -f oracle-readiness.sql ]
+then
+     log "Downloading oracle-readiness.sql"
+     wget https://docs.confluent.io/kafka-connectors/oracle-cdc/current/_downloads/e32ba2efc9a8c9b0976b02ac04fb46a8/oracle-readiness.sql
+fi
+
+log "Running oracle-readiness.sql, see https://docs.confluent.io/cloud/current/connectors/cc-oracle-cdc-source/oracle-cdc-setup-includes/prereqs-validation.html#automated-readiness-check"
+docker cp oracle-readiness.sql oracle:/oracle-readiness.sql
+docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+     CONNECT sys/Admin123 AS SYSDBA
+     @/oracle-readiness.sql C##MYUSER ''
+/
+EOF
+
 log "Inserting initial data"
 docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
 
