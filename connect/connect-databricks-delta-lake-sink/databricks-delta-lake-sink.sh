@@ -139,7 +139,7 @@ then
      exit 1
 fi
 
-if [ `wc -l /tmp/result.log | cut -d" " -f1` = 0 ]
+if [ $(wc -l /tmp/result.log | cut -d" " -f1) = 0 ]
 then
      logerror "FAILED"
      docker container logs connect >  connect.log 2>&1
