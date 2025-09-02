@@ -29,12 +29,6 @@ Check out [kafka-docker-playground.io](https://kafka-docker-playground.io/) to l
 
 [![asciicast](https://asciinema.org/a/643687.svg)](https://asciinema.org/a/643687)
 
-## 🎙️ Podcast
-
-[![podcast](./images/podcast.jpg)](https://youtu.be/zV56G1Gz1kI "Podcast")
-
-Made with love ♥️ by AI
-
 ## 🏁 Getting Started
 
 Check out the **[How to Use](https://kafka-docker-playground.io/#/how-to-use.md)** section, then select an example in the **[Content](https://kafka-docker-playground.io/#/content)** section and run it !
