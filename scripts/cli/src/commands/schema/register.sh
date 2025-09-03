@@ -111,6 +111,7 @@ then
     fi
     echo "$curl_output"
 
+    # https://docs.confluent.io/platform/current/schema-registry/installation/migrate.html#migrate-an-individual-schema-to-an-already-populated-sr-subject-level-migration
     log "⏺️☢️ Registering schema to subject ${subject} with id $id"
     json_new_force_id=$(echo $json_new | jq --arg id "$id" '. + { "id": $id }')
     curl_output=$(curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions" --header 'Content-Type: application/vnd.schemaregistry.v1+json' --data "$json_new_force_id" | jq .)
