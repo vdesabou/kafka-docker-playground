@@ -1872,6 +1872,7 @@ function bootstrap_ccloud_environment () {
 
   local expected_cloud="$1"
   local expected_region="$2"
+  local skip_trick_ccloud_environment="$3"
 
   DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
   get_kafka_docker_playground_dir
@@ -2136,8 +2137,11 @@ function bootstrap_ccloud_environment () {
   playground state set ccloud.CLUSTER_CREDS "$CLUSTER_CREDS"
   playground state set ccloud.SCHEMA_REGISTRY_CREDS "$SCHEMA_REGISTRY_CREDS"
 
-  # trick
-  playground state set run.environment "ccloud"
+  if [[ ! -n "$skip_trick_ccloud_environment" ]]
+  then
+	# trick
+	playground state set run.environment "ccloud"
+  fi
 }
 
 function create_ccloud_connector() {

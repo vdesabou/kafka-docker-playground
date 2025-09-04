@@ -3699,6 +3699,42 @@ commands:
 
         Default browser from your system if not set
 
+  - name: connect-migration-utility
+    help: |
+      🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster
+    filters:
+    - plaintext_or_ccloud_environment
+    dependencies:
+      confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+    commands:
+    - name: discovery
+      help: |
+        👨‍🔬 Discover connectors in the local connect cluster and export their configurations to files
+           
+           see https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#step-1-specify-the-connector-configuration
+      flags:
+      - *verbose
+
+    - name: migrate
+      help: |
+        🪄 Migrate discovered connectors to cloud
+
+           discovery command should be run first
+           
+           see https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#step-2-migrate-the-connector
+      flags:
+      - long: --migration-mode
+        arg: migration-mode
+        allowed: [stop_create_latest_offset, create, create_latest_offset]
+        required: false
+        default: create
+        help: |-
+          - create: Create connector without any offset consideration
+          - stop_create_latest_offset: Create a connector with no data loss/duplication (the python script stops the self-managed connector and fetches the latest offset and creates a fully-managed connector on Confluent Cloud using the fetched offset). See https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#create-a-connector-with-no-data-lossduplication.
+          - create_latest_offset: Create a connector with no downtime (the python script fetches the latest offset without stopping the connector and creates a fully-managed connector on Confluent Cloud using the fetched offset. This option may cause data duplication as the self-managed connector is still running). See https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#create-a-connector-with-no-downtime.
+
+          ⚠️ for stop_create_latest_offset and create_latest_offset, the connector example should be ran with --environment flag set to <ccloud>
+
   - name: create-or-update
     help: 🧑‍🎨  Create or update connector
     args:

@@ -806,6 +806,15 @@ function filter_ccloud_environment() {
   fi
 }
 
+function filter_plaintext_or_ccloud_environment() {
+  get_environment_used
+
+  if [[ "$environment" != "ccloud" ]] && [[ "$environment" != "plaintext" ]]
+  then
+    logerror "environment should be plaintext or ccloud with this command (it is $environment)!"
+  fi
+}
+
 function filter_schema_registry_running() {
   get_sr_url_and_security
 

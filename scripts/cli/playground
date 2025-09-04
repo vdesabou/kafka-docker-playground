@@ -176,6 +176,7 @@ playground_usage() {
   printf "  %s   🧬 Set connect log level\n" "$(green "connector log-level")                       "
   printf "  %s   🕵️  Tail and follow connect logs\n" "$(green "connector logs")                            "
   printf "  %s   🤖 Open Fully Managed connector in browser (Confluent Cloud dashboard)\n" "$(green "connector open-ccloud-connector-in-browser")"
+  printf "  %s   🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster\n" "$(green "connector connect-migration-utility")       "
   printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "connector create-or-update")                "
   printf "  %s   🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.\n" "$(green "connector update")                          "
   echo
@@ -5571,6 +5572,7 @@ playground_connector_usage() {
   printf "  %s   🔌 useful snippets\n" "$(green "snippets")                        "
   printf "  %s   🧑‍🎓 Open connector documentation of currently running conector(s)\n" "$(green "open-docs")                       "
   printf "  %s   🧬 Set connect log level\n" "$(green "log-level")                       "
+  printf "  %s   🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster\n" "$(green "connect-migration-utility")       "
   printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "create-or-update")                "
   printf "  %s   🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.\n" "$(green "update")                          "
   echo
@@ -6460,6 +6462,103 @@ playground_connector_open_ccloud_connector_in_browser_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--browser BROWSER")"
     printf "    🌎 browser name\n    \n    Default browser from your system if not set\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_connect_migration_utility_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector connect-migration-utility\n\n"
+    printf "  🧩 Run Kafka Connector Migration Utility (see\n  https://github.com/confluentinc/connect-migration-utility/) on running connect\n  cluster\n\n"
+  else
+    printf "playground connector connect-migration-utility - 🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector connect-migration-utility COMMAND\n"
+  printf "  playground connector connect-migration-utility [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   👨‍🔬 Discover connectors in the local connect cluster and export their configurations to files\n" "$(green "discovery")"
+  printf "  %s   🪄 Migrate discovered connectors to cloud\n" "$(green "migrate")  "
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_connect_migration_utility_discovery_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector connect-migration-utility discovery\n\n"
+    printf "  👨‍🔬 Discover connectors in the local connect cluster and export their\n  configurations to files\n     \n     see\n  https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#step-1-specify-the-connector-configuration\n\n"
+  else
+    printf "playground connector connect-migration-utility discovery - 👨‍🔬 Discover connectors in the local connect cluster and export their configurations to files\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector connect-migration-utility discovery [OPTIONS]\n"
+  printf "  playground connector connect-migration-utility discovery --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_connect_migration_utility_migrate_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector connect-migration-utility migrate\n\n"
+    printf "  🪄 Migrate discovered connectors to cloud\n  \n     discovery command should be run first\n     \n     see\n  https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#step-2-migrate-the-connector\n\n"
+  else
+    printf "playground connector connect-migration-utility migrate - 🪄 Migrate discovered connectors to cloud\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector connect-migration-utility migrate [OPTIONS]\n"
+  printf "  playground connector connect-migration-utility migrate --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--migration-mode MIGRATION-MODE")"
+    printf "    - create: Create connector without any offset consideration\n    - stop_create_latest_offset: Create a connector with no data\n    loss/duplication (the python script stops the self-managed connector and\n    fetches the latest offset and creates a fully-managed connector on Confluent\n    Cloud using the fetched offset). See\n    https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#create-a-connector-with-no-data-lossduplication.\n    - create_latest_offset: Create a connector with no downtime (the python\n    script fetches the latest offset without stopping the connector and creates\n    a fully-managed connector on Confluent Cloud using the fetched offset. This\n    option may cause data duplication as the self-managed connector is still\n    running). See\n    https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#create-a-connector-with-no-downtime.\n    \n    ⚠️ for stop_create_latest_offset and create_latest_offset, the connector\n    example should be ran with --environment flag set to <ccloud>\n"
+    printf "    %s\n" "Allowed: stop_create_latest_offset, create, create_latest_offset"
+    printf "    %s\n" "Default: create"
     echo
 
     # :command.usage_fixed_flags
@@ -7829,6 +7928,15 @@ function filter_ccloud_environment() {
   if [[ "$environment" != "ccloud" ]]
   then
     logerror "environment should be ccloud with this command (it is $environment)!"
+  fi
+}
+
+function filter_plaintext_or_ccloud_environment() {
+  get_environment_used
+
+  if [[ "$environment" != "ccloud" ]] && [[ "$environment" != "plaintext" ]]
+  then
+    logerror "environment should be plaintext or ccloud with this command (it is $environment)!"
   fi
 }
 
@@ -10827,6 +10935,7 @@ function bootstrap_ccloud_environment () {
 
   local expected_cloud="$1"
   local expected_region="$2"
+  local skip_trick_ccloud_environment="$3"
 
   DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
   get_kafka_docker_playground_dir
@@ -11094,8 +11203,11 @@ function bootstrap_ccloud_environment () {
   playground state set ccloud.CLUSTER_CREDS "$CLUSTER_CREDS"
   playground state set ccloud.SCHEMA_REGISTRY_CREDS "$SCHEMA_REGISTRY_CREDS"
 
-  # trick
-  playground state set run.environment "ccloud"
+  if [[ ! -n "$skip_trick_ccloud_environment" ]]
+  then
+	# trick
+	playground state set run.environment "ccloud"
+  fi
 }
 
 function create_ccloud_connector() {
@@ -18667,7 +18779,7 @@ playground_repro_bootstrap_command() {
 
   description_kebab_case="${description// /-}"
   description_kebab_case=$(echo "$description_kebab_case" | tr '[:upper:]' '[:lower:]')
-  #only keep alphanumeric characters and hyphens
+  # only keep alphanumeric characters and hyphens
   description_kebab_case=$(echo "$description_kebab_case" | tr -cd '[:alnum:]-')
   repro_test_file="$repro_dir/$filename-repro-$description_kebab_case.$extension"
 
@@ -19984,6 +20096,7 @@ playground_schema_register_command() {
       fi
       echo "$curl_output"
 
+      # https://docs.confluent.io/platform/current/schema-registry/installation/migrate.html#migrate-an-individual-schema-to-an-already-populated-sr-subject-level-migration
       log "⏺️☢️ Registering schema to subject ${subject} with id $id"
       json_new_force_id=$(echo $json_new | jq --arg id "$id" '. + { "id": $id }')
       curl_output=$(curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions" --header 'Content-Type: application/vnd.schemaregistry.v1+json' --data "$json_new_force_id" | jq .)
@@ -27045,6 +27158,148 @@ playground_connector_open_ccloud_connector_in_browser_command() {
           fi
       fi
   done
+}
+
+# :command.function
+playground_connector_connect_migration_utility_discovery_command() {
+
+  # src/commands/connector/connect-migration-utility/discovery.sh
+  verbose=${args[--verbose]}
+
+  log "🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster"
+
+  log "🔌 boostrapping ccloud environment"
+  bootstrap_ccloud_environment "" "" "true"
+
+  get_ccloud_connect
+
+  discovery_output_dir="$root_folder/connect-migration-utility-discovery-output"
+  rm -rf "$discovery_output_dir"
+
+  docker pull vdesabou/docker-connect-migration-utility:latest > /dev/null 2>&1
+  docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "cd connect-migration-utility && python src/discovery_script.py --worker-urls 'http://localhost:8083' --output-dir /discovery_output_dir --disable-ssl-verify --environment-id $environment --cluster-id $cluster" > /tmp/output.log 2>&1
+  ret=$?
+
+  if [[ -n "$verbose" ]]
+  then
+    log "🐞 --verbose is set, full output of the discovery process:"
+    cat /tmp/output.log
+  fi
+
+  if [ $ret -ne 0 ]
+  then
+  	logerror "❌ Failed to Run Kafka Connector Migration Utility, check output below:"
+  	cat /tmp/output.log
+  	exit 1
+  fi
+
+  if [ ! -f "$discovery_output_dir/summary.txt" ]
+  then
+  	logerror "❌ File "$discovery_output_dir/summary.txt" does not exist"
+  	exit 1
+  fi
+
+  log "📝 Summary of the discovery process:"
+
+  cat "$discovery_output_dir/summary.txt"
+
+  echo ""
+
+  if [ ! -d "$discovery_output_dir/discovered_configs/successful_configs/fm_configs" ]
+  then
+  	logerror "❌ Folder "$discovery_output_dir/discovered_configs/successful_configs/fm_configs" does not exist"
+  	exit 1
+  fi
+
+  json_count=$(find "$discovery_output_dir/discovered_configs/successful_configs/fm_configs" -name "*.json" -type f | wc -l)
+  if [ "$json_count" -eq 0 ]
+  then
+  	logerror "❌ No connector was discovered that can be migrated to fully managed"
+  	exit 1
+  else
+  	log "📁 Found $json_count connector configuration(s) that can be migrated to fully managed:"
+  	# Display the directory structure
+  	if command -v tree >/dev/null 2>&1; then
+  		tree "$discovery_output_dir/discovered_configs/successful_configs/fm_configs"
+  	else
+  		find "$discovery_output_dir/discovered_configs/successful_configs/fm_configs" -type f -name "*.json" | sort
+  	fi
+
+  	echo ""
+
+  	# Display each JSON file with its connector name
+  	for json_file in "$discovery_output_dir/discovered_configs/successful_configs/fm_configs"/*.json
+  	do
+  		if [ -f "$json_file" ]
+  		then
+  			log "📄 $(basename "$json_file")"
+  			if [[ $(type -f bat 2>&1) =~ "not found" ]]
+  			then
+  				cat $json_file
+  			else
+  				bat $json_file
+  			fi
+  		fi
+  	done
+  fi
+}
+
+# :command.function
+playground_connector_connect_migration_utility_migrate_command() {
+
+  # src/commands/connector/connect-migration-utility/migrate.sh
+  migration_mode=${args[--migration-mode]}
+
+  discovery_output_dir="$root_folder/connect-migration-utility-discovery-output"
+  if [ ! -d "$discovery_output_dir" ]
+  then
+  	logerror "❌ $discovery_output_dir does not exist, please run playground connect-migration-utility discovery first !"
+  	exit 1
+  fi
+
+  log "🪄 Migrate discovered local connectors in $discovery_output_dir as fully managed connectors"
+
+  get_environment_used
+  if [ "$migration_mode" == "stop_create_latest_offset" ] ||  [ "$migration_mode" == "create_latest_offset" ]
+  then
+  	if [ "$environment" != "ccloud" ]
+  	then
+  		logerror "❌ --migration-mode $migration_mode is only supported with --environment ccloud"
+  		exit 1
+  	fi
+  fi
+
+  log "🔌 boostrapping ccloud environment"
+  bootstrap_ccloud_environment "" "" "true"
+
+  get_ccloud_connect
+
+  docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "cd connect-migration-utility && python src/migrate_connector_script.py --worker-urls 'http://localhost:8083' --disable-ssl-verify --environment-id $environment --cluster-id $cluster --bearer-token $CLOUD_API_KEY:$CLOUD_API_SECRET --kafka-auth-mode KAFKA_API_KEY --kafka-api-key $CLOUD_KEY --kafka-api-secret $CLOUD_SECRET --fm-config-dir /discovery_output_dir/discovered_configs/successful_configs/fm_configs --migration-mode $migration_mode" > /tmp/output.log 2>&1
+  ret=$?
+  if [ $ret -ne 0 ]
+  then
+  	logerror "❌ Failed to Migrate Kafka Connectors, check output below"
+  	cat /tmp/output.log
+  	exit 1
+  else
+  	set +e
+  	grep "ERROR" /tmp/output.log > /dev/null 2>&1
+  	if [ $? -eq 0 ]
+  	then
+  		logerror "❌ Found ERROR in the output of the migration process, please check output below"
+  		grep "ERROR" /tmp/output.log
+  		exit 1
+  	fi
+  	set -e
+  	log "✅ Migrate Kafka Connectors was successful!"
+  	playground switch-ccloud
+
+  	playground connector status
+
+  	log "Do you want to see the connector in your browser ?"
+  	check_if_continue
+  	playground connector open-ccloud-connector-in-browser
+  fi
 }
 
 # :command.function
@@ -40913,6 +41168,13 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
+    connect-migration-utility)
+      action="connect-migration-utility"
+      shift
+      playground_connector_connect_migration_utility_parse_requirements "$@"
+      shift $#
+      ;;
+
     create-or-update)
       action="create-or-update"
       shift
@@ -42763,6 +43025,222 @@ playground_connector_open_ccloud_connector_in_browser_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_connector_connect_migration_utility_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_connect_migration_utility_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v confluent >/dev/null 2>&1; then
+    printf "missing dependency: confluent\n" >&2
+    printf "%s\n\n" "visit https://docs.confluent.io/confluent-cli/current/overview.html to install" >&2
+    missing_deps=1
+  else
+    deps['confluent']="$(command -v confluent | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    discovery)
+      action="discovery"
+      shift
+      playground_connector_connect_migration_utility_discovery_parse_requirements "$@"
+      shift $#
+      ;;
+
+    migrate)
+      action="migrate"
+      shift
+      playground_connector_connect_migration_utility_migrate_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_connector_connect_migration_utility_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.user_filter
+  filter_error=$(filter_plaintext_or_ccloud_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_connector_connect_migration_utility_discovery_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_connect_migration_utility_discovery_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector connect-migration-utility discovery"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_connector_connect_migration_utility_migrate_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_connect_migration_utility_migrate_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector connect-migration-utility migrate"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --migration-mode)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--migration-mode']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--migration-mode requires an argument: --migration-mode MIGRATION-MODE" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--migration-mode']:-} ]] || args['--migration-mode']="create"
+
+  # :command.whitelist_filter
+  if [[ ${args['--migration-mode']:-} ]] && [[ ! ${args['--migration-mode']:-} =~ ^(stop_create_latest_offset|create|create_latest_offset)$ ]]; then
+    printf "%s\n" "--migration-mode must be one of: stop_create_latest_offset, create, create_latest_offset" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
 playground_connector_create_or_update_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
@@ -44180,6 +44658,9 @@ run() {
     "connector log-level") playground_connector_log_level_command ;;
     "connector logs") playground_connector_logs_command ;;
     "connector open-ccloud-connector-in-browser") playground_connector_open_ccloud_connector_in_browser_command ;;
+    "connector connect-migration-utility") playground_connector_connect_migration_utility_command ;;
+    "connector connect-migration-utility discovery") playground_connector_connect_migration_utility_discovery_command ;;
+    "connector connect-migration-utility migrate") playground_connector_connect_migration_utility_migrate_command ;;
     "connector create-or-update") playground_connector_create_or_update_command ;;
     "connector update") playground_connector_update_command ;;
     "ec2") playground_ec2_command ;;
