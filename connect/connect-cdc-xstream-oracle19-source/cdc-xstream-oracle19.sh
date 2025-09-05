@@ -242,26 +242,27 @@ EOF
 log "Creating Oracle Xstream CDC source connector"
 playground connector create-or-update --connector cdc-xstream-oracle-source << EOF
 {
-     "connector.class": "io.confluent.connect.oracle.xstream.cdc.OracleXStreamSourceConnector",
-     "database.dbname": "ORCLCDB",
-     "database.hostname": "oracle",
-     "database.os.timezone": "UTC",
-     "database.out.server.name": "XOUT",
-     "database.service.name": "ORCLCDB",
-     "table.include.list": "C##CFLTUSER[.]CUSTOMERS",
-     "database.password": "password",
-     "database.port": "1521",
-     "database.user": "c##cfltuser",
-     "topic.prefix": "cflt",
-     "schema.history.internal.kafka.bootstrap.servers": "broker:9092",
-     "schema.history.internal.kafka.topic": "__orcl-schema-changes.cflt",
-     "confluent.license": "",
-     "confluent.topic.bootstrap.servers": "broker:9092",
-     "confluent.topic.replication.factor": "1",
+	"connector.class": "io.confluent.connect.oracle.xstream.cdc.OracleXStreamSourceConnector",
+	"database.dbname": "ORCLCDB",
+	"database.hostname": "oracle",
+	"database.os.timezone": "UTC",
+	"database.out.server.name": "XOUT",
+	"database.service.name": "ORCLCDB",
+	"table.include.list": "C##CFLTUSER[.]CUSTOMERS",
+	"database.password": "password",
+	"database.port": "1521",
+	"database.user": "c##cfltuser",
+	"topic.prefix": "cflt",
+	"schema.history.internal.kafka.bootstrap.servers": "broker:9092",
+	"schema.history.internal.kafka.topic": "__orcl-schema-changes.cflt",
+	"confluent.license": "",
+	"confluent.topic.bootstrap.servers": "broker:9092",
+	"confluent.topic.replication.factor": "1",
+	"database.processor.licenses": "1",
 
-     "_comment:": "remove _ to use ExtractNewRecordState smt",
-     "_transforms": "unwrap",
-     "_transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
+	"_comment:": "remove _ to use ExtractNewRecordState smt",
+	"_transforms": "unwrap",
+	"_transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
 }
 EOF
 
