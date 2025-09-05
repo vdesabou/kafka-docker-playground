@@ -43,7 +43,13 @@ fi
 
 handle_aws_credentials
 
-for component in awscredentialsprovider
+export COMPONENT_NAME="awscredentialsprovider"
+if version_gt $CONNECTOR_TAG "10.9.9"
+then
+    export COMPONENT_NAME="awscredentialsprovider-v2"
+fi
+
+for component in $COMPONENT_NAME
 do
     set +e
     log "🏗 Building jar for ${component}"
@@ -57,14 +63,11 @@ do
     set -e
 done
 
-
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.backup-and-restore-assuming-iam-role-with-custom-aws-credential-provider.yml"
 
 AWS_BUCKET_NAME=pg-bucket-${USER}
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
-
-
 
 log "Empty bucket <$AWS_BUCKET_NAME/$TAG>, if required"
 set +e
@@ -91,6 +94,7 @@ playground connector create-or-update --connector s3-sink  << EOF
     "topics.dir": "$TAG",
     "s3.part.size": 5242880,
     "flush.size": "3",
+	"_comment": "The following sts parameters are not used when using v11+ of the connector",
     "s3.credentials.provider.class": "com.github.vdesabou.AwsAssumeRoleCredentialsProvider",
     "s3.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
     "s3.credentials.provider.sts.role.session.name": "session-name",
