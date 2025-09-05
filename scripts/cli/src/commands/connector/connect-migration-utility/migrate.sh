@@ -26,6 +26,16 @@ bootstrap_ccloud_environment "" "" "true"
 
 get_ccloud_connect
 
+for json_file in "$discovery_output_dir/discovered_configs/successful_configs/fm_configs"/*.json
+do
+	if [ -f "$json_file" ]
+	then
+		log "📄 $(basename "$json_file")"
+		log "✨ Update the connector config file $(basename "$json_file") as per your needs, save and close the file to continue"
+		playground open --file "$json_file" --wait
+	fi
+done
+
 set +e
 docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "cd connect-migration-utility && python src/migrate_connector_script.py --worker-urls 'http://localhost:8083' --disable-ssl-verify --environment-id $environment --cluster-id $cluster --bearer-token $CLOUD_API_KEY:$CLOUD_API_SECRET --kafka-auth-mode KAFKA_API_KEY --kafka-api-key $CLOUD_KEY --kafka-api-secret $CLOUD_SECRET --fm-config-dir /discovery_output_dir/discovered_configs/successful_configs/fm_configs --migration-mode $migration_mode" > /tmp/output.log 2>&1
 ret=$?

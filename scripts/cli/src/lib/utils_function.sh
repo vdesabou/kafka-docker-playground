@@ -1872,7 +1872,7 @@ function bootstrap_ccloud_environment () {
 
   local expected_cloud="$1"
   local expected_region="$2"
-  local skip_trick_ccloud_environment="$3"
+  local connect_migration_utility="$3"
 
   DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
   get_kafka_docker_playground_dir
@@ -1902,7 +1902,7 @@ function bootstrap_ccloud_environment () {
 
   if [ -f "$test_file" ]
   then
-    if [[ $test_file == *"fm-databricks-delta-lake-sink"* ]]
+    if [[ $test_file == *"fm-databricks-delta-lake-sink"* ]] || [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-databricks"* ]]
     then
       if [ ! -z "$AWS_DATABRICKS_CLUSTER_NAME" ]
       then
@@ -1915,7 +1915,7 @@ function bootstrap_ccloud_environment () {
       fi
     fi
 
-    if [[ $test_file == *"fm-aws"* ]]
+    if [[ $test_file == *"fm-aws"* ]] || [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-aws"* ]]
     then
       if [ ! -z "$AWS_CLUSTER_NAME" ]
       then
@@ -1928,7 +1928,7 @@ function bootstrap_ccloud_environment () {
       fi
     fi
 
-    if [[ $test_file == *"fm-gcp"* ]]
+    if [[ $test_file == *"fm-gcp"* ]] || [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-gcp"* ]]
     then
       if [ ! -z "$GCP_CLUSTER_NAME" ]
       then
@@ -1941,7 +1941,7 @@ function bootstrap_ccloud_environment () {
       fi
     fi
 
-    if [[ $test_file == *"fm-azure"* ]]
+    if [[ $test_file == *"fm-azure"* ]] || [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-azure"* ]]
     then
       if [ ! -z "$AZURE_CLUSTER_NAME" ]
       then
@@ -2097,7 +2097,7 @@ function bootstrap_ccloud_environment () {
             source $DELTA_CONFIGS_ENV
             log "🌱 cluster $CLUSTER_NAME is ready to be used!"
 
-			if [[ ! -n "$skip_trick_ccloud_environment" ]]
+			if [[ ! -n "$connect_migration_utility" ]]
 			then
 				# trick
 				playground state set run.environment "ccloud"
@@ -2140,7 +2140,7 @@ function bootstrap_ccloud_environment () {
   playground state set ccloud.CLUSTER_CREDS "$CLUSTER_CREDS"
   playground state set ccloud.SCHEMA_REGISTRY_CREDS "$SCHEMA_REGISTRY_CREDS"
 
-  if [[ ! -n "$skip_trick_ccloud_environment" ]]
+  if [[ ! -n "$connect_migration_utility" ]]
   then
 	# trick
 	playground state set run.environment "ccloud"

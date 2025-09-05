@@ -10935,7 +10935,7 @@ function bootstrap_ccloud_environment () {
 
   local expected_cloud="$1"
   local expected_region="$2"
-  local skip_trick_ccloud_environment="$3"
+  local connect_migration_utility="$3"
 
   DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
   get_kafka_docker_playground_dir
@@ -10965,7 +10965,7 @@ function bootstrap_ccloud_environment () {
 
   if [ -f "$test_file" ]
   then
-    if [[ $test_file == *"fm-databricks-delta-lake-sink"* ]]
+    if [[ $test_file == *"fm-databricks-delta-lake-sink"* ]] || [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-databricks"* ]]
     then
       if [ ! -z "$AWS_DATABRICKS_CLUSTER_NAME" ]
       then
@@ -10978,7 +10978,7 @@ function bootstrap_ccloud_environment () {
       fi
     fi
 
-    if [[ $test_file == *"fm-aws"* ]]
+    if [[ $test_file == *"fm-aws"* ]] || [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-aws"* ]]
     then
       if [ ! -z "$AWS_CLUSTER_NAME" ]
       then
@@ -10991,7 +10991,7 @@ function bootstrap_ccloud_environment () {
       fi
     fi
 
-    if [[ $test_file == *"fm-gcp"* ]]
+    if [[ $test_file == *"fm-gcp"* ]] || [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-gcp"* ]]
     then
       if [ ! -z "$GCP_CLUSTER_NAME" ]
       then
@@ -11004,7 +11004,7 @@ function bootstrap_ccloud_environment () {
       fi
     fi
 
-    if [[ $test_file == *"fm-azure"* ]]
+    if [[ $test_file == *"fm-azure"* ]] || [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-azure"* ]]
     then
       if [ ! -z "$AZURE_CLUSTER_NAME" ]
       then
@@ -11163,7 +11163,7 @@ function bootstrap_ccloud_environment () {
             source $DELTA_CONFIGS_ENV
             log "🌱 cluster $CLUSTER_NAME is ready to be used!"
 
-			if [[ ! -n "$skip_trick_ccloud_environment" ]]
+			if [[ ! -n "$connect_migration_utility" ]]
 			then
 				# trick
 				playground state set run.environment "ccloud"
@@ -11206,7 +11206,7 @@ function bootstrap_ccloud_environment () {
   playground state set ccloud.CLUSTER_CREDS "$CLUSTER_CREDS"
   playground state set ccloud.SCHEMA_REGISTRY_CREDS "$SCHEMA_REGISTRY_CREDS"
 
-  if [[ ! -n "$skip_trick_ccloud_environment" ]]
+  if [[ ! -n "$connect_migration_utility" ]]
   then
 	# trick
 	playground state set run.environment "ccloud"
@@ -27251,12 +27251,13 @@ playground_connector_connect_migration_utility_discovery_command() {
   		if [ -f "$json_file" ]
   		then
   			log "📄 $(basename "$json_file")"
-  			if [[ $(type -f bat 2>&1) =~ "not found" ]]
-  			then
-  				cat $json_file
-  			else
-  				bat $json_file
-  			fi
+  			# if [[ $(type -f bat 2>&1) =~ "not found" ]]
+  			# then
+  			# 	cat $json_file
+  			# else
+  			# 	bat $json_file
+  			# fi
+  			cat $json_file
   		fi
   	done
   fi
@@ -27293,6 +27294,16 @@ playground_connector_connect_migration_utility_migrate_command() {
   bootstrap_ccloud_environment "" "" "true"
 
   get_ccloud_connect
+
+  for json_file in "$discovery_output_dir/discovered_configs/successful_configs/fm_configs"/*.json
+  do
+  	if [ -f "$json_file" ]
+  	then
+  		log "📄 $(basename "$json_file")"
+  		log "✨ Update the connector config file $(basename "$json_file") as per your needs, save and close the file to continue"
+  		playground open --file "$json_file" --wait
+  	fi
+  done
 
   set +e
   docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "cd connect-migration-utility && python src/migrate_connector_script.py --worker-urls 'http://localhost:8083' --disable-ssl-verify --environment-id $environment --cluster-id $cluster --bearer-token $CLOUD_API_KEY:$CLOUD_API_SECRET --kafka-auth-mode KAFKA_API_KEY --kafka-api-key $CLOUD_KEY --kafka-api-secret $CLOUD_SECRET --fm-config-dir /discovery_output_dir/discovered_configs/successful_configs/fm_configs --migration-mode $migration_mode" > /tmp/output.log 2>&1

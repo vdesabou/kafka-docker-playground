@@ -82,12 +82,13 @@ else
 		if [ -f "$json_file" ]
 		then
 			log "📄 $(basename "$json_file")"
-			if [[ $(type -f bat 2>&1) =~ "not found" ]]
-			then
-				cat $json_file
-			else
-				bat $json_file
-			fi
+			# if [[ $(type -f bat 2>&1) =~ "not found" ]]
+			# then
+			# 	cat $json_file
+			# else
+			# 	bat $json_file
+			# fi
+			cat $json_file
 		fi
 	done
 fi
