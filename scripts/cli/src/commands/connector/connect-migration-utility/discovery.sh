@@ -2,7 +2,8 @@ verbose=${args[--verbose]}
 
 get_connect_url_and_security
 
-log "🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster"
+log "👨‍🔬 Discover connectors in the local connect cluster and export their configurations to files"
+log "🛠️ It is using Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster"
 
 log "🔌 boostrapping ccloud environment"
 bootstrap_ccloud_environment "" "" "true"
@@ -31,17 +32,6 @@ then
 	exit 1
 fi
 
-# set +e
-# grep "ERROR" /tmp/output.log > /dev/null 2>&1
-# if [ $? -eq 0 ]
-# then
-# 	logerror "❌ Found ERROR in the output of the discovery process, please check output below"
-# 	cat /tmp/output.log
-# 	grep "ERROR" /tmp/output.log
-# 	exit 1
-# fi
-# set -e
-
 if [ ! -f "$discovery_output_dir/summary.txt" ]
 then
 	logerror "❌ File "$discovery_output_dir/summary.txt" does not exist"
@@ -49,16 +39,9 @@ then
 fi
 
 log "📝 Summary of the discovery process:"
-
 cat "$discovery_output_dir/summary.txt"
 
 echo ""
-
-if [ ! -d "$discovery_output_dir/discovered_configs/successful_configs/fm_configs" ]
-then
-	logerror "❌ Folder "$discovery_output_dir/discovered_configs/successful_configs/fm_configs" does not exist"
-	exit 1
-fi
 
 json_count=$(find "$discovery_output_dir/discovered_configs/successful_configs/fm_configs" -name "*.json" -type f | wc -l)
 if [ "$json_count" -eq 0 ]
@@ -91,4 +74,6 @@ else
 			cat $json_file
 		fi
 	done
+
+	log "✅ Now you can run 'playground connect-migration-utility migrate' to migrate these connectors to fully managed"
 fi

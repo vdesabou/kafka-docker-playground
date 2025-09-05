@@ -3005,7 +3005,7 @@
         },
         {
           "name": "connect-migration-utility",
-          "description": "🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster\n  \n",
+          "description": "🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster\n  \n  The connector example should be ran with --environment flag set to <ccloud>\n  \n",
           "usage": "playground connector connect-migration-utility COMMAND",
           "options": []
         },
@@ -3238,13 +3238,13 @@
     },
     {
       "name": "connect-migration-utility",
-      "description": "🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster\n",
+      "description": "🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster\n\nThe connector example should be ran with --environment flag set to <ccloud>\n",
       "usage": "playground connector connect-migration-utility COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "discovery",
-          "description": "👨‍🔬 Discover connectors in the local connect cluster and export their configurations to files\n     \n     see https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#step-1-specify-the-connector-configuration\n  \n",
+          "description": "👨‍🔬 Discover connectors in the local connect cluster and export their configurations to files\n    \n    see https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#step-1-specify-the-connector-configuration\n  \n",
           "usage": "playground connector connect-migration-utility discovery [OPTIONS]",
           "options": [
             {
@@ -3259,7 +3259,7 @@
         },
         {
           "name": "migrate",
-          "description": "🪄 Migrate discovered connectors to cloud\n  \n     discovery command should be run first\n     \n     see https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#step-2-migrate-the-connector\n  \n",
+          "description": "🪄 Migrate discovered connectors to fully managed connectors\n  \n    see https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#step-2-migrate-the-connector\n    ⚠️ <discovery> command should be run first\n  \n",
           "usage": "playground connector connect-migration-utility migrate [OPTIONS]",
           "options": [
             {
@@ -3267,7 +3267,7 @@
                 "--migration-mode"
               ],
               "argument": "create",
-              "description": "- create: Create connector without any offset consideration\n- stop_create_latest_offset: Create a connector with no data loss/duplication (the python script stops the self-managed connector and fetches the latest offset and creates a fully-managed connector on Confluent Cloud using the fetched offset). See https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#create-a-connector-with-no-data-lossduplication.\n- create_latest_offset: Create a connector with no downtime (the python script fetches the latest offset without stopping the connector and creates a fully-managed connector on Confluent Cloud using the fetched offset. This option may cause data duplication as the self-managed connector is still running). See https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#create-a-connector-with-no-downtime.\n\n⚠️ for stop_create_latest_offset and create_latest_offset, the connector example should be ran with --environment flag set to <ccloud>\n\nDefault value: create\n\nAllowed values: stop_create_latest_offset, create, create_latest_offset\n"
+              "description": "- create: Create connector without any offset consideration\n- stop_create_latest_offset: Create a connector with no data loss/duplication (the python script stops the self-managed connector and fetches the latest offset and creates a fully-managed connector on Confluent Cloud using the fetched offset). See https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#create-a-connector-with-no-data-lossduplication.\n- create_latest_offset: Create a connector with no downtime (the python script fetches the latest offset without stopping the connector and creates a fully-managed connector on Confluent Cloud using the fetched offset. This option may cause data duplication as the self-managed connector is still running). See https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#create-a-connector-with-no-downtime.\n\nDefault value: create\n\nAllowed values: stop_create_latest_offset, create, create_latest_offset\n"
             }
           ]
         }

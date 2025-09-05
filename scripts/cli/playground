@@ -6476,7 +6476,7 @@ playground_connector_open_ccloud_connector_in_browser_usage() {
 playground_connector_connect_migration_utility_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector connect-migration-utility\n\n"
-    printf "  🧩 Run Kafka Connector Migration Utility (see\n  https://github.com/confluentinc/connect-migration-utility/) on running connect\n  cluster\n\n"
+    printf "  🧩 Run Kafka Connector Migration Utility (see\n  https://github.com/confluentinc/connect-migration-utility/) on running connect\n  cluster\n  \n  The connector example should be ran with --environment flag set to <ccloud>\n\n"
   else
     printf "playground connector connect-migration-utility - 🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster\n\n"
   fi
@@ -6488,7 +6488,7 @@ playground_connector_connect_migration_utility_usage() {
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   👨‍🔬 Discover connectors in the local connect cluster and export their configurations to files\n" "$(green "discovery")"
-  printf "  %s   🪄 Migrate discovered connectors to cloud\n" "$(green "migrate")  "
+  printf "  %s   🪄 Migrate discovered connectors to fully managed connectors\n" "$(green "migrate")  "
   echo
 
   # :command.long_usage
@@ -6507,7 +6507,7 @@ playground_connector_connect_migration_utility_usage() {
 playground_connector_connect_migration_utility_discovery_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector connect-migration-utility discovery\n\n"
-    printf "  👨‍🔬 Discover connectors in the local connect cluster and export their\n  configurations to files\n     \n     see\n  https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#step-1-specify-the-connector-configuration\n\n"
+    printf "  👨‍🔬 Discover connectors in the local connect cluster and export their\n  configurations to files\n    \n    see\n  https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#step-1-specify-the-connector-configuration\n\n"
   else
     printf "playground connector connect-migration-utility discovery - 👨‍🔬 Discover connectors in the local connect cluster and export their configurations to files\n\n"
   fi
@@ -6539,9 +6539,9 @@ playground_connector_connect_migration_utility_discovery_usage() {
 playground_connector_connect_migration_utility_migrate_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector connect-migration-utility migrate\n\n"
-    printf "  🪄 Migrate discovered connectors to cloud\n  \n     discovery command should be run first\n     \n     see\n  https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#step-2-migrate-the-connector\n\n"
+    printf "  🪄 Migrate discovered connectors to fully managed connectors\n  \n    see\n  https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#step-2-migrate-the-connector\n    ⚠️ <discovery> command should be run first\n\n"
   else
-    printf "playground connector connect-migration-utility migrate - 🪄 Migrate discovered connectors to cloud\n\n"
+    printf "playground connector connect-migration-utility migrate - 🪄 Migrate discovered connectors to fully managed connectors\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -6556,7 +6556,7 @@ playground_connector_connect_migration_utility_migrate_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--migration-mode MIGRATION-MODE")"
-    printf "    - create: Create connector without any offset consideration\n    - stop_create_latest_offset: Create a connector with no data\n    loss/duplication (the python script stops the self-managed connector and\n    fetches the latest offset and creates a fully-managed connector on Confluent\n    Cloud using the fetched offset). See\n    https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#create-a-connector-with-no-data-lossduplication.\n    - create_latest_offset: Create a connector with no downtime (the python\n    script fetches the latest offset without stopping the connector and creates\n    a fully-managed connector on Confluent Cloud using the fetched offset. This\n    option may cause data duplication as the self-managed connector is still\n    running). See\n    https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#create-a-connector-with-no-downtime.\n    \n    ⚠️ for stop_create_latest_offset and create_latest_offset, the connector\n    example should be ran with --environment flag set to <ccloud>\n"
+    printf "    - create: Create connector without any offset consideration\n    - stop_create_latest_offset: Create a connector with no data\n    loss/duplication (the python script stops the self-managed connector and\n    fetches the latest offset and creates a fully-managed connector on Confluent\n    Cloud using the fetched offset). See\n    https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#create-a-connector-with-no-data-lossduplication.\n    - create_latest_offset: Create a connector with no downtime (the python\n    script fetches the latest offset without stopping the connector and creates\n    a fully-managed connector on Confluent Cloud using the fetched offset. This\n    option may cause data duplication as the self-managed connector is still\n    running). See\n    https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#create-a-connector-with-no-downtime.\n"
     printf "    %s\n" "Allowed: stop_create_latest_offset, create, create_latest_offset"
     printf "    %s\n" "Default: create"
     echo
@@ -27171,7 +27171,8 @@ playground_connector_connect_migration_utility_discovery_command() {
 
   get_connect_url_and_security
 
-  log "🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster"
+  log "👨‍🔬 Discover connectors in the local connect cluster and export their configurations to files"
+  log "🛠️ It is using Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster"
 
   log "🔌 boostrapping ccloud environment"
   bootstrap_ccloud_environment "" "" "true"
@@ -27200,17 +27201,6 @@ playground_connector_connect_migration_utility_discovery_command() {
   	exit 1
   fi
 
-  # set +e
-  # grep "ERROR" /tmp/output.log > /dev/null 2>&1
-  # if [ $? -eq 0 ]
-  # then
-  # 	logerror "❌ Found ERROR in the output of the discovery process, please check output below"
-  # 	cat /tmp/output.log
-  # 	grep "ERROR" /tmp/output.log
-  # 	exit 1
-  # fi
-  # set -e
-
   if [ ! -f "$discovery_output_dir/summary.txt" ]
   then
   	logerror "❌ File "$discovery_output_dir/summary.txt" does not exist"
@@ -27218,16 +27208,9 @@ playground_connector_connect_migration_utility_discovery_command() {
   fi
 
   log "📝 Summary of the discovery process:"
-
   cat "$discovery_output_dir/summary.txt"
 
   echo ""
-
-  if [ ! -d "$discovery_output_dir/discovered_configs/successful_configs/fm_configs" ]
-  then
-  	logerror "❌ Folder "$discovery_output_dir/discovered_configs/successful_configs/fm_configs" does not exist"
-  	exit 1
-  fi
 
   json_count=$(find "$discovery_output_dir/discovered_configs/successful_configs/fm_configs" -name "*.json" -type f | wc -l)
   if [ "$json_count" -eq 0 ]
@@ -27260,6 +27243,8 @@ playground_connector_connect_migration_utility_discovery_command() {
   			cat $json_file
   		fi
   	done
+
+  	log "✅ Now you can run 'playground connect-migration-utility migrate' to migrate these connectors to fully managed"
   fi
 }
 
@@ -43146,7 +43131,7 @@ playground_connector_connect_migration_utility_parse_requirements() {
   done
 
   # :command.user_filter
-  filter_error=$(filter_plaintext_or_ccloud_environment)
+  filter_error=$(filter_ccloud_environment)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
     exit 1
