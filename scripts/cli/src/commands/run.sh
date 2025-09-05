@@ -1331,7 +1331,7 @@ then
       
       if [[ $cluster_environment == *"@"* ]]
       then
-        cluster_environment=$(echo "$cluster_environment" | cut -d "@" -f 1)
+        cluster_environment=$(echo "$cluster_environment" | cut -d "@" -f 2)
       fi
       if [[ $cluster_environment == *"/"* ]]
       then
