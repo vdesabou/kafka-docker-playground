@@ -11163,8 +11163,11 @@ function bootstrap_ccloud_environment () {
             source $DELTA_CONFIGS_ENV
             log "🌱 cluster $CLUSTER_NAME is ready to be used!"
 
-            # trick
-            playground state set run.environment "ccloud"
+			if [[ ! -n "$skip_trick_ccloud_environment" ]]
+			then
+				# trick
+				playground state set run.environment "ccloud"
+			fi
             return
           else
             logwarn "$DELTA_CONFIGS_ENV has not been generated, doing it now..."
@@ -27166,6 +27169,8 @@ playground_connector_connect_migration_utility_discovery_command() {
   # src/commands/connector/connect-migration-utility/discovery.sh
   verbose=${args[--verbose]}
 
+  get_connect_url_and_security
+
   log "🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster"
 
   log "🔌 boostrapping ccloud environment"
@@ -27176,9 +27181,11 @@ playground_connector_connect_migration_utility_discovery_command() {
   discovery_output_dir="$root_folder/connect-migration-utility-discovery-output"
   rm -rf "$discovery_output_dir"
 
+  set +e
   docker pull vdesabou/docker-connect-migration-utility:latest > /dev/null 2>&1
   docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "cd connect-migration-utility && python src/discovery_script.py --worker-urls 'http://localhost:8083' --output-dir /discovery_output_dir --disable-ssl-verify --environment-id $environment --cluster-id $cluster" > /tmp/output.log 2>&1
   ret=$?
+  set -e
 
   if [[ -n "$verbose" ]]
   then
@@ -27192,6 +27199,17 @@ playground_connector_connect_migration_utility_discovery_command() {
   	cat /tmp/output.log
   	exit 1
   fi
+
+  # set +e
+  # grep "ERROR" /tmp/output.log > /dev/null 2>&1
+  # if [ $? -eq 0 ]
+  # then
+  # 	logerror "❌ Found ERROR in the output of the discovery process, please check output below"
+  # 	cat /tmp/output.log
+  # 	grep "ERROR" /tmp/output.log
+  # 	exit 1
+  # fi
+  # set -e
 
   if [ ! -f "$discovery_output_dir/summary.txt" ]
   then
@@ -27250,6 +27268,8 @@ playground_connector_connect_migration_utility_migrate_command() {
   # src/commands/connector/connect-migration-utility/migrate.sh
   migration_mode=${args[--migration-mode]}
 
+  get_connect_url_and_security
+
   discovery_output_dir="$root_folder/connect-migration-utility-discovery-output"
   if [ ! -d "$discovery_output_dir" ]
   then
@@ -27274,8 +27294,10 @@ playground_connector_connect_migration_utility_migrate_command() {
 
   get_ccloud_connect
 
+  set +e
   docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "cd connect-migration-utility && python src/migrate_connector_script.py --worker-urls 'http://localhost:8083' --disable-ssl-verify --environment-id $environment --cluster-id $cluster --bearer-token $CLOUD_API_KEY:$CLOUD_API_SECRET --kafka-auth-mode KAFKA_API_KEY --kafka-api-key $CLOUD_KEY --kafka-api-secret $CLOUD_SECRET --fm-config-dir /discovery_output_dir/discovered_configs/successful_configs/fm_configs --migration-mode $migration_mode" > /tmp/output.log 2>&1
   ret=$?
+  set -e
   if [ $ret -ne 0 ]
   then
   	logerror "❌ Failed to Migrate Kafka Connectors, check output below"

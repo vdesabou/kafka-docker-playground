@@ -1,5 +1,7 @@
 verbose=${args[--verbose]}
 
+get_connect_url_and_security
+
 log "🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster"
 
 log "🔌 boostrapping ccloud environment"
@@ -10,9 +12,11 @@ get_ccloud_connect
 discovery_output_dir="$root_folder/connect-migration-utility-discovery-output"
 rm -rf "$discovery_output_dir"
 
+set +e
 docker pull vdesabou/docker-connect-migration-utility:latest > /dev/null 2>&1
 docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "cd connect-migration-utility && python src/discovery_script.py --worker-urls 'http://localhost:8083' --output-dir /discovery_output_dir --disable-ssl-verify --environment-id $environment --cluster-id $cluster" > /tmp/output.log 2>&1
 ret=$?
+set -e
 
 if [[ -n "$verbose" ]]
 then
@@ -26,6 +30,17 @@ then
 	cat /tmp/output.log
 	exit 1
 fi
+
+# set +e
+# grep "ERROR" /tmp/output.log > /dev/null 2>&1
+# if [ $? -eq 0 ]
+# then
+# 	logerror "❌ Found ERROR in the output of the discovery process, please check output below"
+# 	cat /tmp/output.log
+# 	grep "ERROR" /tmp/output.log
+# 	exit 1
+# fi
+# set -e
 
 if [ ! -f "$discovery_output_dir/summary.txt" ]
 then

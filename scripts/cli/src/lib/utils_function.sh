@@ -2097,8 +2097,11 @@ function bootstrap_ccloud_environment () {
             source $DELTA_CONFIGS_ENV
             log "🌱 cluster $CLUSTER_NAME is ready to be used!"
 
-            # trick
-            playground state set run.environment "ccloud"
+			if [[ ! -n "$skip_trick_ccloud_environment" ]]
+			then
+				# trick
+				playground state set run.environment "ccloud"
+			fi
             return
           else
             logwarn "$DELTA_CONFIGS_ENV has not been generated, doing it now..."

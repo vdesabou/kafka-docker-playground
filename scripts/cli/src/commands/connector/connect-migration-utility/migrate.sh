@@ -1,5 +1,7 @@
 migration_mode=${args[--migration-mode]}
 
+get_connect_url_and_security
+
 discovery_output_dir="$root_folder/connect-migration-utility-discovery-output"
 if [ ! -d "$discovery_output_dir" ]
 then
@@ -24,8 +26,10 @@ bootstrap_ccloud_environment "" "" "true"
 
 get_ccloud_connect
 
+set +e
 docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "cd connect-migration-utility && python src/migrate_connector_script.py --worker-urls 'http://localhost:8083' --disable-ssl-verify --environment-id $environment --cluster-id $cluster --bearer-token $CLOUD_API_KEY:$CLOUD_API_SECRET --kafka-auth-mode KAFKA_API_KEY --kafka-api-key $CLOUD_KEY --kafka-api-secret $CLOUD_SECRET --fm-config-dir /discovery_output_dir/discovered_configs/successful_configs/fm_configs --migration-mode $migration_mode" > /tmp/output.log 2>&1
 ret=$?
+set -e
 if [ $ret -ne 0 ]
 then
 	logerror "❌ Failed to Migrate Kafka Connectors, check output below"
