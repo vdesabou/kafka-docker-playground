@@ -28,7 +28,7 @@ log "Creating Azure Resource Group $AZURE_RESOURCE_GROUP"
 az group create \
     --name $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
-    --tags owner_email=$AZ_USER
+    --tags owner_email=$AZ_USER cflt_managed_by=user cflt_managed_id="$USER"
 function cleanup_cloud_resources {
     set +e
     log "Deleting resource group $AZURE_RESOURCE_GROUP"
@@ -43,7 +43,8 @@ az sql server create \
     --resource-group $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION  \
     --admin-user myadmin \
-    --admin-password $PASSWORD
+    --admin-password $PASSWORD \
+    --tags cflt_managed_by=user cflt_managed_id="$USER"
 if [ ! -z "$GITHUB_RUN_NUMBER" ]
 then
     # running with CI
@@ -70,7 +71,8 @@ log "Create a SQL Data Warehouse instance"
 az sql dw create \
     --name $AZURE_DATA_WAREHOUSE_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
-    --server $AZURE_SQL_NAME
+    --server $AZURE_SQL_NAME \
+    --tags cflt_managed_by=user cflt_managed_id="$USER"
 
 if [ -z "$GITHUB_RUN_NUMBER" ]
 then

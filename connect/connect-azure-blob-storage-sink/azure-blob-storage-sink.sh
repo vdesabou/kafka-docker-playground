@@ -45,7 +45,8 @@ az storage account create \
     --resource-group $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
     --sku Standard_LRS \
-    --encryption-services blob
+    --encryption-services blob \
+    --tags cflt_managed_by=user cflt_managed_id="$USER"
 AZURE_ACCOUNT_KEY=$(az storage account keys list \
     --account-name $AZURE_ACCOUNT_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
