@@ -55,7 +55,7 @@ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_
 set -e
 
 log "Create dataset $GCP_PROJECT.$DATASET"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" mk --dataset --description "used by playground" "$DATASET"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" mk --dataset --label cflt_managed_by:user --label cflt_managed_id:"$USER" --description "used by playground" "$DATASET"
 
 function cleanup_cloud_resources {
   log "Drop GCP BigQuery dataset $DATASET"

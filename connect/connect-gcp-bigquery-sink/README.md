@@ -46,7 +46,7 @@ $ just use <playground run> command and search for gcp-bigquery<use tab key to a
 Create dataset $GCP_PROJECT.$DATASET
 
 ```bash
-$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" mk --dataset --description "used by playground" "$DATASET"
+$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" mk --dataset --label cflt_managed_by:user --label cflt_managed_id:"$USER" --description "used by playground" "$DATASET"
 ```
 
 Messages are sent to `kcbq-quickstart1` topic using:
