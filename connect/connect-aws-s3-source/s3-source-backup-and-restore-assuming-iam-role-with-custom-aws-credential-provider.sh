@@ -43,13 +43,7 @@ fi
 
 handle_aws_credentials
 
-export COMPONENT_NAME="awscredentialsprovider"
-if version_gt $CONNECTOR_TAG "10.9.9"
-then
-    export COMPONENT_NAME="awscredentialsprovider-v2"
-fi
-
-for component in $COMPONENT_NAME
+for component in awscredentialsprovider-v2 awscredentialsprovider
 do
     set +e
     log "🏗 Building jar for ${component}"
