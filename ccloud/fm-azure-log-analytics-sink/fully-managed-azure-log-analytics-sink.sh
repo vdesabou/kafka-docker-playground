@@ -24,7 +24,7 @@ log "Creating Azure Resource Group $AZURE_RESOURCE_GROUP"
 az group create \
     --name $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
-    --tags owner_email=$AZ_USER
+    --tags owner_email=$AZ_USER cflt_managed_by=user cflt_managed_id="$USER"
 
 function cleanup_cloud_resources {
     set +e
@@ -39,7 +39,8 @@ log "Creating Azure Log Analytics workspace $AZURE_LOGANALYTICS_WORKSPACE_NAME"
 az monitor log-analytics workspace create \
     --name $AZURE_LOGANALYTICS_WORKSPACE_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
-    --location $AZURE_REGION
+    --location $AZURE_REGION \
+    --tags cflt_managed_by=user cflt_managed_id="$USER"
 
 AZURE_LOG_ANALYTICS_WORKSPACE_ID=$(az monitor log-analytics workspace show \
     --name $AZURE_LOGANALYTICS_WORKSPACE_NAME \

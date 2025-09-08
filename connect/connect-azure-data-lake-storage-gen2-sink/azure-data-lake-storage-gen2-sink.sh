@@ -99,7 +99,8 @@ az storage account create \
     --resource-group $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
     --sku Standard_LRS \
-    --kind StorageV2
+    --kind StorageV2 \
+    --tags cflt_managed_by=user cflt_managed_id="$USER"
 
 sleep 20
 
