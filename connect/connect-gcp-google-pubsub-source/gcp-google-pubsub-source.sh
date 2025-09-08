@@ -63,10 +63,10 @@ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub
 set -e
 
 log "Create a Pub/Sub topic called $GCP_PUB_SUB_TOPIC"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics create $GCP_PUB_SUB_TOPIC
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics create $GCP_PUB_SUB_TOPIC --labels=cflt_managed_by=user,cflt_managed_id="$USER"
 
 log "Create a Pub/Sub subscription called $GCP_PUB_SUB_SUBSCRIPTION"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions create --topic $GCP_PUB_SUB_TOPIC $GCP_PUB_SUB_SUBSCRIPTION --ack-deadline 60
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions create --topic $GCP_PUB_SUB_TOPIC $GCP_PUB_SUB_SUBSCRIPTION --ack-deadline 60 --labels=cflt_managed_by=user,cflt_managed_id="$USER"
 
 function cleanup_cloud_resources {
     set +e
