@@ -47,7 +47,7 @@ GCS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${TAG}
 GCS_BUCKET_NAME=${GCS_BUCKET_NAME//[-.]/}
 GCS_BUCKET_REGION=${1:-europe-west2}
 
-log "Doing gsutil authentication"
+log "Doing gcloud authentication"
 set +e
 docker rm -f gcloud-config
 set -e
@@ -55,12 +55,12 @@ docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cl
 
 log "Creating bucket name <$GCS_BUCKET_NAME>, if required"
 set +e
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gsutil mb -p $(cat ${GCP_KEYFILE} | jq -r .project_id) -l $GCS_BUCKET_REGION gs://$GCS_BUCKET_NAME
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud storage buckets create gs://$GCS_BUCKET_NAME --project=$(cat ${GCP_KEYFILE} | jq -r .project_id) --location=$GCS_BUCKET_REGION
 set -e
 
 log "Removing existing objects in GCS, if applicable"
 set +e
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gsutil -m rm -r gs://$GCS_BUCKET_NAME/topics/gcs_topic
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud storage rm gs://$GCS_BUCKET_NAME/topics/gcs_topic/** --recursive
 set -e
 
 
@@ -108,10 +108,10 @@ EOF
 sleep 10
 
 log "Listing objects of in GCS"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gsutil ls gs://$GCS_BUCKET_NAME/topics/gcs_topic/partition=0/
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud storage ls gs://$GCS_BUCKET_NAME/topics/gcs_topic/partition=0/
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-docker run -i --volumes-from gcloud-config -v /tmp:/tmp/ google/cloud-sdk:latest gsutil cp gs://$GCS_BUCKET_NAME/topics/gcs_topic/partition=0/gcs_topic+0+0000000000.avro /tmp/gcs_topic+0+0000000000.avro
+docker run -i --volumes-from gcloud-config -v /tmp:/tmp/ google/cloud-sdk:latest gcloud storage cp gs://$GCS_BUCKET_NAME/topics/gcs_topic/partition=0/gcs_topic+0+0000000000.avro /tmp/gcs_topic+0+0000000000.avro
 
 playground  tools read-avro-file --file /tmp/gcs_topic+0+0000000000.avro
 
@@ -123,18 +123,18 @@ docker rm -f gcloud-config
 log "Creating Backup and Restore GCS Source connector"
 playground connector create-or-update --connector gcs-source  << EOF
 {
-               "connector.class": "io.confluent.connect.gcs.GcsSourceConnector",
-               "gcs.bucket.name" : "$GCS_BUCKET_NAME",
-               "gcs.credentials.path" : "/tmp/keyfile.json",
-               "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
-               "tasks.max" : "1",
-               "confluent.topic.bootstrap.servers" : "broker:9092",
-               "confluent.topic.replication.factor" : "1",
-               "transforms" : "AddPrefix",
-               "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
-               "transforms.AddPrefix.regex" : ".*",
-               "transforms.AddPrefix.replacement" : "copy_of_\$0"
-          }
+	"connector.class": "io.confluent.connect.gcs.GcsSourceConnector",
+	"gcs.bucket.name" : "$GCS_BUCKET_NAME",
+	"gcs.credentials.path" : "/tmp/keyfile.json",
+	"format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
+	"tasks.max" : "1",
+	"confluent.topic.bootstrap.servers" : "broker:9092",
+	"confluent.topic.replication.factor" : "1",
+	"transforms" : "AddPrefix",
+	"transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
+	"transforms.AddPrefix.regex" : ".*",
+	"transforms.AddPrefix.replacement" : "copy_of_\$0"
+}
 EOF
 
 sleep 10
