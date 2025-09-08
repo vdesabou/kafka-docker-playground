@@ -52,6 +52,9 @@ set +e
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud storage buckets create gs://$GCS_BUCKET_NAME --project=$(cat ${GCP_KEYFILE} | jq -r .project_id) --location=$GCS_BUCKET_REGION
 set -e
 
+log "Setting labels on bucket <$GCS_BUCKET_NAME>"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud storage buckets update gs://$GCS_BUCKET_NAME --update-labels=cflt_managed_by=user,cflt_managed_id="$USER"
+
 log "Removing existing objects in GCS, if applicable"
 set +e
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud storage rm gs://$GCS_BUCKET_NAME/topics/gcs_topic/** --recursive
