@@ -1902,7 +1902,7 @@ function bootstrap_ccloud_environment () {
 
   if [ -f "$test_file" ]
   then
-    if [[ $test_file == *"fm-databricks-delta-lake-sink"* ]] || [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-databricks"* ]]
+    if [[ $test_file == *"fm-databricks-delta-lake-sink"* ]] || ( [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-databricks"* ]] )
     then
       if [ ! -z "$AWS_DATABRICKS_CLUSTER_NAME" ]
       then
@@ -1915,7 +1915,7 @@ function bootstrap_ccloud_environment () {
       fi
     fi
 
-    if [[ $test_file == *"fm-aws"* ]] || [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-aws"* ]]
+    if [[ $test_file == *"fm-aws"* ]] || ( [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-aws"* ]] )
     then
       if [ ! -z "$AWS_CLUSTER_NAME" ]
       then
@@ -1928,7 +1928,7 @@ function bootstrap_ccloud_environment () {
       fi
     fi
 
-    if [[ $test_file == *"fm-gcp"* ]] || [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-gcp"* ]]
+    if [[ $test_file == *"fm-gcp"* ]] || ( [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-gcp"* ]] )
     then
       if [ ! -z "$GCP_CLUSTER_NAME" ]
       then
@@ -1941,7 +1941,7 @@ function bootstrap_ccloud_environment () {
       fi
     fi
 
-    if [[ $test_file == *"fm-azure"* ]] || [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-azure"* ]]
+    if [[ $test_file == *"fm-azure"* ]] || ( [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-azure"* ]] )
     then
       if [ ! -z "$AZURE_CLUSTER_NAME" ]
       then
