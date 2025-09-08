@@ -48,7 +48,7 @@ log "Creating Azure Resource Group $AZURE_RESOURCE_GROUP"
 az group create \
     --name $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
-    --tags owner_email=$AZ_USER
+    --tags owner_email=$AZ_USER cflt_managed_by=user cflt_managed_id="$USER"
 function cleanup_cloud_resources {
     set +e
     log "Deleting resource group $AZURE_RESOURCE_GROUP"
@@ -60,7 +60,8 @@ log "Creating Azure Service Bus namespace"
 az servicebus namespace create \
     --name $AZURE_SERVICE_BUS_NAMESPACE \
     --resource-group $AZURE_RESOURCE_GROUP \
-    --location $AZURE_REGION
+    --location $AZURE_REGION \
+    --tags cflt_managed_by=user cflt_managed_id="$USER"
 log "Creating Azure Service Bus Queue"
 az servicebus queue create \
     --name $AZURE_SERVICE_BUS_QUEUE_NAME \

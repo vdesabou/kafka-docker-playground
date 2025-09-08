@@ -40,7 +40,8 @@ set -e
 log "Creating Azure Resource Group $AZURE_RESOURCE_GROUP"
 az group create \
     --name $AZURE_RESOURCE_GROUP \
-    --location $AZURE_REGION
+    --location $AZURE_REGION \
+    --tags owner_email=$AZ_USER cflt_managed_by=user cflt_managed_id="$USER"
 
 function cleanup_cloud_resources {
     set +e
@@ -54,7 +55,8 @@ log "Creating Azure Event Hubs namespace"
 az eventhubs namespace create \
     --name $AZURE_EVENT_HUBS_NAMESPACE \
     --resource-group $AZURE_RESOURCE_GROUP \
-    --enable-kafka true
+    --enable-kafka true \
+    --tags cflt_managed_by=user cflt_managed_id="$USER"
 log "Creating Azure Event Hubs"
 az eventhubs eventhub create \
     --name $AZURE_EVENT_HUBS_NAME \
