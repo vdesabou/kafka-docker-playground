@@ -39,7 +39,7 @@ sleep 3
 playground topic create --topic gcs_topic --nb-partitions 1
 set -e
 
-log "Doing gsutil authentication"
+log "Doing gcloud authentication"
 set +e
 docker rm -f gcloud-config
 set -e
@@ -47,12 +47,12 @@ docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cl
 
 log "Creating bucket name <$GCS_BUCKET_NAME>, if required"
 set +e
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gsutil mb -p $(cat ${GCP_KEYFILE} | jq -r .project_id) -l $GCS_BUCKET_REGION gs://$GCS_BUCKET_NAME
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud storage buckets create gs://$GCS_BUCKET_NAME --project=$(cat ${GCP_KEYFILE} | jq -r .project_id) --location=$GCS_BUCKET_REGION
 set -e
 
 log "Removing existing objects in GCS, if applicable"
 set +e
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gsutil -m rm -r gs://$GCS_BUCKET_NAME/topics/gcs_topic
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud storage rm gs://$GCS_BUCKET_NAME/topics/gcs_topic/** --recursive
 set -e
 
 log "Sending messages to topic gcs_topic"
@@ -98,10 +98,10 @@ wait_for_ccloud_connector_up $connector_name 180
 sleep 10
 
 log "Listing objects of in GCS"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gsutil ls gs://$GCS_BUCKET_NAME/topics/gcs_topic/*/*
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud storage ls gs://$GCS_BUCKET_NAME/topics/gcs_topic/** --recursive
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-docker run -i --volumes-from gcloud-config -v /tmp:/tmp/ google/cloud-sdk:latest gsutil cp gs://$GCS_BUCKET_NAME/topics/gcs_topic/*/*/*/*/gcs_topic+0+0000000000.avro /tmp/gcs_topic+0+0000000000.avro
+docker run -i --volumes-from gcloud-config -v /tmp:/tmp/ google/cloud-sdk:latest gcloud storage cp gs://$GCS_BUCKET_NAME/topics/gcs_topic/*/*/*/*/gcs_topic+0+0000000000.avro /tmp/gcs_topic+0+0000000000.avro
 
 playground  tools read-avro-file --file /tmp/gcs_topic+0+0000000000.avro
 
