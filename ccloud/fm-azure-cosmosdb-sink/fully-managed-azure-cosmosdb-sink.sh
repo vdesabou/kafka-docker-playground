@@ -36,7 +36,7 @@ log "Creating Azure Resource Group $AZURE_RESOURCE_GROUP"
 az group create \
     --name $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
-    --tags owner_email=$AZ_USER
+    --tags owner_email=$AZ_USER cflt_managed_by=user cflt_managed_id="$USER"
 
 sleep 10
 
@@ -44,7 +44,8 @@ log "Creating Cosmos DB server $AZURE_COSMOSDB_SERVER_NAME"
 az cosmosdb create \
     --name $AZURE_COSMOSDB_SERVER_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
-    --locations regionName=$AZURE_REGION
+    --locations regionName=$AZURE_REGION \
+    --tags cflt_managed_by=user cflt_managed_id="$USER"
 
 function cleanup_cloud_resources {
     set +e
