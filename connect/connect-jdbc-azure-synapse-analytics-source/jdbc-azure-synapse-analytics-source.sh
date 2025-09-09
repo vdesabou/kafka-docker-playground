@@ -54,13 +54,14 @@ function cleanup_cloud_resources {
 }
 trap cleanup_cloud_resources EXIT
 log "Creating SQL server instance $AZURE_SQL_NAME"
+# https://github.com/Azure/azure-cli/issues/17052 tags cannot be set
 az sql server create \
     --name $AZURE_SQL_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION  \
     --admin-user myadmin \
-    --admin-password $PASSWORD \
-    --tags cflt_managed_by=user cflt_managed_id="$USER"
+    --admin-password $PASSWORD
+	
 if [ ! -z "$GITHUB_RUN_NUMBER" ]
 then
     # running with CI
