@@ -993,7 +993,7 @@ _playground_completions() {
       ;;
 
     *'connector restart'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help --task-id --verbose -c -h -t -v")" -- "$cur")
       ;;
 
     *'debug heap-dump'*'-c')

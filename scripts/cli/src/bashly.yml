@@ -3531,6 +3531,13 @@ commands:
     flags:
     - *verbose
     - *connector
+    - long: --task-id
+      short: -t
+      arg: task_id
+      validate: integer
+      required: false
+      help: |-
+        🔧 Restart specific task ID only (instead of restarting entire connector)
 
   - name: stop
     help: 🛑 Stop connector (only available if CP > 7.5)

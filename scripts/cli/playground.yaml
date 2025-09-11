@@ -2885,6 +2885,13 @@ subcommands:
             
             🎓 Tip: If not specified, the command will apply to all connectors
             
+        - names:
+          - --task-id
+          - -t
+          argument: TASK_ID
+          description: | 
+            🔧 Restart specific task ID only (instead of restarting entire connector)
+            
       - name: stop
         description: | 
           🛑 Stop connector (only available if CP > 7.5)

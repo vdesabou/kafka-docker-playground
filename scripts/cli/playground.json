@@ -2651,6 +2651,14 @@
               ],
               "argument": "CONNECTOR",
               "description": "🔗 Connector name\n\n🎓 Tip: If not specified, the command will apply to all connectors\n"
+            },
+            {
+              "names": [
+                "--task-id",
+                "-t"
+              ],
+              "argument": "TASK_ID",
+              "description": "🔧 Restart specific task ID only (instead of restarting entire connector)\n"
             }
           ]
         },
