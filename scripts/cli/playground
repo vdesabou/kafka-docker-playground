@@ -8819,6 +8819,11 @@ function open_file_with_editor() {
   filename="$1"
   wait="$2"
 
+	if [ ! -z "$GITHUB_RUN_NUMBER" ]
+	then
+		# running with CI
+		return
+	fi
   editor=$(playground config get editor)
   if [ "$editor" != "" ] && command -v "$editor" > /dev/null
   then
@@ -27270,7 +27275,7 @@ playground_connector_connect_migration_utility_discovery_command() {
   		fi
   	done
 
-  	log "✅ Now you can run 'playground connect-migration-utility migrate' to migrate these connectors to fully managed"
+  	log "✅ Now you can run 'playground connector connect-migration-utility migrate' to migrate these connectors to fully managed"
   fi
 }
 

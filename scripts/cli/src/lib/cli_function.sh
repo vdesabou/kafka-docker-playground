@@ -1654,6 +1654,11 @@ function open_file_with_editor() {
   filename="$1"
   wait="$2"
 
+	if [ ! -z "$GITHUB_RUN_NUMBER" ]
+	then
+		# running with CI
+		return
+	fi
   editor=$(playground config get editor)
   if [ "$editor" != "" ] && command -v "$editor" > /dev/null
   then

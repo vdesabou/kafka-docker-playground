@@ -75,5 +75,5 @@ else
 		fi
 	done
 
-	log "✅ Now you can run 'playground connect-migration-utility migrate' to migrate these connectors to fully managed"
+	log "✅ Now you can run 'playground connector connect-migration-utility migrate' to migrate these connectors to fully managed"
 fi
