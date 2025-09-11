@@ -294,6 +294,12 @@
 
 💫 Any connector example can be run as *self-managed* by using `--environment ccloud` option when running it with [playground run](/playground%20run) command ! This is also the case for any other [environment](/content?id=%f0%9f%94%90-environments)
 
+### 🧩 Kafka Connector Migration Utility
+
+Test Self-Managed connector mugration to Fully Managed using [playground connector connect-migration-utility](https://kafka-docker-playground.io/#/playground%20connector%20connect-migration-utility) CLI
+
+* <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/cloudwatch_logs.svg" width="15"> [Amazon CloudWatch Metrics Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-migration-utility) :ccloud/connect-migration-utility:
+
 ### 🚀 And much more...
 
   - 🌨 Using [Confluent for Kubernetes](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/confluent-for-kubernetes/) with Confluent Cloud ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
