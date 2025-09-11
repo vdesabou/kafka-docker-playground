@@ -113,3 +113,8 @@ log "View the metrics being produced to Amazon CloudWatch"
 aws cloudwatch list-metrics --namespace service-namespace --region $AWS_REGION > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "test_meter_fifteenMinuteRate" /tmp/result.log
+
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name

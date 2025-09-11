@@ -82,3 +82,8 @@ sleep 5
 
 log "Verify we have received the data in MyKafkaTopicName topic"
 playground topic consume --topic MyKafkaTopicName --min-expected-messages 1 --timeout 60
+
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name
