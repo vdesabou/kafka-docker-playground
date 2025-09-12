@@ -1463,6 +1463,10 @@ subcommands:
           description: | 
             🐳 Container name
             
+            🎓 Tip: you can pass multiple containers by specifying --container multiple times
+            
+            Repeatable: ✓ Yes
+            
             Default value: connect
             
       - name: testssl
@@ -1490,6 +1494,10 @@ subcommands:
           description: | 
             🐳 Container name
             
+            🎓 Tip: you can pass multiple containers by specifying --container multiple times
+            
+            Repeatable: ✓ Yes
+            
             Default value: connect
             
       - name: thread-dump
@@ -1505,6 +1513,10 @@ subcommands:
           argument: connect
           description: | 
             🐳 Container name
+            
+            🎓 Tip: you can pass multiple containers by specifying --container multiple times
+            
+            Repeatable: ✓ Yes
             
             Default value: connect
             
@@ -1523,6 +1535,10 @@ subcommands:
           argument: connect
           description: | 
             🐳 Container name
+            
+            🎓 Tip: you can pass multiple containers by specifying --container multiple times
+            
+            Repeatable: ✓ Yes
             
             Default value: connect
             
@@ -1549,6 +1565,10 @@ subcommands:
           argument: connect
           description: | 
             🐳 Container name
+            
+            🎓 Tip: you can pass multiple containers by specifying --container multiple times
+            
+            Repeatable: ✓ Yes
             
             Default value: connect
             
@@ -1577,6 +1597,10 @@ subcommands:
           argument: connect
           description: | 
             🐳 Container name
+            
+            🎓 Tip: you can pass multiple containers by specifying --container multiple times
+            
+            Repeatable: ✓ Yes
             
             Default value: connect
             
@@ -1615,6 +1639,10 @@ subcommands:
           argument: connect
           description: | 
             🐳 Container name
+            
+            🎓 Tip: you can pass multiple containers by specifying --container multiple times
+            
+            Repeatable: ✓ Yes
             
             Default value: connect
             
@@ -1656,6 +1684,10 @@ subcommands:
           argument: connect
           description: | 
             🐳 Container name
+            
+            🎓 Tip: you can pass multiple containers by specifying --container multiple times
+            
+            Repeatable: ✓ Yes
             
             Default value: connect
             
@@ -1724,6 +1756,10 @@ subcommands:
           argument: connect
           description: | 
             🐳 Container name
+            
+            🎓 Tip: you can pass multiple containers by specifying --container multiple times
+            
+            Repeatable: ✓ Yes
             
             Default value: connect
             
@@ -1800,6 +1836,10 @@ subcommands:
       description: | 
         🐳 Container name
         
+        🎓 Tip: you can pass multiple containers by specifying --container multiple times
+        
+        Repeatable: ✓ Yes
+        
         Default value: connect
         
     - names:
@@ -1836,6 +1876,10 @@ subcommands:
           argument: connect
           description: | 
             🐳 Container name
+            
+            🎓 Tip: you can pass multiple containers by specifying --container multiple times
+            
+            Repeatable: ✓ Yes
             
             Default value: connect
             
@@ -1875,6 +1919,10 @@ subcommands:
           argument: connect
           description: | 
             🐳 Container name
+            
+            🎓 Tip: you can pass multiple containers by specifying --container multiple times
+            
+            Repeatable: ✓ Yes
             
             Default value: connect
             
@@ -1924,6 +1972,10 @@ subcommands:
           description: | 
             🐳 Container name
             
+            🎓 Tip: you can pass multiple containers by specifying --container multiple times
+            
+            Repeatable: ✓ Yes
+            
             Default value: connect
             
         - names:
@@ -1951,6 +2003,10 @@ subcommands:
           description: | 
             🐳 Container name
             
+            🎓 Tip: you can pass multiple containers by specifying --container multiple times
+            
+            Repeatable: ✓ Yes
+            
             Default value: connect
             
         - names:
@@ -1965,7 +2021,7 @@ subcommands:
             
       - name: exec
         description: | 
-          🪄  Execute command in a container
+          🪄 Execute command in a container
         usage: playground container exec [OPTIONS]
         options:
         - names:
@@ -1974,6 +2030,10 @@ subcommands:
           argument: connect
           description: | 
             🐳 Container name
+            
+            🎓 Tip: you can pass multiple containers by specifying --container multiple times
+            
+            Repeatable: ✓ Yes
             
             Default value: connect
             
@@ -2013,6 +2073,10 @@ subcommands:
           description: | 
             🐳 Container name
             
+            🎓 Tip: you can pass multiple containers by specifying --container multiple times
+            
+            Repeatable: ✓ Yes
+            
             Default value: connect
             
       - name: pause
@@ -2026,6 +2090,10 @@ subcommands:
           argument: connect
           description: | 
             🐳 Container name
+            
+            🎓 Tip: you can pass multiple containers by specifying --container multiple times
+            
+            Repeatable: ✓ Yes
             
             Default value: connect
             
@@ -2041,6 +2109,10 @@ subcommands:
           description: | 
             🐳 Container name
             
+            🎓 Tip: you can pass multiple containers by specifying --container multiple times
+            
+            Repeatable: ✓ Yes
+            
             Default value: connect
             
       - name: kill
@@ -2054,6 +2126,10 @@ subcommands:
           argument: connect
           description: | 
             🐳 Container name
+            
+            🎓 Tip: you can pass multiple containers by specifying --container multiple times
+            
+            Repeatable: ✓ Yes
             
             Default value: connect
             
@@ -2072,6 +2148,10 @@ subcommands:
           argument: connect
           description: | 
             🐳 Container name
+            
+            🎓 Tip: you can pass multiple containers by specifying --container multiple times
+            
+            Repeatable: ✓ Yes
             
             Default value: connect
             

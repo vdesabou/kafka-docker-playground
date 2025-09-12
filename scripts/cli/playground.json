@@ -1297,7 +1297,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\nDefault value: connect\n"
+              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             }
           ]
         },
@@ -1318,7 +1318,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\nDefault value: connect\n"
+              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             }
           ]
         },
@@ -1333,7 +1333,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\nDefault value: connect\n"
+              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             }
           ]
         },
@@ -1348,7 +1348,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\nDefault value: connect\n"
+              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -1377,7 +1377,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\nDefault value: connect\n"
+              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -1406,7 +1406,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\nDefault value: connect\n"
+              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -1445,7 +1445,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\nDefault value: connect\n"
+              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -1479,7 +1479,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\nDefault value: connect\n"
+              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -1527,7 +1527,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\nDefault value: connect\n"
+              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -1608,7 +1608,7 @@
             "-c"
           ],
           "argument": "connect",
-          "description": "🐳 Container name\n\nDefault value: connect\n"
+          "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
         },
         {
           "names": [
@@ -1646,7 +1646,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\nDefault value: connect\n"
+              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             }
           ]
         },
@@ -1687,7 +1687,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\nDefault value: connect\n"
+              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -1732,7 +1732,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\nDefault value: connect\n"
+              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -1755,7 +1755,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\nDefault value: connect\n"
+              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -1774,7 +1774,7 @@
         },
         {
           "name": "exec",
-          "description": "🪄  Execute command in a container\n",
+          "description": "🪄 Execute command in a container\n",
           "usage": "playground container exec [OPTIONS]",
           "options": [
             {
@@ -1783,7 +1783,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\nDefault value: connect\n"
+              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -1819,7 +1819,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\nDefault value: connect\n"
+              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             }
           ]
         },
@@ -1834,7 +1834,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\nDefault value: connect\n"
+              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             }
           ]
         },
@@ -1849,7 +1849,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\nDefault value: connect\n"
+              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             }
           ]
         },
@@ -1864,7 +1864,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\nDefault value: connect\n"
+              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             }
           ]
         },
@@ -1879,7 +1879,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\nDefault value: connect\n"
+              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [

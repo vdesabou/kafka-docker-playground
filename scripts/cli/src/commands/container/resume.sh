@@ -1,4 +1,10 @@
-container="${args[--container]}"
+containers="${args[--container]}"
 
-log "Resuming docker container ${container}"
-docker unpause ${container}
+# Convert space-separated string to array
+IFS=' ' read -ra container_array <<< "$containers"
+
+for container in "${container_array[@]}"
+do
+	log "⏯️ Resuming docker container ${container}"
+	docker unpause ${container}
+done

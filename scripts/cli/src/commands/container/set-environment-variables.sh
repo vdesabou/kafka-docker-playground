@@ -1,6 +1,9 @@
-container="${args[--container]}"
+containers="${args[--container]}"
 restore_original_values="${args[--restore-original-values]}"
 mount_jscissors_files="${args[--mount-jscissors-files]}"
+
+# Convert space-separated string to array
+IFS=' ' read -ra container_array <<< "$containers"
 
 # Convert the space delimited string to an array
 eval "env_array=(${args[--env]})"
@@ -45,37 +48,42 @@ if [[ ! -n "$restore_original_values" ]]
 then
     cat << EOF > $tmp_dir/docker-compose.override.java.env.yml
 services:
+EOF
+
+    # Generate environment variables for each container
+    for container in "${container_array[@]}"
+    do
+        cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
   $container:
     environment:
       DUMMY: $RANDOM
 EOF
 
-
-    for env_variable in "${env_array[@]}"
-    do
-    env_list="$env_list $env_variable"
-    cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
+        for env_variable in "${env_array[@]}"
+        do
+            env_list="$env_list $env_variable"
+            cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
       $env_variable
 EOF
+        done
 
-    done
-
-    if [[ -n "$mount_jscissors_files" ]]
-    then
-    cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
+        if [[ -n "$mount_jscissors_files" ]]
+        then
+            cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
     volumes:
       - ${root_folder}/scripts/cli/src/jscissors/jscissors-1.0-SNAPSHOT.jar:/tmp/jscissors-1.0-SNAPSHOT.jar
       - /tmp/:/tmp/
 EOF
+        fi
+    done
 
-    fi
-    log "📦 enabling container $container with environment variables $env_list"
+    log "📦 enabling containers ${containers} with environment variables $env_list"
     echo "$docker_command" > $tmp_dir/playground-command-java-env
     sed -i -E -e "s|up -d --quiet-pull|-f $tmp_dir/docker-compose.override.java.env.yml up -d --quiet-pull|g" $tmp_dir/playground-command-java-env
     load_env_variables
     bash $tmp_dir/playground-command-java-env
 else
-    log "🧽 restore back original values before any changes was made for container $container"
+    log "🧽 restore back original values before any changes was made for containers ${containers}"
     echo "$docker_command" > $tmp_dir/playground-command
     load_env_variables
     bash $tmp_dir/playground-command

@@ -129,7 +129,7 @@ playground_usage() {
   printf "  %s   🔥 Display all ERROR/FATAL logs in all containers. Useful for quick troubleshooting\n" "$(green "container display-error-all-containers")    "
   printf "  %s   🛬 SSH into container\n" "$(green "container ssh")                             "
   printf "  %s   🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)\n" "$(green "container change-jdk")                      "
-  printf "  %s   🪄  Execute command in a container\n" "$(green "container exec")                            "
+  printf "  %s   🪄 Execute command in a container\n" "$(green "container exec")                            "
   printf "  %s   🔁 Restart a container\n" "$(green "container restart")                         "
   printf "  %s   ⏸️  Pause a container\n" "$(green "container pause")                           "
   printf "  %s   ⏯️  Resume a container\n" "$(green "container resume")                          "
@@ -3668,8 +3668,8 @@ playground_debug_enable_remote_debugging_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    🐳 Container name\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
+    printf "    🐳 Container name\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
 
@@ -3748,8 +3748,8 @@ playground_debug_generate_diagnostics_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    🐳 Container name\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
+    printf "    🐳 Container name\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
 
@@ -3787,8 +3787,8 @@ playground_debug_thread_dump_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    🐳 Container name\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
+    printf "    🐳 Container name\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
 
@@ -3826,8 +3826,8 @@ playground_debug_heap_dump_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    🐳 Container name\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
+    printf "    🐳 Container name\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
 
@@ -3870,8 +3870,8 @@ playground_debug_tcp_dump_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    🐳 Container name\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
+    printf "    🐳 Container name\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
 
@@ -3914,8 +3914,8 @@ playground_debug_block_traffic_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    🐳 Container name\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
+    printf "    🐳 Container name\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
 
@@ -3964,8 +3964,8 @@ playground_debug_java_debug_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    🐳 Container name\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
+    printf "    🐳 Container name\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
 
@@ -4016,8 +4016,8 @@ playground_debug_jscissors_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    🐳 Container name\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
+    printf "    🐳 Container name\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
 
@@ -4080,8 +4080,8 @@ playground_debug_flight_recorder_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    🐳 Container name\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
+    printf "    🐳 Container name\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
 
@@ -4220,8 +4220,8 @@ playground_get_jmx_metrics_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    🐳 Container name\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
+    printf "    🐳 Container name\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
 
@@ -4270,7 +4270,7 @@ playground_container_usage() {
   printf "  %s   🔥 Display all ERROR/FATAL logs in all containers. Useful for quick troubleshooting\n" "$(green "display-error-all-containers")   "
   printf "  %s   🛬 SSH into container\n" "$(green "ssh")                            "
   printf "  %s   🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)\n" "$(green "change-jdk")                     "
-  printf "  %s   🪄  Execute command in a container\n" "$(green "exec")                           "
+  printf "  %s   🪄 Execute command in a container\n" "$(green "exec")                           "
   printf "  %s   🔁 Restart a container\n" "$(green "restart")                        "
   printf "  %s   ⏸️  Pause a container\n" "$(green "pause")                          "
   printf "  %s   ⏯️  Resume a container\n" "$(green "resume")                         "
@@ -4310,8 +4310,8 @@ playground_container_get_properties_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    🐳 Container name\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
+    printf "    🐳 Container name\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
 
@@ -4424,8 +4424,8 @@ playground_container_logs_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    🐳 Container name\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
+    printf "    🐳 Container name\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
 
@@ -4499,8 +4499,8 @@ playground_container_ssh_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    🐳 Container name\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
+    printf "    🐳 Container name\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
 
@@ -4546,8 +4546,8 @@ playground_container_change_jdk_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    🐳 Container name\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
+    printf "    🐳 Container name\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
 
@@ -4572,7 +4572,7 @@ playground_container_change_jdk_usage() {
 
 # :command.usage
 playground_container_exec_usage() {
-  printf "playground container exec - 🪄  Execute command in a container\n\n"
+  printf "playground container exec - 🪄 Execute command in a container\n\n"
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground container exec [OPTIONS]\n"
@@ -4585,8 +4585,8 @@ playground_container_exec_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    🐳 Container name\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
+    printf "    🐳 Container name\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
 
@@ -4637,8 +4637,8 @@ playground_container_restart_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    🐳 Container name\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
+    printf "    🐳 Container name\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
 
@@ -4665,8 +4665,8 @@ playground_container_pause_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    🐳 Container name\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
+    printf "    🐳 Container name\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
 
@@ -4695,8 +4695,8 @@ playground_container_resume_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    🐳 Container name\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
+    printf "    🐳 Container name\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
 
@@ -4723,8 +4723,8 @@ playground_container_kill_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    🐳 Container name\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
+    printf "    🐳 Container name\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
 
@@ -4756,8 +4756,8 @@ playground_container_set_environment_variables_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    🐳 Container name\n"
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
+    printf "    🐳 Container name\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
 
@@ -21122,32 +21122,38 @@ playground_tools_certs_create_command() {
 playground_debug_enable_remote_debugging_command() {
 
   # src/commands/debug/enable-remote-debugging.sh
-  container="${args[--container]}"
+  containers="${args[--container]}"
 
-  log "✨ enable remote debugging for $container"
-  playground container set-environment-variables --container "${container}" --env "KAFKA_DEBUG: 'true'" --env "JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'"
+  # Convert space-separated string to array
+  IFS=' ' read -ra container_array <<< "$containers"
 
-  log "If you use Visual Studio Code:"
-  log "Edit .vscode/launch.json with"
+  for container in "${container_array[@]}"
+  do
+  	log "✨ enable remote debugging for $container"
+  	playground container set-environment-variables --container "${container}" --env "KAFKA_DEBUG: 'true'" --env "JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'"
 
-  log "
-  {
-      \"version\": \"0.2.0\",
-      \"configurations\": [
+  	log "If you use Visual Studio Code:"
+  	log "Edit .vscode/launch.json with"
 
-          {
-              \"type\": \"java\",
-              \"name\": \"Debug $component container\",
-              \"request\": \"attach\",
-              \"hostName\": \"127.0.0.1\",
-              \"port\": 5005,
-              \"timeout\": 30000
-          }
-      ]
-  }
-  "
+  	log "
+  	{
+  		\"version\": \"0.2.0\",
+  		\"configurations\": [
 
-  log "See https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging"environment
+  			{
+  				\"type\": \"java\",
+  				\"name\": \"Debug $component container\",
+  				\"request\": \"attach\",
+  				\"hostName\": \"127.0.0.1\",
+  				\"port\": 5005,
+  				\"timeout\": 30000
+  			}
+  		]
+  	}
+  	"
+
+  	log "See https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging"
+  done
 }
 
 # :command.function
@@ -21164,7 +21170,8 @@ playground_debug_testssl_command() {
 playground_debug_generate_diagnostics_command() {
 
   # src/commands/debug/generate-diagnostics.sh
-  container="${args[--container]}"
+  containers="${args[--container]}"
+
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   if [ -z "$PG_VERBOSE_MODE" ]
   then
@@ -21173,241 +21180,279 @@ playground_debug_generate_diagnostics_command() {
       log "🐛📂 not deleting tmp dir $tmp_dir"
   fi
 
-  if [[ "$container" == "connect" ]] || [[ "$container" == "broker" ]]
-  then
-      log "⛑️ Creating diagnostics bundle for container ${container}"
-      log "⏳ please wait..."
-  else
-      logerror "❌ only connect and broker containers are supported"
-      exit 1
-  fi
+  # Convert space-separated string to array
+  IFS=' ' read -ra container_array <<< "$containers"
 
-  docker exec $container curl -L https://packages.confluent.io/tools/diagnostics-bundle/diagnostics-bundle-1.0.0.jar -o /tmp/diagnostics-bundle-1.0.0.jar > /dev/null 2>&1
-
-  fifo_path="$tmp_dir/collect_fifo"
-  mkfifo "$fifo_path"
-
-  set +e
-  docker exec $container java -jar /tmp/diagnostics-bundle-1.0.0.jar collect > "$fifo_path" 2>&1 &
-
-  # Loop through each line in the named pipe
-  while read -r line
+  for container in "${container_array[@]}"
   do
-      echo "$line"
-      echo "$line" >> $tmp_dir/result.log
+  	if [[ "$container" == "connect" ]] || [[ "$container" == "broker" ]]
+  	then
+  		log "⛑️ Creating diagnostics bundle for container ${container}"
+  		log "⏳ please wait..."
+  	else
+  		logerror "❌ only connect and broker containers are supported"
+  		exit 1
+  	fi
 
-  done < "$fifo_path"
+  	docker exec $container curl -L https://packages.confluent.io/tools/diagnostics-bundle/diagnostics-bundle-1.0.0.jar -o /tmp/diagnostics-bundle-1.0.0.jar > /dev/null 2>&1
 
-  nb=$(grep -c "Diagnostics output has been zipped and written to" $tmp_dir/result.log)
-  if [ $nb -eq 0 ]
-  then
-      logerror "❌ Failed to generate bundle"
-      cat $tmp_dir/result.log
-      exit 1
-  fi
-  bundle_file=$(cat $tmp_dir/result.log | grep "Diagnostics output has been zipped and written to" | cut -d ":" -f 4 | sed 's/ //g')
-  bundle_file_filename=$(basename -- "$bundle_file")
-  log "⛑️ diagnostics bundle is available at ${bundle_file_filename}"
-  docker cp ${container}:${bundle_file} ${bundle_file_filename}
+  	fifo_path="$tmp_dir/collect_fifo"
+  	mkfifo "$fifo_path"
+
+  	set +e
+  	docker exec $container java -jar /tmp/diagnostics-bundle-1.0.0.jar collect > "$fifo_path" 2>&1 &
+
+  	# Loop through each line in the named pipe
+  	while read -r line
+  	do
+  		echo "$line"
+  		echo "$line" >> $tmp_dir/result.log
+
+  	done < "$fifo_path"
+
+  	nb=$(grep -c "Diagnostics output has been zipped and written to" $tmp_dir/result.log)
+  	if [ $nb -eq 0 ]
+  	then
+  		logerror "❌ Failed to generate bundle"
+  		cat $tmp_dir/result.log
+  		exit 1
+  	fi
+  	bundle_file=$(cat $tmp_dir/result.log | grep "Diagnostics output has been zipped and written to" | cut -d ":" -f 4 | sed 's/ //g')
+  	bundle_file_filename=$(basename -- "$bundle_file")
+  	log "⛑️ diagnostics bundle is available at ${bundle_file_filename}"
+  	docker cp ${container}:${bundle_file} ${bundle_file_filename}
+  done
 }
 
 # :command.function
 playground_debug_thread_dump_command() {
 
   # src/commands/debug/thread-dump.sh
-  container="${args[--container]}"
-  filename="/tmp/thread-dump-$container-`date '+%Y-%m-%d-%H-%M-%S'`.log"
+  containers="${args[--container]}"
 
-  set +e
-  docker exec $container type jstack > /dev/null 2>&1
-  if [ $? != 0 ]
-  then
-      logerror "❌ jstack is not installed on container $container"
-      exit 1
-  fi
-  set -e
-  log "🎯 Taking thread dump on container ${container} for pid 1"
-  docker exec $container jstack 1 > "$filename" 2>&1
-  if [ $? -eq 0 ]
-  then
-      playground open --file "${filename}"
-  else
-      logerror "❌ Failed to take thread dump"
-  fi
+  # Convert space-separated string to array
+  IFS=' ' read -ra container_array <<< "$containers"
+
+  for container in "${container_array[@]}"
+  do
+  	filename="/tmp/thread-dump-$container-$(date '+%Y-%m-%d-%H-%M-%S').log"
+
+  	set +e
+  	docker exec $container type jstack > /dev/null 2>&1
+  	if [ $? != 0 ]
+  	then
+  		logerror "❌ jstack is not installed on container $container"
+  		exit 1
+  	fi
+  	set -e
+  	log "🎯 Taking thread dump on container ${container} for pid 1"
+  	docker exec $container jstack 1 > "$filename" 2>&1
+  	if [ $? -eq 0 ]
+  	then
+  		playground open --file "${filename}"
+  	else
+  		logerror "❌ Failed to take thread dump"
+  	fi
+  done
+
 }
 
 # :command.function
 playground_debug_heap_dump_command() {
 
   # src/commands/debug/heap-dump.sh
-  container="${args[--container]}"
+  containers="${args[--container]}"
   live="${args[--live]}"
   histo="${args[--histo]}"
 
   set +e
-  docker exec $container type jmap > /dev/null 2>&1
-  if [ $? != 0 ]
-  then
-      logerror "❌ jmap is not installed on container $container"
-      exit 1
-  fi
 
-  if [[ -n "$histo" ]]
-  then
-      filename="heap-dump-$container-histo-`date '+%Y-%m-%d-%H-%M-%S'`.txt"
-      set -e
-      if [[ -n "$live" ]]
-      then
-          log "📊 Taking histo (with live option) heap dump on container ${container}"
-          docker exec $container jmap -histo:live 1 > /tmp/${filename}
-      else
-          log "📊 Taking histo (without live option) heap dump on container ${container}"
-          docker exec $container jmap -histo 1 > /tmp/${filename}
-      fi
-      if [ $? -eq 0 ]
-      then
-          log "👻 heap dump is available at /tmp/${filename}"
-      else
-          logerror "❌ Failed to take heap dump"
-      fi
-  else
-      filename="heap-dump-$container-`date '+%Y-%m-%d-%H-%M-%S'`.hprof"
-      set -e
-      if [[ -n "$live" ]]
-      then
-          log "🎯 Taking heap dump (with live option) on container ${container}"
-          docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
-      else
-          log "🎯 Taking heap dump (without live option) on container ${container}"
-          docker exec $container jmap -dump:format=b,file=/tmp/${filename} 1
-      fi
-      if [ $? -eq 0 ]
-      then
-          log "👻 heap dump is available at ${filename}"
-          docker cp ${container}:/tmp/${filename} ${filename}
-      else
-          logerror "❌ Failed to take heap dump"
-      fi
-  fi
+  # Convert space-separated string to array
+  IFS=' ' read -ra container_array <<< "$containers"
 
+  for container in "${container_array[@]}"
+  do
+  	docker exec $container type jmap > /dev/null 2>&1
+  	if [ $? != 0 ]
+  	then
+  		logerror "❌ jmap is not installed on container $container"
+  		exit 1
+  	fi
+
+  	if [[ -n "$histo" ]]
+  	then
+  		filename="heap-dump-$container-histo-$(date '+%Y-%m-%d-%H-%M-%S').txt"
+  		set -e
+  		if [[ -n "$live" ]]
+  		then
+  			log "📊 Taking histo (with live option) heap dump on container ${container}"
+  			docker exec $container jmap -histo:live 1 > /tmp/${filename}
+  		else
+  			log "📊 Taking histo (without live option) heap dump on container ${container}"
+  			docker exec $container jmap -histo 1 > /tmp/${filename}
+  		fi
+  		if [ $? -eq 0 ]
+  		then
+  			log "👻 heap dump is available at /tmp/${filename}"
+  		else
+  			logerror "❌ Failed to take heap dump"
+  		fi
+  	else
+  		filename="heap-dump-$container-$(date '+%Y-%m-%d-%H-%M-%S').hprof"
+  		set -e
+  		if [[ -n "$live" ]]
+  		then
+  			log "🎯 Taking heap dump (with live option) on container ${container}"
+  			docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
+  		else
+  			log "🎯 Taking heap dump (without live option) on container ${container}"
+  			docker exec $container jmap -dump:format=b,file=/tmp/${filename} 1
+  		fi
+  		if [ $? -eq 0 ]
+  		then
+  			log "👻 heap dump is available at ${filename}"
+  			docker cp ${container}:/tmp/${filename} ${filename}
+  		else
+  			logerror "❌ Failed to take heap dump"
+  		fi
+  	fi
+  done
 }
 
 # :command.function
 playground_debug_tcp_dump_command() {
 
   # src/commands/debug/tcp-dump.sh
-  container="${args[--container]}"
+  containers="${args[--container]}"
   port="${args[--port]}"
   duration="${args[--duration]}"
-  filename="tcp-dump-$container-$port-`date '+%Y-%m-%d-%H-%M-%S'`.pcap"
+  filename="tcp-dump-$container-$port-$(date '+%Y-%m-%d-%H-%M-%S').pcap"
 
-  set +e
-  docker exec $container type tcpdump > /dev/null 2>&1
-  if [ $? != 0 ]
-  then
+  # Convert space-separated string to array
+  IFS=' ' read -ra container_array <<< "$containers"
 
-    tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-    if [ -z "$PG_VERBOSE_MODE" ]
-    then
-        trap 'rm -rf $tmp_dir' EXIT
-    else
-        log "🐛📂 not deleting tmp dir $tmp_dir"
-    fi
-    output_install_log="$tmp_dir/output_install.log"
+  for container in "${container_array[@]}"
+  do
+  	set +e
+  	docker exec $container type tcpdump > /dev/null 2>&1
+  	if [ $? != 0 ]
+  	then
 
-    logwarn "tcpdump is not installed on container $container, attempting to install it"
-    echo "using rpm" > $output_install_log
-    docker exec --privileged --user root $container bash -c "rpm -i --nosignature https://rpmfind.net/linux/centos/8-stream/AppStream/aarch64/os/Packages/tcpdump-4.9.3-2.el8.aarch64.rpm" >> $output_install_log 2>&1
-    echo "using yum" >> $output_install_log
-    docker exec --privileged --user root $container bash -c "yum update -y && yum install tcpdump -y" >> $output_install_log 2>&1
+  	tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  	if [ -z "$PG_VERBOSE_MODE" ]
+  	then
+  		trap 'rm -rf $tmp_dir' EXIT
+  	else
+  		log "🐛📂 not deleting tmp dir $tmp_dir"
+  	fi
+  	output_install_log="$tmp_dir/output_install.log"
 
-    if [ "$container" == "ngrok" ]
-    then
-      playground container exec -c ngrok --command "adduser --force-badname --system --no-create-home _apt --gid 1000" --root >> $output_install_log 2>&1
-    fi
-    echo "using apt-get" >> $output_install_log
-    docker exec --privileged --user root $container bash -c "apt-get update && echo tcpdump | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*" >> $output_install_log 2>&1
-  fi
-  docker exec $container type tcpdump > /dev/null 2>&1
-  if [ $? != 0 ]
-  then
-      logerror "❌ tcpdump could not be installed, see output below"
-      cat $output_install_log
-      exit 1
-  fi
-  set -e
+  	logwarn "tcpdump is not installed on container $container, attempting to install it"
+  	echo "using rpm" > $output_install_log
+  	docker exec --privileged --user root $container bash -c "rpm -i --nosignature https://rpmfind.net/linux/centos/8-stream/AppStream/aarch64/os/Packages/tcpdump-4.9.3-2.el8.aarch64.rpm" >> $output_install_log 2>&1
+  	echo "using yum" >> $output_install_log
+  	docker exec --privileged --user root $container bash -c "yum update -y && yum install tcpdump -y" >> $output_install_log 2>&1
 
-  set +e
-  docker exec --privileged --user root ${container} bash -c "killall tcpdump" > /dev/null 2>&1
-  set -e
+  	if [ "$container" == "ngrok" ]
+  	then
+  		playground container exec -c ngrok --command "adduser --force-badname --system --no-create-home _apt --gid 1000" --root >> $output_install_log 2>&1
+  	fi
+  	echo "using apt-get" >> $output_install_log
+  	docker exec --privileged --user root $container bash -c "apt-get update && echo tcpdump | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*" >> $output_install_log 2>&1
+  	fi
+  	docker exec $container type tcpdump > /dev/null 2>&1
+  	if [ $? != 0 ]
+  	then
+  		logerror "❌ tcpdump could not be installed, see output below"
+  		cat $output_install_log
+  		exit 1
+  	fi
+  	set -e
 
-  if [[ -n "$port" ]]
-  then
-    log "🕵️‍♂️ Taking tcp dump on container ${container} and port ${port} for ${duration} seconds..."
-    docker exec -d --privileged --user root ${container} bash -c "tcpdump -w /tmp/${filename} -i any port ${port}"
-  else
-    log "🕵️‍♂️ Taking tcp dump on container ${container} and all ports for ${duration} seconds..."
-    docker exec -d --privileged --user root ${container} bash -c "tcpdump -w /tmp/${filename} -i any"
-  fi
+  	set +e
+  	docker exec --privileged --user root ${container} bash -c "killall tcpdump" > /dev/null 2>&1
+  	set -e
 
-  if [ $? -eq 0 ]
-  then
-      playground container get-ip-addresses
-      sleep $duration
-      set +e
-      docker exec --privileged --user root ${container} bash -c "killall tcpdump" > /dev/null 2>&1
-      set -e
-      log "🌶️ tcp dump is available at ${filename}"
-      docker cp ${container}:/tmp/${filename} ${filename}
-      if [[ $(type -f wireshark 2>&1) =~ "not found" ]]
-      then
-          logwarn "🦈 wireshark is not installed, grab it at https://www.wireshark.org/"
-          exit 0
-      else
-          log "🦈 Opening ${filename} with wireshark"
-          wireshark ${filename}
-      fi
+  	if [[ -n "$port" ]]
+  	then
+  	log "🕵️‍♂️ Taking tcp dump on container ${container} and port ${port} for ${duration} seconds..."
+  	docker exec -d --privileged --user root ${container} bash -c "tcpdump -w /tmp/${filename} -i any port ${port}"
+  	else
+  	log "🕵️‍♂️ Taking tcp dump on container ${container} and all ports for ${duration} seconds..."
+  	docker exec -d --privileged --user root ${container} bash -c "tcpdump -w /tmp/${filename} -i any"
+  	fi
 
-  else
-      logerror "❌ Failed to take tcp dump"
-  fi
+  	if [ $? -eq 0 ]
+  	then
+  		playground container get-ip-addresses
+  		sleep $duration
+  		set +e
+  		docker exec --privileged --user root ${container} bash -c "killall tcpdump" > /dev/null 2>&1
+  		set -e
+  		log "🌶️ tcp dump is available at ${filename}"
+  		docker cp ${container}:/tmp/${filename} ${filename}
+  		if [[ $(type -f wireshark 2>&1) =~ "not found" ]]
+  		then
+  			logwarn "🦈 wireshark is not installed, grab it at https://www.wireshark.org/"
+  			exit 0
+  		else
+  			log "🦈 Opening ${filename} with wireshark"
+  			wireshark ${filename}
+  		fi
 
+  	else
+  		logerror "❌ Failed to take tcp dump"
+  	fi
+  done
 }
 
 # :command.function
 playground_debug_block_traffic_command() {
 
   # src/commands/debug/block-traffic.sh
-  container="${args[--container]}"
+  containers="${args[--container]}"
   port="${args[--port]}"
   destination="${args[--destination]}"
   action="${args[--action]}"
 
-  set +e
-  docker exec $container type iptables > /dev/null 2>&1
-  if [ $? != 0 ]
-  then
-      tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
-      if [ $? != 0 ] || [ "$tag" == "" ]
+  # Convert space-separated string to array
+  IFS=' ' read -ra container_array <<< "$containers"
+
+  # Function to install iptables on a container if needed
+  install_iptables_if_needed() {
+      local container=$1
+      set +e
+      docker exec $container type iptables > /dev/null 2>&1
+      if [ $? != 0 ]
       then
-          logerror "Could not find current CP version from docker ps"
+          tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+          if [ $? != 0 ] || [ "$tag" == "" ]
+          then
+              logerror "Could not find current CP version from docker ps"
+              exit 1
+          fi
+          logwarn "iptables is not installed on container $container, attempting to install it"
+          if [[ "$tag" == *ubi8 ]] || version_gt $tag "5.9.0"
+          then
+            docker exec --privileged --user root $container bash -c "yum -y install --disablerepo='Confluent*' iptables"
+          else
+            docker exec --privileged --user root $container bash -c "apt-get update && echo iptables | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*"
+          fi
+      fi
+      docker exec $container type iptables > /dev/null 2>&1
+      if [ $? != 0 ]
+      then
+          logerror "❌ iptables could not be installed on container $container"
           exit 1
       fi
-      logwarn "iptables is not installed on container $container, attempting to install it"
-      if [[ "$tag" == *ubi8 ]] || version_gt $tag "5.9.0"
-      then
-        docker exec --privileged --user root $container bash -c "yum -y install --disablerepo='Confluent*' iptables"
-      else
-        docker exec --privileged --user root $container bash -c "apt-get update && echo iptables | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*"
-      fi
-  fi
-  docker exec $container type iptables > /dev/null 2>&1
-  if [ $? != 0 ]
-  then
-      logerror "❌ iptables could not be installed"
-      exit 1
-  fi
-  set -e
+      set -e
+  }
+
+  # Install iptables on all containers if needed
+  for container in "${container_array[@]}"
+  do
+      install_iptables_if_needed "$container"
+  done
 
   ip_pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$"
 
@@ -21454,9 +21499,9 @@ playground_debug_block_traffic_command() {
           action="A"
           if [[ -n "$port" ]]
           then
-              log "🚫 Blocking traffic on container ${container} and port ${port} for destination ${destination} (${ip})"
+              log "🚫 Blocking traffic on containers ${containers} and port ${port} for destination ${destination} (${ip})"
           else
-              log "🚫 Blocking traffic on container ${container} for all ports for destination ${destination} (${ip})"
+              log "🚫 Blocking traffic on containers ${containers} for all ports for destination ${destination} (${ip})"
           fi
       ;;
       stop)
@@ -21464,9 +21509,9 @@ playground_debug_block_traffic_command() {
 
           if [[ -n "$port" ]]
           then
-              log "🟢 Unblocking traffic on container ${container} and port ${port} for destination ${destination} (${ip})"
+              log "🟢 Unblocking traffic on containers ${containers} and port ${port} for destination ${destination} (${ip})"
           else
-              log "🟢 Unblocking traffic on container ${container} for all ports from destination ${destination} (${ip})"
+              log "🟢 Unblocking traffic on containers ${containers} for all ports from destination ${destination} (${ip})"
           fi
       ;;
       *)
@@ -21475,15 +21520,20 @@ playground_debug_block_traffic_command() {
       ;;
   esac
 
-  if [[ -n "$port" ]]
-  then
-    docker exec --privileged --user root ${container} bash -c "iptables -${action} INPUT -p tcp -s ${ip} --sport ${port} -j DROP"
-  else
-    docker exec --privileged --user root ${container} bash -c "iptables -${action} INPUT -p tcp -s ${ip} -j DROP"
-  fi
+  # Apply iptables rules to all containers
+  for container in "${container_array[@]}"
+  do
+      log "Applying iptables rule to container: $container"
+      if [[ -n "$port" ]]
+      then
+        docker exec --privileged --user root ${container} bash -c "iptables -${action} INPUT -p tcp -s ${ip} --sport ${port} -j DROP"
+      else
+        docker exec --privileged --user root ${container} bash -c "iptables -${action} INPUT -p tcp -s ${ip} -j DROP"
+      fi
 
-  log "Output of command iptables-save"
-  docker exec --privileged --user root ${container} bash -c "iptables-save"
+      log "Output of command iptables-save for container $container"
+      docker exec --privileged --user root ${container} bash -c "iptables-save"
+  done
 
 }
 
@@ -21491,149 +21541,168 @@ playground_debug_block_traffic_command() {
 playground_debug_java_debug_command() {
 
   # src/commands/debug/java-debug.sh
-  container="${args[--container]}"
+  containers="${args[--container]}"
   type="${args[--type]}"
   action="${args[--action]}"
 
-  if [[ "$action" == "enable" ]]
-  then
-      case "${type}" in
-          "ssl_all")
-              OPTS="-Djavax.net.debug=all"
-          ;;
-          "ssl_handshake")
-              OPTS="-Djavax.net.debug=ssl:handshake"
-          ;;
-          "class_loading")
-              OPTS="-verbose:class"
-          ;;
-          "kerberos")
-              OPTS="-Dsun.security.krb5.debug=true"
-          ;;
-      esac
+  # Convert space-separated string to array
+  IFS=' ' read -ra container_array <<< "$containers"
 
-      playground container set-environment-variables --container "${container}" --env "KAFKA_OPTS: ${OPTS}"
-  else
-      playground container set-environment-variables --container "${container}" --restore-original-values
-  fi
+  for container in "${container_array[@]}"
+  do
+  	if [[ "$action" == "enable" ]]
+  	then
+  		case "${type}" in
+  			"ssl_all")
+  				OPTS="-Djavax.net.debug=all"
+  			;;
+  			"ssl_handshake")
+  				OPTS="-Djavax.net.debug=ssl:handshake"
+  			;;
+  			"class_loading")
+  				OPTS="-verbose:class"
+  			;;
+  			"kerberos")
+  				OPTS="-Dsun.security.krb5.debug=true"
+  			;;
+  		esac
+
+  		playground container set-environment-variables --container "${container}" --env "KAFKA_OPTS: ${OPTS}"
+  	else
+  		playground container set-environment-variables --container "${container}" --restore-original-values
+  	fi
+  done
 }
 
 # :command.function
 playground_debug_jscissors_command() {
 
   # src/commands/debug/jscissors.sh
-  container="${args[--container]}"
+  containers="${args[--container]}"
   # Convert the space delimited string to an array
   eval "operations=(${args[--operation]})"
   class="${args[--class]}"
   method="${args[--method]}"
   action="${args[--action]}"
 
-  if [[ "$action" == "enable" ]]
-  then
-      operation_string=$(printf "+%s" "${operations[@]}")
-      # remove + at beginning and end of operation_string
-      operation_string=${operation_string%+}
-      operation_string=${operation_string#+}
+  # Convert space-separated string to array
+  IFS=' ' read -ra container_array <<< "$containers"
 
-      log "🔧 enabling jscissors for container ${container} with operation(s) ${operation_string}, class ${class} and method ${method}"
-      echo "${class}{${method}}=$operation_string" > /tmp/scissors.props
+  for container in "${container_array[@]}"
+  do
+  	if [[ "$action" == "enable" ]]
+  	then
+  		operation_string=$(printf "+%s" "${operations[@]}")
+  		# remove + at beginning and end of operation_string
+  		operation_string=${operation_string%+}
+  		operation_string=${operation_string#+}
 
-      playground container set-environment-variables --container "${container}" --env "_JAVA_OPTIONS: -javaagent:/tmp/jscissors-1.0-SNAPSHOT.jar=configFile=/tmp/scissors.props" --mount-jscissors-files
+  		log "🔧 enabling jscissors for container ${container} with operation(s) ${operation_string}, class ${class} and method ${method}"
+  		echo "${class}{${method}}=$operation_string" > /tmp/scissors.props
 
-      playground container logs --container "${container}" --wait-for-log "Core Logger" --max-wait 30
+  		playground container set-environment-variables --container "${container}" --env "_JAVA_OPTIONS: -javaagent:/tmp/jscissors-1.0-SNAPSHOT.jar=configFile=/tmp/scissors.props" --mount-jscissors-files
 
-      scissors_file=$(playground --output-level WARN container logs --container "${container}" --wait-for-log "Core Logger" | tail -1 | cut -d " " -f 4)
+  		playground container logs --container "${container}" --wait-for-log "Core Logger" --max-wait 30
 
-      log "✂️ jscissors file is available ${scissors_file}"
-      playground open --file "${scissors_file}"
-  else
-      playground container set-environment-variables --container "${container}" --restore-original-values
-  fi
+  		scissors_file=$(playground --output-level WARN container logs --container "${container}" --wait-for-log "Core Logger" | tail -1 | cut -d " " -f 4)
+
+  		log "✂️ jscissors file is available ${scissors_file}"
+  		playground open --file "${scissors_file}"
+  	else
+  		playground container set-environment-variables --container "${container}" --restore-original-values
+  	fi
+  done
 }
 
 # :command.function
 playground_debug_flight_recorder_command() {
 
   # src/commands/debug/flight-recorder.sh
-  container="${args[--container]}"
+  containers="${args[--container]}"
   action="${args[--action]}"
-  filename="flight-recorder-$container-`date '+%Y-%m-%d-%H-%M-%S'`.jfr"
 
-  set +e
-  docker exec $container type jcmd > /dev/null 2>&1
-  if [ $? != 0 ]
-  then
-      tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
-      if [ $? != 0 ] || [ "$tag" == "" ]
-      then
-          logerror "Could not find current CP version from docker ps"
-          exit 1
-      fi
+  # Convert space-separated string to array
+  IFS=' ' read -ra container_array <<< "$containers"
 
-      logwarn "jcmd is not installed on container $container, attempting to install it"
+  for container in "${container_array[@]}"
+  do
+  	filename="flight-recorder-$container-$(date '+%Y-%m-%d-%H-%M-%S').jfr"
 
-      if [[ "$tag" == *ubi8 ]] || version_gt $tag "5.9.0"
-      then
-        docker exec --privileged --user root $container bash -c "yum -y install --disablerepo='Confluent*' openjdk"
-      else
-        docker exec --privileged --user root $container bash -c "apt-get update && echo openjdk | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*"
-      fi
-  fi
-  docker exec $container type jcmd > /dev/null 2>&1
-  if [ $? != 0 ]
-  then
-      logerror "❌ jcmd could not be installed"
-      exit 1
-  fi
-  set -e
+  	set +e
+  	docker exec $container type jcmd > /dev/null 2>&1
+  	if [ $? != 0 ]
+  	then
+  		tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+  		if [ $? != 0 ] || [ "$tag" == "" ]
+  		then
+  			logerror "Could not find current CP version from docker ps"
+  			exit 1
+  		fi
 
-  case "${action}" in
-      start)
-          set +e
-          output=$(docker exec ${container} jcmd 1 JFR.check)
-          echo "$output" | grep "running" | grep "dump1"
-          if [ $? -eq 0 ]
-          then
-              logwarn "🛩️ flight recorder is already started !"
-              exit 0
-          fi
-          set -e
+  		logwarn "jcmd is not installed on container $container, attempting to install it"
 
-          docker cp ${root_folder}/scripts/cli/all.jfc ${container}:/tmp/all.jfc > /dev/null 2>&1
-          docker exec ${container} jcmd 1 JFR.start name=dump1 filename=/tmp/${filename} settings=/tmp/all.jfc
-          if [ $? -eq 0 ]
-          then
-              log "🛩️ flight recorder is now started"
-          else
-              logerror "❌ Failed to start flight recorder"
-          fi
-      ;;
-      stop)
-          set +e
-          output=$(docker exec ${container} jcmd 1 JFR.check)
-          echo "$output" | grep "running" | grep "dump1"
-          if [ $? -ne 0 ]
-          then
-              logerror "🛩️ flight recorder is not started !"
-              exit 1
-          fi
-          set -e
-          docker exec ${container} jcmd 1 JFR.stop name=dump1 filename=/tmp/${filename}
-          if [ $? -eq 0 ]
-          then
-              log "🛩️ flight recorder is available at ${filename}"
-              log "use JDK Mission Control JMC (https://jdk.java.net/jmc/) to open it"
-              docker cp ${container}:/tmp/${filename} ${filename}
-          else
-              logerror "❌ Failed to stop flight recorder"
-          fi
-      ;;
-      *)
-          logerror "should not happen"
-          exit 1
-      ;;
-  esac
+  		if [[ "$tag" == *ubi8 ]] || version_gt $tag "5.9.0"
+  		then
+  		docker exec --privileged --user root $container bash -c "yum -y install --disablerepo='Confluent*' openjdk"
+  		else
+  		docker exec --privileged --user root $container bash -c "apt-get update && echo openjdk | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*"
+  		fi
+  	fi
+  	docker exec $container type jcmd > /dev/null 2>&1
+  	if [ $? != 0 ]
+  	then
+  		logerror "❌ jcmd could not be installed"
+  		exit 1
+  	fi
+  	set -e
+
+  	case "${action}" in
+  		start)
+  			set +e
+  			output=$(docker exec ${container} jcmd 1 JFR.check)
+  			echo "$output" | grep "running" | grep "dump1"
+  			if [ $? -eq 0 ]
+  			then
+  				logwarn "🛩️ flight recorder is already started !"
+  				exit 0
+  			fi
+  			set -e
+
+  			docker cp ${root_folder}/scripts/cli/all.jfc ${container}:/tmp/all.jfc > /dev/null 2>&1
+  			docker exec ${container} jcmd 1 JFR.start name=dump1 filename=/tmp/${filename} settings=/tmp/all.jfc
+  			if [ $? -eq 0 ]
+  			then
+  				log "🛩️ flight recorder is now started"
+  			else
+  				logerror "❌ Failed to start flight recorder"
+  			fi
+  		;;
+  		stop)
+  			set +e
+  			output=$(docker exec ${container} jcmd 1 JFR.check)
+  			echo "$output" | grep "running" | grep "dump1"
+  			if [ $? -ne 0 ]
+  			then
+  				logerror "🛩️ flight recorder is not started !"
+  				exit 1
+  			fi
+  			set -e
+  			docker exec ${container} jcmd 1 JFR.stop name=dump1 filename=/tmp/${filename}
+  			if [ $? -eq 0 ]
+  			then
+  				log "🛩️ flight recorder is available at ${filename}"
+  				log "use JDK Mission Control JMC (https://jdk.java.net/jmc/) to open it"
+  				docker cp ${container}:/tmp/${filename} ${filename}
+  			else
+  				logerror "❌ Failed to stop flight recorder"
+  			fi
+  		;;
+  		*)
+  			logerror "should not happen"
+  			exit 1
+  		;;
+  	esac
+  done
 }
 
 # :command.function
@@ -21688,29 +21757,41 @@ playground_get_jmx_metrics_command() {
   # src/commands/get-jmx-metrics.sh
   IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 
-  container="${args[--container]}"
+  containers="${args[--container]}"
   domain="${args[--domain]}"
   open="${args[--open]}"
 
-  case "${container}" in
-    zookeeper|broker|schema-registry|connect|connect2|connect3|controller)
-    ;;
-    *)
-      logerror "❌ container name not valid ! Should be one of zookeeper, controller, broker, schema-registry, connect, connect2 or connect3"
-      exit 1
-    ;;
-  esac
+  # Convert space-separated string to array
+  IFS=' ' read -ra container_array <<< "$containers"
 
-  get_jmx_metrics "$container" "$domain" "$open"
+  for container in "${container_array[@]}"
+  do
+  	case "${container}" in
+  	zookeeper|broker|schema-registry|connect|connect2|connect3|controller)
+  	;;
+  	*)
+  		logerror "❌ container name not valid ! Should be one of zookeeper, controller, broker, schema-registry, connect, connect2 or connect3"
+  		exit 1
+  	;;
+  	esac
+
+  	get_jmx_metrics "$container" "$domain" "$open"
+  done
+
 }
 
 # :command.function
 playground_container_get_properties_command() {
 
   # src/commands/container/get-properties.sh
-  container="${args[--container]}"
+  containers="${args[--container]}"
 
-  log "Displaying properties file for $container"
+  # Convert space-separated string to array
+  IFS=' ' read -ra container_array <<< "$containers"
+
+  for container in "${container_array[@]}"
+  do
+  	log "📝 Displaying properties file for $container"
 
   docker exec -i "$container" sh << EOF
 ps -ef | grep properties | grep java | grep -v grep | awk '{ print \$NF }' > /tmp/propertie_file
@@ -21722,6 +21803,8 @@ then
 fi
 cat \$propertie_file | grep -v None | grep .
 EOF
+  done
+
 }
 
 # :command.function
@@ -21796,27 +21879,45 @@ playground_container_kill_all_command() {
 playground_container_logs_command() {
 
   # src/commands/container/logs.sh
-  container="${args[--container]}"
+  containers="${args[--container]}"
   open="${args[--open]}"
   log="${args[--wait-for-log]}"
   max_wait="${args[--max-wait]}"
 
-  if [[ -n "$open" ]]
-  then
-    filename="/tmp/${container}-$(date '+%Y-%m-%d-%H-%M-%S').log"
-    docker container logs "$container" > "$filename" 2>&1
-    if [ $? -eq 0 ]
-    then
-      playground open --file "${filename}"
-    else
-      logerror "❌ failed to get logs using container logs $container"
-    fi
-  elif [[ -n "$log" ]]
-  then
-    wait_for_log "$log" "$container" "$max_wait"
-  else
+  # Convert space-separated string to array
+  IFS=' ' read -ra container_array <<< "$containers"
 
-    docker container logs --tail=200 -f "$container"
+  for container in "${container_array[@]}"
+  do
+  	if [[ -n "$open" ]]
+  	then
+  		filename="/tmp/${container}-$(date '+%Y-%m-%d-%H-%M-%S').log"
+  		docker container logs "$container" > "$filename" 2>&1
+  		if [ $? -eq 0 ]
+  		then
+  			playground open --file "${filename}"
+  		else
+  			logerror "❌ failed to get logs using container logs $container"
+  		fi
+  	elif [[ -n "$log" ]]
+  	then
+  		wait_for_log "$log" "$container" "$max_wait"
+  	else
+
+  		# For multiple containers, run docker logs in parallel in background
+  		if [ ${#container_array[@]} -gt 1 ]; then
+  			# Add container prefix to distinguish logs from different containers
+  			docker container logs --tail=200 -f "$container" 2>&1 | sed "s/^/[$container] /" &
+  		else
+  			# For single container, use normal behavior without prefix
+  			docker container logs --tail=200 -f "$container"
+  		fi
+  	fi
+  done
+
+  # If multiple containers, wait for all background processes
+  if [ ${#container_array[@]} -gt 1 ]; then
+  	wait
   fi
 }
 
@@ -21848,111 +21949,157 @@ playground_container_display_error_all_containers_command() {
 playground_container_ssh_command() {
 
   # src/commands/container/ssh.sh
-  container="${args[--container]}"
+  containers="${args[--container]}"
   shell="${args[--shell]}"
 
-  docker exec -it "$container" "$shell"
+  # Convert space-separated string to array
+  IFS=' ' read -ra container_array <<< "$containers"
+
+  for container in "${container_array[@]}"
+  do
+  	log "🛬 SSH into container: opening shell $shell on container $container"
+      docker exec -it "$container" "$shell"
+  done
 }
 
 # :command.function
 playground_container_change_jdk_command() {
 
   # src/commands/container/change-jdk.sh
-  container="${args[--container]}"
+  containers="${args[--container]}"
   version="${args[--version]}"
 
-  log "🤎 Installing Azul JDK ${version} on container ${container}" /usr/lib/jvm/java-11-zulu-openjdk/bin/java
-  playground container exec --container "${container}" --root --command "yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm ; yum -y install zulu${version}-jdk"
-  if [ $? -eq 0 ]
-  then
-      java_path=$(playground --output-level ERROR container exec --container "${container}" --root --command "update-alternatives --display java | grep \"java-${version}-zulu-openjdk\" | grep \"priority\" | head -1 | cut -d \" \" -f 1")
-      if [ -n "$java_path" ]
-      then
-          playground container exec --container "${container}" --root --command "update-alternatives --set java \"$java_path\""
-      else
-          logerror "could not find java ${version} in alternatives list"
-      fi
-      playground container restart --container "${container}"
+  # Convert space-separated string to array
+  IFS=' ' read -ra container_array <<< "$containers"
 
-      sleep 5
+  for container in "${container_array[@]}"
+  do
+  	log "🤎 Installing Azul JDK ${version} on container ${container}" /usr/lib/jvm/java-11-zulu-openjdk/bin/java
+  	playground container exec --container "${container}" --root --command "yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm ; yum -y install zulu${version}-jdk"
+  	if [ $? -eq 0 ]
+  	then
+  		java_path=$(playground --output-level ERROR container exec --container "${container}" --root --command "update-alternatives --display java | grep \"java-${version}-zulu-openjdk\" | grep \"priority\" | head -1 | cut -d \" \" -f 1")
+  		if [ -n "$java_path" ]
+  		then
+  			playground container exec --container "${container}" --root --command "update-alternatives --set java \"$java_path\""
+  		else
+  			logerror "could not find java ${version} in alternatives list"
+  		fi
+  		playground container restart --container "${container}"
 
-      playground container exec --container "${container}" --command "java -version"
-  else
-      logerror "❌ failed to install Azul JDK ${version}"
-  fi
+  		sleep 5
+
+  		playground container exec --container "${container}" --command "java -version"
+  	else
+  		logerror "❌ failed to install Azul JDK ${version}"
+  	fi
+  done
 }
 
 # :command.function
 playground_container_exec_command() {
 
   # src/commands/container/exec.sh
-  container="${args[--container]}"
+  containers="${args[--container]}"
   command="${args[--command]}"
   root="${args[--root]}"
   shell="${args[--shell]}"
 
-  if [[ -n "$root" ]]
-  then
-    log "Executing command as root in container $container with $shell"
-    docker exec --privileged --user root $container $shell -c "$command"
-  else
-    log "Executing command in container $container with $shell"
-    docker exec $container $shell -c "$command"
-  fi
+  # Convert space-separated string to array
+  IFS=' ' read -ra container_array <<< "$containers"
+
+  for container in "${container_array[@]}"
+  do
+  	if [[ -n "$root" ]]
+  	then
+  	log "🪄👑 Executing command as root in container $container with $shell"
+  	docker exec --privileged --user root $container $shell -c "$command"
+  	else
+  	log "🪄 Executing command in container $container with $shell"
+  	docker exec $container $shell -c "$command"
+  	fi
+  done
 }
 
 # :command.function
 playground_container_restart_command() {
 
   # src/commands/container/restart.sh
-  container="${args[--container]}"
+  containers="${args[--container]}"
 
-  log "Restarting docker container ${container}"
-  docker restart ${container}
+  # Convert space-separated string to array
+  IFS=' ' read -ra container_array <<< "$containers"
 
-  if [[ ${container} == connect* ]]
-  then
-      wait_container_ready
-  fi
+  for container in "${container_array[@]}"
+  do
+  	log "🔁 Restarting docker container ${container}"
+  	docker restart ${container}
+
+  	if [[ ${container} == connect* ]]
+  	then
+  		wait_container_ready
+  	fi
+  done
 }
 
 # :command.function
 playground_container_pause_command() {
 
   # src/commands/container/pause.sh
-  container="${args[--container]}"
+  containers="${args[--container]}"
 
-  log "Pausing docker container ${container}"
-  docker pause ${container}
+  # Convert space-separated string to array
+  IFS=' ' read -ra container_array <<< "$containers"
+
+  for container in "${container_array[@]}"
+  do
+  	log "⏸️ Pausing docker container ${container}"
+  	docker pause ${container}
+  done
 }
 
 # :command.function
 playground_container_resume_command() {
 
   # src/commands/container/resume.sh
-  container="${args[--container]}"
+  containers="${args[--container]}"
 
-  log "Resuming docker container ${container}"
-  docker unpause ${container}
+  # Convert space-separated string to array
+  IFS=' ' read -ra container_array <<< "$containers"
+
+  for container in "${container_array[@]}"
+  do
+  	log "⏯️ Resuming docker container ${container}"
+  	docker unpause ${container}
+  done
 }
 
 # :command.function
 playground_container_kill_command() {
 
   # src/commands/container/kill.sh
-  container="${args[--container]}"
+  containers="${args[--container]}"
 
-  log "Killing docker container ${container}"
-  docker kill ${container}
+  # Convert space-separated string to array
+  IFS=' ' read -ra container_array <<< "$containers"
+
+  for container in "${container_array[@]}"
+  do
+      log "🔫 Killing docker container ${container}"
+      docker kill ${container}
+  done
 }
 
 # :command.function
 playground_container_set_environment_variables_command() {
 
   # src/commands/container/set-environment-variables.sh
-  container="${args[--container]}"
+  containers="${args[--container]}"
   restore_original_values="${args[--restore-original-values]}"
   mount_jscissors_files="${args[--mount-jscissors-files]}"
+
+  # Convert space-separated string to array
+  IFS=' ' read -ra container_array <<< "$containers"
 
   # Convert the space delimited string to an array
   eval "env_array=(${args[--env]})"
@@ -21997,36 +22144,42 @@ playground_container_set_environment_variables_command() {
   then
       cat << EOF > $tmp_dir/docker-compose.override.java.env.yml
 services:
+EOF
+
+      # Generate environment variables for each container
+      for container in "${container_array[@]}"
+      do
+          cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
   $container:
     environment:
       DUMMY: $RANDOM
 EOF
 
-      for env_variable in "${env_array[@]}"
-      do
-      env_list="$env_list $env_variable"
-      cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
+          for env_variable in "${env_array[@]}"
+          do
+              env_list="$env_list $env_variable"
+              cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
       $env_variable
 EOF
+          done
 
-      done
-
-      if [[ -n "$mount_jscissors_files" ]]
-      then
-      cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
+          if [[ -n "$mount_jscissors_files" ]]
+          then
+              cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
     volumes:
       - ${root_folder}/scripts/cli/src/jscissors/jscissors-1.0-SNAPSHOT.jar:/tmp/jscissors-1.0-SNAPSHOT.jar
       - /tmp/:/tmp/
 EOF
+          fi
+      done
 
-      fi
-      log "📦 enabling container $container with environment variables $env_list"
+      log "📦 enabling containers ${containers} with environment variables $env_list"
       echo "$docker_command" > $tmp_dir/playground-command-java-env
       sed -i -E -e "s|up -d --quiet-pull|-f $tmp_dir/docker-compose.override.java.env.yml up -d --quiet-pull|g" $tmp_dir/playground-command-java-env
       load_env_variables
       bash $tmp_dir/playground-command-java-env
   else
-      log "🧽 restore back original values before any changes was made for container $container"
+      log "🧽 restore back original values before any changes was made for containers ${containers}"
       echo "$docker_command" > $tmp_dir/playground-command
       load_env_variables
       bash $tmp_dir/playground-command
@@ -36702,7 +36855,12 @@ playground_debug_enable_remote_debugging_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--container']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
           shift
           shift
         else
@@ -36814,7 +36972,12 @@ playground_debug_generate_diagnostics_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--container']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
           shift
           shift
         else
@@ -36875,7 +37038,12 @@ playground_debug_thread_dump_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--container']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
           shift
           shift
         else
@@ -36936,7 +37104,12 @@ playground_debug_heap_dump_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--container']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
           shift
           shift
         else
@@ -37013,7 +37186,12 @@ playground_debug_tcp_dump_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--container']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
           shift
           shift
         else
@@ -37122,7 +37300,12 @@ playground_debug_block_traffic_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--container']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
           shift
           shift
         else
@@ -37251,7 +37434,12 @@ playground_debug_java_debug_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--container']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
           shift
           shift
         else
@@ -37357,7 +37545,12 @@ playground_debug_jscissors_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--container']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
           shift
           shift
         else
@@ -37503,7 +37696,12 @@ playground_debug_flight_recorder_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--container']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
           shift
           shift
         else
@@ -37848,7 +38046,12 @@ playground_get_jmx_metrics_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--container']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
           shift
           shift
         else
@@ -38097,7 +38300,12 @@ playground_container_get_properties_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--container']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
           shift
           shift
         else
@@ -38300,7 +38508,12 @@ playground_container_logs_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--container']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
           shift
           shift
         else
@@ -38477,7 +38690,12 @@ playground_container_ssh_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--container']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
           shift
           shift
         else
@@ -38559,7 +38777,12 @@ playground_container_change_jdk_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--container']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
           shift
           shift
         else
@@ -38646,7 +38869,12 @@ playground_container_exec_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--container']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
           shift
           shift
         else
@@ -38766,7 +38994,12 @@ playground_container_restart_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--container']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
           shift
           shift
         else
@@ -38827,7 +39060,12 @@ playground_container_pause_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--container']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
           shift
           shift
         else
@@ -38888,7 +39126,12 @@ playground_container_resume_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--container']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
           shift
           shift
         else
@@ -38949,7 +39192,12 @@ playground_container_kill_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--container']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
           shift
           shift
         else
@@ -39010,7 +39258,12 @@ playground_container_set_environment_variables_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--container']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
           shift
           shift
         else

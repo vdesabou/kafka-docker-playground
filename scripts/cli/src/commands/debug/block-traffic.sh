@@ -1,33 +1,46 @@
-container="${args[--container]}"
+containers="${args[--container]}"
 port="${args[--port]}"
 destination="${args[--destination]}"
 action="${args[--action]}"
 
-set +e
-docker exec $container type iptables > /dev/null 2>&1
-if [ $? != 0 ]
-then
-    tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
-    if [ $? != 0 ] || [ "$tag" == "" ]
+# Convert space-separated string to array
+IFS=' ' read -ra container_array <<< "$containers"
+
+# Function to install iptables on a container if needed
+install_iptables_if_needed() {
+    local container=$1
+    set +e
+    docker exec $container type iptables > /dev/null 2>&1
+    if [ $? != 0 ]
     then
-        logerror "Could not find current CP version from docker ps"
+        tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+        if [ $? != 0 ] || [ "$tag" == "" ]
+        then
+            logerror "Could not find current CP version from docker ps"
+            exit 1
+        fi
+        logwarn "iptables is not installed on container $container, attempting to install it"
+        if [[ "$tag" == *ubi8 ]] || version_gt $tag "5.9.0"
+        then
+          docker exec --privileged --user root $container bash -c "yum -y install --disablerepo='Confluent*' iptables"
+        else
+          docker exec --privileged --user root $container bash -c "apt-get update && echo iptables | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*"
+        fi
+    fi
+    docker exec $container type iptables > /dev/null 2>&1
+    if [ $? != 0 ]
+    then
+        logerror "❌ iptables could not be installed on container $container"
         exit 1
     fi
-    logwarn "iptables is not installed on container $container, attempting to install it"
-    if [[ "$tag" == *ubi8 ]] || version_gt $tag "5.9.0"
-    then
-      docker exec --privileged --user root $container bash -c "yum -y install --disablerepo='Confluent*' iptables"
-    else
-      docker exec --privileged --user root $container bash -c "apt-get update && echo iptables | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*"
-    fi
-fi
-docker exec $container type iptables > /dev/null 2>&1
-if [ $? != 0 ]
-then
-    logerror "❌ iptables could not be installed"
-    exit 1
-fi
-set -e
+    set -e
+}
+
+# Install iptables on all containers if needed
+for container in "${container_array[@]}"
+do
+    install_iptables_if_needed "$container"
+done
 
 ip_pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$"
 
@@ -74,9 +87,9 @@ case "${action}" in
         action="A"
         if [[ -n "$port" ]]
         then
-            log "🚫 Blocking traffic on container ${container} and port ${port} for destination ${destination} (${ip})"
+            log "🚫 Blocking traffic on containers ${containers} and port ${port} for destination ${destination} (${ip})"
         else
-            log "🚫 Blocking traffic on container ${container} for all ports for destination ${destination} (${ip})"
+            log "🚫 Blocking traffic on containers ${containers} for all ports for destination ${destination} (${ip})"
         fi
     ;;
     stop)
@@ -84,9 +97,9 @@ case "${action}" in
 
         if [[ -n "$port" ]]
         then
-            log "🟢 Unblocking traffic on container ${container} and port ${port} for destination ${destination} (${ip})"
+            log "🟢 Unblocking traffic on containers ${containers} and port ${port} for destination ${destination} (${ip})"
         else
-            log "🟢 Unblocking traffic on container ${container} for all ports from destination ${destination} (${ip})"
+            log "🟢 Unblocking traffic on containers ${containers} for all ports from destination ${destination} (${ip})"
         fi
     ;;
     *)
@@ -95,12 +108,17 @@ case "${action}" in
     ;;
 esac
 
-if [[ -n "$port" ]]
-then
-  docker exec --privileged --user root ${container} bash -c "iptables -${action} INPUT -p tcp -s ${ip} --sport ${port} -j DROP"
-else
-  docker exec --privileged --user root ${container} bash -c "iptables -${action} INPUT -p tcp -s ${ip} -j DROP"
-fi
-
-log "Output of command iptables-save"
-docker exec --privileged --user root ${container} bash -c "iptables-save"
+# Apply iptables rules to all containers
+for container in "${container_array[@]}"
+do
+    log "Applying iptables rule to container: $container"
+    if [[ -n "$port" ]]
+    then
+      docker exec --privileged --user root ${container} bash -c "iptables -${action} INPUT -p tcp -s ${ip} --sport ${port} -j DROP"
+    else
+      docker exec --privileged --user root ${container} bash -c "iptables -${action} INPUT -p tcp -s ${ip} -j DROP"
+    fi
+    
+    log "Output of command iptables-save for container $container"
+    docker exec --privileged --user root ${container} bash -c "iptables-save"
+done

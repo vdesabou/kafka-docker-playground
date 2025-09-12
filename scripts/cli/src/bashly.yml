@@ -1847,10 +1847,13 @@ commands:
         required: false
         default: "connect"
         arg: container
+        repeatable: true
         completions:
           - $(docker ps --format '{{.Names}}')
         help: |-
           🐳 Container name
+
+          🎓 Tip: you can pass multiple containers by specifying --container multiple times
     examples:
     - playground debug enable-remote-debugging
     - playground debug enable-remote-debugging --container broker
@@ -2279,7 +2282,7 @@ commands:
     - name: exec
       group: Container
       help: |-
-        🪄  Execute command in a container
+        🪄 Execute command in a container
 
       flags:
       - *container
