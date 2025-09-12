@@ -60,7 +60,11 @@ else
 
 	playground connector status
 
-	log "Do you want to see the connector in your browser ?"
-	check_if_continue
-	playground connector open-ccloud-connector-in-browser
+	if [ -z "$GITHUB_RUN_NUMBER" ]
+	then
+		# not running with CI
+		log "Do you want to see the connector in your browser ?"
+		check_if_continue
+		playground connector open-ccloud-connector-in-browser
+	fi
 fi
