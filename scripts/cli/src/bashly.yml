@@ -1858,6 +1858,8 @@ commands:
     - playground debug enable-remote-debugging
     - playground debug enable-remote-debugging --container broker
     - playground debug enable-remote-debugging -c broker
+    - playground debug enable-remote-debugging -c connect -c broker
+    - playground debug enable-remote-debugging --container schema-registry --container ksqldb-server --container control-center
 
   - name: testssl
     help: |-
@@ -1897,6 +1899,8 @@ commands:
     examples:
     - playground debug thread-dump
     - playground debug thread-dump --container broker
+    - playground debug thread-dump -c connect -c broker
+    - playground debug thread-dump --container schema-registry --container ksqldb-server
 
   - name: heap-dump
     help: |-
@@ -1918,6 +1922,9 @@ commands:
     examples:
     - playground debug heap-dump
     - playground debug heap-dump --container broker
+    - playground debug heap-dump -c connect -c broker
+    - playground debug heap-dump --container schema-registry --live
+    - playground debug heap-dump -c connect -c broker --histo
 
   - name: tcp-dump
     help: |-
@@ -1970,6 +1977,9 @@ commands:
     examples:
     - playground debug block-traffic --destination google.com --action start
     - playground debug block-traffic --container broker --destination zookeeper --action start
+    - playground debug block-traffic -c broker -c connect --destination zookeeper --action start
+    - playground debug block-traffic --container schema-registry --destination broker --port 9092 --action start
+    - playground debug block-traffic -c connect -c ksqldb-server --destination schema-registry --action stop
 
   - name: java-debug
     help: |-
@@ -2140,6 +2150,9 @@ commands:
   - playground get-jmx-metrics --container connect
   - playground get-jmx-metrics --container connect --domain "kafka.connect kafka.consumer kafka.producer"
   - playground get-jmx-metrics -c broker
+  - playground get-jmx-metrics -c connect -c broker
+  - playground get-jmx-metrics --container schema-registry --container ksqldb-server --open
+  - playground get-jmx-metrics -c broker -c connect --domain "kafka.server"
 
 - name: container
   expose: always
@@ -2222,6 +2235,10 @@ commands:
       - playground container logs --container connect
       - playground container logs -c connect --open
       - playground container logs -c connect --wait-for-log "StackOverflowError"
+      - playground container logs -c connect -c broker
+      - playground container logs --container schema-registry --container ksqldb-server --open
+      - playground container logs -c broker -c connect -c schema-registry
+      - playground container logs -c connect -c broker --wait-for-log "ERROR" --max-wait 120
 
     - name: display-error-all-containers
       group: Container
@@ -2253,6 +2270,8 @@ commands:
       - playground ssh -c connect
       - playground ssh -c connect -s sh
       - playground ssh --container connect --shell sh
+      - playground ssh -c broker
+      - playground ssh --container schema-registry --shell zsh
 
     - name: change-jdk
       group: Container
@@ -2313,6 +2332,9 @@ commands:
       - playground exec -c connect -d "date"
       - playground exec -c connect -d "whoami" --root
       - playground exec --container connect --command "whoami" --shell sh
+      - playground exec -c broker -c connect -d "ps aux"
+      - playground exec --container schema-registry --container ksqldb-server --command "free -h"
+      - playground exec -c connect -c broker -d "netstat -tuln" --root
 
     - name: restart
       group: Container
@@ -2346,6 +2368,11 @@ commands:
 
       flags:
       - *container
+      examples:
+      - playground container kill --container connect
+      - playground container kill -c broker
+      - playground container kill -c connect -c broker
+      - playground container kill --container schema-registry --container ksqldb-server --container control-center
 
     - name: set-environment-variables
       group: Container
@@ -3714,6 +3741,8 @@ commands:
       🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster
 
       The connector example should be ran with --environment flag set to <ccloud>
+
+      See a full example at https://github.com/vdesabou/kafka-docker-playground/blob/master/ccloud/connect-migration-utility/README.md
     filters:
     - ccloud_environment
     dependencies:
