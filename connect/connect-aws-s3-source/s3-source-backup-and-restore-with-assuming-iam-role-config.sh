@@ -129,6 +129,8 @@ playground connector create-or-update --connector s3-source  << EOF
   "s3.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
   "s3.credentials.provider.sts.role.session.name": "session-name",
   "s3.credentials.provider.sts.role.external.id": "123",
+  "_comment": "sts.region was added in version 2.6.17 https://docs.confluent.io/kafka-connectors/s3-source/current/changelog.html#version-2-6-17",
+  "s3.credentials.provider.sts.region": "$AWS_REGION",
   "s3.credentials.provider.aws.access.key.id": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID",
   "s3.credentials.provider.aws.secret.access.key": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY",
   "transforms": "AddPrefix",
