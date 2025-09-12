@@ -39,16 +39,11 @@ This is a Model Context Protocol (MCP) server that provides intelligent command 
      "mcpServers": {
        "playground": {
          "command": "node",
-         "args": ["./mcp-playground-server/dist/index.js"],
-         "env": {
-           "PLAYGROUND_ROOT": "/Users/vsaboulin/Documents/github/kafka-docker-playground"
-         }
+         "args": ["./mcp-playground-server/dist/index.js"]
        }
      }
    }
    ```
-
-   **Important**: Update the `PLAYGROUND_ROOT` environment variable to match your actual playground installation path.
 
 4. **Optional: VS Code Settings (Alternative Method)**
    
@@ -77,7 +72,7 @@ The server exposes several tools that GitHub Copilot can use automatically:
 
 ### Environment Variables
 
-- `PLAYGROUND_ROOT`: Path to your Kafka Docker Playground installation (required)
+This MCP server runs without requiring any environment variables since it uses relative paths within the repository.
 
 ## Development
 
@@ -99,12 +94,12 @@ The server can be tested by running it directly:
 
 ```bash
 npm run build
-PLAYGROUND_ROOT=/path/to/playground node dist/index.js
+node dist/index.js
 ```
 
 ## Configuration Details
 
-The server requires access to the playground's `scripts/cli/bashly.yml` file to understand the command structure. Make sure the `PLAYGROUND_ROOT` environment variable points to the correct location.
+The server automatically locates the playground's `scripts/cli/bashly.yml` file using relative paths within the repository structure.
 
 ## Architecture
 
@@ -134,7 +129,7 @@ mcp-playground-server/
 
 For manual integration with other MCP-compatible clients:
 
-1. Start the server with proper environment variables
+1. Build and start the server: `npm run build && node dist/index.js`
 2. Connect your MCP client to the server endpoint
 3. The server will automatically provide command completion and help functionality
 
@@ -142,8 +137,8 @@ For manual integration with other MCP-compatible clients:
 
 ### Common Issues
 
-1. **Server won't start**: Ensure `PLAYGROUND_ROOT` environment variable is set correctly
-2. **Commands not found**: Verify that `bashly.yml` exists at `$PLAYGROUND_ROOT/scripts/cli/bashly.yml`
+1. **Server won't start**: Ensure the server is built (`npm run build`) and run from the correct directory
+2. **Commands not found**: Verify that `bashly.yml` exists at `scripts/cli/src/bashly.yml` relative to the repository root
 3. **No completion suggestions**: Check that the server is running and properly configured in VS Code
 
 ### Debug Mode

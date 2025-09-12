@@ -1,6 +1,8 @@
 import * as yaml from 'yaml';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 export interface PlaygroundCommand {
   name: string;
@@ -24,9 +26,11 @@ export class PlaygroundCliParser {
   private yamlPath: string;
 
   constructor() {
-    // Look for bashly.yml in the CLI directory
-    const playgroundRoot = process.env.PLAYGROUND_ROOT || process.cwd();
-    this.yamlPath = path.join(playgroundRoot, 'scripts', 'cli', 'src', 'bashly.yml');
+    // Use relative path since MCP server is part of the repo
+    // Get the directory of this file in ES modules
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    this.yamlPath = path.join(__dirname, '..', '..', 'scripts', 'cli', 'src', 'bashly.yml');
     this.loadCommands();
   }
 
