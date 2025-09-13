@@ -123,6 +123,29 @@ mcp-playground-server/
 └── README.md             # This file
 ```
 
+## Docker Deployment
+
+For containerized environments and docker model runners, you can use the Docker version:
+
+### Quick Start
+
+```bash
+# Build the Docker image
+./docker-build.sh build
+
+# Run with Docker
+docker run --rm -i \
+  -v /var/run/docker.sock:/var/run/docker.sock:ro \
+  mcp-playground-server:1.0.0 \
+  node dist/index.js
+```
+
+### Configuration
+
+The `bashly.yml` configuration is embedded directly in the Docker image, requiring only Docker socket access for container inspection.
+
+For detailed Docker documentation, see [README-DOCKER.md](README-DOCKER.md).
+
 ## Advanced Configuration
 
 ### Manual MCP Integration

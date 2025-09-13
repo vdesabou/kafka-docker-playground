@@ -26,26 +26,45 @@ export class PlaygroundCliParser {
   private yamlPath: string;
 
   constructor() {
-    // Use relative path since MCP server is part of the repo
-    // Get the directory of this file in ES modules
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = dirname(__filename);
-    this.yamlPath = path.join(__dirname, '..', '..', 'scripts', 'cli', 'src', 'bashly.yml');
+    // Priority order for bashly.yml location:
+    // 1. Environment variable (for custom mount)
+    // 2. Embedded file in Docker image
+    // 3. Relative path (for local development)
+    if (process.env.BASHLY_YML_PATH && fs.existsSync(process.env.BASHLY_YML_PATH)) {
+      this.yamlPath = process.env.BASHLY_YML_PATH;
+    } else if (fs.existsSync('/app/bashly.yml')) {
+      // Embedded in Docker image
+      this.yamlPath = '/app/bashly.yml';
+    } else {
+      // Use relative path since MCP server is part of the repo
+      // Get the directory of this file in ES modules
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = dirname(__filename);
+      this.yamlPath = path.join(__dirname, '..', '..', 'scripts', 'cli', 'src', 'bashly.yml');
+    }
     this.loadCommands();
   }
 
   private loadCommands(): void {
+    const isDebug = process.env.NODE_ENV !== 'production';
+    
     try {
+      if (isDebug) console.error(`Looking for bashly.yml at: ${this.yamlPath}`);
+      
       if (fs.existsSync(this.yamlPath)) {
+        if (isDebug) console.error(`Loading bashly.yml from: ${this.yamlPath}`);
         const yamlContent = fs.readFileSync(this.yamlPath, 'utf8');
         const parsed = yaml.parse(yamlContent);
         this.commands = this.parseYamlCommands(parsed);
+        if (isDebug) console.error(`Successfully loaded ${this.commands.length} commands from bashly.yml`);
       } else {
         console.error(`bashly.yml not found at ${this.yamlPath}`);
+        if (isDebug) console.error('Using default command structure');
         this.commands = this.getDefaultCommands();
       }
     } catch (error) {
       console.error('Error loading bashly.yml:', error);
+      if (isDebug) console.error('Falling back to default command structure');
       this.commands = this.getDefaultCommands();
     }
   }
