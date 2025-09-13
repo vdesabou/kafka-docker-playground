@@ -1,0 +1,12 @@
+   {
+     "mcpServers": {
+		"playground": {
+		"command": "docker",
+		"args": [
+			"run", "--rm", "-i",
+			"vdesabou/mcp-playground-server:latest",
+			"node", "dist/index.js"
+		]
+		}
+     }
+   }

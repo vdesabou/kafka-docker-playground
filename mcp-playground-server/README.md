@@ -1,13 +1,17 @@
 # MCP Playground Server
 
-This is a Model Context Protocol (MCP) server that provides intelligent command completion and assistance for the Kafka Docker Playground CLI. It integrates with GitHub Copilot to offer contextual help, command suggestions, and debugging assistance for playground commands.
+This is a Model Context Protocol (MCP) server that provides intelligent command comp```
+mcp-playground-server/
+├── src/
+│   ├── index.ts          # Main MCP server implementation
+│   ├── parser.ts         # Bashly YAML parser for command structure
+│   └── suggester.ts      # Command suggestion logicand assistance for the Kafka Docker Playground CLI. It integrates with GitHub Copilot to offer contextual help, command suggestions, and debugging assistance for playground commands.
 
 ## Features
 
 - **Command Completion**: Auto-complete playground commands with context-aware suggestions
 - **Command Help**: Get detailed help for any playground command or subcommand  
 - **Command Validation**: Validate playground commands before execution
-- **Container Inspection**: List and filter Docker containers related to the playground
 - **Interactive Assistance**: Works seamlessly with GitHub Copilot for natural language queries
 
 ## Installation
@@ -68,7 +72,6 @@ The server exposes several tools that GitHub Copilot can use automatically:
 - `playground_command_help`: Get detailed help for any command
 - `playground_command_suggest`: Get command suggestions and completions  
 - `playground_command_validate`: Validate command syntax
-- `playground_list_containers`: List available Docker containers
 
 ### Environment Variables
 
@@ -106,7 +109,6 @@ The server automatically locates the playground's `scripts/cli/bashly.yml` file 
 - **MCP Protocol**: Implements the Model Context Protocol for seamless integration with AI assistants
 - **Command Parser**: Parses the Bashly YAML configuration to understand available commands
 - **Suggestion Engine**: Provides intelligent command completion based on context
-- **Docker Integration**: Inspects running containers to provide relevant suggestions
 
 ## File Structure
 
@@ -116,7 +118,6 @@ mcp-playground-server/
 │   ├── index.ts          # Main MCP server implementation
 │   ├── parser.ts         # Bashly YAML parser for command structure
 │   ├── suggester.ts      # Command suggestion engine
-│   └── docker.ts         # Docker container inspection
 ├── package.json          # Dependencies and scripts
 ├── tsconfig.json         # TypeScript configuration
 ├── .gitignore            # Git ignore patterns
@@ -135,14 +136,13 @@ For containerized environments and docker model runners, you can use the Docker 
 
 # Run with Docker
 docker run --rm -i \
-  -v /var/run/docker.sock:/var/run/docker.sock:ro \
-  mcp-playground-server:1.0.0 \
+  vdesabou/mcp-playground-server:latest \
   node dist/index.js
 ```
 
 ### Configuration
 
-The `bashly.yml` configuration is embedded directly in the Docker image, requiring only Docker socket access for container inspection.
+The `bashly.yml` configuration is embedded directly in the Docker image for simplified deployment.
 
 For detailed Docker documentation, see [README-DOCKER.md](README-DOCKER.md).
 

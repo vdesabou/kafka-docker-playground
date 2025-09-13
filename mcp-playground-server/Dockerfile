@@ -20,9 +20,6 @@ RUN npm run build
 # Stage 2: Production stage  
 FROM node:20-alpine3.20 AS production
 
-# Install Docker CLI for container inspection capabilities
-RUN apk add --no-cache docker-cli
-
 WORKDIR /app
 
 # Copy package files

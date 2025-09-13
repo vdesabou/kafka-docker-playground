@@ -9,13 +9,11 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { PlaygroundCliParser } from "./parser.js";
 import { CommandSuggester } from "./suggester.js";
-import { DockerInspector } from "./docker.js";
 
 export class PlaygroundMcpServer {
   private server: Server;
   private parser: PlaygroundCliParser;
   private suggester: CommandSuggester;
-  private dockerInspector: DockerInspector;
 
   constructor() {
     this.server = new Server(
@@ -32,7 +30,6 @@ export class PlaygroundMcpServer {
 
     this.parser = new PlaygroundCliParser();
     this.suggester = new CommandSuggester();
-    this.dockerInspector = new DockerInspector();
 
     this.setupToolHandlers();
   }
@@ -74,19 +71,6 @@ export class PlaygroundMcpServer {
             },
           },
           {
-            name: "playground_list_containers",
-            description: "List available Docker containers for the playground",
-            inputSchema: {
-              type: "object",
-              properties: {
-                pattern: {
-                  type: "string",
-                  description: "Optional pattern to filter container names",
-                },
-              },
-            },
-          },
-          {
             name: "playground_command_help",
             description: "Get detailed help for playground commands",
             inputSchema: {
@@ -115,9 +99,6 @@ export class PlaygroundMcpServer {
           case "playground_command_validate":
             return await this.handleCommandValidate(args);
           
-          case "playground_list_containers":
-            return await this.handleListContainers(args);
-          
           case "playground_command_help":
             return await this.handleCommandHelp(args);
 
@@ -140,7 +121,6 @@ export class PlaygroundMcpServer {
     const { partial_command, context } = args;
     
     const suggestions = await this.suggester.getSuggestions(partial_command, context);
-    const containers = await this.dockerInspector.getContainers();
     
     return {
       content: [
@@ -148,7 +128,6 @@ export class PlaygroundMcpServer {
           type: "text",
           text: JSON.stringify({
             suggestions,
-            available_containers: containers,
             command_structure: this.parser.getCommandStructure(partial_command),
           }, null, 2),
         },
@@ -166,24 +145,6 @@ export class PlaygroundMcpServer {
         {
           type: "text",
           text: JSON.stringify(validation, null, 2),
-        },
-      ],
-    };
-  }
-
-  private async handleListContainers(args: any) {
-    const { pattern } = args;
-    
-    const containers = await this.dockerInspector.getContainers(pattern);
-    
-    return {
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify({
-            containers,
-            count: containers.length,
-          }, null, 2),
         },
       ],
     };

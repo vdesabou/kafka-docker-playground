@@ -6,13 +6,6 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >&2
 }
 
-# Check if Docker is available (for container inspection)
-if [ -S /var/run/docker.sock ]; then
-    log "Docker socket detected - container inspection will be available"
-else
-    log "Warning: Docker socket not mounted - container inspection will be limited"
-fi
-
 # Check if bashly.yml is available
 if [ -f "/app/bashly.yml" ]; then
     log "bashly.yml found - full command parsing enabled"
