@@ -82,6 +82,4 @@ reproduction-models
 zazkia
 ccloud/connect-csfle-examples
 connect-migration-utility-discovery-output
-.vscode/extensions.json
-.vscode/launch.json
-.vscode/settings.json
+.vscode
