@@ -22,7 +22,7 @@ then
     log "Bulk delete leads"
     docker exec sfdx-cli sh -c "sfdx data:query --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -q \"SELECT Id FROM Lead\" --result-format csv" > /tmp/out.csv
     docker cp /tmp/out.csv sfdx-cli:/tmp/out.csv
-    docker exec  sfdx-cli sh -c "sfdx force:data:bulk:delete -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -s Lead -f /tmp/out.csv"
+    docker exec  sfdx-cli sh -c "sfdx force:data:bulk:delete --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -s Lead -f /tmp/out.csv"
 fi
 
 stop_all "$DIR"
