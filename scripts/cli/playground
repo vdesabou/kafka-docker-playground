@@ -3683,6 +3683,8 @@ playground_debug_enable_remote_debugging_usage() {
     printf "  playground debug enable-remote-debugging\n"
     printf "  playground debug enable-remote-debugging --container broker\n"
     printf "  playground debug enable-remote-debugging -c broker\n"
+    printf "  playground debug enable-remote-debugging -c connect -c broker\n"
+    printf "  playground debug enable-remote-debugging --container schema-registry\n  --container ksqldb-server --container control-center\n"
     echo
 
   fi
@@ -3801,6 +3803,8 @@ playground_debug_thread_dump_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground debug thread-dump\n"
     printf "  playground debug thread-dump --container broker\n"
+    printf "  playground debug thread-dump -c connect -c broker\n"
+    printf "  playground debug thread-dump --container schema-registry --container\n  ksqldb-server\n"
     echo
 
   fi
@@ -3850,6 +3854,9 @@ playground_debug_heap_dump_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground debug heap-dump\n"
     printf "  playground debug heap-dump --container broker\n"
+    printf "  playground debug heap-dump -c connect -c broker\n"
+    printf "  playground debug heap-dump --container schema-registry --live\n"
+    printf "  playground debug heap-dump -c connect -c broker --histo\n"
     echo
 
   fi
@@ -3944,6 +3951,9 @@ playground_debug_block_traffic_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground debug block-traffic --destination google.com --action start\n"
     printf "  playground debug block-traffic --container broker --destination zookeeper\n  --action start\n"
+    printf "  playground debug block-traffic -c broker -c connect --destination zookeeper\n  --action start\n"
+    printf "  playground debug block-traffic --container schema-registry --destination\n  broker --port 9092 --action start\n"
+    printf "  playground debug block-traffic -c connect -c ksqldb-server --destination\n  schema-registry --action stop\n"
     echo
 
   fi
@@ -4245,6 +4255,9 @@ playground_get_jmx_metrics_usage() {
     printf "  playground get-jmx-metrics --container connect\n"
     printf "  playground get-jmx-metrics --container connect --domain \"kafka.connect\n  kafka.consumer kafka.producer\"\n"
     printf "  playground get-jmx-metrics -c broker\n"
+    printf "  playground get-jmx-metrics -c connect -c broker\n"
+    printf "  playground get-jmx-metrics --container schema-registry --container\n  ksqldb-server --open\n"
+    printf "  playground get-jmx-metrics -c broker -c connect --domain \"kafka.server\"\n"
     echo
 
   fi
@@ -4458,6 +4471,10 @@ playground_container_logs_usage() {
     printf "  playground container logs --container connect\n"
     printf "  playground container logs -c connect --open\n"
     printf "  playground container logs -c connect --wait-for-log \"StackOverflowError\"\n"
+    printf "  playground container logs -c connect -c broker\n"
+    printf "  playground container logs --container schema-registry --container\n  ksqldb-server --open\n"
+    printf "  playground container logs -c broker -c connect -c schema-registry\n"
+    printf "  playground container logs -c connect -c broker --wait-for-log \"ERROR\"\n  --max-wait 120\n"
     echo
 
   fi
@@ -4521,6 +4538,8 @@ playground_container_ssh_usage() {
     printf "  playground ssh -c connect\n"
     printf "  playground ssh -c connect -s sh\n"
     printf "  playground ssh --container connect --shell sh\n"
+    printf "  playground ssh -c broker\n"
+    printf "  playground ssh --container schema-registry --shell zsh\n"
     echo
 
   fi
@@ -4617,6 +4636,9 @@ playground_container_exec_usage() {
     printf "  playground exec -c connect -d \"date\"\n"
     printf "  playground exec -c connect -d \"whoami\" --root\n"
     printf "  playground exec --container connect --command \"whoami\" --shell sh\n"
+    printf "  playground exec -c broker -c connect -d \"ps aux\"\n"
+    printf "  playground exec --container schema-registry --container ksqldb-server\n  --command \"free -h\"\n"
+    printf "  playground exec -c connect -c broker -d \"netstat -tuln\" --root\n"
     echo
 
   fi
@@ -4731,6 +4753,14 @@ playground_container_kill_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground container kill --container connect\n"
+    printf "  playground container kill -c broker\n"
+    printf "  playground container kill -c connect -c broker\n"
+    printf "  playground container kill --container schema-registry --container\n  ksqldb-server --container control-center\n"
     echo
 
   fi
@@ -6481,7 +6511,7 @@ playground_connector_open_ccloud_connector_in_browser_usage() {
 playground_connector_connect_migration_utility_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector connect-migration-utility\n\n"
-    printf "  🧩 Run Kafka Connector Migration Utility (see\n  https://github.com/confluentinc/connect-migration-utility/) on running connect\n  cluster\n  \n  The connector example should be ran with --environment flag set to <ccloud>\n\n"
+    printf "  🧩 Run Kafka Connector Migration Utility (see\n  https://github.com/confluentinc/connect-migration-utility/) on running connect\n  cluster\n  \n  The connector example should be ran with --environment flag set to <ccloud>\n  \n  See a full example at\n  https://github.com/vdesabou/kafka-docker-playground/blob/master/ccloud/connect-migration-utility/README.md\n\n"
   else
     printf "playground connector connect-migration-utility - 🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster\n\n"
   fi
@@ -25954,7 +25984,10 @@ playground_connector_restart_command() {
       fi
   done
   sleep 3
-  playground connector status --connector $connector
+  for connector in "${items[@]}"
+  do
+  	playground connector status --connector $connector
+  done
 }
 
 # :command.function

@@ -80,4 +80,7 @@ do
     fi
 done
 sleep 3
-playground connector status --connector $connector
+for connector in "${items[@]}"
+do
+	playground connector status --connector $connector
+done
