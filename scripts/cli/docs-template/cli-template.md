@@ -48,6 +48,66 @@ Once installed, go on a `.sh` script and then type  in Palette `Ctrl+Shift+P` (o
 
 ![extension](./images/vscode_extension2.jpg)
 
+### 🤖 Setup MCP server for Playground CLI
+
+You can use it with any MCP Client (Github Copilot, Claude desktop, Cursor, etc...)
+
+#### Features
+
+- **Command Completion**: Auto-complete playground commands with context-aware suggestions
+- **Command Help**: Get detailed help for any playground command or subcommand  
+- **Command Validation**: Validate playground commands before execution
+
+#### installation for Visual Studio Code (Github Copilot)
+
+Add in `.vscode/mcp.json`:
+
+```json
+{
+	"servers": {
+		"playground": {
+		"command": "docker",
+		"args": [
+			"run", "--rm", "-i",
+			"vdesabou/mcp-playground-server:latest",
+			"node", "dist/index.js"
+		]
+		}
+	},
+	"inputs": []
+}
+```
+
+Start the server if not already started:
+
+![mcp](./images/mcp_vscode1.png)
+
+Then use Github Copilot to ask for `playground` commands, example:
+
+![mcp](./images/mcp_vscode2.png)
+
+#### installation for Claude desktop
+
+```json
+{
+  "mcpServers": {
+    "playground": {
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "vdesabou/mcp-playground-server:latest",
+        "node",
+        "dist/index.js"
+      ],
+      "command": "docker"
+    }
+  }
+}
+```
+
+![mcp](./images/mcp_claude1.png)
+
 ### ⚙️ Config
 
 CLI can be configured using [playground config](/playground%20config) 
