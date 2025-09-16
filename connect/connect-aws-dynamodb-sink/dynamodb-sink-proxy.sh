@@ -98,7 +98,7 @@ playground connector create-or-update --connector dynamodb-sink  << EOF
     "topics": "$DYNAMODB_TABLE",
     "aws.dynamodb.region": "$AWS_REGION",
     "aws.dynamodb.endpoint": "$DYNAMODB_ENDPOINT",
-    "aws.dynamodb.proxy.url": "https://nginx-proxy:8888",
+    "aws.dynamodb.proxy.url": "http://nginx-proxy:8888",
     "confluent.license": "",
     "confluent.topic.bootstrap.servers": "broker:9092",
     "confluent.topic.replication.factor": "1"
