@@ -36,24 +36,6 @@ playground connector create-or-update --connector iceberg-sink  << EOF
 }
 EOF
 
-# https://github.com/apache/iceberg/issues/12507
-
-# [2025-08-13 13:08:47,143] ERROR [iceberg-sink|worker] Failed to start connector iceberg-sink (org.apache.kafka.connect.runtime.Worker:425)
-# java.lang.NoClassDefFoundError: org/apache/iceberg/IcebergBuild
-# 	at org.apache.iceberg.connect.IcebergSinkConfig.version(IcebergSinkConfig.java:109) ~[iceberg-kafka-connect-1.9.1.jar:?]
-# 	at org.apache.iceberg.connect.IcebergSinkConnector.version(IcebergSinkConnector.java:37) ~[iceberg-kafka-connect-1.9.1.jar:?]
-# 	at org.apache.kafka.connect.runtime.WorkerConnector$ConnectorMetricsGroup.<init>(WorkerConnector.java:502) ~[connect_runtime_runtime-project.jar:?]
-# 	at org.apache.kafka.connect.runtime.WorkerConnector.<init>(WorkerConnector.java:103) ~[connect_runtime_runtime-project.jar:?]
-# 	at org.apache.kafka.connect.runtime.Worker.startConnector(Worker.java:411) ~[connect_runtime_runtime-project.jar:?]
-# 	at org.apache.kafka.connect.runtime.distributed.DistributedHerder.startConnector(DistributedHerder.java:2172) ~[connect_runtime_runtime-project.jar:?]
-# 	at org.apache.kafka.connect.runtime.distributed.DistributedHerder.lambda$getConnectorStartingCallable$46(DistributedHerder.java:2178) ~[connect_runtime_runtime-project.jar:?]
-# 	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317) ~[?:?]
-# 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144) ~[?:?]
-# 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642) ~[?:?]
-# 	at java.base/java.lang.Thread.run(Thread.java:1583) [?:?]
-# Caused by: java.lang.ClassNotFoundException: org.apache.iceberg.IcebergBuild
-# 	... 11 more
-
 sleep 30
 
 playground connector show-lag --max-wait 300
