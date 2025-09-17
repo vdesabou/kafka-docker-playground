@@ -4,7 +4,7 @@
 
 ## Objective
 
-Quickly test [Apache Iceberg Sink Connector](https://github.com/tabular-io/iceberg-kafka-connect?tab=readme-ov-file) connector.
+Quickly test [Apache Iceberg Sink Connector](https://www.confluent.io/hub/iceberg/iceberg-kafka-connect) connector.
 
 
 

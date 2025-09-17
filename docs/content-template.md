@@ -289,6 +289,7 @@
 ### 🛃 Custom Connectors
 
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/s3.png" width="15"> [Amazon S3 Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/custom-connector-connect-aws-s3-sink) :ccloud/custom-connector-connect-aws-s3-sink:
+  - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/tabular.png" width="15"> [Apache Iceberg Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/custom-connector-connect-iceberg-sink) :ccloud/custom-connector-connect-iceberg-sink:
 
 ### 🔗 Self-Managed Connectors
 

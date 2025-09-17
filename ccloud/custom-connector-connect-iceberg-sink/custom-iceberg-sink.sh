@@ -4,13 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f tabular-iceberg-kafka-connect-0.6.19.zip ]
+if [ ! -f iceberg-iceberg-kafka-connect-1.9.2.zip ]
 then
-    log "Downloading tabular-iceberg-kafka-connect-0.6.19.zip from confluent hub"
-    wget -q https://d2p6pa21dvn84.cloudfront.net/api/plugins/tabular/iceberg-kafka-connect/versions/0.6.19/tabular-iceberg-kafka-connect-0.6.19.zip
+    log "Downloading iceberg-iceberg-kafka-connect-1.9.2.zip from confluent hub"
+    wget -q https://hub-downloads.confluent.io/api/plugins/iceberg/iceberg-kafka-connect/versions/1.9.2/iceberg-iceberg-kafka-connect-1.9.2.zip
 fi
 
-plugin_name="pg_${USER}_tabular_iceberg_sink_0_6_19"
+plugin_name="pg_${USER}_apache_iceberg_sink_1_9_2"
 
 set +e
 for row in $(confluent connect custom-plugin list --output json | jq -r '.[] | @base64'); do
@@ -30,7 +30,7 @@ done
 set -e
 
 log "Uploading custom plugin $plugin_name"
-confluent connect custom-plugin create $plugin_name --plugin-file tabular-iceberg-kafka-connect-0.6.19.zip --connector-class io.tabular.iceberg.connect.IcebergSinkConnector --connector-type SINK --sensitive-properties "iceberg.kafka.sasl.jaas.config"
+confluent connect custom-plugin create $plugin_name --plugin-file iceberg-iceberg-kafka-connect-1.9.2.zip --connector-class org.apache.iceberg.connect.IcebergSinkConnector --connector-type SINK --sensitive-properties "iceberg.kafka.sasl.jaas.config"
 ret=$?
 
 function cleanup_resources {
@@ -145,14 +145,13 @@ playground connector create-or-update --connector $connector_name << EOF
   "confluent.connector.type": "CUSTOM",
   "confluent.custom.plugin.id": "$plugin_id",
   "confluent.custom.connection.endpoints": "$NGROK_HOSTNAME:$NGROK_PORT:TCP;$NGROK_HOSTNAME2:$NGROK_PORT2:TCP",
-  "connector.class": "io.tabular.iceberg.connect.IcebergSinkConnector",
+  "connector.class": "org.apache.iceberg.connect.IcebergSinkConnector",
 
   "kafka.api.key": "$CLOUD_KEY",
   "kafka.api.secret": "$CLOUD_SECRET",
   "name": "$connector_name",
   "tasks.max": "1",
   "topics": "payments",
-  "connector.class": "io.tabular.iceberg.connect.IcebergSinkConnector",
 
   "iceberg.catalog.s3.endpoint": "http://$NGROK_HOSTNAME2:$NGROK_PORT2",
   "iceberg.catalog.s3.secret-access-key": "minioadmin",
