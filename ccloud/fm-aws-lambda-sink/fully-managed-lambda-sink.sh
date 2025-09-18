@@ -14,6 +14,7 @@ LAMBDA_FUNCTION_NAME=${LAMBDA_FUNCTION_NAME//[-._]/}
 
 set +e
 log "Cleanup, this might fail..."
+aws iam detach-role-policy --role-name $LAMBDA_ROLE_NAME --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 aws iam delete-role --role-name $LAMBDA_ROLE_NAME
 aws lambda delete-function --function-name $LAMBDA_FUNCTION_NAME
 set -e
@@ -37,10 +38,14 @@ cp add.zip /tmp/
 aws lambda create-function --function-name "$LAMBDA_FUNCTION_NAME" --zip-file fileb:///tmp/add.zip --handler add.lambda_handler --runtime python3.8 --role "$LAMBDA_ROLE" --tags "cflt_managed_by=user,cflt_managed_id=$USER"
 cd -
 
+log "Attaching AWSLambdaBasicExecutionRole policy to $LAMBDA_ROLE_NAME (to be able to see logs in Cloudwatch)"
+aws iam attach-role-policy --role-name $LAMBDA_ROLE_NAME --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
 function cleanup_cloud_resources {
   set +e
   log "Cleanup role and function"
   check_if_continue
+  aws iam detach-role-policy --role-name $LAMBDA_ROLE_NAME --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
   aws iam delete-role --role-name $LAMBDA_ROLE_NAME
   aws lambda delete-function --function-name $LAMBDA_FUNCTION_NAME
 }
