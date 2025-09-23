@@ -1,0 +1,237 @@
+==========================
+JMS JNDI Connection
+==========================
+🔘 java.naming.provider.url
+
+The URL to connect to.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 java.naming.factory.initial
+
+The initial context for the JMS Provider See `Context.INITIAL_CONTEXT_FACTORY <https://docs.oracle.com/javase/7/docs/api/javax/naming/Context.html#INITIAL_CONTEXT_FACTORY>`_ for more details.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 connection.factory.name
+
+The name that is passed to the `Context.lookup <https://docs.oracle.com/javase/7/docs/api/javax/naming/Context.html#lookup(java.lang.String)>`_ of the InitialContext specified in ``java.naming.factory.initial``. This should return the `ConnectionFactory <http://docs.oracle.com/javaee/6/api/javax/jms/ConnectionFactory.html>`_ for the JMS provider.
+
+	 - Type: STRING
+	 - Default: ConnectionFactory
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+JMS
+==========================
+🔘 java.naming.security.principal
+
+The security principal to connect with. This is typically a username. See `Context.SECURITY_PRINCIPAL <https://docs.oracle.com/javase/7/docs/api/javax/naming/Context.html#SECURITY_PRINCIPAL>`_ for more information. You can also review your JMS provider documentation for additional details.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 java.naming.security.credentials
+
+The security credentials to connect with. This is typically a password. See `Context.SECURITY_CREDENTIALS <https://docs.oracle.com/javase/7/docs/api/javax/naming/Context.html#SECURITY_CREDENTIALS>`_ for more information. You can also review your JMS provider documentation for additional details.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 jms.destination.name
+
+The name of the JMS destination that messages are written to.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 jms.destination.type
+
+The type of JMS destination.
+
+	 - Type: STRING
+	 - Default: queue
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 jms.forward.kafka.key
+
+If enabled, the |ak| record key is converted to a string and forwarded on the ``JMSCorrelationID`` property of the JMS Message.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.forward.kafka.metadata
+
+If enabled, metadata from the |ak| record is forwarded on the JMS Message properties. This includes the record's topic, partition, and offset. The topic name is applied as a String property named ``KAFKA_TOPIC``, the partition value is applied as an Int property named ``KAFKA_PARTITION``, and the offset value is applied as a Long property named ``KAFKA_OFFSET``.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.forward.kafka.headers
+
+If enabled, |ak| record headers are added to the JMS Message as string properties.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.connection.max.retries
+
+Connecting to a JMS broker may fail for multiple reasons. This determines the maximum number of times a task attempts to connect to the JMS broker.
+
+	 - Type: INT
+	 - Default: 150
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.connection.backoff.ms
+
+Following a connection failure, this configuration parameter is the amount of time in milliseconds to wait before attempting to reconnect to the JMS broker. A value less than or equal to 0 removes the delay altogether.
+
+	 - Type: INT
+	 - Default: 2000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+JMS Formatter
+==========================
+🔘 jms.message.format
+
+The format of the values on the JMS messages.
+
+	 - Type: STRING
+	 - Default: string
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 jms.message.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 jms.message.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JMS Formatter
+==========================
+🔘 character.encoding
+
+The character encoding to use while writing the message.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+JMS MessageProducer
+==========================
+🔘 jms.producer.time.to.live.ms
+
+Time to live (TTL) in milliseconds for messages sent to the JMS broker.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.producer.delivery.mode
+
+The ``PERSISTENT`` delivery mode (the default) instructs the JMS provider to take extra care to ensure that a message is not lost in transit in case of a JMS provider failure. The ``NON_PERSISTENT`` delivery mode does not require the JMS provider to store the message or otherwise guarantee that it is not lost if the provider fails. Connectors using the ``PERSISTENT`` delivery mode have lower overall throughput than those running with ``NON_PERSISTENT`` delivery mode. However, the ``NON_PERSISTENT`` delivery mode does not offer the same delivery guarantees as the ``PERSISTENT`` delivery mode.
+
+	 - Type: STRING
+	 - Default: persistent
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.producer.disable.message.id
+
+Sets whether message IDs are disabled. Since message IDs take some effort to create and increase a message's size, some JMS providers may be able to optimize message overhead if they are given a hint that the message ID is not used by an application. JMS message Producers provide a hint to disable message ID. When a connector sets a Producer to disable message ID, the connector is indicating that it does not depend on the value of message ID for the messages it produces. These messages must either have the message ID set to null or, if the hint is ignored, the message ID must be set to its normal unique value. Message IDs are enabled by default.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.producer.disable.message.timestamp
+
+Sets whether message timestamps are disabled. Since timestamps take some effort to create and increase a message's size, some JMS providers may be able to optimize message overhead, if they are given a hint that the timestamp is not used by an application. JMS message Producers provide a hint to disable timestamps. When a connector sets a Producer to disable timestamps, the connector is indicating that it does not depend on the value of timestamp for the messages it produces. These messages must either have the timestamp set to null or, if the hint is ignored, the timestamp must be set to its normal value. Message timestamps are enabled by default.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 value.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
