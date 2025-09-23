@@ -10,7 +10,7 @@ Configuration:
         Pattern: "{\"severity\":\"%p\",\"timestamp\":\"%d{ISO8601}\",\"textPayload\":\"%X{connector.context}%m\",\"sourceLocation\":{\"file\":\"%F\",\"line\":\"%L\",\"function\":\"%c\"}}%n"
       Filters:
         RegexFilter:
-          regex: "was supplied but isn't a known config|optionality could not be determined"
+          regex: ".*was supplied but isn't a known config.*|.*connect-adminclient-producer.*"
           onMatch: DENY
           onMismatch: NEUTRAL
 
