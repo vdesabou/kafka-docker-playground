@@ -26696,9 +26696,24 @@ playground_connector_show_config_parameters_command() {
           done
       fi
 
-      mkdir -p $root_folder/.connector_config
-      filename="$root_folder/.connector_config/config-$connector_class-$version.txt"
-      json_filename="$root_folder/.connector_config/config-$connector_class-$version.json"
+  	if [ -z "$GITHUB_RUN_NUMBER" ]
+  	then
+  		mkdir -p $root_folder/.connector_config
+  		filename="$root_folder/.connector_config/config-$connector_class-$version.txt"
+  		json_filename="$root_folder/.connector_config/config-$connector_class-$version.json"
+  	else
+  		test_file=$(playground state get run.test_file)
+  		if [ ! -f $test_file ]
+  		then
+
+  			logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
+  			exit 1
+  		fi
+
+  		folder_of_test_file=$(dirname "$test_file")
+  		filename="$folder_of_test_file/config-$connector_class.txt"
+  		json_filename="$folder_of_test_file/config-$connector_class.json"
+  	fi
 
       if [[ ! -n "$only_show_json_file_path" ]]
       then
