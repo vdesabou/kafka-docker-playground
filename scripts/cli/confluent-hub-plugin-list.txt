@@ -153,6 +153,7 @@ debezium/debezium-connector-sqlserver
 denisw/kafka-connect-jmespath
 DiffusionData/Diffusion-Connector
 f0xdx/kafka-connect-wrap-smt
+firebolt-db/firebolt-kafka-connect
 gridgain/gridgain-kafka-connect
 gridgain/ignite-connector
 hazelcast/hazelcast-jet-kafka
