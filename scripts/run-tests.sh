@@ -84,10 +84,10 @@ do
             log "⏭ skipping fully managed connector test $script in dir $dir" as $tag is not latest $latest_tag
             log "####################################################"
             testdir=$(echo "$dir" | sed 's/\//-/g')
-            file="$TAG-$testdir--$script"
+            file="/tmp/$TAG-$testdir--$script"
             rm -f $file
             touch $file
-            echo "|`date +%s`|skipped|$GITHUB_RUN_ID" > $file
+            echo "|$(date +%s)|skipped|$GITHUB_RUN_ID" > $file
             aws s3 cp "$file" "s3://kafka-docker-playground/ci/" --region us-east-1
             log "📄 INFO: <$file> was uploaded to S3 bucket"
             continue
@@ -260,7 +260,7 @@ do
         let ELAPSED_TOTAL+=$SECONDS
         CUMULATED="cumulated time: $((($ELAPSED_TOTAL / 60) % 60))min $(($ELAPSED_TOTAL % 60))sec"
         testdir=$(echo "$dir" | sed 's/\//-/g')
-        file="$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
+        file="/tmp/$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
         rm -f $file
         touch $file
         if [ $ret -eq 0 ]
@@ -269,27 +269,27 @@ do
             log "✅ RESULT: SUCCESS for $script in dir $dir ($ELAPSED - $CUMULATED)"
             log "####################################################"
 
-            echo "$connector_path|`date +%s`|success|$GITHUB_RUN_ID" > $file
+            echo "$connector_path|$(date +%s)|success|$GITHUB_RUN_ID" > $file
         elif [ $ret -eq 107 ]
         then
             log "####################################################"
             log "💀 RESULT: KNOWN ISSUE #907 for $script in dir $dir ($ELAPSED - $CUMULATED)"
             log "####################################################"
 
-            echo "$connector_path|`date +%s`|known_issue#907|$GITHUB_RUN_ID" > $file
+            echo "$connector_path|$(date +%s)|known_issue#907|$GITHUB_RUN_ID" > $file
         elif [ $ret -eq 111 ]
         then
             log "####################################################"
             log "⏭ RESULT: SKIPPED for $script in dir $dir ($ELAPSED - $CUMULATED)"
             log "####################################################"
 
-            echo "$connector_path|`date +%s`|skipped|$GITHUB_RUN_ID" > $file
+            echo "$connector_path|$(date +%s)|skipped|$GITHUB_RUN_ID" > $file
         else
             logerror "####################################################"
             logerror "🔥 RESULT: FAILURE for $script in dir $dir ($ELAPSED - $CUMULATED)"
             logerror "####################################################"
 
-            echo "$connector_path|`date +%s`|failure|$GITHUB_RUN_ID" > $file
+            echo "$connector_path|$(date +%s)|failure|$GITHUB_RUN_ID" > $file
 
             failed_tests=$failed_tests"$dir[$script]\n"
             let "nb_test_failed++"
