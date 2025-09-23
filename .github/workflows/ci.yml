@@ -327,6 +327,16 @@ jobs:
           CLICKHOUSE_CLOUD_USERNAME: ${{ secrets.CLICKHOUSE_CLOUD_USERNAME}}
           CLICKHOUSE_CLOUD_PASSWORD: ${{ secrets.CLICKHOUSE_CLOUD_PASSWORD}}
           
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add .
+          git diff --cached --quiet || git commit -m "updated config file with latest version"
+          git push
+        env:
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+
   execute_one_test:
     if: ${{ github.event.inputs.test_name != '' }}
     runs-on: ubuntu-latest
@@ -525,12 +535,11 @@ jobs:
           CLICKHOUSE_CLOUD_PASSWORD: ${{ secrets.CLICKHOUSE_CLOUD_PASSWORD}}
           
       - name: Commit and Push Changes
-        if: success()
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
           git add .
-          git diff --cached --quiet || git commit -m "chore: commit changes after tests"
+          git diff --cached --quiet || git commit -m "updated config file with latest version"
           git push
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
