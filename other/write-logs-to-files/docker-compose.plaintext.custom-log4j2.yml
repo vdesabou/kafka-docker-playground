@@ -1,0 +1,8 @@
+---
+services:
+
+  connect:
+    volumes:
+      - ../../other/write-logs-to-files/connect/connect-log4j2.yaml:/opt/connect/connect-log4j2.yaml
+    environment:
+      KAFKA_LOG4J_OPTS: "-Dlog4j2.configurationFile=file:/opt/connect/connect-log4j2.yaml"

@@ -1,0 +1,38 @@
+Configuration:
+  name: Log4j2
+  status: warn
+
+  Appenders:
+    Console:
+      name: STDOUT
+      target: SYSTEM_OUT
+      PatternLayout:
+        Pattern: "{\"severity\":\"%p\",\"timestamp\":\"%d{ISO8601}\",\"textPayload\":\"%X{connector.context}%m\",\"sourceLocation\":{\"file\":\"%F\",\"line\":\"%L\",\"function\":\"%c\"}}%n"
+      Filters:
+        RegexFilter:
+          regex: "was supplied but isn't a known config|optionality could not be determined"
+          onMatch: DENY
+          onMismatch: NEUTRAL
+
+  Loggers:
+    Root:
+      level: INFO
+      AppenderRef:
+        - ref: STDOUT
+    Logger:
+      - name: "org.apache.zookeeper"
+        level: "ERROR"
+        AppenderRef:
+          - ref: STDOUT
+      - name: "org.I0Itec.zkclient"
+        level: "ERROR"
+        AppenderRef:
+          - ref: STDOUT
+      - name: "org.reflections"
+        level: "ERROR"
+        AppenderRef:
+          - ref: STDOUT
+      - name: "org.apache.kafka.connect.runtime.rest.RestServer"
+        level: "ERROR"
+        AppenderRef:
+          - ref: STDOUT
