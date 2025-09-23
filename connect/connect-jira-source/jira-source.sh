@@ -49,21 +49,21 @@ SINCE="2021-01-01 00:00"
 log "Creating Jira Source connector"
 playground connector create-or-update --connector jira-source  << EOF
 {
-                    "connector.class": "io.confluent.connect.jira.JiraSourceConnector",
-                    "topic.name.pattern":"jira-topic-\${resourceName}",
-                    "tasks.max": "1",
-                    "jira.url": "$JIRA_URL",
-                    "jira.since": "$SINCE",
-                    "jira.username": "$JIRA_USERNAME",
-                    "jira.api.token": "$JIRA_API_TOKEN",
-                    "jira.tables": "issues",
-                    "jira.resources": "issues",
-                    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }
+	"connector.class": "io.confluent.connect.jira.JiraSourceConnector",
+	"topic.name.pattern":"jira-topic-\${resourceName}",
+	"tasks.max": "1",
+	"jira.url": "$JIRA_URL",
+	"jira.since": "$SINCE",
+	"jira.username": "$JIRA_USERNAME",
+	"jira.api.token": "$JIRA_API_TOKEN",
+	"jira.tables": "issues",
+	"jira.resources": "issues",
+	"key.converter": "org.apache.kafka.connect.json.JsonConverter",
+	"value.converter": "org.apache.kafka.connect.json.JsonConverter",
+	"confluent.license": "",
+	"confluent.topic.bootstrap.servers": "broker:9092",
+	"confluent.topic.replication.factor": "1"
+}
 EOF
 
 
