@@ -1,0 +1,1 @@
+debezium-debezium-connector-sqlserver|1758653720|success|17955176436
