@@ -331,6 +331,7 @@ jobs:
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
+          git pull
           git add .
           git diff --cached --quiet || git commit -m "updated config file with latest version"
           git push
@@ -538,6 +539,7 @@ jobs:
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
+          git pull
           git add .
           git diff --cached --quiet || git commit -m "updated config file with latest version"
           git push
