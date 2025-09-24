@@ -141,7 +141,7 @@ do
             fi
         fi
         testdir=$(echo "$dir" | sed 's/\//-/g')
-        file="$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
+        file="/tmp/$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
         s3_file="s3://kafka-docker-playground/ci/$file"
         set +e
         exists=$(aws s3 ls $s3_file --region us-east-1)
