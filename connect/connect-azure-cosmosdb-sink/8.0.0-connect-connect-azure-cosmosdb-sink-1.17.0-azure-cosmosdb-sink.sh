@@ -1,0 +1,1 @@
+microsoftcorporation-kafka-connect-cosmos|1758657154|success|17955176436
