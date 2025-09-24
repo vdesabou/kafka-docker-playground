@@ -1,0 +1,399 @@
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 datapreview.schemas.enable
+
+This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Which topic do you want to send data to?
+==========================
+🔘 kafka.topic
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Identifies the topic name to write the data to.
+	 - Required: HIGH
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+How should we connect to Salesforce?
+==========================
+🔘 salesforce.grant.type
+
+Salesforce grant type. Valid options are 'PASSWORD', 'CLIENT_CREDENTIALS' and 'JWT_BEARER'.
+
+	 - Type: STRING
+	 - Default: PASSWORD
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 salesforce.instance
+
+The URL of the Salesforce endpoint to use. When using 'CLIENT_CREDENTIALS' grant type, provide your Salesforce domain URL. The default is https://login.salesforce.com, which directs the connector to use the endpoint specified in the authentication response.
+
+	 - Type: STRING
+	 - Default: https://login.salesforce.com
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 salesforce.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Salesforce username the connector should use.
+	 - Required: HIGH
+
+🔘 salesforce.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The Salesforce password the connector should use.
+	 - Required: HIGH
+
+🔘 salesforce.password.token
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The Salesforce security token associated with the username.
+	 - Required: HIGH
+
+🔘 salesforce.consumer.key
+
+
+
+	 - Type: true
+	 - Default: PASSWORD
+	 - Importance: The client id(consumer key) for the Salesforce Connected app.
+	 - Required: HIGH
+
+🔘 salesforce.consumer.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The client secret(consumer secret) for the Salesforce Connected app.
+	 - Required: MEDIUM
+
+🔘 salesforce.jwt.keystore.file
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Salesforce JWT keystore file which contains the private key.
+	 - Required: MEDIUM
+
+🔘 salesforce.jwt.keystore.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Password used to access JWT keystore file.
+	 - Required: MEDIUM
+
+🔘 salesforce.object
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The Salesforce object to create topic for
+	 - Required: HIGH
+
+🔘 salesforce.push.topic.name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The Salesforce PushTopic to subscribe to. If `salesforce.push.topic.create` is set to true, a PushTopic with this name will be created.
+	 - Required: HIGH
+
+🔘 salesforce.push.topic.create
+
+Flag to determine if the PushTopic should be created if it does not exist.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.push.topic.notify.create
+
+Flag to determine if the Salesforce PushTopic should respond to creates. This config is used when `salesforce.push.topic.create` is set to true.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.push.topic.notify.delete
+
+Flag to determine if the Salesforce PushTopic should respond to deletes. This config is used when `salesforce.push.topic.create` is set to true.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.push.topic.notify.undelete
+
+Flag to determine if the Salesforce PushTopic should respond to undeletes. This config is used when `salesforce.push.topic.create` is set to true.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.push.topic.notify.update
+
+Flag to determine if the Salesforce PushTopic should respond to updates. This config is used when `salesforce.push.topic.create` is set to true.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connection details
+==========================
+🔘 salesforce.initial.start
+
+Specify the initial starting point for the connector. Allowed values are
+
+	 - Type: STRING
+	 - Default: latest
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 connection.timeout
+
+The amount of time to wait in milliseconds while connecting to the Salesforce streaming endpoint.
+
+	 - Type: LONG
+	 - Default: 30000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 request.max.retries.time.ms
+
+In case of error when making a request to Salesforce, the connector will retry until this time (in ms) elapses. The default value is 30000 (30 seconds). Minimum value is 1 sec
+
+	 - Type: LONG
+	 - Default: 30000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.version
+
+The version of Salesforce API to use.
+
+	 - Type: STRING
+	 - Default: latest
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Output messages
+==========================
+🔘 output.data.format
+
+Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values. Input messages must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
