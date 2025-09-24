@@ -1,0 +1,1 @@
+snowflakeinc-snowflake-kafka-connector|1758657950|success|17955176436
