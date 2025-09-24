@@ -1,0 +1,447 @@
+==========================
+Connection
+==========================
+🔘 couchbase.password
+
+Password of the Couchbase user.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 couchbase.username
+
+Name of the Couchbase user to authenticate as.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 couchbase.bucket
+
+This property is required unless using the experimental AnalyticsSinkHandler.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Name of the Couchbase bucket to use.
+	 - Required: HIGH
+
+🔘 couchbase.seed.nodes
+
+Addresses of Couchbase Server nodes, delimited by commas.
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 couchbase.network
+
+The network selection strategy for connecting to a Couchbase Server cluster that advertises alternate addresses.
+
+	 - Type: STRING
+	 - Default: auto
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.bootstrap.timeout
+
+On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
+
+	 - Type: STRING
+	 - Default: 30s
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Security
+==========================
+🔘 couchbase.enable.tls
+
+Use secure connection to Couchbase Server.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.enable.hostname.verification
+
+Set this to `false` to disable TLS hostname verification for Couchbase connections. Less secure, but might be required if for some reason you can't issue a certificate whose Subject Alternative Names match the hostname used to connect to the server. Only disable if you understand the impact and can accept the risks.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.trust.store.path
+
+If you want to use a PEM file instead of a Java keystore, specify `couchbase.trust.certificate.path` instead.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Absolute filesystem path to the Java keystore holding the CA certificate used by Couchbase Server.
+	 - Required: MEDIUM
+
+🔘 couchbase.trust.certificate.path
+
+If you want to use a Java keystore instead of a PEM file, specify `couchbase.trust.store.path` instead.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Absolute filesystem path to the PEM file containing the CA certificate used by Couchbase Server.
+	 - Required: MEDIUM
+
+🔘 couchbase.client.certificate.path
+
+If you supply a value for this config property, the `couchbase.username` and `couchbase.password` properties will be ignored.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Absolute filesystem path to a Java keystore or PKCS12 bundle holding the private key and certificate chain to use for client certificate authentication (mutual TLS).
+	 - Required: MEDIUM
+
+🔘 couchbase.client.certificate.password
+
+Password for accessing the client certificate.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.trust.store.password
+
+Password for accessing the trust store.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Logging
+==========================
+🔘 couchbase.log.redaction
+
+Determines which kinds of sensitive log messages from the Couchbase connector will be tagged for later redaction by the Couchbase log redaction tool. NONE = no tagging; PARTIAL = user data is tagged; FULL = user, meta, and system data is tagged.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.log.document.lifecycle
+
+If true, document lifecycle milestones will be logged at INFO level instead of DEBUG. Enabling this feature lets you watch documents flow through the connector. Disabled by default because it generates many log messages.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.metrics.interval
+
+The connector writes metrics to the log at this interval.
+
+	 - Type: STRING
+	 - Default: 10m
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Sink Behavior
+==========================
+🔘 couchbase.default.collection
+
+Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
+
+	 - Type: STRING
+	 - Default: _default._default
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.topic.to.collection
+
+Topic and collection are joined by an equals sign. Map entries are delimited by commas.
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A map from Kafka topic to Couchbase collection.
+	 - Required: MEDIUM
+
+🔘 couchbase.topic.to.document.id
+
+Topic and document ID format are joined by an equals sign. Map entries are delimited by commas.
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A map of per-topic overrides for the `couchbase.document.id` configuration property.
+	 - Required: MEDIUM
+
+🔘 couchbase.sink.handler
+
+The fully-qualified class name of the sink handler to use. The sink handler determines how the Kafka record is translated into actions on Couchbase documents.
+
+	 - Type: CLASS
+	 - Default: com.couchbase.connect.kafka.handler.sink.UpsertSinkHandler
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.document.mode
+
+Overrides the `couchbase.sink.handler` property.
+
+	 - Type: STRING
+	 - Default: DOCUMENT
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.document.id
+
+If not specified, the Couchbase document ID is the Kafka record key.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Format string to use for the Couchbase document ID. May refer to document fields via placeholders like ${/path/to/field}
+	 - Required: MEDIUM
+
+🔘 couchbase.remove.document.id
+
+Whether to remove the ID identified by 'couchbase.documentId' from the document before storing in Couchbase.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.document.expiration
+
+Document expiration time specified as an integer followed by a time unit (s = seconds, m = minutes, h = hours, d = days). For example, to have documents expire after 30 minutes, set this value to "30m".
+
+	 - Type: STRING
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.retry.timeout
+
+Retry failed writes to Couchbase until this deadline is reached. If time runs out, the connector terminates.
+
+	 - Type: STRING
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Durability
+==========================
+🔘 couchbase.durability
+
+The preferred way to specify an enhanced durability requirement when using Couchbase Server 6.5 or later.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.persist.to
+
+For Couchbase Server versions prior to 6.5, this is how you require the connector to verify a write is persisted to disk on a certain number of replicas before considering the write successful.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.replicate.to
+
+For Couchbase Server versions prior to 6.5, this is how you require the connector to verify a write has reached the memory of a certain number of replicas before considering the write successful.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+N1ql Sink Handler
+==========================
+🔘 couchbase.n1ql.operation
+
+The type of update to use when `couchbase.sink.handler` is set to `com.couchbase.connect.kafka.handler.sink.N1qlSinkHandler`.
+
+	 - Type: STRING
+	 - Default: UPDATE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.n1ql.where.fields
+
+This property is specific to `N1qlSinkHandler`.
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: When using the UPDATE_WHERE operation, this is the list of document fields that must match the Kafka message in order for the document to be updated with the remaining message fields. To match against a literal value instead of a message field, use a colon to delimit the document field name and the target value. For example, "type:widget,color" matches documents whose 'type' field is 'widget' and whose 'color' field matches the 'color' field of the Kafka message.
+	 - Required: MEDIUM
+
+🔘 couchbase.n1ql.create.document
+
+Controls whether to create the document if it does not exist.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Analytics Sink Handler
+==========================
+🔘 couchbase.analytics.max.records.in.batch
+
+Every Batch consists of an UPSERT or a DELETE statement, based on mutations. This property determines the maximum number of records in the UPSERT or DELETE statement in the batch. Users can configure this parameter based on the capacity of their analytics cluster.
+
+	 - Type: INT
+	 - Default: 100
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.analytics.max.size.in.batch
+
+Every Batch consists of an UPSERT or a DELETE statement, based on mutations. This property defines the max size of all docs in bytes in an UPSERT statement in a batch. Users can configure this parameter based on the capacity of their analytics cluster.
+
+	 - Type: STRING
+	 - Default: 5m
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.analytics.query.timeout
+
+This property determines the time period after which client cancels the Query request for Analytics.
+
+	 - Type: STRING
+	 - Default: 5m
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Sub Document Sink Handler
+==========================
+🔘 couchbase.subdocument.path
+
+This property is specific to `SubDocumentSinkHandler`.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: JSON Pointer to the property of the Kafka message whose value is the subdocument path to use when modifying the Couchbase document.
+	 - Required: MEDIUM
+
+🔘 couchbase.subdocument.operation
+
+Setting to indicate the type of update to a sub-document.
+
+	 - Type: STRING
+	 - Default: UPSERT
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.subdocument.create.path
+
+Whether to add the parent paths if they are missing in the document.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.subdocument.create.document
+
+This property controls whether to create the document if it does not exist.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 value.converter.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+==========================
+Schemas
+==========================
+🔘 value.converter.schemas.cache.size
+
+The maximum number of schemas that can be cached in this converter instance.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schemas
+==========================
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
