@@ -1,0 +1,315 @@
+==========================
+Datadog
+==========================
+🔘 datadog.site
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Datadog Site to which the Datadog account belongs to. There are five possible values: ``US1``, ``US3``, ``US5``, ``EU1`` or ``US1-FED``. This setting is use to determine the Datadog API connector will use to post metrics to. In case this config is not configured, then Datadog API is determined by ``datadog.domain`` config value.
+	 - Required: HIGH
+
+🔘 datadog.domain
+
+Datadog domain to which the Datadog account belongs to. The two possible values are ``EU`` or ``COM``. If ``datadog.site`` is not configured, then this setting will determine the Datadog API which connector will use to post metrics to. The value `EU` will map to `https://api.datadoghq.eu` and `COM` will map to `https://api.datadoghq.com`.
+
+	 - Type: STRING
+	 - Default: COM
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 datadog.api.key
+
+API key required by the Datadog Agent to submit metrics and events to Datadog.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 behavior.on.error
+
+Error handling behavior setting. Must be configured to one of the following:
+
+	 - Type: STRING
+	 - Default: FAIL
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 max.retry.time.ms
+
+The maximum time (in millisecond) upto which connector client will try creating API requests. The recommended minimum value for this property is 1 second. The default value is 5 seconds
+
+	 - Type: INT
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Proxy Connection
+==========================
+🔘 datadog.proxy.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Datadog Proxy settings encoded in URL syntax. Use this property only if you need to access Datadog through a proxy.
+	 - Required: LOW
+
+🔘 datadog.proxy.user
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Datadog Proxy User. Use this property only if you need to access Datadog through a proxy. Using ``datadog.proxy.user`` instead of embedding the username and password in ``datadog.proxy.url`` allows the password to be hidden in the logs.
+	 - Required: LOW
+
+🔘 datadog.proxy.password
+
+Datadog Proxy Password. Use this property only if you need to access Datadog through a proxy. Using ``datadog.proxy.password`` instead of embedding the username and password in ``datadog.proxy.url`` allows the password to be hidden in the logs.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+reporter.result.topic.name
+==========================
+🔘 ${connector}-success
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the topic to produce records to after successfully processing a sink record. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
+	 - Required: MEDIUM
+
+==========================
+reporter.result.topic.replication.factor
+==========================
+🔘 3
+
+
+
+	 - Type: false
+	 - Default: SHORT
+	 - Importance: The replication factor of the result topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
+	 - Required: MEDIUM
+
+==========================
+reporter.result.topic.partitions
+==========================
+🔘 1
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The number of partitions in the result topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions to handle the potential throughput.
+	 - Required: MEDIUM
+
+==========================
+Formatter
+==========================
+🔘 reporter.result.topic.key.format
+
+The format in which the result report key is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.result.topic.key.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.key.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Formatter
+==========================
+🔘 reporter.result.topic.value.format
+
+The format in which the result report value is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.result.topic.value.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.value.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+reporter.error.topic.name
+==========================
+🔘 ${connector}-error
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the topic to produce records to after each unsuccessful record sink attempt. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
+	 - Required: MEDIUM
+
+==========================
+reporter.error.topic.replication.factor
+==========================
+🔘 3
+
+
+
+	 - Type: false
+	 - Default: SHORT
+	 - Importance: The replication factor of the error topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
+	 - Required: MEDIUM
+
+==========================
+reporter.error.topic.partitions
+==========================
+🔘 1
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The number of partitions in the error topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions in order to handle the potential throughput.
+	 - Required: MEDIUM
+
+==========================
+Formatter
+==========================
+🔘 reporter.error.topic.key.format
+
+The format in which the error report key is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.error.topic.key.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.key.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Formatter
+==========================
+🔘 reporter.error.topic.value.format
+
+The format in which the error report value is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.error.topic.value.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.value.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+reporter.bootstrap.servers
+==========================
+🔘 LIST
+
+
+
+	 - Type: MEDIUM
+	 - Default: false
+	 - Importance: 
+	 - Required: A list of host/port pairs to use for establishing the initial connection to the Kafka cluster. The client will make use of all servers irrespective of which servers are specified here for bootstrapping&mdash;this list only impacts the initial hosts used to discover the full set of servers. This list should be in the form <code>host1:port1,host2:port2,...</code>. Since these servers are just used for the initial connection to discover the full cluster membership (which may change dynamically), this list need not contain the full set of servers (you may want more than one, though, in case a server is down).
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
