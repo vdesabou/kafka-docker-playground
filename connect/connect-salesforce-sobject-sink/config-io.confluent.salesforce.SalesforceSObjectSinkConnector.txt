@@ -1,0 +1,606 @@
+==========================
+Salesforce SObject Sink
+==========================
+🔘 topics
+
+One or more Kafka topics to use as data sources for SOjects or Events.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 topics.regex
+
+A Java regex or regular expression to use for matching data source topics.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connection
+==========================
+🔘 salesforce.instance
+
+The URL of the Salesforce endpoint to use. The default is blank. This directs the connector to use the endpoint specified in the authentication response.
+
+	 - Type: STRING
+	 - Default: https://login.salesforce.com
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 salesforce.username
+
+The Salesforce username the connector should use.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 salesforce.password
+
+The Salesforce password the connector should use.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 salesforce.password.token
+
+The Salesforce security token associated with the username.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 http.proxy
+
+The HTTP(S) proxy host and port the connector should use when communicating with Salesforce. This defaults to a blank string, which corresponds to not using a proxy.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 salesforce.grant.type
+
+Authorization mechanism. Valid options are 'PASSWORD' or 'JWT_BEARER'.
+
+	 - Type: STRING
+	 - Default: PASSWORD
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 salesforce.consumer.key
+
+The consumer key for the OAuth application.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 salesforce.consumer.secret
+
+The consumer secret for the OAuth application.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 salesforce.jwt.keystore.path
+
+Path to keystore containing key to use in OAuth token bearer flow
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 salesforce.jwt.keystore.password
+
+Keystore password to enable OAuth token bearer flow
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 curl.logging
+
+If enabled, the logs output the equivalent curl commands. This is a security risk because your authorization header is displayed in the log file. **Use at your own risk.**
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.version
+
+The version of the Salesforce API to use.
+
+	 - Type: STRING
+	 - Default: latest
+	 - Importance: LOW
+	 - Required: false
+
+🔘 connection.timeout
+
+The amount of time to wait while connecting to the Salesforce streaming endpoint.
+
+	 - Type: LONG
+	 - Default: 30000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 connection.max.message.size
+
+The maximum message size in bytes that is accepted during a long poll on the Salesforce streaming endpoint.
+
+	 - Type: INT
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 request.max.retries.time.ms
+
+The maximum time in milliseconds that the connector continues to retry requests to Salesforce that fail because of network issues (once authentication succeeds). If the total time spent retrying the request exceeds this duration, retries stop and the request fails. This results in task failure.
+
+	 - Type: LONG
+	 - Default: 900000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.auth.retries.time.ms
+
+The maximum time in milliseconds connector retries for retriable errors during authentication phase
+
+	 - Type: LONG
+	 - Default: 30000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 http.proxy.auth.scheme
+
+Authentication scheme to be used when authenticate the connector towards HTTP(s) proxy.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 http.proxy.user
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The HTTP(S) proxy user name
+	 - Required: MEDIUM
+
+🔘 http.proxy.password
+
+The HTTP(S) proxy password
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 http.proxy.auth.ntlm.domain
+
+The domain to authenticate within, when NTLM scheme is used
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+reporter.result.topic.name
+==========================
+🔘 ${connector}-success
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the topic to produce records to after successfully processing a sink record. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
+	 - Required: MEDIUM
+
+==========================
+reporter.result.topic.replication.factor
+==========================
+🔘 3
+
+
+
+	 - Type: false
+	 - Default: SHORT
+	 - Importance: The replication factor of the result topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
+	 - Required: MEDIUM
+
+==========================
+reporter.result.topic.partitions
+==========================
+🔘 1
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The number of partitions in the result topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions to handle the potential throughput.
+	 - Required: MEDIUM
+
+==========================
+Formatter
+==========================
+🔘 reporter.result.topic.key.format
+
+The format in which the result report key is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.result.topic.key.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.key.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Formatter
+==========================
+🔘 reporter.result.topic.value.format
+
+The format in which the result report value is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.result.topic.value.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.value.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+reporter.error.topic.name
+==========================
+🔘 ${connector}-error
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the topic to produce records to after each unsuccessful record sink attempt. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
+	 - Required: MEDIUM
+
+==========================
+reporter.error.topic.replication.factor
+==========================
+🔘 3
+
+
+
+	 - Type: false
+	 - Default: SHORT
+	 - Importance: The replication factor of the error topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
+	 - Required: MEDIUM
+
+==========================
+reporter.error.topic.partitions
+==========================
+🔘 1
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The number of partitions in the error topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions in order to handle the potential throughput.
+	 - Required: MEDIUM
+
+==========================
+Formatter
+==========================
+🔘 reporter.error.topic.key.format
+
+The format in which the error report key is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.error.topic.key.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.key.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Formatter
+==========================
+🔘 reporter.error.topic.value.format
+
+The format in which the error report value is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.error.topic.value.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.value.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+reporter.bootstrap.servers
+==========================
+🔘 LIST
+
+
+
+	 - Type: MEDIUM
+	 - Default: false
+	 - Importance: 
+	 - Required: A list of host/port pairs to use for establishing the initial connection to the Kafka cluster. The client will make use of all servers irrespective of which servers are specified here for bootstrapping&mdash;this list only impacts the initial hosts used to discover the full set of servers. This list should be in the form <code>host1:port1,host2:port2,...</code>. Since these servers are just used for the initial connection to discover the full cluster membership (which may change dynamically), this list need not contain the full set of servers (you may want more than one, though, in case a server is down).
+
+==========================
+Salesforce SObject Sink
+==========================
+🔘 salesforce.object
+
+The Salesforce SObject to perform the sink operation on.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 salesforce.sink.object.operation
+
+The Salesforce sink operation to perform on the SObject. One of: insert, update, upsert, delete. Default is insert. This feature works if ``override.event.type`` is true.
+
+	 - Type: STRING
+	 - Default: insert
+	 - Importance: LOW
+	 - Required: false
+
+🔘 override.event.type
+
+A flag to indicate that the Kafka SObject source record EventType(create, update, delete) is overridden to use the operation specified in the ``salesforce.sink.object.operation`` configuration setting.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.ignore.fields
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma separate list of fields from the source Kafka record to ignore when pushing a record into Salesforce.
+	 - Required: LOW
+
+🔘 salesforce.ignore.reference.fields
+
+Flag to prevent reference type fields from being updated or inserted in Salesforce SObjects.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.custom.id.field.name
+
+Name of a custom external id field in SObject to structure Rest Api calls for insert, upsert, delete, and update operations.  When ``salesforce.use.custom.id.field=true`` , The operations substitute the value of the ``id`` field of source records in |ak| into the value of the specified custom external id field for sink records. This allows the sink connector to match records for operations without having to specify the  ``id`` field in Salesforce which is auto generated.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.use.custom.id.field
+
+Flag to indicate whether to use the ``salesforce.custom.id.field.name`` for all sink connector operations.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 key.converter.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+==========================
+Schemas
+==========================
+🔘 key.converter.schemas.cache.size
+
+The maximum number of schemas that can be cached in this converter instance.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 key.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schemas
+==========================
+🔘 key.converter.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 value.converter.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+==========================
+Schemas
+==========================
+🔘 value.converter.schemas.cache.size
+
+The maximum number of schemas that can be cached in this converter instance.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schemas
+==========================
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
