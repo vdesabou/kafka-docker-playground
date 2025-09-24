@@ -1,1 +1,0 @@
-singlestore-singlestore-kafka-connector|1758652832|success|17955176436

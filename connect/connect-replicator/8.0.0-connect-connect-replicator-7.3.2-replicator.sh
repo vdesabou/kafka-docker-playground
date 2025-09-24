@@ -1,1 +1,0 @@
-confluentinc-kafka-connect-replicator|1758653348|success|17955176436

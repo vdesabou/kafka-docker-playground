@@ -1,1 +1,0 @@
-confluentinc-kafka-connect-salesforce|1758655403|success|17955176436

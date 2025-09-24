@@ -1,1 +1,0 @@
-confluentinc-kafka-connect-elasticsearch|1758653973|success|17955176436

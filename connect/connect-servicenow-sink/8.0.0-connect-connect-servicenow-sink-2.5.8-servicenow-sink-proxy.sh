@@ -1,1 +1,0 @@
-confluentinc-kafka-connect-servicenow|1758652627|success|17955176436
