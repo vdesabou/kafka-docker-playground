@@ -1,0 +1,435 @@
+==========================
+null
+==========================
+🔘 splunk.hec.token
+
+Splunk Http Event Collector token.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 splunk.hec.uri
+
+Splunk HEC URIs. Either a list of FQDNs or IPs of all Splunk indexers, separated with a ",", or a load balancer. The connector will load balance to indexers using round robin. Splunk Connector will round robin to this list of indexers. https://hec1.splunk.com:8088,https://hec2.splunk.com:8088,https://hec3.splunk.com:8088
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 splunk.hec.raw
+
+Set to true in order for Splunk software to ingest data using the the /raw HEC endpoint. Default is false, which will use the /event endpoint.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.ack.enabled
+
+Valid settings are true or false. When set to true Splunk Connect for Kafka will poll event ACKs for POST events before check-pointing the Kafka offsets. This is used to prevent data loss, as this setting implements guaranteed delivery. By default, this setting is set to true.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.indexes
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Splunk index names for Kafka topic data separated by comma for multiple topics to indexers ("prod-index1,prod-index2,prod-index3").
+	 - Required: MEDIUM
+
+🔘 splunk.sourcetypes
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Splunk event sourcetype metadata for Kafka topic data. The same configuration rules as indexes can be applied here. If left unconfigured, the default source binds to the HEC token. By default, this setting is emptythrough to splunk. Only use with JSON Event endpoint
+	 - Required: MEDIUM
+
+🔘 splunk.sources
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Splunk event source metadata for Kafka topic data. The same configuration rules as indexes can be applied. If left un-configured, the default source binds to the HEC token. By default, this setting is empty.
+	 - Required: MEDIUM
+
+🔘 splunk.hec.http.keepalive
+
+Valid settings are true or false. Enables or disables HTTP connection keep-alive. By default, this is set to true
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.ssl.validate.certs
+
+Valid settings are true or false. Enables or disables HTTPS certification validation. By default, this is set to true.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.ssl.trust.store.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Path on the local disk to the certificate trust store.
+	 - Required: HIGH
+
+🔘 splunk.hec.ssl.trust.store.type
+
+Type of the trust store (JKS, PKCS12, ...).
+
+	 - Type: STRING
+	 - Default: JKS
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.hec.ssl.trust.store.password
+
+Password for the trust store.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 splunk.hec.auto.extract.timestamp
+
+When set to true, it forces Splunk HEC to extract the timestamp from event envelope/event data.
+
+	 - Type: BOOLEAN
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.hec.event.timeout
+
+This setting is applicable when splunk.hec.ack.enabled is set to true. When events are POSTed to Splunk and before they are ACKed, this setting determines how long the connector will wait before timing out and resending. By default, this is set to 300 seconds.
+
+	 - Type: INT
+	 - Default: 300
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.ack.poll.interval
+
+This setting is only applicable when splunk.hec.ack.enabled is set to true. Internally it controls the event ACKs polling interval. By default, this setting is 10 seconds.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.ack.poll.threads
+
+This setting is used for performance tuning and is only applicable when splunk.hec.ack.enabled is set to true. It controls how many threads should be spawned to poll event ACKs. By default, this is set to 1.
+
+	 - Type: INT
+	 - Default: 2
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.max.http.connection.per.channel
+
+Max HTTP connections pooled for one HEC Channel when posting events to Splunk.
+
+	 - Type: INT
+	 - Default: 2
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.flush.window
+
+The interval in seconds at which the events from kafka connect will be flushed to Splunk.
+
+	 - Type: INT
+	 - Default: 30
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.hec.total.channels
+
+Total HEC Channels used to post events to Splunk. When enabling HEC ACK, setting to the same or 2X number of indexers is generally good.
+
+	 - Type: INT
+	 - Default: 2
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 splunk.hec.socket.timeout
+
+Max duration in seconds to read / write data to network before internal TCP Socket timeout.By default, this is set to 60 seconds.
+
+	 - Type: INT
+	 - Default: 60
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.hec.json.event.enrichment
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Only applicable to /event HEC endpoint. This setting is used to enrich raw data with extra metadata fields. It contains a list of key value pairs separated by ",". The configured enrichment metadata will be indexed along with raw event data by Splunk software. Note: Data enrichment for /event HEC endpoint is only available in Splunk Enterprise 6.5 and above. By default, this setting is empty.
+	 - Required: LOW
+
+🔘 splunk.hec.track.data
+
+Valid settings are true or false. When set to true, data loss and data injection latency metadata will be indexed along with raw data. This setting only works in conjunction with /event HEC endpoint ("splunk.hec.raw" : "false"). By default, this is set to false.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.hec.use.record.timestamp
+
+Valid settings are true or false. When set to `true`, The timestamp is retrieved from the Kafka record and passed to Splunk as a HEC meta-data override. This will index events in Splunk with the record timestamp. By default, this is set to true.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.threads
+
+Controls how many threads are spawned to do data injection via HEC in a single connector task. By default, this is set to 1.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.hec.raw.line.breaker
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Only applicable to /raw HEC endpoint. The setting is used to specify a custom line breaker to help Splunk separate the events correctly. Note: For exampleyou can specify "#####" as a special line breaker.By default, this setting is empty.
+	 - Required: MEDIUM
+
+🔘 splunk.hec.max.outstanding.events
+
+Maximum amount of un-acknowledged events kept in memory by connector. Will trigger back-pressure event to slow collection. By default, this is set to 1000000.
+
+	 - Type: INT
+	 - Default: 1000000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.max.retries
+
+Number of retries for failed batches before giving up. By default this is set to -1 which will retry indefinitely.
+
+	 - Type: INT
+	 - Default: -1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.backoff.threshhold.seconds
+
+The amount of time Splunk Connect for Kafka waits on errors sending events to Splunk to attempt resending it
+
+	 - Type: INT
+	 - Default: 60
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.json.event.formatted
+
+Ensures events that are pre-formatted into the properly formatted HEC JSON format as per http://dev.splunk.com/view/event-collector/SP-CAAAE6P have meta-data and event data indexed correctly by Splunk.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.hec.max.batch.size
+
+Maximum batch size when posting events to Splunk. The size is the actual number of Kafka events not the byte size. By default, this is set to 100.
+
+	 - Type: INT
+	 - Default: 500
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.header.support
+
+Setting will enable Kafka Record headers to be used for meta data override
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.header.custom
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Setting will enable look for Record headers with these values and add themto each event if present. Custom headers are configured separated by comma for multiple headers. ex,  ("custom_header_1,custom_header_2,custom_header_3").
+	 - Required: MEDIUM
+
+🔘 splunk.header.index
+
+Header to use for Splunk Header Index
+
+	 - Type: STRING
+	 - Default: splunk.header.index
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.header.source
+
+Header to use for Splunk Header Source
+
+	 - Type: STRING
+	 - Default: splunk.header.source
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.header.sourcetype
+
+Header to use for Splunk Header Sourcetype
+
+	 - Type: STRING
+	 - Default: splunk.header.sourcetype
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.header.host
+
+Header to use for Splunk Header Host
+
+	 - Type: STRING
+	 - Default: splunk.header.host
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.lb.poll.interval
+
+This setting controls the load balancer polling interval. By default, this setting is 120 seconds.
+
+	 - Type: INT
+	 - Default: 120
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.hec.enable.compression
+
+Valid settings are true or false. Used for enable or disable gzip-compression. By default, this is set to false.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.validation.disable
+
+Disable validating splunk configurations before creating task.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 kerberos.user.principal
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kerberos user principal
+	 - Required: MEDIUM
+
+🔘 kerberos.keytab.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kerberos keytab path
+	 - Required: MEDIUM
+
+🔘 enable.timestamp.extraction
+
+Set to true if you want to extract the timestamp
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 timestamp.regex
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regex
+	 - Required: MEDIUM
+
+🔘 timestamp.format
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Timestamp format
+	 - Required: MEDIUM
+
+🔘 timestamp.timezone
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Timestamp timezone
+	 - Required: MEDIUM
+
+🔘 splunk.hec.concurrent.queue.capacity
+
+This setting controls the queue capacity for concurrency
+
+	 - Type: INT
+	 - Default: 100
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 value.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+

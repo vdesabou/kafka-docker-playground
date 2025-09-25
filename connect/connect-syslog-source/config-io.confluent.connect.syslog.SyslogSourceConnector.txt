@@ -1,0 +1,303 @@
+==========================
+Listener
+==========================
+🔘 syslog.listener
+
+The type of listener to use.
+
+	 - Type: STRING
+	 - Default: UDP
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 syslog.port
+
+The port to listen on.
+
+	 - Type: INT
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+syslog.queue.max.size
+==========================
+🔘 50000
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The maximum number of records to buffer in the connector. This queue is used as an intermediate before data is written to Kafka.
+	 - Required: LOW
+
+==========================
+syslog.queue.batch.size
+==========================
+🔘 1000
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The number of records to try and retrieve from the buffer.
+	 - Required: LOW
+
+==========================
+syslog.backoff.millis
+==========================
+🔘 100
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The number of milliseconds to wait if there are no messages in the queue for Kafka.
+	 - Required: LOW
+
+==========================
+syslog.write.timeout.millis
+==========================
+🔘 60000
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The number of milliseconds to wait if there are no messages in the queue for Kafka.
+	 - Required: LOW
+
+==========================
+Listener
+==========================
+🔘 syslog.listen.address
+
+The IP Address to listen on.
+
+	 - Type: STRING
+	 - Default: 0.0.0.0
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Netty
+==========================
+🔘 netty.trace.enabled
+
+Flag to enable trace logging at the Netty level. You will need to set `io.confluent.connect.syslog.protocol to `TRACE`. Keep in mind this will dump anything that comes into the connector to the log.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 netty.trace.addresses
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: IP addresses to enable tracing for. If this option is set tracing will only be enabled for the addresses in this list. If empty tracing will be enabled for all addresses.
+	 - Required: LOW
+
+🔘 netty.worker.threads
+
+The number of worker threads for the worker group that processes incoming messages.
+
+	 - Type: INT
+	 - Default: 16
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+topic
+==========================
+🔘 syslog
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Name of the topic to put all records.
+	 - Required: HIGH
+
+==========================
+topic.prefix
+==========================
+🔘 syslog
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Deprecated: Use `topic`
+	 - Required: HIGH
+
+==========================
+SSL
+==========================
+🔘 syslog.ssl.cert.chain.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Path to X.509 cert chain file in PEM format.
+	 - Required: HIGH
+
+🔘 syslog.ssl.key.password
+
+The password of the key file(syslog.ssl.key.path), or blank if it's not password-protected
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 syslog.ssl.key.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Path to a PKCS#8 private key file in PEM format.
+	 - Required: HIGH
+
+🔘 syslog.ssl.self.signed.certificate.enable
+
+Flag to determine if a self signed certificate should be generated and used.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 syslog.ssl.client.auth.enable
+
+Enable Client Authentication in SSL communication between the connector and syslog client.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 syslog.ssl.root.ca.cert.chain.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Path to X.509 root CA certificate chain file in PEM format to verify client certificate when client authentication is enabled in SSL Communication.
+	 - Required: LOW
+
+==========================
+Listener
+==========================
+🔘 syslog.ssl.provider
+
+The SSLContext Provider to use. JDK = JDK's default implementation. OPENSSL = OpenSSL-based implementation. OPENSSL_REFCNT = OpenSSL-based implementation which does not have finalizers and instead implements ReferenceCounted.
+
+	 - Type: STRING
+	 - Default: OPENSSL
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+TCP
+==========================
+🔘 syslog.tcp.idle.timeout.secs
+
+The amount of time in seconds to wait before disconnecting an idle session.
+
+	 - Type: INT
+	 - Default: 600
+	 - Importance: LOW
+	 - Required: false
+
+🔘 syslog.tcp.max.frame.size
+
+Maximum size of the syslog tcp message in bytes.
+
+	 - Type: INT
+	 - Default: 10000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 syslog.use.length.as.delimiter
+
+Flag to determine if the length of the message should be used as a delimiter for the message in TCP. If false, the message will be delimited by new lines only. If true, the message will be delimited by the length of the message if message starts with integer other wise it will be delimited by new lines.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Socket
+==========================
+🔘 socket.backlog.size
+
+
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 socket.rcvbuf.bytes
+
+The size of the socket receive buffer in bytes.
+
+	 - Type: INT
+	 - Default: 256000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 netty.event.group.type
+
+The type of event group to use with the Netty listener. `EPOLL` is only supported on Linux.
+
+	 - Type: STRING
+	 - Default: EPOLL
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Messsage Parsing
+==========================
+🔘 cef.timestamp.mode
+
+The strategy to use when parsing timestamps for CEF formatted messages. The default mode, 'header', will look only in the header. 'extension_field' will look in a specified extension field key, specified in a subconfig.
+
+	 - Type: STRING
+	 - Default: header
+	 - Importance: LOW
+	 - Required: false
+
+🔘 cef.timestamp.mode.extension_field.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The key used to extract timestamps from CEF extension fields.
+	 - Required: LOW
+
+🔘 syslog.date.time.formatter.pattern
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The pattern to use when parsing timestamps for the Syslog messages. The default patterns are as specified in the formats supported by the Syslog connector. Alternatively, the DateTimeFormatter pattern "d-M-yy'T'HH:mm:ss" would parse the timestamp '28-2-12T09:29:10'. For more information, see the java.time.format.DateTimeFormatter documentation.
+	 - Required: LOW
+
+🔘 syslog.time.zone
+
+The time zone to use when parsing timestamps from syslog messages to the Kafka records. For more information, see the java.time.ZoneId documentation.
+
+	 - Type: STRING
+	 - Default: UTC
+	 - Importance: LOW
+	 - Required: false
+

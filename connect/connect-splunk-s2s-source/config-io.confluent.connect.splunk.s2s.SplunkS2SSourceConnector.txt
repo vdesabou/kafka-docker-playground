@@ -1,0 +1,348 @@
+==========================
+Connection
+==========================
+🔘 splunk.s2s.port
+
+The port to listen on.
+
+	 - Type: INT
+	 - Default: 9997
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.topic
+
+Name of the Kafka topic to publish the Splunk S2S events to.
+
+	 - Type: STRING
+	 - Default: splunk-s2s-events
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Event Buffer
+==========================
+🔘 splunk.s2s.buffer.capacity
+
+The maximum number of records to buffer in the connector. This queue is used as an intermediate before data is written to Kafka.
+
+	 - Type: INT
+	 - Default: 50000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.s2s.buffer.batch.size
+
+The number of records to try and retrieve from the buffer.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.s2s.buffer.empty.wait.ms
+
+The number of milliseconds to wait if there are no messages in the buffer.
+
+	 - Type: INT
+	 - Default: 100
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.s2s.buffer.full.timeout.ms
+
+The number of milliseconds to wait for space to become available in the buffer before timing out.
+
+	 - Type: INT
+	 - Default: 60000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Parsing
+==========================
+🔘 splunk.s2s.sourcetypes
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Source types to use while parsing Splunk S2S Events.
+	 - Required: LOW
+
+🔘 splunk.s2s.headers.metadata
+
+Specify the location of the metadata fields
+
+	 - Type: STRING
+	 - Default: body
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.s2s.record.format
+
+Specify the format of the record being stored in Kafka. This configuration is applicable only when splunk.s2s.headers.metadata is set to 'body'.
+
+	 - Type: STRING
+	 - Default: DEFAULT
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.s2s.headers.event.raw
+
+This setting specifies whether events should be written in raw format or JSON format. The default value is false. If set to true, events will be written to kafka in raw format. Note this setting is only applicable if `Location of the metadata fields`(splunk.s2s.headers.metadata) is set to `headers`.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connection
+==========================
+🔘 splunk.s2s.ssl.enable
+
+Enable Secure Sockets Layer for communication between the connector and Splunk UF. Forwarder(s) needs to have SSL option set correspondingly.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.s2s.ssl.client.auth.enable
+
+Enable Client Authentication in SSL communication between the connector and Splunk UF. Forwarder(s) needs to have SSL option set correspondingly. SSL Connection should be enabled before enabling SSL client authentication.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.s2s.ssl.key.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Path to a PKCS#8 private key file in PEM format
+	 - Required: LOW
+
+🔘 splunk.s2s.ssl.cert.chain.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Path to X.509 cert chain file in PEM format.
+	 - Required: LOW
+
+🔘 splunk.s2s.ssl.key.password
+
+The password of the key file or blank if it's not password-protected
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.s2s.ssl.root.ca.cert.chain.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Path to X.509 root CA certificate chain file in PEM format to verify client certificate when client authentication is enabled in SSL Communication.
+	 - Required: LOW
+
+🔘 splunk.s2s.ssl.cn.list
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A list of one or more common names which will be checked for a match in the certificate that the client presents. This setting is only valid if "Enable Client Authentication" is set to "true".
+	 - Required: LOW
+
+==========================
+Netty
+==========================
+🔘 splunk.s2s.netty.backlog.size
+
+The maximum queue length for incoming connection requests. Connection is refused if the connection arrives when the queue is full
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.s2s.netty.receive.buffer.bytes
+
+Size of the buffer the kernel allocates to hold the data arriving into the given socket
+
+	 - Type: INT
+	 - Default: 256000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.s2s.netty.trace.enabled
+
+Enables netty trace logs
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.s2s.netty.worker.threads
+
+The number of worker threads for the worker group that processes incoming messages.
+
+	 - Type: INT
+	 - Default: 16
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connection
+==========================
+🔘 splunk.s2s.compression.enable
+
+Enable compression for communication between the connector and Splunk forwarders. The connector supports only native Splunk compression, i.e, `compressed=true` setting. It does not support `useClientSSLCompression`setting provided by Splunk. Please configure `compressed=true` on forwarders before setting this config to `true`.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.s2s.enable.ack
+
+Enable Splunk S2S support for acknowledging events sent by the connector. Forwarder needs to be configured correspondingly
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Parsing
+==========================
+🔘 splunk.s2s.auto.timestamp.generation
+
+Enable Splunk S2S support for auto generation for timestamp when not present in the payload
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connection
+==========================
+🔘 splunk.s2s.ack.interval.ms
+
+The interval at which acknowledgement packets are sent. This is applicable only when `splunk.s2s.enable.ack` is set to true. The value can be set between a minimum of 5 ms and a maximum of 240,000 ms. Default is 10 ms.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.s2s.behavior.on.error
+
+Error handling behavior setting. Must be configured to one of the following:
+
+	 - Type: STRING
+	 - Default: LOG
+	 - Importance: LOW
+	 - Required: false
+
+🔘 regex.timeout.ms
+
+Timeout in milliseconds for any regex operation. This controls how long the connector will wait for regex pattern compilation, matching, replacement, or any other regex-related operation to complete before timing out.
+
+	 - Type: LONG
+	 - Default: 100
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 value.converter.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+==========================
+Schemas
+==========================
+🔘 value.converter.schemas.cache.size
+
+The maximum number of schemas that can be cached in this converter instance.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schemas
+==========================
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+

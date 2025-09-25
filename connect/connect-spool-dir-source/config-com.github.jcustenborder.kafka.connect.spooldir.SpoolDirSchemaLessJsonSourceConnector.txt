@@ -1,0 +1,222 @@
+==========================
+General
+==========================
+🔘 topic
+
+The Kafka topic to write the data to.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 batch.size
+
+The number of records that should be returned with each batch.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 empty.poll.wait.ms
+
+The amount of time to wait if a poll returns an empty list of records.
+
+	 - Type: LONG
+	 - Default: 500
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+File System
+==========================
+🔘 cleanup.policy
+
+Determines how the connector should cleanup the files that have been successfully processed. NONE leaves the files in place which could cause them to be reprocessed if the connector is restarted. DELETE removes the file from the filesystem. MOVE will move the file to a finished directory. MOVEBYDATE will move the file to a finished directory with subdirectories by date
+
+	 - Type: STRING
+	 - Default: MOVE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 input.path
+
+The directory to read files that will be processed. This directory must exist and be writable by the user running Kafka Connect.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 finished.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The directory to place files that have been successfully processed. This directory must exist and be writable by the user running Kafka Connect.
+	 - Required: HIGH
+
+🔘 error.path
+
+The directory to place files in which have error(s). This directory must exist and be writable by the user running Kafka Connect.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 input.file.pattern
+
+Regular expression to check input file names against. This expression must match the entire filename. The equivalent of Matcher.matches().
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 halt.on.error
+
+Should the task halt when it encounters an error or continue to the next file.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 file.minimum.age.ms
+
+The amount of time in milliseconds after the file was last written to before the file can be processed.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 processing.file.extension
+
+Before a file is processed, a flag is created in its directory to indicate the file is being handled. The flag file has the same name as the file, but with this property appended as a suffix.
+
+	 - Type: STRING
+	 - Default: .PROCESSING
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Timestamps
+==========================
+🔘 timestamp.mode
+
+Determines how the connector will set the timestamp for the [ConnectRecord](https://kafka.apache.org/0102/javadoc/org/apache/kafka/connect/connector/ConnectRecord.html#timestamp()). If set to `Field` then the timestamp will be read from a field in the value. This field cannot be optional and must be a [Timestamp](https://kafka.apache.org/0102/javadoc/org/apache/kafka/connect/data/Schema.html). Specify the field  in `timestamp.field`. If set to `FILE_TIME` then the last modified time of the file will be used. If set to `PROCESS_TIME` the time the record is read will be used.
+
+	 - Type: STRING
+	 - Default: PROCESS_TIME
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+File System
+==========================
+🔘 files.sort.attributes
+
+The attributes each file will use to determine the sort order. `Name` is name of the file. `Length` is the length of the file preferring larger files first. `LastModified` is the LastModified attribute of the file preferring older files first.
+
+	 - Type: LIST
+	 - Default: NameAsc
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+General
+==========================
+🔘 task.index
+
+Internal setting to the connector used to instruct a task on which files to select. The connector will override this setting.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 task.count
+
+Internal setting to the connector used to instruct a task on which files to select. The connector will override this setting.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+File System
+==========================
+🔘 task.partitioner
+
+The task partitioner implementation is used when the connector is configured to use more than one task. This is used by each task to identify which files will be processed by that task. This ensures that each file is only assigned to one task.
+
+	 - Type: STRING
+	 - Default: ByName
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 input.path.walk.recursively
+
+If enabled, any sub-directories dropped under `input.path` will be recursively walked looking for files matching the configured `input.file.pattern`. After processing is complete the discovered sub directory structure (as well as files within them) will handled according to the configured `cleanup.policy` (i.e. moved or deleted etc). For each discovered file, the walked sub-directory path will be set as a header named `file.relative.path`
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 cleanup.policy.maintain.relative.path
+
+If `input.path.walk.recursively` is enabled in combination with this flag being `true`, the walked sub-directories which contained files will be retained as-is under the `input.path`. The actual files within the sub-directories will moved (with a copy of the sub-dir structure) or deleted as per the `cleanup.policy` defined, but the parent sub-directory structure will remain.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 file.buffer.size.bytes
+
+The size of buffer for the BufferedInputStream that will be used to interact with the file system.
+
+	 - Type: INT
+	 - Default: 131072
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+file.charset
+==========================
+🔘 UTF-8
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Character set to read wth file with.
+	 - Required: LOW
+
+==========================
+null
+==========================
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 value.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+

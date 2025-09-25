@@ -1,0 +1,525 @@
+==========================
+Connection
+==========================
+🔘 sftp.host
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Host address of the SFTP server.
+	 - Required: HIGH
+
+🔘 sftp.port
+
+Port number of the SFTP server.
+
+	 - Type: INT
+	 - Default: 22
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sftp.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Username for the SFTP connection.
+	 - Required: HIGH
+
+🔘 sftp.password
+
+Password for the SFTP connection.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Proxy
+==========================
+🔘 sftp.proxy.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Proxy url for the SFTP connection.
+	 - Required: LOW
+
+🔘 proxy.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Proxy username for the SFTP connection.
+	 - Required: LOW
+
+🔘 proxy.password
+
+Proxy password for the SFTP connection.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Security
+==========================
+🔘 tls.private.key
+
+Private key that will be used for public-key authentication.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+🔘 tls.public.key
+
+Public key that will be used to decrypt the private key if the given private key is encrypted.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+🔘 tls.passphrase
+
+Passphrase that will be used to decrypt the private key if the given private key is encrypted.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+🔘 tls.pemfile
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Path in the filesystem to a valid pemfile that will be used for public-key authentication.
+	 - Required: LOW
+
+🔘 kerberos.user.principal
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The principal to use when connecting to SFTP with Kerberos. The ``sftp.username`` is still required. Format: ``username@REALM``.
+	 - Required: LOW
+
+🔘 kerberos.keytab.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The path to the keytab file for the SFTP connector principal. This keytab file should only be readable by the connector.
+	 - Required: LOW
+
+==========================
+null
+==========================
+🔘 session.validation.timeout.ms
+
+
+
+	 - Type: INT
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+General
+==========================
+🔘 kafka.topic
+
+The Kafka topic to write the data to.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 batch.size
+
+The number of records that should be returned with each batch.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 empty.poll.wait.ms
+
+The amount of time to wait if a poll returns an empty list of records.
+
+	 - Type: LONG
+	 - Default: 250
+	 - Importance: LOW
+	 - Required: false
+
+🔘 sftp.max.record.size
+
+The maximum size of a record in bytes to be accepted by the connector. Records larger than this size will result in an error and will get handled as per the cleanup policy. Default is 0, which means no limit.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connector
+==========================
+🔘 input.path
+
+The sftp directory to read files that will be processed.This directory must exist and be writable by the user running Kafka Connect.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 finished.path
+
+The sftp directory to place files that have been successfully processed. This directory must exist and be writable by the user running Kafka Connect.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 error.path
+
+The sftp directory to place files in which have error(s).This directory must exist and be writable by the user running Kafka Connect.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+File System
+==========================
+🔘 cleanup.policy
+
+Determines how the connector should cleanup the files that have been successfully processed. NONE leaves the files in place which could cause them to be reprocessed if the connector is restarted. DELETE removes the file from the filesystem. MOVE will move the file to a finished directory.
+
+	 - Type: STRING
+	 - Default: MOVE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 input.file.pattern
+
+Regular expression to check input file names against. This expression must match the entire filename. The equivalent of Matcher.matches().
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 behavior.on.error
+
+Should the task halt when it encounters an error or continue to the next file.
+
+	 - Type: STRING
+	 - Default: FAIL
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 processing.file.extension
+
+Deprecated. Before a file is processed, it is renamed to indicate that it is currently being processed. This setting is appended to the end of the file.
+
+	 - Type: STRING
+	 - Default: .PROCESSING
+	 - Importance: LOW
+	 - Required: false
+
+🔘 file.minimum.age.ms
+
+The amount of time in milliseconds after the file was last written to before the file can be processed.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Timestamps
+==========================
+🔘 timestamp.mode
+
+Determines how the connector will set the timestamp for the [ConnectRecord](https://kafka.apache.org/0102/javadoc/org/apache/kafka/connect/connector/ConnectRecord.html#timestamp()). If set to `Field` then the timestamp will be read from a field in the value. This field cannot be optional and must be a [Timestamp] (https://kafka.apache.org/0102/javadoc/org/apache/kafka/connect/data/Schema.html). Specify the field  in `timestamp.field`. If set to `FILE_TIME` then the last modified time of the file will be used. If set to `PROCESS_TIME` the time the record is read will be used.
+
+	 - Type: STRING
+	 - Default: PROCESS_TIME
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Schema
+==========================
+🔘 key.schema
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The schema for the key written to Kafka.
+	 - Required: HIGH
+
+🔘 value.schema
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The schema for the value written to Kafka.
+	 - Required: HIGH
+
+==========================
+Timestamps
+==========================
+🔘 parser.timestamp.timezone
+
+The timezone that all of the dates will be parsed with.
+
+	 - Type: STRING
+	 - Default: UTC
+	 - Importance: LOW
+	 - Required: false
+
+🔘 parser.timestamp.date.formats
+
+The date formats that are expected in the file. This is a list of strings that will be used to parse the date fields in order. The most accurate date format should be the first in the list. Take a look at the Java documentation for more info. https://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html
+
+	 - Type: LIST
+	 - Default: yyyy-MM-dd'T'HH:mm:ss,yyyy-MM-dd' 'HH:mm:ss
+	 - Importance: LOW
+	 - Required: false
+
+🔘 timestamp.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The field in the value schema that will contain the parsed timestamp for the record. This field cannot be marked as optional and must be a [Timestamp] (https://kafka.apache.org/0102/javadoc/org/apache/kafka/connect/data/Schema.html)
+	 - Required: MEDIUM
+
+==========================
+Schema Generation
+==========================
+🔘 schema.generation.enabled
+
+Flag to determine if schemas should be dynamically generated. If set  to true, `key.schema` and `value.schema` can be omitted, but `schema.generation.key.name` and `schema.generation.value.name` must be set.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 schema.generation.key.fields
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: The field(s) to use to build a key schema.This is only used during schema generation.
+	 - Required: MEDIUM
+
+🔘 schema.generation.key.name
+
+The name of the generated key schema.
+
+	 - Type: STRING
+	 - Default: defaultkeyschemaname
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 schema.generation.value.name
+
+The name of the generated value schema.
+
+	 - Type: STRING
+	 - Default: defaultvalueschemaname
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+CSV Parsing
+==========================
+🔘 csv.skip.lines
+
+Number of lines to skip in the beginning of the file.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.separator.char
+
+The character that separates each field in the form of an integer. Typically in a CSV this is a ,(44) character. A TSV would use a tab(9) character. If `csv.separator.char` is defined as a null(0), then the RFC 4180 parser must be utilized by default. This is the equivalent of `csv.rfc.4180.parser.enabled = true`.
+
+	 - Type: INT
+	 - Default: 44
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.quote.char
+
+The character that is used to quote a field. This typically happens when the csv.separator.char character is within the data.
+
+	 - Type: INT
+	 - Default: 34
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.escape.char
+
+The character as an integer to use when a special character is encountered. The default escape character is typically a \(92)
+
+	 - Type: INT
+	 - Default: 92
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.strict.quotes
+
+Sets the strict quotes setting - if true, characters outside the quotes are ignored.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.ignore.leading.whitespace
+
+Sets the ignore leading whitespace setting - if true, white space in front of a quote in a field is ignored.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.ignore.quotations
+
+Sets the ignore quotations mode - if true, quotations are ignored.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.keep.carriage.return
+
+Flag to determine if the carriage return at the end of the line should be maintained. 
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.verify.reader
+
+Flag to determine if the reader should be verified.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.null.field.indicator
+
+Indicator to determine how the CSV Reader can determine if a field is null. Valid values are EMPTY_SEPARATORS, EMPTY_QUOTES, BOTH, NEITHER. For more information see http://opencsv.sourceforge.net/apidocs/com/opencsv/enums/CSVReaderNullFieldIndicator.html.
+
+	 - Type: STRING
+	 - Default: NEITHER
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.first.row.as.header
+
+Flag to indicate if the fist row of data contains the header of the file. If true the position of the columns will be determined by the first row to the CSV. The column position will be inferred from the position of the schema supplied in `value.schema`. If set to true the number of columns must be greater than or equal to the number of fields in the schema.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 csv.file.charset
+
+Character set to read wth file with.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.case.sensitive.field.names
+
+Flag to determine if the field names in the header row should be treated as case sensitive.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.rfc.4180.parser.enabled
+
+Flag to determine if the RFC 4180 parser should be used instead of the default parser.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.pre.validate.file.enabled
+
+Flag to enable validating the integrity of all records in the CSV file before processing any of its records.  For example, if any of the records have a linefeed within an unquoted field, which would incorrectly break the record at that point, then the entire fil will be considered erroneous and no records from that file will be processed.  The failed file would be moved to the configured error path.  Important: If the number of records in a file is larger than the configured batch size, then portions of the file may be retrieved from the sftp server by the connector more than once.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 producer.override.security.protocol
+
+Protocol used to communicate with brokers.
+
+	 - Type: STRING
+	 - Default: PLAINTEXT
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 producer.override.sasl.mechanism
+
+SASL mechanism used for client connections. This may be any mechanism for which a security provider is available. GSSAPI is the default mechanism.
+
+	 - Type: STRING
+	 - Default: GSSAPI
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 producer.override.sasl.jaas.config
+
+JAAS login context parameters for SASL connections in the format used by JAAS configuration files. JAAS configuration file format is described <a href="https://docs.oracle.com/javase/8/docs/technotes/guides/security/jgss/tutorials/LoginConfigFile.html">here</a>. The format for the value is: <code>loginModuleClass controlFlag (optionName=optionValue)*;</code>. For brokers, the config must be prefixed with listener prefix and SASL mechanism name in lower-case. For example, listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config=com.example.ScramLoginModule required;
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+

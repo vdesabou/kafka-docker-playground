@@ -1,0 +1,111 @@
+==========================
+null
+==========================
+🔘 splunk.port
+
+The port to configure the http listener on.
+
+	 - Type: INT
+	 - Default: 8088
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 splunk.ssl.renegotiation.allowed
+
+Flag to determine if ssl renegotiation is allowed.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.ssl.key.store.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The path to the keystore on the local filesystem.
+	 - Required: HIGH
+
+🔘 splunk.ssl.key.store.password
+
+The password for opening the keystore.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 splunk.collector.url
+
+Path fragment the servlet should respond on
+
+	 - Type: STRING
+	 - Default: /services/collector/event
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.collector.authentication.tokens
+
+A comma separated list of authentication tokens
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.collector.index.allowed
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: The indexes this connector allows data to be written for. Specifying an index outside of this list will result in an exception being raised.
+	 - Required: LOW
+
+🔘 splunk.collector.index.default
+
+The index that will be used if no index is specified in the event message.
+
+	 - Type: STRING
+	 - Default: main
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 topic.per.index
+
+Flag determines if the all generated messages should be written to a single topic or should the messages be placed in a topic prefixed by the supplied index. If true the `kafka.topic` setting will be concatenated along with the index name. If false the `kafka.topic` value will be used for the topic.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 kafka.topic
+
+This value contains the topic that the messages will be written to. If topic per index is enabled this will be the prefix for the topic. If not this will be the exact topic.
+
+	 - Type: STRING
+	 - Default: splunk-hec
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 batch.size
+
+Maximum number of records to write per poll call.
+
+	 - Type: INT
+	 - Default: 10000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 backoff.ms
+
+The number of milliseconds to back off when there are no records in the queue.
+
+	 - Type: INT
+	 - Default: 100
+	 - Importance: LOW
+	 - Required: false
+
