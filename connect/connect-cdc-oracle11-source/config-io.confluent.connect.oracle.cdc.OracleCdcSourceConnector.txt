@@ -1,0 +1,1230 @@
+==========================
+Oracle Connection
+==========================
+🔘 oracle.server
+
+The host name or address for the Oracle server.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 oracle.port
+
+The port number used to connect to Oracle.
+
+	 - Type: INT
+	 - Default: 1521
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 oracle.sid
+
+The Oracle system identifier (SID).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 oracle.pdb.name
+
+The Oracle PDB name. Set this only if using multi-tenant CDB/PDB architecture. By default, this is not set, which indicates that the tables to capture reside in the CDB root.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 oracle.service.name
+
+The Oracle service name. If set, the connector always connects to the database using provided service name.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 oracle.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Oracle database user. Blank typically only when using Kerberos for authentication.
+	 - Required: HIGH
+
+🔘 oracle.password
+
+The password for the Oracle database user. Blank typically only when using Kerberos for authentication.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 ldap.url
+
+The connection URL for LDAP server. This supports OID/OUD LDAP implementations.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 ldap.security.principal
+
+LDAP security principal used for authentication.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 ldap.security.credentials
+
+LDAP security credentials used for authentication.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 oracle.kerberos.cache.file
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: If using Kerberose 5 authentication, set this to the location of the Kerberos 5 ticket cache file on all the Connect workers.
+	 - Required: MEDIUM
+
+🔘 oracle.fan.events.enable
+
+Whether the connection should allow using Oracle RAC Fast Application Notification (FAN) events. This is disabled by default, meaning FAN events will not be used even if they are supported by the database. This should only be enabled when using Oracle RAC set up with FAN events. Enabling this feature may cause connection issues when the database is not set up to use FAN events.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 oracle.ssl.truststore.file
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: If using SSL for encryption and server authentication, set this to the location of the trust store containing server certificates that should be trusted.
+	 - Required: MEDIUM
+
+🔘 oracle.ssl.truststore.password
+
+If using SSL for encryption and server authentication, the password of the trust store containing server certificates that should be trusted.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 query.timeout.ms
+
+The timeout in milliseconds for any query submitted to Oracle. The default is 5 minutes (or 300000 milliseconds). If set to negative values, then the connector will not enforce timeout on queries.
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 max.retry.time.ms
+
+The maximum time in milliseconds for any Oracle operation to retry. The default is 30 minutes (or 1800000 milliseconds).
+
+	 - Type: LONG
+	 - Default: 1800000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 start.from
+
+What the connector should do when it starts for the first time. The value is either the literal ``snapshot`` (default), the literal ``current``, the literal ``force_current``. an Oracle System Change Number (SCN), or a database timestamp in the form ``DD-MON-YYYY HH24:MI:SS``. The ``snapshot`` literal instructs the connector to snapshot captured tables the first time it is started, then continue processing redo log events from the point in time when the snapshot was taken. The ``current`` literal instructs the connector to start from the current Oracle SCN without snapshotting. The ``force_current`` literal is the same as ``current`` but it will ignore any previously stored offsets when the connector is restarted. This option should only be used to recover the connector when the SCN stored in offsets is no longer available in the Oracle archive logs.
+
+	 - Type: STRING
+	 - Default: snapshot
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 oracle.validation.result.fetch.size
+
+The fetch size to be used while querying database for validations. This will be used to query list of tables and supplemental logging level validation.
+
+	 - Type: INT
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 retry.error.codes
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma-separated list of Oracle error codes (e.g. 12505, 12528) that will be retried by the connector, up to the time defined by ``max.retry.time.ms`` configuration. By default, the connector retries in case of a recoverable or transient SQL exception and on certain Oracle error codes.
+	 - Required: LOW
+
+==========================
+Oracle Redo Logs
+==========================
+🔘 redo.log.topic.name
+
+The name of the Kafka topic to which the connector will record all raw redo log events. A blank topic name (the default) signals that this information should not be written to Kafka.
+
+	 - Type: STRING
+	 - Default: ${connectorName}-${databaseName}-redo-log
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 redo.log.corruption.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Kafka topic where the connector records events describing corruption in the Oracle redo log, indicating missed data. This topic is also where unparsable statements are published when ``behavior.on.unparsable.statement`` is set to ``write``. A blank topic name (the default) means this information will not be written to Kafka.
+	 - Required: HIGH
+
+🔘 redo.log.poll.interval.ms
+
+The interval between polls to retrieve the database redo log events. This has no effect when continuous mine is available and enabled. The default is 1 second (or 1000 milliseconds)
+
+	 - Type: LONG
+	 - Default: 1000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.startup.polling.limit.ms
+
+The amount of time to wait for the redo log to be present on connector startup. This is only relevant when connector is configured to capture change events. The default is 5 minutes (or 300000 milliseconds)
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snapshot.row.fetch.size
+
+The number of rows to provide as a hint to the JDBC driver when fetching table rows in a snapshot. A value of 0 disables this hint.
+
+	 - Type: INT
+	 - Default: 2000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snapshot.threads.per.task
+
+The number of threads that can be used in each task to perform snapshots. This is only used in each task the value is larger than the number of tables assigned to that task. The default is 4.
+
+	 - Type: INT
+	 - Default: 4
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snapshot.by.table.partitions
+
+Whether the connector should perform snapshots on each table partition if the table is defined to use partitions. This is ``false`` by default, meaning that one snapshot is performed on each table in its entirety.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 redo.log.initial.delay.interval.ms
+
+The amount of time to wait for in flight transactions to complete after the initial snapshot is taken, before the initial startup of reading redo logs. Only relevant on cold start when connector is configured to capture change events.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 redo.log.row.fetch.size
+
+The number of rows to provide as a hint to the JDBC driver when fetching rows from the redo log. A value of 0 disables this hint.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.row.poll.fields.include
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma-separated list of the fields to include in the redo log
+	 - Required: LOW
+
+🔘 redo.log.row.poll.fields.exclude
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma-separated list of the fields to exclude from the redo log
+	 - Required: LOW
+
+🔘 redo.log.row.poll.username.include
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma-separated list of database usernames. When this property is set, the connector captures changes only from the specified set of database users.You cannot set this property along with the redo.log.row.poll.username.exclude property
+	 - Required: LOW
+
+🔘 redo.log.row.poll.username.exclude
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma-separated list of database usernames. When this property is set, the connector captures changes only from database users that are not specified in this list.You cannot set this property along with the redo.log.row.poll.username.include property
+	 - Required: LOW
+
+🔘 redo.log.row.poll.filter
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: SQL predicate to include the specific rows
+	 - Required: LOW
+
+🔘 use.transaction.begin.for.mining.session
+
+Set start SCN for log mining session based on if there are active transactions or not. This is used only in the without continuous mining mode
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 archive.only.mining.on.consecutive.log.switches.threshold
+
+Maximum number of consecutive log switches after which the connector mines only the archived redo log files before reverting to mining online and archived redo log files. Applicable only when use.transaction.begin.for.mining.session is set to true
+
+	 - Type: INT
+	 - Default: 2
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 archive.only.mining.redo.log.size.threshold
+
+Include only archived redo logs in a mining session if the total size of relevant archived redo logs for the session is more than this threshold value (in MB). Applicable only when use.transaction.begin.for.mining.session is set to true
+
+	 - Type: LONG
+	 - Default: 8192
+	 - Importance: LOW
+	 - Required: false
+
+🔘 oracle.dictionary.mode
+
+The dictionary handling mode used by the connector. One of auto, online, or redo_log.
+
+	 - Type: STRING
+	 - Default: auto
+	 - Importance: LOW
+	 - Required: false
+
+🔘 log.mining.archive.destination.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the log archive destination to use when mining archived redo logs. You can configure the connector to use a  specific destination using the destination name, for example, LOG_ARCHIVE_DEST_2. This is only applicable for Oracle database versions 19c and later.
+	 - Required: LOW
+
+🔘 record.buffer.mode
+
+Where to buffer records that are part of the transaction but may not yet be committed. Options are:
+
+	 - Type: STRING
+	 - Default: connector
+	 - Importance: LOW
+	 - Required: false
+
+🔘 log.mining.end.scn.deviation.ms
+
+Calculates the end SCN of log mining sessions as the approximate SCN that corresponds to the point in time that is log.mining.end.scn.deviation.ms milliseconds before the current SCN obtained from the database. The default value is set to 3 seconds on RAC environments, and not set otherwise. This configuration is applicable only for Oracle database versions 19c and later.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.bootstrap.servers
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A list of host/port pairs to use for establishing the initial connection to the Kafka cluster with the redo log topic. The client will make use of all servers irrespective of which servers are specified here for bootstrapping—this list only impacts the initial hosts used to discover the full set of servers. This list should be in the form ``host1:port1,host2:port2,...``. Since these servers are just used for the initial connection to discover the full cluster membership (which may change dynamically), this list need not contain the full set of servers (you may want more than one, though, in case a server is down).
+	 - Required: HIGH
+
+🔘 redo.log.consumer.client.dns.lookup
+
+Controls how the client uses DNS lookups. If set to <code>use_all_dns_ips</code>, connect to each returned IP address in sequence until a successful connection is established. After a disconnection, the next IP is used. Once all IPs have been used once, the client resolves the IP(s) from the hostname again (both the JVM and the OS cache DNS name lookups, however). If set to <code>resolve_canonical_bootstrap_servers_only</code>, resolve each bootstrap address into a list of canonical names. After the bootstrap phase, this behaves the same as <code>use_all_dns_ips</code>.
+
+	 - Type: STRING
+	 - Default: use_all_dns_ips
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.group.id
+
+A unique string that identifies the consumer group this consumer belongs to. This property is required if the consumer uses either the group management functionality by using <code>subscribe(topic)</code> or the Kafka-based offset management strategy.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 redo.log.consumer.group.instance.id
+
+A unique identifier of the consumer instance provided by the end user. Only non-empty strings are permitted. If set, the consumer is treated as a static member, which means that only one instance with this ID is allowed in the consumer group at any time. This can be used in combination with a larger session timeout to avoid group rebalances caused by transient unavailability (e.g. process restarts). If not set, the consumer will join the group as a dynamic member, which is the traditional behavior.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.session.timeout.ms
+
+The timeout used to detect client failures when using Kafka's group management facility. The client sends periodic heartbeats to indicate its liveness to the broker. If no heartbeats are received by the broker before the expiration of this session timeout, then the broker will remove this client from the group and initiate a rebalance. Note that the value must be in the allowable range as configured in the broker configuration by <code>group.min.session.timeout.ms</code> and <code>group.max.session.timeout.ms</code>. Note that this configuration is not supported when <code>group.protocol</code> is set to "consumer".
+
+	 - Type: INT
+	 - Default: 45000
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 redo.log.consumer.heartbeat.interval.ms
+
+The expected time between heartbeats to the consumer coordinator when using Kafka's group management facilities. Heartbeats are used to ensure that the consumer's session stays active and to facilitate rebalancing when new consumers join or leave the group. The value must be set lower than <code>session.timeout.ms</code>, but typically should be set no higher than 1/3 of that value. It can be adjusted even lower to control the expected time for normal rebalances.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 redo.log.consumer.partition.assignment.strategy
+
+A list of class names or class types, ordered by preference, of supported partition assignment strategies that the client will use to distribute partition ownership amongst consumer instances when group management is used. Available options are:<ul><li><code>org.apache.kafka.clients.consumer.RangeAssignor</code>: Assigns partitions on a per-topic basis.</li><li><code>org.apache.kafka.clients.consumer.RoundRobinAssignor</code>: Assigns partitions to consumers in a round-robin fashion.</li><li><code>org.apache.kafka.clients.consumer.StickyAssignor</code>: Guarantees an assignment that is maximally balanced while preserving as many existing partition assignments as possible.</li><li><code>org.apache.kafka.clients.consumer.CooperativeStickyAssignor</code>: Follows the same StickyAssignor logic, but allows for cooperative rebalancing.</li></ul><p>The default assignor is [RangeAssignor, CooperativeStickyAssignor], which will use the RangeAssignor by default, but allows upgrading to the CooperativeStickyAssignor with just a single rolling bounce that removes the RangeAssignor from the list.</p><p>Implementing the <code>org.apache.kafka.clients.consumer.ConsumerPartitionAssignor</code> interface allows you to plug in a custom assignment strategy.</p>
+
+	 - Type: LIST
+	 - Default: class org.apache.kafka.clients.consumer.RangeAssignor,class org.apache.kafka.clients.consumer.CooperativeStickyAssignor
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.max.partition.fetch.bytes
+
+The maximum amount of data per-partition the server will return. Records are fetched in batches by the consumer. If the first record batch in the first non-empty partition of the fetch is larger than this limit, the batch will still be returned to ensure that the consumer can make progress. The maximum record batch size accepted by the broker is defined via <code>message.max.bytes</code> (broker config) or <code>max.message.bytes</code> (topic config). See fetch.max.bytes for limiting the consumer request size.
+
+	 - Type: INT
+	 - Default: 1048576
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 redo.log.consumer.send.buffer.bytes
+
+The size of the TCP send buffer (SO_SNDBUF) to use when sending data. If the value is -1, the OS default will be used.
+
+	 - Type: INT
+	 - Default: 131072
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.receive.buffer.bytes
+
+The size of the TCP receive buffer (SO_RCVBUF) to use when reading data. If the value is -1, the OS default will be used.
+
+	 - Type: INT
+	 - Default: 65536
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.fetch.min.bytes
+
+The minimum amount of data the server should return for a fetch request. If insufficient data is available the request will wait for that much data to accumulate before answering the request. The default setting of 1 byte means that fetch requests are answered as soon as that many byte(s) of data is available or the fetch request times out waiting for data to arrive. Setting this to a larger value will cause the server to wait for larger amounts of data to accumulate which can improve server throughput a bit at the cost of some additional latency.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 redo.log.consumer.fetch.max.bytes
+
+The maximum amount of data the server should return for a fetch request. Records are fetched in batches by the consumer, and if the first record batch in the first non-empty partition of the fetch is larger than this value, the record batch will still be returned to ensure that the consumer can make progress. As such, this is not a absolute maximum. The maximum record batch size accepted by the broker is defined via <code>message.max.bytes</code> (broker config) or <code>max.message.bytes</code> (topic config). Note that the consumer performs multiple fetches in parallel.
+
+	 - Type: INT
+	 - Default: 52428800
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.request.timeout.ms
+
+The configuration controls the maximum amount of time the client will wait for the response of a request. If the response is not received before the timeout elapses the client will resend the request if necessary or fail the request if retries are exhausted.
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.default.api.timeout.ms
+
+Specifies the timeout (in milliseconds) for client APIs. This configuration is used as the default timeout for all client operations that do not specify a <code>timeout</code> parameter.
+
+	 - Type: INT
+	 - Default: 60000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.socket.connection.setup.timeout.ms
+
+The amount of time the client will wait for the socket connection to be established. If the connection is not built before the timeout elapses, clients will close the socket channel. This value is the initial backoff value and will increase exponentially for each consecutive connection failure, up to the <code>socket.connection.setup.timeout.max.ms</code> value.
+
+	 - Type: LONG
+	 - Default: 10000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.socket.connection.setup.timeout.max.ms
+
+The maximum amount of time the client will wait for the socket connection to be established. The connection setup timeout will increase exponentially for each consecutive connection failure up to this maximum. To avoid connection storms, a randomization factor of 0.2 will be applied to the timeout resulting in a random range between 20% below and 20% above the computed value.
+
+	 - Type: LONG
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.connections.max.idle.ms
+
+Close idle connections after the number of milliseconds specified by this config.
+
+	 - Type: LONG
+	 - Default: 540000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.max.poll.records
+
+The maximum number of records returned in a single call to poll(). Note, that <code>max.poll.records</code> does not impact the underlying fetching behavior. The consumer will cache the records from each fetch request and returns them incrementally from each poll.
+
+	 - Type: INT
+	 - Default: 500
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.max.poll.interval.ms
+
+The maximum delay between invocations of poll() when using consumer group management. This places an upper bound on the amount of time that the consumer can be idle before fetching more records. If poll() is not called before expiration of this timeout, then the consumer is considered failed and the group will rebalance in order to reassign the partitions to another member. For consumers using a non-null <code>group.instance.id</code> which reach this timeout, partitions will not be immediately reassigned. Instead, the consumer will stop sending heartbeats and partitions will be reassigned after expiration of <code>session.timeout.ms</code>. This mirrors the behavior of a static consumer which has shutdown.
+
+	 - Type: INT
+	 - Default: 300000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.exclude.internal.topics
+
+Whether internal topics matching a subscribed pattern should be excluded from the subscription. It is always possible to explicitly subscribe to an internal topic.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.isolation.level
+
+Controls how to read messages written transactionally. If set to <code>read_committed</code>, consumer.poll() will only return transactional messages which have been committed. If set to <code>read_uncommitted</code> (the default), consumer.poll() will return all messages, even transactional messages which have been aborted. Non-transactional messages will be returned unconditionally in either mode. <p>Messages will always be returned in offset order. Hence, in  <code>read_committed</code> mode, consumer.poll() will only return messages up to the last stable offset (LSO), which is the one less than the offset of the first open transaction. In particular any messages appearing after messages belonging to ongoing transactions will be withheld until the relevant transaction has been completed. As a result, <code>read_committed</code> consumers will not be able to read up to the high watermark when there are in flight transactions.</p><p> Further, when in <code>read_committed</code> the seekToEnd method will return the LSO</p>
+
+	 - Type: STRING
+	 - Default: read_uncommitted
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.group.protocol
+
+The group protocol consumer should use. We currently support "classic" or "consumer". If "consumer" is specified, then the consumer group protocol will be used. Otherwise, the classic group protocol will be used.
+
+	 - Type: STRING
+	 - Default: classic
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 redo.log.consumer.group.remote.assignor
+
+The name of the server-side assignor to use. If not specified, the group coordinator will pick the first assignor defined in the broker config group.consumer.assignors.This configuration is applied only if <code>group.protocol</code> is set to "consumer".
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.security.protocol
+
+Protocol used to communicate with brokers.
+
+	 - Type: STRING
+	 - Default: PLAINTEXT
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.confluent.proxy.protocol.client.version
+
+The version of the PROXY protocol that the client will use, or NONE if the PROXY protocol will not be used. This value must match that of the brokers to which the client is connecting. If the brokers are using COMBINED to support both PROXY protocol versions, then this value can be either V1 or V2. See the confluent.proxy.protocol.version configuration option for the broker configuration. See http://www.haproxy.org/download/1.8/doc/proxy-protocol.txt for more information on the PROXY protocol.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.confluent.proxy.protocol.client.address
+
+This configuration specifies the connection initiator's IP address. While the configuration option is of type String, the user configuring the client should pass in a value representing an IPv4 or IPv6 address, since the broker will be attempting to parse one of those two IP address types. Note that this should be IP address, not a host name. This configuration option is conditionally required. The default value is null, but if the confluent.proxy.protocol.client.version is set to a valid protocol version, it is an error if this configuration option is not set.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.confluent.proxy.protocol.client.port
+
+This configuration specifies the connection initiator's port. The configuration option is of type Integer, though the port range is within the limits of a 16-bit value. This configuration option is conditionally required. The default value is null, but if the confluent.proxy.protocol.client.version is set to a valid protocol version, it is an error if this configuration option is not set.
+
+	 - Type: INT
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.confluent.proxy.protocol.client.mode
+
+This configuration specifies the origin of the connection: remote (PROXY, the default) or local (LOCAL) node. This configuration is only valid when confluent.proxy.protocol.client.version is set to V2 and ignored otherwise.
+
+	 - Type: STRING
+	 - Default: PROXY
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.confluent.lkc.id
+
+This configuration specifies the LKC of the originating caller.This configuration is only valid when confluent.proxy.protocol.client.version is set to V2 and ignored otherwise.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.confluent.client.switchover.disable
+
+Client configuration option that specifies if switchover should be disabled for the client even if switchover is enabled on the broker. This is an internal config used to disable client switchover in internal clients.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.ssl.protocol
+
+The SSL protocol used to generate the SSLContext. The default is 'TLSv1.3', which should be fine for most use cases. A typical alternative to the default is 'TLSv1.2'. Allowed values for this config are dependent on the JVM. Clients using the defaults for this config and 'ssl.enabled.protocols' will downgrade to 'TLSv1.2' if the server does not support 'TLSv1.3'. If this config is set to 'TLSv1.2', however, clients will not use 'TLSv1.3' even if it is one of the values in `ssl.enabled.protocols` and the server only supports 'TLSv1.3'.
+
+	 - Type: STRING
+	 - Default: TLSv1.3
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.ssl.provider
+
+The name of the security provider used for SSL connections. Default value is the default security provider of the JVM.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.ssl.enabled.protocols
+
+The list of protocols enabled for SSL connections. The default is 'TLSv1.2,TLSv1.3'. This means that clients and servers will prefer TLSv1.3 if both support it and fallback to TLSv1.2 otherwise (assuming both support at least TLSv1.2). This default should be fine for most use cases. Also see the config documentation for `ssl.protocol` to understand how it can impact the TLS version negotiation behavior.
+
+	 - Type: LIST
+	 - Default: TLSv1.2,TLSv1.3
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.ssl.keystore.type
+
+The file format of the key store file. This is optional for client. The values currently supported by the default `ssl.engine.factory.class` are [JKS, PKCS12, PEM].
+
+	 - Type: STRING
+	 - Default: JKS
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.ssl.keystore.location
+
+The location of the key store file. This is optional for client and can be used for two-way authentication for client.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 redo.log.consumer.ssl.keystore.password
+
+The store password for the key store file. This is optional for client and only needed if 'ssl.keystore.location' is configured. Key store password is not supported for PEM format.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 redo.log.consumer.ssl.key.password
+
+The password of the private key in the key store file or the PEM key specified in 'ssl.keystore.key'.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 redo.log.consumer.ssl.keystore.key
+
+Private key in the format specified by 'ssl.keystore.type'. Default SSL engine factory supports only PEM format with PKCS#8 keys. If the key is encrypted, key password must be specified using 'ssl.key.password'
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 redo.log.consumer.ssl.keystore.certificate.chain
+
+Certificate chain in the format specified by 'ssl.keystore.type'. Default SSL engine factory supports only PEM format with a list of X.509 certificates
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 redo.log.consumer.ssl.truststore.certificates
+
+Trusted certificates in the format specified by 'ssl.truststore.type'. Default SSL engine factory supports only PEM format with X.509 certificates.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 redo.log.consumer.ssl.truststore.type
+
+The file format of the trust store file. The values currently supported by the default `ssl.engine.factory.class` are [JKS, PKCS12, PEM].
+
+	 - Type: STRING
+	 - Default: JKS
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.ssl.truststore.location
+
+The location of the trust store file.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 redo.log.consumer.ssl.truststore.password
+
+The password for the trust store file. If a password is not set, trust store file configured will still be used, but integrity checking is disabled. Trust store password is not supported for PEM format.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 redo.log.consumer.sasl.kerberos.service.name
+
+The Kerberos principal name that Kafka runs as. This can be defined either in Kafka's JAAS config or in Kafka's config.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.sasl.mechanism
+
+SASL mechanism used for client connections. This may be any mechanism for which a security provider is available. GSSAPI is the default mechanism.
+
+	 - Type: STRING
+	 - Default: GSSAPI
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.sasl.jaas.config
+
+JAAS login context parameters for SASL connections in the format used by JAAS configuration files. JAAS configuration file format is described <a href="https://docs.oracle.com/javase/8/docs/technotes/guides/security/jgss/tutorials/LoginConfigFile.html">here</a>. The format for the value is: <code>loginModuleClass controlFlag (optionName=optionValue)*;</code>. For brokers, the config must be prefixed with listener prefix and SASL mechanism name in lower-case. For example, listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config=com.example.ScramLoginModule required;
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.sasl.jaas.config.jndi.allowlist
+
+This system property is used to allow list the JNDI properties that can be configured in the SASL JAAS configuration. This property accepts comma-separated list of JNDI properties. By default, all of the properties prefixed with java.naming are denied.If users want to use any of the java.naming JNDI properties, they need to explicitly set the system property as shown below to allow list the same. We advise the users to validate configurations and only allow trusted JNDI properties. For more details<a href="https://kafka.apache.org/cve-list#CVE-2023-25194">CVE-2023-25194</a> To add more JNDI properties, explicitly update the system property with comma-separated values. For example, to allow <b>java.naming.factory.initial</b> and <b>java.naming.provider.url</b>, set the property as follows: <code>-Dsasl.jaas.config.jndi.allowlist=java.naming.factory.initial,java.naming.provider.url</code>
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.sasl.client.callback.handler.class
+
+The fully qualified name of a SASL client callback handler class that implements the AuthenticateCallbackHandler interface.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.sasl.login.callback.handler.class
+
+The fully qualified name of a SASL login callback handler class that implements the AuthenticateCallbackHandler interface. For brokers, login callback handler config must be prefixed with listener prefix and SASL mechanism name in lower-case. For example, listener.name.sasl_ssl.scram-sha-256.sasl.login.callback.handler.class=com.example.CustomScramLoginCallbackHandler
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.sasl.login.class
+
+The fully qualified name of a class that implements the Login interface. For brokers, login config must be prefixed with listener prefix and SASL mechanism name in lower-case. For example, listener.name.sasl_ssl.scram-sha-256.sasl.login.class=com.example.CustomScramLogin
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.sasl.oauthbearer.token.endpoint.url
+
+The URL for the OAuth/OIDC identity provider. If the URL is HTTP(S)-based, it is the issuer's token endpoint URL to which requests will be made to login based on the configuration in sasl.jaas.config. If the URL is file-based, it specifies a file containing an access token (in JWT serialized form) issued by the OAuth/OIDC identity provider to use for authorization.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.sasl.oauthbearer.jwks.endpoint.url
+
+The OAuth/OIDC provider URL from which the provider's <a href="https://datatracker.ietf.org/doc/html/rfc7517#section-5">JWKS (JSON Web Key Set)</a> can be retrieved. The URL can be HTTP(S)-based or file-based. If the URL is HTTP(S)-based, the JWKS data will be retrieved from the OAuth/OIDC provider via the configured URL on broker startup. All then-current keys will be cached on the broker for incoming requests. If an authentication request is received for a JWT that includes a "kid" header claim value that isn't yet in the cache, the JWKS endpoint will be queried again on demand. However, the broker polls the URL every sasl.oauthbearer.jwks.endpoint.refresh.ms milliseconds to refresh the cache with any forthcoming keys before any JWT requests that include them are received. If the URL is file-based, the broker will load the JWKS file from a configured location on startup. In the event that the JWT includes a "kid" header value that isn't in the JWKS file, the broker will reject the JWT and authentication will fail.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Output Records
+==========================
+🔘 key.template
+
+The template that defines the Kafka record key for each change event. By default the key will contain a struct with the primary key fields, or null if the table has no primary or unique key.
+
+	 - Type: STRING
+	 - Default: ${primaryKeyStructOrValue}
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 max.batch.size
+
+The maximum number of records that will be returned by the connector to Connect. The connector may still return fewer records if no additional records are available.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 max.buffer.size
+
+The maximum number of records from all snapshot threads and from the redo log that can be buffered into batches. The default of 0 means a buffer size will be computed from the maximum batch size and number of threads.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 poll.linger.ms
+
+The maximum time to wait for a record before returning an empty batch. The default is 5 seconds.
+
+	 - Type: LONG
+	 - Default: 5000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 max.batch.timeout.ms
+
+Deprecated. Use ``poll.linger.ms`` instead.
+
+	 - Type: LONG
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 numeric.mapping
+
+Map NUMERIC values by precision and optionally scale to primitive or decimal types.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 numeric.default.scale
+
+The default scale to use for numeric types when the scale cannot be determined.
+
+	 - Type: INT
+	 - Default: 127
+	 - Importance: LOW
+	 - Required: false
+
+🔘 emit.tombstone.on.delete
+
+If true, delete operations emit a tombstone record with null value.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 behavior.on.dictionary.mismatch
+
+Specifies the desired behavior when the connector is not able to parse the value of a column due to a dictionary mismatch caused by DDL statement. This can happen if the ``online`` dictionary mode is specified but the connector is streaming historical data recorded before DDL changes occurred. The default option ``fail`` will cause the connector task to fail. The ``log`` option will log the unparsable record and skip the problematic record without failing the connector task.
+
+	 - Type: STRING
+	 - Default: fail
+	 - Importance: LOW
+	 - Required: false
+
+🔘 behavior.on.unparsable.statement
+
+Specifies the desired behavior when the connector encounters a SQL statement that could not be parsed. The default option ``fail`` will cause the connector task to fail. The ``log`` option will log the unparsable statement and skip the problematic record without failing the connector task. The ``write`` option, in addition to logging the statement, will publish the unparsable SQL statement to corruption topic (configured by `redo.log.corruption.topic`), and skip the problematic record without failing the connector task. If the ``write`` option is selected, but redo.log.corruption.topic is not configured, it defaults to ``log``.
+
+	 - Type: STRING
+	 - Default: fail
+	 - Importance: LOW
+	 - Required: false
+
+🔘 oracle.date.mapping
+
+Map Oracle DATE values to Connect types.
+
+	 - Type: STRING
+	 - Default: date
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.table.name.field
+
+The name of the field in the change record written to Kafka that contains the schema-qualified name of the affected Oracle table (e.g., ``dbo.Customers``). A blank value signals that this field should not be included in the change records.
+
+	 - Type: STRING
+	 - Default: table
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.scn.field
+
+The name of the field in the change record written to Kafka that contains the Oracle system change number (SCN) when this change was made. A blank value signals that this field should not be included in the change records.
+
+	 - Type: STRING
+	 - Default: scn
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.commit.scn.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the field in the change record written to Kafka that contains the Oracle system change number (SCN) when this transaction was committed. A blank value signals that this field should not be included in the change records.
+	 - Required: LOW
+
+🔘 output.before.state.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the field in the change record written to Kafka that contains the before state of changed database rows for an update operation.A blank value signals that this field should not be included in the change records.
+	 - Required: LOW
+
+🔘 output.op.type.field
+
+The name of the field in the change record written to Kafka that contains the operation type for this change event. A blank value signals that this field should not be included in the change records.
+
+	 - Type: STRING
+	 - Default: op_type
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.op.ts.field
+
+The name of the field in the change record written to Kafka that contains the operation timestamp for this change event. A blank value signals that this field should not be included in the change records.
+
+	 - Type: STRING
+	 - Default: op_ts
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.current.ts.field
+
+The name of the field in the change record written to Kafka that contains the connector's timestamp when this change event was processed. A blank value signals that this field should not be included in the change records.
+
+	 - Type: STRING
+	 - Default: current_ts
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.row.id.field
+
+The name of the field in the change record written to Kafka that contains the row ID of the table changed by this event. A blank value signals that this field should not be included in the change records.
+
+	 - Type: STRING
+	 - Default: row_id
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.username.field
+
+The name of the field in the change record written to Kafka that contains the name of the Oracle user that executed the transaction that resulted in this change. A blank value signals that this field should not be included in the change records.
+
+	 - Type: STRING
+	 - Default: username
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.redo.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the field in the change record written to Kafka that contains the original redo DML statement from which this change record was created. A blank value signals that this field should not be included in the change records.
+	 - Required: LOW
+
+🔘 output.undo.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the field in the change record written to Kafka that contains the original undo DML statement that effectively undoes this change and represents the "before" state of the row. A blank value signals that this field should not be included in the change records.
+	 - Required: LOW
+
+🔘 output.op.type.read.value
+
+The value of the operation type for a read (snapshot) change event. By default this is "R".
+
+	 - Type: STRING
+	 - Default: R
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.op.type.insert.value
+
+The value of the operation type for an insert change event. By default this is "I".
+
+	 - Type: STRING
+	 - Default: I
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.op.type.update.value
+
+The value of the operation type for an update change event. By default this is "U".
+
+	 - Type: STRING
+	 - Default: U
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.op.type.delete.value
+
+The value of the operation type for a delete change event. By default this is "D".
+
+	 - Type: STRING
+	 - Default: D
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.op.type.truncate.value
+
+The value of the operation type for a truncate change event. By default this is "T".
+
+	 - Type: STRING
+	 - Default: T
+	 - Importance: LOW
+	 - Required: false
+
+🔘 lob.topic.name.template
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The template that defines the name of the Kafka topic to which LOB objects should be written. The value can be a constant if all LOB objects from all captured tables are to be written to one topic, or the value can include any supported template variables, including ``${columnName}``, ``${databaseName}``, ``${schemaName}``, ``${tableName}``, ``${connectorName}``, etc. The default is empty, which will ignore all LOB type columns if any exist on captured tables. Special-meaning characters ``\``, ``$``, ``{``, and ``}`` must be escaped with ``\`` when not intended to be part of a template variable.
+	 - Required: LOW
+
+🔘 enable.large.lob.object.support
+
+If true, the connector will support large LOB objects that are split across multiple redo log records. The connector will emit commit messages to the redo log topic and use these commit messages to track when a large LOB object can be emitted to the LOB topic.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 heartbeat.interval.ms
+
+The interval after which the connector would send heartbeats to a heartbeat topic configured via heartbeat.topic.name config. Setting this config to 0 would disable this heartbeating mechanism from the connector.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 heartbeat.topic.name
+
+The name of the Kafka topic to which the connector will record heartbeat events after almost once in a heartbeat.interval.ms milliseconds value. Note that, if heartbeat.interval.ms is set to 0, then no heartbeat messages would be sent and this topic won't be automatically created
+
+	 - Type: STRING
+	 - Default: ${connectorName}-${databaseName}-heartbeat-topic
+	 - Importance: LOW
+	 - Required: false
+
+🔘 log.sensitive.data
+
+If true, logs sensitive data (such as customer records, SQL queries or exception traces containing sensitive data). Set this to true only in exceptional scenarios where logging sensitive data is acceptable and is necessary for troubleshooting.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Oracle Tables
+==========================
+🔘 table.inclusion.regex
+
+A Java regular expression that matches the schema-qualified names of the tables (e.g., ``dbo.Customers``) to be captured. For example, ``dbo[.](table1|orders|customers)``. Matches are case-sensitive.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 table.exclusion.regex
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A Java regular expression that matches the schema-qualified names of the tables (e.g., ``dbo.Customers``) not to be captured. For example, ``dbo[.](table1|orders|customers)``. Matches are case-sensitive. The exclusion pattern is applied after the inclusion pattern. A blank regex (the default) implies no exclusions.
+	 - Required: HIGH
+
+🔘 table.topic.name.template
+
+The template that defines the name of the Kafka topic to which the change event is to be written. The value can be a constant if all records from all captured tables are to be written to one topic, or the value can include any supported template variables, including ``${databaseName}``, ``${schemaName}``, ``${tableName}``, ``${connectorName}``, etc. The default is ``${databaseName}.${schemaName}.${tableName}``. Special-meaning characters ``\``, ``$``, ``{``, and ``}`` must be escaped with ``\`` when not intended to be part of a template variable. May be blank only when a redo log topic is specified, in which case the connector will only write to the redo log topic.
+
+	 - Type: STRING
+	 - Default: ${databaseName}.${schemaName}.${tableName}
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 table.task.reconfig.checking.interval.ms
+
+The interval for the background monitoring thread to examine changes to table set and reconfigure table placement if necessary. The default is 5 minutes.
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 table.rps.logging.interval.ms
+
+The interval for the background thread to log current RPS of each table
+
+	 - Type: LONG
+	 - Default: 60000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 oracle.supplemental.log.level
+
+Database Supplemental logging level at which the connector would operate. If set to ``full``, the connector validates the same and captures Snapshots and CDC events for the specified tables whenever ``table.topic.name.template`` is not set to "". When it is ``msl``, then the connector only captures snapshots if ``table.topic.name.template`` is not set to "". The redo logs are captured irrespective of the setting. This setting defaults to ``full`` supplemental logging level mode.
+
+	 - Type: STRING
+	 - Default: full
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connection Pooling
+==========================
+🔘 connection.pool.initial.size
+
+The number of JDBC connections created immediately upon startup, before any connection is needed. A non-zero initial size can be used to reduce the ramp-up time incurred by priming the pool to its optimal size.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 connection.pool.min.size
+
+The minimum number of available and borrowed JDBC connections in each worker's connection pool. A connection pool always tries to return to the minimum pool size specified unless the minimum number has yet to be reached.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 connection.pool.max.size
+
+The maximum number of available and borrowed JDBC connections in worker's connection pool. If the maximum number of connections are borrowed (in use), no connections will be available for other uses until a borrowed connection is returned to the pool.
+
+	 - Type: INT
+	 - Default: 20
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 connection.pool.login.timeout.ms
+
+The maximum time in milliseconds wait for a connection to be established before failing. A value of 0 specifies that the system timeout should be used.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 connection.pool.connection.wait.timeout.ms
+
+Specifies how long an application request waits to obtain a connection if there are no longer any connections in the pool. A connection pool runs out of connections if all connections in the pool are being used (borrowed) and if the pool size has reached it's maximum connection capacity as specified by the maximum pool size property. This timeout feature improves overall application usability by minimizing the amount of time an application is blocked and provides the ability to implement a graceful recovery. A value of 0 disables the feature.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+

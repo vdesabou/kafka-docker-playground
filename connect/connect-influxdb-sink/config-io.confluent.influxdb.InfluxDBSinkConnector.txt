@@ -1,0 +1,294 @@
+==========================
+Transforms: InsertField
+==========================
+🔘 transforms.InsertField.type
+
+Class for the 'InsertField' transformation.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.InsertField.negate
+
+Whether the configured predicate should be negated.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertField.offset.field
+
+Field name for Kafka offset - only applicable to sink connectors.<br/>Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertField.partition.field
+
+Field name for Kafka partition. Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertField.predicate
+
+The alias of a predicate used to determine whether to apply this transformation.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertField.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertField.static.field
+
+Field name for static data field. Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertField.static.value
+
+Static field value, if field name configured.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertField.timestamp.field
+
+Field name for record timestamp. Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertField.topic.field
+
+Field name for Kafka topic. Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Transforms: RenameField
+==========================
+🔘 transforms.RenameField.type
+
+Class for the 'RenameField' transformation.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.RenameField.exclude
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Fields to exclude. This takes precedence over the fields to include.
+	 - Required: MEDIUM
+
+🔘 transforms.RenameField.include
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Fields to include. If specified, only these fields will be used.
+	 - Required: MEDIUM
+
+🔘 transforms.RenameField.negate
+
+Whether the configured predicate should be negated.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.RenameField.predicate
+
+The alias of a predicate used to determine whether to apply this transformation.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.RenameField.renames
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Field rename mappings.
+	 - Required: MEDIUM
+
+🔘 transforms.RenameField.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.RenameField.blacklist
+
+Deprecated. Use exclude instead.
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 transforms.RenameField.whitelist
+
+Deprecated. Use include instead.
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+InfluxDB
+==========================
+🔘 influxdb.url
+
+Fully qualified InfluxDB API URL used for establishing connection.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 influxdb.username
+
+InfluxDB username on whose behalf database connection has to be established.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 influxdb.password
+
+The InfluxDB user's password used for establishing database connection.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Connection
+==========================
+🔘 influxdb.log.level
+
+influxdb.log.level
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 influxdb.gzip.enable
+
+Flag to determine if gzip should be enabled.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Write
+==========================
+🔘 influxdb.db
+
+The InfluxDB database name in which connector will write records from Apache Kafka topic.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 measurement.name.format
+
+A format string for the destination measurement name, which may contain '${topic}' as a placeholder for the originating topic name.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 event.time.fieldname
+
+The name of field in the Kafka record that contains the event time to be written to anInfluxDB data point. By default (if this config is unspecified), the timestamp written to InfluxDB is the Kafka record timestamp (when the Kafka record was created) which corresponds to the time that the event was processed.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 influxdb.timeunit
+
+The default timeunit for writing data to InfluxDB.
+
+	 - Type: STRING
+	 - Default: MILLISECONDS
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 influxdb.consistency.level
+
+The default consistency level for writing data to InfluxDB.
+
+	 - Type: STRING
+	 - Default: ONE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 retry.backoff.ms
+
+Backoff time duration to wait before retrying
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: MEDIUM
+	 - Required: false
+

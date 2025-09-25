@@ -1,0 +1,189 @@
+==========================
+InfluxDB
+==========================
+🔘 influxdb.url
+
+Fully qualified InfluxDB API URL used for establishing connection.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 influxdb.username
+
+InfluxDB username on whose behalf database connection has to be established.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 influxdb.password
+
+The InfluxDB user's password used for establishing database connection.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 topic.prefix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Prefix that should be prepended to measurment names to determine the name of the Apache Kafka topic to publish data to, in case of custom query, it should be the full name of the Apache Kafka topic.
+	 - Required: LOW
+
+🔘 topic.mapper
+
+Configuration to decide how to map topics Supported options are :
+
+	 - Type: STRING
+	 - Default: db
+	 - Importance: LOW
+	 - Required: false
+
+🔘 influxdb.db
+
+The InfluxDB database name from which record have to be read and publish data to configured Apache Kafka topic.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 mode
+
+The mode in which measurements in InfluxDB has to be polled. Supported modes are :
+
+	 - Type: STRING
+	 - Default: timestamp
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 query
+
+If specified, this query will be executed and the resultant records will be pushed to desired Apache Kafka topic. Use this setting if there's a need to select subset of fields or tags, perform aggregations or filter data.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 batch.size
+
+Maximum number of points to include in a single batch when polling for new data. This setting can be used to limit the amount of data buffered internally in the connector.
+
+	 - Type: INT
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 retry.backoff.ms
+
+Backoff time duration to wait before retrying
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 timestamp.delay.interval.ms
+
+How long to wait after a record with certain timestamp appears before we include it in the result. You may choose to add some delay to allow transactions with earlier timestamp to complete. The first execution will fetch all available records (i.e. starting at timestamp 0) until current time minus the delay. Every following execution will get data from the last time we fetched until current time minus the delay.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 influxdb.measurement.whitelist
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Comma seperated list of measurements to include in copying. If specified, influxdb.measurement.blacklist cannot be set. If left empty, all measurements will be included.
+	 - Required: MEDIUM
+
+🔘 influxdb.measurement.blacklist
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Comma seperated list of measurements to exclude from copying. If specified, influxdb.measurement.whitelist cannot be set. 
+	 - Required: MEDIUM
+
+==========================
+Serialization
+==========================
+🔘 value.converter.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+==========================
+Schemas
+==========================
+🔘 value.converter.schemas.cache.size
+
+The maximum number of schemas that can be cached in this converter instance.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schemas
+==========================
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
