@@ -1,0 +1,297 @@
+==========================
+Connector
+==========================
+🔘 prometheus.listener.url
+
+URL exposed by the HTTP Server for Prometheus to scrape metrics.
+
+	 - Type: STRING
+	 - Default: http://localhost:8889/metrics
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 behavior.on.error
+
+Error handling behavior setting. Must be configured to one of the following:
+
+	 - Type: STRING
+	 - Default: FAIL
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 max.retry.time.ms
+
+While Prometheus is scraping metrics from the buffer, Connect waits for scraping to complete before adding another record to the buffer.``max.retry.time.ms`` is the time limit in milliseconds, connect will retry to put record in the buffer before failing.
+
+	 - Type: LONG
+	 - Default: 60000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+TLS
+==========================
+🔘 prometheus.listener.ssl.keystore.location
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Used for Prometheus endpoint using HTTPS. Location of the keystore file to use for SSL.
+	 - Required: LOW
+
+🔘 prometheus.listener.ssl.keystore.password
+
+Used for Prometheus endpoint using HTTPS. The store password for the keystore file.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 prometheus.listener.ssl.key.password
+
+Used for Prometheus endpoint using HTTPS. The password of the private key in the keystore file.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Basic auth
+==========================
+🔘 prometheus.listener.basic.auth.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Username for basic access authentication. This username will be used to authenticate the HTTP user agent (Prometheus) when it makes a request to get metrics
+	 - Required: MEDIUM
+
+🔘 prometheus.listener.basic.auth.password
+
+Password for basic access authentication. This password will be used to authenticate the HTTP user agent (Prometheus) when it makes a request to get metrics
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+reporter.result.topic.name
+==========================
+🔘 ${connector}-success
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the topic to produce records to after successfully processing a sink record. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
+	 - Required: MEDIUM
+
+==========================
+reporter.result.topic.replication.factor
+==========================
+🔘 3
+
+
+
+	 - Type: false
+	 - Default: SHORT
+	 - Importance: The replication factor of the result topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
+	 - Required: MEDIUM
+
+==========================
+reporter.result.topic.partitions
+==========================
+🔘 1
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The number of partitions in the result topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions to handle the potential throughput.
+	 - Required: MEDIUM
+
+==========================
+Formatter
+==========================
+🔘 reporter.result.topic.key.format
+
+The format in which the result report key is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.result.topic.key.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.key.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Formatter
+==========================
+🔘 reporter.result.topic.value.format
+
+The format in which the result report value is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.result.topic.value.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.value.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+reporter.error.topic.name
+==========================
+🔘 ${connector}-error
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the topic to produce records to after each unsuccessful record sink attempt. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
+	 - Required: MEDIUM
+
+==========================
+reporter.error.topic.replication.factor
+==========================
+🔘 3
+
+
+
+	 - Type: false
+	 - Default: SHORT
+	 - Importance: The replication factor of the error topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
+	 - Required: MEDIUM
+
+==========================
+reporter.error.topic.partitions
+==========================
+🔘 1
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The number of partitions in the error topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions in order to handle the potential throughput.
+	 - Required: MEDIUM
+
+==========================
+Formatter
+==========================
+🔘 reporter.error.topic.key.format
+
+The format in which the error report key is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.error.topic.key.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.key.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Formatter
+==========================
+🔘 reporter.error.topic.value.format
+
+The format in which the error report value is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.error.topic.value.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.value.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+reporter.bootstrap.servers
+==========================
+🔘 LIST
+
+
+
+	 - Type: MEDIUM
+	 - Default: false
+	 - Importance: 
+	 - Required: A list of host/port pairs to use for establishing the initial connection to the Kafka cluster. The client will make use of all servers irrespective of which servers are specified here for bootstrapping&mdash;this list only impacts the initial hosts used to discover the full set of servers. This list should be in the form <code>host1:port1,host2:port2,...</code>. Since these servers are just used for the initial connection to discover the full cluster membership (which may change dynamically), this list need not contain the full set of servers (you may want more than one, though, in case a server is down).
+

@@ -1,0 +1,120 @@
+==========================
+Kafka
+==========================
+🔘 kafka.topic
+
+The Apache Kafka topic to publish data to. Only a single topic must be specified. Records from one or more AWS SQS queues will be published to this topic.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+SQS
+==========================
+🔘 sqs.url
+
+Fully qualified AWS SQS URL from which this source connector polls messages.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 sqs.region
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The AWS region for SQS.
+	 - Required: MEDIUM
+
+🔘 sqs.messages.max
+
+The maximum number of messages to fetch from AWS SQS in every poll. AWS SQS never returns more messages than this value, however, fewer messages may be returned.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+🔘 sqs.waittime.seconds
+
+The duration (in seconds) that the call to SQS waits for a message to arrive in the queue before returning. If a message is available, the call returns sooner than WaitTimeSeconds. If no messages are available and the wait time expires, the call returns successfully with an empty list of messages.
+
+	 - Type: INT
+	 - Default: 20
+	 - Importance: LOW
+	 - Required: false
+
+🔘 sqs.max.retries
+
+Max number of retry attempts. In case of a network error, the connector can automatically retry the connection.
+
+	 - Type: INT
+	 - Default: 3
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+AWS Credentials
+==========================
+🔘 aws.access.key.id
+
+The AWS access key that will be used to connect to SQS.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 aws.secret.key.id
+
+The AWS secret key that will be used to connect to SQS.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sqs.credentials.provider.class
+
+Credentials provider or provider chain to use for authentication to AWS. By default the connector uses ``DefaultAWSCredentialsProviderChain``.
+
+	 - Type: CLASS
+	 - Default: software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Proxy
+==========================
+🔘 sqs.proxy.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTPS Proxy Server URL. This property is meant to be used only if you need to access SQS through an HTTPS proxy.
+	 - Required: LOW
+
+🔘 sqs.proxy.user
+
+HTTPS Proxy User. This property is meant to be used only if you need to access SQS through a proxy. Using ``sqs.proxy.user`` instead of embedding the username and password in ``sqs.proxy.url`` allows the password to be hidden in the logs.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 sqs.proxy.password
+
+HTTPS Proxy Password. This property is meant to be used only if you need to access SQS through a proxy. Using ``sqs.proxy.password`` instead of embedding the username and password in ``sqs.proxy.url`` allows the password to be hidden in the logs.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+

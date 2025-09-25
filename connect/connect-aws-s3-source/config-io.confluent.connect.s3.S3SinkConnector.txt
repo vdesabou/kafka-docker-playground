@@ -1,0 +1,640 @@
+==========================
+Connector
+==========================
+🔘 format.class
+
+The format class to use when writing data to the store.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 flush.size
+
+Number of records written to store before invoking file commits.
+
+	 - Type: INT
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 rotate.interval.ms
+
+The time interval in milliseconds to invoke file commits. You can configure this parameter so that the time interval is determined by using a timestamp extractor (for example, Kafka Record Time, Record Field, or Wall Clock extractor). When the first record is processed, a timestamp is set as the base time. This is useful if you require exactly-once-semantics. This configuration ensures that file commits are invoked at every configured interval. The default value ``-1`` indicates that this feature is disabled.
+
+	 - Type: LONG
+	 - Default: -1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 rotate.schedule.interval.ms
+
+The time interval in milliseconds to periodically invoke file commits. This configuration ensures that file commits are invoked at every configured interval. Time of commit will be adjusted to 00:00 of selected timezone. The commit will be performed at the scheduled time, regardless of the previous commit time or number of messages. This configuration is useful when you have to commit your data based on current server time, for example at the beginning of every hour. The default value ``-1`` means that this feature is disabled.
+
+	 - Type: LONG
+	 - Default: -1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 schemas.cache.config
+
+The size of the schema cache used in the Avro converter.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 enhanced.avro.schema.support
+
+Enable enhanced avro schema support in AvroConverter: Enum symbol preservation and Package Name awareness
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 connect.meta.data
+
+Allow connect converter to add its metadata to the output schema
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 retry.backoff.ms
+
+The retry backoff in milliseconds. This config is used to notify Kafka connect to retry delivering a message batch or performing recovery in case of transient exceptions.
+
+	 - Type: LONG
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 filename.offset.zero.pad.width
+
+Width to zero pad offsets in store's filenames if offsets are too short in order to provide fixed width filenames that can be ordered by simple lexicographic sorting.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+🔘 avro.codec
+
+The Avro compression codec to be used for output  files. Available values: null, deflate, snappy and bzip2 (CodecSource is org.apache.avro.file.CodecFactory)
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 allow.optional.map.keys
+
+Allow optional string map key when converting from Connect Schema to Avro Schema.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schema
+==========================
+🔘 schema.compatibility
+
+The schema compatibility rule to use when the connector is observing schema changes. The supported configurations are NONE, BACKWARD, FORWARD and FULL.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Connector
+==========================
+🔘 parquet.codec
+
+The Parquet compression codec to be used for output files.
+
+	 - Type: STRING
+	 - Default: snappy
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+S3
+==========================
+🔘 s3.bucket.name
+
+The S3 Bucket.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 s3.object.tagging
+
+Tag S3 objects with start and end offsets, as well as record count.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.object.tagging.key.value.pairs
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Additional S3 tag key value pairs
+	 - Required: LOW
+
+🔘 s3.object.behavior.on.tagging.error
+
+How to handle S3 object tagging error. Valid options are 'ignore' and 'fail'.
+
+	 - Type: STRING
+	 - Default: ignore
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.region
+
+The AWS region to be used the connector.
+
+	 - Type: STRING
+	 - Default: us-west-2
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 s3.part.size
+
+The Part Size in S3 Multi-part Uploads.
+
+	 - Type: INT
+	 - Default: 26214400
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 s3.credentials.provider.class
+
+Credentials provider or provider chain to use for authentication to AWS. By default the connector uses ``DefaultCredentialsProvider``.
+
+	 - Type: CLASS
+	 - Default: software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
+	 - Importance: LOW
+	 - Required: false
+
+🔘 aws.access.key.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The AWS access key ID used to authenticate personal AWS credentials such as IAM credentials. Use only if you do not wish to authenticate by using a credentials provider class via ``s3.credentials.provider.class``
+	 - Required: HIGH
+
+🔘 aws.secret.access.key
+
+The secret access key used to authenticate personal AWS credentials such as IAM credentials. Use only if you do not wish to authenticate by using a credentials provider class via ``s3.credentials.provider.class``
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 s3.ssea.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The S3 Server Side Encryption Algorithm.
+	 - Required: LOW
+
+🔘 s3.sse.customer.key
+
+The S3 Server Side Encryption Customer-Provided Key (SSE-C).
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.sse.kms.key.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the AWS Key Management Service (AWS-KMS) key to be used for server side encryption of the S3 objects. No encryption is used when no key is provided, but it is enabled when ``aws:kms`` is specified as encryption algorithm with a valid key name.
+	 - Required: LOW
+
+🔘 s3.acl.canned
+
+An S3 canned ACL header value to apply when writing objects.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.wan.mode
+
+Use S3 accelerated endpoint.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 s3.compression.type
+
+Compression type for files written to S3. Applied when using JsonFormat or ByteArrayFormat. Available values: none, gzip.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.compression.level
+
+Compression level for files written to S3. Applied when using JsonFormat or ByteArrayFormat. 
+
+	 - Type: INT
+	 - Default: -1
+	 - Importance: LOW
+	 - Required: false
+
+🔘 json.decimal.format
+
+Controls which format json converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 s3.part.retries
+
+Maximum number of retry attempts for failed requests. Zero means no retries. The actual number of attempts is determined by the S3 client based on multiple factors including, but not limited to: the value of this parameter, type of exception occurred, and throttling settings of the underlying S3 client.
+
+	 - Type: INT
+	 - Default: 3
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 s3.retry.backoff.ms
+
+How long to wait in milliseconds before attempting the first retry of a failed S3 request. Upon a failure, this connector may wait up to twice as long as the previous wait, up to the maximum number of retries. This avoids retrying in a tight loop under failure scenarios.
+
+	 - Type: LONG
+	 - Default: 200
+	 - Importance: LOW
+	 - Required: false
+
+🔘 format.bytearray.extension
+
+Output file extension for ByteArrayFormat. Defaults to ``.bin``.
+
+	 - Type: STRING
+	 - Default: .bin
+	 - Importance: LOW
+	 - Required: false
+
+🔘 format.bytearray.separator
+
+String inserted between records for ByteArrayFormat. Defaults to ``System.lineSeparator()`` and may contain escape sequences like ``
+``. An input record that contains the line separator will look like multiple records in the output S3 object.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.proxy.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: S3 Proxy settings encoded in URL syntax. This property is meant to be used only if you need to access S3 through a proxy.
+	 - Required: LOW
+
+🔘 s3.proxy.user
+
+S3 Proxy User. This property is meant to be used only if you need to access S3 through a proxy. Using ``s3.proxy.user`` instead of embedding the username and password in ``s3.proxy.url`` allows the password to be hidden in the logs.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.proxy.password
+
+S3 Proxy Password. This property is meant to be used only if you need to access S3 through a proxy. Using ``s3.proxy.password`` instead of embedding the username and password in ``s3.proxy.url`` allows the password to be hidden in the logs.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.http.send.expect.continue
+
+Enable or disable use of the HTTP/1.1 handshake using EXPECT: 100-CONTINUE during multi-part upload. If true, the client will wait for a 100 (CONTINUE) response before sending the request body. Else, the client uploads the entire request body without checking if the server is willing to accept the request.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 behavior.on.null.values
+
+How to handle records with a null value (i.e. Kafka tombstone records). Valid options are 'ignore', 'fail' and 'write'. Ignore would skip the tombstone record and fail would cause the connector task to throw an exception. In case of the write tombstone option, the connector redirects tombstone records to a separate directory mentioned in the config tombstone.encoded.partition. The storage of Kafka record keys is mandatory when this option is selected and the file for values is not generated for tombstone records.
+
+	 - Type: STRING
+	 - Default: fail
+	 - Importance: LOW
+	 - Required: false
+
+🔘 report.null.values.to.dlq
+
+Determine whether to log records with null values to dlq. `errors.tolerance` should be set to 'all' for successfully writing into dlq
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.write.duration.ms
+
+The maximum duration that a task will spend in batching and writing to S3. If the write operation takes longer than this the task will voluntarily return from the put method. This prevents the consumer from being revoked from the group. It also mitigates (but does not eliminate) the risk of a zombie task to continue writing to S3 after it has been revoked.
+
+	 - Type: LONG
+	 - Default: 9223372036854775807
+	 - Importance: LOW
+	 - Required: false
+
+🔘 rotate.file.on.partition.change
+
+Flag to determine whether we want to rotate existing files when the record belongs to a new file. This flag will be honored when rotate.interval.ms is set and timestamp.extractor is configured
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 tombstone.encoded.partition
+
+Output s3 folder to write the tombstone records to. The configured partitioner would map tombstone records to this output folder.
+
+	 - Type: STRING
+	 - Default: tombstone
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.schema.partition.affix.type
+
+Append the record schema name to prefix or suffix in the s3 path after the topic name. None will not append the schema name in the s3 path.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.send.digest
+
+Enable or disable sending MD5 digest with S3 multipart upload request.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 enable.conditional.writes
+
+Flag to control whether to enable conditional writes during multipart upload. The config will be ignored if scheduled rotation is disabled by setting `rotate.schedule.interval.ms` to -1 or the connector is configured to write kafka keys or headers to S3
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 max.files.scan.limit
+
+
+
+	 - Type: INT
+	 - Default: 100
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Keys and Headers
+==========================
+🔘 store.kafka.keys
+
+Enable or disable writing keys to storage. This config is mandatory when the writing of tombstone records is enabled.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 store.kafka.headers
+
+Enable or disable writing headers to storage.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 keys.format.class
+
+The format class to use when writing keys to the store.
+
+	 - Type: CLASS
+	 - Default: io.confluent.connect.s3.format.avro.AvroFormat
+	 - Importance: LOW
+	 - Required: false
+
+🔘 headers.format.class
+
+The format class to use when writing headers to the store.
+
+	 - Type: CLASS
+	 - Default: io.confluent.connect.s3.format.avro.AvroFormat
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.path.style.access.enabled
+
+Specifies whether or not to enable path style access to the bucket used by the connector
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.elastic.buffer.enable
+
+Specifies whether or not to allocate elastic buffer for staging s3-part to save memory. Note that this may cause decreased performance or increased CPU usage
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.elastic.buffer.init.capacity
+
+Elastic buffer initial capacity.
+
+	 - Type: INT
+	 - Default: 131072
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 partitioner.max.open.files
+
+
+
+	 - Type: INT
+	 - Default: -1
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Storage
+==========================
+🔘 storage.class
+
+The underlying storage layer.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 topics.dir
+
+Top level directory to store the data ingested from Kafka.
+
+	 - Type: STRING
+	 - Default: topics
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 store.url
+
+Store's connection URL, if applicable.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 directory.delim
+
+Directory delimiter pattern
+
+	 - Type: STRING
+	 - Default: /
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 file.delim
+
+File delimiter pattern
+
+	 - Type: STRING
+	 - Default: +
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Partitioner
+==========================
+🔘 partitioner.class
+
+The partitioner to use when writing data to the store. You can use ``DefaultPartitioner``, which preserves the Kafka partitions; ``FieldPartitioner``, which partitions the data to different directories according to the value of the partitioning field specified in ``partition.field.name``; ``TimeBasedPartitioner``, which partitions data according to ingestion time.
+
+	 - Type: CLASS
+	 - Default: io.confluent.connect.storage.partitioner.DefaultPartitioner
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 partition.field.name
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: The name of the partitioning field when FieldPartitioner is used.
+	 - Required: MEDIUM
+
+🔘 partition.duration.ms
+
+The duration of a partition milliseconds used by ``TimeBasedPartitioner``. The default value -1 means that we are not using ``TimeBasedPartitioner``.
+
+	 - Type: LONG
+	 - Default: -1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 path.format
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: This configuration is used to set the format of the data directories when partitioning with ``TimeBasedPartitioner``. The format set in this configuration converts the Unix timestamp to proper directories strings. For example, if you set ``path.format='year'=YYYY/'month'=MM/'day'=dd/'hour'=HH``, the data directories will have the format ``/year=2015/month=12/day=07/hour=15/``.
+	 - Required: MEDIUM
+
+🔘 locale
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The locale to use when partitioning with ``TimeBasedPartitioner``. Used to format dates and times. For example, use ``en-US`` for US English, ``en-GB`` for UK English, or ``fr-FR`` for French (in France). These may vary by Java version. See the `available locales <http://www.localeplanet.com/java/>`__.
+	 - Required: MEDIUM
+
+🔘 timezone
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The timezone to use when partitioning with ``TimeBasedPartitioner``. Used to format and compute dates and times. All timezone IDs must be specified in the long format, such as ``America/Los_Angeles``, ``America/New_York``, and ``Europe/Paris``, or ``UTC``. Alternatively a locale independent, fixed offset, datetime zone can be specified in form ``[+-]hh:mm``. Support for these timezones may vary by Java version. See the `available timezones within each locale <http://www.localeplanet.com/java/>`__, such as `those within the US English locale <http://www.localeplanet.com/java/en-US/index.html>`__.
+	 - Required: MEDIUM
+
+🔘 timestamp.extractor
+
+The extractor that gets the timestamp for records when partitioning with ``TimeBasedPartitioner``. It can be set to ``Wallclock``, ``Record`` or ``RecordField`` in order to use one of the built-in timestamp extractors or be given the fully-qualified class name of a user-defined class that extends the ``TimestampExtractor`` interface.
+
+	 - Type: STRING
+	 - Default: Wallclock
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 timestamp.field
+
+The record field to be used as timestamp by the timestamp extractor.
+
+	 - Type: STRING
+	 - Default: timestamp
+	 - Importance: MEDIUM
+	 - Required: false
+

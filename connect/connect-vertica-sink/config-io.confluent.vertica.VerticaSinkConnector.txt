@@ -1,0 +1,246 @@
+==========================
+Writes
+==========================
+🔘 expected.records
+
+The expected number of records the connector will process each time.
+
+	 - Type: INT
+	 - Default: 10000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 expected.topics
+
+The expected number of topics the connector will process in a poll.
+
+	 - Type: INT
+	 - Default: 500
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connection
+==========================
+🔘 vertica.port
+
+The Vertica port to connect to. This is used to build the JDBC url.
+
+	 - Type: INT
+	 - Default: 5433
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 vertica.host
+
+The Vertica host to connect to. This is used to build the JDBC url.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 vertica.database
+
+The database on the Vertica system. This is used to build the JDBC url.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 vertica.username
+
+The username to authenticate to Vertica with.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 max.hikari.connection.pool.size
+
+The maximum number of connections HikariCp pool will contain.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 vertica.password
+
+The password to authenticate to Vertica with.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Writes
+==========================
+🔘 vertica.buffer.size.bytes
+
+The buffer for the input stream that is used by the Vertica Copy Stream.
+
+	 - Type: INT
+	 - Default: 1048576
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 vertica.timeout.ms
+
+The timeout for completing the write to Vertica.
+
+	 - Type: INT
+	 - Default: 60000
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 vertica.load.method
+
+The method for loading data.
+
+	 - Type: STRING
+	 - Default: auto
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 vertica.compression
+
+The type of compression for the data load.
+
+	 - Type: STRING
+	 - Default: uncompressed
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rejected.record.logging.mode
+
+Mode of logging when vertica rejects record. Must be configured to one of the following:
+
+	 - Type: STRING
+	 - Default: log
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rejected.record.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Local directory path where the rejected records from vertica will be stored. This config is only required when rejected.record.logging.mode is set to 'FILE'.
+	 - Required: MEDIUM
+
+🔘 rejected.record.exception.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Local directory path where the exceptions of rejected records from vertica will be stored. This config is only required when rejected.record.logging.mode is set to 'FILE'.
+	 - Required: MEDIUM
+
+🔘 rejected.record.table.suffix
+
+Suffix value for Vertica rejected records table name. With this configuration, we can provide any suffix along with a date format placeholder, for example ``_rejected_${yyyyMMdd}``. The placeholder is replaced by the current timestamp in the provided date format and is appended to the table name. By default, the value of the config is ``_rejected`` which is added as a suffix to the Vertica table name. This config is only required when rejected.record.logging.mode is set to 'TABLE'.
+
+	 - Type: STRING
+	 - Default: _rejected
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rejected.record.table.schema
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Schema name for Vertica rejected records table name. This config is only required when rejected.record.logging.mode is set to 'TABLE'.
+	 - Required: MEDIUM
+
+🔘 stream.builder.cache.ms
+
+The amount of time in milliseconds to cache the stream builder objects that are used to define the table structure.
+
+	 - Type: INT
+	 - Default: 300000
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 table.name.format
+
+A format string for the destination table name, which may contain '${topic}' as a placeholder for the originating topic name.
+
+	 - Type: STRING
+	 - Default: ${topic}
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+DDL Support
+==========================
+🔘 auto.create
+
+Whether to automatically create the destination table based on record schema if it is found to be missing by issuing ``CREATE``.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 auto.evolve
+
+Whether to automatically add columns in the table schema when found to be missing relative to the record schema by issuing ``ALTER``.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Writes
+==========================
+🔘 max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+DDL Support
+==========================
+🔘 pk.mode
+
+The primary key mode, also refer to ``pk.fields`` documentation for interplay. Supported modes are:
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 pk.fields
+
+``none``
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of comma-separated primary key field names. The runtime interpretation of this config depends on the ``pk.mode``:
+	 - Required: MEDIUM
+
+==========================
+Writes
+==========================
+🔘 delete.enabled
+
+To process delete requests for tombstone records, if Kafka record value is null, set this value to true. A record will only be deleted when pk.mode configuration is set to record_key.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+

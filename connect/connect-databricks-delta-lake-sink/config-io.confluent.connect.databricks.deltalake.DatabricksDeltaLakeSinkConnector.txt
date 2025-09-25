@@ -1,0 +1,165 @@
+==========================
+Databricks Delta Lake
+==========================
+🔘 delta.lake.host.name
+
+The host name used to connect to Delta Lake.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 delta.lake.http.path
+
+The HTTP path used to connect to Delta Lake.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 delta.lake.token
+
+The personal access token used to authenticate the user when connecting to Delta Lake via JDBC.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 delta.lake.catalog
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The destination catalog under which the destination database and tables are located.
+	 - Required: LOW
+
+🔘 delta.lake.database
+
+The destination database under which the destination tables are located.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: LOW
+	 - Required: false
+
+🔘 delta.lake.table.format
+
+A format string for the destination table name, which may contain '${topic}' as a placeholder for the originating topic name.For example, to create a table named ``kafka-orders`` based on a |ak| topic named ``orders``, you would enter ``kafka-${topic}`` in this field. Note that you must use the ``${topic}`` placeholder if you have multiple originating topics.
+
+	 - Type: STRING
+	 - Default: ${topic}
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 delta.lake.topic2table.map
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Map of topics to tables (optional). Create mapping as comma-separated tuples. For example: ``<topic-1>:<table-1>,<topic-2>:<table-2>,...``. If you use this property, the connector ignores any string entered for ``delta.lake.table.format``.
+	 - Required: LOW
+
+🔘 delta.lake.table.auto.create
+
+Whether to automatically create the destination table based on record schema if it does not exist.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 delta.lake.tables.location
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The underlying location where the data in the Delta Lake table(s) is stored.
+	 - Required: HIGH
+
+🔘 delta.lake.table2partition.map
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Map of tables to partition fields (optional). Format: comma-separated tuples, e.g. <table-1>:<partition-1>, <table-2>:<partition-2>,... Note: multiple partitions can be specified per table, please add a separate tuple for each partition.
+	 - Required: LOW
+
+==========================
+null
+==========================
+🔘 delta.lake.user.agent
+
+
+
+	 - Type: STRING
+	 - Default: ConfluentPlatform
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+S3
+==========================
+🔘 staging.s3.access.key.id
+
+The AWS access key ID used to authenticate personal AWS credentials such as IAM credentials. These credentials are used to access the S3 staging bucket.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 staging.s3.secret.access.key
+
+The secret access key ID used to authenticate personal AWS credentials such as IAM credentials. These credentials are used to access the S3 staging bucket.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 staging.bucket.name
+
+The S3 staging bucket where files get written to from Kafka and subsequently copied from into the Databricks Delta Lake table
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 flush.interval.ms
+
+The time interval in milliseconds to periodically invoke file commits. This configuration ensures that file commits are invoked at every configured interval. Time of commit will be adjusted to 00:00 of selected timezone. The commit will be performed at the scheduled time, regardless of the previous commit time or number of messages. This configuration is useful when you have to commit your data based on current server time, for example at the beginning of every hour. The default value is ``300000`` ms
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
