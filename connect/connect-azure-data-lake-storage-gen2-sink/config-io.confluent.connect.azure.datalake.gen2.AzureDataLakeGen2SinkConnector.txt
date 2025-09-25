@@ -1,0 +1,406 @@
+==========================
+Storage
+==========================
+🔘 topics.dir
+
+Top level directory to store the data ingested from Kafka.
+
+	 - Type: STRING
+	 - Default: topics
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 directory.delim
+
+Directory delimiter pattern
+
+	 - Type: STRING
+	 - Default: /
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 file.delim
+
+File delimiter pattern
+
+	 - Type: STRING
+	 - Default: +
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 storage.class
+
+The underlying storage layer. The default value will work with Azure Data Lake Storage, however, this can be used to specify an alternative custom storage implementation.
+
+	 - Type: CLASS
+	 - Default: io.confluent.connect.azure.datalake.gen2.storage.AzureDataLakeGen2Storage
+	 - Importance: LOW
+	 - Required: false
+
+🔘 store.url
+
+Domain for accessing blob data in your Azure Data Lake Storage account. The default endpoint for Azure Data Lake Storage is ``storage-account-name``.dfs.core.windows.net.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connector
+==========================
+🔘 format.class
+
+The format class to use when writing data to the store.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 flush.size
+
+Number of records written to store before invoking file commits.
+
+	 - Type: INT
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 rotate.interval.ms
+
+The time interval in milliseconds to invoke file commits. You can configure this parameter so that the time interval is determined by using a timestamp extractor (for example, Kafka Record Time, Record Field, or Wall Clock extractor). When the first record is processed, a timestamp is set as the base time. This is useful if you require exactly-once-semantics. This configuration ensures that file commits are invoked at every configured interval. The default value ``-1`` indicates that this feature is disabled.
+
+	 - Type: LONG
+	 - Default: -1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 rotate.schedule.interval.ms
+
+The time interval in milliseconds to periodically invoke file commits. This configuration ensures that file commits are invoked at every configured interval. Time of commit will be adjusted to 00:00 of selected timezone. The commit will be performed at the scheduled time, regardless of the previous commit time or number of messages. This configuration is useful when you have to commit your data based on current server time, for example at the beginning of every hour. The default value ``-1`` means that this feature is disabled.
+
+	 - Type: LONG
+	 - Default: -1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 schemas.cache.config
+
+The size of the schema cache used in the Avro converter.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 enhanced.avro.schema.support
+
+Enable enhanced avro schema support in AvroConverter: Enum symbol preservation and Package Name awareness
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 connect.meta.data
+
+Allow connect converter to add its metadata to the output schema
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 retry.backoff.ms
+
+The retry backoff in milliseconds. This config is used to notify Kafka connect to retry delivering a message batch or performing recovery in case of transient exceptions.
+
+	 - Type: LONG
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 shutdown.timeout.ms
+
+Clean shutdown timeout. This makes sure that asynchronous Hive metastore updates are completed during connector shutdown.
+
+	 - Type: LONG
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 filename.offset.zero.pad.width
+
+Width to zero pad offsets in store's filenames if offsets are too short in order to provide fixed width filenames that can be ordered by simple lexicographic sorting.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+🔘 avro.codec
+
+The Avro compression codec to be used for output  files. Available values: null, deflate, snappy and bzip2 (CodecSource is org.apache.avro.file.CodecFactory)
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 allow.optional.map.keys
+
+Allow optional string map key when converting from Connect Schema to Avro Schema.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schema
+==========================
+🔘 schema.compatibility
+
+The schema compatibility rule to use when the connector is observing schema changes. The supported configurations are NONE, BACKWARD, FORWARD and FULL.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Connector
+==========================
+🔘 parquet.codec
+
+The Parquet compression codec to be used for output files.
+
+	 - Type: STRING
+	 - Default: snappy
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Azure Common
+==========================
+🔘 format.bytearray.extension
+
+Output file extension for when using the ByteArrayFormat.
+
+	 - Type: STRING
+	 - Default: .bin
+	 - Importance: LOW
+	 - Required: false
+
+🔘 format.bytearray.separator
+
+String inserted between records in the same file for ByteArrayFormat. Defaults to ``System.lineSeparator()`` and may contain escape sequences like ``
+``. An input record that contains the line separator will look like multiple records in the output Azure object.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 az.compression.type
+
+Compression type for file written to Azure. Applied when using JsonFormat or ByteArrayFormat.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 behavior.on.null.values
+
+How to handle records with a null value (i.e. Kafka tombstone records).
+
+	 - Type: STRING
+	 - Default: FAIL
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 partitioner.max.open.files
+
+
+
+	 - Type: INT
+	 - Default: -1
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.files.scan.limit
+
+
+
+	 - Type: INT
+	 - Default: 100
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Partitioner
+==========================
+🔘 partitioner.class
+
+The partitioner to use when writing data to the store. You can use ``DefaultPartitioner``, which preserves the Kafka partitions; ``FieldPartitioner``, which partitions the data to different directories according to the value of the partitioning field specified in ``partition.field.name``; ``TimeBasedPartitioner``, which partitions data according to ingestion time.
+
+	 - Type: CLASS
+	 - Default: io.confluent.connect.storage.partitioner.DefaultPartitioner
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 partition.field.name
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: The name of the partitioning field when FieldPartitioner is used.
+	 - Required: MEDIUM
+
+🔘 partition.duration.ms
+
+The duration of a partition milliseconds used by ``TimeBasedPartitioner``. The default value -1 means that we are not using ``TimeBasedPartitioner``.
+
+	 - Type: LONG
+	 - Default: -1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 path.format
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: This configuration is used to set the format of the data directories when partitioning with ``TimeBasedPartitioner``. The format set in this configuration converts the Unix timestamp to proper directories strings. For example, if you set ``path.format='year'=YYYY/'month'=MM/'day'=dd/'hour'=HH``, the data directories will have the format ``/year=2015/month=12/day=07/hour=15/``.
+	 - Required: MEDIUM
+
+🔘 locale
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The locale to use when partitioning with ``TimeBasedPartitioner``. Used to format dates and times. For example, use ``en-US`` for US English, ``en-GB`` for UK English, or ``fr-FR`` for French (in France). These may vary by Java version. See the `available locales <http://www.localeplanet.com/java/>`__.
+	 - Required: MEDIUM
+
+🔘 timezone
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The timezone to use when partitioning with ``TimeBasedPartitioner``. Used to format and compute dates and times. All timezone IDs must be specified in the long format, such as ``America/Los_Angeles``, ``America/New_York``, and ``Europe/Paris``, or ``UTC``. Alternatively a locale independent, fixed offset, datetime zone can be specified in form ``[+-]hh:mm``. Support for these timezones may vary by Java version. See the `available timezones within each locale <http://www.localeplanet.com/java/>`__, such as `those within the US English locale <http://www.localeplanet.com/java/en-US/index.html>`__.
+	 - Required: MEDIUM
+
+🔘 timestamp.extractor
+
+The extractor that gets the timestamp for records when partitioning with ``TimeBasedPartitioner``. It can be set to ``Wallclock``, ``Record`` or ``RecordField`` in order to use one of the built-in timestamp extractors or be given the fully-qualified class name of a user-defined class that extends the ``TimestampExtractor`` interface.
+
+	 - Type: STRING
+	 - Default: Wallclock
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 timestamp.field
+
+The record field to be used as timestamp by the timestamp extractor.
+
+	 - Type: STRING
+	 - Default: timestamp
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Azure
+==========================
+🔘 azure.datalake.gen2.account.name
+
+The account name: Must be between 3-24 alphanumeric characters.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 azure.datalake.gen2.client.id
+
+The client ID (GUID) of the client obtained from Azure Active Directory configuration. To establish connection, either set all of these properties, azure.datalake.gen2.client.id, azure.datalake.gen2.client.key, azure.datalake.gen2.token.endpoint or simply set azure.datalake.gen2.sas.key
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 azure.datalake.gen2.client.key
+
+The secret key of the client.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 azure.datalake.gen2.token.endpoint
+
+The OAuth 2.0 token endpoint associated with the user's directory (obtain from Active Directory configuration)
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 azure.datalake.gen2.access.key
+
+The Access key obtained from Azure Active Directory configuration.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 azure.datalake.gen2.sas.keyname
+
+The SAS key name obtained from Azure Active Directory configuration. This configuration has been deprecated, use 'azure.datalake.gen2.access.key' instead.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 azure.datalake.gen2.sas.key
+
+The SAS key obtained from Azure Active Directory configuration. This configuration has been deprecated, use 'azure.datalake.gen2.access.key' instead.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 azure.datalake.gen2.block.size
+
+
+
+	 - Type: INT
+	 - Default: 5242880
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 connect.azure.datalake.gen2.useragent
+
+
+
+	 - Type: STRING
+	 - Default: APN/1.0 Confluent/1.0 AzureDataLakeGen2Sink/
+	 - Importance: LOW
+	 - Required: false
+

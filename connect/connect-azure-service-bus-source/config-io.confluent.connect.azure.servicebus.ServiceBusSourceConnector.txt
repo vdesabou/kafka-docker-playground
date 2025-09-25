@@ -1,0 +1,96 @@
+==========================
+Kafka
+==========================
+🔘 kafka.topic
+
+The name of Kafka topic to publish data to. Only a single topic must be specified. 
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+ Azure Service Bus
+==========================
+🔘 azure.servicebus.sas.keyname
+
+Azure Service Bus Shared Access Signature Key Name
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 azure.servicebus.sas.key
+
+Azure Service Bus Shared Access Signature Access Key
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 azure.servicebus.namespace
+
+Azure Service Bus Namespace that message entity belongs to.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 azure.servicebus.entity.name
+
+Azure Service Bus messaging entity name. Should be either the name of the queue or topic from which messages have to be polled.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 azure.servicebus.subscription
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Azure Service Bus Subscription Name for the configured topic from which messages have to be polled. This should only be configured when message entity is of type topic.
+	 - Required: HIGH
+
+🔘 azure.servicebus.connection.string
+
+Fully qualified Azure Service Bus Connection string for ``Message Entity`` from which this source connector will poll messages. Only in the case where ``Message Entity`` is ``topic``, set the ``azure.servicebus.subscription`` config to the topic's subscription name. To establish connection with Azure Service Bus, either set all of these properties, azure.servicebus.sas.keyname, azure.servicebus.sas.key, azure.servicebus.namespace, azure.servicebus.entity.name or simply set azure.servicebus.connection.string.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 azure.servicebus.max.message.count
+
+Maximum number of messages to be pulled in a single poll from the configured Service Bus message entity.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+🔘 azure.servicebus.max.waiting.time.seconds
+
+Maximum server wait time until which connector will try to pull records from message entity.
+
+	 - Type: INT
+	 - Default: 30
+	 - Importance: LOW
+	 - Required: false
+
+🔘 azure.servicebus.max.retry.time.seconds
+
+The maximum time until which connector will retry pulling records with exponential backoff, in the case of exception being raised.
+
+	 - Type: LONG
+	 - Default: 5
+	 - Importance: LOW
+	 - Required: false
+

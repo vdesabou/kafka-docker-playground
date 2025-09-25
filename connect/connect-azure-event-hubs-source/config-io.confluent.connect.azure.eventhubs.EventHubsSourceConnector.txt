@@ -1,0 +1,144 @@
+==========================
+Connector
+==========================
+🔘 azure.eventhubs.sas.keyname
+
+Shared Access Signature keyname to the corresponding shared access policy rule for the namespace or entity.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 azure.eventhubs.sas.key
+
+Shared Access Signature key to the corresponding shared access policy rule of the namespace or entity.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 azure.eventhubs.namespace
+
+Namespace name of the event hub to connect to.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 azure.eventhubs.domain
+
+Specifies the domain of the Event Hub to connect to. Available options include: `servicebus.windows.net`, `servicebus.usgovcloudapi.net`, `servicebus.cloudapi.de`, `servicebus.chinacloudapi.cn`. Default is `servicebus.windows.net`.
+
+	 - Type: STRING
+	 - Default: servicebus.windows.net
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 azure.eventhubs.hub.name
+
+The event hub to read from.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 azure.eventhubs.max.retries
+
+Maximum number of retry attempts for failed operations. Zero indicates no retries
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: LOW
+	 - Required: false
+
+🔘 azure.eventhubs.initial.backoff.ms
+
+The amount of time to wait (backoff) before the first retry.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 kafka.topic
+
+The kafka topic to write the data to.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 max.events
+
+Maximum number of events to read per event hub partition per poll.
+
+	 - Type: INT
+	 - Default: 50
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Azure Event Hubs
+==========================
+🔘 azure.eventhubs.partition.starting.position
+
+Default position in the event hub to reset to if no offsets are stored.
+
+	 - Type: STRING
+	 - Default: start_of_stream
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 azure.eventhubs.partition.id.regex
+
+Regex that matches the names of partitions in the event hub from which the connector polls data.
+
+	 - Type: STRING
+	 - Default: .gitignore
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 azure.eventhubs.consumer.group
+
+Event Hubs consumer group to use to consume events.
+
+	 - Type: STRING
+	 - Default: $Default
+	 - Importance: LOW
+	 - Required: false
+
+🔘 azure.eventhubs.transport.type
+
+Transport type for communicating to Event Hubs service. Event Hubs supports 2 types: AMQP, AMQP over TCP, which uses port 5671; AMQP_WEB_SOCKETS, AMQP over Web Sockets, which uses port 443.
+
+	 - Type: STRING
+	 - Default: AMQP
+	 - Importance: LOW
+	 - Required: false
+
+🔘 azure.eventhubs.offset.type
+
+Offset type to use to keep track of events. Azure Event Hubs provides the offsets: OFFSET, Event Hubs offset of the event; SEQ_NUM, sequence number of the event.
+
+	 - Type: STRING
+	 - Default: OFFSET
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 azure.client.executor.shutdown.timeout.ms
+
+
+
+	 - Type: LONG
+	 - Default: 600000
+	 - Importance: LOW
+	 - Required: false
+
