@@ -1,0 +1,141 @@
+==========================
+null
+==========================
+🔘 fs.listing.class
+
+Class which is used to list eligible files from the scanned file system.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 fs.listing.filters
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Filters classes which are used to apply list input files.
+	 - Required: MEDIUM
+
+==========================
+Filters
+==========================
+🔘 filters
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of filters aliases to apply on each value (order is important).
+	 - Required: HIGH
+
+==========================
+The TaskPartitioner to be used for partitioning files to tasks
+==========================
+🔘 task.partitioner.class
+
+List of filters aliases to apply on each value (order is important).
+
+	 - Type: CLASS
+	 - Default: io.streamthoughts.kafka.connect.filepulse.source.DefaultTaskPartitioner
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Filters
+==========================
+🔘 tasks.file.processing.order.by
+
+The strategy to be used for sorting files for processing. Valid values are: LAST_MODIFIED, URI, CONTENT_LENGTH, CONTENT_LENGTH_DESC.
+
+	 - Type: STRING
+	 - Default: LAST_MODIFIED
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 connect.schema.keep.leading.underscores.on.record.name
+
+Specify if leading underscores should be kept when generating schema record name.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 fs.listing.interval.ms
+
+The time interval, in milliseconds, in which the connector invokes the scan of the filesystem.
+
+	 - Type: LONG
+	 - Default: 10000
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 fs.cleanup.policy.class
+
+The class used to cleanup files that have been processed by tasks.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 allow.tasks.reconfiguration.after.timeout.ms
+
+Specifies the timeout (in milliseconds) for the connector to allow tasks to be reconfigured when new files are detected, even if some tasks are still being processed.
+
+	 - Type: LONG
+	 - Default: 9223372036854775807
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 max.scheduled.files
+
+Maximum number of files that can be schedules to tasks.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 fs.listing.task.delegation.enabled
+
+Boolean indicating whether the file listing process should be delegated to tasks.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 fs.cleanup.policy.triggered.on
+
+Specify the status when a file get cleanup. Valid values are: [COMPLETED, COMMITTED]
+
+	 - Type: STRING
+	 - Default: COMPLETED
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 state.initial.read.timeout.ms
+
+The maximum amount of time in milliseconds the filesystem monitor thread waits to read all the file processing states before timing out. This property is used only on connector startup.
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 state.default.read.timeout.ms
+
+The maximum amount of time in milliseconds the filesystem monitor thread waits to read all the file processing states before timing out.
+
+	 - Type: LONG
+	 - Default: 5000
+	 - Importance: MEDIUM
+	 - Required: false
+
