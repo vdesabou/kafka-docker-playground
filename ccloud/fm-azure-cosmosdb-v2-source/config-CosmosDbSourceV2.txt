@@ -1,0 +1,594 @@
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 datapreview.schemas.enable
+
+This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+CSFLE
+==========================
+🔘 csfle.enabled
+
+Determines whether the connector honours CSFLE rules or not
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sr.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
+	 - Required: HIGH
+
+==========================
+Connect to your Cosmos DB database
+==========================
+🔘 azure.cosmos.account.endpoint
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Cosmos endpoint URL. For example: https://connect-cosmosdb.documents.azure.com:443/.
+	 - Required: HIGH
+
+🔘 azure.cosmos.source.database.name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Name of the database to read from.
+	 - Required: HIGH
+
+==========================
+Account details
+==========================
+🔘 azure.cosmos.account.environment
+
+The azure environment of the Cosmos DB account: `Azure`, `AzureChina`, `AzureUsGovernment`, `AzureGermany`.
+
+	 - Type: STRING
+	 - Default: AZURE
+	 - Importance: MEDIUM
+	 - Required: true
+
+🔘 azure.cosmos.mode.gateway
+
+Flag to indicate whether to use gateway mode. By default it is false, means SDK uses direct mode. https://learn.microsoft.com/azure/cosmos-db/nosql/sdk-connection-modes
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 azure.cosmos.preferredRegionList
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Preferred regions list to be used for a multi region Cosmos DB account. This is a comma separated value (e.g., `[East US, West US]` or `East US, West US`) provided preferred regions will be used as hint. You should use a collocated kafka cluster with your Cosmos DB account and pass the kafka cluster region as preferred region. See list of azure regions - https://docs.microsoft.com/dotnet/api/microsoft.azure.documents.locationnames?view=azure-dotnet&preserve-view=true.
+	 - Required: LOW
+
+🔘 azure.cosmos.auth.type
+
+Cosmos connection auth type
+
+	 - Type: STRING
+	 - Default: MasterKey
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 azure.cosmos.account.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Cosmos DB account key (only required in case of `auth.type` as `MasterKey`).
+	 - Required: MEDIUM
+
+🔘 azure.cosmos.auth.aad.clientId
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The clientId/ApplicationId of the service principal. Required for `ServicePrincipal` authentication.
+	 - Required: MEDIUM
+
+🔘 azure.cosmos.auth.aad.clientSecret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The client secret/password of the service principal. Required for `ServicePrincipal` authentication.
+	 - Required: MEDIUM
+
+🔘 azure.cosmos.account.tenantId
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The tenantId of the Cosmos DB account. Required for `ServicePrincipal` authentication.
+	 - Required: MEDIUM
+
+==========================
+Output messages
+==========================
+🔘 output.data.format
+
+Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, or PROTOBUF. Note that you need to have Confluent Cloud Schema Registry configured when using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+
+	 - Type: STRING
+	 - Default: JSON_SR
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Container details
+==========================
+🔘 azure.cosmos.source.containers.topicMap
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A comma delimited list of Kafka topics mapped to Cosmos containers. For example: topic1#con1,topic2#con2. By default, the container name is used as the name of the Kafka topic to publish data to, but you can use this property to override the default configuration.
+	 - Required: MEDIUM
+
+🔘 azure.cosmos.source.containers.includeAll
+
+Flag to indicate whether reading from all containers.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 azure.cosmos.source.containers.includedList
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Containers included. This config will be ignored if kafka.connect.cosmos.source.containers.includeAll is true.
+	 - Required: MEDIUM
+
+==========================
+Throughput control details
+==========================
+🔘 azure.cosmos.throughputControl.enabled
+
+A flag to indicate whether throughput control is enabled.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 azure.cosmos.throughputControl.auth.type
+
+There are two auth types are supported currently: `MasterKey`(PrimaryReadWriteKeys, SecondReadWriteKeys, PrimaryReadOnlyKeys, SecondReadWriteKeys), `ServicePrincipal`
+
+	 - Type: STRING
+	 - Default: MasterKey
+	 - Importance: LOW
+	 - Required: true
+
+🔘 azure.cosmos.throughputControl.account.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Cosmos DB throughput control account key (only required in case of `throughputControl.auth.type` as `MasterKey`)
+	 - Required: LOW
+
+🔘 azure.cosmos.throughputControl.auth.aad.clientId
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The clientId/applicationId of the service principal. Required for `ServicePrincipal` authentication.
+	 - Required: LOW
+
+🔘 azure.cosmos.throughputControl.auth.aad.clientSecret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The client secret/password of the service principal. Required for `ServicePrincipal` authentication.
+	 - Required: LOW
+
+🔘 azure.cosmos.throughputControl.account.tenantId
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The tenantId of the Cosmos DB account. Required for `ServicePrincipal` authentication.
+	 - Required: LOW
+
+🔘 azure.cosmos.throughputControl.account.environment
+
+The azure environment of the Cosmos DB account: `Azure`, `AzureChina`, `AzureUsGovernment`, `AzureGermany`.
+
+	 - Type: STRING
+	 - Default: AZURE
+	 - Importance: LOW
+	 - Required: true
+
+🔘 azure.cosmos.throughputControl.account.endpoint
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Cosmos DB throughput control account endpoint uri.
+	 - Required: LOW
+
+🔘 azure.cosmos.throughputControl.mode.gateway
+
+Flag to indicate whether to use gateway mode. By default it is false, means SDK uses direct mode. https://learn.microsoft.com/azure/cosmos-db/nosql/sdk-connection-modes
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 azure.cosmos.throughputControl.preferredRegionList
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Preferred regions list to be used for a multi region Cosmos DB account. This is a comma separated value (e.g., `[East US, West US]` or `East US, West US`) provided preferred regions will be used as hint. You should use a collocated kafka cluster with your Cosmos DB account and pass the kafka cluster region as preferred region. See list of azure regions - https://docs.microsoft.com/dotnet/api/microsoft.azure.documents.locationnames?view=azure-dotnet&preserve-view=true
+	 - Required: LOW
+
+🔘 azure.cosmos.throughputControl.group.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Throughput control group name. Since customer is allowed to create many groups for a container, the name should be unique.
+	 - Required: MEDIUM
+
+🔘 azure.cosmos.throughputControl.targetThroughput
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: Throughput control group target throughput. The value should be larger than 0.
+	 - Required: MEDIUM
+
+🔘 azure.cosmos.throughputControl.targetThroughputThreshold
+
+
+
+	 - Type: false
+	 - Default: DOUBLE
+	 - Importance: Throughput control group target throughput threshold. The value should be between (0,1].
+	 - Required: MEDIUM
+
+🔘 azure.cosmos.throughputControl.priorityLevel
+
+Throughput control group priority level. The value can be None, High or Low.
+
+	 - Type: STRING
+	 - Default: None
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 azure.cosmos.throughputControl.globalControl.database.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Database which will be used for throughput global control.
+	 - Required: MEDIUM
+
+🔘 azure.cosmos.throughputControl.globalControl.container.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Container which will be used for throughput global control.
+	 - Required: MEDIUM
+
+🔘 azure.cosmos.throughputControl.globalControl.renewIntervalInMS
+
+This controls how often the client is going to update the throughput usage of itself and adjust its own throughput share based on the throughput usage of other clients. Default is 5s, the allowed min value is 5s.
+
+	 - Type: INT
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 azure.cosmos.throughputControl.globalControl.expireIntervalInMS
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: This controls how quickly we will detect the client has been offline and hence allow its throughput share to be taken by other clients. Default is 11s, the allowed min value is 2 * renewIntervalInMS + 1
+	 - Required: LOW
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Metadata details
+==========================
+🔘 azure.cosmos.source.metadata.storage.name.prefix
+
+The resource name of the metadata storage prefix. If metadata storage type is Kafka topic, then this config refers to kafka topic name, the metadata topic will be created if it does not already exist, else it will use the pre-created topic. If metadata storage type is ``Cosmos``, then this config refers to container name, for ``MasterKey`` auth, this container will be created with ``AutoScale`` with 4000 RU if not already exists, for ``ServicePrincipal`` auth, it requires the container to be created ahead of time .
+
+	 - Type: STRING
+	 - Default: cosmos.metadata.topic
+	 - Importance: MEDIUM
+	 - Required: true
+
+🔘 azure.cosmos.source.metadata.storage.type
+
+The storage type of the metadata. Two types are supported: Cosmos, Kafka.
+
+	 - Type: STRING
+	 - Default: Kafka
+	 - Importance: MEDIUM
+	 - Required: true
+
+🔘 azure.cosmos.source.metadata.poll.delay.ms
+
+Indicates how often to check the metadata changes (including container split/merge, adding/removing/recreated containers). When changes are detected, it will reconfigure the tasks. Default is 5 minutes
+
+	 - Type: INT
+	 - Default: 300000
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Message key details
+==========================
+🔘 azure.cosmos.source.messageKey.enabled
+
+Whether to set the kafka record message key.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 azure.cosmos.source.messageKey.field
+
+The document field to use as the message key.
+
+	 - Type: STRING
+	 - Default: id
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+ChangeFeed details
+==========================
+🔘 azure.cosmos.source.changeFeed.maxItemCountHint
+
+The maximum number of documents returned in a single change feed request. But the number of items received might be higher than the specified value if multiple items are changed by the same transaction. The default is 1000.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 azure.cosmos.source.changeFeed.mode
+
+ChangeFeed mode (LatestVersion or AllVersionsAndDeletes)
+
+	 - Type: STRING
+	 - Default: LatestVersion
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 azure.cosmos.source.changeFeed.startFrom
+
+ChangeFeed Start from settings (Now, Beginning or a certain point in time (UTC) for example 2020-02-10T14:15:03) - the default value is ``Beginning``.
+
+	 - Type: STRING
+	 - Default: Beginning
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values. Input messages must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+

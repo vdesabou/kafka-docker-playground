@@ -1,0 +1,764 @@
+==========================
+Which topics do you want to get data from?
+==========================
+🔘 topics.regex
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A regular expression that matches the names of the topics to consume from. This is useful when you want to consume from multiple topics that match a certain pattern without having to list them all individually.
+	 - Required: LOW
+
+🔘 topics
+
+
+
+	 - Type: true
+	 - Default: LIST
+	 - Importance: Identifies the topic name or a comma-separated list of topic names.
+	 - Required: HIGH
+
+🔘 errors.deadletterqueue.topic.name
+
+The name of the topic to be used as the dead letter queue (DLQ) for messages that result in an error when processed by this sink connector, or its transformations or converters. Defaults to 'dlq-${connector}' if not set. The DLQ topic will be created automatically if it does not exist. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: dlq-${connector}
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Input messages
+==========================
+🔘 input.data.format
+
+Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, JSON, BYTES or STRING. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 input.key.format
+
+Sets the input Kafka record key format. Valid entries are AVRO, BYTES, JSON, JSON_SR, PROTOBUF, or STRING. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
+
+	 - Type: STRING
+	 - Default: BYTES
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+==========================
+AWS credentials
+==========================
+🔘 authentication.method
+
+Select how you want to authenticate with AWS.
+
+	 - Type: STRING
+	 - Default: Access Keys
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 aws.access.key.id
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing integration that has access to your resource. In case you need to integrate a new IAM role, use provider integration
+	 - Required: HIGH
+
+🔘 aws.secret.access.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: 
+	 - Required: HIGH
+
+==========================
+Amazon S3 details
+==========================
+🔘 s3.region
+
+The AWS region where the S3 bucket is defined.
+
+	 - Type: STRING
+	 - Default: ${kafka.region}
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.ssea.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The S3 Server Side Encryption Algorithm.
+	 - Required: LOW
+
+🔘 s3.bucket.name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: An Amazon S3 bucket must be in the same region as your Confluent Cloud cluster.
+	 - Required: HIGH
+
+🔘 store.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The object storage connection URL, if applicable. For example: 'https://bucket.s3-aws-region.amazonaws.com'
+	 - Required: MEDIUM
+
+🔘 s3.sse.customer.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The S3 Server Side Encryption Customer-Provided Key (SSE-C)
+	 - Required: LOW
+
+🔘 s3.sse.kms.key.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the AWS Key Management Service (AWS-KMS) key to be used for server side encryption of the S3 objects. No encryption is used when no key is provided, but it is enabled when ``KMS`` is specified as encryption algorithm with a valid key name.
+	 - Required: LOW
+
+🔘 s3.part.size
+
+The Part Size(bytes) in S3 Multi-part Uploads.
+
+	 - Type: INT
+	 - Default: 5242880
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 s3.wan.mode
+
+Use S3 accelerated endpoint.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 s3.path.style.access.enabled
+
+Specifies whether or not to enable path style access to the bucket used by the connector
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 s3.retry.backoff.ms
+
+How long to wait in milliseconds before attempting the first retry of a failed S3 request. Upon a failure, this connector may wait up to twice as long as the previous wait, up to the maximum number of retries. This avoids retrying in a tight loop under failure scenarios.
+
+	 - Type: LONG
+	 - Default: 200
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.part.retries
+
+Maximum number of retry attempts for failed requests. Zero means no retries. The actual number of attempts is determined by the S3 client based on multiple factors including, but not limited to: the value of this parameter, type of exception occurred, and throttling settings of the underlying S3 client.
+
+	 - Type: INT
+	 - Default: 10000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 s3.http.send.expect.continue
+
+Enable or disable use of the HTTP/1.1 handshake using EXPECT: 100-CONTINUE during multi-part upload. If true, the client will wait for a 100 (CONTINUE) response before sending the request body. Else, the client uploads the entire request body without checking if the server is willing to accept the request.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.object.behavior.on.tagging.error
+
+How to handle S3 object tagging error. Valid options are 'ignore' and 'fail'.
+
+	 - Type: STRING
+	 - Default: ignore
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.object.tagging.key.value.pairs
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Additional S3 tag key value pairs. Example: environment=production,team=data-engineering
+	 - Required: LOW
+
+==========================
+CSFLE
+==========================
+🔘 csfle.enabled
+
+Determines whether the connector honours CSFLE rules or not
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sr.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
+	 - Required: HIGH
+
+🔘 csfle.onFailure
+
+Configures the behavior for decryption failures. If set to ERROR, the connector will behave as configured for error behaviour. If set to NONE, the connector will ignore the decryption failure and proceed to write the data in its encrypted form.
+
+	 - Type: STRING
+	 - Default: ERROR
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Output messages
+==========================
+🔘 output.data.format
+
+Set the output message format for values. Valid entries are AVRO, JSON, PARQUET or BYTES. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO. Note that the output message format defaults to the value in the Input Message Format field. If either PROTOBUF or JSON_SR is selected as the input message format, you should select one explicitly.
+
+	 - Type: STRING
+	 - Default: ${input.data.format}
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 output.keys.format
+
+Set the output format for keys. Valid entries are AVRO, JSON, PARQUET or BYTES. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO.
+
+	 - Type: STRING
+	 - Default: AVRO
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 output.headers.format
+
+Set the output format for headers. Valid entries are AVRO, JSON, PARQUET or BYTES. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO.
+
+	 - Type: STRING
+	 - Default: AVRO
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 json.decimal.format
+
+Controls which format json converter will serialize decimals in. This value can be either 'BASE64' (default) or 'NUMERIC' and is applicable only when the output format is JSON.
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Organize my data by...
+==========================
+🔘 partitioner.class
+
+The partitioner to use when writing data to the Object store
+
+	 - Type: STRING
+	 - Default: TimeBasedPartitioner
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 topics.dir
+
+Configures the directory to store the data ingested from Kafka. For a file like ``s3://<s3-bucket-name>/json_logs/daily/<Topic-Name>/dt=2020-02-06/hr=09/<files>``, set ``topics.dir=json_logs/daily``, ``path.format='dt'=YYYY-MM-dd/'hr'=HH``, and ``time.interval=HOURLY``. For another file like ``s3://<s3-bucket-name>/<Topic-Name>/dt=2020-02-06/hr=09/<files>``, set ``topics.dir=" "``, but keep ``path.format`` and ``time.interval`` the same as in the previous example. This configures the ``topics.dir`` to a space. In the UI, enter a blank space, and use ``" "`` for CLI and API configurations.
+
+	 - Type: STRING
+	 - Default: topics
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 locale
+
+Sets the locale to use with TimeBasedPartitioner.
+
+	 - Type: STRING
+	 - Default: en
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 timezone
+
+Sets the timezone used by the TimeBasedPartitioner.
+
+	 - Type: STRING
+	 - Default: UTC
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 rotate.schedule.interval.ms
+
+Scheduled rotation uses rotate.schedule.interval.ms to close the file and upload to storage on a regular basis using the current time, rather than the record time. Setting rotate.schedule.interval.ms is nondeterministic and will invalidate exactly-once guarantees.
+
+	 - Type: INT
+	 - Default: -1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rotate.interval.ms
+
+The connector’s rotation interval specifies the maximum timespan (in milliseconds) a file can remain open and ready for additional records. In other words, when using rotate.interval.ms, the timestamp for each file starts with the timestamp of the first record inserted in the file. The connector closes and uploads a file to the blob store when the next record's timestamp does not fit into the file's rotate.interval time span from the first record's timestamp. If the connector has no more records to process, the connector may keep the file open until the connector can process another record (which can be a long time).
+
+	 - Type: INT
+	 - Default: ${time.interval}
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 path.format
+
+This configuration is used to set the format of the data directories when partitioning with TimeBasedPartitioner. The format set in this configuration converts the Unix timestamp to a valid directory string. To organize files like this example, s3://<s3-bucket-name>/json_logs/daily/<Topic-Name>/dt=2020-02-06/hr=09/<files>, use the properties: topics.dir=json_logs/daily, path.format='dt'=YYYY-MM-dd/'hr'=HH, and time.interval=HOURLY.
+
+	 - Type: STRING
+	 - Default: 'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 flush.size
+
+Number of records written to storage before invoking file commits.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 partition.field.name
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: The partition field name to use when partitioning with FieldPartitioner
+	 - Required: HIGH
+
+🔘 behavior.on.null.values
+
+How to handle records with null values, e.g Kafka tombstone records. Valid options are ‘ignore’, ‘fail’ and ‘write’. Default is ‘ignore’
+
+	 - Type: STRING
+	 - Default: ignore
+	 - Importance: LOW
+	 - Required: false
+
+🔘 timestamp.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Sets the field that contains the timestamp used for the TimeBasedPartitioner
+	 - Required: HIGH
+
+🔘 compression.codec
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Compression type for files written to S3.
+	 - Required: HIGH
+
+🔘 subject.name.strategy
+
+Strategy used for deriving subject name from topic and record schema name.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.compression.level
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: Gzip compression level for files written to S3. Applied when using JSON or BYTES input.
+	 - Required: HIGH
+
+🔘 enhanced.avro.schema.support
+
+When set to true, this property preserves Avro schema package information and Enums when going from Avro schema to Connect schema. This information is added back in when going from Connect schema to Avro schema.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 time.interval
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Partitioning interval of data, according to the time ingested to storage.
+	 - Required: HIGH
+
+🔘 report.null.values.to.dlq
+
+Determine whether to log records with null values to dlq
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.schema.partition.affix.type
+
+Append the record schema name to prefix or suffix in the s3 path after the topic name. None will not append the schema name in the s3 path.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 schema.compatibility
+
+The schema compatibility rule to use when the connector is observing schema changes.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 tombstone.encoded.partition
+
+Output s3 folder to write the tombstone records to. The configured partitioner would map tombstone records to this output folder.
+
+	 - Type: STRING
+	 - Default: tombstone
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.acl.canned
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: An S3 canned ACL header value to apply when writing objects.
+	 - Required: LOW
+
+🔘 store.kafka.keys
+
+Enable or disable writing record keys to storage
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 store.kafka.headers
+
+Enable or disable writing record headers to storage.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 s3.object.tagging
+
+Tag S3 objects with start and end offsets, as well as record count.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 directory.delim
+
+Defines the delimiter character used to separate directory levels in S3 object keys.
+
+	 - Type: STRING
+	 - Default: /
+	 - Importance: LOW
+	 - Required: false
+
+🔘 file.delim
+
+Defines the character used to separate topic name, partition number, and start offset within the filename.
+
+	 - Type: STRING
+	 - Default: +
+	 - Importance: LOW
+	 - Required: false
+
+🔘 timestamp.source
+
+Extracts timestamps from records for time-based operations. Required for time-based partitioners and file rotation based on time intervals. If set to ``Record`` timestamp extractor will depend on timestamp.field configuration. If timestamp.field is set to empty, the connector will use the timestamp of the record to determine the partitioning of file, otherwise it will pick the value of the field denoted by `timestamp.field` from the record to determine the time. If ``timestamp.source`` is set to ``Wallclock``, it will use the system time to determine the timestamp for partitioning.
+
+	 - Type: STRING
+	 - Default: Record
+	 - Importance: LOW
+	 - Required: false
+
+🔘 format.bytearray.extension
+
+Sets the file extension for S3 objects when using ByteArrayFormat.
+
+	 - Type: STRING
+	 - Default: .bin
+	 - Importance: LOW
+	 - Required: false
+
+🔘 filename.offset.zero.pad.width
+
+Controls the number of digits used for zero-padding Kafka offset numbers in S3 object filenames. This ensures consistent filename formatting and enables proper lexicographic (alphabetical) sorting.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+🔘 format.bytearray.separator
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The line separator string that is inserted between individual records when using the ByteArrayFormat. Supports escape sequences like 
+, 
+, 	.
+	 - Required: LOW
+
+==========================
+Consumer configuration
+==========================
+🔘 max.poll.interval.ms
+
+The maximum delay between subsequent consume requests to Kafka. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 300000 milliseconds (5 minutes).
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.poll.records
+
+The maximum number of records to consume from Kafka in a single request. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 500 records.
+
+	 - Type: LONG
+	 - Default: 500
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values. Input messages must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: all
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+

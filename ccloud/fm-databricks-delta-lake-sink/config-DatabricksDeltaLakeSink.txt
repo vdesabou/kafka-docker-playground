@@ -1,0 +1,366 @@
+==========================
+Which topics do you want to get data from?
+==========================
+🔘 topics.regex
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A regular expression that matches the names of the topics to consume from. This is useful when you want to consume from multiple topics that match a certain pattern without having to list them all individually.
+	 - Required: LOW
+
+🔘 topics
+
+
+
+	 - Type: true
+	 - Default: LIST
+	 - Importance: Identifies the topic name or a comma-separated list of topic names.
+	 - Required: HIGH
+
+🔘 errors.deadletterqueue.topic.name
+
+The name of the topic to be used as the dead letter queue (DLQ) for messages that result in an error when processed by this sink connector, or its transformations or converters. Defaults to 'dlq-${connector}' if not set. The DLQ topic will be created automatically if it does not exist. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: dlq-${connector}
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Input messages
+==========================
+🔘 input.data.format
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, or PROTOBUF. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+	 - Required: HIGH
+
+🔘 input.key.format
+
+Sets the input Kafka record key format. Valid entries are AVRO, BYTES, JSON, JSON_SR, PROTOBUF, or STRING. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+==========================
+How should we connect to your Databricks Delta Lake?
+==========================
+🔘 delta.lake.host.name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The host name used to connect to Delta Lake.
+	 - Required: HIGH
+
+🔘 delta.lake.http.path
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The HTTP path used to connect to Delta Lake.
+	 - Required: HIGH
+
+🔘 delta.lake.token
+
+
+
+	 - Type: true
+	 - Default: PASSWORD
+	 - Importance: The personal access token used to authenticate the user when connecting to Delta Lake via JDBC.
+	 - Required: HIGH
+
+🔘 delta.lake.catalog
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The destination catalog under which the destination database and tables are located.
+	 - Required: LOW
+
+🔘 delta.lake.database
+
+The destination database under which the destination tables are located.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: LOW
+	 - Required: false
+
+🔘 delta.lake.table.format
+
+A format string for the destination table name, which may contain '${topic}' as a placeholder for the originating topic name. For example, ``kafka_${topic}`` for the topic 'orders' will map to the table name 'kafka_orders'.
+
+	 - Type: STRING
+	 - Default: ${topic}
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 delta.lake.topic2table.map
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Map of topics to tables (optional). Format: comma-seperated tuples, e.g. <topic-1>:<table-1>,<topic-2>:<table-2>,...
+	 - Required: LOW
+
+🔘 delta.lake.table.auto.create
+
+Whether to automatically create the destination table based on record schema if it does not exist.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 delta.lake.tables.location
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The underlying location where the data in the Delta Lake table(s) is stored. If you set s3://<your-s3-bucket>/tmp/, Delta Lake data will be stored under s3://<your-s3-bucket>/tmp/. Make sure the AWS IAM for the Databricks Delta Lake instance has the permision to write records to the specified directory, and the specified directory exists (e.g. tmp)
+	 - Required: MEDIUM
+
+🔘 delta.lake.table2partition.map
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Map of tables to partition fields (optional). Format: comma-separated tuples. For example: <table-1>:<partition-1>,<table-2>:<partition-2>,... Note that you can specify multiple partitions per table. Be sure to add a separate tuple for each partition. For example: <table-1>:<partition-1>, <table-1>:<partition-2>), <table-2>:<partition-3>
+	 - Required: LOW
+
+==========================
+Amazon S3 details
+==========================
+🔘 staging.s3.access.key.id
+
+
+
+	 - Type: true
+	 - Default: PASSWORD
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 staging.s3.secret.access.key
+
+
+
+	 - Type: true
+	 - Default: PASSWORD
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 flush.interval.ms
+
+The time interval in milliseconds to periodically invoke file commits. This configuration ensures that file commits are invoked at every configured interval. Time of commit will be adjusted to 00:00 of selected timezone. The commit will be performed at the scheduled time, regardless of the previous commit time or number of messages. This configuration is useful when you have to commit your data based on current server time, for example at the beginning of every hour.
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 staging.bucket.name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The S3 staging bucket where files get written to from Kafka and subsequently copied into the Databricks Delta Lake table. Must be in the same region as your Confluent Cloud cluster.
+	 - Required: HIGH
+
+==========================
+Consumer configuration
+==========================
+🔘 max.poll.interval.ms
+
+The maximum delay between subsequent consume requests to Kafka. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 300000 milliseconds (5 minutes).
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.poll.records
+
+The maximum number of records to consume from Kafka in a single request. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 500 records.
+
+	 - Type: LONG
+	 - Default: 500
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: all
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
