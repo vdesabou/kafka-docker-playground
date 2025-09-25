@@ -1,0 +1,201 @@
+==========================
+null
+==========================
+🔘 cps.project
+
+The project containing the topic to which to publish.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 cps.topic
+
+The topic to which to publish.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 maxBufferSize
+
+The maximum number of messages that can be received for the messages on a topic partition before publishing them to Cloud Pub/Sub.
+
+	 - Type: INT
+	 - Default: 100
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 maxBufferBytes
+
+The maximum number of bytes that can be received for the messages on a topic partition before publishing the messages to Cloud Pub/Sub.
+
+	 - Type: LONG
+	 - Default: 9500000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 maxOutstandingRequestBytes
+
+The maximum outstanding bytes from incomplete requests before the task blocks.
+
+	 - Type: LONG
+	 - Default: 9223372036854775807
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 maxOutstandingMessages
+
+The maximum outstanding incomplete messages before the task blocks.
+
+	 - Type: LONG
+	 - Default: 9223372036854775807
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 delayThresholdMs
+
+The maximum amount of time to wait after receiving the first message in a batch for a before publishing the messages to Cloud Pub/Sub.
+
+	 - Type: INT
+	 - Default: 100
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 maxRequestTimeoutMs
+
+The maximum amount of time to wait for a single publish request to Cloud Pub/Sub.
+
+	 - Type: INT
+	 - Default: 10000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 maxTotalTimeoutMs
+
+The maximum amount of time to wait for a publish to complete (including retries) in Cloud Pub/Sub.
+
+	 - Type: INT
+	 - Default: 60000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 maxShutdownTimeoutMs
+
+The maximum amount of time to wait for a publisher to shutdown when stopping task in Kafka Connect.
+
+	 - Type: INT
+	 - Default: 60000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 metadata.publish
+
+When true, include the Kafka topic, partition, offset, and timestamp as message attributes when a message is published to Cloud Pub/Sub.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 headers.publish
+
+When true, include any headers as attributes when a message is published to Cloud Pub/Sub.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 messageBodyName
+
+When using a struct or map value schema, this field or key name indicates that the corresponding value will go into the Pub/Sub message body.
+
+	 - Type: STRING
+	 - Default: cps_message_body
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 gcp.credentials.file.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The path to the GCP credentials file
+	 - Required: HIGH
+
+🔘 gcp.credentials.json
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: GCP JSON credentials
+	 - Required: HIGH
+
+🔘 orderingKeySource
+
+What to use to populate the Pub/Sub message ordering key. Possible values are "none", "key", or "partition".
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 enableCompression
+
+When "true", use gRPC Gzip compression on publish requests before sending them to Cloud Pub/Sub.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 compressionBytesThreshold
+
+The number of bytes at which to compress a request when publishing to  Cloud Pub/Sub. Only takes effect if "enableCompression" is "true".
+
+	 - Type: LONG
+	 - Default: 240
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 cps.endpoint
+
+The Pub/Sub endpoint to use.
+
+	 - Type: STRING
+	 - Default: pubsub.googleapis.com:443
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+

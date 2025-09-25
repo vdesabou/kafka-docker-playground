@@ -1,0 +1,120 @@
+==========================
+Pub/Sub
+==========================
+🔘 kafka.topic
+
+The Apache Kafka topic to publish data to. Only a single topic must be specified. Messages from Pub/Sub subscriptions will be published to this topic.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 gcp.pubsub.project.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The id of the GCP Pub/Sub project. 
+	 - Required: HIGH
+
+🔘 gcp.pubsub.topic.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The id of Pub/Sub topic from which messages have to be pulled. 
+	 - Required: HIGH
+
+🔘 gcp.pubsub.subscription.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The id of Pub/Sub subscription for the configured Pub/Sub topic. 
+	 - Required: HIGH
+
+🔘 gcp.pubsub.credentials.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The path to the JSON service key file. If empty, credentials are read from the gcp.pubsub.credentials.json configuration.
+	 - Required: HIGH
+
+🔘 gcp.pubsub.credentials.json
+
+The contents of the JSON service key file. If empty, credentials are read from the gcp.pubsub.credentials.path configuration.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 gcp.pubsub.message.max.count
+
+The maximum number of messages that should be pulled from Pub/Sub topic in a single pull request.
+
+	 - Type: INT
+	 - Default: 10000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 gcp.pubsub.max.retry.time
+
+The maximum time in seconds that the Pub/Sub client will try polling records from Pub/Sub topic. The least recommended value is 5 seconds.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: LOW
+	 - Required: false
+
+🔘 gcp.pubsub.proxy.url
+
+HTTPS Proxy Server URL. This property is meant to be used only if you need to access Pub/Sub through an HTTPS proxy.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 gcp.pubsub.proxy.user
+
+HTTPS Proxy User. This property is meant to be used only if you need to access Pub/Sub through a proxy. Using ``gcp.pubsub.proxy.user`` instead of embedding the username and password in ``gcp.pubsub.proxy.url`` allows the password to be hidden in the logs.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 gcp.pubsub.proxy.password
+
+HTTPS Proxy Password. This property is  meant to be used only if you need to access Pub/Sub through a proxy. Using ``gcp.pubsub.proxy.password`` instead of embedding the username and password in ``gcp.pubsub.proxy.url`` allows the password to be hidden in the logs.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+🔘 gcp.pubsub.data.format
+
+Pub/Sub Message Data format. This property defines  the initial format of message data obtained from the GCP Pub/Sub.
+
+	 - Type: STRING
+	 - Default: utf_8
+	 - Importance: LOW
+	 - Required: false
+
+🔘 gcp.pubsub.return.immediately
+
+Setting this field to true is generally discouraged due to performance implications.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+

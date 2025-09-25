@@ -1,0 +1,174 @@
+==========================
+null
+==========================
+🔘 kafka.topic
+
+The topic in Kafka which will receive messages that were pulled from Cloud Pub/Sub.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 cps.project
+
+The project containing the topic from which to pull messages.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 cps.subscription
+
+The name of the subscription to Cloud Pub/Sub.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 cps.maxBatchSize
+
+The maximum number of messages to batch per pull request to Cloud Pub/Sub.
+
+	 - Type: INT
+	 - Default: 100
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 cps.streamingPull.enabled
+
+Whether to use streaming pull for the connector to connect to Cloud Pub/Sub. If provided, cps.maxBatchSize is ignored.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 cps.streamingPull.flowControlMessages
+
+The maximum number of outstanding messages per task when using streaming pull.
+
+	 - Type: LONG
+	 - Default: 1000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 cps.streamingPull.flowControlBytes
+
+The maximum number of outstanding message bytes per task when using streaming pull.
+
+	 - Type: LONG
+	 - Default: 104857600
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 cps.streamingPull.parallelStreams
+
+The number of streams to open per-task when using streaming pull.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 cps.streamingPull.maxAckExtensionMs
+
+The maximum number of milliseconds the subscribe deadline will be extended to in milliseconds when using streaming pull. A value of `0` implies the java-pubsub library default value.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 cps.streamingPull.maxMsPerAckExtension
+
+The maximum number of milliseconds to extend the subscribe deadline for at a time when using streaming pull. A value of `0` implies the java-pubsub library default value.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 kafka.key.attribute
+
+The Cloud Pub/Sub message attribute to use as a key for messages published to Kafka. If set to "orderingKey", use the message's ordering key.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 kafka.timestamp.attribute
+
+The optional Cloud Pub/Sub message attribute to use as a timestamp for messages published to Kafka. The timestamp is Long value.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 kafka.partition.count
+
+The number of Kafka partitions for the Kafka topic in which messages will be published to.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 kafka.partition.scheme
+
+The scheme for assigning a message to a partition in Kafka.
+
+	 - Type: STRING
+	 - Default: round_robin
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 gcp.credentials.file.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The path to the GCP credentials file
+	 - Required: HIGH
+
+🔘 gcp.credentials.json
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: GCP JSON credentials
+	 - Required: HIGH
+
+🔘 kafka.record.headers
+
+Use Kafka record headers to store Pub/Sub message attributes
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 cps.makeOrderingKeyAttribute
+
+When true, add the ordering key to the set of attributes with the key "orderingKey" if it is non-empty.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 cps.endpoint
+
+The Pub/Sub endpoint to use.
+
+	 - Type: STRING
+	 - Default: pubsub.googleapis.com:443
+	 - Importance: LOW
+	 - Required: false
+

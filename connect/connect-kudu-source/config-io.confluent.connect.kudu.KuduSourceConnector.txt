@@ -1,0 +1,228 @@
+==========================
+Connection
+==========================
+🔘 impala.server
+
+The server address to use to format JDBC URL for connection
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 impala.port
+
+The port to use to format JDBC URL for connection; By default, Impala uses port 21050.
+
+	 - Type: INT
+	 - Default: 21050
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kudu.database
+
+The Kudu database to connect
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 impala.ldap.user
+
+Username to do LDAP authentication with Impala
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 impala.ldap.password
+
+Password to do LDAP authentication with Impala
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 kudu.tablet.replicas
+
+The number of replicas of Kudu tablets
+
+	 - Type: INT
+	 - Default: 3
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Database
+==========================
+🔘 connection.attempts
+
+Maximum number of attempts to retrieve a valid JDBC connection.
+
+	 - Type: INT
+	 - Default: 3
+	 - Importance: LOW
+	 - Required: false
+
+🔘 connection.backoff.ms
+
+Backoff time in milliseconds between connection attempts.
+
+	 - Type: LONG
+	 - Default: 10000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 table.whitelist
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of tables to include in copying. If specified, table.blacklist may not be set.
+	 - Required: MEDIUM
+
+🔘 table.blacklist
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of tables to exclude from copying. If specified, table.whitelist may not be set.
+	 - Required: MEDIUM
+
+🔘 catalog.pattern
+
+Catalog pattern to fetch table metadata from the database:
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 schema.pattern
+
+Schema pattern to fetch table metadata from the database:
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Mode
+==========================
+🔘 mode
+
+  * bulk - perform a bulk load of the entire table each time it is polled
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The mode for updating a table each time it is polled. Options include:
+	 - Required: HIGH
+
+🔘 incrementing.column.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the strictly incrementing column to use to detect new rows. Any empty value indicates the column should be autodetected by looking for an auto-incrementing column. This column may not be nullable.
+	 - Required: MEDIUM
+
+🔘 timestamp.column.name
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma separated list of one or more timestamp columns to detect new or modified rows using the COALESCE SQL function. Rows whose first non-null timestamp value is greater than the largest previous timestamp value seen will be discovered with each poll. At least one column should not be nullable.
+	 - Required: MEDIUM
+
+🔘 validate.non.null
+
+By default, the JDBC connector will validate that all incrementing and timestamp tables have NOT NULL set for the columns being used as their ID/timestamp. If the tables don't, JDBC connector will fail to start. Setting this to false will disable these checks.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 query
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: If specified, the query to perform to select new or updated rows. Use this setting if you want to join tables, select subsets of columns in a table, or filter data. If used, this connector will only copy data using this query -- whole-table copying will be disabled. Different query modes may still be used for incremental updates, but in order to properly construct the incremental query, it must be possible to append a WHERE clause to this query (i.e. no WHERE clauses may be used). If you use a WHERE clause, it must handle incremental queries itself.
+	 - Required: MEDIUM
+
+🔘 quote.sql.identifiers
+
+When to quote table names, column names, and other identifiers in SQL statements. For backward compatibility, the default is 'always'.
+
+	 - Type: STRING
+	 - Default: ALWAYS
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Connector
+==========================
+🔘 table.types
+
+By default, the JDBC connector will only detect tables with type TABLE from the source Database. This config allows a command separated list of table types to extract. Options include:
+
+	 - Type: LIST
+	 - Default: TABLE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 poll.interval.ms
+
+Frequency in ms to poll for new data in each table.
+
+	 - Type: INT
+	 - Default: 5000
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 batch.max.rows
+
+Maximum number of rows to include in a single batch when polling for new data. This setting can be used to limit the amount of data buffered internally in the connector.
+
+	 - Type: INT
+	 - Default: 100
+	 - Importance: LOW
+	 - Required: false
+
+🔘 table.poll.interval.ms
+
+Frequency in ms to poll for new or removed tables, which may result in updated task configurations to start polling for data in added tables or stop polling for data in removed tables.
+
+	 - Type: LONG
+	 - Default: 60000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 topic.prefix
+
+Prefix to prepend to table names to generate the name of the Kafka topic to publish data to, or in the case of a custom query, the full name of the topic to publish to.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 timestamp.delay.interval.ms
+
+How long to wait after a row with certain timestamp appears before we include it in the result. You may choose to add some delay to allow transactions with earlier timestamp to complete. The first execution will fetch all available records (i.e. starting at timestamp 0) until current time minus the delay. Every following execution will get data from the last time we fetched until current time minus the delay.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: HIGH
+	 - Required: false
+
