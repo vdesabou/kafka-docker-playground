@@ -1,0 +1,366 @@
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 datapreview.schemas.enable
+
+This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+CSFLE
+==========================
+🔘 csfle.enabled
+
+Determines whether the connector honours CSFLE rules or not
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sr.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
+	 - Required: HIGH
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+How should we connect to your Snowflake Instance?
+==========================
+🔘 connection.url
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Snowflake connection URL. Supported formats are `<org_name>_<account_name>.snowflakecomputing.com` or If the account is located in the AWS US West (Oregon) region, then `<locator>.snowflakecomputing.com`.
+	 - Required: HIGH
+
+🔘 connection.user
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: User to be used for authenticating to snowflake.
+	 - Required: HIGH
+
+🔘 connection.credentials.source
+
+The source of the credentials to use for authentication. Supported values are: `PRIVATE_KEY`: Use the private key to authenticate. `PRIVATE_KEY_PASSPHRASE`: Use the private key and passphrase to authenticate.
+
+	 - Type: STRING
+	 - Default: PRIVATE_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 connection.private.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Private key for Snowflake user.
+	 - Required: HIGH
+
+🔘 connection.private.key.passphrase
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Passphrase of the encrypted private key.
+	 - Required: HIGH
+
+==========================
+How should we name your topic(s)?
+==========================
+🔘 topic.prefix
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Prefix to prepend to table names to generate the name of the Kafka topic to publish data to.
+	 - Required: HIGH
+
+==========================
+Connector Details
+==========================
+🔘 mode
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Mode represents the criteria on which table is polled each time. Options include -- `BULK`: perform a bulk load of all the eligible tables each time it is polled. `TIMESTAMP`: use timestamp column(s) to detect new and modified rows. On specifying multiple timestamp columns, COALESCE SQL function would be used to find out the effective timestamp for a row. This assumes that the effective timestamp is updated with each write, it's values are monotonically incrementing, but not necessarily unique. Only rows with non null value of effective timestamp would be captured. `INCREMENTING`: use a strictly incrementing column on each table to detect only new rows. Only rows with non null value of incrementing column would be captured. `TIMESTAMP AND INCREMENTING`: use two columns, a timestamp column that detects new and modified rows and a strictly incrementing column which provides a globally unique ID for updates so each row can be assigned a unique stream offset. Only rows with non null effective timestamp value and non null incrementing column value would be captured
+	 - Required: MEDIUM
+
+🔘 table.include.list
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma-separated list of regular expressions that match the fully-qualified names of tables to be copied. Identifier names are case sensitive. For example, ``table.include.list: "DB_A.PUBLIC.CUSTOMER.*,DB_B.PUBLIC.CUSTOMER.*,"``.
+	 - Required: MEDIUM
+
+🔘 table.exclude.list
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma-separated list of regular expressions that match the fully-qualified names of tables not to be copied. This only applies on the tables filtered using include list. Identifier names are case sensitive. For example, ``table.exclude.list: "DB_A.PUBLIC.CUSTOMER.*,DB_B.PUBLIC.CUSTOMER.*,"``.
+	 - Required: MEDIUM
+
+🔘 timestamp.columns.mapping
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma-separated list of table regex to timestamp columns mappings. Timestamp columns supplied should strictly be of type ``TIMESTAMP_NTZ``. On specifying multiple timestamp columns, COALESCE SQL function would be used to find out the effective timestamp for a row. Expected format is ``regex1:[col1|col2],regex2:[col3]``. Regexes would be matched against the fully-qualified table names. Identifier names are case sensitive. Every table included for capture should match exactly one of the provided mappings. An example for a valid input would be ``COMPANY.EMPLOYEES.SALARY.*:[UPDATED_AT|MODIFIED_AT], COMPANY.FINANCE.ACCOUNTS.*:[CHANGED_AT]``.
+	 - Required: MEDIUM
+
+🔘 incrementing.column.mapping
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma-separated list of table regex to incrementing column mappings. Expected format is ``regex1:col2,regex2:col1``. Regexes would be matched against the fully-qualified table names. Identifier names are case sensitive. Every table included for capture should match exactly one of the provided mappings. An example for a valid input would be ``COMPANY.EMPLOYEES.SALARY*:EMP_ID,COMPANY.FINANCE.ACCOUNTS.*:ID``.
+	 - Required: MEDIUM
+
+🔘 db.timezone
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Timezone to be used when interpreting values for timestamp types which don't have a timezone information in them. This should be set to the timezone of the snowflake account.
+	 - Required: MEDIUM
+
+🔘 timestamp.initial
+
+
+
+	 - Type: false
+	 - Default: LONG
+	 - Importance: Epoch timestamp in milliseconds which provides the start timestamp from where to capture rows. The value -1 sets the start timestamp to the current time, in this case older data would not be fetched. If not specified, start timestamp is treated as epoch start time, hence all data is fetched. Once the connector has managed to successfully record a source offset, this property has no effect even if changed to a different value later on.
+	 - Required: MEDIUM
+
+🔘 table.types
+
+By default, the connector will only detect tables with type TABLE. This config allows a command separated list of table types to extract.
+
+	 - Type: LIST
+	 - Default: TABLE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 timestamp.granularity
+
+Define the granularity of the Timestamp column. `CONNECT_LOGICAL`: Represents timestamp values using Kafka Connect built-in representations. This may lead to loss of precision as this only supports milliseconds precision. `NANOS_LONG`: Represents timestamp values as nanos since epoch. Avoid this if any of the eligible timestamp columns contains timestamps greater than `2262-11-04 23:47:16.854775807 GMT`, nanos since epoch value would not fit in the range for long and hence would lead to erroneous values. Use `nanos_string` in such cases. `NANOS_STRING`: represents timestamp values as nanos since epoch in string.
+
+	 - Type: STRING
+	 - Default: NANOS_LONG
+	 - Importance: LOW
+	 - Required: false
+
+🔘 poll.interval.ms
+
+Frequency in ms to poll for new data in each table.
+
+	 - Type: INT
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 quote.sql.identifiers
+
+When to quote table names, column names, and other identifiers in SQL statements. Use `always` when working with case-sensitive identifiers or reserved keywords. Default value is `never`.
+
+	 - Type: STRING
+	 - Default: never
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Output messages
+==========================
+🔘 output.data.format
+
+Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+
+	 - Type: STRING
+	 - Default: AVRO
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+

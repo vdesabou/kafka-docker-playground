@@ -1,0 +1,378 @@
+==========================
+Which topics do you want to get data from?
+==========================
+🔘 topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Identifies the topic name or a comma-separated list of topic names.
+	 - Required: HIGH
+
+🔘 errors.deadletterqueue.topic.name
+
+The name of the topic to be used as the dead letter queue (DLQ) for messages that result in an error when processed by this sink connector, or its transformations or converters. Defaults to 'dlq-${connector}' if not set. The DLQ topic will be created automatically if it does not exist. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: dlq-${connector}
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Input messages
+==========================
+🔘 input.key.format
+
+Sets the input Kafka record key format. Valid entries are AVRO, BYTES, JSON, JSON_SR, PROTOBUF, or STRING. Note that you must have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
+
+	 - Type: STRING
+	 - Default: BYTES
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 input.data.format
+
+Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, and JSON. Note that you must have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, or PROTOBUF.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+==========================
+GCP credentials
+==========================
+🔘 keyfile
+
+
+
+	 - Type: true
+	 - Default: PASSWORD
+	 - Importance: GCP service account JSON file with write permissions for BigQuery.
+	 - Required: HIGH
+
+==========================
+BigQuery details
+==========================
+🔘 project
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: GCP Project ID where BigQuery is located.
+	 - Required: HIGH
+
+🔘 datasets
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Name for the BigQuery dataset that Kafka topics write to.
+	 - Required: HIGH
+
+==========================
+SQL/DDL Support
+==========================
+🔘 partitioning.type
+
+The partitioning type to use.
+
+	 - Type: STRING
+	 - Default: INGESTION_TIME
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 topic2table.map
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Map of topics to tables (optional). The required format is comma-separated tuples. For example, <topic-1>:<table-1>,<topic-2>:<table-2>,... Note that a topic name must not be modified using a regex SMT while using this option. Note that if this property is used, ``sanitize.topics`` is ignored. Also, if the topic-to-table map doesn’t contain the topic for a record, the connector creates a table with the same name as the topic name.
+	 - Required: MEDIUM
+
+🔘 auto.create.tables
+
+Designates whether or not to automatically create BigQuery tables. Note: Supports AVRO, JSON_SR, and PROTOBUF message format only.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 auto.update.schemas
+
+Designates whether or not to automatically update BigQuery schemas. New fields in record schemas must be nullable. Note: Supports AVRO, JSON_SR, and PROTOBUF message format only.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sanitize.topics
+
+Designates whether to automatically sanitize topic names before using them as table names in BigQuery. If not enabled, topic names are used as table names.
+
+	 - Type: STRING
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sanitize.field.names
+
+Whether to automatically sanitize field names before using them as field names in BigQuery. BigQuery specifies that field names can only contain letters, numbers, and underscores. The sanitizer replaces invalid symbols with underscores. If the field name starts with a digit, the sanitizer adds an underscore in front of field name. Caution: Key duplication errors can occur if different fields are named a.b and a_b, for instance. After being sanitized, field names a.b and a_b will have same value.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 time.partitioning.type
+
+The time partitioning type to use when creating new tables for ``partitioning.type`` INGESTION_TIME, RECORD_TIME or TIMESTAMP_COLUMN. Existing tables are not altered to use this partitioning type.
+
+	 - Type: STRING
+	 - Default: DAY
+	 - Importance: LOW
+	 - Required: false
+
+🔘 timestamp.partition.field.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the field in the value that contains the timestamp to partition by in BigQuery. This enable timestamp partitioning for tables. The connector ignores this property if ``partitioning.type`` is not TIMESTAMP_COLUMN or if ``auto.create.tables`` is false.
+	 - Required: LOW
+
+🔘 allow.schema.unionization
+
+If enabled, when performing schema updates, record schemas are combined with the current schema of the BigQuery table. This can be useful if there are Kafka records with schemas that are missing fields that correspond to columns already present in the BigQuery table schema. Note that when this is enabled, unrelated records could be produced to a topic consumed by the connector. The reason for this is instead of failing on invalid data, the connector appends the field for the unrelated record schema to the BigQuery table schema.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 all.bq.fields.nullable
+
+If true, no fields in any produced BigQuery schema are required. All non-nullable Avro fields are translated as NULLABLE (or REPEATED, if arrays).
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 convert.double.special.values
+
+Designates whether +Infinity is converted to Double.MAX_VALUE and whether -Infinity and NaN are converted to Double.MIN_VALUE to ensure successful delivery to BigQuery.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Consumer configuration
+==========================
+🔘 max.poll.interval.ms
+
+The maximum delay between subsequent consume requests to Kafka. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 300000 milliseconds (5 minutes).
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.poll.records
+
+The maximum number of records to consume from Kafka in a single request. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 500 records.
+
+	 - Type: LONG
+	 - Default: 500
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values. Input messages must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: all
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+

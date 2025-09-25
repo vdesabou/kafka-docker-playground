@@ -1,0 +1,540 @@
+==========================
+Which topics do you want to get data from?
+==========================
+🔘 topics.regex
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A regular expression that matches the names of the topics to consume from. This is useful when you want to consume from multiple topics that match a certain pattern without having to list them all individually.
+	 - Required: LOW
+
+🔘 topics
+
+
+
+	 - Type: true
+	 - Default: LIST
+	 - Importance: Identifies the topic name or a comma-separated list of topic names.
+	 - Required: HIGH
+
+🔘 errors.deadletterqueue.topic.name
+
+The name of the topic to be used as the dead letter queue (DLQ) for messages that result in an error when processed by this sink connector, or its transformations or converters. Defaults to 'dlq-${connector}' if not set. The DLQ topic will be created automatically if it does not exist. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: dlq-${connector}
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Input messages
+==========================
+🔘 input.key.format
+
+Sets the input Kafka record key format. Valid entries are AVRO, JSON_SR, PROTOBUF, STRING or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
+
+	 - Type: STRING
+	 - Default: STRING
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 input.data.format
+
+Sets the input Kafka record value format. Valid entries are JSON, AVRO, JSON_SR, PROTOBUF, or STRING. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 key.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for key. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+==========================
+How should we connect to your Snowflake database?
+==========================
+🔘 snowflake.url.name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The URL for accessing your Snowflake account, in the form of https://<account_name>.<region_id>.snowflakecomputing.com:443. Note that the https:// and port number are optional. The region ID is not used if your account is in the AWS US West region and you are not using AWS PrivateLink.
+	 - Required: HIGH
+
+🔘 snowflake.user.name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: User login name for the Snowflake account
+	 - Required: HIGH
+
+🔘 snowflake.private.key
+
+
+
+	 - Type: true
+	 - Default: PASSWORD
+	 - Importance: The private key to authenticate the user. Include only the key, not the header or footer. If the key is split across multiple lines, remove the line breaks. You can provide either an unencrypted key or an encrypted key. If you use an encrypted key, provide the snowflake.private.key.passphrase parameter so Snowflake can decrypt the key. Use this parameter only if the snowflake.private.key parameter value is encrypted.
+	 - Required: HIGH
+
+🔘 snowflake.role.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Access control role to use when inserting the rows into the table. If Ingestion method is Snowpipe_Streaming Ingestion then it's required. If Ingestion method is Snowpipe then its not required and use default role
+	 - Required: LOW
+
+🔘 snowflake.database.name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The name of the database that contains the table to insert rows into.
+	 - Required: HIGH
+
+🔘 snowflake.useHttpsProxy
+
+Enable HTTPS proxy for Snowflake connections
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.https.proxyHost
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTPS proxy host for Snowflake connections
+	 - Required: LOW
+
+🔘 snowflake.https.proxyPort
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTPS proxy port for Snowflake connections
+	 - Required: LOW
+
+🔘 snowflake.https.nonProxyHosts
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Hosts to bypass HTTPS proxy for Snowflake connections
+	 - Required: LOW
+
+🔘 snowflake.https.proxyUser
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTPS proxy username for Snowflake connections
+	 - Required: LOW
+
+🔘 snowflake.https.proxyPassword
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: HTTPS proxy password for Snowflake connections
+	 - Required: LOW
+
+==========================
+Database details
+==========================
+🔘 snowflake.schema.name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The name of the schema that contains the table to insert rows into.
+	 - Required: HIGH
+
+🔘 snowflake.topic2table.map
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Map of topics to tables (optional). Format : comma-separated tuples, e.g. <topic-1>:<table-1>,<topic-2>:<table-2>,...
+	 - Required: HIGH
+
+==========================
+Snowflake connection
+==========================
+🔘 snowflake.ingestion.method
+
+Choose the preferred ingestion method. The connector supports the SNOWPIPE (default) and SNOWPIPE_STREAMIMG for Kafka data ingestion. Using SNOWPIPE_STREAMING may provide a cost-benefit for your Snowflake project.
+
+	 - Type: STRING
+	 - Default: SNOWPIPE
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Connection details
+==========================
+🔘 snowflake.private.key.passphrase
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: If snowflake.private.key is encrypted, this passphrase is used to decrypt the key. If the value of this parameter is not empty, Kafka uses this phrase to try to decrypt the private key.
+	 - Required: MEDIUM
+
+🔘 snowflake.metadata.createtime
+
+If the value is set to FALSE, the CreateTime property value is omitted from the metadata in the RECORD_METADATA column. The default value is TRUE.
+
+	 - Type: STRING
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snowflake.metadata.topic
+
+If the value is set to FALSE, the topic property value is omitted from the metadata in the RECORD_METADATA column. The default value is TRUE.
+
+	 - Type: STRING
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snowflake.metadata.offset.and.partition
+
+If the value is set to FALSE, the Offset and Partition property values are omitted from the metadata in the RECORD_METADATA column. The default value is TRUE.
+
+	 - Type: STRING
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snowflake.streaming.metadata.connectorPushTime
+
+If the value is set to TRUE, the ConnectorPushTime property value is added to the metadata in the RECORD_METADATA column. The default value is FALSE. This works with only SNOWPIPE_STREAMING ingestion mode.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snowflake.metadata.all
+
+If the value is set to FALSE, the metadata in the RECORD_METADATA column is completely empty. The default value is TRUE.
+
+	 - Type: STRING
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snowflake.enable.schematization
+
+Specify to TRUE to enable schema detection and evolution for Kafka Connector with Snowpipe Streaming. The default value is FALSE
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 buffer.flush.time
+
+Number of seconds between buffer flushes, where the flush is from the Kafka’s memory cache to the internal stage. The default value is 120 seconds. Minimum value allowed is 10 for snowflake.ingestion.method=SNOWPIPE, and 1 for snowflake.ingestion.method=SNOWPIPE_STREAMING. The connector uses buffer.count.records and buffer.size.bytes=10,000,000 (10MB) as well. Whichever comes first, the connector will flush Kafka records to Snowflake.
+
+	 - Type: LONG
+	 - Default: 120
+	 - Importance: LOW
+	 - Required: false
+
+🔘 buffer.count.records
+
+Number of records between buffer flushes, where the flush is from the Kafka’s memory cache to the internal stage. The default and minimum value is 10,000 records. The connector uses buffer.flush.time and buffer.size.bytes=10,000,000 (10MB) as well. Whichever comes first, the connector will flush Kafka records to Snowflake.
+
+	 - Type: LONG
+	 - Default: 10000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 buffer.size.bytes
+
+Kafka records are cached in a buffer (per partition) before being written to Snowflake as data files. The buffer size defaults to 10000000 bytes (10 MB). The records are compressed when written to Snowflake. Because of the compression, the size of the cached records buffer may be larger that the size of the resulting data files created in Snowflake.
+
+	 - Type: LONG
+	 - Default: 10000000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.streaming.iceberg.enabled
+
+Interested in integrating with Iceberg? Take a look at Tableflow — a solution designed to simplify and streamline your Iceberg workflows, refer https://www.confluent.io/product/tableflow/.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 enable.task.fail.on.authorization.errors
+
+If set to true, the connector task will fail whenever it encounters an authorization error from Snowflake.
+
+	 - Type: STRING
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Error handling
+==========================
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior differently from the Connect framework's.
+
+	 - Type: STRING
+	 - Default: all
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+CSFLE
+==========================
+🔘 csfle.enabled
+
+Determines whether the connector honours CSFLE rules or not
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sr.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
+	 - Required: HIGH
+
+🔘 csfle.onFailure
+
+Configures the behavior for decryption failures. If set to ERROR, the connector will behave as configured for error behaviour. If set to NONE, the connector will ignore the decryption failure and proceed to write the data in its encrypted form.
+
+	 - Type: STRING
+	 - Default: ERROR
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Consumer configuration
+==========================
+🔘 max.poll.interval.ms
+
+The maximum delay between subsequent consume requests to Kafka. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 300000 milliseconds (5 minutes).
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.poll.records
+
+The maximum number of records to consume from Kafka in a single request. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 500 records.
+
+	 - Type: LONG
+	 - Default: 500
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: The number of tasks for the connector. Each task is limited to a number of topic partitions based on the `buffer.size.bytes` configuration, e.g., 10 MB -> 50 Topic Partitions, 20 MB-> 25 Topic Partitions, 50 MB -> 10 Topic Partitions, and 100 MB -> 5 Topic Partitions.
+	 - Required: HIGH
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values. Input messages must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
