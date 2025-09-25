@@ -1,0 +1,186 @@
+==========================
+Connection
+==========================
+🔘 gcp.spanner.instance.id
+
+The ID of the Spanner instance to connect to. 
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 gcp.spanner.database.id
+
+The ID of the database in which the tables of the topics are (or should be created).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 gcp.spanner.database.dialect
+
+Database dialect configured in the target Google Spanner database. This will default to GOOGLESQL but can be overridden to POSTGRESQL.
+
+	 - Type: STRING
+	 - Default: GOOGLESQL
+	 - Importance: LOW
+	 - Required: false
+
+🔘 gcp.spanner.credentials.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The path to the JSON service key file. If empty, credentials are read from the gcp.spanner.credentials.json configuration.
+	 - Required: HIGH
+
+🔘 gcp.spanner.credentials.json
+
+The contents of the JSON service key file. If empty, credentials are read from the gcp.spanner.credentials.path configuration.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 gcp.spanner.proxy.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Google Cloud Spanner Proxy settings encoded in URL syntax. This property is meant to be used only if you need to access Spanner through a proxy.
+	 - Required: LOW
+
+🔘 gcp.spanner.proxy.user
+
+Spanner Proxy User. This property is meant to be used only if you need to access Spanner through a proxy. Using ``gcp.spanner.proxy.user`` instead of embedding the username and password in ``gcp.spanner.proxy.url`` allows the password to be hidden in the logs.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 gcp.spanner.proxy.password
+
+Spanner Proxy Password. This property is meant to be used only if you need to access Spanner through a proxy. Using ``gcp.spanner.proxy.password`` instead of embedding the username and password in ``gcp.spanner.proxy.url`` allows the password to be hidden in the logs.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Writes
+==========================
+🔘 insert.mode
+
+The insertion mode to use. Supported modes are:
+
+	 - Type: STRING
+	 - Default: INSERT
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 max.batch.size
+
+The maximum number of records that can be batched into a single insert, update or upsert to Spanner.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 error.mode
+
+Specifies how to handle errors that result from writes to Spanner.
+
+	 - Type: STRING
+	 - Default: fail
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Data Mapping
+==========================
+🔘 table.name.format
+
+A format string for the destination table name, which may contain '${topic}' as a placeholder for the originating topic name.
+
+	 - Type: STRING
+	 - Default: ${topic}
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 pk.mode
+
+The primary key mode, also refer to ``pk.fields`` documentation for interplay. Supported modes are:
+
+	 - Type: STRING
+	 - Default: kafka
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 pk.fields
+
+``kafka``
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of comma-separated primary key field names. The runtime interpretation of this config depends on the ``pk.mode``:
+	 - Required: MEDIUM
+
+🔘 fields.whitelist
+
+Note that ``pk.fields`` is applied independently in the context of which field(s) form the primary key columns in the destination database, while this configuration is applicable for the other columns.
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of comma-separated record value field names. If empty, all fields from the record value are utilized, otherwise used to filter to the desired fields.
+	 - Required: MEDIUM
+
+==========================
+DDL Support
+==========================
+🔘 auto.create
+
+Whether to automatically create the destination table based on record schema if it is found to be missing by issuing ``CREATE``.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 auto.evolve
+
+Whether to automatically add columns in the table schema when found to be missing relative to the record schema by issuing ``ALTER``.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Retries
+==========================
+🔘 retry.timeout.ms
+
+The maximum amount of time to retry on errors before failing the task.
+
+	 - Type: LONG
+	 - Default: 60000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 request.timeout.ms
+
+The amount of time to wait on a request to Spanner before timing out and retry-ing.
+
+	 - Type: LONG
+	 - Default: 6000
+	 - Importance: MEDIUM
+	 - Required: false
+

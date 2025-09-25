@@ -1,0 +1,39 @@
+==========================
+Firebase
+==========================
+🔘 gcp.firebase.database.reference
+
+The firebase database reference from which the connector will read records
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 gcp.firebase.credentials.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Path to the GCP private key file,this file is needed for service account authentication.
+	 - Required: HIGH
+
+🔘 gcp.firebase.credentials.json
+
+The contents of the JSON service key file. If empty, credentials are read from the gcp.firebase.credentials.path configuration.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 gcp.firebase.snapshot
+
+If true, the connector performs a snapshot once and listen to further changes. A complete snapshot is taken each time the connector restarts when the configuration gcp.firebase.snapshot is set to true, this may lead to connector writing duplicate records to Kafka topic. If false, the connector skips the initial database snapshot and listens to changes and writes them to kafka topic.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+

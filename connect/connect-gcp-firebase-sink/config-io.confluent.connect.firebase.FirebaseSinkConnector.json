@@ -1,0 +1,7 @@
+    "gcp.firebase.credentials.json": "",
+    "gcp.firebase.credentials.path": "STRING",
+    "gcp.firebase.database.reference": "",
+    "insert.mode": "",
+    "key.converter.converter.encoding": "UTF-8",
+    "key.converter.converter.type": "",
+    "max.wait.duration.ms": "10000",

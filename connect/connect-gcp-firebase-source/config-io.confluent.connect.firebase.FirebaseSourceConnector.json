@@ -1,0 +1,4 @@
+    "gcp.firebase.credentials.json": "",
+    "gcp.firebase.credentials.path": "STRING",
+    "gcp.firebase.database.reference": "",
+    "gcp.firebase.snapshot": "false",

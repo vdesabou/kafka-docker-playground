@@ -1,0 +1,69 @@
+==========================
+Firebase
+==========================
+🔘 gcp.firebase.database.reference
+
+The firebase database reference from which the connector will read records
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 gcp.firebase.credentials.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Path to the GCP private key file,this file is needed for service account authentication.
+	 - Required: HIGH
+
+🔘 gcp.firebase.credentials.json
+
+The contents of the JSON service key file. If empty, credentials are read from the gcp.firebase.credentials.path configuration.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 insert.mode
+
+The Firebase Sink Connector can insert records into firebase in 3 different modes. Following are the possible values for ``insert.mode`` configuration :
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 max.wait.duration.ms
+
+Max wait duration for the records to be inserted in firebase
+
+	 - Type: LONG
+	 - Default: 10000
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
