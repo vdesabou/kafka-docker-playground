@@ -1,0 +1,396 @@
+==========================
+Which topics do you want to get data from?
+==========================
+🔘 topics.regex
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A regular expression that matches the names of the topics to consume from. This is useful when you want to consume from multiple topics that match a certain pattern without having to list them all individually.
+	 - Required: LOW
+
+🔘 topics
+
+
+
+	 - Type: true
+	 - Default: LIST
+	 - Importance: Identifies the topic name or a comma-separated list of topic names.
+	 - Required: HIGH
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+==========================
+RabbitMQ Publishing
+==========================
+🔘 rabbitmq.publish.max.batch.size
+
+Maximum number of messages in a batch to block on for acknowledgements. Maximum allowed size is 10000.
+
+	 - Type: INT
+	 - Default: 100
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rabbitmq.publish.ack.timeout
+
+Period of time to wait for message acknowledgement in milliseconds. Minimum allowed timeout is 1 millisecond. Maximum allowed timeout is 60 seconds.
+
+	 - Type: INT
+	 - Default: 10000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rabbitmq.publish.max.retries
+
+Number of retries for un-acked or n-acked messages.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Security
+==========================
+🔘 rabbitmq.security.protocol
+
+The security protocol to use when connection to RabbitMQ. Values can be PLAINTEXT or SSL.
+
+	 - Type: STRING
+	 - Default: PLAINTEXT
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.key.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The password of the private key in the key store file or the PEM key specified in ``ssl.keystore.key``. This is required for clients only if two-way authentication is configured.
+	 - Required: HIGH
+
+🔘 rabbitmq.https.ssl.keystorefile
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The key store containing server certificate. Only required if using https
+	 - Required: HIGH
+
+🔘 rabbitmq.https.ssl.keystore.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The store password for the key store file. This is optional for client and only needed if ``ssl.keystore.location`` is configured.  Key store password is not supported for PEM format.
+	 - Required: HIGH
+
+🔘 rabbitmq.https.ssl.truststorefile
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The trust store containing server CA certificate. Only required if using https
+	 - Required: HIGH
+
+🔘 rabbitmq.https.ssl.truststore.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The password for the trust store file. If a password is not set, trust store file configured will still be used, but integrity checking is disabled. Trust store password is not supported for PEM format.
+	 - Required: HIGH
+
+🔘 rabbitmq.https.ssl.keystore.type
+
+The file format of the key store file. This is optional for client.
+
+	 - Type: STRING
+	 - Default: JKS
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.truststore.type
+
+The file format of the trust store file.
+
+	 - Type: STRING
+	 - Default: JKS
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Connection
+==========================
+🔘 rabbitmq.host
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: RabbitMQ host to connect to.
+	 - Required: HIGH
+
+🔘 rabbitmq.port
+
+RabbitMQ port to connect to.
+
+	 - Type: INT
+	 - Default: 5672
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rabbitmq.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Username to authenticate to RabbitMQ with.
+	 - Required: HIGH
+
+🔘 rabbitmq.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Password to authenticate to RabbitMQ with.
+	 - Required: HIGH
+
+🔘 rabbitmq.virtual.host
+
+The virtual host to use when connecting to the broker.
+
+	 - Type: STRING
+	 - Default: /
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+RabbitMQ
+==========================
+🔘 rabbitmq.routing.key
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: RabbitMQ routing key that dictates how the message travels once it reaches RabbitMQ.
+	 - Required: HIGH
+
+🔘 rabbitmq.delivery.mode
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: PERSISTENT or TRANSIENT, decides message durability in RabbitMQ.
+	 - Required: HIGH
+
+🔘 rabbitmq.forward.kafka.key
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: If enabled, the Kafka record key is converted to a string and forwarded on the correlationID property of the RabbitMQ Message. In case the Kafka record key is null and this value is true, no correlationID will be sent.
+	 - Required: LOW
+
+🔘 rabbitmq.forward.kafka.metadata
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: If enabled, metadata from the Kafka record is forwarded on the RabbitMQ Message as headers. This includes the record's topic, partition, and offset. The topic name is applied as a header named KAFKA_TOPIC, the partition value is applied as a header named KAFKA_PARTITION, and the offset value is applied as a header named KAFKA_OFFSET.
+	 - Required: LOW
+
+🔘 rabbitmq.forward.kafka.headers
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: If enabled, Kafka record headers are added to the RabbitMQ Message as headers.
+	 - Required: LOW
+
+🔘 rabbitmq.exchange
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The destination RabbitMQ exchange where messages need to be delivered. The connector will deliver messages to this one RabbitMQ exchange even when the connector consumes from multiple specified Kafka topics.
+	 - Required: HIGH
+
+==========================
+Consumer configuration
+==========================
+🔘 max.poll.interval.ms
+
+The maximum delay between subsequent consume requests to Kafka. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 300000 milliseconds (5 minutes).
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.poll.records
+
+The maximum number of records to consume from Kafka in a single request. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 500 records.
+
+	 - Type: LONG
+	 - Default: 500
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+

@@ -1,0 +1,531 @@
+==========================
+Which topics do you want to get data from?
+==========================
+🔘 topics.regex
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A regular expression that matches the names of the topics to consume from. This is useful when you want to consume from multiple topics that match a certain pattern without having to list them all individually.
+	 - Required: LOW
+
+🔘 topics
+
+
+
+	 - Type: true
+	 - Default: LIST
+	 - Importance: Identifies the topic name or a comma-separated list of topic names.
+	 - Required: HIGH
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Input messages
+==========================
+🔘 input.data.format
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets the input Kafka record value format. Valid entries are AVRO, JSON, JSON_SR, PROTOBUF, or STRING. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+	 - Required: HIGH
+
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+==========================
+How should we connect to Splunk?
+==========================
+🔘 splunk.hec.uri
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Either a list of FQDNs or IPs of all Splunk indexers, separated with a ',' or a load balancer. The connector will load balance to indexers using round robin. Example: https://hec1.splunk.com:8088,https://hec2.splunk.com:8088,https://hec3.splunk.com:8088.
+	 - Required: HIGH
+
+🔘 splunk.hec.token
+
+
+
+	 - Type: true
+	 - Default: PASSWORD
+	 - Importance: Splunk HTTP Event Collector token.
+	 - Required: HIGH
+
+🔘 splunk.hec.ssl.validate.certs
+
+Enables or disables HTTPS certification validation.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.ssl.trust.store.file
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The certificate trust store containing the certificates required to validate the SSL connection.
+	 - Required: HIGH
+
+🔘 splunk.hec.ssl.trust.store.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Password for the certificate trust store.
+	 - Required: HIGH
+
+==========================
+Metadata configuration
+==========================
+🔘 splunk.indexes
+
+Splunk index names for Kafka topic data separated by comma for multiple topics to indexers ("prod-index1,prod-index2,prod-index3").
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.sourcetypes
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Splunk event sourcetype metadata for Kafka topic data.
+	 - Required: MEDIUM
+
+🔘 splunk.sources
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Splunk event source metadata for Kafka topic data.
+	 - Required: MEDIUM
+
+==========================
+Endpoint configuration
+==========================
+🔘 splunk.hec.raw
+
+When set to true, the connector ingests data using the the /raw HEC endpoint.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.raw.line.breaker
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Only applicable to /raw HEC endpoint. The setting is used to specify a custom line breaker to help Splunk separate the events correctly.
+	 - Required: MEDIUM
+
+🔘 splunk.hec.json.event.enrichment
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Only applicable to /event HEC endpoint. This setting is used to enrich raw data with extra metadata fields. It contains a list of key value pairs separated by ",".
+	 - Required: LOW
+
+🔘 splunk.hec.track.data
+
+Only applicable to /event HEC endpoint. When set to true, data loss and data injection latency metadata will be indexed along with raw data.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+HEC configuration
+==========================
+🔘 splunk.hec.http.keepalive
+
+Enables or disables HTTP connection keep-alive.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.max.http.connection.per.channel
+
+Max HTTP connections pooled for one HEC Channel when posting events to Splunk.
+
+	 - Type: INT
+	 - Default: 2
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.total.channels
+
+Total HEC Channels used to post events to Splunk.
+
+	 - Type: INT
+	 - Default: 2
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 splunk.hec.socket.timeout
+
+Max duration in seconds to read / write data to network before internal TCP Socket timeout.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.hec.use.record.timestamp
+
+When set to true, The timestamp is retrieved from the Kafka record and passed to Splunk as a HEC metadata override.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.threads
+
+The number of threads spawned to do data injection via HEC in a single connector task.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.hec.max.outstanding.events
+
+Maximum amount of unacknowledged events kept in memory by connector. Will trigger back-pressure event to slow collection.
+
+	 - Type: INT
+	 - Default: 10000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.max.retries
+
+Number of retries for failed batches before giving up. By default this is set to -1 which will retry indefinitely.
+
+	 - Type: INT
+	 - Default: -1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.backoff.threshhold.seconds
+
+The amount of time the connector waits on errors sending events to Splunk to attempt resending it.
+
+	 - Type: INT
+	 - Default: 60
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.json.event.formatted
+
+Set to true for events that are already in HEC format.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.hec.max.batch.size
+
+Maximum batch size when posting events to Splunk. The size is the actual number of Kafka events not the byte size.
+
+	 - Type: INT
+	 - Default: 500
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.lb.poll.interval
+
+This setting controls the load balancer polling interval.
+
+	 - Type: INT
+	 - Default: 120
+	 - Importance: LOW
+	 - Required: false
+
+🔘 splunk.flush.window
+
+The interval in seconds at which the events from kafka will be flushed to Splunk.
+
+	 - Type: INT
+	 - Default: 30
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Acknowledgement configuration
+==========================
+🔘 splunk.hec.ack.enabled
+
+When set to true the connector will poll event ACKs for POST events before check-pointing the Kafka offsets. This is used to prevent data loss, as this setting implements guaranteed delivery.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.ack.poll.interval
+
+This setting is only applicable when splunk.hec.ack.enabled is set to true. Internally it controls the event ACKs polling interval.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.ack.poll.threads
+
+This setting is only applicable when splunk.hec.ack.enabled is set to true. It controls how many threads should be spawned to poll event ACKs.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.event.timeout
+
+This setting is only applicable when splunk.hec.ack.enabled is set to true. When events are POSTed to Splunk and before they are ACKed, this setting determines how long the connector will wait before timing out and resending.
+
+	 - Type: INT
+	 - Default: 300
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Headers configuration
+==========================
+🔘 splunk.header.support
+
+When set to true the connector will parse Kafka headers for use as metadata in Splunk events.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.header.custom
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: This setting will look for kafka record headers with these values and add them to each event if present. Custom headers are configured separated by comma for multiple headers. Example: "custom_header_1,custom_header_2,custom_header_3".
+	 - Required: MEDIUM
+
+🔘 splunk.header.index
+
+Header to use for Splunk Header Index
+
+	 - Type: STRING
+	 - Default: splunk.header.index
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.header.source
+
+Header to use for Splunk Header Source
+
+	 - Type: STRING
+	 - Default: splunk.header.source
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.header.sourcetype
+
+Header to use for Splunk Header Sourcetype
+
+	 - Type: STRING
+	 - Default: splunk.header.sourcetype
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.header.host
+
+Header to use for Splunk Header Host
+
+	 - Type: STRING
+	 - Default: splunk.header.host
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Consumer configuration
+==========================
+🔘 max.poll.interval.ms
+
+The maximum delay between subsequent consume requests to Kafka. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 300000 milliseconds (5 minutes).
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.poll.records
+
+The maximum number of records to consume from Kafka in a single request. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 500 records.
+
+	 - Type: LONG
+	 - Default: 500
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+

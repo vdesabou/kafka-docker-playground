@@ -1,0 +1,306 @@
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 datapreview.schemas.enable
+
+This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Which topic do you want to send data to?
+==========================
+🔘 kafka.topic
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Identifies the topic name to write the data to.
+	 - Required: HIGH
+
+==========================
+How should we connect to RabbitMQ?
+==========================
+🔘 rabbitmq.host
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: RabbitMQ host to connect to.
+	 - Required: HIGH
+
+🔘 rabbitmq.username
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Username to authenticate with RabbitMQ.
+	 - Required: HIGH
+
+🔘 rabbitmq.password
+
+
+
+	 - Type: true
+	 - Default: PASSWORD
+	 - Importance: Password to authenticate with RabbitMQ.
+	 - Required: HIGH
+
+🔘 rabbitmq.virtual.host
+
+The virtual host to use when connecting to the RabbitMQ broker.
+
+	 - Type: STRING
+	 - Default: /
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 rabbitmq.port
+
+RabbitMQ port to connect to. This should be set in accordance with chosen Security protocol.
+
+	 - Type: INT
+	 - Default: 5672
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+RabbitMQ details
+==========================
+🔘 rabbitmq.queue
+
+
+
+	 - Type: true
+	 - Default: LIST
+	 - Importance: RabbitMQ queue(s) to read from.
+	 - Required: HIGH
+
+🔘 batch.size
+
+The maximum number of records to return to Connect for each poll, if there are more than this number of records already available from RabbitMQ.
+
+	 - Type: INT
+	 - Default: 1024
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 backoff.time.ms
+
+The number of milliseconds to wait when no records are returned from the RabbitMQ queue.
+
+	 - Type: INT
+	 - Default: 100
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Security
+==========================
+🔘 rabbitmq.security.protocol
+
+The security protocol to use when connecting to RabbitMQ. Valid values are PLAINTEXT and SSL.
+
+	 - Type: STRING
+	 - Default: PLAINTEXT
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.key.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The password of the private key in the key store file. This is optional for client.
+	 - Required: HIGH
+
+🔘 rabbitmq.https.ssl.keystorefile
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The key store containing server certificate. Only required if using SSL.
+	 - Required: HIGH
+
+🔘 rabbitmq.https.ssl.keystore.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The store password for the key store file. This is optional for a client and is only needed if key store is configured.
+	 - Required: HIGH
+
+🔘 rabbitmq.https.ssl.keystore.type
+
+The file format of the key store file. This is optional for client.
+
+	 - Type: STRING
+	 - Default: JKS
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.truststorefile
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The trust store containing server CA certificate. Only required if using SSL.
+	 - Required: HIGH
+
+🔘 rabbitmq.https.ssl.truststore.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The password for the trust store file. If a password is not set, trust store file configured will still be used, but integrity checking is disabled. Trust store password is not supported for PEM format.
+	 - Required: HIGH
+
+🔘 rabbitmq.https.ssl.truststore.type
+
+The file format of the trust store file.
+
+	 - Type: STRING
+	 - Default: JKS
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+

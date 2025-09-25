@@ -1,0 +1,5262 @@
+==========================
+Which topics do you want to get data from?
+==========================
+🔘 topics
+
+
+
+	 - Type: true
+	 - Default: LIST
+	 - Importance: Identifies the topic name or a comma-separated list of topic names.
+	 - Required: HIGH
+
+🔘 errors.deadletterqueue.topic.name
+
+The name of the topic to be used as the dead letter queue (DLQ) for messages that result in an error when processed by this sink connector, or its transformations or converters. Defaults to 'dlq-${connector}' if not set. The DLQ topic will be created automatically if it does not exist. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: dlq-${connector}
+	 - Importance: LOW
+	 - Required: false
+
+🔘 reporter.result.topic.name
+
+The name of the topic to produce records to after successfully processing a sink record. Defaults to 'success-${connector}' if not set. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: success-${connector}
+	 - Importance: LOW
+	 - Required: false
+
+🔘 reporter.error.topic.name
+
+The name of the topic to produce records to after each unsuccessful record sink attempt. Defaults to 'error-${connector}' if not set. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: error-${connector}
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Input messages
+==========================
+🔘 input.data.format
+
+Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, JSON, BYTES or STRING. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+==========================
+CSFLE
+==========================
+🔘 csfle.enabled
+
+Determines whether the connector honours CSFLE rules or not
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sr.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
+	 - Required: HIGH
+
+🔘 csfle.onFailure
+
+Configures the behavior for decryption failures. If set to ERROR, the connector will behave as configured for error behaviour. If set to NONE, the connector will ignore the decryption failure and proceed to write the data in its encrypted form.
+
+	 - Type: STRING
+	 - Default: ERROR
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Reporter
+==========================
+🔘 report.errors.as
+
+Dictates the content of records produced to the error topic. If set to ``Error string`` the value would be a human readable string describing the failure. The value will include some or all of the following information if available: http response code, reason phrase, submitted payload, url, response content, exception and error message. If set to http_response, the value would be the plain response content for the request which failed to write the record. In both modes, any information about the failure will also be included in the error records headers.
+
+	 - Type: STRING
+	 - Default: Error string
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Consumer configuration
+==========================
+🔘 max.poll.interval.ms
+
+The maximum delay between subsequent consume requests to Kafka. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 300000 milliseconds (5 minutes).
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.poll.records
+
+The maximum number of records to consume from Kafka in a single request. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 500 records.
+
+	 - Type: LONG
+	 - Default: 500
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Authentication
+==========================
+🔘 http.api.base.url
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The HTTP API Base URL. For example: `http://example.com/absenceManagement/v1`.
+	 - Required: HIGH
+
+🔘 auth.type
+
+Authentication type of the endpoint. Valid values are ``NONE``, ``BASIC``, ``OAUTH2`` (Client Credentials grant type only), ``BEARER``, ``API_KEY``
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 connection.user
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The username to be used with an endpoint requiring basic authentication.
+	 - Required: MEDIUM
+
+🔘 connection.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The password to be used with an endpoint requiring basic authentication.
+	 - Required: MEDIUM
+
+🔘 bearer.token
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The bearer authentication token to be used with an endpoint requiring bearer token based authentication.
+	 - Required: MEDIUM
+
+🔘 oauth2.token.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The URL to be used for fetching the OAuth2 token. Client Credentials is the only supported grant type.
+	 - Required: MEDIUM
+
+🔘 oauth2.client.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The client id used when fetching the OAuth2 token.
+	 - Required: MEDIUM
+
+🔘 oauth2.client.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The client secret used when fetching the OAuth2 token.
+	 - Required: MEDIUM
+
+🔘 oauth2.token.property
+
+The name of the property containing the OAuth2 token returned by the OAuth2 token URL (defaults to `access_token`).
+
+	 - Type: STRING
+	 - Default: access_token
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 oauth2.client.scope
+
+The scope parameter sent to the service when fetching the OAuth2 token.
+
+	 - Type: STRING
+	 - Default: any
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 oauth2.client.auth.mode
+
+Specifies how to encode ``client_id`` and ``client_secret`` in the OAuth2 authorization request. If set to ``header``, the credentials are encoded as an `'Authorization: Basic <base-64 encoded client_id:client_secret>'` HTTP header. If set to 'url', then ``client_id`` and ``client_secret`` are sent as URL encoded parameters.
+
+	 - Type: STRING
+	 - Default: header
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 oauth2.client.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: HTTP headers to be included in the OAuth2 client endpoint. Individual headers should be separated by ``|``. This configuration can be set via CLI only.
+	 - Required: LOW
+
+🔘 oauth2.client.header.separator
+
+Separator character used in OAuth2 Client Headers. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: LOW
+	 - Required: false
+
+🔘 gcp.credentials.json
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: GCP service account JSON file.
+	 - Required: HIGH
+
+🔘 oauth2.jwt.enabled
+
+Whether to generate and add JWT token to request. If selected, JWT token will be added as ``jwt_token`` request param.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 oauth2.jwt.keystore.path
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Keystore containing private key to use to sign JWT.
+	 - Required: MEDIUM
+
+🔘 oauth2.jwt.keystore.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Password to access keystore.
+	 - Required: MEDIUM
+
+🔘 oauth2.jwt.keystore.type
+
+JWT keystore type
+
+	 - Type: STRING
+	 - Default: JKS
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 oauth2.jwt.claimset
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: JSON containing JWT claims
+	 - Required: MEDIUM
+
+🔘 https.ssl.enabled
+
+Controls whether to enforce TLSv1.3 for HTTPS connections. If false, the connector uses the JVM default TLS configuration (typically TLSv1.2). If true, TLSv1.3 is enforced. Note that, even when disabled, HTTPS connections still use TLS. This setting only controls TLS version enforcement.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 https.ssl.keystorefile
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The key store containing the server certificate. Should be in JKS format.
+	 - Required: LOW
+
+🔘 https.ssl.keystore.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The store password for the key store file.
+	 - Required: HIGH
+
+🔘 https.ssl.key.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The password for the private key in the key store file.
+	 - Required: HIGH
+
+🔘 https.ssl.truststorefile
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The trust store containing a server CA certificate. Should be in JKS format.
+	 - Required: HIGH
+
+🔘 https.ssl.protocol
+
+The protocol to use for SSL connections
+
+	 - Type: STRING
+	 - Default: TLSv1.3
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 https.ssl.truststore.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The trust store password containing a server CA certificate.
+	 - Required: HIGH
+
+🔘 api.key.location
+
+Specifies where the API key is included in the HTTP request. Choose ``HEADER`` to send the API key as an HTTP header (for example, ``X-API-KEY: your-api-key``), or ``QUERY`` to include it as a query parameter in the URL (for example, ``?api_key=your-api-key``). The default is ``HEADER`` which is the most common and secure approach.
+
+	 - Type: STRING
+	 - Default: HEADER
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 https.host.verifier.enabled
+
+True if SSL host verification should be enabled. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api.key.name
+
+The identifier for the API key used in authentication. The format depends on the ``api.key.location`` configuration. If location is ``HEADER``, use the HTTP header name (for example, ``X-API-KEY``). If location is ``QUERY``, use the query parameter name (for example, ``api_key``, ``app_id``). The default value ``X-API-KEY`` is commonly used for header-based authentication.
+
+	 - Type: STRING
+	 - Default: X-API-KEY
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api.key.value
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The API key to be used with an endpoint that requires API key-based authentication
+	 - Required: MEDIUM
+
+🔘 http.proxy.host
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The host or IP address of the HTTP proxy.
+	 - Required: MEDIUM
+
+🔘 http.proxy.port
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The port number of the HTTP proxy.
+	 - Required: MEDIUM
+
+🔘 http.proxy.user
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The username to be used for proxy authentication.
+	 - Required: MEDIUM
+
+🔘 http.proxy.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The password to be used for proxy authentication.
+	 - Required: MEDIUM
+
+==========================
+Behavior on error
+==========================
+🔘 behavior.on.error
+
+Error handling behavior setting for handling error response from HTTP requests. 
+
+	 - Type: STRING
+	 - Default: FAIL
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+APIs
+==========================
+🔘 apis.num
+
+The number of http(s) APIs to configure. This value should be less than or equal to 15
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values. Input messages must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: all
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+API-1 Configs
+==========================
+🔘 api1.http.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Required: HIGH
+
+🔘 api1.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics for this API
+	 - Required: HIGH
+
+🔘 api1.http.request.method
+
+The HTTP method to use. This supports ``POST``, ``PUT``, ``PATCH``, ``GET`` and ``DELETE``. If ``DELETE`` is selected, the body is omitted when making the API call. In addition, if the ``api1.http.api.path`` doesn't have ``${key}`` or ``${topic}`` placeholders, ``/${key}`` is appended to the API path.
+
+	 - Type: STRING
+	 - Default: POST
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api1.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Required: MEDIUM
+
+🔘 api1.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api1.http.request.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
+	 - Required: MEDIUM
+
+🔘 api1.http.request.timeout.ms
+
+The time in milliseconds to wait for a request response from the server
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api1.behavior.on.null.values
+
+How to handle records with a non-null key and a null value (i.e. Kafka tombstone records). Valid options are ``IGNORE``, ``DELETE`` and ``FAIL``
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api1.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api1.request.body.format
+
+The format of the request body. Valid options are JSON or String. The default value is JSON. Note that if `input.data.format`` is ``STRING``, you should also set ``api1.request.body.format`` to ``STRING``.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api1.batch.key.pattern
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
+	 - Required: HIGH
+
+🔘 api1.retry.backoff.policy
+
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api1.max.batch.size
+
+The number of records accumulated in a batch before the HTTP API is invoked. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api1.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api1.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api1.batch.prefix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
+	 - Required: HIGH
+
+🔘 api1.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api1.batch.suffix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
+	 - Required: HIGH
+
+🔘 api1.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api1.batch.separator
+
+Separator for records in a batch. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: ,
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api1.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api1.batch.json.as.array
+
+Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api1.regex.patterns
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api1.regex.replacements
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api1.regex.separator
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api1.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api1.allow.get.request.body
+
+Allow Request Body in case of GET call. This configuration can be set via CLI only.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api1.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api1.report.only.status.code.to.success.topic
+
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api1.http.path.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
+	 - Required: MEDIUM
+
+🔘 api1.http.path.parameters.separator
+
+The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api1.upsert.method
+
+The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Setting the value to ``NONE`` disables upsert. The connector does not support batching for upsert operations.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api1.upsert.on.field.value
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api1.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+🔘 api1.upsert.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api1.upsert.method`` is set to ``POST``. This property must not be set if ``api1.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+==========================
+API-2 Configs
+==========================
+🔘 api2.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics for this API
+	 - Required: HIGH
+
+🔘 api2.http.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Required: HIGH
+
+🔘 api2.http.request.method
+
+The HTTP method to use. This supports ``POST``, ``PUT``, ``PATCH``, ``GET`` and ``DELETE``. If ``DELETE`` is selected, the body is omitted when making the API call. In addition, if the ``api2.http.api.path`` doesn't have ``${key}`` or ``${topic}`` placeholders, ``/${key}`` is appended to the API path.
+
+	 - Type: STRING
+	 - Default: POST
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api2.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Required: MEDIUM
+
+🔘 api2.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api2.http.request.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
+	 - Required: MEDIUM
+
+🔘 api2.behavior.on.null.values
+
+How to handle records with a non-null key and a null value (i.e. Kafka tombstone records). Valid options are ``IGNORE``, ``DELETE`` and ``FAIL``
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api2.http.request.timeout.ms
+
+The time in milliseconds to wait for a request response from the server
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api2.request.body.format
+
+The format of the request body. Valid options are JSON or String. The default value is JSON. Note that if `input.data.format`` is ``STRING``, you should also set ``api2.request.body.format`` to ``STRING``.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api2.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api2.batch.key.pattern
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
+	 - Required: HIGH
+
+🔘 api2.retry.backoff.policy
+
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api2.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api2.max.batch.size
+
+The number of records accumulated in a batch before the HTTP API is invoked. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api2.batch.prefix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
+	 - Required: HIGH
+
+🔘 api2.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api2.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api2.batch.suffix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
+	 - Required: HIGH
+
+🔘 api2.batch.separator
+
+Separator for records in a batch. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: ,
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api2.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api2.batch.json.as.array
+
+Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api2.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api2.regex.patterns
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api2.regex.replacements
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api2.regex.separator
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api2.allow.get.request.body
+
+Allow Request Body in case of GET call. This configuration can be set via CLI only.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api2.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api2.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api2.report.only.status.code.to.success.topic
+
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api2.http.path.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
+	 - Required: MEDIUM
+
+🔘 api2.http.path.parameters.separator
+
+The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api2.upsert.method
+
+The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Setting the value to ``NONE`` disables upsert. The connector does not support batching for upsert operations.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api2.upsert.on.field.value
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api2.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+🔘 api2.upsert.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api2.upsert.method`` is set to ``POST``. This property must not be set if ``api2.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+==========================
+API-3 Configs
+==========================
+🔘 api3.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics for this API
+	 - Required: HIGH
+
+🔘 api3.http.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Required: HIGH
+
+🔘 api3.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Required: MEDIUM
+
+🔘 api3.http.request.method
+
+The HTTP method to use. This supports ``POST``, ``PUT``, ``PATCH``, ``GET`` and ``DELETE``. If ``DELETE`` is selected, the body is omitted when making the API call. In addition, if the ``api3.http.api.path`` doesn't have ``${key}`` or ``${topic}`` placeholders, ``/${key}`` is appended to the API path.
+
+	 - Type: STRING
+	 - Default: POST
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api3.http.request.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
+	 - Required: MEDIUM
+
+🔘 api3.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api3.behavior.on.null.values
+
+How to handle records with a non-null key and a null value (i.e. Kafka tombstone records). Valid options are ``IGNORE``, ``DELETE`` and ``FAIL``
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api3.http.request.timeout.ms
+
+The time in milliseconds to wait for a request response from the server
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api3.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api3.request.body.format
+
+The format of the request body. Valid options are JSON or String. The default value is JSON. Note that if `input.data.format`` is ``STRING``, you should also set ``api3.request.body.format`` to ``STRING``.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api3.batch.key.pattern
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
+	 - Required: HIGH
+
+🔘 api3.retry.backoff.policy
+
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api3.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api3.max.batch.size
+
+The number of records accumulated in a batch before the HTTP API is invoked. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api3.batch.prefix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
+	 - Required: HIGH
+
+🔘 api3.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api3.batch.suffix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
+	 - Required: HIGH
+
+🔘 api3.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api3.batch.separator
+
+Separator for records in a batch. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: ,
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api3.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api3.batch.json.as.array
+
+Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api3.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api3.regex.patterns
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api3.regex.replacements
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api3.regex.separator
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api3.allow.get.request.body
+
+Allow Request Body in case of GET call. This configuration can be set via CLI only.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api3.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api3.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api3.report.only.status.code.to.success.topic
+
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api3.http.path.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
+	 - Required: MEDIUM
+
+🔘 api3.http.path.parameters.separator
+
+The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api3.upsert.method
+
+The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Setting the value to ``NONE`` disables upsert. The connector does not support batching for upsert operations.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api3.upsert.on.field.value
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api3.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+🔘 api3.upsert.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api3.upsert.method`` is set to ``POST``. This property must not be set if ``api3.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+==========================
+API-4 Configs
+==========================
+🔘 api4.http.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Required: HIGH
+
+🔘 api4.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics for this API
+	 - Required: HIGH
+
+🔘 api4.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Required: MEDIUM
+
+🔘 api4.http.request.method
+
+The HTTP method to use. This supports ``POST``, ``PUT``, ``PATCH``, ``GET`` and ``DELETE``. If ``DELETE`` is selected, the body is omitted when making the API call. In addition, if the ``api4.http.api.path`` doesn't have ``${key}`` or ``${topic}`` placeholders, ``/${key}`` is appended to the API path.
+
+	 - Type: STRING
+	 - Default: POST
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api4.http.request.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
+	 - Required: MEDIUM
+
+🔘 api4.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api4.http.request.timeout.ms
+
+The time in milliseconds to wait for a request response from the server
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api4.behavior.on.null.values
+
+How to handle records with a non-null key and a null value (i.e. Kafka tombstone records). Valid options are ``IGNORE``, ``DELETE`` and ``FAIL``
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api4.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api4.request.body.format
+
+The format of the request body. Valid options are JSON or String. The default value is JSON. Note that if `input.data.format`` is ``STRING``, you should also set ``api4.request.body.format`` to ``STRING``.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api4.batch.key.pattern
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
+	 - Required: HIGH
+
+🔘 api4.retry.backoff.policy
+
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api4.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api4.max.batch.size
+
+The number of records accumulated in a batch before the HTTP API is invoked. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api4.batch.prefix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
+	 - Required: HIGH
+
+🔘 api4.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api4.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api4.batch.suffix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
+	 - Required: HIGH
+
+🔘 api4.batch.separator
+
+Separator for records in a batch. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: ,
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api4.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api4.batch.json.as.array
+
+Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api4.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api4.regex.patterns
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api4.regex.replacements
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api4.regex.separator
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api4.allow.get.request.body
+
+Allow Request Body in case of GET call. This configuration can be set via CLI only.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api4.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api4.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api4.report.only.status.code.to.success.topic
+
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api4.http.path.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
+	 - Required: MEDIUM
+
+🔘 api4.http.path.parameters.separator
+
+The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api4.upsert.method
+
+The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Setting the value to ``NONE`` disables upsert. The connector does not support batching for upsert operations.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api4.upsert.on.field.value
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api4.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+🔘 api4.upsert.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api4.upsert.method`` is set to ``POST``. This property must not be set if ``api4.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+==========================
+API-5 Configs
+==========================
+🔘 api5.http.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Required: HIGH
+
+🔘 api5.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics for this API
+	 - Required: HIGH
+
+🔘 api5.http.request.method
+
+The HTTP method to use. This supports ``POST``, ``PUT``, ``PATCH``, ``GET`` and ``DELETE``. If ``DELETE`` is selected, the body is omitted when making the API call. In addition, if the ``api5.http.api.path`` doesn't have ``${key}`` or ``${topic}`` placeholders, ``/${key}`` is appended to the API path.
+
+	 - Type: STRING
+	 - Default: POST
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api5.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Required: MEDIUM
+
+🔘 api5.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api5.http.request.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
+	 - Required: MEDIUM
+
+🔘 api5.http.request.timeout.ms
+
+The time in milliseconds to wait for a request response from the server
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api5.behavior.on.null.values
+
+How to handle records with a non-null key and a null value (i.e. Kafka tombstone records). Valid options are ``IGNORE``, ``DELETE`` and ``FAIL``
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api5.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api5.request.body.format
+
+The format of the request body. Valid options are JSON or String. The default value is JSON. Note that if `input.data.format`` is ``STRING``, you should also set ``api5.request.body.format`` to ``STRING``.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api5.batch.key.pattern
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
+	 - Required: HIGH
+
+🔘 api5.retry.backoff.policy
+
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api5.max.batch.size
+
+The number of records accumulated in a batch before the HTTP API is invoked. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api5.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api5.batch.prefix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
+	 - Required: HIGH
+
+🔘 api5.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api5.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api5.batch.suffix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
+	 - Required: HIGH
+
+🔘 api5.batch.separator
+
+Separator for records in a batch. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: ,
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api5.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api5.batch.json.as.array
+
+Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api5.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api5.regex.patterns
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api5.regex.replacements
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api5.regex.separator
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api5.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api5.allow.get.request.body
+
+Allow Request Body in case of GET call. This configuration can be set via CLI only.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api5.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api5.report.only.status.code.to.success.topic
+
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api5.http.path.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
+	 - Required: MEDIUM
+
+🔘 api5.http.path.parameters.separator
+
+The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api5.upsert.method
+
+The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Setting the value to ``NONE`` disables upsert. The connector does not support batching for upsert operations.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api5.upsert.on.field.value
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api5.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+🔘 api5.upsert.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api5.upsert.method`` is set to ``POST``. This property must not be set if ``api5.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+==========================
+API-6 Configs
+==========================
+🔘 api6.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics for this API
+	 - Required: HIGH
+
+🔘 api6.http.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Required: HIGH
+
+🔘 api6.http.request.method
+
+The HTTP method to use. This supports ``POST``, ``PUT``, ``PATCH``, ``GET`` and ``DELETE``. If ``DELETE`` is selected, the body is omitted when making the API call. In addition, if the ``api6.http.api.path`` doesn't have ``${key}`` or ``${topic}`` placeholders, ``/${key}`` is appended to the API path.
+
+	 - Type: STRING
+	 - Default: POST
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api6.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Required: MEDIUM
+
+🔘 api6.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api6.http.request.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
+	 - Required: MEDIUM
+
+🔘 api6.behavior.on.null.values
+
+How to handle records with a non-null key and a null value (i.e. Kafka tombstone records). Valid options are ``IGNORE``, ``DELETE`` and ``FAIL``
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api6.http.request.timeout.ms
+
+The time in milliseconds to wait for a request response from the server
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api6.request.body.format
+
+The format of the request body. Valid options are JSON or String. The default value is JSON. Note that if `input.data.format`` is ``STRING``, you should also set ``api6.request.body.format`` to ``STRING``.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api6.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api6.retry.backoff.policy
+
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api6.batch.key.pattern
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
+	 - Required: HIGH
+
+🔘 api6.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api6.max.batch.size
+
+The number of records accumulated in a batch before the HTTP API is invoked. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api6.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api6.batch.prefix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
+	 - Required: HIGH
+
+🔘 api6.batch.suffix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
+	 - Required: HIGH
+
+🔘 api6.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api6.batch.separator
+
+Separator for records in a batch. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: ,
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api6.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api6.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api6.batch.json.as.array
+
+Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api6.regex.patterns
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api6.regex.replacements
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api6.regex.separator
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api6.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api6.allow.get.request.body
+
+Allow Request Body in case of GET call. This configuration can be set via CLI only.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api6.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api6.report.only.status.code.to.success.topic
+
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api6.http.path.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
+	 - Required: MEDIUM
+
+🔘 api6.http.path.parameters.separator
+
+The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api6.upsert.method
+
+The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Setting the value to ``NONE`` disables upsert. The connector does not support batching for upsert operations.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api6.upsert.on.field.value
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api6.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+🔘 api6.upsert.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api6.upsert.method`` is set to ``POST``. This property must not be set if ``api6.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+==========================
+API-7 Configs
+==========================
+🔘 api7.http.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Required: HIGH
+
+🔘 api7.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics for this API
+	 - Required: HIGH
+
+🔘 api7.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Required: MEDIUM
+
+🔘 api7.http.request.method
+
+The HTTP method to use. This supports ``POST``, ``PUT``, ``PATCH``, ``GET`` and ``DELETE``. If ``DELETE`` is selected, the body is omitted when making the API call. In addition, if the ``api7.http.api.path`` doesn't have ``${key}`` or ``${topic}`` placeholders, ``/${key}`` is appended to the API path.
+
+	 - Type: STRING
+	 - Default: POST
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api7.http.request.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
+	 - Required: MEDIUM
+
+🔘 api7.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api7.behavior.on.null.values
+
+How to handle records with a non-null key and a null value (i.e. Kafka tombstone records). Valid options are ``IGNORE``, ``DELETE`` and ``FAIL``
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api7.http.request.timeout.ms
+
+The time in milliseconds to wait for a request response from the server
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api7.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api7.request.body.format
+
+The format of the request body. Valid options are JSON or String. The default value is JSON. Note that if `input.data.format`` is ``STRING``, you should also set ``api7.request.body.format`` to ``STRING``.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api7.batch.key.pattern
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
+	 - Required: HIGH
+
+🔘 api7.retry.backoff.policy
+
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api7.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api7.max.batch.size
+
+The number of records accumulated in a batch before the HTTP API is invoked. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api7.batch.prefix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
+	 - Required: HIGH
+
+🔘 api7.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api7.batch.suffix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
+	 - Required: HIGH
+
+🔘 api7.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api7.batch.separator
+
+Separator for records in a batch. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: ,
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api7.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api7.batch.json.as.array
+
+Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api7.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api7.regex.patterns
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api7.regex.replacements
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api7.regex.separator
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api7.allow.get.request.body
+
+Allow Request Body in case of GET call. This configuration can be set via CLI only.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api7.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api7.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api7.report.only.status.code.to.success.topic
+
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api7.http.path.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
+	 - Required: MEDIUM
+
+🔘 api7.http.path.parameters.separator
+
+The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api7.upsert.method
+
+The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Setting the value to ``NONE`` disables upsert. The connector does not support batching for upsert operations.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api7.upsert.on.field.value
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api7.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+🔘 api7.upsert.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api7.upsert.method`` is set to ``POST``. This property must not be set if ``api7.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+==========================
+API-8 Configs
+==========================
+🔘 api8.http.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Required: HIGH
+
+🔘 api8.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics for this API
+	 - Required: HIGH
+
+🔘 api8.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Required: MEDIUM
+
+🔘 api8.http.request.method
+
+The HTTP method to use. This supports ``POST``, ``PUT``, ``PATCH``, ``GET`` and ``DELETE``. If ``DELETE`` is selected, the body is omitted when making the API call. In addition, if the ``api8.http.api.path`` doesn't have ``${key}`` or ``${topic}`` placeholders, ``/${key}`` is appended to the API path.
+
+	 - Type: STRING
+	 - Default: POST
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api8.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api8.http.request.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
+	 - Required: MEDIUM
+
+🔘 api8.http.request.timeout.ms
+
+The time in milliseconds to wait for a request response from the server
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api8.behavior.on.null.values
+
+How to handle records with a non-null key and a null value (i.e. Kafka tombstone records). Valid options are ``IGNORE``, ``DELETE`` and ``FAIL``
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api8.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api8.request.body.format
+
+The format of the request body. Valid options are JSON or String. The default value is JSON. Note that if `input.data.format`` is ``STRING``, you should also set ``api8.request.body.format`` to ``STRING``.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api8.batch.key.pattern
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
+	 - Required: HIGH
+
+🔘 api8.retry.backoff.policy
+
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api8.max.batch.size
+
+The number of records accumulated in a batch before the HTTP API is invoked. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api8.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api8.batch.prefix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
+	 - Required: HIGH
+
+🔘 api8.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api8.batch.suffix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
+	 - Required: HIGH
+
+🔘 api8.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api8.batch.separator
+
+Separator for records in a batch. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: ,
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api8.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api8.batch.json.as.array
+
+Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api8.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api8.regex.patterns
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api8.regex.replacements
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api8.regex.separator
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api8.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api8.allow.get.request.body
+
+Allow Request Body in case of GET call. This configuration can be set via CLI only.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api8.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api8.report.only.status.code.to.success.topic
+
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api8.http.path.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
+	 - Required: MEDIUM
+
+🔘 api8.http.path.parameters.separator
+
+The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api8.upsert.method
+
+The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Setting the value to ``NONE`` disables upsert. The connector does not support batching for upsert operations.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api8.upsert.on.field.value
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api8.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+🔘 api8.upsert.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api8.upsert.method`` is set to ``POST``. This property must not be set if ``api8.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+==========================
+API-9 Configs
+==========================
+🔘 api9.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics for this API
+	 - Required: HIGH
+
+🔘 api9.http.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Required: HIGH
+
+🔘 api9.http.request.method
+
+The HTTP method to use. This supports ``POST``, ``PUT``, ``PATCH``, ``GET`` and ``DELETE``. If ``DELETE`` is selected, the body is omitted when making the API call. In addition, if the ``api9.http.api.path`` doesn't have ``${key}`` or ``${topic}`` placeholders, ``/${key}`` is appended to the API path.
+
+	 - Type: STRING
+	 - Default: POST
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api9.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Required: MEDIUM
+
+🔘 api9.http.request.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
+	 - Required: MEDIUM
+
+🔘 api9.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api9.behavior.on.null.values
+
+How to handle records with a non-null key and a null value (i.e. Kafka tombstone records). Valid options are ``IGNORE``, ``DELETE`` and ``FAIL``
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api9.http.request.timeout.ms
+
+The time in milliseconds to wait for a request response from the server
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api9.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api9.request.body.format
+
+The format of the request body. Valid options are JSON or String. The default value is JSON. Note that if `input.data.format`` is ``STRING``, you should also set ``api9.request.body.format`` to ``STRING``.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api9.batch.key.pattern
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
+	 - Required: HIGH
+
+🔘 api9.retry.backoff.policy
+
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api9.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api9.max.batch.size
+
+The number of records accumulated in a batch before the HTTP API is invoked. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api9.batch.prefix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
+	 - Required: HIGH
+
+🔘 api9.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api9.batch.suffix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
+	 - Required: HIGH
+
+🔘 api9.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api9.batch.separator
+
+Separator for records in a batch. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: ,
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api9.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api9.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api9.batch.json.as.array
+
+Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api9.regex.patterns
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api9.regex.replacements
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api9.regex.separator
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api9.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api9.allow.get.request.body
+
+Allow Request Body in case of GET call. This configuration can be set via CLI only.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api9.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api9.report.only.status.code.to.success.topic
+
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api9.http.path.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
+	 - Required: MEDIUM
+
+🔘 api9.http.path.parameters.separator
+
+The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api9.upsert.method
+
+The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Setting the value to ``NONE`` disables upsert. The connector does not support batching for upsert operations.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api9.upsert.on.field.value
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api9.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+🔘 api9.upsert.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api9.upsert.method`` is set to ``POST``. This property must not be set if ``api9.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+==========================
+API-10 Configs
+==========================
+🔘 api10.http.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Required: HIGH
+
+🔘 api10.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics for this API
+	 - Required: HIGH
+
+🔘 api10.http.request.method
+
+The HTTP method to use. This supports ``POST``, ``PUT``, ``PATCH``, ``GET`` and ``DELETE``. If ``DELETE`` is selected, the body is omitted when making the API call. In addition, if the ``api10.http.api.path`` doesn't have ``${key}`` or ``${topic}`` placeholders, ``/${key}`` is appended to the API path.
+
+	 - Type: STRING
+	 - Default: POST
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api10.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Required: MEDIUM
+
+🔘 api10.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api10.http.request.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
+	 - Required: MEDIUM
+
+🔘 api10.http.request.timeout.ms
+
+The time in milliseconds to wait for a request response from the server
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api10.behavior.on.null.values
+
+How to handle records with a non-null key and a null value (i.e. Kafka tombstone records). Valid options are ``IGNORE``, ``DELETE`` and ``FAIL``
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api10.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api10.request.body.format
+
+The format of the request body. Valid options are JSON or String. The default value is JSON. Note that if `input.data.format`` is ``STRING``, you should also set ``api10.request.body.format`` to ``STRING``.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api10.retry.backoff.policy
+
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api10.batch.key.pattern
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
+	 - Required: HIGH
+
+🔘 api10.max.batch.size
+
+The number of records accumulated in a batch before the HTTP API is invoked. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api10.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api10.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api10.batch.prefix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
+	 - Required: HIGH
+
+🔘 api10.batch.suffix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
+	 - Required: HIGH
+
+🔘 api10.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api10.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api10.batch.separator
+
+Separator for records in a batch. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: ,
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api10.batch.json.as.array
+
+Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api10.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api10.regex.patterns
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api10.regex.replacements
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api10.regex.separator
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api10.allow.get.request.body
+
+Allow Request Body in case of GET call. This configuration can be set via CLI only.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api10.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api10.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api10.report.only.status.code.to.success.topic
+
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api10.http.path.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
+	 - Required: MEDIUM
+
+🔘 api10.http.path.parameters.separator
+
+The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api10.upsert.method
+
+The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Setting the value to ``NONE`` disables upsert. The connector does not support batching for upsert operations.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api10.upsert.on.field.value
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api10.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+🔘 api10.upsert.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api10.upsert.method`` is set to ``POST``. This property must not be set if ``api10.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+==========================
+API-11 Configs
+==========================
+🔘 api11.http.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Required: HIGH
+
+🔘 api11.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics for this API
+	 - Required: HIGH
+
+🔘 api11.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Required: MEDIUM
+
+🔘 api11.http.request.method
+
+The HTTP method to use. This supports ``POST``, ``PUT``, ``PATCH``, ``GET`` and ``DELETE``. If ``DELETE`` is selected, the body is omitted when making the API call. In addition, if the ``api11.http.api.path`` doesn't have ``${key}`` or ``${topic}`` placeholders, ``/${key}`` is appended to the API path.
+
+	 - Type: STRING
+	 - Default: POST
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api11.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api11.http.request.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
+	 - Required: MEDIUM
+
+🔘 api11.behavior.on.null.values
+
+How to handle records with a non-null key and a null value (i.e. Kafka tombstone records). Valid options are ``IGNORE``, ``DELETE`` and ``FAIL``
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api11.http.request.timeout.ms
+
+The time in milliseconds to wait for a request response from the server
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api11.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api11.request.body.format
+
+The format of the request body. Valid options are JSON or String. The default value is JSON. Note that if `input.data.format`` is ``STRING``, you should also set ``api11.request.body.format`` to ``STRING``.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api11.retry.backoff.policy
+
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api11.batch.key.pattern
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
+	 - Required: HIGH
+
+🔘 api11.max.batch.size
+
+The number of records accumulated in a batch before the HTTP API is invoked. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api11.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api11.batch.prefix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
+	 - Required: HIGH
+
+🔘 api11.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api11.batch.suffix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
+	 - Required: HIGH
+
+🔘 api11.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api11.batch.separator
+
+Separator for records in a batch. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: ,
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api11.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api11.batch.json.as.array
+
+Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api11.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api11.regex.patterns
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api11.regex.replacements
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api11.regex.separator
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api11.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api11.allow.get.request.body
+
+Allow Request Body in case of GET call. This configuration can be set via CLI only.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api11.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api11.report.only.status.code.to.success.topic
+
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api11.http.path.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
+	 - Required: MEDIUM
+
+🔘 api11.http.path.parameters.separator
+
+The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api11.upsert.method
+
+The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Setting the value to ``NONE`` disables upsert. The connector does not support batching for upsert operations.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api11.upsert.on.field.value
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api11.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+🔘 api11.upsert.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api11.upsert.method`` is set to ``POST``. This property must not be set if ``api11.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+==========================
+API-12 Configs
+==========================
+🔘 api12.http.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Required: HIGH
+
+🔘 api12.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics for this API
+	 - Required: HIGH
+
+🔘 api12.http.request.method
+
+The HTTP method to use. This supports ``POST``, ``PUT``, ``PATCH``, ``GET`` and ``DELETE``. If ``DELETE`` is selected, the body is omitted when making the API call. In addition, if the ``api12.http.api.path`` doesn't have ``${key}`` or ``${topic}`` placeholders, ``/${key}`` is appended to the API path.
+
+	 - Type: STRING
+	 - Default: POST
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api12.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Required: MEDIUM
+
+🔘 api12.http.request.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
+	 - Required: MEDIUM
+
+🔘 api12.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api12.behavior.on.null.values
+
+How to handle records with a non-null key and a null value (i.e. Kafka tombstone records). Valid options are ``IGNORE``, ``DELETE`` and ``FAIL``
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api12.http.request.timeout.ms
+
+The time in milliseconds to wait for a request response from the server
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api12.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api12.request.body.format
+
+The format of the request body. Valid options are JSON or String. The default value is JSON. Note that if `input.data.format`` is ``STRING``, you should also set ``api12.request.body.format`` to ``STRING``.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api12.retry.backoff.policy
+
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api12.batch.key.pattern
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
+	 - Required: HIGH
+
+🔘 api12.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api12.max.batch.size
+
+The number of records accumulated in a batch before the HTTP API is invoked. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api12.batch.prefix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
+	 - Required: HIGH
+
+🔘 api12.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api12.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api12.batch.suffix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
+	 - Required: HIGH
+
+🔘 api12.batch.separator
+
+Separator for records in a batch. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: ,
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api12.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api12.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api12.batch.json.as.array
+
+Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api12.regex.patterns
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api12.regex.replacements
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api12.regex.separator
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api12.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api12.allow.get.request.body
+
+Allow Request Body in case of GET call. This configuration can be set via CLI only.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api12.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api12.report.only.status.code.to.success.topic
+
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api12.http.path.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
+	 - Required: MEDIUM
+
+🔘 api12.http.path.parameters.separator
+
+The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api12.upsert.method
+
+The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Setting the value to ``NONE`` disables upsert. The connector does not support batching for upsert operations.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api12.upsert.on.field.value
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api12.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+🔘 api12.upsert.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api12.upsert.method`` is set to ``POST``. This property must not be set if ``api12.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+==========================
+API-13 Configs
+==========================
+🔘 api13.http.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Required: HIGH
+
+🔘 api13.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics for this API
+	 - Required: HIGH
+
+🔘 api13.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Required: MEDIUM
+
+🔘 api13.http.request.method
+
+The HTTP method to use. This supports ``POST``, ``PUT``, ``PATCH``, ``GET`` and ``DELETE``. If ``DELETE`` is selected, the body is omitted when making the API call. In addition, if the ``api13.http.api.path`` doesn't have ``${key}`` or ``${topic}`` placeholders, ``/${key}`` is appended to the API path.
+
+	 - Type: STRING
+	 - Default: POST
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api13.http.request.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
+	 - Required: MEDIUM
+
+🔘 api13.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api13.http.request.timeout.ms
+
+The time in milliseconds to wait for a request response from the server
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api13.behavior.on.null.values
+
+How to handle records with a non-null key and a null value (i.e. Kafka tombstone records). Valid options are ``IGNORE``, ``DELETE`` and ``FAIL``
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api13.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api13.request.body.format
+
+The format of the request body. Valid options are JSON or String. The default value is JSON. Note that if `input.data.format`` is ``STRING``, you should also set ``api13.request.body.format`` to ``STRING``.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api13.retry.backoff.policy
+
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api13.batch.key.pattern
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
+	 - Required: HIGH
+
+🔘 api13.max.batch.size
+
+The number of records accumulated in a batch before the HTTP API is invoked. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api13.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api13.batch.prefix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
+	 - Required: HIGH
+
+🔘 api13.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api13.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api13.batch.suffix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
+	 - Required: HIGH
+
+🔘 api13.batch.separator
+
+Separator for records in a batch. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: ,
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api13.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api13.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api13.batch.json.as.array
+
+Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api13.regex.patterns
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api13.regex.replacements
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api13.regex.separator
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api13.allow.get.request.body
+
+Allow Request Body in case of GET call. This configuration can be set via CLI only.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api13.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api13.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api13.report.only.status.code.to.success.topic
+
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api13.http.path.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
+	 - Required: MEDIUM
+
+🔘 api13.http.path.parameters.separator
+
+The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api13.upsert.method
+
+The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Setting the value to ``NONE`` disables upsert. The connector does not support batching for upsert operations.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api13.upsert.on.field.value
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api13.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+🔘 api13.upsert.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api13.upsert.method`` is set to ``POST``. This property must not be set if ``api13.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+==========================
+API-14 Configs
+==========================
+🔘 api14.http.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Required: HIGH
+
+🔘 api14.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics for this API
+	 - Required: HIGH
+
+🔘 api14.http.request.method
+
+The HTTP method to use. This supports ``POST``, ``PUT``, ``PATCH``, ``GET`` and ``DELETE``. If ``DELETE`` is selected, the body is omitted when making the API call. In addition, if the ``api14.http.api.path`` doesn't have ``${key}`` or ``${topic}`` placeholders, ``/${key}`` is appended to the API path.
+
+	 - Type: STRING
+	 - Default: POST
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api14.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Required: MEDIUM
+
+🔘 api14.http.request.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
+	 - Required: MEDIUM
+
+🔘 api14.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api14.behavior.on.null.values
+
+How to handle records with a non-null key and a null value (i.e. Kafka tombstone records). Valid options are ``IGNORE``, ``DELETE`` and ``FAIL``
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api14.http.request.timeout.ms
+
+The time in milliseconds to wait for a request response from the server
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api14.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api14.request.body.format
+
+The format of the request body. Valid options are JSON or String. The default value is JSON. Note that if `input.data.format`` is ``STRING``, you should also set ``api14.request.body.format`` to ``STRING``.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api14.batch.key.pattern
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
+	 - Required: HIGH
+
+🔘 api14.retry.backoff.policy
+
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api14.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api14.max.batch.size
+
+The number of records accumulated in a batch before the HTTP API is invoked. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api14.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api14.batch.prefix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
+	 - Required: HIGH
+
+🔘 api14.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api14.batch.suffix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
+	 - Required: HIGH
+
+🔘 api14.batch.separator
+
+Separator for records in a batch. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: ,
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api14.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api14.batch.json.as.array
+
+Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api14.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api14.regex.patterns
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api14.regex.replacements
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api14.regex.separator
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api14.allow.get.request.body
+
+Allow Request Body in case of GET call. This configuration can be set via CLI only.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api14.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api14.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api14.report.only.status.code.to.success.topic
+
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api14.http.path.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
+	 - Required: MEDIUM
+
+🔘 api14.http.path.parameters.separator
+
+The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api14.upsert.method
+
+The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Setting the value to ``NONE`` disables upsert. The connector does not support batching for upsert operations.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api14.upsert.on.field.value
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api14.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+🔘 api14.upsert.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api14.upsert.method`` is set to ``POST``. This property must not be set if ``api14.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+==========================
+API-15 Configs
+==========================
+🔘 api15.http.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Required: HIGH
+
+🔘 api15.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics for this API
+	 - Required: HIGH
+
+🔘 api15.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Required: MEDIUM
+
+🔘 api15.http.request.method
+
+The HTTP method to use. This supports ``POST``, ``PUT``, ``PATCH``, ``GET`` and ``DELETE``. If ``DELETE`` is selected, the body is omitted when making the API call. In addition, if the ``api15.http.api.path`` doesn't have ``${key}`` or ``${topic}`` placeholders, ``/${key}`` is appended to the API path.
+
+	 - Type: STRING
+	 - Default: POST
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api15.http.request.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
+	 - Required: MEDIUM
+
+🔘 api15.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api15.http.request.timeout.ms
+
+The time in milliseconds to wait for a request response from the server
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api15.behavior.on.null.values
+
+How to handle records with a non-null key and a null value (i.e. Kafka tombstone records). Valid options are ``IGNORE``, ``DELETE`` and ``FAIL``
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api15.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api15.request.body.format
+
+The format of the request body. Valid options are JSON or String. The default value is JSON. Note that if `input.data.format`` is ``STRING``, you should also set ``api15.request.body.format`` to ``STRING``.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api15.batch.key.pattern
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
+	 - Required: HIGH
+
+🔘 api15.retry.backoff.policy
+
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api15.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api15.max.batch.size
+
+The number of records accumulated in a batch before the HTTP API is invoked. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api15.batch.prefix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
+	 - Required: HIGH
+
+🔘 api15.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api15.batch.suffix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
+	 - Required: HIGH
+
+🔘 api15.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api15.batch.separator
+
+Separator for records in a batch. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: ,
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api15.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api15.batch.json.as.array
+
+Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api15.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api15.regex.patterns
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api15.regex.replacements
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api15.regex.separator
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Required: MEDIUM
+
+🔘 api15.allow.get.request.body
+
+Allow Request Body in case of GET call. This configuration can be set via CLI only.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api15.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api15.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api15.report.only.status.code.to.success.topic
+
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api15.http.path.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
+	 - Required: MEDIUM
+
+🔘 api15.http.path.parameters.separator
+
+The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api15.upsert.method
+
+The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Setting the value to ``NONE`` disables upsert. The connector does not support batching for upsert operations.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api15.upsert.on.field.value
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api15.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+🔘 api15.upsert.api.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api15.upsert.method`` is set to ``POST``. This property must not be set if ``api15.upsert.method`` is ``NONE``.
+	 - Required: MEDIUM
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
