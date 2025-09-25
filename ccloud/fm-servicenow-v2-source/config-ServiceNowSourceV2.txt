@@ -1,0 +1,1188 @@
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 datapreview.schemas.enable
+
+This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+CSFLE
+==========================
+🔘 csfle.enabled
+
+Determines whether the connector honours CSFLE rules or not
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sr.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
+	 - Required: HIGH
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Output messages
+==========================
+🔘 output.data.format
+
+Output Kafka record value format. Valid entries are ``AVRO``, ``JSON_SR``, or ``PROTOBUF``. Ensure you configure the Confluent Cloud Schema Registry for such schema-based message formats.
+
+	 - Type: STRING
+	 - Default: JSON_SR
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Behavior on error
+==========================
+🔘 behavior.on.error
+
+The error handling behavior setting for handling error response from HTTP requests. Valid values are `FAIL` or `IGNORE`.
+
+	 - Type: STRING
+	 - Default: FAIL
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Authentication
+==========================
+🔘 servicenow.url
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: ServiceNow instance URL. For example: `https://${instance-id}.service-now.com/`.
+	 - Required: HIGH
+
+🔘 auth.type
+
+The authentication type of the endpoint. Valid values are ``BASIC`` or ``OAUTH2``.
+
+	 - Type: STRING
+	 - Default: BASIC
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 connection.user
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The username for an endpoint requiring basic authentication.
+	 - Required: MEDIUM
+
+🔘 connection.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The password for an endpoint requiring basic authentication.
+	 - Required: MEDIUM
+
+🔘 oauth2.token.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The URL for fetching OAuth2 token. Supported grant type is Client Credentials.
+	 - Required: MEDIUM
+
+🔘 oauth2.client.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The client ID for fetching the OAuth2 token.
+	 - Required: MEDIUM
+
+🔘 oauth2.client.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The client secret for fetching the OAuth2 token.
+	 - Required: MEDIUM
+
+🔘 oauth2.token.property
+
+The name of the property that contains the OAuth2 token returned by the OAuth2 token URL (defaults to `access_token`).
+
+	 - Type: STRING
+	 - Default: access_token
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 oauth2.client.scope
+
+The scope parameter sent to the service when fetching the OAuth2 token.
+
+	 - Type: STRING
+	 - Default: any
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 oauth2.client.auth.mode
+
+The encoding method of the ``client_id`` and ``client_secret`` in an OAuth2 authorization request. If set to ``header``, the credentials are encoded as an `Authorization: Basic <base-64 encoded client_id:client_secret>` HTTP header. If set to `url`, the credentials are sent as URL-encoded parameters.
+
+	 - Type: STRING
+	 - Default: header
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 oauth2.client.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: HTTP headers that should be included in the OAuth2 client endpoint. Individual headers must be separated by a `|`.
+	 - Required: LOW
+
+🔘 oauth2.client.header.separator
+
+The character used as separator in OAuth2 client headers.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: LOW
+	 - Required: false
+
+🔘 oauth2.jwt.enabled
+
+Specify whether to generate and add a JWT token to the request. If set to `true`, JWT token will be added as a `jwt_token` request parameter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 oauth2.jwt.keystore.path
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The keystore containing the private key used to sign JWTs.
+	 - Required: MEDIUM
+
+🔘 oauth2.jwt.keystore.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The password to access the keystore.
+	 - Required: MEDIUM
+
+🔘 oauth2.jwt.keystore.type
+
+The keystore type for signing JWT. Valid values are `JKS` or `PKCS12`.
+
+	 - Type: STRING
+	 - Default: JKS
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 oauth2.jwt.claimset
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A JSON containing JWT claims for authentication.
+	 - Required: MEDIUM
+
+🔘 servicenow.ssl.enabled
+
+Determine whether the connection to the endpoint should use SSL.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 servicenow.ssl.keystorefile
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The key store containing the server certificate.
+	 - Required: LOW
+
+🔘 servicenow.ssl.keystore.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The store password for the key store file.
+	 - Required: HIGH
+
+🔘 servicenow.ssl.key.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The password for the private key in the key store file.
+	 - Required: HIGH
+
+🔘 servicenow.ssl.truststorefile
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The trust store containing a server CA certificate.
+	 - Required: HIGH
+
+🔘 servicenow.ssl.truststore.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The trust store password containing a server CA certificate.
+	 - Required: HIGH
+
+🔘 servicenow.ssl.protocol
+
+The protocol to use for SSL connections.
+
+	 - Type: STRING
+	 - Default: TLSv1.3
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Tables
+==========================
+🔘 tables.num
+
+The number of tables to fetch data from. This value should be less than or equal to 5.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Reporter
+==========================
+🔘 reporter.error.topic.name
+
+The name of the topic to produce errant records after each unsuccessful API operation. Defaults to 'error-${connector}' if not set. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: error-${connector}
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Retry configurations
+==========================
+🔘 retry.backoff.policy
+
+The backoff policy to use for retry attempts. Valid values are `CONSTANT_VALUE` or `EXPONENTIAL_WITH_JITTER`.
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 retry.backoff.ms
+
+The initial wait time in milliseconds after an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (set via the `retry.backoff.policy` parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 retry.on.status.codes
+
+A comma-separated list of HTTP status codes or a range of codes to retry on. Ranges are specified with a starting code and an optional ending code. The range boundaries are inclusive. For instance, "400-" includes all codes greater than or equal to 400, and "400-500" includes codes from 400 to 500, including 500 itself. Multiple ranges and single codes can be combined for fine-grained control over retry behavior. For example, "404, 408, 500-" will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that certain status codes, such as unauthorized, timeouts, and too many requests, will always prompt a retry.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 max.retries
+
+The maximum number of retries on errors before a task is failed.
+
+	 - Type: INT
+	 - Default: 3
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Table - 1 configurations
+==========================
+🔘 table1.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The table name, combined with the ServiceNow Instance URL, will form the complete HTTP(S) URL. This path can be templated to include offset information.
+	 - Required: HIGH
+
+🔘 table1.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Specify the topic to which data will be pushed for this table.
+	 - Required: HIGH
+
+🔘 table1.batch.size
+
+Size of the batch of records to be fetched from the ServiceNow table. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
+
+	 - Type: INT
+	 - Default: 20000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table1.start.timestamp
+
+Time to start fetching all updates/creation. Defaults to `1970-01-01 00:00:00`. Note that the time is in UTC and requires format: `yyyy-MM-dd HH:mm:ss`.
+
+	 - Type: STRING
+	 - Default: 1970-01-01 00:00:00
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table1.timestamp.field
+
+Timestamp Field to be used for pagination.
+
+	 - Type: STRING
+	 - Default: sys_updated_on
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table1.pagination.query
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The query to be used for pagination on the table can be templated with offset information - `${offset}`. Note that all other table-related configurations will be ignored if this is configured. It defaults to a timestamp-based pagination query. An example query is `closed_at>=${offset}^ORDERBYclosed_at`, where `${offset}` refers to the pagination query offset field - `closed_at`.
+	 - Required: LOW
+
+🔘 table1.pagination.query.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Offset field if pagination query is used.
+	 - Required: LOW
+
+🔘 table1.display.value
+
+Specify whether to display values for the ServiceNow table records.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 table1.allowlisted.fields
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A comma-separated list of fields that should be included in the Kafka record. The list must necessarily include the selected timestamp field (either `sys_updated_on` or `sys_created_on`) and the `sys_id` field. It defaults to all fields from the response.
+	 - Required: LOW
+
+🔘 table1.suppress.pagination.header
+
+Indicates whether to remove the Link header from the response. The Link header provides various URLs to relative pages in the record set which you can use to paginate the returned record set.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table1.request.interval.ms
+
+The time in milliseconds to wait between consecutive requests.
+
+	 - Type: INT
+	 - Default: 2000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table1.exclude.reference.link
+
+Indicates whether to exclude Table API links for reference fields. By default, it includes all the Table API links.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table1.query.category
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Name of the category to use for queries.
+	 - Required: MEDIUM
+
+🔘 table1.count.records
+
+Indicates if a ``SELECT COUNT(*)`` query will run to retrieve the row count on the table. Setting it to ``true`` enables this query.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table1.query.domain
+
+Indicates whether to restrict the record search to the domains that are accessible to the logged in user . If set to ``true``, it excludes the records from domains that the current logged in user can't access.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Table - 2 configurations
+==========================
+🔘 table2.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The table name, combined with the ServiceNow Instance URL, will form the complete HTTP(S) URL. This path can be templated to include offset information.
+	 - Required: HIGH
+
+🔘 table2.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Specify the topic to which data will be pushed for this table.
+	 - Required: HIGH
+
+🔘 table2.batch.size
+
+Size of the batch of records to be fetched from the ServiceNow table. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
+
+	 - Type: INT
+	 - Default: 20000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table2.start.timestamp
+
+Time to start fetching all updates/creation. Defaults to `1970-01-01 00:00:00`. Note that the time is in UTC and requires format: `yyyy-MM-dd HH:mm:ss`.
+
+	 - Type: STRING
+	 - Default: 1970-01-01 00:00:00
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table2.timestamp.field
+
+Timestamp Field to be used for pagination.
+
+	 - Type: STRING
+	 - Default: sys_updated_on
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table2.pagination.query
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The query to be used for pagination on the table can be templated with offset information - `${offset}`. Note that all other table-related configurations will be ignored if this is configured. It defaults to a timestamp-based pagination query. An example query is `closed_at>=${offset}^ORDERBYclosed_at`, where `${offset}` refers to the pagination query offset field - `closed_at`.
+	 - Required: LOW
+
+🔘 table2.pagination.query.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Offset field if pagination query is used.
+	 - Required: LOW
+
+🔘 table2.display.value
+
+Specify whether to display values for the ServiceNow table records.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 table2.allowlisted.fields
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A comma-separated list of fields that should be included in the Kafka record. The list must necessarily include the selected timestamp field (either `sys_updated_on` or `sys_created_on`) and the `sys_id` field. It defaults to all fields from the response.
+	 - Required: LOW
+
+🔘 table2.request.interval.ms
+
+The time in milliseconds to wait between consecutive requests.
+
+	 - Type: INT
+	 - Default: 2000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table2.suppress.pagination.header
+
+Indicates whether to remove the Link header from the response. The Link header provides various URLs to relative pages in the record set which you can use to paginate the returned record set.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table2.exclude.reference.link
+
+Indicates whether to exclude Table API links for reference fields. By default, it includes all the Table API links.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table2.query.category
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Name of the category to use for queries.
+	 - Required: MEDIUM
+
+🔘 table2.count.records
+
+Indicates if a ``SELECT COUNT(*)`` query will run to retrieve the row count on the table. Setting it to ``true`` enables this query.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table2.query.domain
+
+Indicates whether to restrict the record search to the domains that are accessible to the logged in user . If set to ``true``, it excludes the records from domains that the current logged in user can't access.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Table - 3 configurations
+==========================
+🔘 table3.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The table name, combined with the ServiceNow Instance URL, will form the complete HTTP(S) URL. This path can be templated to include offset information.
+	 - Required: HIGH
+
+🔘 table3.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Specify the topic to which data will be pushed for this table.
+	 - Required: HIGH
+
+🔘 table3.batch.size
+
+Size of the batch of records to be fetched from the ServiceNow table. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
+
+	 - Type: INT
+	 - Default: 20000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table3.start.timestamp
+
+Time to start fetching all updates/creation. Defaults to `1970-01-01 00:00:00`. Note that the time is in UTC and requires format: `yyyy-MM-dd HH:mm:ss`.
+
+	 - Type: STRING
+	 - Default: 1970-01-01 00:00:00
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table3.timestamp.field
+
+Timestamp Field to be used for pagination.
+
+	 - Type: STRING
+	 - Default: sys_updated_on
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table3.pagination.query
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The query to be used for pagination on the table can be templated with offset information - `${offset}`. Note that all other table-related configurations will be ignored if this is configured. It defaults to a timestamp-based pagination query. An example query is `closed_at>=${offset}^ORDERBYclosed_at`, where `${offset}` refers to the pagination query offset field - `closed_at`.
+	 - Required: LOW
+
+🔘 table3.pagination.query.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Offset field if pagination query is used.
+	 - Required: LOW
+
+🔘 table3.display.value
+
+Specify whether to display values for the ServiceNow table records.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 table3.allowlisted.fields
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A comma-separated list of fields that should be included in the Kafka record. The list must necessarily include the selected timestamp field (either `sys_updated_on` or `sys_created_on`) and the `sys_id` field. It defaults to all fields from the response.
+	 - Required: LOW
+
+🔘 table3.suppress.pagination.header
+
+Indicates whether to remove the Link header from the response. The Link header provides various URLs to relative pages in the record set which you can use to paginate the returned record set.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table3.request.interval.ms
+
+The time in milliseconds to wait between consecutive requests.
+
+	 - Type: INT
+	 - Default: 2000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table3.exclude.reference.link
+
+Indicates whether to exclude Table API links for reference fields. By default, it includes all the Table API links.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table3.query.category
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Name of the category to use for queries.
+	 - Required: MEDIUM
+
+🔘 table3.count.records
+
+Indicates if a ``SELECT COUNT(*)`` query will run to retrieve the row count on the table. Setting it to ``true`` enables this query.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table3.query.domain
+
+Indicates whether to restrict the record search to the domains that are accessible to the logged in user . If set to ``true``, it excludes the records from domains that the current logged in user can't access.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Table - 4 configurations
+==========================
+🔘 table4.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The table name, combined with the ServiceNow Instance URL, will form the complete HTTP(S) URL. This path can be templated to include offset information.
+	 - Required: HIGH
+
+🔘 table4.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Specify the topic to which data will be pushed for this table.
+	 - Required: HIGH
+
+🔘 table4.batch.size
+
+Size of the batch of records to be fetched from the ServiceNow table. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
+
+	 - Type: INT
+	 - Default: 20000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table4.start.timestamp
+
+Time to start fetching all updates/creation. Defaults to `1970-01-01 00:00:00`. Note that the time is in UTC and requires format: `yyyy-MM-dd HH:mm:ss`.
+
+	 - Type: STRING
+	 - Default: 1970-01-01 00:00:00
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table4.timestamp.field
+
+Timestamp Field to be used for pagination.
+
+	 - Type: STRING
+	 - Default: sys_updated_on
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table4.pagination.query
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The query to be used for pagination on the table can be templated with offset information - `${offset}`. Note that all other table-related configurations will be ignored if this is configured. It defaults to a timestamp-based pagination query. An example query is `closed_at>=${offset}^ORDERBYclosed_at`, where `${offset}` refers to the pagination query offset field - `closed_at`.
+	 - Required: LOW
+
+🔘 table4.pagination.query.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Offset field if pagination query is used.
+	 - Required: LOW
+
+🔘 table4.display.value
+
+Specify whether to display values for the ServiceNow table records.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 table4.allowlisted.fields
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A comma-separated list of fields that should be included in the Kafka record. The list must necessarily include the selected timestamp field (either `sys_updated_on` or `sys_created_on`) and the `sys_id` field. It defaults to all fields from the response.
+	 - Required: LOW
+
+🔘 table4.suppress.pagination.header
+
+Indicates whether to remove the Link header from the response. The Link header provides various URLs to relative pages in the record set which you can use to paginate the returned record set.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table4.request.interval.ms
+
+The time in milliseconds to wait between consecutive requests.
+
+	 - Type: INT
+	 - Default: 2000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table4.exclude.reference.link
+
+Indicates whether to exclude Table API links for reference fields. By default, it includes all the Table API links.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table4.query.category
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Name of the category to use for queries.
+	 - Required: MEDIUM
+
+🔘 table4.count.records
+
+Indicates if a ``SELECT COUNT(*)`` query will run to retrieve the row count on the table. Setting it to ``true`` enables this query.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table4.query.domain
+
+Indicates whether to restrict the record search to the domains that are accessible to the logged in user . If set to ``true``, it excludes the records from domains that the current logged in user can't access.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Table - 5 configurations
+==========================
+🔘 table5.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The table name, combined with the ServiceNow Instance URL, will form the complete HTTP(S) URL. This path can be templated to include offset information.
+	 - Required: HIGH
+
+🔘 table5.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Specify the topic to which data will be pushed for this table.
+	 - Required: HIGH
+
+🔘 table5.batch.size
+
+Size of the batch of records to be fetched from the ServiceNow table. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
+
+	 - Type: INT
+	 - Default: 20000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table5.start.timestamp
+
+Time to start fetching all updates/creation. Defaults to `1970-01-01 00:00:00`. Note that the time is in UTC and requires format: `yyyy-MM-dd HH:mm:ss`.
+
+	 - Type: STRING
+	 - Default: 1970-01-01 00:00:00
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table5.timestamp.field
+
+Timestamp Field to be used for pagination.
+
+	 - Type: STRING
+	 - Default: sys_updated_on
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table5.pagination.query
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The query to be used for pagination on the table can be templated with offset information - `${offset}`. Note that all other table-related configurations will be ignored if this is configured. It defaults to a timestamp-based pagination query. An example query is `closed_at>=${offset}^ORDERBYclosed_at`, where `${offset}` refers to the pagination query offset field - `closed_at`.
+	 - Required: LOW
+
+🔘 table5.pagination.query.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Offset field if pagination query is used.
+	 - Required: LOW
+
+🔘 table5.display.value
+
+Specify whether to display values for the ServiceNow table records.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 table5.allowlisted.fields
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A comma-separated list of fields that should be included in the Kafka record. The list must necessarily include the selected timestamp field (either `sys_updated_on` or `sys_created_on`) and the `sys_id` field. It defaults to all fields from the response.
+	 - Required: LOW
+
+🔘 table5.suppress.pagination.header
+
+Indicates whether to remove the Link header from the response. The Link header provides various URLs to relative pages in the record set which you can use to paginate the returned record set.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table5.request.interval.ms
+
+The time in milliseconds to wait between consecutive requests.
+
+	 - Type: INT
+	 - Default: 2000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table5.exclude.reference.link
+
+Indicates whether to exclude Table API links for reference fields. By default, it includes all the Table API links.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table5.query.category
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Name of the category to use for queries.
+	 - Required: MEDIUM
+
+🔘 table5.count.records
+
+Indicates if a ``SELECT COUNT(*)`` query will run to retrieve the row count on the table. Setting it to ``true`` enables this query.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table5.query.domain
+
+Indicates whether to restrict the record search to the domains that are accessible to the logged in user . If set to ``true``, it excludes the records from domains that the current logged in user can't access.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+

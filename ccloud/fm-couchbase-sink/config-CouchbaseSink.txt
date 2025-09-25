@@ -1,0 +1,507 @@
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+==========================
+Connection
+==========================
+🔘 couchbase.seed.nodes
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Addresses of Couchbase Server nodes, delimited by commas. If a custom port is specified, it must be the KV port (which is normally 11210 for insecure connections, or 11207 for secure connections).
+	 - Required: HIGH
+
+🔘 couchbase.username
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Name of the Couchbase user to authenticate as.
+	 - Required: HIGH
+
+🔘 couchbase.password
+
+
+
+	 - Type: true
+	 - Default: PASSWORD
+	 - Importance: Password of the Couchbase user.
+	 - Required: HIGH
+
+🔘 couchbase.bucket
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Name of the Couchbase bucket to use. This property is required unless using the experimental AnalyticsSinkHandler.
+	 - Required: HIGH
+
+==========================
+Sink Behavior
+==========================
+🔘 couchbase.default.collection
+
+Qualified name (scope.collection or bucket.scope.collection) of the destination collection for messages from topics that don't have an entry in the couchbase.topic.to.collection map. If the bucket component contains a dot, escape it by enclosing it in backticks. If the bucket component is omitted, it defaults to the value of the couchbase.bucket property.
+
+	 - Type: STRING
+	 - Default: _default._default
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.topic.to.collection
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A map from Kafka topic to Couchbase collection. Topic and collection are joined by an equals sign. Map entries are delimited by commas. A collection name is of the form bucket.scope.collection or scope.collection. If the bucket component is omitted, it defaults to the value of the couchbase.bucket property. If the bucket component contains a dot, escape it by enclosing it in backticks. For example, if you want to write messages from topic "topic1" to collection "scope-a.invoices" in the default bucket, and messages from topic "topic2" to collection "scope-a.widgets" in bucket "other-bucket" you would write: "topic1=scope-a.invoices,topic2=other-bucket.scope-a.widgets". Defaults to an empty map, with all documents going to the collection specified by couchbase.default.collection.
+	 - Required: MEDIUM
+
+🔘 couchbase.topic.to.document.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A map of per-topic overrides for the couchbase.document.id configuration property. Topic and document ID format are joined by an equals sign. Map entries are delimited by commas. For example, if documents from topic "topic1" should be assigned document IDs that match their "id" field, and documents from topic "topic2" should be assigned documents IDs that match their "identifier" field, you would write: "topic1=${/id},topic2=${/identifier}". Defaults to an empty map, which means the value of the couchbase.document.id configuration property is applied to documents from all topics.
+	 - Required: MEDIUM
+
+🔘 couchbase.sink.handler
+
+The fully-qualified class name of the sink handler to use. The sink handler determines how the Kafka record is translated into actions on Couchbase documents. The built-in handlers are: com.couchbase.connect.kafka.handler.sink.UpsertSinkHandler, com.couchbase.connect.kafka.handler.sink.N1qlSinkHandler, and com.couchbase.connect.kafka.handler.sink.SubDocumentSinkHandler. You can customize the sink connector's behavior by implementing your own SinkHandler.
+
+	 - Type: STRING
+	 - Default: com.couchbase.connect.kafka.handler.sink.UpsertSinkHandler
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.document.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Format string to use for the Couchbase document ID (overriding the message key). May refer to document fields via placeholders like ${/path/to/field}
+	 - Required: MEDIUM
+
+🔘 couchbase.remove.document.id
+
+Whether to remove the ID identified by 'couchbase.documentId' from the document before storing in Couchbase.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.document.expiration
+
+Document expiration time specified as an integer followed by a time unit (s = seconds, m = minutes, h = hours, d = days). For example, to have documents expire after 30 minutes, set this value to "30m". A value of "0" (the default) means documents never expire.
+
+	 - Type: STRING
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.retry.timeout
+
+Retry failed writes to Couchbase until this deadline is reached. If time runs out, the connector terminates. A value of 0 (the default) means the connector will terminate immediately when a write fails. This retry timeout is distinct from the KV timeout (which you can set via couchbase.env.*). The KV timeout affects an individual write attempt, while the retry timeout spans multiple attempts and makes the connector resilient to more kinds of transient failures. Try not to confuse this with the Kafka Connect framework's built-in errors.retry.timeout config property, which applies only to failures occurring before the framework delivers the record to the Couchbase connector.
+
+	 - Type: STRING
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+CSFLE
+==========================
+🔘 csfle.enabled
+
+Determines whether the connector honours CSFLE rules or not
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sr.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
+	 - Required: HIGH
+
+🔘 csfle.onFailure
+
+Configures the behavior for decryption failures. If set to ERROR, the connector will behave as configured for error behaviour. If set to NONE, the connector will ignore the decryption failure and proceed to write the data in its encrypted form.
+
+	 - Type: STRING
+	 - Default: ERROR
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Durability
+==========================
+🔘 couchbase.durability
+
+The preferred way to specify an enhanced durability requirement when using Couchbase Server 6.5 or later. The default value of NONE means a write is considered successful as soon as it reaches the memory of the active node. If you set this to anything other than NONE, then you must not set couchbase.persist.to or couchbase.replicate.to.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.persist.to
+
+For Couchbase Server versions prior to 6.5, this is how you require the connector to verify a write is persisted to disk on a certain number of replicas before considering the write successful. If you're using Couchbase Server 6.5 or later, we recommend using the couchbase.durability property instead.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.replicate.to
+
+For Couchbase Server versions prior to 6.5, this is how you require the connector to verify a write has reached the memory of a certain number of replicas before considering the write successful. If you're using Couchbase Server 6.5 or later, we recommend using the couchbase.durability property instead.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+N1ql Sink Handler
+==========================
+🔘 couchbase.n1ql.operation
+
+The type of update to use when couchbase.sink.handler is set to com.couchbase.connect.kafka.handler.sink.N1qlSinkHandler. This property is specific to N1qlSinkHandler.
+
+	 - Type: STRING
+	 - Default: UPDATE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.n1ql.where.fields
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: When using the UPDATE_WHERE operation, this is the list of document fields that must match the Kafka message in order for the document to be updated with the remaining message fields. To match against a literal value instead of a message field, use a colon to delimit the document field name and the target value. For example, "type:widget,color" matches documents whose 'type' field is 'widget' and whose 'color' field matches the 'color' field of the Kafka message. This property is specific to N1qlSinkHandler.
+	 - Required: MEDIUM
+
+🔘 couchbase.n1ql.create.document
+
+Controls whether to create the document if it does not exist. This property is specific to N1qlSinkHandler.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Sub Document Sink Handler
+==========================
+🔘 couchbase.subdocument.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: JSON Pointer to the property of the Kafka message whose value is the subdocument path to use when modifying the Couchbase document. This property is specific to SubDocumentSinkHandler.
+	 - Required: MEDIUM
+
+🔘 couchbase.subdocument.operation
+
+Setting to indicate the type of update to a sub-document. This property is specific to SubDocumentSinkHandler.
+
+	 - Type: STRING
+	 - Default: UPSERT
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.subdocument.create.path
+
+Whether to add the parent paths if they are missing in the document. This property is specific to SubDocumentSinkHandler.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.subdocument.create.document
+
+This property controls whether to create the document if it does not exist. This property is specific to SubDocumentSinkHandler.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Analytics Sink Handler
+==========================
+🔘 couchbase.analytics.max.records.in.batch
+
+Every Batch consists of an UPSERT or a DELETE statement, based on mutations. This property determines the maximum number of records in the UPSERT or DELETE statement in the batch. Users can configure this parameter based on the capacity of their analytics cluster. This property is specific to AnalyticsSinkHandler. UNCOMMITTED; this feature may change in a patch release without notice. Since: 4.1.14
+
+	 - Type: INT
+	 - Default: 100
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.analytics.max.size.in.batch
+
+Every Batch consists of an UPSERT or a DELETE statement, based on mutations. This property defines the max size of all docs in bytes in an UPSERT statement in a batch. Users can configure this parameter based on the capacity of their analytics cluster. This property is specific to AnalyticsSinkHandler. UNCOMMITTED; this feature may change in a patch release without notice. Since: 4.2.0
+
+	 - Type: STRING
+	 - Default: 5m
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.analytics.query.timeout
+
+This property determines the time period after which client cancels the Query request for Analytics. This property is specific to AnalyticsSinkHandler. UNCOMMITTED; this feature may change in a patch release without notice. Since: 4.2.0
+
+	 - Type: STRING
+	 - Default: 5m
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values. Input messages must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: all
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Consumer configuration
+==========================
+🔘 max.poll.interval.ms
+
+The maximum delay between subsequent consume requests to Kafka. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 300000 milliseconds (5 minutes).
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.poll.records
+
+The maximum number of records to consume from Kafka in a single request. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 500 records.
+
+	 - Type: LONG
+	 - Default: 500
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Input messages
+==========================
+🔘 input.data.format
+
+Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, JSON or BYTES. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Which topics do you want to get data from?
+==========================
+🔘 topics.regex
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A regular expression that matches the names of the topics to consume from. This is useful when you want to consume from multiple topics that match a certain pattern without having to list them all individually.
+	 - Required: LOW
+
+🔘 topics
+
+
+
+	 - Type: true
+	 - Default: LIST
+	 - Importance: Identifies the topic name or a comma-separated list of topic names.
+	 - Required: HIGH
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+

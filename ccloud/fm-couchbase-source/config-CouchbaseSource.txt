@@ -1,0 +1,351 @@
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 datapreview.schemas.enable
+
+This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connection
+==========================
+🔘 couchbase.seed.nodes
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Addresses of Couchbase Server nodes, delimited by commas. If a custom port is specified, it must be the KV port (which is normally 11210 for insecure connections, or 11207 for secure connections).
+	 - Required: HIGH
+
+🔘 couchbase.username
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Name of the Couchbase user to authenticate as.
+	 - Required: HIGH
+
+🔘 couchbase.password
+
+
+
+	 - Type: true
+	 - Default: PASSWORD
+	 - Importance: Password of the Couchbase user.
+	 - Required: HIGH
+
+🔘 couchbase.bucket
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Name of the Couchbase bucket to use. This property is required unless using the experimental AnalyticsSinkHandler.
+	 - Required: HIGH
+
+==========================
+Source Behavior
+==========================
+🔘 couchbase.topic
+
+Name of the default Kafka topic to publish data to, for collections that don’t have an entry in the couchbase.collection.to.topic map. This is a format string that recognizes the following placeholders: ${bucket} refers to the bucket containing the document. ${scope} refers to the scope containing the document. ${collection} refers to the collection containing the document.
+
+	 - Type: STRING
+	 - Default: ${bucket}.${scope}.${collection}
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.collection.to.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A map from Couchbase collection to Kafka topic. Collection and Topic are joined by an equals sign. Map entries are delimited by commas. For example, if you want to write messages from collection "scope-a.invoices" to topic "topic1", and messages from collection "scope-a.widgets" to topic "topic2", you would write: "scope-a.invoices=topic1,scope-a.widgets=topic2". Defaults to an empty map. For collections not present in this map, the destination topic is determined by the couchbase.topic config property.
+	 - Required: MEDIUM
+
+🔘 couchbase.source.handler
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The fully-qualified class name of the source handler to use. The source handler determines how the Couchbase document is converted into a Kafka record. To publish JSON messages identical to the Couchbase documents, use com.couchbase.connect.kafka.handler.source.RawJsonSourceHandler and set value.converter to org.apache.kafka.connect.converters.ByteArrayConverter. When using a custom source handler that filters out certain messages, consider also configuring couchbase.black.hole.topic. See that property’s documentation for details.
+	 - Required: MEDIUM
+
+🔘 couchbase.headers
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma-delimited list of Couchbase metadata headers to add to records. Recognized values: bucket - Name of the bucket the document came from. scope - Name of the scope the document came from. collection - Name of the collection the document came from. key - The Couchbase document ID. qualifiedKey - The document’s scope, collection, and document ID, delimited by dots. Example: myScope.myCollection.myDocumentId cas - The document’s "compare and swap" value. partition - The index of the Couchbase partition the document came from. partitionUuid - Identifies the history branch of the partition the document came from. seqno - The DCP sequence number of the event. rev - The revision number of the event. expiry - The epoch second when the document expires, or null if the document has no expiry (or if the event is a deletion).
+	 - Required: MEDIUM
+
+🔘 couchbase.header.name.prefix
+
+The connector prepends this value to header names to prevent collision with headers set by other parts of the system. For example, if couchbase.headers is set to bucket,qualifiedKey and header.name.prefix is set to example. then records will have headers named example.bucket and example.qualifiedKey.
+
+	 - Type: STRING
+	 - Default: couchbase.
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.event.filter
+
+The class name of the event filter to use. The event filter determines whether a database change event is ignored. As of version 4.2.4, the default filter ignores events from the Couchbase _system scope. If you are interested in those events too, set this property to com.couchbase.connect.kafka.filter.AllPassIncludingSystemFilter. See also couchbase.black.hole.topic.
+
+	 - Type: STRING
+	 - Default: com.couchbase.connect.kafka.filter.AllPassFilter
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.black.hole.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: If this property is non-blank, the connector publishes a tiny synthetic record to this topic whenever the Filter or SourceHandler ignores a source event. This lets the connector tell the Kafka Connect framework about the source offset of the ignored event. Configure this topic to use small segments and the lowest possible retention settings.
+	 - Required: MEDIUM
+
+🔘 couchbase.initial.offset.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: If couchbase.stream.from is SAVED_OFFSET_OR_NOW, and this property is non-blank, on startup the connector publishes to the named topic one tiny synthetic record for each source partition that does not yet have a saved offset. This lets the connector initialize the missing source offsets to 'now' (the current state of Couchbase).
+	 - Required: MEDIUM
+
+🔘 couchbase.batch.size.max
+
+Controls maximum size of the batch for writing into topic.
+
+	 - Type: INT
+	 - Default: 2000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.stream.from
+
+Controls when in the history the connector starts streaming from.
+
+	 - Type: STRING
+	 - Default: SAVED_OFFSET_OR_BEGINNING
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.scope
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: If you wish to stream from all collections within a scope, specify the scope name here. Requires Couchbase Server 7.0 or later.
+	 - Required: MEDIUM
+
+🔘 couchbase.collections
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: If you wish to stream from specific collections, specify the qualified collection names here, separated by commas. A qualified name is the name of the scope followed by a dot (.) and then the name of the collection. For example: "tenant-foo.invoices". If you specify neither "couchbase.scope" nor "couchbase.collections", the connector will stream from all collections of all scopes in the bucket. Requires Couchbase Server 7.0 or later.
+	 - Required: MEDIUM
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values. Input messages must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Output messages
+==========================
+🔘 output.data.format
+
+Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, JSON, STRING or BSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
+
+	 - Type: STRING
+	 - Default: STRING
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+

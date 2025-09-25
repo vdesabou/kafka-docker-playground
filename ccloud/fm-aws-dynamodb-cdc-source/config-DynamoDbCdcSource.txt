@@ -1,0 +1,411 @@
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 datapreview.schemas.enable
+
+This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 key.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for key. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+AWS credentials
+==========================
+🔘 authentication.method
+
+Select how you want to authenticate with AWS.
+
+	 - Type: STRING
+	 - Default: Access Keys
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 aws.access.key.id
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing integration that has access to your resource. In case you need to integrate a new IAM role, use provider integration
+	 - Required: HIGH
+
+🔘 aws.secret.access.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: 
+	 - Required: HIGH
+
+==========================
+Output messages
+==========================
+🔘 output.data.format
+
+Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, or PROTOBUF. Please configure Confluent Cloud Schema Registry.
+
+	 - Type: STRING
+	 - Default: AVRO
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 output.data.key.format
+
+Sets the output Kafka record key format. Valid entries are AVRO, JSON_SR, PROTOBUF. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+
+	 - Type: STRING
+	 - Default: AVRO
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+DynamoDB Details
+==========================
+🔘 dynamodb.service.endpoint
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: AWS DynamoDB API Endpoint
+	 - Required: HIGH
+
+🔘 dynamodb.table.sync.mode
+
+Define table sync mode. SNAPSHOT_CDC - start with SNAPSHOT and switch to CDC mode on completion; SNAPSHOT - perform SNAPSHOT only,CDC - perform CDC only
+
+	 - Type: STRING
+	 - Default: SNAPSHOT_CDC
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 dynamodb.table.discovery.mode
+
+Specifies the table discovery mode that defines the list of tables to be captured. 
+
+	 - Type: STRING
+	 - Default: INCLUDELIST
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 dynamodb.table.tag.filters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A semi-colon-separated list of pairs in the form `<tag-key>:<value-1>,<value-2>` that is used to create tag filters. For example, `key1:v1,v2;key2:v3,v4` will include all tags that match `key1` key with value of either `v1` or `v2`, and match `key2` with value of either `v3` or `v4`. Any `keys` not specified will be excluded.
+	 - Required: HIGH
+
+🔘 aws.resource.tagging.endpoint
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: AWS Resource Group Tag API Endpoint. Required if dynamodb.table.discovery.mode is selected as TAG
+	 - Required: HIGH
+
+🔘 dynamodb.table.includelist
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A comma-separated list of DynamoDB table names to be captured. This is required if `dynamodb.table.discovery.mode` is set to `INCLUDELIST`
+	 - Required: HIGH
+
+🔘 max.batch.size
+
+The maximum number of records that will be returned by the connector to Connect. The connector may still return fewer records if no additional records are available.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 poll.linger.ms
+
+The maximum time to wait for a record before returning an empty batch. The call to poll can return early before ``poll.linger.ms`` expires if ``max.batch.size`` records are received.
+
+	 - Type: LONG
+	 - Default: 5000
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Snapshot Details
+==========================
+🔘 dynamodb.snapshot.max.poll.records
+
+Maximum number of records that can be returned in single DynamoDB read operation. Only applicable to SNAPSHOT phase. Note that there is 1MB size limit as well. 
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 dynamodb.snapshot.max.rcu.percentage
+
+Configure percentage of table read capacity that will be used as a maximum limit of RCU consumption rate
+
+	 - Type: INT
+	 - Default: 50
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+CDC Details
+==========================
+🔘 dynamodb.cdc.initial.stream.position
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Specifies the position in the stream where a new application should start from. This is used during initial application bootstrap (when a checkpoint doesn't exist for a shard or its parents). Used only in CDC mode.TRIM_HORIZON - Start from the oldest available data record. LATEST - Start after the most recent data record (fetch new data).AT_TIMESTAMP - Start from the record at or after the specified server-side timestamp
+	 - Required: MEDIUM
+
+🔘 cdc.start.position.timestamp
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Specifies the timestamp in the stream where a new application should start from. This is used during initial application bootstrap (when a checkpoint doesn't exist for a shard or its parents). Used only in CDC mode.
+	 - Required: MEDIUM
+
+🔘 cdc.start.position.timestamp.format
+
+The format of timestamp in the stream where a new application should start fromThe format should abide by patterns specified in java.time.format.DateTimeFormatter https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html#patterns. This is used during initial application bootstrap (when a checkpoint doesn't exist for a shard or its parents). Used only in CDC mode.
+
+	 - Type: STRING
+	 - Default: yyyy-MM-dd'T'HH:mm:ss'Z'
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 dynamodb.cdc.checkpointing.table.prefix
+
+Prefix for CDC Checkpointing tables, must be unique per connector. Checkpointing table is used to store the last processed record for each shard and is used to resume from lastprocessed record in case of connector restart. This is applicable only in CDC mode.
+
+	 - Type: STRING
+	 - Default: connect-KCL-
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 dynamodb.cdc.table.billing.mode
+
+Define billing mode for internal checkpoint table created with CDC. Allowed values: PROVISIONED, PAY_PER_REQUEST.Default is PROVISIONED. Use PAY_PER_REQUEST for unpredictable application traffic and on-demand billing mode. Use PROVISIONED for predictable application traffic and provisioned billing mode.
+
+	 - Type: STRING
+	 - Default: PROVISIONED
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 dynamodb.cdc.max.poll.records
+
+Maximum number of records that can be returned in single DynamoDB Stream getRecords
+
+	 - Type: INT
+	 - Default: 5000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 dynamodb.cdc.checkpointing.table.read.capacity
+
+Read capacity for CDC checkpointing table. The checkpointing table is used to track the leases (shards) of the DynamoDB tables and helps determine the resume position in case of connector restarts.
+
+	 - Type: INT
+	 - Default: 50
+	 - Importance: LOW
+	 - Required: false
+
+🔘 dynamodb.cdc.checkpointing.table.write.capacity
+
+Write capacity for CDC checkpointing table. The checkpointing table is used to track the leases (shards) of the DynamoDB tables and helps determine the resume position in case of connector restarts.
+
+	 - Type: INT
+	 - Default: 50
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
