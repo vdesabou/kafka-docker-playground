@@ -1,0 +1,519 @@
+==========================
+Errors
+==========================
+🔘 errors.tolerance
+
+Behavior for tolerating errors during connector operation. 'none' is the default value and signals that any error will result in an immediate connector task failure; 'all' changes the behavior to skip over problematic records,'data' will try for network/server unreachable errors.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 errors.log.enable
+
+If true, write each error and the details of the failed operation and problematic record to the Connect application log. This is 'false' by default, so that only errors that are not tolerated are reported.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Connection
+==========================
+🔘 topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A list of kafka topics for the sink connector, separated by commas
+	 - Required: HIGH
+
+🔘 topics.regex
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regular expression giving topics to consume. Under the hood, the regex is compiled to a <code>java.util.regex.Pattern</code>. Only one of topics or topics.regex should be specified.
+	 - Required: HIGH
+
+🔘 connection.uri
+
+The connection URI as supported by the official drivers. eg: ``mongodb://user@pass@locahost/``.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Server Api
+==========================
+🔘 server.api.version
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The server API version to use. Disabled by default.
+	 - Required: MEDIUM
+
+🔘 server.api.deprecation.errors
+
+Sets whether the connector requires use of deprecated server APIs to be reported as errors.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 server.api.strict
+
+Sets whether the application requires strict server API version enforcement.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+SSL
+==========================
+🔘 connection.ssl.truststore
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A trust store certificate location to be used for SSL enabled connections
+	 - Required: MEDIUM
+
+🔘 connection.ssl.truststorePassword
+
+A trust store password to be used for SSL enabled connections
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 connection.ssl.keystore
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A key store certificate location to be used for SSL enabled connections
+	 - Required: MEDIUM
+
+🔘 connection.ssl.keystorePassword
+
+A key store password to be used for SSL enabled connections
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Overrides
+==========================
+🔘 topic.override.%s.%s
+
+For example, ``topic.override.foo.collection=bar`` will store data from the ``foo`` topic into the ``bar`` collection.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The overrides configuration allows for per topic customization of configuration. The customized overrides are merged with the default configuration, to create the specific configuration for a topic.
+	 - Required: LOW
+
+==========================
+null
+==========================
+🔘 provider
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: 
+	 - Required: LOW
+
+==========================
+Namespace
+==========================
+🔘 database
+
+The database for the sink to write.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 collection
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Optional, single sink collection name to write to. If following multiple topics then this will be the default collection they are mapped to.
+	 - Required: HIGH
+
+==========================
+Namespace mapping
+==========================
+🔘 namespace.mapper
+
+The class that determines the namespace to write the sink data to. By default this will be based on the 'database' configuration and either the topic name or the 'collection' configuration. Users can provide their own implementations of the 'NamespaceMapper' interface.
+
+	 - Type: STRING
+	 - Default: com.mongodb.kafka.connect.sink.namespace.mapping.DefaultNamespaceMapper
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 namespace.mapper.key.database.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The key field to use as the destination database name. Requires the 'namespace.mapper' to be set to 'com.mongodb.kafka.connect.sink.topic.mapping.FieldPathNamespaceMapper'.
+	 - Required: MEDIUM
+
+🔘 namespace.mapper.key.collection.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The key field to use as the destination collection name. Requires the 'namespace.mapper' to be set to 'com.mongodb.kafka.connect.sink.topic.mapping.FieldPathNamespaceMapper'.
+	 - Required: MEDIUM
+
+🔘 namespace.mapper.value.database.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The value field to use as the destination database name. Requires the 'namespace.mapper' to be set to 'com.mongodb.kafka.connect.sink.topic.mapping.FieldPathNamespaceMapper'.
+	 - Required: MEDIUM
+
+🔘 namespace.mapper.value.collection.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The value field to use as the destination collection name. Requires the 'namespace.mapper' to be set to 'com.mongodb.kafka.connect.sink.topic.mapping.FieldPathNamespaceMapper'.
+	 - Required: MEDIUM
+
+🔘 namespace.mapper.error.if.invalid
+
+Throw an error if the mapped field is missing or invalid. Defaults to false. Requires the 'namespace.mapper' to be set to 'com.mongodb.kafka.connect.sink.topic.mapping.FieldPathNamespaceMapper'.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Writes
+==========================
+🔘 delete.on.null.values
+
+Whether or not the connector tries to delete documents based on key when value is null
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 writemodel.strategy
+
+The class the handles how build the write models for the sink documents
+
+	 - Type: STRING
+	 - Default: com.mongodb.kafka.connect.sink.writemodel.strategy.DefaultWriteModelStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 delete.writemodel.strategy
+
+The class the handles how build the write models for the sink documents
+
+	 - Type: STRING
+	 - Default: com.mongodb.kafka.connect.sink.writemodel.strategy.DeleteOneDefaultStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.batch.size
+
+The maximum number of sink records to possibly batch together for processing
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 bulk.write.ordered
+
+Whether the batches controlled by 'max.batch.size' must be written via ordered bulk writes
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rate.limiting.timeout
+
+How long in ms processing should wait before continue processing
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 rate.limiting.every.n
+
+After how many processed batches the rate limit should trigger (NO rate limiting if n=0)
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Post Processing
+==========================
+🔘 post.processor.chain
+
+A comma separated list of post processor classes to process the data before saving to MongoDB.
+
+	 - Type: LIST
+	 - Default: com.mongodb.kafka.connect.sink.processor.DocumentIdAdder
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.projection.type
+
+The type of key projection to use Use either `AllowList` or `BlockList`.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.projection.list
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A comma separated list of field names for key projection
+	 - Required: LOW
+
+🔘 value.projection.type
+
+The type of value projection to use
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.projection.list
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A comma separated list of field names for value projection
+	 - Required: LOW
+
+🔘 field.renamer.mapping
+
+An inline JSON array with objects describing field name mappings.
+
+	 - Type: STRING
+	 - Default: []
+	 - Importance: LOW
+	 - Required: false
+
+🔘 field.renamer.regexp
+
+An inline JSON array with objects describing regexp settings.
+
+	 - Type: STRING
+	 - Default: []
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Id Strategies
+==========================
+🔘 document.id.strategy
+
+The IdStrategy class name to use for generating a unique document id (_id)
+
+	 - Type: STRING
+	 - Default: com.mongodb.kafka.connect.sink.processor.id.strategy.BsonOidStrategy
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 document.id.strategy.overwrite.existing
+
+Allows the document id strategy will overwrite existing `_id` values
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 document.id.strategy.uuid.format
+
+The bson output format when using the `UuidStrategy`. Either `String` or `Binary`.
+
+	 - Type: STRING
+	 - Default: string
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 document.id.strategy.partial.key.projection.type
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: For use with the `PartialKeyStrategy` allows custom key fields to be projected for the id strategy Use either `AllowList` or `BlockList`.
+	 - Required: LOW
+
+🔘 document.id.strategy.partial.key.projection.list
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: For use with the `PartialKeyStrategy` allows custom key fields to be projected for the id strategy. A comma separated list of field names for key projection.
+	 - Required: LOW
+
+🔘 document.id.strategy.partial.value.projection.type
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: For use with the `PartialValueStrategy` allows custom value fields to be projected for the id strategy. Use either `AllowList` or `BlockList`.
+	 - Required: LOW
+
+🔘 document.id.strategy.partial.value.projection.list
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: For use with the `PartialValueStrategy` allows custom value fields to be projected for the id strategy. A comma separated list of field names for value projection.
+	 - Required: LOW
+
+==========================
+Errors
+==========================
+🔘 mongo.errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior differently from the Connect framework's.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mongo.errors.log.enable
+
+Use this property if you would like to configure the connector's error handling behavior differently from the mapping Connect framework's.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Change Data Capture
+==========================
+🔘 change.data.capture.handler
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The class name of the CDC handler to use for processing
+	 - Required: LOW
+
+==========================
+Time series
+==========================
+🔘 timeseries.timefield
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Name of the top level field used for time. Note: Inserted documents must have this field, and the field must be of the BSON datetime type.
+	 - Required: LOW
+
+🔘 timeseries.metafield
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the top-level field which contains metadata in each time series document. The metadata in the specified field should be data that is used to label a unique series of documents. The metadata should rarely, if ever, change. Note: This field is used to group related data and may be of any BSON type, except for array. The meta field may not be the same as the `timeField` or `_id`.
+	 - Required: LOW
+
+🔘 timeseries.expire.after.seconds
+
+Determines the amount of time in seconds the data will be in MongoDB before being automatically deleted.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 timeseries.granularity
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Describes the expected interval between subsequent measurements for a time series. Possible values: "seconds" "minutes" "hours".
+	 - Required: LOW
+
+🔘 timeseries.timefield.auto.convert
+
+Converts the timeseries field to a BSON datetime type. If the value is a numeric value it will use it as the milliseconds from epoch. Note any fractional parts are discarded. If the value is a String it will use `timeseries.timefield.auto.convert.date.format` configuration to parse the date.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 timeseries.timefield.auto.convert.date.format
+
+The DateTimeFormatter pattern to use when converting String dates. Defaults to supporting ISO style date times. Note: A string representation is expected to contain both date and time information. If the string only contains date information then the time since epoch will be taken from the start of that day. If a string representation does not contain time-zone offset, then the extracted date and time is interpreted as UTC.
+
+	 - Type: STRING
+	 - Default: yyyy-MM-dd[['T'][ ]][HH:mm:ss[[.][SSSSSS][SSS]][ ]VV[ ]'['VV']'][HH:mm:ss[[.][SSSSSS][SSS]][ ]X][HH:mm:ss[[.][SSSSSS][SSS]]]
+	 - Importance: LOW
+	 - Required: false
+
+🔘 timeseries.timefield.auto.convert.locale.language.tag
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The DateTimeFormatter locale language tag to use with the date pattern: Defaults to Locale.ROOT.
+	 - Required: LOW
+

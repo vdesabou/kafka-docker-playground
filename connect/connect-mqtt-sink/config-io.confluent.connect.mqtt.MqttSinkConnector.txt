@@ -1,0 +1,180 @@
+==========================
+Connection
+==========================
+🔘 mqtt.server.uri
+
+List of MQTT brokers to connect to.
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 mqtt.clean.session.enabled
+
+Sets whether the client and server should remember state across restarts and reconnects.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mqtt.connect.timeout.seconds
+
+Sets the connection timeout value.
+
+	 - Type: INT
+	 - Default: 30
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mqtt.keepalive.interval.seconds
+
+Sets the "keep alive" interval.
+
+	 - Type: INT
+	 - Default: 60
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mqtt.username
+
+Username to connect with, or blank to connect without a username. Note: username field is masked as it may contain sensitive information
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mqtt.password
+
+Password to connect with, or blank to connect without a password.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 max.retry.time.ms
+
+The maximum time in ms the connector will spend backing off and retrying failed operations (connecting to the MQTT broker and publishing records).
+
+	 - Type: LONG
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mqtt.ssl.trust.store.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The location of the Java TrustStore file containing the certificates required to validate the SSL connection to the server.
+	 - Required: HIGH
+
+🔘 mqtt.ssl.trust.store.password
+
+Password used to open the Java TrustStore file.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mqtt.ssl.key.store.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The location of the Java KeyStore file containing the private key to use for authenticating with the server.
+	 - Required: HIGH
+
+🔘 mqtt.ssl.key.store.password
+
+Password used to open the Java KeyStore file.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mqtt.ssl.key.password
+
+Password for the client certificate contained in the Java KeyStore.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Write
+==========================
+🔘 mqtt.qos
+
+The QOS level to write messages to the MQTT broker with.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mqtt.retained.enabled
+
+Flag to determine if the messages should be retained.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mqtt.publish.timeout.ms
+
+Max allowed time for a publish operation to complete. A value or 0 or -1 will wait until the publish finishes and not timeout.
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 value.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+

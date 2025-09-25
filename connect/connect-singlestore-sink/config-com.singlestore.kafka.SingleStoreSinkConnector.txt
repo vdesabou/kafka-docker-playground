@@ -1,0 +1,192 @@
+==========================
+Connection
+==========================
+🔘 connection.ddlEndpoint
+
+Hostname or IP address of the SingleStoreDB Cloud workspace to run queries against in the `host[:port]` format
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 connection.clientEndpoint
+
+Hostname or IP address to the SingleStoreDB Cloud workspace to run queries against in the format `host[:port]`
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 connection.database
+
+SingleStoreDB connection database.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 connection.user
+
+SingleStoreDB connection user.
+
+	 - Type: STRING
+	 - Default: root
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 connection.password
+
+SingleStoreDB connection password.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 connection.dmlEndpoints
+
+Hostname or IP address of SingleStoreDB Aggregator nodes to run queries against in the format host[:port],host[:port],... (port is optional, multiple hosts separated by comma). Example: child-agg:3308,child-agg2 (default: ddlEndpoint)
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 params.<value>
+
+Specify a specific MySQL or JDBC parameter which will be injected into the connection URI
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 tableKey.<index_type>[.<name>]
+
+Specify additional keys to add to tables created by the connector; value of this property is the comma separated list with names of the columns to apply key; <index_type> one of (`PRIMARY`, `COLUMNSTORE`, `UNIQUE`, `SHARD`, `KEY`)
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Data Mapping
+==========================
+🔘 fields.whitelist
+
+Specify fields to be inserted to the database. By default all keys will be used; value of this property is the comma separated list with names of the columns`)
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Retry
+==========================
+🔘 max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 retry.backoff.ms
+
+The time in milliseconds to wait following an error before a retry attempt is made.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+SingleStore
+==========================
+🔘 singlestore.metadata.allow
+
+Allows or denies the use of an additional meta-table to save the recording results (default: true)
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 singlestore.metadata.table
+
+Specify the name of an additional meta-table to save the recording results (default: `kafka-connect-transaction-metadata`)
+
+	 - Type: STRING
+	 - Default: kafka_connect_transaction_metadata
+	 - Importance: LOW
+	 - Required: false
+
+🔘 singlestore.loadDataCompression
+
+Compress data on load; one of (GZip, LZ4, Skip) (default: GZip)
+
+	 - Type: STRING
+	 - Default: GZip
+	 - Importance: LOW
+	 - Required: false
+
+🔘 singlestore.tableName.<topicName>
+
+Specify a mapping between Kafka topic name and SingleStoreDB table name
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 singlestore.filter
+
+Specify a SQL expression to use for filtering incoming data. This parameter is inserted directly into the query's WHERE clause and is not SQL-injection safe
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 singlestore.columnToField.<tableName>.<columnName>
+
+Specify a mapping between SingleStoreDB table column names and the Kafka record fields. Nested fields are specified as a sequence of field names separated by '.'
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 singlestore.recordToTable.mappingField
+
+Specify which field of the Kafka record defines to the SingleStoreDB table where the Kafka record will be written
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 singlestore.recordToTable.mapping.<value>
+
+Specify a mapping between the Kafka record and the SingleStoreDB table name
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 singlestore.upsert
+
+Update a row in case of a duplicate key
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
