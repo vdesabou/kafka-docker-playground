@@ -40,9 +40,9 @@ then
         if [[ -n "$verbose" ]]
         then
             log "🐞 CLI command used"
-            echo "kafka-topics --create --topic $topic --bootstrap-server $bootstrap_server:9092 --partitions $nb_partitions $security ${other_args[*]}"
+            echo "kafka-topics --create --topic $topic --bootstrap-server $bootstrap_server --partitions $nb_partitions $security ${other_args[*]}"
         fi
-        docker exec $container kafka-topics --create --topic $topic --bootstrap-server $bootstrap_server:9092 --partitions $nb_partitions $security ${other_args[*]}
+        docker exec $container kafka-topics --create --topic $topic --bootstrap-server $bootstrap_server --partitions $nb_partitions $security ${other_args[*]}
     fi
 else
     logerror "❌ topic $topic already exist !"

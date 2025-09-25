@@ -7550,6 +7550,7 @@ function get_security_broker() {
 
   get_broker_container
   container="$broker_container"
+  bootstrap_server="$broker_container:9092"
 
   security=""
   if [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
@@ -22416,13 +22417,25 @@ playground_topic_display_consumer_offsets_command() {
       logerror " __consumer_offsets topic is not readable in cloud"
       exit 1
   else
-
       if [[ -n "$verbose" ]]
       then
           log "🐞 CLI command used"
-          echo "kafka-console-consumer --bootstrap-server $bootstrap_server:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security"
+          echo "kafka-console-consumer --bootstrap-server $bootstrap_server --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security"
       fi
-      docker exec -i $container kafka-console-consumer --bootstrap-server $bootstrap_server:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security | grep -v "_confluent-controlcenter"
+
+  	tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-server-.*:' | awk -F':' '{print $2}')
+  	if [ $? != 0 ] || [ "$tag" == "" ]
+  	then
+  		logerror "Could not find current CP version from docker ps"
+  		exit 1
+  	fi
+
+  	formatter="kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter"
+  	if version_gt $tag "7.9.9"; then
+  		formatter="org.apache.kafka.tools.consumer.OffsetsMessageFormatter"
+  	fi
+
+      docker exec -i $container kafka-console-consumer --bootstrap-server $bootstrap_server --topic __consumer_offsets --from-beginning --formatter "$formatter" $security | grep -v "_confluent-controlcenter"
   fi
 }
 
@@ -22488,9 +22501,9 @@ playground_topic_describe_command() {
           if [[ -n "$verbose" ]]
           then
               log "🐞 CLI command used"
-              echo "kafka-topics --describe --topic $topic --bootstrap-server $bootstrap_server:9092 $security"
+              echo "kafka-topics --describe --topic $topic --bootstrap-server $bootstrap_server $security"
           fi
-          docker exec $container kafka-topics --describe --topic $topic --bootstrap-server $bootstrap_server:9092 $security
+          docker exec $container kafka-topics --describe --topic $topic --bootstrap-server $bootstrap_server $security
       fi
   done
 }
@@ -24469,9 +24482,9 @@ playground_topic_create_command() {
           if [[ -n "$verbose" ]]
           then
               log "🐞 CLI command used"
-              echo "kafka-topics --create --topic $topic --bootstrap-server $bootstrap_server:9092 --partitions $nb_partitions $security ${other_args[*]}"
+              echo "kafka-topics --create --topic $topic --bootstrap-server $bootstrap_server --partitions $nb_partitions $security ${other_args[*]}"
           fi
-          docker exec $container kafka-topics --create --topic $topic --bootstrap-server $bootstrap_server:9092 --partitions $nb_partitions $security ${other_args[*]}
+          docker exec $container kafka-topics --create --topic $topic --bootstrap-server $bootstrap_server --partitions $nb_partitions $security ${other_args[*]}
       fi
   else
       logerror "❌ topic $topic already exist !"
@@ -24529,9 +24542,9 @@ playground_topic_delete_command() {
       if [[ -n "$verbose" ]]
       then
           log "🐞 CLI command used"
-          echo "kafka-topics --delete --topic $topic --bootstrap-server $bootstrap_server:9092 $security"
+          echo "kafka-topics --delete --topic $topic --bootstrap-server $bootstrap_server $security"
       fi
-      docker exec $container kafka-topics --delete --topic $topic --bootstrap-server $bootstrap_server:9092 $security
+      docker exec $container kafka-topics --delete --topic $topic --bootstrap-server $bootstrap_server $security
   fi
 
   if [[ -n "$skip_delete_schema" ]]
@@ -24596,7 +24609,7 @@ playground_topic_alter_command() {
           get_connect_image
           docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties ${other_args[*]}
       else
-          docker exec $container kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $bootstrap_server:9092 $security ${other_args[*]}
+          docker exec $container kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $bootstrap_server $security ${other_args[*]}
       fi
   fi
   set -e
@@ -25314,7 +25327,7 @@ playground_connector_offsets_get_command() {
           if [[ -n "$verbose" ]]
           then
               log "🐞 CLI command used"
-              echo "kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security"
+              echo "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security"
           fi
           get_environment_used
           if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [[ "$environment" == "ccloud" ]]
@@ -25330,7 +25343,7 @@ playground_connector_offsets_get_command() {
                       continue
                   fi
               else
-                  docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security
+                  docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security
 
               fi
           fi
@@ -25477,7 +25490,7 @@ playground_connector_offsets_reset_command() {
               fi
               playground connector offsets get --connector $connector
           else
-              docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security | grep -v PARTITION
+              docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security | grep -v PARTITION
 
               if version_gt $tag "7.4.99"
               then
@@ -25487,7 +25500,7 @@ playground_connector_offsets_reset_command() {
                   playground connector delete --connector $connector
               fi
 
-              docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector $security --to-earliest --reset-offsets --all-topics --execute
+              docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector $security --to-earliest --reset-offsets --all-topics --execute
 
               if version_gt $tag "7.4.99"
               then
@@ -25671,7 +25684,7 @@ playground_connector_offsets_alter_command() {
                   # if [[ -n "$verbose" ]]
                   # then
                   #     log "🐞 CLI command used"
-                  #     echo "kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security"
+                  #     echo "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security"
                   # fi
                   get_environment_used
                   if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [[ "$environment" == "ccloud" ]]
@@ -25690,7 +25703,7 @@ playground_connector_offsets_alter_command() {
                       fi
 
                       echo "topic,partition,current-offset" > $file
-                      docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector $security --export --reset-offsets --to-current --all-topics --dry-run >> $file
+                      docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector $security --export --reset-offsets --to-current --all-topics --dry-run >> $file
 
                       log "✨ Update the connector offsets as per your needs, save and close the file to continue"
                       playground open --file "${file}" --wait
@@ -25700,7 +25713,7 @@ playground_connector_offsets_alter_command() {
                       grep -v 'current-offset' "$file" > $tmp_dir/tmp && mv $tmp_dir/tmp "$file"
 
                       docker cp $file $container:/tmp/offsets.csv > /dev/null 2>&1
-                      docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector $security --reset-offsets --from-file /tmp/offsets.csv --execute
+                      docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector $security --reset-offsets --from-file /tmp/offsets.csv --execute
 
                       if version_gt $tag "7.4.99"
                       then
@@ -26373,7 +26386,7 @@ playground_connector_show_lag_command() {
     if [[ -n "$verbose" ]]
     then
         log "🐞 CLI command used"
-        echo "kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security"
+        echo "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security"
     fi
 
     SECONDS=0
@@ -26398,7 +26411,7 @@ playground_connector_show_lag_command() {
         fi
         docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group $consumer_group --describe | grep -v PARTITION | sed '/^$/d' &> $lag_output
       else
-        docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d' &> $lag_output
+        docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d' &> $lag_output
       fi
 
       if grep -q "Warning" $lag_output

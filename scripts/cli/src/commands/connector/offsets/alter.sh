@@ -168,7 +168,7 @@ do
                 # if [[ -n "$verbose" ]]
                 # then
                 #     log "🐞 CLI command used"
-                #     echo "kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security"
+                #     echo "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security"
                 # fi
                 get_environment_used
                 if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [[ "$environment" == "ccloud" ]]
@@ -187,7 +187,7 @@ do
                     fi
 
                     echo "topic,partition,current-offset" > $file
-                    docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector $security --export --reset-offsets --to-current --all-topics --dry-run >> $file
+                    docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector $security --export --reset-offsets --to-current --all-topics --dry-run >> $file
 
                     log "✨ Update the connector offsets as per your needs, save and close the file to continue"
                     playground open --file "${file}" --wait
@@ -197,7 +197,7 @@ do
                     grep -v 'current-offset' "$file" > $tmp_dir/tmp && mv $tmp_dir/tmp "$file"
 
                     docker cp $file $container:/tmp/offsets.csv > /dev/null 2>&1
-                    docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector $security --reset-offsets --from-file /tmp/offsets.csv --execute
+                    docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector $security --reset-offsets --from-file /tmp/offsets.csv --execute
 
                     if version_gt $tag "7.4.99"
                     then

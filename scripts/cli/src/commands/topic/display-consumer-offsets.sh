@@ -8,11 +8,23 @@ then
     logerror " __consumer_offsets topic is not readable in cloud"
     exit 1
 else
-
     if [[ -n "$verbose" ]]
     then
         log "🐞 CLI command used"
-        echo "kafka-console-consumer --bootstrap-server $bootstrap_server:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security"
+        echo "kafka-console-consumer --bootstrap-server $bootstrap_server --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security"
     fi
-    docker exec -i $container kafka-console-consumer --bootstrap-server $bootstrap_server:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security | grep -v "_confluent-controlcenter"
+
+	tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-server-.*:' | awk -F':' '{print $2}')
+	if [ $? != 0 ] || [ "$tag" == "" ]
+	then
+		logerror "Could not find current CP version from docker ps"
+		exit 1
+	fi
+
+	formatter="kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter"
+	if version_gt $tag "7.9.9"; then
+		formatter="org.apache.kafka.tools.consumer.OffsetsMessageFormatter"
+	fi
+
+    docker exec -i $container kafka-console-consumer --bootstrap-server $bootstrap_server --topic __consumer_offsets --from-beginning --formatter "$formatter" $security | grep -v "_confluent-controlcenter"
 fi

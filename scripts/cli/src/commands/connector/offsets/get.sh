@@ -102,7 +102,7 @@ do
         if [[ -n "$verbose" ]]
         then
             log "🐞 CLI command used"
-            echo "kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security"
+            echo "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security"
         fi
         get_environment_used
         if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [[ "$environment" == "ccloud" ]]
@@ -117,7 +117,7 @@ do
                     continue
                 fi
             else
-                docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server:9092 --group connect-$connector --describe $security 
+                docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security 
             fi
         fi
     fi

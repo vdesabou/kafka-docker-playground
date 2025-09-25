@@ -388,6 +388,7 @@ function get_security_broker() {
 
   get_broker_container
   container="$broker_container"
+  bootstrap_server="$broker_container:9092"
 
   security=""
   if [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
