@@ -1,0 +1,108 @@
+==========================
+Connection
+==========================
+🔘 gemfire.locator.host
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Gemfire Locator Host Name
+	 - Required: HIGH
+
+🔘 gemfire.locator.port
+
+Gemfire Locator Port Number
+
+	 - Type: INT
+	 - Default: 10334
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 gemfire.server.host
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Gemfire Server Host Name
+	 - Required: HIGH
+
+🔘 gemfire.server.port
+
+Gemfire Server Port Number
+
+	 - Type: INT
+	 - Default: 40411
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 gemfire.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Gemfire Username
+	 - Required: HIGH
+
+🔘 gemfire.password
+
+Gemfire Password
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 gemfire.region
+
+Gemfire Region Name
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Key
+==========================
+🔘 key.mode
+
+The key mode, Supported modes are:
+
+	 - Type: STRING
+	 - Default: kafka
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 key.fields
+
+``kafka``
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of comma-separated with whitespace key field names. The runtime interpretation of this config depends on the ``key.mode``:
+	 - Required: HIGH
+
+==========================
+Writes
+==========================
+🔘 delete.enabled
+
+Whether to treat ``null`` record values as deletes. Requires ``key.mode`` to be ``record_key``.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 batch.size
+
+Maximum number of records to be batched in a single insert operation.
+
+	 - Type: INT
+	 - Default: 100
+	 - Importance: MEDIUM
+	 - Required: false
+
