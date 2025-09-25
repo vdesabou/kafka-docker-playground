@@ -1,0 +1,300 @@
+==========================
+Connection
+==========================
+🔘 salesforce.instance
+
+The URL of the Salesforce endpoint to use. The default is blank. This directs the connector to use the endpoint specified in the authentication response.
+
+	 - Type: STRING
+	 - Default: https://login.salesforce.com
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 salesforce.username
+
+The Salesforce username the connector should use.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 salesforce.password
+
+The Salesforce password the connector should use.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 salesforce.password.token
+
+The Salesforce security token associated with the username.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 http.proxy
+
+The HTTP(S) proxy host and port the connector should use when communicating with Salesforce. This defaults to a blank string, which corresponds to not using a proxy.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Salesforce SObject
+==========================
+🔘 salesforce.object
+
+The Salesforce object name.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Logging
+==========================
+🔘 enable.trace.logging
+
+Enable trace logging for BulkApiClient.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Connection
+==========================
+🔘 http.proxy.auth.scheme
+
+Authentication scheme to be used when authenticate the connector towards HTTP(s) proxy.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 http.proxy.user
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The HTTP(S) proxy user name
+	 - Required: MEDIUM
+
+🔘 http.proxy.password
+
+The HTTP(S) proxy password
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 http.proxy.auth.ntlm.domain
+
+The domain to authenticate within, when NTLM scheme is used
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 request.max.retries.time.ms
+
+The maximum time in milliseconds that the connector continues to retry requests to Salesforce that fail because of network issues (once authentication succeeds). If the total time spent retrying the request exceeds this duration, retries stop and the request fails. This results in task failure.
+
+	 - Type: LONG
+	 - Default: 900000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.auth.retries.time.ms
+
+The maximum time in milliseconds connector retries for retriable errors during authentication phase
+
+	 - Type: LONG
+	 - Default: 30000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Kafka
+==========================
+🔘 kafka.topic
+
+The Apache Kafka topic to publish data to. Only a single topic must be specified. Records from Salesforce will be published to this topic.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Connection
+==========================
+🔘 poll.interval.ms
+
+How often to query Salesforce for new records
+
+	 - Type: LONG
+	 - Default: 10000
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 batch.enable
+
+Enable batching by applying PK-chunking.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 batch.max.rows
+
+Maximum number of Salesforce table rows/records within each batch returned by Bulk API. The default value is set to 100,000 as per `Salesforce documentation <https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/async_api_headers_enable_pk_chunking.htm>`_
+
+	 - Type: INT
+	 - Default: 100000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 salesforce.since
+
+CreatedDate after which the records should be pulled. The format should be yyyy-MM-dd
+
+	 - Type: STRING
+	 - Default: 2025-09-25
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 key.converter.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+==========================
+Schemas
+==========================
+🔘 key.converter.schemas.cache.size
+
+The maximum number of schemas that can be cached in this converter instance.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 key.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schemas
+==========================
+🔘 key.converter.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 value.converter.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+==========================
+Schemas
+==========================
+🔘 value.converter.schemas.cache.size
+
+The maximum number of schemas that can be cached in this converter instance.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schemas
+==========================
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+

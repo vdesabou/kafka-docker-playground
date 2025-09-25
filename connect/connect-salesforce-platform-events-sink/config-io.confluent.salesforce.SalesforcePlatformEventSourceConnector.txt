@@ -1,0 +1,348 @@
+==========================
+Connection
+==========================
+🔘 salesforce.instance
+
+The URL of the Salesforce endpoint to use. The default is blank. This directs the connector to use the endpoint specified in the authentication response.
+
+	 - Type: STRING
+	 - Default: https://login.salesforce.com
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 salesforce.username
+
+The Salesforce username the connector should use.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 salesforce.password
+
+The Salesforce password the connector should use.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 salesforce.password.token
+
+The Salesforce security token associated with the username.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 http.proxy
+
+The HTTP(S) proxy host and port the connector should use when communicating with Salesforce. This defaults to a blank string, which corresponds to not using a proxy.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 salesforce.grant.type
+
+Authorization mechanism. Valid options are 'PASSWORD' or 'JWT_BEARER'.
+
+	 - Type: STRING
+	 - Default: PASSWORD
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 salesforce.consumer.key
+
+The consumer key for the OAuth application.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 salesforce.consumer.secret
+
+The consumer secret for the OAuth application.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 salesforce.jwt.keystore.path
+
+Path to keystore containing key to use in OAuth token bearer flow
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 salesforce.jwt.keystore.password
+
+Keystore password to enable OAuth token bearer flow
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 curl.logging
+
+If enabled, the logs output the equivalent curl commands. This is a security risk because your authorization header is displayed in the log file. **Use at your own risk.**
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.version
+
+The version of the Salesforce API to use.
+
+	 - Type: STRING
+	 - Default: latest
+	 - Importance: LOW
+	 - Required: false
+
+🔘 connection.timeout
+
+The amount of time to wait while connecting to the Salesforce streaming endpoint.
+
+	 - Type: LONG
+	 - Default: 30000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 connection.max.message.size
+
+The maximum message size in bytes that is accepted during a long poll on the Salesforce streaming endpoint.
+
+	 - Type: INT
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 request.max.retries.time.ms
+
+The maximum time in milliseconds that the connector continues to retry requests to Salesforce that fail because of network issues (once authentication succeeds). If the total time spent retrying the request exceeds this duration, retries stop and the request fails. This results in task failure.
+
+	 - Type: LONG
+	 - Default: 900000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.auth.retries.time.ms
+
+The maximum time in milliseconds connector retries for retriable errors during authentication phase
+
+	 - Type: LONG
+	 - Default: 30000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Kafka
+==========================
+🔘 kafka.topic
+
+The |ak| topic to write the Salesforce data to. This is a template driven by the data returned by Salesforce. Any field in the schema can be used but you should always pick a value that is guaranteed to exist. ``_EventType`` and ``_ObjectType`` are two metadata fields that are included on every record. For example, you could put update and deletes in a different topic by using ``salesforce.${_ObjectType}.${_EventType}``
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 kafka.topic.lowercase
+
+Flag to determine if the |ak| topic should be lowercase.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Salesforce Streaming
+==========================
+🔘 salesforce.initial.start
+
+Specify the initial starting point for the connector for replaying events. Use ``all`` to send a replayId of -2 to Salesforce that replays all events from last 24 hours, or use ``latest`` to send a replayId of -1 to Salesforce that plays only new incoming events that arrive after the connector has started. The default is ``latest`` in case there are more enqueued events than might be allowed by API limits.
+
+	 - Type: STRING
+	 - Default: latest
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 salesforce.platform.event.name
+
+The Salesforce platform event name to subscribe to.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 invalid.replay.id.behaviour
+
+Determine if the connector should fallback to fetching all or latest events if invalid or expired replayId is provided.
+
+	 - Type: STRING
+	 - Default: all
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Connection
+==========================
+🔘 http.proxy.auth.scheme
+
+Authentication scheme to be used when authenticate the connector towards HTTP(s) proxy.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 http.proxy.user
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The HTTP(S) proxy user name
+	 - Required: MEDIUM
+
+🔘 http.proxy.password
+
+The HTTP(S) proxy password
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 key.converter.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+==========================
+Schemas
+==========================
+🔘 key.converter.schemas.cache.size
+
+The maximum number of schemas that can be cached in this converter instance.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 key.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schemas
+==========================
+🔘 key.converter.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 value.converter.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+==========================
+Schemas
+==========================
+🔘 value.converter.schemas.cache.size
+
+The maximum number of schemas that can be cached in this converter instance.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schemas
+==========================
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
