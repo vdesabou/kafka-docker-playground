@@ -1,0 +1,420 @@
+==========================
+IBM MQ Connection
+==========================
+🔘 mq.hostname
+
+The hostname of the IBM MQ broker.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 mq.port
+
+The TCP listener port of the IBM MQ broker.
+
+	 - Type: INT
+	 - Default: 1414
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mq.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The username to use when connecting to IBM MQ.
+	 - Required: HIGH
+
+🔘 mq.password
+
+The password to use when connecting to IBM MQ.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 security.exit.classpath
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Full classpath location of the IBM MQ Security Exit implementation class. This should be the complete Java class name (e.g., com.example.CustomSecurityExit) of your custom security exit that implements the com.ibm.mq.exits.WMQSecurityExit interface. The security exit is called during connection establishment to perform custom authentication and authorization logic beyond standard IBM MQ security mechanisms.
+	 - Required: MEDIUM
+
+🔘 security.exit.init.data
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Initialization data string passed to the Security Exit class during setup. This data can contain configuration parameters, authentication tokens, or other context information that the Security Exit implementation needs to properly authenticate and authorize the connection to IBM MQ. Maximum length is 32 characters.
+	 - Required: MEDIUM
+
+🔘 credentials.provider.classpath
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Fully qualified class name of the credentials provider implementation. This class must implement the io.confluent.connect.jms.creds.IbmMqCredentialsProvider interface. If the class also implements org.apache.kafka.common.Configurable, it will be passed a map of configuration properties with the prefix ``credentials.provider.`` . If not specified, no credentials provider will be used.
+	 - Required: MEDIUM
+
+🔘 mq.transport.type
+
+The type of transport to use when connecting to IBM MQ.
+
+	 - Type: STRING
+	 - Default: client
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mq.queue.manager
+
+The name of the queue manager.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 mq.channel
+
+The channel for client connections. This is only required when ``mq.transport.type`` is set to ``client`` (the default); in other cases, it is ignored and can be set to an empty value.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 mq.ssl.cipher.suite
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The CipherSuite for SSL connections.
+	 - Required: HIGH
+
+🔘 mq.ssl.fips.required
+
+Whether SSL FIPS is required.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mq.ssl.peer.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Sets a distinguished name (DN) pattern. If sslCipherSuite is set, this pattern can ensure that the correct queue manager is used. The connection attempt fails if the DN provided by the queue manager does not match this pattern.
+	 - Required: HIGH
+
+🔘 mq.destination.suppress.rfh2
+
+Whether to suppress or allow the inclusion of RFH2 Header
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+IBM MQ Secure Connection
+==========================
+🔘 mq.tls.protocol
+
+The TLS protocol version for secure connections to IBM MQ. The default is ``TLSv1.2``, which should be fine for most cases, though the actual set of allowed values will depend on the JVM. Recent JVMs support ``TLSv1.3`` and ``TLSv1.2``, ``TLSv1.1`` and ``TLS``. Older JVMs may support ``SSL``, ``SSLv2`` and ``SSLv3``, but these versions are discouraged due to known security vulnerabilities.
+
+	 - Type: STRING
+	 - Default: TLSv1.2
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.tls.keystore.type
+
+The file format of the key store file. This is required only when using secure TLS communication with IBM MQ.
+
+	 - Type: STRING
+	 - Default: JKS
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.tls.keystore.location
+
+The location of the key store file. This is required only when using secure TLS communication with IBM MQ.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mq.tls.keystore.password
+
+The store password for the key store file. This is optional for client and only needed if ``mq.tls.keystore.location`` is configured.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mq.tls.key.password
+
+The password of the private key used for secure TLS communication with IBM MQ.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mq.tls.truststore.type
+
+The file format of the trust store file. This is required when using TLS and secure communication with IBM MQ.
+
+	 - Type: STRING
+	 - Default: JKS
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.tls.truststore.location
+
+The location of the trust store file. This is required only when using secure TLS communication with IBM MQ.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mq.tls.truststore.password
+
+The password for the trust store file. If a password is not set access to the truststore is still available, but integrity checking is disabled. This is required only when using secure TLS communication with IBM MQ.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mq.tls.keymanager.algorithm
+
+The algorithm used by key manager factory for SSL connections. Default value is the key manager factory algorithm configured for the Java Virtual Machine. This is required only when using secure TLS communication with IBM MQ.
+
+	 - Type: STRING
+	 - Default: SunX509
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.tls.trustmanager.algorithm
+
+The algorithm used by trust manager factory for SSL connections. Default value is the trust manager factory algorithm configured for the Java Virtual Machine. This is required only when using secure TLS communication with IBM MQ.
+
+	 - Type: STRING
+	 - Default: PKIX
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.tls.secure.random.implementation
+
+The SecureRandom PRNG implementation to use for SSL cryptography operations. By default, tries PKCS11 implementation first. If PKCS11 is not supported, iterates through the provider and returns the first working implementation. This is required only when using secure TLS communication with IBM MQ.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+JMS
+==========================
+🔘 jms.destination.name
+
+The name of the JMS destination that messages are written to.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 jms.destination.type
+
+The type of JMS destination.
+
+	 - Type: STRING
+	 - Default: queue
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 jms.forward.kafka.key
+
+If enabled, the |ak| record key is converted to a string and forwarded on the ``JMSCorrelationID`` property of the JMS Message.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.forward.kafka.metadata
+
+If enabled, metadata from the |ak| record is forwarded on the JMS Message properties. This includes the record's topic, partition, and offset. The topic name is applied as a String property named ``KAFKA_TOPIC``, the partition value is applied as an Int property named ``KAFKA_PARTITION``, and the offset value is applied as a Long property named ``KAFKA_OFFSET``.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.forward.kafka.headers
+
+If enabled, |ak| record headers are added to the JMS Message as string properties.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.connection.max.retries
+
+Connecting to a JMS broker may fail for multiple reasons. This determines the maximum number of times a task attempts to connect to the JMS broker.
+
+	 - Type: INT
+	 - Default: 150
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.connection.backoff.ms
+
+Following a connection failure, this configuration parameter is the amount of time in milliseconds to wait before attempting to reconnect to the JMS broker. A value less than or equal to 0 removes the delay altogether.
+
+	 - Type: INT
+	 - Default: 2000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+JMS Formatter
+==========================
+🔘 jms.message.format
+
+The format of the values on the JMS messages.
+
+	 - Type: STRING
+	 - Default: string
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 jms.message.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 jms.message.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JMS Formatter
+==========================
+🔘 character.encoding
+
+The character encoding to use while writing the message.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+JMS MessageProducer
+==========================
+🔘 jms.producer.time.to.live.ms
+
+Time to live (TTL) in milliseconds for messages sent to the JMS broker.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.producer.delivery.mode
+
+The ``PERSISTENT`` delivery mode (the default) instructs the JMS provider to take extra care to ensure that a message is not lost in transit in case of a JMS provider failure. The ``NON_PERSISTENT`` delivery mode does not require the JMS provider to store the message or otherwise guarantee that it is not lost if the provider fails. Connectors using the ``PERSISTENT`` delivery mode have lower overall throughput than those running with ``NON_PERSISTENT`` delivery mode. However, the ``NON_PERSISTENT`` delivery mode does not offer the same delivery guarantees as the ``PERSISTENT`` delivery mode.
+
+	 - Type: STRING
+	 - Default: persistent
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.producer.disable.message.id
+
+Sets whether message IDs are disabled. Since message IDs take some effort to create and increase a message's size, some JMS providers may be able to optimize message overhead if they are given a hint that the message ID is not used by an application. JMS message Producers provide a hint to disable message ID. When a connector sets a Producer to disable message ID, the connector is indicating that it does not depend on the value of message ID for the messages it produces. These messages must either have the message ID set to null or, if the hint is ignored, the message ID must be set to its normal unique value. Message IDs are enabled by default.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.producer.disable.message.timestamp
+
+Sets whether message timestamps are disabled. Since timestamps take some effort to create and increase a message's size, some JMS providers may be able to optimize message overhead, if they are given a hint that the timestamp is not used by an application. JMS message Producers provide a hint to disable timestamps. When a connector sets a Producer to disable timestamps, the connector is indicating that it does not depend on the value of timestamp for the messages it produces. These messages must either have the timestamp set to null or, if the hint is ignored, the timestamp must be set to its normal value. Message timestamps are enabled by default.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 value.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+

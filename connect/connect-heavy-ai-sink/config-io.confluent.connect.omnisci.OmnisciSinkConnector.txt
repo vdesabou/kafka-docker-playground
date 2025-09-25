@@ -1,0 +1,147 @@
+==========================
+Data Mapping
+==========================
+🔘 table.name.format
+
+A format string for the destination table name, which may contain '${topic}' as a placeholder for the originating topic name.
+
+	 - Type: STRING
+	 - Default: ${topic}
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Connection
+==========================
+🔘 connection.password
+
+OmniSci connection password
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 connection.database
+
+OmniSci database name.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Writes
+==========================
+🔘 batch.size
+
+Specifies how many records to attempt to batch together for insertion into the destination table, when possible.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Retries
+==========================
+🔘 max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 retry.backoff.ms
+
+The time in milliseconds to wait following an error before a retry attempt is made.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Data Mapping
+==========================
+🔘 fields.whitelist
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of comma-separated record value field names. If empty, all fields from the record value are utilized, otherwise used to filter to the desired fields.
+	 - Required: MEDIUM
+
+==========================
+SQL/DDL Support
+==========================
+🔘 auto.evolve
+
+Whether to automatically add columns in the table schema when found to be missing relative to the record schema by issuing ``ALTER``.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Connection
+==========================
+🔘 connection.user
+
+OmniSci connection user
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Data Mapping
+==========================
+🔘 db.timezone
+
+Name of the Omnisci DB timezone that should be used in the connector when inserting time-based values. Defaults to UTC
+
+	 - Type: STRING
+	 - Default: UTC
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+SQL/DDL Support
+==========================
+🔘 auto.create
+
+Whether to automatically create the destination table based on record schema if it is found to be missing by issuing ``CREATE``.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Connection
+==========================
+🔘 connection.port
+
+OmniSci port number
+
+	 - Type: INT
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 connection.host
+
+OmniSci hostname or ipaddress.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+

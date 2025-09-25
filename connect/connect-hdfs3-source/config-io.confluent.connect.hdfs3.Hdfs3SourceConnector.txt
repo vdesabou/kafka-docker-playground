@@ -1,0 +1,481 @@
+==========================
+Transforms: AddPrefix
+==========================
+🔘 transforms.AddPrefix.type
+
+Class for the 'AddPrefix' transformation.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.AddPrefix.regex
+
+Regular expression to use for matching.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.AddPrefix.replacement
+
+Replacement string.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.AddPrefix.negate
+
+Whether the configured predicate should be negated.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.AddPrefix.predicate
+
+The alias of a predicate used to determine whether to apply this transformation.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Storage
+==========================
+🔘 store.url
+
+Store's connection URL, if applicable.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 topics.dir
+
+Top level directory where data was stored to be re-ingested by Kafka.
+
+	 - Type: STRING
+	 - Default: topics
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 directory.delim
+
+Directory delimiter pattern.
+
+	 - Type: STRING
+	 - Default: /
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 behavior.on.error
+
+Error handling behavior setting for storage connectors. Must be configured to one of the following:
+
+	 - Type: STRING
+	 - Default: fail
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 format.bytearray.extension
+
+Output file extension for Byte Array Format. Defaults to ``.bin``.
+
+	 - Type: STRING
+	 - Default: .bin
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 format.bytearray.separator
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: String inserted between records for ByteArrayFormat. Defaults to ``System.lineSeparator()`` and may contain escape sequences like ``
+``. An input record that contains the line separator looks like multiple records in the storage object output.
+	 - Required: MEDIUM
+
+🔘 format.json.schema.enable
+
+Enable reading of JSON messages with schema embedded.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Connector
+==========================
+🔘 record.batch.max.size
+
+The maximum amount of records to return each time storage is polled.
+
+	 - Type: INT
+	 - Default: 200
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 schema.cache.size
+
+The size of the schema cache used in the Avro converter.
+
+	 - Type: INT
+	 - Default: 50
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Partitioner
+==========================
+🔘 partitioner.class
+
+The partitioner to use when reading data to the store.
+
+	 - Type: CLASS
+	 - Default: io.confluent.connect.storage.partitioner.DefaultPartitioner
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 partition.field.name
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: The name of the partitioning fields when FieldPartitioner is used.
+	 - Required: MEDIUM
+
+🔘 path.format
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: This configuration that was used to set the format of the data directories when partitioning with a TimeBasedPartitioner. For example, if you set ``path.format`` to ``'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH``, then a valid data directories would be: ``/year=2015/month=12/day=07/hour=15/``.
+	 - Required: MEDIUM
+
+==========================
+Topic
+==========================
+🔘 topic.regex.list
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma-separated list of pairs of type '<kafka topic>:<regex>' that is used to map file paths to Kafka topics. An example might be `topic1:.*\.json` to source all files ending in .json to a kafka topic named topic1. You can specify multiple of these topic:regex mappings to sending sets of files to different topics. Any files that aren't mapped by a regex will be ignored and not  sourced. The `topic.regex.list` property matches the full path (for example, `folder/file.txt`), not just the filename.
+	 - Required: HIGH
+
+==========================
+Storage
+==========================
+🔘 task.batch.size
+
+The number of files assigned to each task at a time
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 file.discovery.starting.timestamp
+
+A unix timestamp that denotes where to start processing files. Any file encountered with a creation time earlier than this will be ignored
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Connector
+==========================
+🔘 bucket.listing.max.objects.threshold
+
+	
+
+	 - Type: INT
+	 - Default: -1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 parse.error.topic.prefix
+
+Topic name prefix for topic where records with error information would be published, whenever connector encounters a malformed file.
+
+	 - Type: STRING
+	 - Default: error
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 bucket.scan.executor.threads
+
+Number of threads to scan the bucket's folders in parallel. To get better performance , files should be distributed among multiple folders under root/topic directory. E.g. -> In case of topics->{dir1, dir2, dir3, dir4, dir5} connector will start scanning dir1, dir2, dir3, dir4, dir5 in parallel if `Bucket scan threads` is set to 5
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+csv
+==========================
+🔘 value.schema
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The schema for the value written to Kafka.
+	 - Required: MEDIUM
+
+🔘 csv.skip.lines
+
+Number of lines to skip in the beginning of the file.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.separator.char
+
+The character that separates each field in the form of an integer. Typically in a CSV this is a ,(44) character. A TSV would use a tab(9) character.
+
+	 - Type: INT
+	 - Default: 44
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.quote.char
+
+The character that is used to quote a field. This typically happens when the csv.separator.char character is within the data.
+
+	 - Type: INT
+	 - Default: 34
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.escape.char
+
+The character as an integer to use when a special character is encountered. The default escape character is typically a \(92)
+
+	 - Type: INT
+	 - Default: 92
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.strict.quotes
+
+Sets the strict quotes setting - if true, characters outside the quotes are ignored.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.ignore.leading.whitespace
+
+Sets the ignore leading whitespace setting - if true, white space in front of a quote in a field is ignored.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.ignore.quotations
+
+Sets the ignore quotations mode - if true, quotations are ignored.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.keep.carriage.return
+
+Flag to determine if the carriage return at the end of the line should be maintained. 
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.null.field.indicator
+
+Indicator to determine how the CSV Reader can determine if a field is null. Valid values are [EMPTY_SEPARATORS, EMPTY_QUOTES, BOTH, NEITHER]. For more information see http://opencsv.sourceforge.net/apidocs/com/opencsv/enums/CSVReaderNullFieldIndicator.html.
+
+	 - Type: STRING
+	 - Default: NEITHER
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.first.row.as.header
+
+Flag to indicate if the fist row of data contains the header of the file. If true the position of the columns will be determined by the first row to the CSV. The column position will be inferred from the position of the schema supplied in `value.schema`. If set to true the number of columns must be greater than or equal to the number of fields in the schema.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 csv.file.charset
+
+Character set to read wth file with.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.case.sensitive.field.names
+
+Flag to determine if the field names in the header row should be treated as case sensitive.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.rfc.4180.parser.enabled
+
+Flag to determine if the RFC 4180 parser should be used instead of the default parser.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+folders
+==========================
+🔘 LIST
+
+
+
+	 - Type: HIGH
+	 - Default: false
+	 - Importance: 
+	 - Required: 
+
+==========================
+filename.regex
+==========================
+🔘 (.+)\+(\d+)\+.+$
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: 
+	 - Required: MEDIUM
+
+==========================
+Connector
+==========================
+🔘 hdfs.poll.interval.ms
+
+Frequency in milliseconds to poll for new or removed folders. This may result in updated task configurations starting to poll for data in added folders or stopping polling for data in removed folders.
+
+	 - Type: LONG
+	 - Default: 60000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 format.class
+
+Class responsible for converting storage objects to source records.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+HDFS3
+==========================
+🔘 hdfs.url
+
+The HDFS connection URL. This configuration has the format of hdfs://hostname:port and specifies the HDFS to export data to. This property is deprecated and will be removed in future releases. Use ``store.url`` instead.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Security
+==========================
+🔘 hadoop.conf.dir
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Hadoop configuration directory.
+	 - Required: HIGH
+
+🔘 hadoop.home
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Hadoop home directory.
+	 - Required: HIGH
+
+🔘 hdfs.authentication.kerberos
+
+Configuration indicating whether HDFS is using Kerberos for authentication.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 connect.hdfs.keytab
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The path to the keytab file for the HDFS connector principal. This keytab file should only be readable by the connector user.
+	 - Required: HIGH
+
+🔘 connect.hdfs.principal
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The principal to use when HDFS is using Kerberos to for authentication.
+	 - Required: HIGH
+
+🔘 hdfs.namenode.principal
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The principal for HDFS Namenode.
+	 - Required: HIGH
+
+🔘 kerberos.ticket.renew.period.ms
+
+The period in milliseconds to renew the Kerberos ticket.
+
+	 - Type: LONG
+	 - Default: 3600000
+	 - Importance: LOW
+	 - Required: false
+

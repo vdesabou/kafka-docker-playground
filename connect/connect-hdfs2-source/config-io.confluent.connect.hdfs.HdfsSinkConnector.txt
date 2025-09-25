@@ -1,0 +1,429 @@
+==========================
+HDFS
+==========================
+🔘 hdfs.url
+
+The HDFS connection URL. This configuration has the format of hdfs://hostname:port and specifies the HDFS to export data to. This property is deprecated and will be removed in future releases. Use ``store.url`` instead.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 hadoop.conf.dir
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Hadoop configuration directory.
+	 - Required: HIGH
+
+🔘 hadoop.home
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Hadoop home directory.
+	 - Required: HIGH
+
+🔘 logs.dir
+
+Top level directory to store the write ahead logs. Supports ``${topic}`` in the value, which will be replaced by the actual topic name. Supports ``${0}``, ..., ``${n}`` in conjunction with topic.capture.groups.regex. See topic.capture.groups.regex configuration documentation for details.
+
+	 - Type: STRING
+	 - Default: logs
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 hive.table.name
+
+The hive table name to use. It must contain '${topic}' to inject the corresponding topic name.
+
+	 - Type: STRING
+	 - Default: ${topic}
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Security
+==========================
+🔘 hdfs.authentication.kerberos
+
+Configuration indicating whether HDFS is using Kerberos for authentication.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 connect.hdfs.principal
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The principal to use when HDFS is using Kerberos to for authentication.
+	 - Required: HIGH
+
+🔘 connect.hdfs.keytab
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The path to the keytab file for the HDFS connector principal. This keytab file should only be readable by the connector user.
+	 - Required: HIGH
+
+🔘 hdfs.namenode.principal
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The principal for HDFS Namenode.
+	 - Required: HIGH
+
+🔘 kerberos.ticket.renew.period.ms
+
+The period in milliseconds to renew the Kerberos ticket.
+
+	 - Type: LONG
+	 - Default: 3600000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connector
+==========================
+🔘 flush.size
+
+Number of records written to store before invoking file commits.
+
+	 - Type: INT
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 rotate.interval.ms
+
+The time interval in milliseconds to invoke file commits. You can configure this parameter so that the time interval is determined by using a timestamp extractor (for example, Kafka Record Time, Record Field, or Wall Clock extractor). When the first record is processed, a timestamp is set as the base time. This is useful if you require exactly-once-semantics. This configuration ensures that file commits are invoked at every configured interval. The default value ``-1`` indicates that this feature is disabled.
+
+	 - Type: LONG
+	 - Default: -1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 rotate.schedule.interval.ms
+
+The time interval in milliseconds to periodically invoke file commits. This configuration ensures that file commits are invoked at every configured interval. Time of commit will be adjusted to 00:00 of selected timezone. The commit will be performed at the scheduled time, regardless of the previous commit time or number of messages. This configuration is useful when you have to commit your data based on current server time, for example at the beginning of every hour. The default value ``-1`` means that this feature is disabled.
+
+	 - Type: LONG
+	 - Default: -1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 schemas.cache.config
+
+The size of the schema cache used in the Avro converter.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 enhanced.avro.schema.support
+
+Enable enhanced avro schema support in AvroConverter: Enum symbol preservation and Package Name awareness
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 connect.meta.data
+
+Allow connect converter to add its metadata to the output schema
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 retry.backoff.ms
+
+The retry backoff in milliseconds. This config is used to notify Kafka connect to retry delivering a message batch or performing recovery in case of transient exceptions.
+
+	 - Type: LONG
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 shutdown.timeout.ms
+
+Clean shutdown timeout. This makes sure that asynchronous Hive metastore updates are completed during connector shutdown.
+
+	 - Type: LONG
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 filename.offset.zero.pad.width
+
+Width to zero pad offsets in store's filenames if offsets are too short in order to provide fixed width filenames that can be ordered by simple lexicographic sorting.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+🔘 avro.codec
+
+The Avro compression codec to be used for output  files. Available values: null, deflate, snappy and bzip2 (CodecSource is org.apache.avro.file.CodecFactory)
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 allow.optional.map.keys
+
+Allow optional string map key when converting from Connect Schema to Avro Schema.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schema
+==========================
+🔘 schema.compatibility
+
+The schema compatibility rule to use when the connector is observing schema changes. The supported configurations are NONE, BACKWARD, FORWARD and FULL.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Storage
+==========================
+🔘 topic.capture.groups.regex
+
+A Java Pattern regex that matches the entire topic and captures values for substituting into ``topics.dir``. Indexed capture groups are accessible with ``${n}``, where ``${0}`` refers to the whole match and ``${1}`` refers to the first capture group. Example config value of ``([a-zA-Z]*)_([a-zA-Z]*)`` will match topics that are two words delimited by an underscore and will capture each word separately. With ``topic.dir = ${1}/${2}``, a record from the topic ``example_name`` will be written into a subdirectory of ``example/name/``. By default, this functionality is not enabled.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 store.url
+
+Store's connection URL, if applicable.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 directory.delim
+
+Directory delimiter pattern
+
+	 - Type: STRING
+	 - Default: /
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 file.delim
+
+File delimiter pattern
+
+	 - Type: STRING
+	 - Default: +
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Partitioner
+==========================
+🔘 partitioner.class
+
+The partitioner to use when writing data to the store. You can use ``DefaultPartitioner``, which preserves the Kafka partitions; ``FieldPartitioner``, which partitions the data to different directories according to the value of the partitioning field specified in ``partition.field.name``; ``TimeBasedPartitioner``, which partitions data according to ingestion time.
+
+	 - Type: CLASS
+	 - Default: io.confluent.connect.storage.partitioner.DefaultPartitioner
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 partition.field.name
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: The name of the partitioning field when FieldPartitioner is used.
+	 - Required: MEDIUM
+
+🔘 partition.duration.ms
+
+The duration of a partition milliseconds used by ``TimeBasedPartitioner``. The default value -1 means that we are not using ``TimeBasedPartitioner``.
+
+	 - Type: LONG
+	 - Default: -1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 path.format
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: This configuration is used to set the format of the data directories when partitioning with ``TimeBasedPartitioner``. The format set in this configuration converts the Unix timestamp to proper directories strings. For example, if you set ``path.format='year'=YYYY/'month'=MM/'day'=dd/'hour'=HH``, the data directories will have the format ``/year=2015/month=12/day=07/hour=15/``.
+	 - Required: MEDIUM
+
+🔘 locale
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The locale to use when partitioning with ``TimeBasedPartitioner``. Used to format dates and times. For example, use ``en-US`` for US English, ``en-GB`` for UK English, or ``fr-FR`` for French (in France). These may vary by Java version. See the `available locales <http://www.localeplanet.com/java/>`__.
+	 - Required: MEDIUM
+
+🔘 timezone
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The timezone to use when partitioning with ``TimeBasedPartitioner``. Used to format and compute dates and times. All timezone IDs must be specified in the long format, such as ``America/Los_Angeles``, ``America/New_York``, and ``Europe/Paris``, or ``UTC``. Alternatively a locale independent, fixed offset, datetime zone can be specified in form ``[+-]hh:mm``. Support for these timezones may vary by Java version. See the `available timezones within each locale <http://www.localeplanet.com/java/>`__, such as `those within the US English locale <http://www.localeplanet.com/java/en-US/index.html>`__.
+	 - Required: MEDIUM
+
+🔘 timestamp.extractor
+
+The extractor that gets the timestamp for records when partitioning with ``TimeBasedPartitioner``. It can be set to ``Wallclock``, ``Record`` or ``RecordField`` in order to use one of the built-in timestamp extractors or be given the fully-qualified class name of a user-defined class that extends the ``TimestampExtractor`` interface.
+
+	 - Type: STRING
+	 - Default: Wallclock
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 timestamp.field
+
+The record field to be used as timestamp by the timestamp extractor.
+
+	 - Type: STRING
+	 - Default: timestamp
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Hive
+==========================
+🔘 hive.integration
+
+Configuration indicating whether to integrate with Hive when running the connector.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 hive.metastore.uris
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Hive metastore URIs, can be IP address or fully-qualified domain name and port of the metastore host.
+	 - Required: HIGH
+
+🔘 hive.conf.dir
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Hive configuration directory
+	 - Required: HIGH
+
+🔘 hive.home
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Hive home directory.
+	 - Required: HIGH
+
+🔘 hive.database
+
+The database to use when the connector creates tables in Hive.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Storage
+==========================
+🔘 storage.class
+
+The underlying storage layer.
+
+	 - Type: CLASS
+	 - Default: io.confluent.connect.hdfs.storage.HdfsStorage
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Connector
+==========================
+🔘 format.class
+
+The format class to use when writing data to the store.
+
+	 - Type: CLASS
+	 - Default: io.confluent.connect.hdfs.avro.AvroFormat
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Storage
+==========================
+🔘 topics.dir
+
+Top level directory to store the data ingested from Kafka. Supports ``${topic}`` in the value, which will be replaced by the actual topic name. Supports ``${0}``, ..., ``${n}`` in conjunction with topic.capture.groups.regex. See topic.capture.groups.regex configuration documentation for details.
+
+	 - Type: STRING
+	 - Default: topics
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+

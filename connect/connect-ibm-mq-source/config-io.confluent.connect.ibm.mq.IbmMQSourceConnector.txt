@@ -1,0 +1,432 @@
+==========================
+IBM MQ Connection
+==========================
+🔘 mq.hostname
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The hostname of the IBM MQ broker.
+	 - Required: HIGH
+
+🔘 mq.port
+
+The port of the IBM MQ broker.
+
+	 - Type: INT
+	 - Default: 1414
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mq.connection.list
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: For IBM's HA/DR support with multiple MQ instances, enter hosts as comma-separated values, e.g., host1:port1, host2:port2.
+	 - Required: HIGH
+
+🔘 mq.transport.type
+
+The type of transport to use when connecting to IBM MQ.
+
+	 - Type: STRING
+	 - Default: client
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mq.queue.manager
+
+The name of the queue manager.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 mq.channel
+
+The channel for client connections. This is only required when ``mq.transport.type`` is set to `client` (the default); in other cases, it is ignored and can be set to an empty value.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 mq.ssl.cipher.suite
+
+The CipherSuite for SSL connections.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mq.ssl.fips.required
+
+Whether SSL FIPS is required.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mq.ssl.peer.name
+
+Sets a distinguished name (DN) pattern. If sslCipherSuite is set, this pattern can ensure that the correct queue manager is used. The connection attempt fails if the distinguished name provided by the queue manager does not match this pattern.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mq.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The username to use when connecting to IBM MQ.
+	 - Required: HIGH
+
+🔘 mq.password
+
+The password to use when connecting to IBM MQ.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 disable.mqcsp.authentication
+
+Whether to disable MQCSP authentication in the connector. By default, connector uses MQCSP authentication. Disabling it will make the connector use a legacy mode of authentication. The legacy mode is not a secure mode and hence, MQCSP mode of authentication will be allowed to be disabled only on connectors using a secure connection (SSL/TLS) through use of a cipher suite, otherwise this will be ignored and the connector will continue to use MQCSP authentication. 
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 security.exit.classpath
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Full classpath location of the IBM MQ Security Exit implementation class. This should be the complete Java class name (e.g., com.example.CustomSecurityExit) of your custom security exit that implements the com.ibm.mq.exits.WMQSecurityExit interface. The security exit is called during connection establishment to perform custom authentication and authorization logic beyond standard IBM MQ security mechanisms.
+	 - Required: MEDIUM
+
+🔘 security.exit.init.data
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Initialization data string passed to the Security Exit class during setup. This data can contain configuration parameters, authentication tokens, or other context information that the Security Exit implementation needs to properly authenticate and authorize the connection to IBM MQ. Maximum length is 32 characters.
+	 - Required: MEDIUM
+
+🔘 credentials.provider.classpath
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Fully qualified class name of the credentials provider implementation. This class must implement the io.confluent.connect.ibm.mq.creds.IbmMqCredentialsProvider interface. If the class also implements org.apache.kafka.common.Configurable, it will be passed a map of configuration properties with the prefix ``credentials.provider.`` . If not specified, no credentials provider will be used. 
+	 - Required: MEDIUM
+
+==========================
+IBM MQ Secure Connection
+==========================
+🔘 mq.tls.protocol
+
+The TLS protocol version for secure connections to IBM MQ. The default is ``TLSv1.2``, which should be fine for most cases, though the actual set of allowed values will depend on the JVM. Recent JVMs support ``TLSv1.3`` and ``TLSv1.2``, ``TLSv1.1`` and ``TLS``. Older JVMs may support ``SSL``, ``SSLv2`` and ``SSLv3``, but these versions are discouraged due to known security vulnerabilities.
+
+	 - Type: STRING
+	 - Default: TLSv1.2
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.tls.keystore.type
+
+The file format of the key store file. This is required only when using secure TLS communication with IBM MQ.
+
+	 - Type: STRING
+	 - Default: JKS
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.tls.keystore.location
+
+The location of the key store file. This is required only when using secure TLS communication with IBM MQ.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mq.tls.keystore.password
+
+The store password for the key store file. This is optional for client and only needed if ``mq.tls.keystore.location`` is configured.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mq.tls.key.password
+
+The password of the private key used for secure TLS communication with IBM MQ.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mq.tls.truststore.type
+
+The file format of the trust store file. This is required when using TLS and secure communication with IBM MQ.
+
+	 - Type: STRING
+	 - Default: JKS
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.tls.truststore.location
+
+The location of the trust store file. This is required only when using secure TLS communication with IBM MQ.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mq.tls.truststore.password
+
+The password for the trust store file. If a password is not set access to the truststore is still available, but integrity checking is disabled. This is required only when using secure TLS communication with IBM MQ.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mq.tls.keymanager.algorithm
+
+The algorithm used by key manager factory for SSL connections. Default value is the key manager factory algorithm configured for the Java Virtual Machine. This is required only when using secure TLS communication with IBM MQ.
+
+	 - Type: STRING
+	 - Default: SunX509
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.tls.trustmanager.algorithm
+
+The algorithm used by trust manager factory for SSL connections. Default value is the trust manager factory algorithm configured for the Java Virtual Machine. This is required only when using secure TLS communication with IBM MQ.
+
+	 - Type: STRING
+	 - Default: PKIX
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.tls.secure.random.implementation
+
+The SecureRandom PRNG implementation to use for SSL cryptography operations. By default, tries PKCS11 implementation first. If PKCS11 is not supported, iterates through the provider and returns the first working implementation. This is required only when using secure TLS communication with IBM MQ.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+IBM MQ Session
+==========================
+🔘 jms.destination.name
+
+The name of the JMS destination (queue or topic) to read from.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 jms.destination.type
+
+The type of JMS destination, which is either `queue` or `topic`.
+
+	 - Type: STRING
+	 - Default: QUEUE
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 batch.size
+
+The maximum number of records that a connector task may read from the JMS broker before writing to Kafka. The task holds these records until they are acknowledged in Kafka, so this may affect memory usage. For IBM MQ connector, the maximum batch size allowed is 10K, because IBM MQ allows at most 10K messages without ack.
+
+	 - Type: INT
+	 - Default: 1024
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.pending.messages
+
+The maximum number of messages per task that can be received from JMS brokers and produced to Kafka before the task acknowledges the JMS session/messages. If the task fails and is restarted, this is the maximum number of JMS messages the task may duplicate in Kafka. This is typically set larger than ``batch.size``. A smaller value than ``batch.size`` limits the size of the batches.
+
+	 - Type: INT
+	 - Default: 4096
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.poll.duration
+
+The maximum amount of time each task can build a batch. The batch is closed and sent to Kafka if not enough messages are read during the time allotted. This helps limit connector lag when the JMS queue/topic has a lower throughput.
+
+	 - Type: INT
+	 - Default: 60000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.receive.block.duration
+
+Maximum time in milliseconds a JMS receive call will be blocked. Setting this value helps in reducing the number of empty receive calls, the call will be blocked until the task receives a message. This value could be in the range of 10 milliseconds to 1800000 milliseconds
+
+	 - Type: LONG
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 initial.poll.wait.time.ms
+
+The initial amount of time in milliseconds to wait when polling for new messages before switching to a shorter poll interval. This helps reduce the number of empty poll attempts during startup or when the queue is empty.
+
+	 - Type: INT
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.record.commit.timeout
+
+Maximum amount of time in minutes to wait for records to be committed in kafka before failing the connector
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+🔘 receiver.threads
+
+The number of threads that each task should use to consume messages from IBM MQ. Using multiple threads and fewer task may be more efficient than using more tasks with just one thread. This is especially true in environments where the network latency from the connector to IBM MQ is high, and when most of the time receiving messages is waiting for the IBM MQ response.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 character.encoding
+
+The character encoding to use while receiving the message.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.subscription.durable
+
+Whether the subscription of the connector tasks to a JMS topic is durable or not. Durable subscriptions require a subscription name to be set via ``jms.subscription.name``. 
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 jms.subscription.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the JMS subscription. Supported only in durable subscriptions (``jms.subscription.durable = true``) and is applicable only to JMS topics.
+	 - Required: MEDIUM
+
+🔘 jms.message.selector
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The `message selector <http://docs.oracle.com/javaee/6/api/javax/jms/Session.html#createConsumer(javax.jms.Destination, java.lang.String, boolean)>`_ that should be applied to messages in the destination.
+	 - Required: HIGH
+
+==========================
+Retry
+==========================
+🔘 max.retry.time
+
+The maximum total time in milliseconds the connector will retry when receiving a retriable exception. This value must be at least 100 milliseconds if retry functionality is desired. If a value of less than 100 milliseconds is configured, it will be assumed that no retry functionality is desired.Additionally, some retriable exceptions will require establishing a new JMS session
+
+	 - Type: LONG
+	 - Default: 3600000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Kafka
+==========================
+🔘 kafka.topic
+
+The name of the Kafka topic where the connector writes all records that were read from the JMS broker.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 use.permissive.schema
+
+Whether to use a more permissive schema with an optional messageID in the key and value. Defaults to ``false`` for compatibility with the old strict schema. If your JMS messages have null message IDs, then you must set this to ``true``.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Confluent Platform
+==========================
+🔘 confluent.license
+
+Confluent will issue a license key to each subscriber. The license key will be a short snippet of text that you can copy and paste. Without the license key, you can use the connector for a 30-day trial period. If you are a subscriber, please contact Confluent Support for more information.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 confluent.topic.bootstrap.servers
+
+A list of host/port pairs to use for establishing the initial connection to the Kafka cluster used for licensing. All servers in the cluster will be discovered from the initial connection. This list should be in the form <code>host1:port1,host2:port2,...</code>. Since these servers are just used for the initial connection to discover the full cluster membership (which may change dynamically), this list need not contain the full set of servers (you may want more than one, though, in case a server is down).
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 confluent.topic
+
+Name of the Kafka topic used for Confluent Platform configuration, including licensing information.
+
+	 - Type: STRING
+	 - Default: _confluent-command
+	 - Importance: LOW
+	 - Required: false
+
+🔘 confluent.topic.replication.factor
+
+The replication factor for the Kafka topic used for Confluent Platform configuration, including licensing information. This is used only if the topic does not already exist, and the default of 3 is appropriate for production use. If you are using a development environment with less than 3 brokers, you must set this to the number of brokers (often 1).
+
+	 - Type: INT
+	 - Default: 3
+	 - Importance: LOW
+	 - Required: false
+

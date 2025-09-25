@@ -1,0 +1,129 @@
+==========================
+Listener
+==========================
+🔘 snmp.listen.address
+
+IP address to listen for messages on.
+
+	 - Type: STRING
+	 - Default: 0.0.0.0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snmp.listen.port
+
+The port to listen on.
+
+	 - Type: INT
+	 - Default: 10161
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snmp.listen.protocol
+
+The Protocol to listen with.
+
+	 - Type: STRING
+	 - Default: UDP
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connector
+==========================
+🔘 kafka.topic
+
+The Kafka topic name.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 dispatcher.thread.pool.size
+
+Number of threads to allocate for the thread pool.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snmp.batch.size
+
+Number of records to return in a single batch.
+
+	 - Type: INT
+	 - Default: 1024
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snmp.poll.backoff.ms
+
+The amount of time in ms to wait if no records are returned.
+
+	 - Type: LONG
+	 - Default: 250
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+SNMP Security
+==========================
+🔘 snmp.v3.enabled
+
+Flag indicating if SNMP v3 protocol is enabled.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 v3.security.context.users
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of unique usernames in each security context.
+	 - Required: MEDIUM
+
+==========================
+null
+==========================
+🔘 v3.mysecurityname.auth.password
+
+
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 v3.mysecurityname.auth.protocol
+
+
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 v3.mysecurityname.privacy.password
+
+
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 v3.mysecurityname.privacy.protocol
+
+
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
