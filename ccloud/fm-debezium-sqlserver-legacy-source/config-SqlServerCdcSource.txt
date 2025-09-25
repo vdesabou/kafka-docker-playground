@@ -1,0 +1,474 @@
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 datapreview.schemas.enable
+
+This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+How should we connect to your database?
+==========================
+🔘 database.hostname
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The address of the Microsoft SQL Server.
+	 - Required: HIGH
+
+🔘 database.port
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Port number of the Microsoft SQL Server.
+	 - Required: HIGH
+
+🔘 database.user
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The name of the Microsoft SQL Server user that has the required authorization.
+	 - Required: HIGH
+
+🔘 database.password
+
+
+
+	 - Type: true
+	 - Default: PASSWORD
+	 - Importance: The password for the Microsoft SQL Server user that has the required authorization.
+	 - Required: HIGH
+
+🔘 database.dbname
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The name of the Microsoft SQL Server database to connect to.
+	 - Required: HIGH
+
+🔘 database.server.name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The logical name of the Microsoft SQL Server cluster. This logical name forms a namespace and is used in all the names of the Kafka topics and the Kafka Connect schema names. The logical name is also used for the namespaces of the corresponding Avro schema, if Avro data format is used. Kafka topics should/will be created with the prefix ``database.server.name``. Only alphanumeric characters, underscores, hyphens and dots are allowed.
+	 - Required: HIGH
+
+🔘 database.instance
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Microsoft SQL Server Instance
+	 - Required: MEDIUM
+
+🔘 database.applicationIntent
+
+You can specify the keyword ApplicationIntent in your connection string. The assignable values are ReadWrite (the default) or ReadOnly
+
+	 - Type: STRING
+	 - Default: ReadWrite
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Database details
+==========================
+🔘 signal.data.collection
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Fully-qualified name of the data collection that needs to be used to send signals to the connector. Use the following format to specify the fully-qualified collection name: ``databaseName.schemaName.tableName`` 
+	 - Required: MEDIUM
+
+🔘 snapshot.isolation.mode
+
+A mode to control which transaction isolation level is used and how long the connector locks tables that are designated for capture. The snapshot, read_committed and read_uncommitted modes do not prevent other transactions from updating table rows during initial snapshot. The exclusive and repeatable_read modes do prevent concurrent updates.Mode choice also affects data consistency. Only exclusive and snapshot modes guarantee full consistency, that is, initial snapshot and streaming logs constitute a linear history. In case of repeatable_read and read_committed modes, it might happen that, for instance, a record added appears twice - once in initial snapshot and once in streaming phase. Nonetheless, that consistency level should do for data mirroring. For read_uncommitted there are no data consistency guarantees at all (some data might be lost or corrupted).
+
+	 - Type: STRING
+	 - Default: repeatable_read
+	 - Importance: LOW
+	 - Required: false
+
+🔘 table.include.list
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: An optional comma-separated list of strings that match fully-qualified table identifiers for tables to be monitored. Any table not included in this config property is excluded from monitoring. Each identifier is in the form ``schemaName.tableName``. By default the connector monitors every non-system table in each monitored schema. May not be used with "Table excluded".
+	 - Required: MEDIUM
+
+🔘 table.exclude.list
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: An optional comma-separated list of strings that match fully-qualified table identifiers for tables to be excluded from monitoring. Any table not included in this config property is monitored. Each identifier is in the form ``schemaName.tableName``. May not be used with "Table included".
+	 - Required: MEDIUM
+
+🔘 snapshot.mode
+
+A mode for taking an initial snapshot of the structure and optionally data of captured tables. Once the snapshot is complete, the connector will continue reading change events from the database’s redo logs. The default setting is ``initial``, and takes a snapshot of structure and data of captured tables; useful if topics should be populated with a complete representation of the data from the captured tables. The ``schema_only`` option takes a snapshot of the structure of captured tables only; useful if only changes happening from now onwards should be propagated to topics. The ``initial_only`` takes a snapshot of structure and data like initial but instead does not transition into streaming changes once the snapshot has completed.
+
+	 - Type: STRING
+	 - Default: initial
+	 - Importance: LOW
+	 - Required: false
+
+🔘 datatype.propagate.source.type
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma-separated list of regular expressions matching the database-specific data type names that adds the data type's original type and original length as parameters to the corresponding field schemas in the emitted change records.
+	 - Required: LOW
+
+🔘 tombstones.on.delete
+
+Controls whether a tombstone event should be generated after a delete event. When set to ``true``, the delete operations are represented by a delete event and a subsequent tombstone event. When set to ``false``, only a delete event is sent. Emitting the tombstone event (the default behavior) allows Kafka to completely delete all events pertaining to the given key, once the source record got deleted.
+
+	 - Type: STRING
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 column.exclude.list
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Regular expressions matching columns to exclude from change events
+	 - Required: MEDIUM
+
+==========================
+Connection details
+==========================
+🔘 poll.interval.ms
+
+Positive integer value that specifies the number of milliseconds the connector should wait during each iteration for new change events to appear. Defaults to 1000 milliseconds, or 1 second.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.batch.size
+
+Positive integer value that specifies the maximum size of each batch of events that should be processed during each iteration of this connector.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 event.processing.failure.handling.mode
+
+Specifies how the connector should react to exceptions during processing of binlog events.
+
+	 - Type: STRING
+	 - Default: fail
+	 - Importance: LOW
+	 - Required: false
+
+🔘 heartbeat.interval.ms
+
+Controls how frequently the connector sends heartbeat messages to a Kafka topic. The behavior of default value 0 is that the connector does not send heartbeat messages.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 database.history.skip.unparseable.ddl
+
+A Boolean value that specifies whether the connector should ignore malformed or unknown database statements (`true`), or stop processing so a human can fix the issue (`false`). Defaults to `false`. Consider setting this to `true` to ignore unparseable statements.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connector details
+==========================
+🔘 provide.transaction.metadata
+
+Stores transaction metadata information in a dedicated topic and enables the transaction metadata extraction together with event counting.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 decimal.handling.mode
+
+Specifies how DECIMAL and NUMERIC columns should be represented in change events, including: 'precise' (the default) uses java.math.BigDecimal to represent values, which are encoded in the change events using a binary representation and Kafka Connect's 'org.apache.kafka.connect.data.Decimal' type; 'string' uses string to represent values; 'double' represents values using Java's 'double', which may not offer the precision but will be far easier to use in consumers.
+
+	 - Type: STRING
+	 - Default: precise
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 binary.handling.mode
+
+Specifies how binary (blob, binary, etc.) columns should be represented in change events, including: 'bytes' (the default) represents binary data as byte array; 'base64' represents binary data as base64-encoded string; 'hex' represents binary data as hex-encoded (base16) string.
+
+	 - Type: STRING
+	 - Default: bytes
+	 - Importance: LOW
+	 - Required: false
+
+🔘 time.precision.mode
+
+Time, date, and timestamps can be represented with different kinds of precisions, including: 'adaptive' (the default) bases the precision of time, date, and timestamp values on the database column's precision; 'adaptive_time_microseconds' like 'adaptive' mode, but TIME fields always use microseconds precision; 'connect' always represents time, date, and timestamp values using Kafka Connect's built-in representations for Time, Date, and Timestamp, which uses millisecond precision regardless of the database columns' precision.
+
+	 - Type: STRING
+	 - Default: adaptive
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 cleanup.policy
+
+Set the topic cleanup policy
+
+	 - Type: STRING
+	 - Default: delete
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 database.history.store.only.captured.tables.ddl
+
+A Boolean value that specifies whether the connector records schema structures from all tables in a schema or database, or only from tables that are designated for capture. Defaults to `false`. 
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Output messages
+==========================
+🔘 output.data.format
+
+Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 after.state.only
+
+Controls whether the generated Kafka record should contain only the state after applying change events.
+
+	 - Type: STRING
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.key.format
+
+Sets the output Kafka record key format. Valid entries are AVRO, JSON_SR, PROTOBUF, STRING or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values. Input messages must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+

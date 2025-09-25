@@ -1,0 +1,510 @@
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 datapreview.schemas.enable
+
+This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Auth Mode
+==========================
+🔘 authentication.method
+
+Select how you want to authenticate the DB. Username Password or AWS IAM Roles.
+
+	 - Type: STRING
+	 - Default: Password
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing integration that has access to your resource. In case you need to integrate a new IAM role, use provider integration
+	 - Required: HIGH
+
+🔘 database.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Password for the MySQL database user that has the required authorization
+	 - Required: HIGH
+
+==========================
+How should we connect to your database?
+==========================
+🔘 database.aws.region
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The AWS region of the MySQL database server for RDS/Aurora.
+	 - Required: HIGH
+
+🔘 database.hostname
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: IP address or hostname of the MySQL database server.
+	 - Required: HIGH
+
+🔘 database.port
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Port number of the MySQL database server.
+	 - Required: HIGH
+
+🔘 database.user
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The name of the MySQL database user that has the required authorization.
+	 - Required: HIGH
+
+🔘 database.ssl.mode
+
+Whether to use an encrypted connection to the MySQL server. Possible settings are: `disabled`, `preferred`, and `required`. 
+
+	 - Type: STRING
+	 - Default: preferred
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+CSFLE
+==========================
+🔘 csfle.enabled
+
+Determines whether the connector honours CSFLE rules or not
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sr.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
+	 - Required: HIGH
+
+==========================
+Output messages
+==========================
+🔘 output.data.format
+
+Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 output.key.format
+
+Sets the output Kafka record key format. Valid entries are AVRO, JSON_SR, PROTOBUF, STRING or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 after.state.only
+
+Controls whether the generated Kafka record should contain only the state of the row after the event occurred.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 tombstones.on.delete
+
+Controls whether a tombstone event should be generated after a delete event. 
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+How should we name your topic(s)?
+==========================
+🔘 topic.prefix
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Topic prefix that provides a namespace (logical server name) for the particular MySQL database server or cluster in which Debezium is capturing changes. The prefix should be unique across all other connectors, since it is used as a topic name prefix for all Kafka topics that receive records from this connector. Only alphanumeric characters, hyphens, dots and underscores must be used. The connector automatically creates Kafka topics using the naming convention: `<topic.prefix>.<databaseName>.<tableName>`.
+	 - Required: HIGH
+
+🔘 schema.history.internal.kafka.topic
+
+The name of the topic for the database schema history. A new topic with provided name is created, if it doesn't already exist. If the topic already exists, ensure that it has a single partition, infinite retention period and is not in use by any other connector. If no value is provided, the name defaults to ``dbhistory.<topic-prefix>.<lcc-id>``.
+
+	 - Type: STRING
+	 - Default: dbhistory.${topic.prefix}.{{.logicalClusterId}}
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Database config
+==========================
+🔘 signal.data.collection
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Fully-qualified name of the data collection that needs to be used to send signals to the connector. Use the following format to specify the fully-qualified collection name: `databaseName.tableName` 
+	 - Required: MEDIUM
+
+==========================
+Connector config
+==========================
+🔘 snapshot.mode
+
+Specifies the criteria for running a snapshot when the connector starts. Possible settings are: `initial`, `initial_only`, `when_needed`, `never`, `schema_only`(deprecated), `no_data`, `schema_only_recovery`(deprecated), `recovery`. 
+
+	 - Type: STRING
+	 - Default: initial
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snapshot.locking.mode
+
+Controls whether and how long the connector holds the global MySQL read lock, which prevents any updates to the database, while the connector is performing a snapshot. Possible settings are: `minimal`, `minimal_percona`, `extended`, and `none`. 
+
+	 - Type: STRING
+	 - Default: minimal
+	 - Importance: LOW
+	 - Required: false
+
+🔘 database.include.list
+
+To match the name of a database, Debezium applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire name string of the database; it does not match substrings that might be present in a database name.
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: An optional, comma-separated list of regular expressions that match the names of the databases for which to capture changes. The connector does not capture changes in any database whose name is not in this list. By default, the connector captures changes in all databases.
+	 - Required: MEDIUM
+
+🔘 table.include.list
+
+To match the name of a table, Debezium applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire identifier for the table; it does not match substrings that might be present in a table name. 
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: An optional, comma-separated list of regular expressions that match fully-qualified table identifiers for tables whose changes you want to capture. When this property is set, the connector captures changes only from the specified tables. Each identifier is of the form `database.tableName`. By default, the connector captures changes in every non-system table in each schema whose changes are being captured. 
+	 - Required: MEDIUM
+
+🔘 table.exclude.list
+
+To match the name of a table, Debezium applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire identifier for the table; it does not match substrings that might be present in a table name. 
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: An optional, comma-separated list of regular expressions that match fully-qualified table identifiers for tables whose changes you do not want to capture. Each identifier is of the form `database.tableName`. When this property is set, the connector captures changes from every table that you do not specify. 
+	 - Required: MEDIUM
+
+🔘 event.processing.failure.handling.mode
+
+Specifies how the connector should react to exceptions during processing of events. Possible settings are: `fail`, `skip`, and `warn`. 
+
+	 - Type: STRING
+	 - Default: fail
+	 - Importance: LOW
+	 - Required: false
+
+🔘 column.exclude.list
+
+To match the name of a column, Debezium applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire name string of the column; it does not match substrings that might be present in a column name.
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: An optional, comma-separated list of regular expressions that match the fully-qualified names of columns to exclude from change event record values. Fully-qualified names for columns are of the form `databaseName.tableName.columnName`. 
+	 - Required: MEDIUM
+
+🔘 schema.name.adjustment.mode
+
+Specifies how schema names should be adjusted for compatibility with the message converter used by the connector. Possible settings are: `none`, `avro`, and `avro_unicode`. 
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 field.name.adjustment.mode
+
+Specifies how field names should be adjusted for compatibility with the message converter used by the connector. Possible settings are: `none`, `avro`, and `avro_unicode`. 
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 heartbeat.interval.ms
+
+Controls how frequently the connector sends heartbeat messages to a Kafka topic. The behavior of default value 0 is that the connector does not send heartbeat messages. Heartbeat messages are useful for monitoring whether the connector is receiving change events from the database. Heartbeat messages might help decrease the number of change events that need to be re-sent when a connector restarts. To send heartbeat messages, set this property to a positive integer, which indicates the number of milliseconds between heartbeat messages.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 inconsistent.schema.handling.mode
+
+Specifies how the connector should react to binlog events that belong to a table missing from internal schema representation. Possible settings are: `fail`, `skip`, and `warn`. 
+
+	 - Type: STRING
+	 - Default: fail
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 schema.history.internal.skip.unparseable.ddl
+
+A Boolean value that specifies whether the connector should ignore malformed or unknown database statements (`true`), or stop processing so a human can fix the issue (`false`). Defaults to `false`. Consider setting this to `true` to ignore unparseable statements.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 schema.history.internal.store.only.captured.tables.ddl
+
+A Boolean value that specifies whether the connector records schema structures from all tables in a schema or database, or only from tables that are designated for capture. Defaults to `false`. 
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 key.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for key. Valid entries are `DefaultReferenceSubjectNameStrategy` or `QualifiedReferenceSubjectNameStrategy`. Note that the subject reference name strategy can be selected only for `PROTOBUF` format with the default strategy being `DefaultReferenceSubjectNameStrategy`.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+How should we handle data types?
+==========================
+🔘 decimal.handling.mode
+
+Specifies how the connector should handle values for `DECIMAL` and `NUMERIC` columns. Possible settings are: `precise`, `double`, and `string`. 
+
+	 - Type: STRING
+	 - Default: precise
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 time.precision.mode
+
+Time, date, and timestamps can be represented with different kinds of precisions: 
+
+	 - Type: STRING
+	 - Default: adaptive_time_microseconds
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values. Input messages must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
