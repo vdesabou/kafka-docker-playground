@@ -1,0 +1,252 @@
+==========================
+null
+==========================
+🔘 iceberg.tables
+
+Comma-delimited list of destination tables
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 iceberg.tables.dynamic-enabled
+
+Enable dynamic routing to tables based on a record value
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 iceberg.tables.route-field
+
+Source record field for routing records to tables
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 iceberg.tables.default-commit-branch
+
+Default branch for commits
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 iceberg.tables.default-id-columns
+
+Default ID columns for tables, comma-separated
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 iceberg.tables.default-partition-by
+
+Default partition spec to use when creating tables, comma-separated
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 iceberg.tables.auto-create-enabled
+
+Set to true to automatically create destination tables, false otherwise
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 iceberg.tables.schema-force-optional
+
+Set to true to set columns as optional during table create and evolution, false to respect schema
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 iceberg.tables.schema-case-insensitive
+
+Set to true to look up table columns by case-insensitive name, false for case-sensitive
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 iceberg.tables.evolve-schema-enabled
+
+Set to true to add any missing record fields to the table schema, false otherwise
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 iceberg.catalog
+
+Iceberg catalog name
+
+	 - Type: STRING
+	 - Default: iceberg
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 iceberg.control.topic
+
+Name of the control topic
+
+	 - Type: STRING
+	 - Default: control-iceberg
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 iceberg.control.group-id-prefix
+
+Prefix of the control consumer group
+
+	 - Type: STRING
+	 - Default: cg-control-
+	 - Importance: LOW
+	 - Required: false
+
+🔘 iceberg.connect.group-id
+
+Name of the Connect consumer group, should not be set under normal conditions
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 iceberg.control.commit.interval-ms
+
+Coordinator interval for performing Iceberg table commits, in millis
+
+	 - Type: INT
+	 - Default: 300000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 iceberg.control.commit.timeout-ms
+
+Coordinator time to wait for worker responses before committing, in millis
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 iceberg.control.commit.threads
+
+Coordinator threads to use for table commits, default is (cores * 2)
+
+	 - Type: INT
+	 - Default: 8
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 iceberg.coordinator.transactional.prefix
+
+Optional prefix of the transactional id for the coordinator
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 iceberg.hadoop-conf-dir
+
+If specified, Hadoop config files in this directory will be loaded
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 value.converter.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+==========================
+Schemas
+==========================
+🔘 value.converter.schemas.cache.size
+
+The maximum number of schemas that can be cached in this converter instance.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schemas
+==========================
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
