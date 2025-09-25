@@ -1,0 +1,255 @@
+==========================
+Writes
+==========================
+🔘 insert.mode
+
+Defines the insertion mode to use. Supported modes are:
+
+	 - Type: STRING
+	 - Default: INSERT
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 max.batch.size
+
+The maximum number of records that can be batched into a batch of upserts. Note that since only a batch size of 1 for inserts is supported,  'max.batch.size' must be exactly 1 when 'insert.mode' is set to INSERT.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 error.mode
+
+Specifies how to handle errors that result from writes, after retries.Supported modes:
+
+	 - Type: STRING
+	 - Default: FAIL
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Data Mapping
+==========================
+🔘 table.name.format
+
+Name of the destination table. Use '${topic}' within the table name to specify the originating topic name.
+
+	 - Type: STRING
+	 - Default: ${topic}
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 row.key.definition
+
+If this configuration is empty or unspecified and the Kafka Message Key is a:
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma separated list of Kafka Record key field names that specifies the order of kafka key fields to be concatenated to form the row key. For example the list: 'username, post_id, time_stamp' when applied to a kafka key: {'username': 'bob','post_id': '213', 'time_stamp': '123123'} and with delimiter '#' gives the row key 'bob#213#123123'. Terms nested in the key maybe also accessed using '.' as a delimiter.
+	 - Required: MEDIUM
+
+🔘 row.key.delimiter
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The delimiter used in concatenating kafka key fields in the row key. If this configuration is empty or unspecified, the key fields will be concatenated together directly.
+	 - Required: LOW
+
+🔘 auto.create.tables
+
+Whether to automatically create the destination table if it is found to be missing.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 auto.create.column.families
+
+Whether to automatically create missing columns families in the table relative to the record schema.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Retries
+==========================
+🔘 retry.timeout.ms
+
+Maximum time in milliseconds allocated for retrying database operations before trying other error handling mechanisms.
+
+	 - Type: LONG
+	 - Default: 90000
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Proxy
+==========================
+🔘 proxy.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The url of a proxy to connect through. This property should only be used if you want to access through a proxy.
+	 - Required: LOW
+
+🔘 proxy.user
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Proxy user. This property should only be used if you want to access through a proxy. Using proxy.user instead of embedding the username in proxy.url allows the proxy credentials to be hidden in logs.
+	 - Required: LOW
+
+🔘 proxy.password
+
+Proxy password. This property should only be used if you want to access through a proxy. Using proxy.password instead of embedding the password in proxy.url allows the proxy credentials to be hidden in logs.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connection
+==========================
+🔘 hbase.zookeeper.quorum
+
+The Zookeeper service that retrieves the HBase master address in order to establish a connection.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 hbase.zookeeper.property.clientPort
+
+The port of the Zookeeper service that retrieves the HBase master address in order to establish a connection.
+
+	 - Type: INT
+	 - Default: 2181
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Authentication
+==========================
+🔘 hbase.master.kerberos.principal
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kerberos principal used to run the HMaster process. Required for Kerberos authentication configurations to be used, otherwise they are ignored.
+	 - Required: MEDIUM
+
+🔘 hbase.regionserver.kerberos.principal
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kerberos principal used to run the HRegionserver process. Required for Kerberos authentication configurations to be used, otherwise they are ignored.
+	 - Required: MEDIUM
+
+🔘 hbase.keytab.file
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The path to the keytab file used to authenticate HBase. Required for Kerberos authentication configurations to be used, otherwise they are ignored.
+	 - Required: MEDIUM
+
+🔘 hbase.user.principal
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kerberos user principal to login as to the hbase.master.kerberos.principal. Required for Kerberos authentication configurations to be used, otherwise they are ignored.
+	 - Required: MEDIUM
+
+🔘 hbase.rpc.protection
+
+The level of encryption for RPC communication. The supported levels are:
+
+	 - Type: STRING
+	 - Default: AUTHENTICATION
+	 - Importance: LOW
+	 - Required: false
+
+🔘 hbase.cluster.distributed
+
+Whether the HBase cluster is in standalone or distributed mode.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 zookeeper.znode.parent
+
+The root directory for HBase's Zookeeper files
+
+	 - Type: STRING
+	 - Default: /hbase-secure
+	 - Importance: LOW
+	 - Required: false
+
+🔘 kerberos.ticket.renew.period.ms
+
+How often in milliseconds to renew the Kerberos ticket when using Kerberos authentication with HBase.
+
+	 - Type: LONG
+	 - Default: 3600000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 value.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+

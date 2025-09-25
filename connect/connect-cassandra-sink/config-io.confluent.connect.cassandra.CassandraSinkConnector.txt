@@ -1,0 +1,306 @@
+==========================
+Transforms: createKey
+==========================
+🔘 transforms.createKey.type
+
+Class for the 'createKey' transformation.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.createKey.fields
+
+Field names on the record value to extract as the record key.
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.createKey.negate
+
+Whether the configured predicate should be negated.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.createKey.predicate
+
+The alias of a predicate used to determine whether to apply this transformation.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.createKey.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Connection
+==========================
+🔘 cassandra.contact.points
+
+The Cassandra hosts to connect to.
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 cassandra.port
+
+The port the Cassandra hosts are listening on.
+
+	 - Type: INT
+	 - Default: 9042
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 cassandra.local.datacenter
+
+The local datacenter of the cassandra nodes defined in cassandra.contact.points. To get the local datacenter  of a node using the cqlsh tool, connect to your node and run the following cqlsh command: `select data_center from system.local;` This configuration is required for the connector to start.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 cassandra.security
+
+Flag to determine if security is password authentication, Kerberos or not enabled.
+
+	 - Type: STRING
+	 - Default: PASSWORD
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 cassandra.username
+
+The username to connect to Cassandra with.
+
+	 - Type: STRING
+	 - Default: cassandra
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 cassandra.password
+
+The password to connect to Cassandra with.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Kerberos
+==========================
+🔘 connect.cassandra.principal
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The principal to use when connecting to Cassandra with Kerberos
+	 - Required: HIGH
+
+🔘 connect.cassandra.keytab
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The path to the keytab file for the Cassandra connector principal. This keytab file should only be readable by the connector.
+	 - Required: HIGH
+
+🔘 cassandra.kerberos.sasl.protocol
+
+The protocol that will be used to create the SASL client for kerberos. Ex: if sink is OSS Cassandra, use `cassandra`, if dse use `dse`
+
+	 - Type: STRING
+	 - Default: cassandra
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connection
+==========================
+🔘 cassandra.compression
+
+Compression algorithm to use when connecting to Cassandra.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 cassandra.ssl.enabled
+
+Flag to determine if SSL is enabled when connecting to Cassandra.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+SSL
+==========================
+🔘 cassandra.ssl.truststore.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Path to the Java Truststore.
+	 - Required: MEDIUM
+
+🔘 cassandra.ssl.truststore.password
+
+Password to open the Java Truststore with.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Write
+==========================
+🔘 cassandra.consistency.level
+
+The requested consistency level to use when writing to Cassandra.
+
+	 - Type: STRING
+	 - Default: LOCAL_QUORUM
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 cassandra.deletes.enabled
+
+Flag to determine if the connector should process deletes.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Keyspace
+==========================
+🔘 cassandra.keyspace
+
+The keyspace to write to.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 cassandra.keyspace.create.enabled
+
+Flag to determine if the keyspace should be created if it does not exist.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 cassandra.keyspace.replication.factor
+
+The replication factor to use if a keyspace is created by the connector.
+
+	 - Type: INT
+	 - Default: 3
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Table
+==========================
+🔘 cassandra.table.manage.enabled
+
+Flag to determine if the connector should manage the table.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 cassandra.table.create.compression.algorithm
+
+Compression algorithm to use when the table is created.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 cassandra.table.create.caching
+
+Caching setting to use.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 cassandra.table.create.caching.rows.per.partition
+
+When `cassandra.table.create.caching` is set to N_ROWS, set the number of rows per partition to cache.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 cassandra.offset.storage.table
+
+The table within the Cassandra keyspace to store the offsets that have been read from Kafka. This is used to enable exactly once delivery to Cassandra.
+
+	 - Type: STRING
+	 - Default: kafka_connect_offsets
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Write
+==========================
+🔘 cassandra.execute.timeout.ms
+
+cassandra.execute.timeout.ms
+
+	 - Type: LONG
+	 - Default: 30000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 cassandra.ttl
+
+The retention period for the data in Cassandra. After this interval elapses, Cassandra will remove these records.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 cassandra.offset.storage.table.enable
+
+If true, Kafka consumer offsets will be stored in Cassandra table. If false, connector will skip writing offset information into Cassandra (this might imply duplicate writes into Cassandra when a task restarts).
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+

@@ -1,0 +1,453 @@
+==========================
+Transforms: KeyExample
+==========================
+🔘 transforms.KeyExample.type
+
+Class for the 'KeyExample' transformation.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.KeyExample.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Field name or header key to use when extracting the topic name. Required when extracting from a header. Otherwise, if left blank, the entire key or value is used (and assumed to be a string).
+	 - Required: MEDIUM
+
+🔘 transforms.KeyExample.field.format
+
+Determine the format of fieldconfig. If set to JSON_PATH, the transformer will interpret the field with json path interpreter. If left blank or set to PLAIN, the transformer evaluates field config as non nested field name.
+
+	 - Type: STRING
+	 - Default: PLAIN
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.KeyExample.negate
+
+Whether the configured predicate should be negated.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.KeyExample.predicate
+
+The alias of a predicate used to determine whether to apply this transformation.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.KeyExample.skip.missing.or.null
+
+How to handle missing fields and null fields, keys, and values. By default, this transformation will throw an exception if a field specified via the field configuration is missing or null, or if no field is specified but the message's key or value is null. If this configuration is set to true, the transformation will instead silently ignore these conditions and all the record to pass through unaltered.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Transforms: dropSufffix
+==========================
+🔘 transforms.dropSufffix.type
+
+Class for the 'dropSufffix' transformation.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.dropSufffix.regex
+
+Regular expression to use for matching.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.dropSufffix.replacement
+
+Replacement string.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.dropSufffix.negate
+
+Whether the configured predicate should be negated.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.dropSufffix.predicate
+
+The alias of a predicate used to determine whether to apply this transformation.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Connection
+==========================
+🔘 couchbase.password
+
+Password of the Couchbase user.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 couchbase.username
+
+Name of the Couchbase user to authenticate as.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 couchbase.bucket
+
+This property is required unless using the experimental AnalyticsSinkHandler.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Name of the Couchbase bucket to use.
+	 - Required: HIGH
+
+🔘 couchbase.seed.nodes
+
+Addresses of Couchbase Server nodes, delimited by commas.
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 couchbase.network
+
+The network selection strategy for connecting to a Couchbase Server cluster that advertises alternate addresses.
+
+	 - Type: STRING
+	 - Default: auto
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.bootstrap.timeout
+
+On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
+
+	 - Type: STRING
+	 - Default: 30s
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Security
+==========================
+🔘 couchbase.enable.tls
+
+Use secure connection to Couchbase Server.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.enable.hostname.verification
+
+Set this to `false` to disable TLS hostname verification for Couchbase connections. Less secure, but might be required if for some reason you can't issue a certificate whose Subject Alternative Names match the hostname used to connect to the server. Only disable if you understand the impact and can accept the risks.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.trust.store.path
+
+If you want to use a PEM file instead of a Java keystore, specify `couchbase.trust.certificate.path` instead.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Absolute filesystem path to the Java keystore holding the CA certificate used by Couchbase Server.
+	 - Required: MEDIUM
+
+🔘 couchbase.trust.certificate.path
+
+If you want to use a Java keystore instead of a PEM file, specify `couchbase.trust.store.path` instead.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Absolute filesystem path to the PEM file containing the CA certificate used by Couchbase Server.
+	 - Required: MEDIUM
+
+🔘 couchbase.client.certificate.path
+
+If you supply a value for this config property, the `couchbase.username` and `couchbase.password` properties will be ignored.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Absolute filesystem path to a Java keystore or PKCS12 bundle holding the private key and certificate chain to use for client certificate authentication (mutual TLS).
+	 - Required: MEDIUM
+
+🔘 couchbase.client.certificate.password
+
+Password for accessing the client certificate.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.trust.store.password
+
+Password for accessing the trust store.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Logging
+==========================
+🔘 couchbase.log.redaction
+
+Determines which kinds of sensitive log messages from the Couchbase connector will be tagged for later redaction by the Couchbase log redaction tool. NONE = no tagging; PARTIAL = user data is tagged; FULL = user, meta, and system data is tagged.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.log.document.lifecycle
+
+If true, document lifecycle milestones will be logged at INFO level instead of DEBUG. Enabling this feature lets you watch documents flow through the connector. Disabled by default because it generates many log messages.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.metrics.interval
+
+The connector writes metrics to the log at this interval.
+
+	 - Type: STRING
+	 - Default: 10m
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Source Behavior
+==========================
+🔘 couchbase.batch.size.max
+
+Controls maximum size of the batch for writing into topic.
+
+	 - Type: INT
+	 - Default: 2000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.topic
+
+Name of the Kafka topic to publish data to.
+
+	 - Type: STRING
+	 - Default: ${bucket}.${scope}.${collection}
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.headers
+
+- *`bucket`* - Name of the bucket the document came from.
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma-delimited list of Couchbase metadata headers to add to records. Recognized values:
+	 - Required: MEDIUM
+
+🔘 couchbase.collections
+
+If you specify neither "couchbase.scope" nor "couchbase.collections", the connector will stream from all collections of all scopes in the bucket.
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: If you wish to stream from specific collections, specify the qualified collection names here, separated by commas. A qualified name is the name of the scope followed by a dot (.) and then the name of the collection. For example: "tenant-foo.invoices".
+	 - Required: MEDIUM
+
+🔘 couchbase.collection.to.topic
+
+Collection and Topic are joined by an equals sign. Map entries are delimited by commas.
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A map from Couchbase collection to Kafka topic.
+	 - Required: MEDIUM
+
+🔘 couchbase.source.handler
+
+The fully-qualified class name of the source handler to use. The source handler determines how the Couchbase document is converted into a Kafka record.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: true
+
+🔘 couchbase.header.name.prefix
+
+The connector prepends this value to header names to prevent collision with headers set by other parts of the system.
+
+	 - Type: STRING
+	 - Default: couchbase.
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.event.filter
+
+The class name of the event filter to use. The event filter determines whether a database change event is ignored.
+
+	 - Type: CLASS
+	 - Default: com.couchbase.connect.kafka.filter.AllPassFilter
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.black.hole.topic
+
+This lets the connector tell the Kafka Connect framework about the source offset of the ignored event. Otherwise, a long sequence of ignored events in a low-traffic deployment might cause the stored source offset to lag too far behind the current source offset, which can lead to rollbacks to zero when the connector is restarted.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: If this property is non-blank, the connector publishes a tiny synthetic record to this topic whenever the Filter or SourceHandler ignores a source event.
+	 - Required: MEDIUM
+
+🔘 couchbase.initial.offset.topic
+
+This lets the connector initialize the missing source offsets to "now" (the current state of Couchbase).
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: If `couchbase.stream.from` is `SAVED_OFFSET_OR_NOW`, and this property is non-blank, on startup the connector publishes to the named topic one tiny synthetic record for each source partition that does not yet have a saved offset.
+	 - Required: MEDIUM
+
+🔘 couchbase.no.value
+
+If true, Couchbase Server will omit the document content when telling the connector about a change. The document key and metadata will still be present.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.connector.name.in.offsets
+
+When true, the connector's offsets are saved under a key that includes the connector name. This is redundant, since the Kafka Connect framework already isolates the offsets of connectors with different names.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.stream.from
+
+Controls when in the history the connector starts streaming from.
+
+	 - Type: STRING
+	 - Default: SAVED_OFFSET_OR_BEGINNING
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.jsonpath.filter
+
+A document passes the jsonpath filter if the expression matches something in the document. If the property is blank or not specified then all documents will pass
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: If you wish to filter the documents being sent, in addition to or instead of using a custom Filter class, this is applied before the couchbase.event.filter or the couchbase.source.handler
+	 - Required: MEDIUM
+
+🔘 couchbase.scope
+
+If you specify neither "couchbase.scope" nor "couchbase.collections", the connector will stream from all collections of all scopes in the bucket.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: If you wish to stream from all collections within a scope, specify the scope name here.
+	 - Required: MEDIUM
+
+==========================
+Database Change Protocol
+==========================
+🔘 couchbase.compression
+
+To reduce bandwidth usage, Couchbase Server 5.5 and later can send documents to the connector in compressed form. (Messages are always published to the Kafka topic in uncompressed form, regardless of this setting.)
+
+	 - Type: STRING
+	 - Default: ENABLED
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.persistence.polling.interval
+
+When a Couchbase Server node fails over, documents on the failing node that haven't been fully replicated may be "rolled back" to a previous state. To ensure consistency between Couchbase and the Kafka topic, the connector can defer publishing a document to Kafka until it has been saved to disk on all replicas.
+
+	 - Type: STRING
+	 - Default: 100ms
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.flow.control.buffer
+
+The flow control buffer limits how much data Couchbase will send before waiting for the connector to acknowledge the data has been processed. The recommended size is between 10 MiB ("10m") and 50 MiB ("50m").
+
+	 - Type: STRING
+	 - Default: 16m
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.xattrs
+
+Should filters and source handlers have access to a document's extended attributes?
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.enable.dcp.trace
+
+If true, detailed protocol trace information is logged to the `com.couchbase.client.dcp.trace` category at INFO level. Otherwise, trace information is not logged.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.dcp.trace.document.id.regex
+
+When DCP trace is enabled, set this property to limit the trace to only documents whose IDs match this Java regular expression.
+
+	 - Type: STRING
+	 - Default: .*
+	 - Importance: MEDIUM
+	 - Required: false
+

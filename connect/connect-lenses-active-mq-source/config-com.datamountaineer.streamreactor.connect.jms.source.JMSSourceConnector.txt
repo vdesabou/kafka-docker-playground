@@ -1,0 +1,180 @@
+==========================
+Connection
+==========================
+🔘 connect.jms.url
+
+Provides the JMS broker url
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 connect.jms.initial.context.factory
+
+Initial Context Factory, e.g: org.apache.activemq.jndi.ActiveMQInitialContextFactory
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 connect.jms.connection.factory
+
+Provides the full class name for the ConnectionFactory implementation to use, e.gorg.apache.activemq.ActiveMQConnectionFactory
+
+	 - Type: STRING
+	 - Default: ConnectionFactory
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 connect.jms.kcql
+
+connect.jms.kcql
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 connect.jms.subscription.name
+
+subscription name to use when subscribing to a topic, specifying this makes a durable subscription for topics
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 connect.jms.password
+
+Provides the password for the JMS connection
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 connect.jms.username
+
+Provides the user for the JMS connection
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 connect.jms.error.policy
+
+Specifies the action to be taken if an error occurs while inserting the data.
+
+	 - Type: STRING
+	 - Default: THROW
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 connect.jms.retry.interval
+
+The time in milliseconds between retries.
+
+	 - Type: INT
+	 - Default: 60000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 connect.jms.max.retries
+
+The maximum number of times to try the write again.
+
+	 - Type: INT
+	 - Default: 20
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 connect.jms.destination.selector
+
+Selector to use for destination lookup. Either CDI or JNDI.
+
+	 - Type: STRING
+	 - Default: CDI
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 connect.jms.initial.context.extra.params
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List (comma separated) of extra properties as key/value pairs with a colon delimiter to supply to the initial context e.g. SOLACE_JMS_VPN:my_solace_vp
+	 - Required: MEDIUM
+
+🔘 connect.jms.batch.size
+
+The number of records to poll for on the target JMS destination in each Connect poll.
+
+	 - Type: INT
+	 - Default: 100
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 connect.jms.polling.timeout
+
+Provides the timeout to poll incoming messages
+
+	 - Type: LONG
+	 - Default: 1000
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Converter
+==========================
+🔘 connect.jms.source.default.converter
+
+Overrides to the default can be done by using connect.jms.source.converters still.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Contains a canonical class name for the default converter of a raw JMS message bytes to a SourceRecord.
+	 - Required: HIGH
+
+🔘 connect.jms.converter.throw.on.error
+
+If set to false the conversion exception will be swallowed and everything carries on BUT the message is lost!!; true will throw the exception.Default is false.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 connect.converter.avro.schemas
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: If the AvroConverter is used you need to provide an avro Schema to be able to read and translate the raw bytes to an avro record. The format is $MQTT_TOPIC=$PATH_TO_AVRO_SCHEMA_FILE
+	 - Required: HIGH
+
+🔘 connect.jms.headers
+
+The format is connect.jms.headers="$MQTT_TOPIC=rmq.jms.message.type:TextMessage,rmq.jms.message.priority:2;$MQTT_TOPIC2=rmq.jms.message.type:JSONMessage"
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Contains collection of static JMS headers included in every SinkRecord
+	 - Required: LOW
+
+==========================
+Metrics
+==========================
+🔘 connect.progress.enabled
+
+Enables the output for how many records have been processed
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
