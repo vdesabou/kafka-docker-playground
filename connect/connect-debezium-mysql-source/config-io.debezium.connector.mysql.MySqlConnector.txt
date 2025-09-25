@@ -1,0 +1,969 @@
+==========================
+Transforms: RemoveDots
+==========================
+🔘 transforms.RemoveDots.type
+
+Class for the 'RemoveDots' transformation.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.RemoveDots.regex
+
+Regular expression to use for matching.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.RemoveDots.replacement
+
+Replacement string.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.RemoveDots.negate
+
+Whether the configured predicate should be negated.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.RemoveDots.predicate
+
+The alias of a predicate used to determine whether to apply this transformation.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+MySQL
+==========================
+🔘 topic.prefix
+
+Topic prefix that identifies and provides a namespace for the particular database server/cluster is capturing changes. The topic prefix should be unique across all other connectors, since it is used as a prefix for all Kafka topic names that receive events emitted by this connector. Only alphanumeric characters, hyphens, dots and underscores must be accepted.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 database.hostname
+
+Resolvable hostname or IP address of the database server.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 database.port
+
+Port of the database server.
+
+	 - Type: INT
+	 - Default: 3306
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 database.user
+
+Name of the database user to be used when connecting to the database.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 database.password
+
+Password of the database user to be used when connecting to the database.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 database.query.timeout.ms
+
+Time to wait for a query to execute, given in milliseconds. Defaults to 600 seconds (600,000 ms); zero means there is no limit.
+
+	 - Type: INT
+	 - Default: 600000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 database.initial.statements
+
+A semicolon separated list of SQL statements to be executed when a JDBC connection (not binlog reading connection) to the database is established. Note that the connector may establish JDBC connections at its own discretion, so this should typically be used for configuration of session parameters only, but not for executing DML statements. Use doubled semicolon (';;') to use a semicolon as a character and not as a delimiter.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 database.server.id
+
+A numeric ID of this database client, which must be unique across all currently-running database processes in the cluster. This connector joins the database cluster as another server (with this unique ID) so it can read the binlog.
+
+	 - Type: LONG
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 database.server.id.offset
+
+Only relevant if parallel snapshotting is configured. During parallel snapshotting, multiple (4) connections open to the database client, and they each need their own unique connection ID. This offset is used to generate those IDs from the base configured cluster ID.
+
+	 - Type: LONG
+	 - Default: 10000
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 database.ssl.keystore
+
+The location of the key store file. This is optional and can be used for two-way authentication between the client and the database.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 database.ssl.keystore.password
+
+The password for the key store file. This is optional and only needed if 'database.ssl.keystore' is configured.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 database.ssl.truststore
+
+The location of the trust store file for the server certificate verification.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 database.ssl.truststore.password
+
+The password for the trust store file. Used to check the integrity of the truststore, and unlock the truststore.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 database.jdbc.driver
+
+JDBC Driver class name used to connect to the MySQL database server.
+
+	 - Type: CLASS
+	 - Default: com.mysql.cj.jdbc.Driver
+	 - Importance: LOW
+	 - Required: false
+
+🔘 database.protocol
+
+JDBC protocol to use with the driver.
+
+	 - Type: STRING
+	 - Default: jdbc:mysql
+	 - Importance: LOW
+	 - Required: false
+
+🔘 database.ssl.mode
+
+Whether to use an encrypted connection to the database. Options include: 'disabled' to use an unencrypted connection; 'preferred' (the default) to establish a secure (encrypted) connection if the server supports secure connections, but fall back to an unencrypted connection otherwise; 'required' to use a secure (encrypted) connection, and fail if one cannot be established; 'verify_ca' like 'required' but additionally verify the server TLS certificate against the configured Certificate Authority (CA) certificates, or fail if no valid matching CA certificates are found; or 'verify_identity' like 'verify_ca' but additionally verify that the server certificate matches the host to which the connection is attempted.
+
+	 - Type: STRING
+	 - Default: preferred
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Connector
+==========================
+🔘 event.processing.failure.handling.mode
+
+Specify how failures during processing of events (i.e. when encountering a corrupted event) should be handled, including: 'fail' (the default) an exception indicating the problematic event and its position is raised, causing the connector to be stopped; 'warn' the problematic event and its position will be logged and the event will be skipped; 'ignore' the problematic event will be skipped.
+
+	 - Type: STRING
+	 - Default: fail
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 max.batch.size
+
+Maximum size of each batch of source records. Defaults to 2048.
+
+	 - Type: INT
+	 - Default: 2048
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 max.queue.size
+
+Maximum size of the queue for change events read from the database log but not yet recorded or forwarded. Defaults to 8192, and should always be larger than the maximum batch size.
+
+	 - Type: INT
+	 - Default: 8192
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 poll.interval.ms
+
+Time to wait for new change events to appear after receiving no events, given in milliseconds. Defaults to 500 ms.
+
+	 - Type: LONG
+	 - Default: 500
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 max.queue.size.in.bytes
+
+Maximum size of the queue in bytes for change events read from the database log but not yet recorded or forwarded. Defaults to 0. Mean the feature is not enabled
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 provide.transaction.metadata
+
+Enables transaction metadata extraction together with event counting
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 skipped.operations
+
+The comma-separated list of operations to skip during streaming, defined as: 'c' for inserts/create; 'u' for updates; 'd' for deletes, 't' for truncates, and 'none' to indicate nothing skipped. By default, only truncate operations will be skipped.
+
+	 - Type: LIST
+	 - Default: t
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snapshot.delay.ms
+
+A delay period before a snapshot will begin, given in milliseconds. Defaults to 0 ms.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 streaming.delay.ms
+
+A delay period after the snapshot is completed and the streaming begins, given in milliseconds. Defaults to 0 ms.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snapshot.include.collection.list
+
+This setting must be set to specify a list of tables/collections whose snapshot must be taken on creating or restarting the connector.
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snapshot.fetch.size
+
+The maximum number of records that should be loaded into memory while performing a snapshot.
+
+	 - Type: INT
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snapshot.max.threads
+
+The maximum number of threads used to perform the snapshot. Defaults to 1.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snapshot.mode.custom.name
+
+When 'snapshot.mode' is set as custom, this setting must be set to specify a the name of the custom implementation provided in the 'name()' method. The implementations must implement the 'Snapshotter' interface and is called on each app boot to determine whether to do a snapshot.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snapshot.mode.configuration.based.snapshot.data
+
+When 'snapshot.mode' is set as configuration_based, this setting permits to specify whenever the data should be snapshotted or not.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snapshot.mode.configuration.based.snapshot.schema
+
+When 'snapshot.mode' is set as configuration_based, this setting permits to specify whenever the schema should be snapshotted or not.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snapshot.mode.configuration.based.start.stream
+
+When 'snapshot.mode' is set as configuration_based, this setting permits to specify whenever the stream should start or not after snapshot.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snapshot.mode.configuration.based.snapshot.on.schema.error
+
+When 'snapshot.mode' is set as configuration_based, this setting permits to specify whenever the schema should be snapshotted or not in case of error.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snapshot.mode.configuration.based.snapshot.on.data.error
+
+When 'snapshot.mode' is set as configuration_based, this setting permits to specify whenever the data should be snapshotted or not in case of error.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 retriable.restart.connector.wait.ms
+
+Time to wait before restarting connector after retriable exception occurs. Defaults to 10000ms.
+
+	 - Type: LONG
+	 - Default: 10000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 query.fetch.size
+
+The maximum number of records that should be loaded into memory while streaming. A value of '0' uses the default JDBC fetch size.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 errors.max.retries
+
+The maximum number of retries on connection errors before failing (-1 = no limit, 0 = disabled, > 0 = num of retries).
+
+	 - Type: INT
+	 - Default: -1
+	 - Importance: LOW
+	 - Required: false
+
+🔘 incremental.snapshot.watermarking.strategy
+
+Specify the strategy used for watermarking during an incremental snapshot: 'insert_insert' both open and close signal is written into signal data collection (default); 'insert_delete' only open signal is written on signal data collection, the close will delete the relative open signal;
+
+	 - Type: STRING
+	 - Default: INSERT_INSERT
+	 - Importance: LOW
+	 - Required: false
+
+🔘 internal.log.position.check.enable
+
+When enabled the connector checks if the position stored in the offset is still available in the log
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 internal.advanced.metrics.enable
+
+When enabled the connector will emit advanced streaming metrics
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 decimal.handling.mode
+
+Specify how DECIMAL and NUMERIC columns should be represented in change events, including: 'precise' (the default) uses java.math.BigDecimal to represent values, which are encoded in the change events using a binary representation and Kafka Connect's 'org.apache.kafka.connect.data.Decimal' type; 'string' uses string to represent values; 'double' represents values using Java's 'double', which may not offer the precision but will be far easier to use in consumers.
+
+	 - Type: STRING
+	 - Default: precise
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snapshot.lock.timeout.ms
+
+The maximum number of millis to wait for table locks at the beginning of a snapshot. If locks cannot be acquired in this time frame, the snapshot will be aborted. Defaults to 10 seconds
+
+	 - Type: LONG
+	 - Default: 10000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 connect.timeout.ms
+
+Maximum time to wait after trying to connect to the database before timing out, given in milliseconds. Defaults to 30 seconds (30,000 ms).
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 connect.keep.alive
+
+Whether a separate thread should be used to ensure the connection is kept alive.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 connect.keep.alive.interval.ms
+
+Interval for connection checking if keep alive thread is used, given in milliseconds Defaults to 1 minute (60,000 ms).
+
+	 - Type: LONG
+	 - Default: 60000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 use.nongraceful.disconnect
+
+Whether to use `socket.setSoLinger(true, 0)` when BinaryLogClient keepalive thread triggers a disconnect for a stale connection.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snapshot.mode
+
+The criteria for running a snapshot upon startup of the connector. Select one of the following snapshot options: 'when_needed': On startup, the connector runs a snapshot if one is needed.; 'schema_only': If the connector does not detect any offsets for the logical server name, it runs a snapshot that captures only the schema (table structures), but not any table data. After the snapshot completes, the connector begins to stream changes from the binlog.; 'schema_only_recovery': The connector performs a snapshot that captures only the database schema history. The connector then transitions back to streaming. Use this setting to restore a corrupted or lost database schema history topic. Do not use if the database schema was modified after the connector stopped.; 'initial' (default): If the connector does not detect any offsets for the logical server name, it runs a snapshot that captures the current full state of the configured tables. After the snapshot completes, the connector begins to stream changes from the binlog.; 'initial_only': The connector performs a snapshot as it does for the 'initial' option, but after the connector completes the snapshot, it stops, and does not stream changes from the binlog.; 'never': The connector does not run a snapshot. Upon first startup, the connector immediately begins reading from the beginning of the binlog. The 'never' mode should be used with care, and only when the binlog is known to contain all history.
+
+	 - Type: STRING
+	 - Default: initial
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snapshot.query.mode
+
+Controls query used during the snapshot
+
+	 - Type: STRING
+	 - Default: select_all
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snapshot.query.mode.custom.name
+
+When 'snapshot.query.mode' is set as custom, this setting must be set to specify a the name of the custom implementation provided in the 'name()' method. The implementations must implement the 'SnapshotterQuery' interface and is called to determine how to build queries during snapshot.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 bigint.unsigned.handling.mode
+
+Specify how BIGINT UNSIGNED columns should be represented in change events, including: 'precise' uses java.math.BigDecimal to represent values, which are encoded in the change events using a binary representation and Kafka Connect's 'org.apache.kafka.connect.data.Decimal' type; 'long' (the default) represents values using Java's 'long', which may not offer the precision but will be far easier to use in consumers.
+
+	 - Type: STRING
+	 - Default: long
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 time.precision.mode
+
+Time, date and timestamps can be represented with different kinds of precisions, including: 'adaptive_time_microseconds': the precision of date and timestamp values is based the database column's precision; but time fields always use microseconds precision; 'connect': always represents time, date and timestamp values using Kafka Connect's built-in representations for Time, Date, and Timestamp, which uses millisecond precision regardless of the database columns' precision.
+
+	 - Type: STRING
+	 - Default: adaptive_time_microseconds
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 enable.time.adjuster
+
+The database allows the user to insert year value as either 2-digit or 4-digit. In case of two digit the value is automatically mapped into 1970 - 2069.false - delegates the implicit conversion to the database; true - (the default) Debezium makes the conversion
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 schema.name.adjustment.mode
+
+Specify how schema names should be adjusted for compatibility with the message converter used by the connector, including: 'avro' replaces the characters that cannot be used in the Avro type name with underscore; 'avro_unicode' replaces the underscore or characters that cannot be used in the Avro type name with corresponding unicode like _uxxxx. Note: _ is an escape sequence like backslash in Java;'none' does not apply any adjustment (default)
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 min.row.count.to.stream.results
+
+The number of rows a table must contain to stream results rather than pull all into memory during snapshots. Defaults to 1,000. Use 0 to stream all results and completely avoid checking the size of each table.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 incremental.snapshot.chunk.size
+
+The maximum size of chunk (number of documents/rows) for incremental snapshotting
+
+	 - Type: INT
+	 - Default: 1024
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 incremental.snapshot.allow.schema.changes
+
+Detect schema change during an incremental snapshot and re-select a current chunk to avoid locking DDLs. Note that changes to a primary key are not supported and can cause incorrect results if performed during an incremental snapshot. Another limitation is that if a schema change affects only columns' default values, then the change won't be detected until the DDL is processed from the binlog stream. This doesn't affect the snapshot events' values, but the schema of snapshot events may have outdated defaults.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snapshot.locking.mode
+
+Controls how long the connector holds onto the global read lock while it is performing a snapshot. The default is 'minimal', which means the connector holds the global read lock (and thus prevents any updates) for just the initial portion of the snapshot while the database schemas and other metadata are being read. The remaining work in a snapshot involves selecting all rows from each table, and this can be done using the snapshot process' REPEATABLE READ transaction even when the lock is no longer held and other operations are updating the database. However, in some cases it may be desirable to block all writes for the entire duration of the snapshot; in such cases set this property to 'extended'. Using a value of 'none' will prevent the connector from acquiring any table locks during the snapshot process. This mode can only be used in combination with snapshot.mode values of 'schema_only' or 'schema_only_recovery' and is only safe to use if no schema changes are happening while the snapshot is taken.
+
+	 - Type: STRING
+	 - Default: minimal
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+History Storage
+==========================
+🔘 schema.history.internal
+
+The name of the SchemaHistory class that should be used to store and recover database schema changes. The configuration properties for the history are prefixed with the 'schema.history.internal.' string.
+
+	 - Type: CLASS
+	 - Default: io.debezium.storage.kafka.history.KafkaSchemaHistory
+	 - Importance: LOW
+	 - Required: false
+
+🔘 schema.history.internal.skip.unparseable.ddl
+
+Controls the action Debezium will take when it meets a DDL statement in binlog, that it cannot parse.By default the connector will stop operating but by changing the setting it can ignore the statements which it cannot parse. If skipping is enabled then Debezium can miss metadata changes.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 schema.history.internal.store.only.captured.tables.ddl
+
+Controls what DDL will Debezium store in database schema history. By default (false) Debezium will store all incoming DDL statements. If set to true, then only DDL that manipulates a captured table will be stored.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 schema.history.internal.store.only.captured.databases.ddl
+
+Controls what DDL will Debezium store in database schema history. By default (false) Debezium will store all incoming DDL statements. If set to true, then only DDL that manipulates a table from captured schema/database will be stored.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Events
+==========================
+🔘 converters
+
+Optional list of custom converters that would be used instead of default ones. The converters are defined using '<converter.prefix>.type' config option and configured using options '<converter.prefix>.<option>'
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 post.processors
+
+Optional list of post processors. The processors are defined using '<post.processor.prefix>.type' config option and configured using options '<post.processor.prefix.<option>'
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 tombstones.on.delete
+
+Whether delete operations should be represented by a delete event and a subsequent tombstone event (true) or only by a delete event (false). Emitting the tombstone event (the default behavior) allows Kafka to completely delete all events pertaining to the given key once the source record got deleted.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 heartbeat.interval.ms
+
+Length of an interval in milli-seconds in in which the connector periodically sends heartbeat messages to a heartbeat topic. Use 0 to disable heartbeat messages. Disabled by default.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 heartbeat.topics.prefix
+
+The prefix that is used to name heartbeat topics.Defaults to __debezium-heartbeat.
+
+	 - Type: STRING
+	 - Default: __debezium-heartbeat
+	 - Importance: LOW
+	 - Required: false
+
+🔘 signal.data.collection
+
+The name of the data collection that is used to send signals/commands to Debezium. Signaling is disabled when not set.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 signal.poll.interval.ms
+
+Interval for looking for new signals in registered channels, given in milliseconds. Defaults to 5 seconds.
+
+	 - Type: LONG
+	 - Default: 5000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 signal.enabled.channels
+
+List of channels names that are enabled. Source channel is enabled by default
+
+	 - Type: LIST
+	 - Default: source
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 topic.naming.strategy
+
+The name of the TopicNamingStrategy class that should be used to determine the topic name for data change, schema change, transaction, heartbeat event etc.
+
+	 - Type: CLASS
+	 - Default: io.debezium.schema.SchemaTopicNamingStrategy
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 notification.enabled.channels
+
+List of notification channels names that are enabled.
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 notification.sink.topic.name
+
+The name of the topic for the notifications. This is required in case 'sink' is in the list of enabled channels
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 transaction.metadata.factory
+
+Class to make transaction context & transaction struct/schemas
+
+	 - Type: CLASS
+	 - Default: io.debezium.pipeline.txmetadata.DefaultTransactionMetadataFactory
+	 - Importance: LOW
+	 - Required: false
+
+🔘 custom.metric.tags
+
+The custom metric tags will accept key-value pairs to customize the MBean object name which should be appended the end of regular name, each key would represent a tag for the MBean object name, and the corresponding value would be the value of that tag the key is. For example: k1=v1,k2=v2
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 column.include.list
+
+Regular expressions matching columns to include in change events
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 column.exclude.list
+
+Regular expressions matching columns to exclude from change events
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table.include.list
+
+The tables for which changes are to be captured
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 table.exclude.list
+
+A comma-separated list of regular expressions that match the fully-qualified names of tables to be excluded from monitoring
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 message.key.columns
+
+A semicolon-separated list of expressions that match fully-qualified tables and column(s) to be used as message key. Each expression must match the pattern '<fully-qualified table name>:<key columns>', where the table names could be defined as (DB_NAME.TABLE_NAME) or (SCHEMA_NAME.TABLE_NAME), depending on the specific connector, and the key columns are a comma-separated list of columns representing the custom key. For any table without an explicit key configuration the table's primary key column(s) will be used as message key. Example: dbserver1.inventory.orderlines:orderId,orderLineId;dbserver1.inventory.orders:id
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snapshot.select.statement.overrides
+
+ This property contains a comma-separated list of fully-qualified tables (DB_NAME.TABLE_NAME) or (SCHEMA_NAME.TABLE_NAME), depending on the specific connectors. Select statements for the individual tables are specified in further configuration properties, one for each table, identified by the id 'snapshot.select.statement.overrides.[DB_NAME].[TABLE_NAME]' or 'snapshot.select.statement.overrides.[SCHEMA_NAME].[TABLE_NAME]', respectively. The value of those properties is the select statement to use when retrieving data from the specific table during snapshotting. A possible use case for large append-only tables is setting a specific point where to start (resume) snapshotting, in case a previous snapshotting was interrupted.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 column.mask.hash.([^.]+).with.salt.(.+)
+
+A comma-separated list of regular expressions matching fully-qualified names of columns that should be masked by hashing the input. Using the specified hash algorithms and salt.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 column.mask.with.(d+).chars
+
+A comma-separated list of regular expressions matching fully-qualified names of columns that should be masked with configured amount of asterisk ('*') characters.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 column.truncate.to.(d+).chars
+
+A comma-separated list of regular expressions matching fully-qualified names of columns that should be truncated to the configured amount of characters.
+
+	 - Type: INT
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 include.schema.changes
+
+Whether the connector should publish changes in the database schema to a Kafka topic with the same name as the database server ID. Each schema change will be recorded using a key that contains the database name and whose value include logical description of the new schema and optionally the DDL statement(s). The default is 'true'. This is independent of how the connector internally records database schema history.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 include.schema.comments
+
+Whether the connector parse table and column's comment to metadata object. Note: Enable this option will bring the implications on memory usage. The number and size of ColumnImpl objects is what largely impacts how much memory is consumed by the Debezium connectors, and adding a String to each of them can potentially be quite heavy. The default is 'false'.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 column.propagate.source.type
+
+A comma-separated list of regular expressions matching fully-qualified names of columns that adds the column’s original type and original length as parameters to the corresponding field schemas in the emitted change records.
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 datatype.propagate.source.type
+
+A comma-separated list of regular expressions matching the database-specific data type names that adds the data type's original type and original length as parameters to the corresponding field schemas in the emitted change records.
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 internal.snapshot.scan.all.columns.force
+
+Restore pre 1.5 behaviour and scan all tables to discover columns. If you are excluding one table then turning this on may improve performance. If you are excluding a lot of tables the default behavior should work well.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snapshot.tables.order.by.row.count
+
+Controls the order in which tables are processed in the initial snapshot. A `descending` value will order the tables by row count descending. A `ascending` value will order the tables by row count ascending. A value of `disabled` (the default) will disable ordering by row count.
+
+	 - Type: STRING
+	 - Default: disabled
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 heartbeat.action.query
+
+The query executed with every heartbeat.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 include.query
+
+Whether the connector should include the original SQL query that generated the change event. Note: This option requires the database to be configured using the server option binlog_rows_query_log_events (MySQL) or binlog_annotate_row_events (MariaDB) set to ON.Query will not be present for events generated from snapshot. WARNING: Enabling this option may expose tables or fields explicitly excluded or masked by including the original SQL statement in the change event. For this reason the default value is 'false'.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table.ignore.builtin
+
+Flag specifying whether built-in tables should be ignored.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 database.include.list
+
+The databases for which changes are to be captured
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 database.exclude.list
+
+A comma-separated list of regular expressions that match database names to be excluded from monitoring
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 binlog.buffer.size
+
+The size of a look-ahead buffer used by the binlog reader to decide whether the transaction in progress is going to be committed or rolled back. Use 0 to disable look-ahead buffering. Defaults to 0 (i.e. buffering is disabled.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 event.deserialization.failure.handling.mode
+
+Specify how failures during deserialization of binlog events (i.e. when encountering a corrupted event) should be handled, including: 'fail' (the default) an exception indicating the problematic event and its binlog position is raised, causing the connector to be stopped; 'warn' the problematic event and its binlog position will be logged and the event will be skipped; 'ignore' the problematic event will be skipped.
+
+	 - Type: STRING
+	 - Default: fail
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 inconsistent.schema.handling.mode
+
+Specify how binlog events that belong to a table missing from internal schema representation (i.e. internal representation is not consistent with database) should be handled, including: 'fail' (the default) an exception indicating the problematic event and its binlog position is raised, causing the connector to be stopped; 'warn' the problematic event and its binlog position will be logged and the event will be skipped; 'skip' the problematic event will be skipped.
+
+	 - Type: STRING
+	 - Default: fail
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 gtid.source.filter.dml.events
+
+When set to true, only produce DML events for transactions that were written on the server with matching GTIDs defined by the `gtid.source.includes` or `gtid.source.excludes`, if they were specified.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 gtid.source.includes
+
+The source UUIDs used to include GTID ranges when determine the starting position in the MySQL server's binlog.
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 gtid.source.excludes
+
+The source UUIDs used to exclude GTID ranges when determine the starting position in the MySQL server's binlog.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 sourceinfo.struct.maker
+
+The name of the SourceInfoStructMaker class that returns SourceInfo schema and struct.
+
+	 - Type: CLASS
+	 - Default: io.debezium.connector.mysql.MySqlSourceInfoStructMaker
+	 - Importance: LOW
+	 - Required: false
+

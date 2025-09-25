@@ -1,0 +1,549 @@
+==========================
+Connector
+==========================
+🔘 connection.url
+
+The comma-separated list of one or more Elasticsearch URLs, such as ``http://eshost1:9200,http://eshost2:9200`` or ``https://eshost3:9200``. HTTPS is used for all connections if any of the URLs starts with ``https:``. A URL without a protocol is treated as ``http``.
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 connection.username
+
+The username used to authenticate with Elasticsearch. The default is the null, and authentication will only be performed if  both the username and password are non-null.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 connection.password
+
+The password used to authenticate with Elasticsearch. The default is the null, and authentication will only be performed if  both the username and password are non-null.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 external.resource.usage
+
+The type of resource the connector writes to, such as indices, datastreams or aliases. Valid options are INDEX, DATASTREAM, ALIAS_INDEX, ALIAS_DATASTREAM, and DISABLED. When set to DISABLED, the connector will auto-create indices or datastreams based on the topic name and datastream configurations
+
+	 - Type: STRING
+	 - Default: DISABLED
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 topic.to.external.resource.mapping
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A list of topic-to-resource mappings in the format 'topic:resource'. If specified, the connector will use the provided resource name (index, data stream, or alias) instead of the topic name for writing to Elasticsearch. The resource must exist in Elasticsearch before configuring the connector. The type of resource (index, data stream, or alias) is determined by the 'external.resource.usage' configuration.
+	 - Required: HIGH
+
+🔘 data.stream.type
+
+Generic type describing the data to be written to data stream. The default is NONE which indicates the connector will write to regular indices instead. If set, this configuration will be used alongside data.stream.dataset and data.stream.namespace to construct the data stream name in the form of {``data.stream.type``}-{``data.stream.dataset``}-{``data.stream.namespace``}. Custom index templates defined in the destination cluster are supported.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 data.stream.dataset
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Generic name describing data ingested and its structure to be written to a data stream. Can be any arbitrary string that is no longer than 100 characters, is in all lowercase, and does not contain spaces or any of these special characters ``/\*"<>|,#:-``. Otherwise, no value indicates the connector will write to regular indices instead. If set, this configuration will be used alongside ``data.stream.type`` and ``data.stream.namespace`` to construct the data stream name in the form of {``data.stream.type``}-{``data.stream.dataset``}-{``data.stream.namespace``}.
+	 - Required: LOW
+
+🔘 data.stream.namespace
+
+Generic name describing user-configurable arbitrary grouping to be written to a data stream. Can be any arbitrary string that is no longer than 100 characters,  is in all lowercase, and does not contain spaces or any of these special characters ``/\*"<>|,#:-``. Otherwise, no value indicates the connector will write to regular indices instead. If set, this configuration will be used alongside ``data.stream.type`` and ``data.stream.dataset`` to construct the data stream name inthe form of {``data.stream.type``}-{``data.stream.dataset``}-{``data.stream.namespace``}. Defaut value is ``${topic}``, that is to say the topic name.
+
+	 - Type: STRING
+	 - Default: ${topic}
+	 - Importance: LOW
+	 - Required: false
+
+🔘 data.stream.timestamp.field
+
+ All documents sent to a data stream needs an ``@timestamp`` field with values of type ``date`` or ``data_nanos``. Otherwise, the document will not be sent. If multiple fields are provided, the first field listed that also appears in the record will be used. If this configuration is left empty, all of the documents will use the Kafka record timestamp as the ``@timestamp`` field value. Note that ``@timestamp`` still needs to be explicitly listed if records already contain this field. This configuration can only be set if ``data.stream.type`` and ``data.stream.dataset`` are set.
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: The Kafka record field to use as the timestamp for the ``@timestamp`` field in documents sent to a data stream.
+	 - Required: LOW
+
+🔘 batch.size
+
+The number of records to process as a batch when writing to Elasticsearch.
+
+	 - Type: INT
+	 - Default: 2000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 bulk.size.bytes
+
+The maximum size (in bytes) to be process as a batch when writing records to Elasticsearch. Setting to '-1' will disable this configuration. If the condition set by 'batch.size' is met first, it will be used instead.
+
+	 - Type: LONG
+	 - Default: 5242880
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.in.flight.requests
+
+The maximum number of indexing requests that can be in-flight to Elasticsearch before blocking further requests.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 max.buffered.records
+
+The maximum number of records each task will buffer before blocking acceptance of more records. This config can be used to limit the memory usage for each task.
+
+	 - Type: INT
+	 - Default: 20000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 linger.ms
+
+Linger time in milliseconds for batching.
+
+	 - Type: LONG
+	 - Default: 1
+	 - Importance: LOW
+	 - Required: false
+
+🔘 flush.timeout.ms
+
+The timeout in milliseconds to use for periodic flushing, and when waiting for buffer space to be made available by completed requests as records are added. If this timeout is exceeded the task will fail.
+
+	 - Type: LONG
+	 - Default: 180000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 flush.synchronously
+
+True if flushes should wait for background processing to finish. This has a throughput penalty and makes the connector less responsive but allows for topic-mutating SMTs (e.g. RegexRouter or TimestampRouter)
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.retries
+
+The maximum number of retries that are allowed for failed indexing requests. If the retry attempts are exhausted the task will fail.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: LOW
+	 - Required: false
+
+🔘 retry.backoff.ms
+
+How long to wait in milliseconds before attempting the first retry of a failed indexing request. Upon a failure, this connector may wait up to twice as long as the previous wait, up to the maximum number of retries. This avoids retrying in a tight loop under failure scenarios.
+
+	 - Type: LONG
+	 - Default: 100
+	 - Importance: LOW
+	 - Required: false
+
+🔘 connection.compression
+
+Whether to use GZip compression on HTTP connection to ElasticSearch. Valid options are ``true`` and ``false``. Default is ``false``. To make this setting to work the ``http.compression`` setting also needs to be enabled at the Elasticsearch nodes or the load-balancer before using it.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.connection.idle.time.ms
+
+How long to wait in milliseconds before dropping an idle connection to prevent a read timeout.
+
+	 - Type: INT
+	 - Default: 60000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 connection.timeout.ms
+
+How long to wait in milliseconds when establishing a connection to the Elasticsearch server. The task fails if the client fails to connect to the server in this interval, and will need to be restarted.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 read.timeout.ms
+
+How long to wait in milliseconds for the Elasticsearch server to send a response. The task fails if any read operation times out, and will need to be restarted to resume further operations.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Data Conversion
+==========================
+🔘 key.ignore
+
+Whether to ignore the record key for the purpose of forming the Elasticsearch document ID. When this is set to ``true``, document IDs will be generated as the record's ``topic+partition+offset``.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 schema.ignore
+
+Whether to ignore schemas during indexing. When this is set to ``true``, the record schema will be ignored for the purpose of registering an Elasticsearch mapping. Elasticsearch will infer the mapping from the data (dynamic mapping needs to be enabled by the user).
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 compact.map.entries
+
+Defines how map entries with string keys within record values should be written to JSON. When this is set to ``true``, these entries are written compactly as ``"entryKey": "entryValue"``. Otherwise, map entries with string keys are written as a nested document ``{"key": "entryKey", "value": "entryValue"}``. All map entries with non-string keys are always written as nested documents. Prior to 3.3.0, this connector always wrote map entries as nested documents, so set this to ``false`` to use that older behavior.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 topic.key.ignore
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics for which ``key.ignore`` should be ``true``.
+	 - Required: LOW
+
+🔘 topic.schema.ignore
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics for which ``schema.ignore`` should be ``true``.
+	 - Required: LOW
+
+🔘 drop.invalid.message
+
+Whether to drop kafka message when it cannot be converted to output message.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 behavior.on.null.values
+
+How to handle records with a non-null key and a null value (i.e. Kafka tombstone records). Valid options are 'ignore', 'delete', and 'fail'.
+
+	 - Type: STRING
+	 - Default: FAIL
+	 - Importance: LOW
+	 - Required: false
+
+🔘 behavior.on.malformed.documents
+
+How to handle records that Elasticsearch rejects due to some malformation of the document itself, such as an index mapping conflict, a field name containing illegal characters, or a record with a missing id. Valid options are ignore', 'warn', and 'fail'.
+
+	 - Type: STRING
+	 - Default: FAIL
+	 - Importance: LOW
+	 - Required: false
+
+🔘 external.version.header
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Header name to pull value for external versioning, defaults to using the kafka record offset.  Must have a numeric value.
+	 - Required: LOW
+
+🔘 write.method
+
+Method used for writing data to Elasticsearch, and one of INSERT or UPSERT. The default method is INSERT, in which the connector constructs a document from the record value and inserts that document into Elasticsearch, completely replacing any existing document with the same ID; this matches previous behavior. The UPSERT method will create a new document if one with the specified ID does not yet exist, or will update an existing document with the same ID by adding/replacing only those fields present in the record value. The UPSERT method may require additional time and resources of Elasticsearch, so consider increasing the read.timeout.ms and decreasing the batch.size configuration properties.
+
+	 - Type: STRING
+	 - Default: INSERT
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connector
+==========================
+🔘 use.autogenerated.ids
+
+Whether to use auto-generated Elasticsearch document IDs for insertion requests. Note that this setting removes exactly once guarantees and message delivery will be at least once. Only applies if write.method is set to INSERT.When this is set to ``true``, ``key.ignore`` option will also be ignored when sending data to Elasticsearch
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Proxy
+==========================
+🔘 proxy.host
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The address of the proxy host to connect through. Supports the basic authentication scheme only.
+	 - Required: LOW
+
+🔘 proxy.port
+
+The port of the proxy host to connect through.
+
+	 - Type: INT
+	 - Default: 8080
+	 - Importance: LOW
+	 - Required: false
+
+🔘 proxy.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The username for the proxy host.
+	 - Required: LOW
+
+🔘 proxy.password
+
+The password for the proxy host.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Security
+==========================
+🔘 elastic.security.protocol
+
+The security protocol to use when connecting to Elasticsearch. Values can be `PLAINTEXT` or `SSL`. If `PLAINTEXT` is passed, all configs prefixed by elastic.https. will be ignored.
+
+	 - Type: STRING
+	 - Default: PLAINTEXT
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 elastic.https.ssl.key.password
+
+The password of the private key in the key store file or the PEM key specified in 'ssl.keystore.key'.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 elastic.https.ssl.keystore.certificate.chain
+
+Certificate chain in the format specified by 'ssl.keystore.type'. Default SSL engine factory supports only PEM format with a list of X.509 certificates
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 elastic.https.ssl.keystore.key
+
+Private key in the format specified by 'ssl.keystore.type'. Default SSL engine factory supports only PEM format with PKCS#8 keys. If the key is encrypted, key password must be specified using 'ssl.key.password'
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 elastic.https.ssl.keystore.location
+
+The location of the key store file. This is optional for client and can be used for two-way authentication for client.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 elastic.https.ssl.keystore.password
+
+The store password for the key store file. This is optional for client and only needed if 'ssl.keystore.location' is configured. Key store password is not supported for PEM format.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 elastic.https.ssl.truststore.certificates
+
+Trusted certificates in the format specified by 'ssl.truststore.type'. Default SSL engine factory supports only PEM format with X.509 certificates.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 elastic.https.ssl.truststore.location
+
+The location of the trust store file.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 elastic.https.ssl.truststore.password
+
+The password for the trust store file. If a password is not set, trust store file configured will still be used, but integrity checking is disabled. Trust store password is not supported for PEM format.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 elastic.https.ssl.enabled.protocols
+
+The list of protocols enabled for SSL connections. The default is 'TLSv1.2,TLSv1.3'. This means that clients and servers will prefer TLSv1.3 if both support it and fallback to TLSv1.2 otherwise (assuming both support at least TLSv1.2). This default should be fine for most use cases. Also see the config documentation for `ssl.protocol` to understand how it can impact the TLS version negotiation behavior.
+
+	 - Type: LIST
+	 - Default: TLSv1.2,TLSv1.3
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 elastic.https.ssl.keystore.type
+
+The file format of the key store file. This is optional for client. The values currently supported by the default `ssl.engine.factory.class` are [JKS, PKCS12, PEM].
+
+	 - Type: STRING
+	 - Default: JKS
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 elastic.https.ssl.protocol
+
+The SSL protocol used to generate the SSLContext. The default is 'TLSv1.3', which should be fine for most use cases. A typical alternative to the default is 'TLSv1.2'. Allowed values for this config are dependent on the JVM. Clients using the defaults for this config and 'ssl.enabled.protocols' will downgrade to 'TLSv1.2' if the server does not support 'TLSv1.3'. If this config is set to 'TLSv1.2', however, clients will not use 'TLSv1.3' even if it is one of the values in `ssl.enabled.protocols` and the server only supports 'TLSv1.3'.
+
+	 - Type: STRING
+	 - Default: TLSv1.3
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 elastic.https.ssl.provider
+
+The name of the security provider used for SSL connections. Default value is the default security provider of the JVM.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 elastic.https.ssl.truststore.type
+
+The file format of the trust store file. The values currently supported by the default `ssl.engine.factory.class` are [JKS, PKCS12, PEM].
+
+	 - Type: STRING
+	 - Default: JKS
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 elastic.https.ssl.cipher.suites
+
+A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 elastic.https.ssl.endpoint.identification.algorithm
+
+The endpoint identification algorithm to validate server hostname using server certificate. 
+
+	 - Type: STRING
+	 - Default: https
+	 - Importance: LOW
+	 - Required: false
+
+🔘 elastic.https.ssl.engine.factory.class
+
+The class of type org.apache.kafka.common.security.auth.SslEngineFactory to provide SSLEngine objects. Default value is org.apache.kafka.common.security.ssl.DefaultSslEngineFactory. Alternatively, setting this to org.apache.kafka.common.security.ssl.CommonNameLoggingSslEngineFactory will log the common name of expired SSL certificates used by clients to authenticate at any of the brokers with log level INFO. Note that this will cause a tiny delay during establishment of new connections from mTLS clients to brokers due to the extra code for examining the certificate chain provided by the client. Note further that the implementation uses a custom truststore based on the standard Java truststore and thus might be considered a security risk due to not being as mature as the standard one.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 elastic.https.ssl.keymanager.algorithm
+
+The algorithm used by key manager factory for SSL connections. Default value is the key manager factory algorithm configured for the Java Virtual Machine.
+
+	 - Type: STRING
+	 - Default: SunX509
+	 - Importance: LOW
+	 - Required: false
+
+🔘 elastic.https.ssl.secure.random.implementation
+
+The SecureRandom PRNG implementation to use for SSL cryptography operations. 
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 elastic.https.ssl.trustmanager.algorithm
+
+The algorithm used by trust manager factory for SSL connections. Default value is the trust manager factory algorithm configured for the Java Virtual Machine.
+
+	 - Type: STRING
+	 - Default: PKIX
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Kerberos
+==========================
+🔘 kerberos.user.principal
+
+The Kerberos user principal the connector may use to authenticate with Kerberos.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 kerberos.keytab.path
+
+The path to the keytab file to use for authentication with Kerberos.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+

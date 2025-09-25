@@ -1,0 +1,120 @@
+==========================
+diode
+==========================
+🔘 diode.host
+
+The hostname or ip address of the remote server where this sink connector sends datagram packets.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 diode.port
+
+The port number to connect to on the remote server.
+
+	 - Type: INT
+	 - Default: 3456
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 diode.buffer.size.kb
+
+The maximum packet size in kilobytes.Maximum possible size is 64KB,the largest possible datagram packet. By increasing the packet size, you increase throughput because multiple records are combined in the same datagram packet. However, larger packets have a significantly higher chance of getting dropped. If that happens, all records contained in the packet will be lost.If the network between sink and source is reliable, set this configuration to 64 KB.If the network is not reliable, set this slightly larger than the largest record size
+
+	 - Type: INT
+	 - Default: 40
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 socket.send.buffer.bytes
+
+The socket send buffer size in bytes. Ensure that the OS kernel parameter 'net.core.wmem_max' is set to a value >= this buffer size. Otherwise, the requested buffer will be silently capped by the kernel.
+
+	 - Type: INT
+	 - Default: 33554432
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 task.rate.limit.quota
+
+
+
+	 - Type: INT
+	 - Default: 4194304
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+diode
+==========================
+🔘 diode.encryption.password
+
+The password used to derive a shared secret between the sink and source connectors. You must use the same password in sink and source connectors.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 diode.encryption.salt
+
+The salt used to derive a shared secret between the sink and source connectors. You must use the same salt in sink and source connectors.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 diode.encryption.class
+
+Fully qualified class used for encrypting and decryption datagram packets. Currently, there are two implementations. ``io.confluent.connect.diode.serde.Aes256CbcEncryptor`` uses the AES algorithm with a 256 bit symmetric key derived from a password and salt. ``io.confluent.connect.diode.serde.NoopEncryptor`` disables encryption and decryption and sends  packets in plaintext. Custom encryption/decryption algorithms are possible by implementing ``io.confluent.connect.diode.serde.Encryptor``.
+
+	 - Type: CLASS
+	 - Default: io.confluent.connect.diode.serde.Aes256CbcEncryptor
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 diode.compression.class
+
+Fully qualified class used for compression and decompression on datagram packets. Compression is CPU intensive, but reduces size of packets. Enable compression if the records are largely text data. Compression is only effective if multiple records are batched. Currently, there are two implementations. ``io.confluent.connect.diode.serde.GzipCompressor`` for gzip and ``io.confluent.connect.diode.serde.NoopCompressor`` to disable compression. You can provied a different implementation by implementing ``io.confluent.connect.diode.serde.Compressor``.
+
+	 - Type: CLASS
+	 - Default: io.confluent.connect.diode.serde.NoopCompressor
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 header.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+

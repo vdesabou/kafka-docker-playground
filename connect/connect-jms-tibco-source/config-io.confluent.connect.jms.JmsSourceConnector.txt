@@ -1,0 +1,270 @@
+==========================
+JMS Connection
+==========================
+🔘 java.naming.provider.url
+
+The url to connect to.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 java.naming.factory.initial
+
+The initial context for the JMS Provider See `Context.INITIAL_CONTEXT_FACTORY <https://docs.oracle.com/javase/7/docs/api/javax/naming/Context.html#INITIAL_CONTEXT_FACTORY>`_ for more details.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 connection.factory.name
+
+The name that is passed to the `Context.lookup <https://docs.oracle.com/javase/7/docs/api/javax/naming/Context.html#lookup(java.lang.String)>`_ of the InitialContext specified in ``java.naming.factory.initial``. This should return the `ConnectionFactory <http://docs.oracle.com/javaee/6/api/javax/jms/ConnectionFactory.html>`_ for the JMS provider.
+
+	 - Type: STRING
+	 - Default: ConnectionFactory
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 java.naming.security.principal
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The security principal to connect with. This is typically a username. See `Context.SECURITY_PRINCIPAL <https://docs.oracle.com/javase/7/docs/api/javax/naming/Context.html#SECURITY_PRINCIPAL>`_ for more details. The documentation for your JMS provider will be helpful as well.
+	 - Required: HIGH
+
+🔘 java.naming.security.credentials
+
+The security credentials to connect with. This is typically a password. See `Context.SECURITY_CREDENTIALS <https://docs.oracle.com/javase/7/docs/api/javax/naming/Context.html#SECURITY_CREDENTIALS>`_ for more details. The documentation for your JMS provider will be helpful as well.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+JMS Session
+==========================
+🔘 jms.destination.name
+
+The name of the JMS destination (queue or topic) to read from.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 jms.destination.type
+
+The type of JMS destination, which is either `queue` or `topic`.
+
+	 - Type: STRING
+	 - Default: QUEUE
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 batch.size
+
+The maximum number of records that a connector task may read from the JMS broker before writing to Kafka. The task holds these records until they are acknowledged in Kafka, so this may affect memory usage.
+
+	 - Type: INT
+	 - Default: 1024
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.pending.messages
+
+The maximum number of messages per task that can be received from JMS brokers and produced to Kafka before the task acknowledges the JMS session/messages. If the task fails and is restarted, this is the maximum number of JMS messages the task may duplicate in Kafka. This is typically set larger than ``batch.size``. A smaller value than ``batch.size`` limits the size of the batches.
+
+	 - Type: INT
+	 - Default: 4096
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.poll.duration
+
+The maximum amount of time each task can build a batch. The batch is closed and sent to Kafka if not enough messages are read during the time allotted. This helps limit connector lag when the JMS queue/topic has a lower throughput.
+
+	 - Type: INT
+	 - Default: 60000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.receive.block.duration
+
+Maximum time in milliseconds a JMS receive call will be blocked. Setting this value helps in reducing the number of empty receive calls, the call will be blocked until the task receives a message. This value could be in the range of 10 milliseconds to 1800000 milliseconds
+
+	 - Type: LONG
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 initial.poll.wait.time.ms
+
+The initial amount of time in milliseconds to wait when polling for new messages before switching to a shorter poll interval. This helps reduce the number of empty poll attempts during startup or when the queue is empty.
+
+	 - Type: INT
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.record.commit.timeout
+
+Maximum amount of time in minutes to wait for records to be committed in kafka before failing the connector
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+🔘 character.encoding
+
+The character encoding to use while receiving the message.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.subscription.durable
+
+Whether the subscription of the connector tasks to a JMS topic is durable or not. Durable subscriptions require a subscription name to be set via ``jms.subscription.name``. 
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 jms.subscription.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the JMS subscription. Supported only in durable subscriptions (``jms.subscription.durable = true``) and is applicable only to JMS topics.
+	 - Required: MEDIUM
+
+🔘 jms.message.selector
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The `message selector <http://docs.oracle.com/javaee/6/api/javax/jms/Session.html#createConsumer(javax.jms.Destination, java.lang.String, boolean)>`_ that should be applied to messages in the destination.
+	 - Required: HIGH
+
+==========================
+Retry
+==========================
+🔘 max.retry.time
+
+The maximum total time in milliseconds the connector will retry when receiving a retriable exception. This value must be at least 100 milliseconds if retry functionality is desired. If a value of less than 100 milliseconds is configured, it will be assumed that no retry functionality is desired.Additionally, some retriable exceptions will require establishing a new JMS session
+
+	 - Type: LONG
+	 - Default: 3600000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Kafka
+==========================
+🔘 kafka.topic
+
+The name of the Kafka topic where the connector writes all records that were read from the JMS broker.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 use.permissive.schema
+
+Whether to use a more permissive schema with an optional messageID in the key and value. Defaults to ``false`` for compatibility with the old strict schema. If your JMS messages have null message IDs, then you must set this to ``true``.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Confluent Platform
+==========================
+🔘 confluent.license
+
+Confluent will issue a license key to each subscriber. The license key will be a short snippet of text that you can copy and paste. Without the license key, you can use the connector for a 30-day trial period. If you are a subscriber, please contact Confluent Support for more information.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 confluent.topic.bootstrap.servers
+
+A list of host/port pairs to use for establishing the initial connection to the Kafka cluster used for licensing. All servers in the cluster will be discovered from the initial connection. This list should be in the form <code>host1:port1,host2:port2,...</code>. Since these servers are just used for the initial connection to discover the full cluster membership (which may change dynamically), this list need not contain the full set of servers (you may want more than one, though, in case a server is down).
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 confluent.topic
+
+Name of the Kafka topic used for Confluent Platform configuration, including licensing information.
+
+	 - Type: STRING
+	 - Default: _confluent-command
+	 - Importance: LOW
+	 - Required: false
+
+🔘 confluent.topic.replication.factor
+
+The replication factor for the Kafka topic used for Confluent Platform configuration, including licensing information. This is used only if the topic does not already exist, and the default of 3 is appropriate for production use. If you are using a development environment with less than 3 brokers, you must set this to the number of brokers (often 1).
+
+	 - Type: INT
+	 - Default: 3
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 value.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
