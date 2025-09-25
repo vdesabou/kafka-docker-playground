@@ -1,0 +1,153 @@
+==========================
+null
+==========================
+🔘 kafka.topic
+
+Topic to write to
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 max.interval
+
+Max interval between messages (ms)
+
+	 - Type: LONG
+	 - Default: 500
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 iterations
+
+Number of messages to send from each task, or less than 1 for unlimited
+
+	 - Type: INT
+	 - Default: -1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 schema.string
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The literal JSON-encoded Avro schema to use
+	 - Required: HIGH
+
+🔘 schema.filename
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Filename of schema to use
+	 - Required: HIGH
+
+🔘 schema.keyfield
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Name of field to use as the message key
+	 - Required: HIGH
+
+🔘 quickstart
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Name of quickstart to use
+	 - Required: HIGH
+
+🔘 random.seed
+
+Numeric seed for generating random data. Two connectors started with the same seed will deterministically produce the same data. Each task will generate different data than the other tasks in the same connector.
+
+	 - Type: LONG
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 value.converter.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+==========================
+Schemas
+==========================
+🔘 value.converter.schemas.cache.size
+
+The maximum number of schemas that can be cached in this converter instance.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schemas
+==========================
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+

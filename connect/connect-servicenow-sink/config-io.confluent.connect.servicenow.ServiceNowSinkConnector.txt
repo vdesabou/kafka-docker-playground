@@ -1,0 +1,141 @@
+==========================
+ServiceNow
+==========================
+🔘 servicenow.url
+
+ServiceNow Instance URL.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 servicenow.table
+
+ServiceNow table name.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 servicenow.user
+
+ServiceNow basic authentication username
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 servicenow.password
+
+ServiceNow basic authentication password
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 proxy.url
+
+Address of the ServiceNow Proxy Server in format <url>:<port>
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 proxy.user
+
+Proxy user. This property should only be used if you want to access through a proxy. Only the basic authentication scheme is supported.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 proxy.password
+
+Proxy password. This property should only be used if you want to access through a proxy. Only the basic authentication scheme is supported.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connection
+==========================
+🔘 connection.timeout.ms
+
+HTTP connection timeout in milliseconds
+
+	 - Type: INT
+	 - Default: 50000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 read.timeout.ms
+
+HTTP read (GET) timeout in milliseconds
+
+	 - Type: INT
+	 - Default: 20000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 write.timeout.ms
+
+HTTP write (PUT/POST) timeout in milliseconds
+
+	 - Type: INT
+	 - Default: 20000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 retry.max.times
+
+Maximum times of request retry
+
+	 - Type: INT
+	 - Default: 3
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 servicenow.ssl.keystore.path
+
+The location of the key store file.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 servicenow.ssl.keystore.password
+
+The password for key store file.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 servicenow.ssl.truststore.path
+
+The location of the trust store file.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 servicenow.ssl.truststore.password
+
+The password for trust store file.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
