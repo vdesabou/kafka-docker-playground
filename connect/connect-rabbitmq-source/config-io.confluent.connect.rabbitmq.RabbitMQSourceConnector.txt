@@ -1,0 +1,369 @@
+==========================
+Connection
+==========================
+🔘 rabbitmq.host
+
+The RabbitMQ host to connect to. See `ConnectionFactory.setHost(java.lang.String) <https://rabbitmq.github.io/rabbitmq-java-client/api/current/com/rabbitmq/client/ConnectionFactory.html#setHost-java.lang.String->`_
+
+	 - Type: STRING
+	 - Default: localhost
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 rabbitmq.username
+
+The username to authenticate to RabbitMQ with. See `ConnectionFactory.setUsername(java.lang.String) <https://rabbitmq.github.io/rabbitmq-java-client/api/current/com/rabbitmq/client/ConnectionFactory.html#setUsername-java.lang.String->`_
+
+	 - Type: STRING
+	 - Default: guest
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 rabbitmq.password
+
+The password to authenticate to RabbitMQ with. See `ConnectionFactory.setPassword(java.lang.String) <https://rabbitmq.github.io/rabbitmq-java-client/api/current/com/rabbitmq/client/ConnectionFactory.html#setPassword-java.lang.String->`_
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 rabbitmq.virtual.host
+
+The virtual host to use when connecting to the broker. See `ConnectionFactory.setVirtualHost(java.lang.String) <https://rabbitmq.github.io/rabbitmq-java-client/api/current/com/rabbitmq/client/ConnectionFactory.html#setVirtualHost-java.lang.String->`_
+
+	 - Type: STRING
+	 - Default: /
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 rabbitmq.requested.channel.max
+
+Initially requested maximum channel number. Zero for unlimited. See `ConnectionFactory.setRequestedChannelMax(int) <https://rabbitmq.github.io/rabbitmq-java-client/api/current/com/rabbitmq/client/ConnectionFactory.html#setRequestedChannelMax-int->`_
+
+	 - Type: INT
+	 - Default: 2047
+	 - Importance: LOW
+	 - Required: false
+
+🔘 rabbitmq.requested.frame.max
+
+Initially requested maximum frame size, in octets. Zero for unlimited. See `ConnectionFactory.setRequestedFrameMax(int) <https://rabbitmq.github.io/rabbitmq-java-client/api/current/com/rabbitmq/client/ConnectionFactory.html#setRequestedFrameMax-int->`_
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 rabbitmq.connection.timeout.ms
+
+Connection TCP establishment timeout in milliseconds. zero for infinite. See `ConnectionFactory.setConnectionTimeout(int) <https://rabbitmq.github.io/rabbitmq-java-client/api/current/com/rabbitmq/client/ConnectionFactory.html#setConnectionTimeout-int->`_
+
+	 - Type: INT
+	 - Default: 60000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 rabbitmq.handshake.timeout.ms
+
+The AMQP0-9-1 protocol handshake timeout, in milliseconds. See `ConnectionFactory.setHandshakeTimeout(int) <https://rabbitmq.github.io/rabbitmq-java-client/api/current/com/rabbitmq/client/ConnectionFactory.html#setHandshakeTimeout-int->`_
+
+	 - Type: INT
+	 - Default: 10000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 rabbitmq.shutdown.timeout.ms
+
+Set the shutdown timeout. This is the amount of time that Consumer implementations have to continue working through deliveries (and other Consumer callbacks) after the connection has closed but before the ConsumerWorkService is torn down. If consumers exceed this timeout then any remaining queued deliveries (and other Consumer callbacks, *including* the Consumer's handleShutdownSignal() invocation) will be lost. See `ConnectionFactory.setShutdownTimeout(int) <https://rabbitmq.github.io/rabbitmq-java-client/api/current/com/rabbitmq/client/ConnectionFactory.html#setShutdownTimeout-int->`_
+
+	 - Type: INT
+	 - Default: 10000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 rabbitmq.requested.heartbeat.seconds
+
+Set the requested heartbeat timeout. Heartbeat frames will be sent at about 1/2 the timeout interval. If server heartbeat timeout is configured to a non-zero value, this method can only be used to lower the value; otherwise any value provided by the client will be used. See `ConnectionFactory.setRequestedHeartbeat(int) <https://rabbitmq.github.io/rabbitmq-java-client/api/current/com/rabbitmq/client/ConnectionFactory.html#setRequestedHeartbeat-int->`_
+
+	 - Type: INT
+	 - Default: 60
+	 - Importance: LOW
+	 - Required: false
+
+🔘 rabbitmq.automatic.recovery.enabled
+
+Enables or disables automatic connection recovery. See `ConnectionFactory.setAutomaticRecoveryEnabled(boolean) <https://rabbitmq.github.io/rabbitmq-java-client/api/current/com/rabbitmq/client/ConnectionFactory.html#setAutomaticRecoveryEnabled-boolean->`_
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 rabbitmq.topology.recovery.enabled
+
+Enables or disables topology recovery. See `ConnectionFactory.setTopologyRecoveryEnabled(boolean) <https://rabbitmq.github.io/rabbitmq-java-client/api/current/com/rabbitmq/client/ConnectionFactory.html#setTopologyRecoveryEnabled-boolean->`_
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 rabbitmq.network.recovery.interval.ms
+
+See `ConnectionFactory.setNetworkRecoveryInterval(long) <https://rabbitmq.github.io/rabbitmq-java-client/api/current/com/rabbitmq/client/ConnectionFactory.html#setNetworkRecoveryInterval-long->`_
+
+	 - Type: INT
+	 - Default: 10000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 rabbitmq.port
+
+The RabbitMQ port to connect to. See `ConnectionFactory.setPort(int) <https://rabbitmq.github.io/rabbitmq-java-client/api/current/com/rabbitmq/client/ConnectionFactory.html#setPort-int->`_
+
+	 - Type: INT
+	 - Default: 5672
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Security
+==========================
+🔘 rabbitmq.security.protocol
+
+The security protocol to use when connection to RabbitMQ. Values can be `PLAINTEXT` or `SSL`. If `PLAINTEXT` is passed, all configs prefixed by rabbitmq.https. or ssl. will be ignored.
+
+	 - Type: STRING
+	 - Default: PLAINTEXT
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.key.password
+
+The password of the private key in the key store file or the PEM key specified in 'ssl.keystore.key'.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.keystore.certificate.chain
+
+Certificate chain in the format specified by 'ssl.keystore.type'. Default SSL engine factory supports only PEM format with a list of X.509 certificates
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.keystore.key
+
+Private key in the format specified by 'ssl.keystore.type'. Default SSL engine factory supports only PEM format with PKCS#8 keys. If the key is encrypted, key password must be specified using 'ssl.key.password'
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.keystore.location
+
+The location of the key store file. This is optional for client and can be used for two-way authentication for client.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.keystore.password
+
+The store password for the key store file. This is optional for client and only needed if 'ssl.keystore.location' is configured. Key store password is not supported for PEM format.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.truststore.certificates
+
+Trusted certificates in the format specified by 'ssl.truststore.type'. Default SSL engine factory supports only PEM format with X.509 certificates.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.truststore.location
+
+The location of the trust store file.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.truststore.password
+
+The password for the trust store file. If a password is not set, trust store file configured will still be used, but integrity checking is disabled. Trust store password is not supported for PEM format.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.enabled.protocols
+
+The list of protocols enabled for SSL connections. The default is 'TLSv1.2,TLSv1.3'. This means that clients and servers will prefer TLSv1.3 if both support it and fallback to TLSv1.2 otherwise (assuming both support at least TLSv1.2). This default should be fine for most use cases. Also see the config documentation for `ssl.protocol` to understand how it can impact the TLS version negotiation behavior.
+
+	 - Type: LIST
+	 - Default: TLSv1.2,TLSv1.3
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.keystore.type
+
+The file format of the key store file. This is optional for client. The values currently supported by the default `ssl.engine.factory.class` are [JKS, PKCS12, PEM].
+
+	 - Type: STRING
+	 - Default: JKS
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.protocol
+
+The SSL protocol used to generate the SSLContext. The default is 'TLSv1.3', which should be fine for most use cases. A typical alternative to the default is 'TLSv1.2'. Allowed values for this config are dependent on the JVM. Clients using the defaults for this config and 'ssl.enabled.protocols' will downgrade to 'TLSv1.2' if the server does not support 'TLSv1.3'. If this config is set to 'TLSv1.2', however, clients will not use 'TLSv1.3' even if it is one of the values in `ssl.enabled.protocols` and the server only supports 'TLSv1.3'.
+
+	 - Type: STRING
+	 - Default: TLSv1.3
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.provider
+
+The name of the security provider used for SSL connections. Default value is the default security provider of the JVM.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.truststore.type
+
+The file format of the trust store file. The values currently supported by the default `ssl.engine.factory.class` are [JKS, PKCS12, PEM].
+
+	 - Type: STRING
+	 - Default: JKS
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.cipher.suites
+
+A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.endpoint.identification.algorithm
+
+The endpoint identification algorithm to validate server hostname using server certificate. 
+
+	 - Type: STRING
+	 - Default: https
+	 - Importance: LOW
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.engine.factory.class
+
+The class of type org.apache.kafka.common.security.auth.SslEngineFactory to provide SSLEngine objects. Default value is org.apache.kafka.common.security.ssl.DefaultSslEngineFactory. Alternatively, setting this to org.apache.kafka.common.security.ssl.CommonNameLoggingSslEngineFactory will log the common name of expired SSL certificates used by clients to authenticate at any of the brokers with log level INFO. Note that this will cause a tiny delay during establishment of new connections from mTLS clients to brokers due to the extra code for examining the certificate chain provided by the client. Note further that the implementation uses a custom truststore based on the standard Java truststore and thus might be considered a security risk due to not being as mature as the standard one.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.keymanager.algorithm
+
+The algorithm used by key manager factory for SSL connections. Default value is the key manager factory algorithm configured for the Java Virtual Machine.
+
+	 - Type: STRING
+	 - Default: SunX509
+	 - Importance: LOW
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.secure.random.implementation
+
+The SecureRandom PRNG implementation to use for SSL cryptography operations. 
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 rabbitmq.https.ssl.trustmanager.algorithm
+
+The algorithm used by trust manager factory for SSL connections. Default value is the trust manager factory algorithm configured for the Java Virtual Machine.
+
+	 - Type: STRING
+	 - Default: PKIX
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Source
+==========================
+🔘 kafka.topic
+
+Kafka topic to write the messages to.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 rabbitmq.prefetch.count
+
+Maximum number of messages that the server will deliver, 0 if unlimited. See `Channel.basicQos(int, boolean) <https://rabbitmq.github.io/rabbitmq-java-client/api/current/com/rabbitmq/client/Channel.html#basicQos-int-boolean->`_
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rabbitmq.prefetch.global
+
+True if the settings should be applied to the entire channel rather than each consumer. See `Channel.basicQos(int, boolean) <https://rabbitmq.github.io/rabbitmq-java-client/api/current/com/rabbitmq/client/Channel.html#basicQos-int-boolean->`_
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rabbitmq.queue
+
+RabbitMQ queue to read from.
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 batch.size
+
+The maximum number of records to return to Connect for each poll, if there are more than this number of records already available from RabbitMQ. This setting is independent from the general producer setting ``batch.size``
+
+	 - Type: INT
+	 - Default: 1024
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 backoff.time.ms
+
+The number of milliseconds to wait when no records are returned from the RabbitMQ queue.
+
+	 - Type: INT
+	 - Default: 100
+	 - Importance: MEDIUM
+	 - Required: false
+

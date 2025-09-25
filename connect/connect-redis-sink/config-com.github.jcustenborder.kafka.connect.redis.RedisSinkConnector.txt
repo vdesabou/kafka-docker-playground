@@ -1,0 +1,267 @@
+==========================
+redis.hosts
+==========================
+🔘 localhost:6379
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: The Redis hosts to connect to.
+	 - Required: HIGH
+
+==========================
+redis.client.mode
+==========================
+🔘 Standalone
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The client mode to use when interacting with the Redis cluster.
+	 - Required: MEDIUM
+
+==========================
+redis.ssl.enabled
+==========================
+🔘 false
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Flag to determine if SSL is enabled.
+	 - Required: MEDIUM
+
+==========================
+redis.password
+==========================
+🔘 [hidden]
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Password used to connect to Redis.
+	 - Required: MEDIUM
+
+==========================
+redis.database
+==========================
+🔘 1
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: Redis database to connect to.
+	 - Required: MEDIUM
+
+==========================
+redis.auto.reconnect.enabled
+==========================
+🔘 true
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Flag to determine if the Redis client should automatically reconnect.
+	 - Required: LOW
+
+==========================
+redis.request.queue.size
+==========================
+🔘 2147483647
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The maximum number of queued requests to Redis.
+	 - Required: LOW
+
+==========================
+redis.socket.tcp.no.delay.enabled
+==========================
+🔘 true
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Flag to enable TCP no delay should be used.
+	 - Required: LOW
+
+==========================
+redis.socket.keep.alive.enabled
+==========================
+🔘 false
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Flag to enable a keepalive to Redis.
+	 - Required: LOW
+
+==========================
+redis.socket.connect.timeout.ms
+==========================
+🔘 10000
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The amount of time in milliseconds to wait before timing out a socket when connecting.
+	 - Required: LOW
+
+==========================
+redis.ssl.provider
+==========================
+🔘 JDK
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The SSL provider to use.
+	 - Required: LOW
+
+==========================
+redis.ssl.keystore.path
+==========================
+🔘 STRING
+
+
+
+	 - Type: MEDIUM
+	 - Default: false
+	 - Importance: 
+	 - Required: The path to the SSL keystore.
+
+==========================
+redis.ssl.keystore.password
+==========================
+🔘 [hidden]
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The password for the SSL keystore.
+	 - Required: MEDIUM
+
+==========================
+redis.ssl.truststore.path
+==========================
+🔘 STRING
+
+
+
+	 - Type: MEDIUM
+	 - Default: false
+	 - Importance: 
+	 - Required: The path to the SSL truststore.
+
+==========================
+redis.ssl.truststore.password
+==========================
+🔘 [hidden]
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The password for the SSL truststore.
+	 - Required: MEDIUM
+
+==========================
+redis.connection.attempts
+==========================
+🔘 3
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The number of attempt when connecting to redis.
+	 - Required: MEDIUM
+
+==========================
+redis.connection.retry.delay.ms
+==========================
+🔘 2000
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The amount of milliseconds to wait between redis connection attempts.
+	 - Required: MEDIUM
+
+==========================
+redis.operation.timeout.ms
+==========================
+🔘 10000
+
+
+
+	 - Type: false
+	 - Default: LONG
+	 - Importance: The amount of time in milliseconds before an operation is marked as timed out.
+	 - Required: MEDIUM
+
+==========================
+redis.charset
+==========================
+🔘 UTF-8
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The character set to use for String key and values.
+	 - Required: LOW
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 value.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+

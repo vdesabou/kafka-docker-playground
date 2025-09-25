@@ -1,0 +1,354 @@
+==========================
+Solace Connection
+==========================
+🔘 solace.host
+
+This property specifies the IP or hostname and port (optional) of the message broker to connect to. If a port is not specified, the default port number is 55555 when compression is not in use, or 55003 when compression is in use. To specify a prioritized list of hosts that the connector can attempt to connect to, list each host, in order of importance, separated by a comma. Additional details can be found in the `Solace Documentation <https://docs.solace.com/Solace-JMS-API/Data-Connection-Properti.htm#Host>`_.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 solace.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The username used when connecting to Solace.
+	 - Required: HIGH
+
+🔘 solace.password
+
+The password used when connecting to Solace.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 solace.vpn
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: This property specifies the Message VPN to use when connecting to the message broker. This property applies to both the JNDI and data connections. The default value is blank, which means connect to the Message VPN ``default``.
+	 - Required: MEDIUM
+
+🔘 solace.connect.retries
+
+This property specifies the maximum number of times to attempt a data connection if the first connect fails. If this value is -1 or greater than 1, and a host list is used, each connect retry traverses the host list according to the value set for the Connect Retries property.  Valid values are -1 through 2147483647. 0 means do not perform any automatic connection retries (that is, try once and give up); –1 means retry forever.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 solace.connect.retries.per.host
+
+When using a list of hosts for the ``solace.host`` property, this property defines how many times to retry a data connection to a single host before moving on to the next host in the list.  Valid values are -1 through 2147483647. 0 means do not perform any automatic connection retries (that is, try once and give up); –1 means retry forever (that is, the API only tries to connect or reconnect to first host listed.)
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 solace.connect.timeout
+
+This property specifies the maximum amount of time (in milliseconds) permitted for a data connection attempt. Valid values are 0 through 2147483647. 0 means wait forever.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 solace.reconnect.retries
+
+This property specifies the number of times to attempt to reconnect once the data connection to a message broker is lost. When a host list of message brokers is provided, and no connection is reestablished to any of the hosts, the API can reattempt connecting to the listed hosts again, starting with the first host listed. Each time the API works through the host list, without establishing a reconnection, is considered a reconnect retry. For example, if a Reconnect Retries value of two is used, the API could possibly work through all of the listed hosts without reconnecting to them three times: one time through for the initial connect attempt, and then two times through for reconnect retries. After each unsuccessful attempt to reconnect to a host, the API waits for the amount of time set for Reconnect Retry Wait property before attempting another reconnection to a host. It should be noted that the number times to attempt to reconnect to one host before moving on to the next listed host is determined by the value set for the Connection Retries Per Host property. Valid values are 0 through 2147483647. -1 means retry forever.
+
+	 - Type: INT
+	 - Default: 3
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 solace.reconnect.retry.wait
+
+If a connect or reconnect attempt to a host is not successful, the API waits the amount of time (in milliseconds) set for this property, and then makes another connect or reconnect attempt. When using a list of hosts for the Broker URL property, the Connect Retries Per Host property sets how many connection or reconnection attempts can be made before moving on to the next host in the list. Valid values are 0 through 60,000. 0 means do not wait.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 solace.dynamic.durables
+
+This property specifies whether queues or topic endpoints (which are used to support durable subscription names), are to be created on the message broker when the corresponding ``Session.createDurableSubscriber()`` or ``Session.createQueue()`` is called.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 solace.client.description
+
+This property specifies the application description on the message broker for the data connection.
+
+	 - Type: STRING
+	 - Default: Kafka Connect
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Solace Secure Connection
+==========================
+🔘 solace.ssl.keystore.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Keystore path of SSL enabled VPN for Solace.
+	 - Required: MEDIUM
+
+🔘 solace.ssl.keystore.password
+
+Password of keystore path of SSL enabled VPN for Solace.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 solace.ssl.truststore.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Truststore path of SSL enabled VPN for Solace.
+	 - Required: MEDIUM
+
+🔘 solace.ssl.truststore.password
+
+Password of truststore path of SSL enabled VPN for Solace.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 solace.ssl.validate.certificate
+
+Sets the settings to validate the SSL certificates.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Solace Connection
+==========================
+🔘 solace.receive.ad.window.size
+
+This property specifies the size of the sliding acknowledgement window.
+
+	 - Type: INT
+	 - Default: 18
+	 - Importance: LOW
+	 - Required: false
+
+🔘 solace.receive.buffer.size
+
+This property is used to configure the socket’s receive buffer size in bytes.
+
+	 - Type: INT
+	 - Default: 65536
+	 - Importance: LOW
+	 - Required: false
+
+🔘 solace.receive.ad.ack.threshold
+
+This property specifies the threshold, configured as a percentage, for sending an acknowledgement to the broker. The connector sends an acknowledgment every N messages where N is calculated as this percentage of the flow window size if the endpoint's `max-delivered-unacked-msgs-per-flow <https://docs.solace.com/Configuring-and-Managing/Configuring-Queues.htm#managing_guaranteed_messaging_1810020758_455709>`_ setting is greater than or equal to the configured ``solace.receive.ad.window.size``. Otherwise, N is calculated as this percentage of the destination's `max-delivered-unacked-msgs-per-flow <https://docs.solace.com/Configuring-and-Managing/Configuring-Queues.htm#managing_guaranteed_messaging_1810020758_455709>`_ setting.
+
+	 - Type: INT
+	 - Default: 60
+	 - Importance: LOW
+	 - Required: false
+
+🔘 solace.receive.ad.ack.timer.millis
+
+This property specifies the duration of the acknowledgement timer in milliseconds.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Solace Session
+==========================
+🔘 jms.destination.name
+
+The name of the JMS destination (queue or topic) to read from.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 jms.destination.type
+
+The type of JMS destination, which is either `queue` or `topic`.
+
+	 - Type: STRING
+	 - Default: QUEUE
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 batch.size
+
+The maximum number of records that a connector task may read from the JMS broker before writing to Kafka. The task holds these records until they are acknowledged in Kafka, so this may affect memory usage.
+
+	 - Type: INT
+	 - Default: 1024
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.pending.messages
+
+The maximum number of messages per task that can be received from JMS brokers and produced to Kafka before the task acknowledges the JMS session/messages. If the task fails and is restarted, this is the maximum number of JMS messages the task may duplicate in Kafka. This is typically set larger than ``batch.size``. A smaller value than ``batch.size`` limits the size of the batches.
+
+	 - Type: INT
+	 - Default: 4096
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.poll.duration
+
+The maximum amount of time each task can build a batch. The batch is closed and sent to Kafka if not enough messages are read during the time allotted. This helps limit connector lag when the JMS queue/topic has a lower throughput.
+
+	 - Type: INT
+	 - Default: 60000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.receive.block.duration
+
+Maximum time in milliseconds a JMS receive call will be blocked. Setting this value helps in reducing the number of empty receive calls, the call will be blocked until the task receives a message. This value could be in the range of 5000 milliseconds to 1800000 milliseconds
+
+	 - Type: LONG
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 character.encoding
+
+The character encoding to use while receiving the message.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.subscription.durable
+
+Whether the subscription of the connector tasks to a JMS topic is durable or not. Durable subscriptions require a subscription name to be set via ``jms.subscription.name``. 
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 jms.subscription.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the JMS subscription. Supported only in durable subscriptions (``jms.subscription.durable = true``) and is applicable only to JMS topics.
+	 - Required: MEDIUM
+
+🔘 jms.message.selector
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The `message selector <http://docs.oracle.com/javaee/6/api/javax/jms/Session.html#createConsumer(javax.jms.Destination, java.lang.String, boolean)>`_ that should be applied to messages in the destination.
+	 - Required: HIGH
+
+==========================
+Retry
+==========================
+🔘 max.retry.time
+
+The maximum total time in milliseconds the connector will retry when receiving a retriable exception. This value must be at least 100 milliseconds if retry functionality is desired. If a value of less than 100 milliseconds is configured, it will be assumed that no retry functionality is desired.Additionally, some retriable exceptions will require establishing a new JMS session
+
+	 - Type: LONG
+	 - Default: 3600000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Kafka
+==========================
+🔘 kafka.topic
+
+The name of the Kafka topic where the connector writes all records that were read from the JMS broker.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 use.permissive.schema
+
+Whether to use a more permissive schema with an optional messageID in the key and value. Defaults to ``false`` for compatibility with the old strict schema. If your JMS messages have null message IDs, then you must set this to ``true``.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 value.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+

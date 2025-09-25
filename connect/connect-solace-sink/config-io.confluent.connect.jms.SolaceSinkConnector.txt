@@ -1,0 +1,348 @@
+==========================
+Solace Connection
+==========================
+🔘 solace.host
+
+This property specifies the IP or hostname and port (optional) of the message broker to connect to. If a port is not specified, the default port number is 55555 when compression is not in use, or 55003 when compression is in use. To specify a prioritized list of hosts that the connector can attempt to connect to, list each host, in order of importance, separated by a comma. Additional details can be found in the `Solace Documentation <https://docs.solace.com/Solace-JMS-API/Data-Connection-Properti.htm#Host>`_.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 solace.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The username used when connecting to Solace.
+	 - Required: HIGH
+
+🔘 solace.password
+
+The password used when connecting to Solace.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 solace.vpn
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: This property specifies the Message VPN to use when connecting to the message broker. This property applies to both the JNDI and data connections. The default value is blank, which means connect to the Message VPN ``default``.
+	 - Required: MEDIUM
+
+🔘 solace.connect.retries
+
+This property specifies the maximum number of times to attempt a data connection if the first connect fails. If this value is -1 or greater than 1, and a host list is used, each connect retry traverses the host list according to the value set for the Connect Retries property.  Valid values are -1 through 2147483647. 0 means do not perform any automatic connection retries (that is, try once and give up); –1 means retry forever.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 solace.connect.retries.per.host
+
+When using a list of hosts for the ``solace.host`` property, this property defines how many times to retry a data connection to a single host before moving on to the next host in the list.  Valid values are -1 through 2147483647. 0 means do not perform any automatic connection retries (that is, try once and give up); –1 means retry forever (that is, the API only tries to connect or reconnect to first host listed.)
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 solace.connect.timeout
+
+This property specifies the maximum amount of time (in milliseconds) permitted for a data connection attempt. Valid values are 0 through 2147483647. 0 means wait forever.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 solace.reconnect.retries
+
+This property specifies the number of times to attempt to reconnect once the data connection to a message broker is lost. When a host list of message brokers is provided, and no connection is reestablished to any of the hosts, the API can reattempt connecting to the listed hosts again, starting with the first host listed. Each time the API works through the host list, without establishing a reconnection, is considered a reconnect retry. For example, if a Reconnect Retries value of two is used, the API could possibly work through all of the listed hosts without reconnecting to them three times: one time through for the initial connect attempt, and then two times through for reconnect retries. After each unsuccessful attempt to reconnect to a host, the API waits for the amount of time set for Reconnect Retry Wait property before attempting another reconnection to a host. It should be noted that the number times to attempt to reconnect to one host before moving on to the next listed host is determined by the value set for the Connection Retries Per Host property. Valid values are 0 through 2147483647. -1 means retry forever.
+
+	 - Type: INT
+	 - Default: 3
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 solace.reconnect.retry.wait
+
+If a connect or reconnect attempt to a host is not successful, the API waits the amount of time (in milliseconds) set for this property, and then makes another connect or reconnect attempt. When using a list of hosts for the Broker URL property, the Connect Retries Per Host property sets how many connection or reconnection attempts can be made before moving on to the next host in the list. Valid values are 0 through 60,000. 0 means do not wait.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 solace.compression.level
+
+This property is used to enable and specify the ZLIB compression level. Valid values for the compression level are -1 through 9. -1 means use the JNDI connection’s compression level. 0 means use no compression. 1 through 9 enables data compression (where 1 offers the least amount of compression and fastest data throughput, and 9 offers the most compression and slowest data throughput). By default, Solace expects SMF compressed data (compression levels 1-9) to be sent to port ``55003``.
+
+	 - Type: INT
+	 - Default: -1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 solace.dynamic.durables
+
+This property specifies whether queues or topic endpoints (which are used to support durable subscription names), are to be created on the message broker when the corresponding ``Session.createDurableSubscriber()`` or ``Session.createQueue()`` is called.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 solace.client.description
+
+This property specifies the application description on the message broker for the data connection.
+
+	 - Type: STRING
+	 - Default: Kafka Connect
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Solace Secure Connection
+==========================
+🔘 solace.ssl.keystore.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Keystore path of SSL enabled VPN for Solace.
+	 - Required: MEDIUM
+
+🔘 solace.ssl.keystore.password
+
+Password of keystore path of SSL enabled VPN for Solace.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 solace.ssl.truststore.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Truststore path of SSL enabled VPN for Solace.
+	 - Required: MEDIUM
+
+🔘 solace.ssl.truststore.password
+
+Password of truststore path of SSL enabled VPN for Solace.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 solace.ssl.validate.certificate
+
+Sets the settings to validate the SSL certificates.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JMS
+==========================
+🔘 jms.destination.name
+
+The name of the JMS destination that messages are written to.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 jms.destination.type
+
+The type of JMS destination.
+
+	 - Type: STRING
+	 - Default: queue
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 jms.forward.kafka.key
+
+If enabled, the |ak| record key is converted to a string and forwarded on the ``JMSCorrelationID`` property of the JMS Message.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.forward.kafka.metadata
+
+If enabled, metadata from the |ak| record is forwarded on the JMS Message properties. This includes the record's topic, partition, and offset. The topic name is applied as a String property named ``KAFKA_TOPIC``, the partition value is applied as an Int property named ``KAFKA_PARTITION``, and the offset value is applied as a Long property named ``KAFKA_OFFSET``.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.forward.kafka.headers
+
+If enabled, |ak| record headers are added to the JMS Message as string properties.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.connection.max.retries
+
+Connecting to a JMS broker may fail for multiple reasons. This determines the maximum number of times a task attempts to connect to the JMS broker.
+
+	 - Type: INT
+	 - Default: 150
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.connection.backoff.ms
+
+Following a connection failure, this configuration parameter is the amount of time in milliseconds to wait before attempting to reconnect to the JMS broker. A value less than or equal to 0 removes the delay altogether.
+
+	 - Type: INT
+	 - Default: 2000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+JMS Formatter
+==========================
+🔘 jms.message.format
+
+The format of the values on the JMS messages.
+
+	 - Type: STRING
+	 - Default: string
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 jms.message.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 jms.message.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JMS Formatter
+==========================
+🔘 character.encoding
+
+The character encoding to use while writing the message.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+JMS MessageProducer
+==========================
+🔘 jms.producer.time.to.live.ms
+
+Time to live (TTL) in milliseconds for messages sent to the JMS broker.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.producer.delivery.mode
+
+The ``PERSISTENT`` delivery mode (the default) instructs the JMS provider to take extra care to ensure that a message is not lost in transit in case of a JMS provider failure. The ``NON_PERSISTENT`` delivery mode does not require the JMS provider to store the message or otherwise guarantee that it is not lost if the provider fails. Connectors using the ``PERSISTENT`` delivery mode have lower overall throughput than those running with ``NON_PERSISTENT`` delivery mode. However, the ``NON_PERSISTENT`` delivery mode does not offer the same delivery guarantees as the ``PERSISTENT`` delivery mode.
+
+	 - Type: STRING
+	 - Default: persistent
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.producer.disable.message.id
+
+Sets whether message IDs are disabled. Since message IDs take some effort to create and increase a message's size, some JMS providers may be able to optimize message overhead if they are given a hint that the message ID is not used by an application. JMS message Producers provide a hint to disable message ID. When a connector sets a Producer to disable message ID, the connector is indicating that it does not depend on the value of message ID for the messages it produces. These messages must either have the message ID set to null or, if the hint is ignored, the message ID must be set to its normal unique value. Message IDs are enabled by default.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.producer.disable.message.timestamp
+
+Sets whether message timestamps are disabled. Since timestamps take some effort to create and increase a message's size, some JMS providers may be able to optimize message overhead, if they are given a hint that the timestamp is not used by an application. JMS message Producers provide a hint to disable timestamps. When a connector sets a Producer to disable timestamps, the connector is indicating that it does not depend on the value of timestamp for the messages it produces. These messages must either have the timestamp set to null or, if the hint is ignored, the timestamp must be set to its normal value. Message timestamps are enabled by default.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 value.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+

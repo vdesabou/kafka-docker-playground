@@ -1,0 +1,288 @@
+==========================
+Connection
+==========================
+🔘 sftp.host
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Host address of the SFTP server.
+	 - Required: HIGH
+
+🔘 sftp.port
+
+Port number of the SFTP server.
+
+	 - Type: INT
+	 - Default: 22
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sftp.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Username for the SFTP connection.
+	 - Required: HIGH
+
+🔘 sftp.password
+
+Password for the SFTP connection.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Proxy
+==========================
+🔘 sftp.proxy.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Proxy url for the SFTP connection.
+	 - Required: LOW
+
+🔘 proxy.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Proxy username for the SFTP connection.
+	 - Required: LOW
+
+🔘 proxy.password
+
+Proxy password for the SFTP connection.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Security
+==========================
+🔘 tls.private.key
+
+Private key that will be used for public-key authentication.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+🔘 tls.public.key
+
+Public key that will be used to decrypt the private key if the given private key is encrypted.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+🔘 tls.passphrase
+
+Passphrase that will be used to decrypt the private key if the given private key is encrypted.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+🔘 tls.pemfile
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Path in the filesystem to a valid pemfile that will be used for public-key authentication.
+	 - Required: LOW
+
+🔘 kerberos.user.principal
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The principal to use when connecting to SFTP with Kerberos. The ``sftp.username`` is still required. Format: ``username@REALM``.
+	 - Required: LOW
+
+🔘 kerberos.keytab.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The path to the keytab file for the SFTP connector principal. This keytab file should only be readable by the connector.
+	 - Required: LOW
+
+==========================
+null
+==========================
+🔘 session.validation.timeout.ms
+
+
+
+	 - Type: INT
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+General
+==========================
+🔘 kafka.topic
+
+The Kafka topic to write the data to.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 batch.size
+
+The number of records that should be returned with each batch.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 empty.poll.wait.ms
+
+The amount of time to wait if a poll returns an empty list of records.
+
+	 - Type: LONG
+	 - Default: 250
+	 - Importance: LOW
+	 - Required: false
+
+🔘 sftp.max.record.size
+
+The maximum size of a record in bytes to be accepted by the connector. Records larger than this size will result in an error and will get handled as per the cleanup policy. Default is 0, which means no limit.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connector
+==========================
+🔘 input.path
+
+The sftp directory to read files that will be processed.This directory must exist and be writable by the user running Kafka Connect.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 finished.path
+
+The sftp directory to place files that have been successfully processed. This directory must exist and be writable by the user running Kafka Connect.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 error.path
+
+The sftp directory to place files in which have error(s).This directory must exist and be writable by the user running Kafka Connect.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+File System
+==========================
+🔘 cleanup.policy
+
+Determines how the connector should cleanup the files that have been successfully processed. NONE leaves the files in place which could cause them to be reprocessed if the connector is restarted. DELETE removes the file from the filesystem. MOVE will move the file to a finished directory.
+
+	 - Type: STRING
+	 - Default: MOVE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 input.file.pattern
+
+Regular expression to check input file names against. This expression must match the entire filename. The equivalent of Matcher.matches().
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 behavior.on.error
+
+Should the task halt when it encounters an error or continue to the next file.
+
+	 - Type: STRING
+	 - Default: FAIL
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 processing.file.extension
+
+Deprecated. Before a file is processed, it is renamed to indicate that it is currently being processed. This setting is appended to the end of the file.
+
+	 - Type: STRING
+	 - Default: .PROCESSING
+	 - Importance: LOW
+	 - Required: false
+
+🔘 file.minimum.age.ms
+
+The amount of time in milliseconds after the file was last written to before the file can be processed.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Timestamps
+==========================
+🔘 timestamp.mode
+
+Determines how the connector will set the timestamp for the [ConnectRecord](https://kafka.apache.org/0102/javadoc/org/apache/kafka/connect/connector/ConnectRecord.html#timestamp()). If set to `Field` then the timestamp will be read from a field in the value. This field cannot be optional and must be a [Timestamp] (https://kafka.apache.org/0102/javadoc/org/apache/kafka/connect/data/Schema.html). Specify the field  in `timestamp.field`. If set to `FILE_TIME` then the last modified time of the file will be used. If set to `PROCESS_TIME` the time the record is read will be used.
+
+	 - Type: STRING
+	 - Default: PROCESS_TIME
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 value.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
