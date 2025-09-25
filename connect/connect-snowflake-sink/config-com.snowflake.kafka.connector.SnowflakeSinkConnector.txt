@@ -1,0 +1,498 @@
+==========================
+ERRORS
+==========================
+🔘 errors.tolerance
+
+Behavior for tolerating errors during Sink connector's operation. 'NONE' is set as default and denotes that it will be fail fast. i.e any error will result in an immediate task failure. 'ALL'  skips over problematic records.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.log.enable
+
+If true, write/log each error along with details of the failed operation and record properties to the Connect log. Default is 'false', so that only errors that are not tolerated are reported.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.deadletterqueue.topic.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Whether to output conversion errors to the dead letter queue By default messages are not sent to the dead letter queue. Requires property `errors.tolerance=all`.
+	 - Required: LOW
+
+==========================
+Snowflake Login Info
+==========================
+🔘 snowflake.url.name
+
+Snowflake account url
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 snowflake.user.name
+
+Snowflake user name
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 snowflake.private.key
+
+Private key for Snowflake user
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 snowflake.private.key.passphrase
+
+Passphrase of private key if encrypted
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.database.name
+
+Snowflake database name
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 snowflake.schema.name
+
+Snowflake database schema name
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 snowflake.role.name
+
+Snowflake role: snowflake.role.name
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.authenticator
+
+Authenticator for JDBC and streaming ingest sdk
+
+	 - Type: STRING
+	 - Default: snowflake_jwt
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.oauth.client.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Client id of target OAuth integration
+	 - Required: HIGH
+
+🔘 snowflake.oauth.client.secret
+
+Client secret of target OAuth integration
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 snowflake.oauth.refresh.token
+
+Refresh token for OAuth
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 snowflake.oauth.token.endpoint
+
+OAuth token endpoint url
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Proxy Info
+==========================
+🔘 jvm.proxy.host
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: JVM option: https.proxyHost
+	 - Required: LOW
+
+🔘 jvm.proxy.port
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: JVM option: https.proxyPort
+	 - Required: LOW
+
+🔘 jvm.nonProxy.hosts
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: JVM option: http.nonProxyHosts
+	 - Required: LOW
+
+🔘 jvm.proxy.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: JVM proxy username
+	 - Required: LOW
+
+🔘 jvm.proxy.password
+
+JVM proxy password
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connector Config
+==========================
+🔘 snowflake.topic2table.map
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Map of topics to tables (optional). Format : comma-separated tuples, e.g. <topic-1>:<table-1>,<topic-2>:<table-2>,... 
+	 - Required: LOW
+
+🔘 buffer.count.records
+
+Number of records buffered in memory per partition before triggering Snowflake ingestion
+
+	 - Type: LONG
+	 - Default: 10000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 buffer.size.bytes
+
+Cumulative size of records buffered in memory per partition before triggering Snowflake ingestion
+
+	 - Type: LONG
+	 - Default: 5000000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 buffer.flush.time
+
+The time in seconds to flush cached data
+
+	 - Type: LONG
+	 - Default: 120
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Snowflake Metadata Flags
+==========================
+🔘 snowflake.metadata.all
+
+Flag to control whether there is metadata collected. If set to false, all metadata will be dropped
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.metadata.createtime
+
+Flag to control whether createtime is collected in snowflake metadata
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.metadata.topic
+
+Flag to control whether kafka topic name is collected in snowflake metadata
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.metadata.offset.and.partition
+
+Flag to control whether kafka partition and offset are collected in snowflake metadata
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.streaming.metadata.connectorPushTime
+
+Flag to control whether ConnectorPushTime is collected in snowflake metadata for Snowpipe Streaming
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 provider
+
+Whether kafka is running on Confluent code, self hosted or other managed service
+
+	 - Type: STRING
+	 - Default: UNKNOWN
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connector Config
+==========================
+🔘 behavior.on.null.values
+
+How to handle records with a null value (i.e. Kafka tombstone records). Valid options are 'DEFAULT' and 'IGNORE'.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 jmx
+
+Whether to enable JMX MBeans for custom SF metrics
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 snowflake.test.rebalancing
+
+Whether to trigger a rebalancing by exceeding the max poll interval (Used only in testing)
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connector Config
+==========================
+🔘 snowflake.ingestion.method
+
+Acceptable values for Ingestion: SNOWPIPE or Streaming ingest respectively
+
+	 - Type: STRING
+	 - Default: snowpipe
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 snowflake.snowpipe.v2CleanerEnabled
+
+Whether to use new file cleaner for snowpipe data ingestion
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.snowpipe.v2CleanerThreads
+
+Defines number of worker threads to associate with the cleaner task. By default there is one cleaner per topic's partition and they all share one worker thread
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.snowpipe.stageFileNameExtensionEnabled
+
+Defines whether stage file names should be prefixed with source topic's name hash. This is required in scenarios, when there are multiple topics configured to ingest data into a single table via topic2table map. If disabled, there is a risk that files from various topics may collide with each other and be deleted before ingestion.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.streaming.closeChannelsInParallel.enabled
+
+Whether to close Snowpipe Streaming channels in parallel during task shutdown or rebalancing
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Connector Config
+==========================
+🔘 snowflake.streaming.max.client.lag
+
+Decide how often the buffer in the Ingest SDK will be flushed
+
+	 - Type: LONG
+	 - Default: 1
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 snowflake.streaming.max.memory.limit.bytes
+
+Memory limit for ingest sdk client in bytes.
+
+	 - Type: LONG
+	 - Default: -1
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.streaming.enable.single.buffer
+
+When enabled, it will disable kafka connector buffer and only use ingest sdk buffer instead of both.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connector Config
+==========================
+🔘 snowflake.streaming.client.provider.override.map
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Map of Key value pairs representing Streaming Client Properties to Override. These are optional and recommended to use ONLY after consulting Snowflake Support. Format : comma-separated tuples, e.g.: MAX_CLIENT_LAG:5000,other_key:value...
+	 - Required: LOW
+
+🔘 enable.streaming.client.optimization
+
+Whether to optimize the streaming client to reduce cost. Note that this may affect throughput or latency and can only be set if Streaming Snowpipe is enabled
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 enable.mdc.logging
+
+Enable MDC context to prepend log messages. Note that this is only available after Apache Kafka 2.3
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 enable.streaming.channel.offset.migration
+
+This config is used to enable/disable streaming channel offset migration logic. If true, we will migrate offset token from channel name format V2 to name format v1. V2 channel format is deprecated and V1 will be used always, disabling this config could have ramifications. Please consult Snowflake support before setting this to false.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 enable.task.fail.on.authorization.errors
+
+If set to true the Connector will fail its tasks when authorization error from Snowflake occurred
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.streaming.iceberg.enabled
+
+When set to true the connector will ingest data into the Iceberg table. Check the official Snowflake documentation for the prerequisites.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Connector Config
+==========================
+🔘 enable.streaming.channel.offset.verification
+
+Whether to enable streaming channel offset verification function. The function checks only for incremental offsets (might contain gaps) and might signal false positives in case of SMT. Can only be set if Streaming Snowpipe is enabled
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
