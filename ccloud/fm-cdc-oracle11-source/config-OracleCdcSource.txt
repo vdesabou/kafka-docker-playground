@@ -1,0 +1,771 @@
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 datapreview.schemas.enable
+
+This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+How should we connect to your database?
+==========================
+🔘 oracle.server
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The hostname or address for the Oracle server.
+	 - Required: HIGH
+
+🔘 oracle.port
+
+The port number used to connect to Oracle.
+
+	 - Type: INT
+	 - Default: 1521
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 oracle.sid
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The Oracle system identifier (SID) of a multi-tenant container database (CDB) or non-multitenant database where tables reside. Confluent recommends you use ``oracle.service.name`` to connect to the database using service names instead of using the SID. Maps to the SID parameter in the connect descriptor.
+	 - Required: HIGH
+
+🔘 oracle.pdb.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the pluggable database (PDB). This is not required when tables reside in the CDB$ROOT database, or if you're using a non-container database.
+	 - Required: HIGH
+
+🔘 oracle.service.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Oracle service name. If set, the connector always connects to the database using the provided service name. The ``oracle.service.name`` maps to the SERVICE_NAME parameter in the connect descriptor. For the multitenant container database (CDB) or non-multitenant database, this does not need to be specified. Confluent recommends you set the ``oracle.service.name`` to the container database (CDB) service name when using a pluggable database (PDB). When this property is set, it is used in the connect descriptor instead of ``oracle.sid``.
+	 - Required: LOW
+
+🔘 oracle.username
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The name of the Oracle database user.
+	 - Required: HIGH
+
+🔘 oracle.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The password for the Oracle database user.
+	 - Required: HIGH
+
+🔘 ssl.truststorefile
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The trust store containing server CA certificate. Only required when using SSL to connect to the database.
+	 - Required: LOW
+
+🔘 ssl.truststorepassword
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The trust store password containing server CA certificate. Only required when using SSL to connect to the database.
+	 - Required: LOW
+
+🔘 oracle.fan.events.enable
+
+Whether the connection should allow using Oracle RAC Fast Application Notification (FAN) events. This is disabled by default, meaning FAN events will not be used even if they are supported by the database. This should only be enabled when using Oracle RAC set up with FAN events. Enabling this feature may cause connection issues when the database is not set up to use FAN events.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Database details
+==========================
+🔘 table.inclusion.regex
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The regular expression that matches the fully-qualified table names. The values are matched (case sensitive) with the object names stored in the data dictionary (Uppercase unless created as a quoted identifier. Database and PDB names are always stored as uppercase in the data dictionary). Ensure consistent casing for the sid part in the identifier with the ``oracle.sid`` value specified. For non-container database, the fully-qualified name includes the SID and schema name. e.g. ``ORCLDB[.]MYUSER[.](ORDERS|CUSTOMERS)`` or ``ORCLDB\.MYUSER\.(ORDERS|CUSTOMERS)``. For multitenant database (CDB), the fully-qualified name includes the SID and schema name. e.g. ``ORCLCDB[.]C##MYUSER[.](ORDERS|CUSTOMERS)`` or ``ORCLCDB\.C##MYUSER\.(ORDERS|CUSTOMERS)``. For multitenant database (PDB), the fully-qualified name includes the PDB and schema name. e.g. ``ORCLPDB1[.]C##MYUSER[.](ORDERS|CUSTOMERS)`` or ``ORCLPDB1\.C##MYUSER\.(ORDERS|CUSTOMERS)``.
+	 - Required: HIGH
+
+🔘 table.exclusion.regex
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The regular expression that matches the fully-qualified table names. The values are matched (case sensitive) with the object names stored in the data dictionary (Uppercase unless created as a quoted identifier. Database and PDB names are always stored as uppercase in the data dictionary). Ensure consistent casing for the sid part in the identifier with the ``oracle.sid`` value specified. For non-container database, the fully-qualified name includes the SID and schema name. e.g. ``ORCLDB[.]MYUSER[.](ORDERS|CUSTOMERS)`` or ``ORCLDB\.MYUSER\.(ORDERS|CUSTOMERS)``. For multitenant database (CDB), the fully-qualified name includes the SID and schema name. e.g. ``ORCLCDB[.]C##MYUSER[.](ORDERS|CUSTOMERS)`` or ``ORCLCDB\.C##MYUSER\.(ORDERS|CUSTOMERS)``. For multitenant database (PDB), the fully-qualified name includes the PDB and schema name. e.g. ``ORCLPDB1[.]C##MYUSER[.](ORDERS|CUSTOMERS)`` or ``ORCLPDB1\.C##MYUSER\.(ORDERS|CUSTOMERS)``.
+	 - Required: HIGH
+
+🔘 start.from
+
+When starting for the first time, this is the position in the redo log where the connector should start. Specifies an Oracle System Change Number (SCN) or a database timestamp with the format ``yyyy-MM-dd HH:mm:SS`` in the database time zone. Defaults to the literal ``snapshot``, which instructs the connector to perform an initial snapshot of each captured table before capturing changes. The literal ``current`` may instruct the connector to start from the current Oracle SCN without snapshotting. The ``force_current`` literal is the same as ``current``, but it will ignore any previously stored offsets when the connector is restarted. This option should be used cautiously as it can result in losing changes between the SCN stored in the offsets and the current SCN. This option should only be used to recover the connector when the SCN stored in offsets is no longer available in the Oracle archive logs. Every option other than ``force_current`` causes the connector to resume from the stored offsets in case of task restarts or re-balances.
+
+	 - Type: STRING
+	 - Default: snapshot
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 oracle.supplemental.log.level
+
+Database supplemental logging level for connector operation. If set to ``full``, the connector validates that the supplemental logging level on the database is FULL and then captures Snapshots and CDC events for the specified tables whenever ``table.topic.name.template`` is not set to ``""``. When the level is set to ``msl``, the connector does not capture the CDC change events; rather, it only captures snapshots if ``table.topic.name.template`` is not set to ``""``. Note that this setting is irrelevant if the ``table.topic.name.template`` is set to ``""``. In this case, only redo logs are captured. This setting defaults to ``full`` supplemental logging level mode.
+
+	 - Type: STRING
+	 - Default: full
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Connector details
+==========================
+🔘 emit.tombstone.on.delete
+
+If true, delete operations emit a tombstone record with null value.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 behavior.on.dictionary.mismatch
+
+Specifies the desired behavior when the connector is not able to parse the value of a column due to a dictionary mismatch caused by DDL statement. This can happen if the ``online`` dictionary mode is specified but the connector is streaming historical data recorded before DDL changes occurred. The default option ``fail`` will cause the connector task to fail. The ``log`` option will log the unparsable record and skip the problematic record without failing the connector task.
+
+	 - Type: STRING
+	 - Default: fail
+	 - Importance: LOW
+	 - Required: false
+
+🔘 behavior.on.unparsable.statement
+
+Specifies the desired behavior when the connector encounters a SQL statement that could not be parsed. The default option ``fail`` will cause the connector task to fail. The ``log`` option will log the unparsable statement and skip the problematic record without failing the connector task.
+
+	 - Type: STRING
+	 - Default: fail
+	 - Importance: LOW
+	 - Required: false
+
+🔘 db.timezone
+
+Default timezone to assume when parsing Oracle ``DATE`` and ``TIMESTAMP`` types for which timezone info is not available. For example, if ``db.timezone=UTC``, data for both ``DATE`` and ``TIMESTAMP`` is parsed as if in UTC timezone. The value has to be a valid java.util.TimeZone ID.
+
+	 - Type: STRING
+	 - Default: UTC
+	 - Importance: LOW
+	 - Required: false
+
+🔘 db.timezone.date
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The default timezone to assume when parsing Oracle ``DATE`` type for which timezone information is not available. If ``db.timezone.date`` is set, the value of ``db.timezone`` for ``DATE`` type will be overwritten with the value in ``db.timezone.date``. For example, if ``db.timezone=UTC`` and ``db.timezone.date=America/Los_Angeles``, the data ``TIMESTAMP`` will be parsed as if it is in UTC timezone, and the data in ``DATE`` will be parsed as if in America/Los_Angeles timezone. The value has to be a valid ``java.util.TimeZone`` ID.
+	 - Required: LOW
+
+🔘 redo.log.startup.polling.limit.ms
+
+The amount of time to wait for the redo log to be present on connector startup. This is only relevant when connector is configured to capture change events. On expiration of this wait time, the connector will move to a failed state.
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 heartbeat.interval.ms
+
+The interval in milliseconds after which the connector would emit heartbeat records to heartbeat topic with the name ``${connectorName}-${databaseName}-heartbeat-topic``. Heartbeats are useful for moving the connector offsets and ensuring we are always up to the latest SCN we processed. The default is 0 milliseconds which disables the heartbeat mechanism. Confluent recommends that you set the heartbeat.interval.ms parameter to a value in the order of minutes to hours in environments where the connector is configured to capture infrequently updated tables so the source offsets can move forward. Otherwise, a task restart could cause the connector to fail with an ORA-01291 missing logfile error if the archived redo log file corresponding to the stored source offset has been purged from the database.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 log.mining.end.scn.deviation.ms
+
+Calculates the end SCN of log mining sessions as the approximate SCN that corresponds to the point in time that is log.mining.end.scn.deviation.ms milliseconds before the current SCN obtained from the database. The default value is set to 3 seconds on RAC environments, and 0 seconds on non RAC environments. This configuration is applicable only for Oracle database versions 19c and later. Setting this configuration to a lower value on a RAC environment introduces the potential for data loss at high load. A higher value increases the end to end latency for change events.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 log.mining.archive.destination.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the archive log destination to use when mining archived redo logs. For example, when configured with ``LOG_ARCHIVE_DEST_2``, the connector exclusively refers to the second destination for retrieving archived redo logs. This is only applicable for Oracle database versions 19c and later.
+	 - Required: LOW
+
+🔘 use.transaction.begin.for.mining.session
+
+Set start SCN for log mining session to the start SCN of the oldest relevant open transaction if one exists. A relevant transaction is defined as one that has changes to tables that the connector is setup to capture. It is recommended to set this to true when connecting to Oracle Real Application Clusters (RAC) databases or if large object datatypes (LOB) support is enabled (using ``enable.large.lob.object.support``). This configuration is applicable only for Oracle database versions 19c and later.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 log.mining.transaction.age.threshold.ms
+
+Specifies the threshold (in milliseconds) for transaction age. Transaction age is defined as the duration the transaction has been open on the database. If the transaction age exceeds this threshold then an action is taken depending on the value set for the ``log.mining.transaction.threshold.breached.action`` configuration. The default value is -1 which means that a transaction is retained in the buffer until the connector receives the commit or rollback event for the transaction. This configuration is applicable only when ``use.transaction.begin.for.mining.session`` is set to ``true``.
+
+	 - Type: LONG
+	 - Default: -1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 log.mining.transaction.threshold.breached.action
+
+Specifies the action to take when an active transaction exceeds the threshold defined using the ``log.mining.transaction.age.threshold.ms`` configuration. When set to ``discard``, the connector drops long running transactions that exceed the threshold age from the buffer and skip emitting any records associated with these transactions. With ``warn`` the connector logs a warning, mentioning the oldest transaction that exceed the threshold.
+
+	 - Type: STRING
+	 - Default: warn
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Connection details
+==========================
+🔘 query.timeout.ms
+
+The timeout in milliseconds for any query submitted to Oracle. The default is 5 minutes (or 300000 milliseconds). If set to negative values, then the connector will not enforce timeout on queries.
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 max.batch.size
+
+The maximum number of records that will be returned by the connector to Connect. The connector may still return fewer records if no additional records are available.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 poll.linger.ms
+
+The maximum time to wait for a record before returning an empty batch. The call to poll can return early before ``poll.linger.ms`` expires if ``max.batch.size`` records are received.
+
+	 - Type: LONG
+	 - Default: 5000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 max.buffer.size
+
+The maximum number of records from all snapshot threads and from the redo log that can be buffered into batches. The default of 0 means a buffer size will be computed from the maximum batch size and number of threads.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 redo.log.poll.interval.ms
+
+The interval between polls to retrieve the database redo log events. This has no effect when using Oracle database versions prior to 19c.
+
+	 - Type: LONG
+	 - Default: 500
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snapshot.row.fetch.size
+
+The number of rows to provide as a hint to the JDBC driver when fetching table rows in a snapshot. A value of 0 disables this hint.
+
+	 - Type: INT
+	 - Default: 2000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.row.fetch.size
+
+The number of rows to provide as a hint to the JDBC driver when fetching rows from the redo log. A value of 0 disables this hint. When continuous mine is available (database versions before Oracle 19c), the mining query from the connector waits until the number of rows available from the redo log is at least the value specified for fetch size before returning the results.
+
+	 - Type: INT
+	 - Default: 5000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.row.poll.fields.include
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma-separated list of fields from the V$LOGMNR_CONTENTS view to include in the redo log events.
+	 - Required: LOW
+
+🔘 redo.log.row.poll.username.include
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma-separated list of database usernames. When this property is set, the connector captures changes only from the specified set of database users. You cannot set this property along with the ``redo.log.row.poll.username.exclude`` property
+	 - Required: LOW
+
+🔘 redo.log.row.poll.username.exclude
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma-separated list of database usernames. When this property is set, the connector captures changes only from database users that are not specified in this list. You cannot set this property along with the ``redo.log.row.poll.username.include`` property
+	 - Required: LOW
+
+🔘 redo.log.row.poll.fields.exclude
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma-separated list of fields from the V$LOGMNR_CONTENTS view to exclude in the redo log events.
+	 - Required: LOW
+
+🔘 oracle.validation.result.fetch.size
+
+The fetch size to be used while querying database for validations. This will be used to query list of tables and supplemental logging level validation.
+
+	 - Type: INT
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Output messages
+==========================
+🔘 table.topic.name.template
+
+The template that defines the name of the Kafka topic where the change event is written. The value can be a constant if the connector writes all change events from all captured tables to one topic. The value can include any supported template variables, including ``${databaseName}``, ``${schemaName}``, ``${tableName}``, ``${connectorName}`` This can be left blank only if the connector has to write events only to the redo log topic and not to the table change event topics. Special characters, including ``\``, ``$``, ``{``, and ``}`` must be escaped with ``\`` when not intended to be part of a template variable.
+
+	 - Type: STRING
+	 - Default: ${databaseName}.${schemaName}.${tableName}
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 redo.log.corruption.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Kafka topic to which the connector will record events that describe the information about corruption in the Oracle redo log, and which signify missed data. This can optionally use the template variables ``${connectorName}``, ``${databaseName}``, and ``${schemaName}``. A blank topic name (the default) signals that this information should not be written to Kafka.
+	 - Required: HIGH
+
+🔘 redo.log.topic.name
+
+The template for the name of the Kafka topic to which the connector will record all raw redo log events. This can optionally use the template variables ``${connectorName}``, ``${databaseName}``, and ``${schemaName}``.
+
+	 - Type: STRING
+	 - Default: ${connectorName}-${databaseName}-redo-log
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 oracle.dictionary.mode
+
+The dictionary handling mode used by the connector. Options are ``auto``, ``online``, or ``redo_log``. ``auto``: The connector uses the dictionary from the online catalog until a DDL statement to evolve the table schema is encountered. At this point, the connector starts using the dictionary from archived redo logs. Once the DDL statement has been processed, the connector reverts to using the online catalog. Use this mode if DDL statements are expected. ``online``: The connector always uses the online dictionary catalog. Use this mode if no DDL statements are expected. ``redo_log``: The connector always uses the dictionary catalog from archived redo logs. Use this mode if you cannot access the online redo log. Note that any CDC events will be delayed until they are archived from online logs before the connector processes them.
+
+	 - Type: STRING
+	 - Default: auto
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.template
+
+The template that defines the Kafka record key for each change event. By default, the record key contains a concatenated primary key value delimited by an underscore (``_``) character. Use ``${primaryKeyStructOrValue}`` to contain either the sole column value of a single-column primary key or a STRUCT with the multi-column primary key fields (or null if the table has no primary or unique key). Use ``${primaryKeyStruct}`` to always use a STRUCT for primary keys that have one or more columns (or null if there is no primary or unique key). If the template contains variables or string literals, the record key is the string with the variables resolved and replaced.
+
+	 - Type: STRING
+	 - Default: ${primaryKeyStructOrValue}
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 output.table.name.field
+
+The name of the field in the change record written to Kafka that contains the fully-qualified name of the affected Oracle table. A blank value signals that this field should not be included in the change records. Use unescaped ``.`` characters to designate nested fields within structs, or prefix with ``header:`` to write the fully-qualified name of the affected Oracle table as a header with the given name.
+
+	 - Type: STRING
+	 - Default: table
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.scn.field
+
+The name of the field in the change record written to Kafka that contains the Oracle system change number (SCN) when this change was made. A blank value signals that this field should not be included in the change records. Use unescaped ``.`` characters to designate nested fields within structs, or prefix with ``header:`` to write the Oracle system change number (SCN) as a header with the given name.
+
+	 - Type: STRING
+	 - Default: scn
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.commit.scn.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the field in the change record written to Kafka that contains the Oracle system change number (SCN) when the transaction was committed. A blank value signals that this field should not be included in the change records. Use unescaped ``.`` characters to designate nested fields within structs, or prefix with ``header:`` to write the Oracle system change number (SCN) when the transaction committed as a header with the given name.
+	 - Required: LOW
+
+🔘 output.before.state.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the field in the change record written to Kafka that contains the before state of changed database rows for an update operation. A blank value signals that this field should not be included in the change records.
+	 - Required: LOW
+
+🔘 output.op.type.field
+
+The name of the field in the change record written to Kafka that contains the operation type for this change event. A blank value signals that this field should not be included in the change records. Use unescaped ``.`` characters to designate nested fields within structs, or prefix with ``header:`` to write the operation type as a header with the given name.
+
+	 - Type: STRING
+	 - Default: op_type
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.op.ts.field
+
+The name of the field in the change record written to Kafka that contains the operation timestamp for this change event. A blank value signals that this field should not be included in the change records. Use unescaped ``.`` characters to designate nested fields within structs, or prefix with ``header:`` to write the operation timestamp as a header with the given name.
+
+	 - Type: STRING
+	 - Default: op_ts
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.current.ts.field
+
+The name of the field in the change record written to Kafka that contains the connector's timestamp when this change event was processed. A blank value signals that this field should not be included in the change records. Use unescaped ``.`` characters to designate nested fields within structs, or prefix with ``header:`` to write the connector's timestamp when this change event was processed as a header with the given name.
+
+	 - Type: STRING
+	 - Default: current_ts
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.row.id.field
+
+The name of the field in the change record written to Kafka that contains the row ID of the table changed by this event. A blank value signals that this field should not be included in the change records. Use unescaped ``.`` characters to designate nested fields within structs, or prefix with ``header:`` to write the row ID of the table changed by this event as a header with the given name.
+
+	 - Type: STRING
+	 - Default: row_id
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.username.field
+
+The name of the field in the change record written to Kafka that contains the name of the Oracle user that executed the transaction that resulted in this change. A blank value signals that this field should not be included in the change records. Use unescaped ``.`` characters to designate nested fields within structs, or prefix with ``header:`` to write the name of the Oracle user that executed the transaction that resulted in this change as a header with the given name.
+
+	 - Type: STRING
+	 - Default: username
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.redo.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the field in the change record written to Kafka that contains the original redo DML statement from which this change record was created. A blank value signals that this field should not be included in the change records. Use unescaped ``.`` characters to designate nested fields within structs, or prefix with ``header:`` to write the original redo DML statement from which this change record was created as a header with the given name.
+	 - Required: LOW
+
+🔘 output.undo.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the field in the change record written to Kafka that contains the original undo DML statement that effectively undoes this change and represents the "before" state of the row. A blank value signals that this field should not be included in the change records. Use unescaped ``.`` characters to designate nested fields within structs, or prefix with ``header:`` to write the  original undo DML statement that effectively undoes this change and represents the "before" state of the row as a header with the given name.
+	 - Required: LOW
+
+🔘 output.op.type.read.value
+
+The value of the operation type for a read (snapshot) change event. By default this is "R".
+
+	 - Type: STRING
+	 - Default: R
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.op.type.insert.value
+
+The value of the operation type for an insert change event. By default this is "I".
+
+	 - Type: STRING
+	 - Default: I
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.op.type.update.value
+
+The value of the operation type for an update change event. By default this is "U".
+
+	 - Type: STRING
+	 - Default: U
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.op.type.delete.value
+
+The value of the operation type for a delete change event. By default this is "D".
+
+	 - Type: STRING
+	 - Default: D
+	 - Importance: LOW
+	 - Required: false
+
+🔘 lob.topic.name.template
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The template that defines the name of the Kafka topic to which LOB objects should be written. The value can be a constant if all LOB objects from all captured tables are to be written to one topic, or the value can include any supported template variables, including ``${columnName}``, ``${databaseName}``, ``${schemaName}``, ``${tableName}``, ``${connectorName}``, etc. The default is empty, which will ignore all LOB type columns if any exist on captured tables. Special-meaning characters ``\``, ``$``, ``{``, and ``}`` must be escaped with ``\`` when not intended to be part of a template variable. Any character that is not a valid character for topic name is replaced by an underscore in the topic name.
+	 - Required: LOW
+
+🔘 snapshot.by.table.partitions
+
+Whether the connector should perform snapshots on each table partition if the table is defined to use partitions. This is ``false`` by default, meaning that one snapshot is performed on each table in its entirety.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snapshot.threads.per.task
+
+The number of threads that can be used in each task to perform snapshots. This is only useful for a task if the value of the number of tables assigned to that task is more than this.
+
+	 - Type: INT
+	 - Default: 4
+	 - Importance: LOW
+	 - Required: false
+
+🔘 enable.large.lob.object.support
+
+If true, the connector will support large LOB objects that are split across multiple redo log records. The connector will emit commit messages to the redo log topic and use these commit messages to track when a large LOB object can be emitted to the LOB topic.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 numeric.mapping
+
+Map NUMERIC values by precision and optionally scale to primitive or decimal types. Use ``none`` if all NUMERIC columns are to be represented by Connect's DECIMAL logical type. Use ``best_fit_or_decimal`` if NUMERIC columns should be cast to Connect's primitive type based on the column's precision and scale. If the precision and scale exceed the bounds for any primitive type, Connect's DECIMAL logical type will be used instead, and the values will be represented in binary form within the change events. Use ``best_fit_or_double`` if NUMERIC columns should be cast to Connect's primitive type based on the column's precision and scale. If the precision and scale exceed the bounds for any primitive type, Connect's FLOAT64 type will be used instead. Use ``best_fit_or_string`` if NUMERIC columns should be cast to Connect's primitive type based on the column's precision and scale. If the precision and scale exceed the bounds for any primitive type, Connect's STRING type will be used instead. Use ``precision_only`` to map NUMERIC columns based only on the column's precision, assuming the column's scale is 0. The ``none`` option is the default but may lead to serialization issues since Connect's DECIMAL type is mapped to its binary representation. One of the ``best_fit_or`` options will often be preferred. For backward compatibility reasons, the ``best_fit`` option is also available. It behaves the same as ``best_fit_or_decimal``. This would require deletion of the table topic and the registered schemas if using non-JSON ``value.converter``.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 numeric.default.scale
+
+The default scale to use for numeric types when the scale cannot be determined.
+
+	 - Type: INT
+	 - Default: 127
+	 - Importance: LOW
+	 - Required: false
+
+🔘 oracle.date.mapping
+
+Map Oracle DATE values to Connect types. Use ``date`` if all DATE columns are to be represented by Connect's Date logical type. Use ``timestamp`` if DATE columns should be cast to Connect's Timestamp. Despite the name similarity, Oracle DATE type has different semantics than Connect Date. ``timestamp`` will often be preferred for semantic similarity.
+
+	 - Type: STRING
+	 - Default: timestamp
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.data.key.format
+
+Sets the output Kafka record key format. Valid entries are AVRO, JSON_SR, PROTOBUF, or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 output.data.value.format
+
+Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+Maximum number of tasks to use for this connector.
+
+	 - Type: INT
+	 - Default: 2
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+

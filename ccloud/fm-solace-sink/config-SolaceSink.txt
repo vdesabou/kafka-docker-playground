@@ -1,0 +1,384 @@
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Which topics do you want to get data from?
+==========================
+🔘 topics.regex
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A regular expression that matches the names of the topics to consume from. This is useful when you want to consume from multiple topics that match a certain pattern without having to list them all individually.
+	 - Required: LOW
+
+🔘 topics
+
+
+
+	 - Type: true
+	 - Default: LIST
+	 - Importance: Identifies the topic name or a comma-separated list of topic names.
+	 - Required: HIGH
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Input messages
+==========================
+🔘 input.data.format
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, JSON, STRING or BYTES. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+==========================
+How should we connect to your Solace cluster?
+==========================
+🔘 solace.host
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: IP or hostname and port (optional) of the message broker to connect to. If a port is not specified, the default port number is 55555 when compression is not in use, or 55003 when compression is in use.
+	 - Required: HIGH
+
+🔘 solace.username
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Username to authenticate with Solace.
+	 - Required: HIGH
+
+🔘 solace.password
+
+
+
+	 - Type: true
+	 - Default: PASSWORD
+	 - Importance: Password to authenticate with Solace.
+	 - Required: HIGH
+
+🔘 solace.vpn
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Message VPN to use when connecting to the Solace message broker.
+	 - Required: MEDIUM
+
+==========================
+Connection details
+==========================
+🔘 solace.compression.level
+
+ZLIB compression level for messages written to Solace. Valid values for the compression level are -1 through 9. -1 means use the JNDI connection’s compression level. 0 means use no compression. 1 through 9 enables data compression (where 1 offers the least amount of compression and fastest data throughput, and 9 offers the most compression and slowest data throughput)
+
+	 - Type: INT
+	 - Default: -1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 solace.dynamic.durables
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Whether queues or topic endpoints (which are used to support durable subscription names), are to be created on the message broker. In case of `queue` destination, set this property to true if the queue doesn't exist already, false otherwise. Setting it incorrectly will fail the connector.
+	 - Required: LOW
+
+🔘 solace.client.description
+
+Application description on the message broker for the data connection.
+
+	 - Type: STRING
+	 - Default: Kafka Connect
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Solace secure connection
+==========================
+🔘 solace.ssl.keystore.file
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Keystore of SSL-enabled VPN for Solace.
+	 - Required: MEDIUM
+
+🔘 solace.ssl.keystore.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Keystore password for SSL-enabled VPN for Solace.
+	 - Required: MEDIUM
+
+🔘 solace.ssl.truststore.file
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Truststore containing server CA certificate for SSL-enabled VPN for Solace.
+	 - Required: MEDIUM
+
+🔘 solace.ssl.truststore.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Truststore password for SSL-enabled VPN for Solace.
+	 - Required: MEDIUM
+
+🔘 solace.ssl.validate.certificate
+
+Whether to validate the SSL certificates.
+
+	 - Type: STRING
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JMS details
+==========================
+🔘 jms.destination.name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The name of the JMS destination that messages are written to.
+	 - Required: HIGH
+
+🔘 jms.destination.type
+
+The type of JMS destination.
+
+	 - Type: STRING
+	 - Default: queue
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 jms.forward.kafka.key
+
+Convert the Kafka record key to a string and forward it on the JMS Message property JMSCorrelationID.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.forward.kafka.metadata
+
+Forward the Kafka record metadata on the JMS Message properties. This includes the record topic, partition, and offset.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jms.forward.kafka.headers
+
+Add the Kafka record headers to the JMS Message as string properties.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+JMS formatter
+==========================
+🔘 jms.message.format
+
+The format of JMS message values.
+
+	 - Type: STRING
+	 - Default: string
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 character.encoding
+
+The character encoding to use while writing the message.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Consumer configuration
+==========================
+🔘 max.poll.interval.ms
+
+The maximum delay between subsequent consume requests to Kafka. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 300000 milliseconds (5 minutes).
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.poll.records
+
+The maximum number of records to consume from Kafka in a single request. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 500 records.
+
+	 - Type: LONG
+	 - Default: 500
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
