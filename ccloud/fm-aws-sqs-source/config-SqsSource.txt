@@ -1,0 +1,264 @@
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 datapreview.schemas.enable
+
+This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Which topic do you want to send data to?
+==========================
+🔘 kafka.topic
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Identifies the topic name to write the data to.
+	 - Required: HIGH
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+AWS credentials
+==========================
+🔘 authentication.method
+
+Select how you want to authenticate with AWS.
+
+	 - Type: STRING
+	 - Default: Access Keys
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing integration that has access to your resource. In case you need to integrate a new IAM role, use provider integration
+	 - Required: HIGH
+
+🔘 aws.access.key.id
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The Amazon Access Key used to connect to SQS.
+	 - Required: HIGH
+
+🔘 aws.secret.key.id
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The Amazon Secret Key used to connect to SQS.
+	 - Required: HIGH
+
+==========================
+How should we connect to Amazon SQS?
+==========================
+🔘 sqs.url
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Fully qualified Amazon SQS URL to read messages from
+	 - Required: HIGH
+
+🔘 sqs.region
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The AWS region that the SQS queue belongs to. If left empty, the connector will attempt to infer the region from the SQS URL.
+	 - Required: MEDIUM
+
+==========================
+Output messages
+==========================
+🔘 output.data.format
+
+Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 schemas.enable
+
+Include schemas within each of the serialized values.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+

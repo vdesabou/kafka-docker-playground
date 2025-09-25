@@ -1,0 +1,636 @@
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 datapreview.schemas.enable
+
+This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+How do you want to name your topic(s)?
+==========================
+🔘 topic.prefix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Prefix to prepend to table names to generate the name of the Apache Kafka® topic to publish data to.
+	 - Required: HIGH
+
+🔘 topic.namespace.map
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: JSON object that maps change stream document namespaces to topics. Any prefix configuration will still apply. In case multiple collections with records having varying schema are mapped to single topic with AVRO, JSON_SR, and PROTOBUF, then multiple schemas will be registered under single subject name. If these schemas are not backward compatible to each other, the connector will fail until you change the schema compatibility in Confluent Cloud Schema Registry.
+	 - Required: LOW
+
+==========================
+How should we connect to your MongoDB database?
+==========================
+🔘 mongodb.instance.type
+
+Specifies the type of MongoDB instance the connector will connect to.
+
+	 - Type: STRING
+	 - Default: MONGODB_ATLAS
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 mongodb.auth.mechanism
+
+Choose an authentication mechanism for MongoDB. Use SCRAM-SHA-256 for username/password authentication. Use MONGODB-X509 for certificate-based authentication. For MONGODB-X509, you must configure the SSL keystore properties.
+
+	 - Type: STRING
+	 - Default: SCRAM-SHA-256
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 connection.host
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: For MongoDB Atlas, provide the SRV connection host (e.g., mycluster.abc123.mongodb.net). For Self Managed MongoDB, provide the host and port in MongoDB URI format, e.g., host1:27017 or host1:27017/?replicaSet=myReplicaSet.
+	 - Required: HIGH
+
+🔘 connection.user
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: MongoDB connection user.
+	 - Required: HIGH
+
+🔘 connection.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: MongoDB connection password.
+	 - Required: HIGH
+
+🔘 connection.ssl.truststore.file
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The trust store file containing trusted certificates. Supported formats include JKS and PKCS12. If not set, the default Java trust store is used.
+	 - Required: MEDIUM
+
+🔘 connection.ssl.truststorePassword
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The password for the trust store file.
+	 - Required: MEDIUM
+
+🔘 connection.ssl.keystore.file
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The key store file containing the client certificate and private key for MONGODB-X509 authentication. Supported formats include JKS and PKCS12.
+	 - Required: MEDIUM
+
+🔘 connection.ssl.keystorePassword
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The password for the key store file. This is optional for the client and only needed if ``connection.ssl.keystore.file`` is configured.
+	 - Required: MEDIUM
+
+🔘 database
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: MongoDB database name.
+	 - Required: HIGH
+
+==========================
+Database details
+==========================
+🔘 collection
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: MongoDB collection name.
+	 - Required: MEDIUM
+
+==========================
+Connection details
+==========================
+🔘 poll.await.time.ms
+
+The amount of time to wait before checking for new results on the change stream.
+
+	 - Type: INT
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 poll.max.batch.size
+
+Maximum number of change stream documents to include in a single batch when polling for new data. This setting can be used to limit the amount of data buffered internally in the connector.
+
+	 - Type: INT
+	 - Default: 100
+	 - Importance: LOW
+	 - Required: false
+
+🔘 pipeline
+
+An array of JSON objects describing the pipeline operations to filter or modify the change events output. For example, [{"$match": {"ns.coll": {"$regex": /^(collection1|collection2)$/}}}] will set your source connector to listen to the "collection1" and "collection2" collections only.
+
+	 - Type: STRING
+	 - Default: []
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 startup.mode
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Specifies how the connector should start up when there is no source offset available. If set to 'latest', the connector ignores all existing source data. If set to 'timestamp', the connector actuates startup.mode.timestamp.* properties. If no properties are configured, timestamp is equivalent to latest. If startup.mode=copy_existing, the connector copies all existing source data to Change Stream events.
+	 - Required: HIGH
+
+🔘 startup.mode.copy.existing.namespace.regex
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regular expression that matches the namespaces (databaseName.collectionName) from which to copy data. For example, stats\.page.* matches all collections that starts with "page" in "stats" database.
+	 - Required: MEDIUM
+
+🔘 startup.mode.copy.existing.pipeline
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: An array of JSON objects describing the pipeline operations to run when copying existing data. It will only be applied for existing documents which are being copied.
+	 - Required: MEDIUM
+
+🔘 startup.mode.timestamp.start.at.operation.time
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Actuated only if startup.mode=timestamp. Specifies the starting point for the change stream.
+	 - Required: MEDIUM
+
+🔘 batch.size
+
+The number of documents to return in a batch.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 output.schema.key
+
+The Avro schema definition for the key value of the SourceRecord.
+
+	 - Type: STRING
+	 - Default: { "type": "record", "name": "keySchema", "fields": [{ "name": "_id", "type": "string"}]}
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 output.schema.value
+
+The Avro schema definition for the value of the SourceRecord.
+
+	 - Type: STRING
+	 - Default: {"name": "ChangeStream", "type": "record", "fields": [{"name": "_id", "type": "string"}, {"name": "operationType", "type": ["string", "null"]}, {"name": "fullDocumentBeforeChange", "type": ["string", "null"]}, {"name": "fullDocument", "type": ["string", "null"]}, {"name": "ns", "type": [{"name": "ns", "type": "record", "fields": [{"name": "db", "type": "string"}, {"name": "coll", "type": ["string", "null"]}]}, "null"]}, {"name": "to", "type": [{"name": "to", "type": "record", "fields": [{"name": "db", "type": "string"}, {"name": "coll", "type": ["string", "null"]}]}, "null"]}, {"name": "documentKey", "type": ["string", "null"]}, {"name": "updateDescription", "type": [{"name": "updateDescription", "type": "record", "fields": [{"name": "updatedFields", "type": ["string", "null"]}, {"name": "removedFields", "type": [{"type": "array", "items": "string"}, "null"]}]}, "null"]}, {"name": "clusterTime", "type": ["string", "null"]}, {"name": "txnNumber", "type": ["long", "null"]}, {"name": "lsid", "type": [{"name": "lsid", "type": "record", "fields": [{"name": "id", "type": "string"}, {"name": "uid", "type": "string"}]}, "null"]}]}
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Producer configuration
+==========================
+🔘 linger.ms
+
+Artificial delay for records to be sent together.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 producer.batch.size
+
+Record batch size in bytes.
+
+	 - Type: INT
+	 - Default: 16384
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Output messages
+==========================
+🔘 output.data.format
+
+Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, JSON, STRING or BSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
+
+	 - Type: STRING
+	 - Default: STRING
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 output.key.format
+
+Sets the output Kafka record key format. Valid entries are AVRO, JSON_SR, PROTOBUF, STRING or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
+
+	 - Type: STRING
+	 - Default: STRING
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 publish.full.document.only
+
+Only publish the changed document instead of the full change stream document. Sets the change.stream.full.document=updateLookup automatically so updated documents will be included.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 publish.full.document.only.tombstone.on.delete
+
+Return the tombstone events when documents are deleted. Tombstone events contain the keys of deleted documents with null values. This setting applies only when publish.full.document.only is true
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 change.stream.full.document
+
+Determines what to return for update operations when using a Change Stream. When set to 'updateLookup' setting returns the differences between the original document and updated document as well as a copy of the entire updated document at a point in time after the update. The 'whenAvailable' setting returns the updated document, if available. The 'required' setting returns the updated document and raises an error if it is not available.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 change.stream.full.document.before.change
+
+Configures the document pre-image your change stream returns on update operations. When set to 'whenAvailable' setting returns the document pre-image if it's available, before it was replaced, updated, or deleted. When set to 'required' setting returns the document pre-image and raises an error if it is not available.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 change.stream.document.key.as.key
+
+Use the document key as the source record key.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 change.stream.show.expanded.events
+
+Determines if change streams notifies for DDL events, such as ``createIndexes`` and ``dropIndexes`` events. This functionality is new in version 6.0. See `MongoDB documentation <https://www.mongodb.com/docs/manual/reference/change-events/#std-label-change-streams-expanded-events>`__ for more details on ``showExpandedEvents``. This setting is required to show ``updateDescription.disambiguatedPaths`` in update events, helping clarify changes that involve ambiguous fields. This specific feature is new in version 6.1. See `MongoDB documentation <https://www.mongodb.com/docs/manual/reference/change-events/update/#path-disambiguation>`__ for more details on ``disambiguatedPaths``.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 collation
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The JSON representation of the collation options to use for the change stream. Use the ``Collation.asDocument().toJson()`` to create the specific json representation.
+	 - Required: HIGH
+
+🔘 output.json.format
+
+The output format of json strings can be configured to be either: DefaultJson: The legacy strict json formatter. ExtendedJson: The fully type safe extended json formatter. SimplifiedJson: Simplified Json, with ObjectId, Decimals, Dates and Binary values represented as strings. Users can provide their own implementation of the com.mongodb.kafka.connect.source.json.formatter.
+
+	 - Type: STRING
+	 - Default: DefaultJson
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 topic.separator
+
+Separator to use when joining prefix, database, collection, and suffix values. This generates the name of the Kafka topic to publish data to. Used by the 'DefaultTopicMapper'.
+
+	 - Type: STRING
+	 - Default: .
+	 - Importance: LOW
+	 - Required: false
+
+🔘 topic.suffix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Suffix to append to database and collection names to generate the name of the Kafka topic to publish data to.
+	 - Required: LOW
+
+🔘 output.schema.infer.value
+
+Whether the connector should infer the schema for the value document of the Source Record.  Since the connector processes each document in isolation, the connector may generate many schemas. The connector only reads this setting when you set your 'Output Kafka record value format' setting to AVRO, JSON, JSON_SR and PROTOBUF.
+
+	 - Type: STRING
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Error handling
+==========================
+🔘 heartbeat.interval.ms
+
+The number of milliseconds the connector waits between sending heartbeat messages. The connector sends heartbeat messages when source records are not published in the specified interval. This mechanism improves resumability of the connector for low volume namespaces. When using SMTs, use predicates to prevent SMTs from processing the heartbeat messages. See connector documentation for more details.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 heartbeat.topic.name
+
+The name of the topic on which the connector should publish heartbeat messages. You must provide a positive value in the "heartbeat.interval.ms" setting to enable this feature.
+
+	 - Type: STRING
+	 - Default: __mongodb_heartbeats
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 remove.field.on.schema.mismatch
+
+If true, remove fields from the document that are not present in the schema. Otherwise, throw an error or send the documents to the DLQ depending on the value of errors.tolerance being set to ALL or NONE respectively.
+
+	 - Type: STRING
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mongo.errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior differently from the Connect framework's.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mongo.errors.deadletterqueue.topic.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Whether to output conversion errors to the dead letter queue. Stops poison messages when using schemas, any message will be outputted as extended json on the specified topic. By default messages are not outputted to the dead letter queue. Also requires errors.tolerance=all.
+	 - Required: MEDIUM
+
+🔘 offset.partition.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom offset partition name to use. You can use this option to instruct the connector to start a new change stream when an existing offset contains an invalid resume token. If you leave this setting blank, the connector uses the default partition name based on the connection details.
+	 - Required: MEDIUM
+
+==========================
+Server API
+==========================
+🔘 server.api.version
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The server API version to use. Disabled by default.
+	 - Required: LOW
+
+🔘 server.api.deprecation.errors
+
+Sets whether the connector requires use of deprecated server APIs to be reported as errors.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 server.api.strict
+
+Sets whether the application requires strict server API version enforcement.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values. Input messages must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+

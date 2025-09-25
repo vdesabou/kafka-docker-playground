@@ -1,0 +1,270 @@
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 datapreview.schemas.enable
+
+This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Which topic do you want to send data to?
+==========================
+🔘 kafka.topic
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Identifies the topic name to write the data to.
+	 - Required: HIGH
+
+==========================
+AWS credentials
+==========================
+🔘 authentication.method
+
+Select how you want to authenticate with AWS.
+
+	 - Type: STRING
+	 - Default: Access Keys
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing integration that has access to your resource. In case you need to integrate a new IAM role, use provider integration
+	 - Required: HIGH
+
+🔘 aws.access.key.id
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The Amazon Access Key used to connect to Kinesis.
+	 - Required: HIGH
+
+🔘 aws.secret.key.id
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The Amazon Secret Key used to connect to Kinesis.
+	 - Required: HIGH
+
+==========================
+Kinesis details
+==========================
+🔘 kinesis.region
+
+The AWS region for the Kinesis stream.
+
+	 - Type: STRING
+	 - Default: us-west-2
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 kinesis.stream
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The Kinesis stream to read from.
+	 - Required: HIGH
+
+🔘 kinesis.shard.timestamp
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Timestamp (the Unix epoch date with precision in milliseconds) after which to start reading records from. To be used only in combination with kinesis.shard.position=AT_TIMESTAMP. Allowed formats: yyyy-MM-dd'T'HH:mm:ss.SSSXXX or epoch time in ms. Note: this will apply to every specified shard in the stream.
+	 - Required: LOW
+
+🔘 kinesis.position
+
+The position in the stream to reset to if no offsets are stored.
+
+	 - Type: STRING
+	 - Default: TRIM_HORIZON
+	 - Importance: LOW
+	 - Required: false
+
+🔘 kinesis.record.deaggregation.enable
+
+Set this value as true if you want to de-aggregate individual Kinesis Record (aggregated using KPL) into separate Source Record(s)
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connection details
+==========================
+🔘 kinesis.record.limit
+
+The number of records to read in each poll of the Kinesis shard.
+
+	 - Type: INT
+	 - Default: 500
+	 - Importance: LOW
+	 - Required: false
+
+🔘 kinesis.throughput.exceeded.backoff.ms
+
+The number of milliseconds to backoff when a throughput exceeded exception is thrown.
+
+	 - Type: LONG
+	 - Default: 10000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 kinesis.empty.records.backoff.ms
+
+The number of milliseconds to backoff when the stream is empty.
+
+	 - Type: LONG
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+

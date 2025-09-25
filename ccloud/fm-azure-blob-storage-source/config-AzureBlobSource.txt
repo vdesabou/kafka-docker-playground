@@ -1,0 +1,371 @@
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Which topic(s) do you want to send data to?
+==========================
+🔘 topic.regex.list
+
+
+
+	 - Type: true
+	 - Default: LIST
+	 - Importance: A list of topics along with a regex expression of the files which are to be sent to that topic.  For example: "my-topic:.*" will send all files to "my-topic", while a list containing only the expression "special-topic:.*\.json" will send only files starting with ".json" to "special-topic", and all other files not matching any patterns will be ignored and not sourced. Files that match multiple mappings will be sent to the first topic in the list that maps the file. The ``topic.regex.list`` property matches the full path (for example, ``folder/file.txt``), not just the filename.
+	 - Required: HIGH
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 datapreview.schemas.enable
+
+This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+CSFLE
+==========================
+🔘 csfle.enabled
+
+Determines whether the connector honours CSFLE rules or not
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sr.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
+	 - Required: HIGH
+
+==========================
+Azure Blob Storage details
+==========================
+🔘 azblob.account.name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Must be between 3-24 alphanumeric characters.
+	 - Required: HIGH
+
+🔘 azblob.account.key
+
+
+
+	 - Type: true
+	 - Default: PASSWORD
+	 - Importance: The Azure Storage account key.
+	 - Required: HIGH
+
+🔘 azblob.container.name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Please provide the Azure Blob Storage Container name. Must be between 3-63 alphanumeric and '-' characters.
+	 - Required: HIGH
+
+🔘 azblob.sas.token
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Shared access signature (SAS) is a URI that grants restricted access rights to Azure Storage resources. Please provide a shared access signature to clients who should not be trusted with your storage account key but whom you wish to delegate access to certain storage account resources.
+	 - Required: MEDIUM
+
+🔘 azblob.retry.type
+
+The policy specifying the type of retry pattern to use. Should be either Exponential or Fixed.
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Input and output messages
+==========================
+🔘 input.data.format
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets the input message format. Valid entries are AVRO, JSON, BYTES or STRING. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO.
+	 - Required: HIGH
+
+🔘 output.data.format
+
+Set the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, JSON or BYTES. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO. Note that the output message format defaults to the value in the Input Message Format field
+
+	 - Type: STRING
+	 - Default: ${input.data.format}
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Storage
+==========================
+🔘 topics.dir
+
+Top-level directory where data to be ingested is stored.
+
+	 - Type: STRING
+	 - Default: topics
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 directory.delim
+
+Directory delimiter pattern.
+
+	 - Type: STRING
+	 - Default: /
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 behavior.on.error
+
+Should the task halt when it encounters an error or continue to the next file.
+
+	 - Type: STRING
+	 - Default: FAIL
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 format.bytearray.separator
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: String inserted between records for ByteArrayFormat. Defaults to `
+` and may contain escape sequences like `
+`.  An input record that contains the line separator looks like multiple records in the storage object input.
+	 - Required: MEDIUM
+
+🔘 task.batch.size
+
+The number of files assigned to each task at a time
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 file.discovery.starting.timestamp
+
+A Unix timestamp (in epoch milliseconds since Jan 1, 1970 UTC) that denotes where to start processing files. The connector ignores any file with a creation time earlier than this timestamp. Note that the connector only uses this configuration property when no offsets are stored for a connector. This parameter allows new connectors to start from a specific timestamp instead of reading all files in a bucket.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Data polling policy
+==========================
+🔘 azblob.poll.interval.ms
+
+Frequency in milliseconds to poll for new or removed folders. This may result in updated task configurations starting to poll for data in added folders or stopping polling for data in removed folders
+
+	 - Type: LONG
+	 - Default: 60000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 record.batch.max.size
+
+The maximum amount of records to return each time storage is polled.
+
+	 - Type: INT
+	 - Default: 200
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: The total number of tasks to run in parallel.
+	 - Required: HIGH
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values. Input messages must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
