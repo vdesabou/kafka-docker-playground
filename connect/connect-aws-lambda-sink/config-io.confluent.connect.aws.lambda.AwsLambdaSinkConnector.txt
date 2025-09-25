@@ -1,0 +1,354 @@
+==========================
+AWS Lambda
+==========================
+🔘 aws.lambda.function.name
+
+The AWS Lambda function to invoke.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 aws.lambda.region
+
+The AWS region where the lambda is defined.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: true
+
+🔘 aws.access.key.id
+
+The Access Key ID for AWS.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 aws.secret.access.key
+
+The Access Key for AWS.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 aws.lambda.invocation.type
+
+The mode in which the AWS Lambda function will be invoked. Supported modes are:
+
+	 - Type: STRING
+	 - Default: sync
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 aws.lambda.batch.size
+
+The maximum number of |ak| records to combine in a single AWS Lambda function invocation. You should set this as high as possible, without exceeding AWS Lambda `invocation payload limits <https://docs.aws.amazon.com/lambda/latest/dg/limits.html>`_. To disable batching of records, set this value to ``1``.
+
+	 - Type: INT
+	 - Default: 20
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 record.converter.class
+
+Record converter class to convert |ak| SinkRecords to AWS Lambda Payload. Connector provides following inbuilt record converter classes - ``io.confluent.connect.aws.lambda.converters.JsonKeyValueConverter``, ``io.confluent.connect.aws.lambda.converters.EscapedJsonKeyValueConverter``. By default connector uses ``JsonKeyValueConverter`` class.
+
+	 - Type: CLASS
+	 - Default: io.confluent.connect.aws.lambda.converters.JsonKeyValueConverter
+	 - Importance: LOW
+	 - Required: false
+
+🔘 behavior.on.error
+
+Error handling behavior setting for AWS Lambda function invocations. Must be one of the following:
+
+	 - Type: STRING
+	 - Default: fail
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 aws.lambda.socket.timeout
+
+The socket timeout in milliseconds for the AWS Lambda client. This is the amount of time the client will wait for a response from the AWS Lambda service. The default value is 50000 milliseconds.
+
+	 - Type: INT
+	 - Default: 50000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 aws.lambda.user.agent
+
+
+
+	 - Type: STRING
+	 - Default: ConfluentPlatform
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+AWS Lambda
+==========================
+🔘 aws.credentials.provider.class
+
+Credentials provider or provider chain to use for authentication to AWS. By default, the connector uses ``DefaultAWSCredentialsProviderChain``.
+
+	 - Type: CLASS
+	 - Default: com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Proxy Configuration
+==========================
+🔘 aws.lambda.proxy.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTPS Proxy Server URL. This property is meant to be used only if you need to access SQS through an HTTPS proxy.
+	 - Required: LOW
+
+🔘 aws.lambda.proxy.user
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTPS Proxy User. This property is meant to be used only if you need to access SQS through a proxy. Using ``aws.lambda.proxy.user`` instead of embedding the username and password in ``aws.lambda.proxy.url`` allows the password to be hidden in the logs.
+	 - Required: LOW
+
+🔘 aws.lambda.proxy.password
+
+HTTPS Proxy Password. This property is meant to be used only if you need to access SQS through a proxy. Using ``aws.lambda.proxy.password`` instead of embedding the username and password in ``aws.lambda.proxy.url`` allows the password to be hidden in the logs.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+reporter.result.topic.name
+==========================
+🔘 ${connector}-success
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the topic to produce records to after successfully processing a sink record. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
+	 - Required: MEDIUM
+
+==========================
+reporter.result.topic.replication.factor
+==========================
+🔘 3
+
+
+
+	 - Type: false
+	 - Default: SHORT
+	 - Importance: The replication factor of the result topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
+	 - Required: MEDIUM
+
+==========================
+reporter.result.topic.partitions
+==========================
+🔘 1
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The number of partitions in the result topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions to handle the potential throughput.
+	 - Required: MEDIUM
+
+==========================
+Formatter
+==========================
+🔘 reporter.result.topic.key.format
+
+The format in which the result report key is serialized.
+
+	 - Type: STRING
+	 - Default: string
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.result.topic.key.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.key.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Formatter
+==========================
+🔘 reporter.result.topic.value.format
+
+The format in which the result report value is serialized.
+
+	 - Type: STRING
+	 - Default: string
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.result.topic.value.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.value.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+reporter.error.topic.name
+==========================
+🔘 ${connector}-error
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the topic to produce records to after each unsuccessful record sink attempt. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
+	 - Required: MEDIUM
+
+==========================
+reporter.error.topic.replication.factor
+==========================
+🔘 3
+
+
+
+	 - Type: false
+	 - Default: SHORT
+	 - Importance: The replication factor of the error topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
+	 - Required: MEDIUM
+
+==========================
+reporter.error.topic.partitions
+==========================
+🔘 1
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The number of partitions in the error topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions in order to handle the potential throughput.
+	 - Required: MEDIUM
+
+==========================
+Formatter
+==========================
+🔘 reporter.error.topic.key.format
+
+The format in which the error report key is serialized.
+
+	 - Type: STRING
+	 - Default: string
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.error.topic.key.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.key.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Formatter
+==========================
+🔘 reporter.error.topic.value.format
+
+The format in which the error report value is serialized.
+
+	 - Type: STRING
+	 - Default: string
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.error.topic.value.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.value.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+reporter.bootstrap.servers
+==========================
+🔘 LIST
+
+
+
+	 - Type: MEDIUM
+	 - Default: false
+	 - Importance: 
+	 - Required: A list of host/port pairs to use for establishing the initial connection to the Kafka cluster. The client will make use of all servers irrespective of which servers are specified here for bootstrapping&mdash;this list only impacts the initial hosts used to discover the full set of servers. This list should be in the form <code>host1:port1,host2:port2,...</code>. Since these servers are just used for the initial connection to discover the full cluster membership (which may change dynamically), this list need not contain the full set of servers (you may want more than one, though, in case a server is down).
+

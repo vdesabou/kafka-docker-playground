@@ -1,0 +1,6 @@
+    "aws.access.key.id": "STRING",
+    "aws.cloudwatch.metrics.namespace": "",
+    "aws.cloudwatch.metrics.url": "",
+    "aws.credentials.provider.class": "software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider",
+    "aws.secret.access.key": "[hidden]",
+    "behavior.on.malformed.metric": "FAIL",

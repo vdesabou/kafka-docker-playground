@@ -1,0 +1,129 @@
+==========================
+Credentials
+==========================
+🔘 aws.access.key.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The access key ID used to authenticate personal AWS credentials such as IAM credentials.
+	 - Required: MEDIUM
+
+🔘 aws.secret.access.key
+
+The secret access key used to authenticate personal AWS credentials such as IAM credentials.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 aws.credentials.provider.class
+
+Credentials provider or provider chain to use for authentication to AWS.
+
+	 - Type: CLASS
+	 - Default: com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+CloudWatch Logs
+==========================
+🔘 aws.cloudwatch.logs.url
+
+The URL used as the endpoint to connect the AWS CloudWatch Logs service to the source connector.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 aws.cloudwatch.signing.region
+
+Signing region for your AWS CloudWatch Logs endpoint. If the field is left empty, the value of aws.cloudwatch.logs.url is used to directly connect to the endpoint
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 aws.cloudwatch.log.group
+
+Name of the log group on AWS CloudWatch under which the desired log streams are contained.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 aws.cloudwatch.log.streams
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Name of the log stream(s) on AWS CloudWatch under which the desired log records are sent through. If the field is left empty, all log streams under the log group will be tracked.
+	 - Required: HIGH
+
+🔘 aws.poll.interval.ms
+
+The time in milliseconds to wait while polling the AWS CloudWatch endpoints.  AWS Imposes a maximum rate of 10 requests per account / region.  Capping polling frequency frees up AWS API budget for other use cases.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 log.message.format
+
+Set the format of log messages ingested from CloudWatch Log Streams. Valid entries are JSON and STRING.
+
+	 - Type: STRING
+	 - Default: STRING
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 streams.per.task
+
+The maximum number of log streams assigned to a single task.
+
+	 - Type: INT
+	 - Default: 500
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 use.filter.logEvents
+
+When true, uses FilterLogEvents API instead of GetLogEvents.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Kafka
+==========================
+🔘 kafka.topic.format
+
+A format string for the topic name(s) in Kafka, which may contain '${log-group}' and '${log-stream}' as a placeholder for the original log group and log stream names. For example, ``confluent.${log-group}.${log-stream}`` for the log group 'log-group-1' and log stream 'log-stream-1' will map to the topic name 'confluent.log-group-1.log-stream-1'.
+
+	 - Type: STRING
+	 - Default: ${log-group}.${log-stream}
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+ Behavior on Errors
+==========================
+🔘 behavior.on.error
+
+Error handling behavior setting.Must be configured to one of the following:
+
+	 - Type: STRING
+	 - Default: FAIL
+	 - Importance: MEDIUM
+	 - Required: false
+

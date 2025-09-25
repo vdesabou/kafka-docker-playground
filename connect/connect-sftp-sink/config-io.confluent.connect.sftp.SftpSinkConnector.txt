@@ -1,0 +1,282 @@
+==========================
+Connector
+==========================
+🔘 format.class
+
+The format class to use when writing data to the store.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 flush.size
+
+Number of records written to store before invoking file commits.
+
+	 - Type: INT
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 rotate.interval.ms
+
+The time interval in milliseconds to invoke file commits. You can configure this parameter so that the time interval is determined by using a timestamp extractor (for example, Kafka Record Time, Record Field, or Wall Clock extractor). When the first record is processed, a timestamp is set as the base time. This is useful if you require exactly-once-semantics. This configuration ensures that file commits are invoked at every configured interval. The default value ``-1`` indicates that this feature is disabled.
+
+	 - Type: LONG
+	 - Default: -1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 rotate.schedule.interval.ms
+
+The time interval in milliseconds to periodically invoke file commits. This configuration ensures that file commits are invoked at every configured interval. Time of commit will be adjusted to 00:00 of selected timezone. The commit will be performed at the scheduled time, regardless of the previous commit time or number of messages. This configuration is useful when you have to commit your data based on current server time, for example at the beginning of every hour. The default value ``-1`` means that this feature is disabled.
+
+	 - Type: LONG
+	 - Default: -1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 schemas.cache.config
+
+The size of the schema cache used in the Avro converter.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 enhanced.avro.schema.support
+
+Enable enhanced avro schema support in AvroConverter: Enum symbol preservation and Package Name awareness
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 connect.meta.data
+
+Allow connect converter to add its metadata to the output schema
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 retry.backoff.ms
+
+The retry backoff in milliseconds. This config is used to notify Kafka connect to retry delivering a message batch or performing recovery in case of transient exceptions.
+
+	 - Type: LONG
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 shutdown.timeout.ms
+
+Clean shutdown timeout. This makes sure that asynchronous Hive metastore updates are completed during connector shutdown.
+
+	 - Type: LONG
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 filename.offset.zero.pad.width
+
+Width to zero pad offsets in store's filenames if offsets are too short in order to provide fixed width filenames that can be ordered by simple lexicographic sorting.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+🔘 avro.codec
+
+The Avro compression codec to be used for output  files. Available values: null, deflate, snappy and bzip2 (CodecSource is org.apache.avro.file.CodecFactory)
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schema
+==========================
+🔘 schema.compatibility
+
+The schema compatibility rule to use when the connector is observing schema changes. The supported configurations are NONE, BACKWARD, FORWARD and FULL.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Connection
+==========================
+🔘 sftp.host
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Host address of the SFTP server.
+	 - Required: HIGH
+
+🔘 sftp.port
+
+Port number of the SFTP server.
+
+	 - Type: INT
+	 - Default: 22
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sftp.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Username for the SFTP connection.
+	 - Required: HIGH
+
+🔘 sftp.password
+
+Password for the SFTP connection.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Proxy
+==========================
+🔘 sftp.proxy.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Proxy url for the SFTP connection.
+	 - Required: LOW
+
+🔘 proxy.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Proxy username for the SFTP connection.
+	 - Required: LOW
+
+🔘 proxy.password
+
+Proxy password for the SFTP connection.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Security
+==========================
+🔘 tls.private.key
+
+Private key that will be used for public-key authentication.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+🔘 tls.public.key
+
+Public key that will be used to decrypt the private key if the given private key is encrypted.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+🔘 tls.passphrase
+
+Passphrase that will be used to decrypt the private key if the given private key is encrypted.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+🔘 tls.pemfile
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Path in the filesystem to a valid pemfile that will be used for public-key authentication.
+	 - Required: LOW
+
+🔘 kerberos.user.principal
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The principal to use when connecting to SFTP with Kerberos. The ``sftp.username`` is still required. Format: ``username@REALM``.
+	 - Required: LOW
+
+🔘 kerberos.keytab.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The path to the keytab file for the SFTP connector principal. This keytab file should only be readable by the connector.
+	 - Required: LOW
+
+==========================
+null
+==========================
+🔘 session.validation.timeout.ms
+
+
+
+	 - Type: INT
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Sftp
+==========================
+🔘 sftp.compression.type
+
+Compression type for file written to sftp. Applied when using JsonFormat or ByteArrayFormat. Available values: none, gzip.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 sftp.working.dir
+
+Home directory on SFTP server. This will be the top most directory that will contain all the files
+
+	 - Type: STRING
+	 - Default: /home
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 extract.column.names
+
+Set this as true if your record value has a key-value pair like structure, and you want to use these keys as column names/header for your CSV or TSV files
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+

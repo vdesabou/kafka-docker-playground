@@ -1,0 +1,63 @@
+==========================
+Credentials
+==========================
+🔘 aws.access.key.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The access key ID used to authenticate personal AWS credentials such as IAM credentials.
+	 - Required: MEDIUM
+
+🔘 aws.secret.access.key
+
+The secret access key used to authenticate personal AWS credentials such as IAM credentials.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 aws.credentials.provider.class
+
+Credentials provider or provider chain to use for authentication to AWS.
+
+	 - Type: CLASS
+	 - Default: software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+CloudWatch Metrics
+==========================
+🔘 aws.cloudwatch.metrics.namespace
+
+The AWS CloudWatch Metrics namespace associated with the desired metrics.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 aws.cloudwatch.metrics.url
+
+The URL used as the endpoint to connect the AWS CloudWatch Metrics service to the source connector.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Connector
+==========================
+🔘 behavior.on.malformed.metric
+
+The connector's behavior if the called metric does not contain an expected field.
+
+	 - Type: STRING
+	 - Default: FAIL
+	 - Importance: MEDIUM
+	 - Required: false
+

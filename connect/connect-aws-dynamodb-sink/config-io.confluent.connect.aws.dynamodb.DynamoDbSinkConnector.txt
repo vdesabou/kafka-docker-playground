@@ -1,0 +1,129 @@
+==========================
+DynamoDB
+==========================
+🔘 aws.dynamodb.pk.hash
+
+Defines how the table's hash key is extracted from the record. By default. partition is used as the hash key. The maximum size of a partition with this configuration is 10Gb as per DynamoDB limits.
+
+	 - Type: STRING
+	 - Default: partition
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 aws.dynamodb.pk.sort
+
+Defines how the table's sort key is extracted from the record. By default, it uses the record offset as sort key. This sort key reference is created from a record reference and optional alias name. If the alias name is absent, then the last field of the reference is used as the column name. 
+
+	 - Type: STRING
+	 - Default: offset
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 aws.access.key.id
+
+The access key ID used to authenticate personal AWS credentials such as IAM credentials.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 aws.secret.access.key
+
+The secret access key used to authenticate personal AWS credentials such as IAM credentials.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 aws.dynamodb.credentials.provider.class
+
+Credentials provider or provider chain to use for authentication to AWS. By default the connector uses ``DefaultCredentialsProvider``.
+
+	 - Type: CLASS
+	 - Default: software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
+	 - Importance: LOW
+	 - Required: false
+
+🔘 aws.dynamodb.endpoint
+
+Overwrite endpoint configuration and AWS service discovery for DynamoDB.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 aws.dynamodb.region
+
+The AWS region to be used by the connector.
+
+	 - Type: STRING
+	 - Default: us-east-1
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Proxy Connection
+==========================
+🔘 aws.dynamodb.proxy.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: DynamoDB Proxy URL. For example http://proxy.example.com:8080, https://user:pass@proxy.example.com:8443
+	 - Required: LOW
+
+🔘 aws.dynamodb.proxy.user
+
+DynamoDB Proxy User.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 aws.dynamodb.proxy.password
+
+DynamoDB Proxy Password.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+DynamoDB
+==========================
+🔘 aws.dynamodb.max.retry.time.seconds
+
+The maximum time upto which DynamoDB client will try writing records. The least recommended value is 5 seconds.
+
+	 - Type: LONG
+	 - Default: 5
+	 - Importance: LOW
+	 - Required: false
+
+🔘 table.name.format
+
+A format string for the destination table name, which may contain '${topic}' as a placeholder for the originating topic name.
+
+	 - Type: STRING
+	 - Default: ${topic}
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 max.pk.depth
+
+
+
+	 - Type: LONG
+	 - Default: -1
+	 - Importance: LOW
+	 - Required: false
+

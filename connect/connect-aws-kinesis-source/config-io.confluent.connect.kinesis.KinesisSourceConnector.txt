@@ -1,0 +1,198 @@
+==========================
+null
+==========================
+🔘 shard.ids
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: 
+	 - Required: HIGH
+
+==========================
+Connector Details
+==========================
+🔘 kafka.topic
+
+The kafka topic to write the data to.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 kinesis.record.limit
+
+The maximum number of records to read in per poll of a Kinesis shard.
+
+	 - Type: INT
+	 - Default: 500
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 kinesis.empty.records.backoff.ms
+
+The number of milliseconds to backoff when the stream is empty.
+
+	 - Type: LONG
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 kinesis.throughput.exceeded.backoff.ms
+
+This property is now deprecated and will be removed in release `2.0.0` and later.
+
+	 - Type: LONG
+	 - Default: 10000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+AWS Credentials
+==========================
+🔘 aws.access.key.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The AWS access key that will be used to connect to Kinesis with.
+	 - Required: HIGH
+
+🔘 aws.secret.key.id
+
+The AWS secret key that will be used to connect to Kinesis with.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kinesis.credentials.provider.class
+
+Credentials provider or provider chain to use for authentication to AWS. By default the connector uses 'DefaultAWSCredentialsProviderChain'.
+
+	 - Type: CLASS
+	 - Default: com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Kinesis Details
+==========================
+🔘 kinesis.stream
+
+The Kinesis stream to read from.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 kinesis.position
+
+The position in the stream to reset to if no offsets are stored. Note: AFTER_SEQUENCE_NUMBER and AT_SEQUENCE_NUMBER are currently not supported values.
+
+	 - Type: STRING
+	 - Default: TRIM_HORIZON
+	 - Importance: LOW
+	 - Required: false
+
+🔘 kinesis.shard.timestamp
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Timestamp (the Unix epoch date with precision in milliseconds) after which to start reading records from. To be used only in combination with kinesis.position=AT_TIMESTAMP. Allowed formats: yyyy-MM-dd'T'HH:mm:ss.SSSXXX or epoch time in ms. Note: this will apply to every specified shard in the stream.
+	 - Required: LOW
+
+🔘 kinesis.region
+
+The AWS region for the Kinesis stream.
+
+	 - Type: STRING
+	 - Default: US_EAST_1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 kinesis.base.url
+
+Examples of endpoints can be found on: https://docs.aws.amazon.com/general/latest/gr/rande.html#ak_region.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The property kinesis.base.url can be used to specify a Kinesis endpoint. For example, if Kinesis is running on port 4567 on your localhost, you may specify http://localhost:4567.
+	 - Required: LOW
+
+🔘 kinesis.record.deaggregation.enable
+
+This property can be set to true, if the data source is using Kinesis Producer Library with aggregation enabled to send records to Kinesis. When set to true, the connector will de-aggregate kinesis records into individual SourceRecord(s)
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Proxy
+==========================
+🔘 kinesis.proxy.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Proxy Server URL. This property is meant to be used only if you need to access Kinesis through an HTTP/HTTPS proxy.
+	 - Required: LOW
+
+🔘 kinesis.proxy.username
+
+Proxy Username. This property is meant to be used only if you need to access Kinesis through an HTTP/HTTPS proxy. Using ``kinesis.proxy.username`` instead of embedding the username and password in ``kinesis.proxy.url`` allows the password to be hidden in the logs.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: This property is now deprecated and will be removed in release `2.0.0` and later.
+	 - Required: LOW
+
+🔘 kinesis.proxy.password
+
+This property is now deprecated and will be removed in release `2.0.0` and later.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+🔘 kinesis.non.proxy.hosts
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Non Proxy Hosts. This property is meant to be used for defining non proxy hosts.For example, this can be configured as ``localhost, 127.0.0.1, host-address-1`` or ``localhost|127.0.0.1|host-address-1``.
+	 - Required: LOW
+
+==========================
+Regex Configurations
+==========================
+🔘 kinesis.shard.id
+
+The shard of the Kinesis stream to read from. This is a regex which can be used to read all of the shards in the stream.
+
+	 - Type: STRING
+	 - Default: .*
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 regex.timeout.ms
+
+Timeout in milliseconds for regex pattern matching.
+
+	 - Type: LONG
+	 - Default: 100
+	 - Importance: MEDIUM
+	 - Required: false
+
