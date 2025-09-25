@@ -1,0 +1,69 @@
+==========================
+Transforms: dropTombstone
+==========================
+🔘 transforms.dropTombstone.type
+
+Class for the 'dropTombstone' transformation.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.dropTombstone.expr
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: JSONata transformation expression.
+	 - Required: HIGH
+
+🔘 transforms.dropTombstone.max.depth
+
+The maximum number of recursive calls allowed for the JSONata transformation.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.dropTombstone.negate
+
+Whether the configured predicate should be negated.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.dropTombstone.predicate
+
+The alias of a predicate used to determine whether to apply this transformation.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.dropTombstone.timeout.ms
+
+The maximum amount of time to wait (in ms) for the JSONata transformation to complete.
+
+	 - Type: LONG
+	 - Default: 5000
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 file
+
+Destination filename. If not specified, the standard output will be used
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
