@@ -1,0 +1,555 @@
+==========================
+Connection
+==========================
+🔘 azure.search.service.name
+
+The name of the Azure Search service.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 azure.search.api.key
+
+The api key for the Azure Search service.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Writes
+==========================
+🔘 index.name
+
+The name of the index to write records as documents to. Use ``${topic}'' within the pattern to specify the topic of the record.
+
+	 - Type: STRING
+	 - Default: ${topic}
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 write.method
+
+The method used to write Kafka records to an index. The available methods are:
+
+	 - Type: STRING
+	 - Default: UPLOAD
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 key.mode
+
+Determines what will be used for the document key id. The available modes are:
+
+	 - Type: STRING
+	 - Default: KEY
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 delete.enabled
+
+Whether documents will be deleted if the record value is null.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 max.batch.size
+
+The maximum number of records that will be sent per request. Azure Search only allows up to 1000 documents to be uploaded at a time.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: LOW
+	 - Required: false
+
+🔘 behavior.on.error
+
+How the connector should behave when a non-retryable error has been encountered. The available modes are:
+
+	 - Type: STRING
+	 - Default: FAIL
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.retry.ms
+
+The maximum amount of time in ms that the connector will attempt its request before aborting it.
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Proxy
+==========================
+🔘 proxy.host
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The address of the proxy host to connect through.
+	 - Required: LOW
+
+🔘 proxy.port
+
+The port of the proxy host to connect through.
+
+	 - Type: INT
+	 - Default: 8080
+	 - Importance: LOW
+	 - Required: false
+
+🔘 proxy.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The username for the proxy host.
+	 - Required: LOW
+
+🔘 proxy.password
+
+The password for the proxy host.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+reporter.result.topic.name
+==========================
+🔘 ${connector}-success
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the topic to produce records to after successfully processing a sink record. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
+	 - Required: MEDIUM
+
+==========================
+reporter.result.topic.replication.factor
+==========================
+🔘 3
+
+
+
+	 - Type: false
+	 - Default: SHORT
+	 - Importance: The replication factor of the result topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
+	 - Required: MEDIUM
+
+==========================
+reporter.result.topic.partitions
+==========================
+🔘 1
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The number of partitions in the result topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions to handle the potential throughput.
+	 - Required: MEDIUM
+
+==========================
+Formatter
+==========================
+🔘 reporter.result.topic.key.format
+
+The format in which the result report key is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Avro Formatter
+==========================
+🔘 reporter.result.topic.key.format.schemas.cache.config
+
+Size of the converted schemas cache.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.key.format.connect.meta.data
+
+Toggle for enabling or disabling the connect converter so it either adds or does not add its metadata to the output schema.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.key.format.enhanced.avro.schema.support
+
+Toggle for enabling or disabling enhanced avro schema support. Enhanced support includes enum symbol preservation and package name awareness.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.key.format.schema.registry.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Comma-separated list of URLs for schema registry instances that can be used to register or look up schemas. If you wish to get a connection to a mocked schema registry for testing, you can specify a scope using the 'mock://' pseudo-protocol. For example, 'mock://my-scope-name' corresponds to 'MockSchemaRegistry.getClientForScope("my-scope-name")'.
+	 - Required: MEDIUM
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.result.topic.key.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.key.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.key.format.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Formatter
+==========================
+🔘 reporter.result.topic.value.format
+
+The format in which the result report value is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Avro Formatter
+==========================
+🔘 reporter.result.topic.value.format.schemas.cache.config
+
+Size of the converted schemas cache.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.value.format.connect.meta.data
+
+Toggle for enabling or disabling the connect converter so it either adds or does not add its metadata to the output schema.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.value.format.enhanced.avro.schema.support
+
+Toggle for enabling or disabling enhanced avro schema support. Enhanced support includes enum symbol preservation and package name awareness.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.value.format.schema.registry.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Comma-separated list of URLs for schema registry instances that can be used to register or look up schemas. If you wish to get a connection to a mocked schema registry for testing, you can specify a scope using the 'mock://' pseudo-protocol. For example, 'mock://my-scope-name' corresponds to 'MockSchemaRegistry.getClientForScope("my-scope-name")'.
+	 - Required: MEDIUM
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.result.topic.value.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.value.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.value.format.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+reporter.error.topic.name
+==========================
+🔘 ${connector}-error
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the topic to produce records to after each unsuccessful record sink attempt. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
+	 - Required: MEDIUM
+
+==========================
+reporter.error.topic.replication.factor
+==========================
+🔘 3
+
+
+
+	 - Type: false
+	 - Default: SHORT
+	 - Importance: The replication factor of the error topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
+	 - Required: MEDIUM
+
+==========================
+reporter.error.topic.partitions
+==========================
+🔘 1
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The number of partitions in the error topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions in order to handle the potential throughput.
+	 - Required: MEDIUM
+
+==========================
+Formatter
+==========================
+🔘 reporter.error.topic.key.format
+
+The format in which the error report key is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Avro Formatter
+==========================
+🔘 reporter.error.topic.key.format.schemas.cache.config
+
+Size of the converted schemas cache.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.key.format.connect.meta.data
+
+Toggle for enabling or disabling the connect converter so it either adds or does not add its metadata to the output schema.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.key.format.enhanced.avro.schema.support
+
+Toggle for enabling or disabling enhanced avro schema support. Enhanced support includes enum symbol preservation and package name awareness.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.key.format.schema.registry.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Comma-separated list of URLs for schema registry instances that can be used to register or look up schemas. If you wish to get a connection to a mocked schema registry for testing, you can specify a scope using the 'mock://' pseudo-protocol. For example, 'mock://my-scope-name' corresponds to 'MockSchemaRegistry.getClientForScope("my-scope-name")'.
+	 - Required: MEDIUM
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.error.topic.key.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.key.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.key.format.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Formatter
+==========================
+🔘 reporter.error.topic.value.format
+
+The format in which the error report value is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Avro Formatter
+==========================
+🔘 reporter.error.topic.value.format.schemas.cache.config
+
+Size of the converted schemas cache.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.value.format.connect.meta.data
+
+Toggle for enabling or disabling the connect converter so it either adds or does not add its metadata to the output schema.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.value.format.enhanced.avro.schema.support
+
+Toggle for enabling or disabling enhanced avro schema support. Enhanced support includes enum symbol preservation and package name awareness.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.value.format.schema.registry.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Comma-separated list of URLs for schema registry instances that can be used to register or look up schemas. If you wish to get a connection to a mocked schema registry for testing, you can specify a scope using the 'mock://' pseudo-protocol. For example, 'mock://my-scope-name' corresponds to 'MockSchemaRegistry.getClientForScope("my-scope-name")'.
+	 - Required: MEDIUM
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.error.topic.value.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.value.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.value.format.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+reporter.bootstrap.servers
+==========================
+🔘 LIST
+
+
+
+	 - Type: MEDIUM
+	 - Default: false
+	 - Importance: 
+	 - Required: A list of host/port pairs to use for establishing the initial connection to the Kafka cluster. The client will make use of all servers irrespective of which servers are specified here for bootstrapping&mdash;this list only impacts the initial hosts used to discover the full set of servers. This list should be in the form <code>host1:port1,host2:port2,...</code>. Since these servers are just used for the initial connection to discover the full cluster membership (which may change dynamically), this list need not contain the full set of servers (you may want more than one, though, in case a server is down).
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
