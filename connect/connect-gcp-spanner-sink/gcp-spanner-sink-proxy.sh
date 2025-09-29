@@ -22,7 +22,7 @@ then
 fi
 
 # generate an 8-character random suffix to make the resource names unique per run
-UNIQUE_SUFFIX=$(uuidgen | cut -c1-8)
+UNIQUE_SUFFIXUNIQUE_SUFFIX=$(uuidgen | tr '[:upper:]' '[:lower:]' | cut -c1-8)
 
 GCP_SPANNER_INSTANCE="spanner-instance-$USER-$UNIQUE_SUFFIX"
 GCP_SPANNER_DATABASE="spanner-db-$USER-$UNIQUE_SUFFIX"
