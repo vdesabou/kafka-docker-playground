@@ -171,7 +171,7 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-playground connector show-lag --max-wait 120
+playground connector show-lag --max-wait 120 --connector $connector_name
 
 log "Confirm that the messages were delivered to the Snowflake table (logged as $PLAYGROUND_USER user)"
 docker run --quiet --rm -i -e SNOWSQL_PWD='Password123!' -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME > /tmp/result.log  2>&1 <<-EOF
