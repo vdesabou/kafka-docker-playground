@@ -1,0 +1,42 @@
+---
+services:
+  redis:
+    image: redis:7.2.4
+    hostname: redis
+    container_name: redis
+    ports:
+      - 6379:6379
+
+  redis-insight:
+    image: redis/redisinsight:latest
+    hostname: redis-insight
+    container_name: redis-insight
+    ports:
+      - "5540:5540"
+    links:
+      - redis
+    depends_on:
+      - redis
+    environment:
+      RI_REDIS_HOSTS: "redis" 
+
+  # https://ngrok.com/docs/using-ngrok-with/docker/
+  ngrok:
+    image: ngrok/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    restart: unless-stopped
+    ports:
+      - 4040:4040
+    links:
+      - redis
+    command:
+      - "start"
+      - "--all"
+      - "--log=stdout"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ../../ccloud/fm-redis-kafka-sink/ngrok.yml:/etc/ngrok.yml
+    environment:
+      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN
