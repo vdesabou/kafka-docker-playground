@@ -114,3 +114,18 @@ sleep 180
 
 log "Verifying topic servicebus-topic"
 playground topic consume --topic servicebus-topic --min-expected-messages 5 --timeout 60
+
+log "Asserting that Azure Service Bus queue is empty after connector processing"
+QUEUE_MESSAGE_COUNT=$(az servicebus queue show \
+    --resource-group $AZURE_RESOURCE_GROUP \
+    --namespace-name $AZURE_SERVICE_BUS_NAMESPACE \
+    --name $AZURE_SERVICE_BUS_QUEUE_NAME \
+    --query "messageCount" -o tsv)
+log "Queue message count: $QUEUE_MESSAGE_COUNT"
+
+if [ "$QUEUE_MESSAGE_COUNT" -eq 0 ]; then
+    log "✅ SUCCESS: Azure Service Bus queue is empty - commitRecord API working correctly"
+else
+    log "❌ FAILURE: $QUEUE_MESSAGE_COUNT messages still remain in Azure Service Bus queue"
+    exit 1
+fi
