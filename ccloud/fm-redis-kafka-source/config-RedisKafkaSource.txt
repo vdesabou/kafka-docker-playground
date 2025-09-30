@@ -1,0 +1,477 @@
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Which topic do you want to send data to?
+==========================
+🔘 kafka.topic
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Identifies the topic name to write the data to.
+	 - Required: HIGH
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 datapreview.schemas.enable
+
+This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+CSFLE
+==========================
+🔘 csfle.enabled
+
+Determines whether the connector honours CSFLE rules or not
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sr.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
+	 - Required: HIGH
+
+==========================
+Redis connection
+==========================
+🔘 redis.host
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The hostname of Redis server to connect to.
+	 - Required: HIGH
+
+🔘 redis.port
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The port number of Redis server to connect to.
+	 - Required: HIGH
+
+🔘 redis.database
+
+The database index to write to.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redis.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The username of the Redis user connecting to the Redis database server.
+	 - Required: MEDIUM
+
+🔘 redis.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The password of the Redis user connecting to the Redis database server.
+	 - Required: MEDIUM
+
+==========================
+Redis security
+==========================
+🔘 redis.tls
+
+Establish a secure TLS connection to Redis.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redis.cacert
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: X.509 CA certificate file to verify with. Use this with or without client certificates.
+	 - Required: MEDIUM
+
+==========================
+Redis client certificate auth
+==========================
+🔘 redis.key.file
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Private key file (PEM format) to authenticate with. Use this file along with the certificate file for client certificate authentication.
+	 - Required: MEDIUM
+
+🔘 redis.key.cert
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: X.509 certificate chain file (PEM format) to authenticate with. Use this file along with the private key file for client certificate authentication.
+	 - Required: MEDIUM
+
+🔘 redis.key.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Password of the private key file. Leave empty if key file is not password-protected.
+	 - Required: MEDIUM
+
+==========================
+Source configuration
+==========================
+🔘 source.type
+
+Type of Redis source connector. Select ``KEYS`` to monitor Redis keyspace notifications, or ``STREAM`` to read from Redis Streams.
+
+	 - Type: STRING
+	 - Default: KEYS
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 keys.batch.size
+
+Number of records to process in each batch for writing into a topic.
+
+	 - Type: INT
+	 - Default: 100
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 stream.batch.size
+
+Number of records to process in each batch for writing into a topic.
+
+	 - Type: INT
+	 - Default: 100
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redis.timeout
+
+Redis command timeout in seconds.
+
+	 - Type: LONG
+	 - Default: 60
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redis.pool
+
+Maximum number of connections in the pool in the range of 1 to 100.
+
+	 - Type: INT
+	 - Default: 8
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redis.server.mode
+
+Whether redis server is running on one or multiple nodes.
+
+	 - Type: STRING
+	 - Default: Standalone
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Output messages
+==========================
+🔘 output.data.format
+
+Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR or PROTOBUF. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
+
+	 - Type: STRING
+	 - Default: JSON_SR
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Keys source configuration
+==========================
+🔘 redis.keys.pattern
+
+fully-managed-redis-kafka-source.sh
+
+	 - Type: config-RedisKafkaSource.json
+	 - Default: README.md
+	 - Importance: docker-compose.yml
+	 - Required: config-RedisKafkaSource.txt
+
+🔘 mode
+
+Use ``LIVE`` for snapshot + updates, ``LIVEONLY`` for just updates.
+
+	 - Type: STRING
+	 - Default: LIVE
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 redis.keys.timeout
+
+Idle timeout in milliseconds. Use ``0`` to disable.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Stream source configuration
+==========================
+🔘 redis.stream.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Name of the Redis stream to read from.
+	 - Required: HIGH
+
+🔘 redis.stream.offset
+
+Stream offset to start reading from. Use ``0-0`` to start from the beginning, ``$`` to read only new messages, or a specific offset like ``1234567890-0``.
+
+	 - Type: STRING
+	 - Default: 0-0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redis.stream.block
+
+The maximum amount of time in milliseconds to wait while polling for stream messages (XREAD [BLOCK milliseconds]).
+
+	 - Type: LONG
+	 - Default: 100
+	 - Importance: LOW
+	 - Required: false
+
+🔘 redis.stream.delivery
+
+Stream message delivery guarantee. The valid options are ``at-least-once`` or ``at-most-once``.
+
+	 - Type: STRING
+	 - Default: at-least-once
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redis.stream.consumer.group
+
+Stream consumer group name. This group will be created if it doesn't exist.
+
+	 - Type: STRING
+	 - Default: kafka-consumer-group
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 redis.stream.consumer.name
+
+A format string for the stream consumer, which may contain '${task}' as a placeholder for the task id. For example, 'consumer-${task}' for the task id '123' will map to the consumer name 'consumer-123'.
+
+	 - Type: STRING
+	 - Default: consumer-${task}
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+Maximum number of tasks for the connector.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values. Input messages must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
