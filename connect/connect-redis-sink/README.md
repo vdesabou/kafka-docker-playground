@@ -6,7 +6,7 @@
 
 Quickly test [Redis Sink](https://docs.confluent.io/kafka-connectors/redis/current/overview.html) connector.
 
-
+Redis UI can be accessed at [http://localhost:5540/](http://localhost:5540/)
 
 
 ## How to run

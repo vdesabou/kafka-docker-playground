@@ -5,6 +5,19 @@ services:
     hostname: redis
     container_name: redis
 
+  redis-insight:
+    image: redis/redisinsight:latest
+    hostname: redis-insight
+    container_name: redis-insight
+    ports:
+      - "5540:5540"
+    links:
+      - redis
+    depends_on:
+      - redis
+    environment:
+      RI_REDIS_HOSTS: "redis" 
+      
   # https://ngrok.com/docs/using-ngrok-with/docker/
   ngrok:
     image: ngrok/ngrok:latest

@@ -6,6 +6,7 @@
 
 Quickly test [Fully Managed Redis Sink](https://docs.confluent.io/cloud/current/connectors/cc-redis-sink.html) connector.
 
+Redis UI can be accessed at [http://localhost:5540/](http://localhost:5540/)
 
 ## Prerequisites
 
