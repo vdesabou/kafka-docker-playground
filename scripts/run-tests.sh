@@ -254,7 +254,10 @@ do
         log "🚀 Executing $script in dir $dir"
         log "####################################################"
         SECONDS=0
-        retry playground run -f "$PWD/$script" $flag_tag $flag_environment
+        file_output="/tmp/$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
+        rm -f $file_output
+        touch $file_output
+		retry playground run -f "$PWD/$script" $flag_tag $flag_environment | tee "$file_output"
         ret=$?
         ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
         let ELAPSED_TOTAL+=$SECONDS
@@ -297,9 +300,17 @@ do
         if [ -f "$file" ]
         then
             aws s3 cp "$file" "s3://kafka-docker-playground/ci/" --region us-east-1
-            log "📄 INFO: <$file> was uploaded to S3 bucket"
+            log "📄 INFO: <$file> was uploaded to S3 bucket in ci folder"
         else
             logerror "$file could not be created"
+            exit 1
+        fi
+        if [ -f "$file_output" ]
+        then
+            aws s3 cp "$file_output" "s3://kafka-docker-playground/ci_output/" --region us-east-1
+            log "📄 INFO: <$file_output> was uploaded to S3 bucket in ci_output folder"
+        else
+            logerror "$file_output could not be created"
             exit 1
         fi
         bash stop.sh

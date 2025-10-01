@@ -34,6 +34,12 @@ rm -rf "$ci_folder"
 mkdir -p "$ci_folder"
 aws s3 cp --only-show-errors s3://kafka-docker-playground/ci/ "${ci_folder}/" --recursive --no-progress --region us-east-1
 
+ci_output_folder="$tmp_dir/ci_output"
+log "Getting ci output log files"
+rm -rf "$ci_output_folder"
+mkdir -p "$ci_output_folder"
+aws s3 cp --only-show-errors s3://kafka-docker-playground/ci_output/ "${ci_output_folder}/" --recursive --no-progress --region us-east-1
+
 test_list=$(grep "🚀" ${root_folder}/.github/workflows/ci.yml | cut -d '"' -f 2 | tr '\n' ' ')
 declare -a TEST_FAILED
 declare -a TEST_SUCCESS
@@ -139,6 +145,7 @@ do
       fi
       testdir=$(echo "$test" | sed 's/\//-/g')
       ci_file="${ci_folder}/${image_version}-${testdir}-${version}-${script_name}"
+	  ci_output_file="${ci_output_folder}/${image_version}-${testdir}-${version}-${script_name}"
 
       if [ -f ${ci_file} ]
       then
@@ -209,6 +216,13 @@ do
         let "nb_total_fail++"
         TEST_FAILED[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-red)]($html_url)"
         echo -e "🔥 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
+        if [ -f ${ci_output_file} ]; then
+          echo -e "<details><summary>Details</summary>" >> ${gh_msg_file}
+          echo -e "<p>\n" >> ${gh_msg_file}
+          cat ${ci_output_file} >> ${gh_msg_file}
+          echo -e "\n</p>" >> ${gh_msg_file}
+          echo -e "</details>\n" >> ${gh_msg_file}
+        fi
         log "🔥 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
       elif [[ "$status" = known_issue* ]]
       then
@@ -231,6 +245,13 @@ do
         let "nb_total_success++"
         TEST_SUCCESS[$image_version_no_dot]="$html_url"
         echo -e "👍 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
+        if [ -f ${ci_output_file} ]; then
+          echo -e "<details><summary>Details</summary>" >> ${gh_msg_file}
+          echo -e "<p>\n" >> ${gh_msg_file}
+          cat ${ci_output_file} >> ${gh_msg_file}
+          echo -e "\n</p>" >> ${gh_msg_file}
+          echo -e "</details>\n" >> ${gh_msg_file}
+        fi
         log "👍 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
       fi
     done #end image_version
