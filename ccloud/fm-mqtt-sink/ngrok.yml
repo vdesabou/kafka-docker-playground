@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  mosquitto:
+    addr: mosquitto:1883
+    proto: tcp
