@@ -1,0 +1,333 @@
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Which topics do you want to get data from?
+==========================
+🔘 topics.regex
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A regular expression that matches the names of the topics to consume from. This is useful when you want to consume from multiple topics that match a certain pattern without having to list them all individually.
+	 - Required: LOW
+
+🔘 topics
+
+
+
+	 - Type: true
+	 - Default: LIST
+	 - Importance: Identifies the topic name or a comma-separated list of topic names.
+	 - Required: HIGH
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Input messages
+==========================
+🔘 input.data.format
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, JSON or BYTES. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+==========================
+How should we connect to MQTT Broker?
+==========================
+🔘 mqtt.server.uri
+
+
+
+	 - Type: true
+	 - Default: LIST
+	 - Importance: The URI of the MQTT broker. This must be given in the format <PROTOCOL>//:URI. The supported protocols are tcp, ssl, ws, wss. Note that for a connection that uses TLS, you must provide the required key stores and trust stores.
+	 - Required: HIGH
+
+🔘 mqtt.username
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Username to connect with, or blank if a username is not required. Note: username field is masked as it may contain sensitive information
+	 - Required: HIGH
+
+🔘 mqtt.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Password to connect with, or blank if a password is not required.
+	 - Required: HIGH
+
+==========================
+MQTT secure connection
+==========================
+🔘 mqtt.ssl.key.store.file
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The location of the Java KeyStore file containing the private key to use for authenticating with the server.
+	 - Required: LOW
+
+🔘 mqtt.ssl.key.store.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Password used to open the Java KeyStore file.
+	 - Required: MEDIUM
+
+🔘 mqtt.ssl.key.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Password for the client certificate contained in the Java KeyStore.
+	 - Required: HIGH
+
+🔘 mqtt.ssl.trust.store.file
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The location of the Java TrustStore file containing the certificates required to validate the SSL connection to the server.
+	 - Required: MEDIUM
+
+🔘 mqtt.ssl.trust.store.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Password used to open the Java TrustStore file.
+	 - Required: MEDIUM
+
+==========================
+Connection Details
+==========================
+🔘 mqtt.clean.session.enabled
+
+Sets whether the client and server should remember state across restarts and reconnects. Note that for unreceived messages to be received after reconnect you should set the QOS to 1 or above. 
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mqtt.connect.timeout.seconds
+
+Sets the connection timeout value in seconds.
+
+	 - Type: INT
+	 - Default: 30
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mqtt.keepalive.interval.seconds
+
+This value, measured in seconds, defines the maximum time interval between messages sent or received. In the absence of a data-related message during the time period, the client sends a very small "ping" message, which the server will acknowledge.
+
+	 - Type: INT
+	 - Default: 60
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 max.retry.time.ms
+
+The maximum time in milliseconds (ms) the connector will spend backing off and retrying failed operations (connecting to the MQTT broker and publishing records).
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mqtt.retained.enabled
+
+Set it to true for messages to be retained for future clients.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mqtt.qos
+
+The QOS level to write messages to the MQTT broker with.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Consumer configuration
+==========================
+🔘 max.poll.interval.ms
+
+The maximum delay between subsequent consume requests to Kafka. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 300000 milliseconds (5 minutes).
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.poll.records
+
+The maximum number of records to consume from Kafka in a single request. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 500 records.
+
+	 - Type: LONG
+	 - Default: 500
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
