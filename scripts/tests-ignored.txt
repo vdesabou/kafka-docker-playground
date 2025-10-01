@@ -24,6 +24,7 @@ s3-sink-with-short-lived-creds.sh
 
 # hostname validation
 fully-managed-mqtt-source-mtls.sh
+fully-managed-mqtt-sink-mtls.sh
 fully-managed-http-v2-sink-mtls-auth.sh
 
 # does not work

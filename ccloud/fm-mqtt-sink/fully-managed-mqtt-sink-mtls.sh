@@ -4,8 +4,8 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-mkdir -p ../../ccloud/fm-mqtt-source/security
-cd ../../ccloud/fm-mqtt-source/security
+mkdir -p ../../ccloud/fm-mqtt-sink/security
+cd ../../ccloud/fm-mqtt-sink/security
 playground tools certs-create --output-folder "$PWD" --container connect --container mosquitto --verbose
 base64_truststore=$(cat $PWD/kafka.connect.truststore.jks | base64 | tr -d '\n')
 base64_keystore=$(cat $PWD/kafka.connect.keystore.jks | base64 | tr -d '\n')
@@ -91,6 +91,9 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
+
+# MqttSinkMTLS_vsaboulin         ❌ FAILED   🤔 N/A                       connector: Unable to validate configuration. If an update was made to the configuration, this means that the configuration was invalid, and the connector continues to operate on a previous configuration that passed validation. Errors:
+# mqtt.server.uri: MqttException (0) - javax.net.ssl.SSLHandshakeException: No subject alternative DNS name matching 6.tcp.eu.ngrok.io found. validation_errors: mqtt.server.uri: MqttException (0) - javax.net.ssl.SSLHandshakeException: No subject alternative DNS name matching 6.tcp.eu.ngrok.io found.
 
 sleep 5
 
