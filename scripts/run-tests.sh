@@ -254,7 +254,7 @@ do
         log "🚀 Executing $script in dir $dir"
         log "####################################################"
         SECONDS=0
-        file_output="/tmp/$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
+        file_output="/tmp/$TAG-$testdir-$THE_CONNECTOR_TAG-$script.log"
         rm -f $file_output
         touch $file_output
 		retry playground run -f "$PWD/$script" $flag_tag $flag_environment | tee "$file_output"

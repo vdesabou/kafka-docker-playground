@@ -145,7 +145,7 @@ do
       fi
       testdir=$(echo "$test" | sed 's/\//-/g')
       ci_file="${ci_folder}/${image_version}-${testdir}-${version}-${script_name}"
-	  ci_output_file="${ci_output_folder}/${image_version}-${testdir}-${version}-${script_name}"
+	  ci_output_file="${ci_output_folder}/${image_version}-${testdir}-${version}-${script_name}.log"
 
       if [ -f ${ci_file} ]
       then
