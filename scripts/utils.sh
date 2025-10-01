@@ -419,10 +419,10 @@ then
           fi
           set -e
 
-          log "🤎 Listing jar files"
-          cd ${DIR_UTILS}/../confluent-hub/$owner-$name/lib > /dev/null 2>&1
-          ls -1 | sort
-          cd - > /dev/null 2>&1
+        #   log "🤎 Listing jar files"
+        #   cd ${DIR_UTILS}/../confluent-hub/$owner-$name/lib > /dev/null 2>&1
+        #   ls -1 | sort
+        #   cd - > /dev/null 2>&1
 
           if [ "$first_loop" = true ]
           then
@@ -623,10 +623,10 @@ else
               grep "Download" /tmp/result.log
             fi
             set -e
-            log "🤎 Listing jar files"
-            cd ${DIR_UTILS}/../confluent-hub/$owner-$name/lib > /dev/null 2>&1
-            ls -1 | sort
-            cd - > /dev/null 2>&1
+            # log "🤎 Listing jar files"
+            # cd ${DIR_UTILS}/../confluent-hub/$owner-$name/lib > /dev/null 2>&1
+            # ls -1 | sort
+            # cd - > /dev/null 2>&1
 
             version=$(cat ${DIR_UTILS}/../confluent-hub/${connector_path}/manifest.json | jq -r '.version')
             release_date=$(cat ${DIR_UTILS}/../confluent-hub/${connector_path}/manifest.json | jq -r '.release_date')
