@@ -15,12 +15,13 @@
   },
   "mcp": {
     "allowed": [
-      "playground-cli",
-      "mcp-confluent"
+      "mcp-playground-cli",
+      "mcp-ccloud",
+      "mcp-kafka"
     ]
   },
   "mcpServers": {
-    "playground-cli": {
+    "mcp-playground-cli": {
       "args": [
         "run",
         "--rm",
