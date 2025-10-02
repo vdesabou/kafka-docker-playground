@@ -35,3 +35,5 @@ hbase-sink-kerberos.sh
 
 # too flaky
 hdfs3-sink-ha-kerberos.sh
+
+start-custom-log4j2.sh
