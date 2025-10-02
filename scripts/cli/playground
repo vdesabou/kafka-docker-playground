@@ -1732,7 +1732,7 @@ playground_config_check_and_update_repo_version_usage() {
 playground_ai_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground ai\n\n"
-    printf "  🧞‍♂️  AI\n  \n  It is using Gemini CI (https://google-gemini.github.io/gemini-cli/) in\n  interactive mode.\n\n"
+    printf "  🧞‍♂️  AI\n  \n  It is using Gemini CI (https://google-gemini.github.io/gemini-cli/) in\n  interactive mode.\n  \n  MCP servers are available:\n  \n  1. Kafka MCP Server (https://docs.tuannvm.com/kafka-mcp-server)\n  \n    Here are the available tools for interacting with the Kafka cluster:\n  \n      * cluster_overview: Aggregates high-level cluster health data.\n      * consume_messages: Consume a batch of messages from Kafka topics.\n      * describe_configs: Fetches configuration entries for a specific resource\n  (topic or broker).\n      * describe_consumer_group: Shows details for a specific consumer group.\n      * describe_topic: Provides detailed metadata for a specific Kafka topic.\n      * list_brokers: Lists the configured Kafka broker addresses.\n      * list_consumer_groups: Enumerates active consumer groups.\n      * list_topics: Retrieves all topic names along with partition counts and\n  replication factors.\n      * produce_message: Produce a message to a Kafka topic.\n  \n  2. Confluent Cloud MCP Server (https://github.com/confluentinc/mcp-confluent)\n  \n    Here are the available tools for interacting with Confluent Cloud:\n  \n      * ccloud_list_clusters: List all Kafka clusters in the Confluent Cloud\n  account.\n      * ccloud_list_topics: List all topics in a specified Kafka cluster.\n      * ccloud_describe_topic: Describe details of a specific topic in a Kafka\n  cluster.\n      * ccloud_list_consumer_groups: List all consumer groups in a specified\n  Kafka cluster.\n      * ccloud_describe_consumer_group: Describe details of a specific consumer\n  group in a Kafka cluster.\n      * ccloud_produce_message: Produce a message to a specified topic in a\n  Kafka cluster.\n      * ccloud_consume_messages: Consume messages from a specified topic in a\n  Kafka cluster.\n\n"
   else
     printf "playground ai - 🧞‍♂️  AI\n\n"
   fi
@@ -14652,16 +14652,26 @@ playground_ai_command() {
   then
   	if [ -f .ccloud/.env ]
   	then
-  		log "🌩️ ccloud environment is used, using mcp-confluent server to interact with confluent cloud"
-  		gemini mcp remove mcp-confluent > /dev/null 2>&1 || true
-  		gemini mcp add mcp-confluent npx "-y" "@confluentinc/mcp-confluent@latest" -- "-e" "$root_folder/.ccloud/.env"
+  		log "🌩️ ccloud environment is used, using mcp-confluent server (https://github.com/confluentinc/mcp-confluent) to interact with confluent cloud"
+  		gemini mcp remove mcp-kafka > /dev/null 2>&1 || true
+  		gemini mcp remove mcp-ccloud > /dev/null 2>&1 || true
+  		gemini mcp add mcp-ccloud npx "-y" "@confluentinc/mcp-confluent@latest" -- "-e" "$root_folder/.ccloud/.env"
   	else
   		logerror "❌ .ccloud/.env file is not present!"
   		exit 1
   	fi
   else
   	# https://github.com/google-gemini/gemini-cli/issues/9766
-  	gemini mcp remove mcp-confluent > /dev/null 2>&1 || true
+  	gemini mcp remove mcp-ccloud > /dev/null 2>&1 || true
+
+  	if [[ "$environment" == "plaintext" ]]
+  	then
+  		log "🌩️ plaintext environment is used, using kafka-mcp-server (https://docs.tuannvm.com/kafka-mcp-server) to interact with the cluster"
+  		gemini mcp remove mcp-kafka > /dev/null 2>&1 || true
+  		gemini mcp add mcp-kafka kafka-mcp-server -e "KAFKA_BROKERS=localhost:29092" -e "KAFKA_CLIENT_ID=kafka-mcp-server" -e "MCP_TRANSPORT=stdio"
+  	else
+  		logwarn "🔐 $environment environment is used, using kafka-mcp-server (https://docs.tuannvm.com/kafka-mcp-server) to interact with the cluster will not be used, only works with plaintext for now"
+  	fi
   fi
 
   if [[ -n "$yolo" ]]
@@ -31651,6 +31661,15 @@ playground_ai_parse_requirements() {
     missing_deps=1
   else
     deps['gemini']="$(command -v gemini | head -n1)"
+  fi
+
+  # :dependency.filter
+  if ! command -v kafka-mcp-server >/dev/null 2>&1; then
+    printf "missing dependency: kafka-mcp-server\n" >&2
+    printf "%s\n\n" "visit https://docs.tuannvm.com/kafka-mcp-server#installation to install" >&2
+    missing_deps=1
+  else
+    deps['kafka-mcp-server']="$(command -v kafka-mcp-server | head -n1)"
   fi
 
   if [[ -n $missing_deps ]]; then

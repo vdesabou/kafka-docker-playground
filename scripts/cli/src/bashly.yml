@@ -458,10 +458,41 @@ commands:
 - name: ai
   dependencies:
     gemini: visit https://github.com/google-gemini/gemini-cli/tree/main?tab=readme-ov-file#-installation to install
+    kafka-mcp-server: visit https://docs.tuannvm.com/kafka-mcp-server#installation to install
   help: |-
     🧞‍♂️  AI
     
     It is using Gemini CI (https://google-gemini.github.io/gemini-cli/) in interactive mode.
+
+    MCP servers are available:
+
+    1. Kafka MCP Server (https://docs.tuannvm.com/kafka-mcp-server)
+
+      Here are the available tools for interacting with the Kafka cluster:
+
+        * cluster_overview: Aggregates high-level cluster health data.
+        * consume_messages: Consume a batch of messages from Kafka topics.
+        * describe_configs: Fetches configuration entries for a specific resource (topic or broker).
+        * describe_consumer_group: Shows details for a specific consumer group.
+        * describe_topic: Provides detailed metadata for a specific Kafka topic.
+        * list_brokers: Lists the configured Kafka broker addresses.
+        * list_consumer_groups: Enumerates active consumer groups.
+        * list_topics: Retrieves all topic names along with partition counts and replication factors.
+        * produce_message: Produce a message to a Kafka topic.
+
+    2. Confluent Cloud MCP Server (https://github.com/confluentinc/mcp-confluent)
+
+      Here are the available tools for interacting with Confluent Cloud:
+
+        * ccloud_list_clusters: List all Kafka clusters in the Confluent Cloud account.
+        * ccloud_list_topics: List all topics in a specified Kafka cluster.
+        * ccloud_describe_topic: Describe details of a specific topic in a Kafka cluster.
+        * ccloud_list_consumer_groups: List all consumer groups in a specified Kafka cluster.
+        * ccloud_describe_consumer_group: Describe details of a specific consumer group in a Kafka cluster.
+        * ccloud_produce_message: Produce a message to a specified topic in a Kafka cluster.
+        * ccloud_consume_messages: Consume messages from a specified topic in a Kafka cluster.
+
+
   flags:
     - long: --yolo
       required: false
