@@ -136,15 +136,8 @@ subcommands:
             * ccloud_describe_consumer_group: Describe details of a specific consumer group in a Kafka cluster.
             * ccloud_produce_message: Produce a message to a specified topic in a Kafka cluster.
             * ccloud_consume_messages: Consume messages from a specified topic in a Kafka cluster.
-    usage: playground ai [OPTIONS] [--] [GEMINI CLI ARGUMENTS...]
-    options:
-    - names:
-      - --yolo
-      argument: ""
-      description: | 
-        🤟 Auto-approve all actions
-        Use with caution as it may lead to unintended consequences.
-        
+    usage: playground ai [--] [GEMINI CLI ARGUMENTS...]
+    options: []
     subcommands:
 
   - name: ccloud-costs

@@ -112,16 +112,8 @@
     {
       "name": "ai",
       "description": "🧞‍♂️  AI\n\nIt is using Gemini CI (https://google-gemini.github.io/gemini-cli/) in interactive mode.\n\nMCP servers are available:\n\n1. Kafka MCP Server (https://docs.tuannvm.com/kafka-mcp-server)\n\n  Here are the available tools for interacting with the Kafka cluster:\n\n    * cluster_overview: Aggregates high-level cluster health data.\n    * consume_messages: Consume a batch of messages from Kafka topics.\n    * describe_configs: Fetches configuration entries for a specific resource (topic or broker).\n    * describe_consumer_group: Shows details for a specific consumer group.\n    * describe_topic: Provides detailed metadata for a specific Kafka topic.\n    * list_brokers: Lists the configured Kafka broker addresses.\n    * list_consumer_groups: Enumerates active consumer groups.\n    * list_topics: Retrieves all topic names along with partition counts and replication factors.\n    * produce_message: Produce a message to a Kafka topic.\n\n2. Confluent Cloud MCP Server (https://github.com/confluentinc/mcp-confluent)\n\n  Here are the available tools for interacting with Confluent Cloud:\n\n    * ccloud_list_clusters: List all Kafka clusters in the Confluent Cloud account.\n    * ccloud_list_topics: List all topics in a specified Kafka cluster.\n    * ccloud_describe_topic: Describe details of a specific topic in a Kafka cluster.\n    * ccloud_list_consumer_groups: List all consumer groups in a specified Kafka cluster.\n    * ccloud_describe_consumer_group: Describe details of a specific consumer group in a Kafka cluster.\n    * ccloud_produce_message: Produce a message to a specified topic in a Kafka cluster.\n    * ccloud_consume_messages: Consume messages from a specified topic in a Kafka cluster.\n",
-      "usage": "playground ai [OPTIONS] [--] [GEMINI CLI ARGUMENTS...]",
-      "options": [
-        {
-          "names": [
-            "--yolo"
-          ],
-          "argument": "",
-          "description": "🤟 Auto-approve all actions\nUse with caution as it may lead to unintended consequences.\n"
-        }
-      ],
+      "usage": "playground ai [--] [GEMINI CLI ARGUMENTS...]",
+      "options": [],
       "subcommands": null
     },
     {

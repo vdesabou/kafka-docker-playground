@@ -1,5 +1,4 @@
 arguments="${args[arguments]}"
-yolo="${args[--yolo]}"
 
 cd $root_folder
 
@@ -16,7 +15,7 @@ then
 		log "🌩️ ccloud environment is used, using mcp-confluent server (https://github.com/confluentinc/mcp-confluent) to interact with confluent cloud"
 		gemini mcp remove mcp-kafka > /dev/null 2>&1 || true
 		gemini mcp remove mcp-ccloud > /dev/null 2>&1 || true
-		gemini mcp add mcp-ccloud npx "-y" "@confluentinc/mcp-confluent@latest" -- "-e" "$root_folder/.ccloud/.env"
+		gemini mcp add --trust mcp-ccloud npx "-y" "@confluentinc/mcp-confluent@latest" -- "-e" "$root_folder/.ccloud/.env"
 	else
 		logerror "❌ .ccloud/.env file is not present!"
 		exit 1
@@ -29,17 +28,11 @@ else
 	then
 		log "🌩️ plaintext environment is used, using kafka-mcp-server (https://docs.tuannvm.com/kafka-mcp-server) to interact with the cluster"
 		gemini mcp remove mcp-kafka > /dev/null 2>&1 || true
-		gemini mcp add mcp-kafka kafka-mcp-server -e "KAFKA_BROKERS=localhost:29092" -e "KAFKA_CLIENT_ID=kafka-mcp-server" -e "MCP_TRANSPORT=stdio"
+		gemini mcp add --trust mcp-kafka kafka-mcp-server -e "KAFKA_BROKERS=localhost:29092" -e "KAFKA_CLIENT_ID=kafka-mcp-server" -e "MCP_TRANSPORT=stdio"
 	else
 		logwarn "🔐 $environment environment is used, using kafka-mcp-server (https://docs.tuannvm.com/kafka-mcp-server) to interact with the cluster will not be used, only works with plaintext for now"
 	fi
 fi
 
-if [[ -n "$yolo" ]]
-then
-	log "🧞‍♂️🤟 calling gemini cli in yolo mode: gemini ${other_args[*]}"
-	gemini --approval-mode=yolo "${other_args[*]}"
-else
-	log "🧞‍♂️ calling gemini cli: gemini ${other_args[*]}"
-	gemini "${other_args[*]}"
-fi
+log "🧞‍♂️ calling gemini cli: gemini ${other_args[*]}"
+gemini "${other_args[*]}"

@@ -1449,7 +1449,7 @@ _playground_completions() {
       ;;
 
     *'ai'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --yolo -h")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
       ;;
 
     *'-o')

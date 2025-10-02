@@ -492,13 +492,6 @@ commands:
         * ccloud_produce_message: Produce a message to a specified topic in a Kafka cluster.
         * ccloud_consume_messages: Consume messages from a specified topic in a Kafka cluster.
 
-
-  flags:
-    - long: --yolo
-      required: false
-      help: |- 
-        🤟 Auto-approve all actions
-        Use with caution as it may lead to unintended consequences.
   catch_all:
     label: gemini cli arguments
     help: arguments to pass to gemini cli, see https://google-gemini.github.io/gemini-cli/docs/cli/configuration.html#command-line-arguments for all options
