@@ -217,13 +217,13 @@ do
         TEST_FAILED[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-red)]($html_url)"
         echo -e "🔥 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
         if [ -f ${ci_output_file} ]; then
-          echo -e "<details><summary>Logs</summary>" >> ${gh_msg_file}
-		  echo -e "<pre>\n" >> ${gh_msg_file}
-		  echo -e "<code>\n" >> ${gh_msg_file}
-          cat ${ci_output_file} >> ${gh_msg_file}
-          echo -e "\n</code>" >> ${gh_msg_file}
-		  echo -e "</pre>\n" >> ${gh_msg_file}
-          echo -e "</details>\n" >> ${gh_msg_file}
+            echo -e "<details><summary>Logs</summary>" >> ${gh_msg_file}
+            echo -e "<pre>\n" >> ${gh_msg_file}
+            echo -e "<code>\n" >> ${gh_msg_file}
+            perl -pe 's/\e\[[0-9;]*[mGKH]//g; s/^-+$/###################################################################/' ${ci_output_file} >> ${gh_msg_file}
+            echo -e "\n</code>" >> ${gh_msg_file}
+            echo -e "</pre>\n" >> ${gh_msg_file}
+            echo -e "</details>\n" >> ${gh_msg_file}
         fi
         log "🔥 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
       elif [[ "$status" = known_issue* ]]
@@ -248,13 +248,13 @@ do
         TEST_SUCCESS[$image_version_no_dot]="$html_url"
         echo -e "👍 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
         if [ -f ${ci_output_file} ]; then
-          echo -e "<details><summary>Logs</summary>" >> ${gh_msg_file}
-		  echo -e "<pre>\n" >> ${gh_msg_file}
-		  echo -e "<code>\n" >> ${gh_msg_file}
-          cat ${ci_output_file} >> ${gh_msg_file}
-          echo -e "\n</code>" >> ${gh_msg_file}
-		  echo -e "</pre>\n" >> ${gh_msg_file}
-          echo -e "</details>\n" >> ${gh_msg_file}
+        echo -e "<details><summary>Logs</summary>" >> ${gh_msg_file}
+        echo -e "<pre>\n" >> ${gh_msg_file}
+        echo -e "<code>\n" >> ${gh_msg_file}
+        perl -pe 's/\e\[[0-9;]*[mGKH]//g; s/^-+$/###################################################################/' ${ci_output_file} >> ${gh_msg_file}
+        echo -e "\n</code>" >> ${gh_msg_file}
+        echo -e "</pre>\n" >> ${gh_msg_file}
+        echo -e "</details>\n" >> ${gh_msg_file}
         fi
         log "👍 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
       fi
