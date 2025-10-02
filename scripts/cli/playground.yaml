@@ -1488,12 +1488,16 @@ subcommands:
       - name: testssl
         description: | 
           🔐 Testing TLS/SSL encryption using https://testssl.sh/
-            
-            testssl <URI>, where <URI> is:
-            
+        usage: playground debug testssl [OPTIONS] [--] [TESTSSL ARGUMENTS...]
+        options:
+        - names:
+          - --uri
+          argument: URI
+          description: | 
             host|host:port|URL|URL:port   port 443 is default, URL can only contain HTTPS protocol
-        usage: playground debug testssl [ARGUMENTS]
-        options: []
+            
+            Required: ✓ Yes
+            
       - name: generate-diagnostics
         description: | 
           ⛑️ Generate a diagnostic bundle with Diagnostics Bundle Tool

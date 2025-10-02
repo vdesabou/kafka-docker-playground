@@ -1883,17 +1883,18 @@ commands:
   - name: testssl
     help: |-
       🔐 Testing TLS/SSL encryption using https://testssl.sh/
-
-      testssl <URI>, where <URI> is:
-
-      host|host:port|URL|URL:port   port 443 is default, URL can only contain HTTPS protocol
-    args:
-    - name: arguments
+    flags:
+      - long: --uri
+        arg: uri
+        required: true
+        help: |-
+          host|host:port|URL|URL:port   port 443 is default, URL can only contain HTTPS protocol
+    catch_all:
+      label: testssl arguments
       help: arguments to pass to testssl, see https://testssl.sh for all options
-      required: false
     examples:
-    - playground debug testssl https://google.com
-    - playground debug testssl pkc-xxxx.us-west-2.aws.confluent.cloud:9092
+    - playground debug testssl --uri "https://google.com" --fast
+    - playground debug testssl --uri "pkc-xxxx.us-west-2.aws.confluent.cloud:9092"
 
   - name: generate-diagnostics
     help: |-

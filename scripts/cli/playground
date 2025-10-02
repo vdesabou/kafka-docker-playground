@@ -3737,21 +3737,22 @@ playground_debug_enable_remote_debugging_usage() {
 
 # :command.usage
 playground_debug_testssl_usage() {
-  if [[ -n $long_usage ]]; then
-    printf "playground debug testssl\n\n"
-    printf "  🔐 Testing TLS/SSL encryption using https://testssl.sh/\n  \n  testssl <URI>, where <URI> is:\n  \n  host|host:port|URL|URL:port   port 443 is default, URL can only contain HTTPS\n  protocol\n\n"
-  else
-    printf "playground debug testssl - 🔐 Testing TLS/SSL encryption using https://testssl.sh/\n\n"
-  fi
+  printf "playground debug testssl - 🔐 Testing TLS/SSL encryption using https://testssl.sh/\n\n"
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground debug testssl [ARGUMENTS]\n"
+  printf "  playground debug testssl [OPTIONS] [--] [TESTSSL ARGUMENTS...]\n"
   printf "  playground debug testssl --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n "$long_usage" ]]; then
     printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--uri URI (required)")"
+    printf "    host|host:port|URL|URL:port   port 443 is default, URL can only contain\n    HTTPS protocol\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -3761,15 +3762,14 @@ playground_debug_testssl_usage() {
     # :command.usage_args
     printf "%s\n" "$(bold "== Arguments ==")"
 
-    # :argument.usage
-    printf "  %s\n" "$(blue "ARGUMENTS")"
+    echo "  TESTSSL ARGUMENTS..."
     printf "    arguments to pass to testssl, see https://testssl.sh for all options\n"
     echo
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground debug testssl https://google.com\n"
-    printf "  playground debug testssl pkc-xxxx.us-west-2.aws.confluent.cloud:9092\n"
+    printf "  playground debug testssl --uri \"https://google.com\" --fast\n"
+    printf "  playground debug testssl --uri \"pkc-xxxx.us-west-2.aws.confluent.cloud:9092\"\n"
     echo
 
   fi
@@ -20783,10 +20783,17 @@ playground_debug_enable_remote_debugging_command() {
 playground_debug_testssl_command() {
 
   # src/commands/debug/testssl.sh
-  arguments="${args[arguments]}"
+  uri="${args[--uri]}"
 
-  log "🔐 Testing TLS/SSL encryption with arguments $arguments"
-  docker run --quiet --rm -ti  drwetter/testssl.sh $arguments
+  if [[ ${#other_args[@]} -gt 0 ]]
+  then
+  	log "🔐 Testing TLS/SSL encryption with uri $uri and arguments ${other_args[*]}"
+  	docker run --quiet --rm -ti  drwetter/testssl.sh "${other_args[*]}" "$uri"
+  else
+  	log "🔐 Testing TLS/SSL encryption with uri $uri"
+  	docker run --quiet --rm -ti  drwetter/testssl.sh "$uri"
+  fi
+
 }
 
 # :command.function
@@ -36649,28 +36656,47 @@ playground_debug_testssl_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --uri)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--uri']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--uri requires an argument: --uri URI" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        other_args+=("$@")
+        break
+        ;;
 
       -?*)
-        printf "invalid option: %s\n" "$key" >&2
-        exit 1
+        other_args+=("$1")
+        shift
         ;;
 
       *)
         # :command.parse_requirements_case
-        # :command.parse_requirements_case_simple
-        # :argument.case
-        if [[ -z ${args['arguments']+x} ]]; then
-          args['arguments']=$1
-          shift
-        else
-          printf "invalid argument: %s\n" "$key" >&2
-          exit 1
-        fi
+        # :command.parse_requirements_case_catch_all
+        other_args+=("$1")
+        shift
 
         ;;
 
     esac
   done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--uri']+x} ]]; then
+    printf "missing required flag: --uri URI\n" >&2
+    exit 1
+  fi
 
 }
 

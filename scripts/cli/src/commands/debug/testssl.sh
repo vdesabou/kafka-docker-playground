@@ -1,4 +1,11 @@
-arguments="${args[arguments]}"
+uri="${args[--uri]}"
 
-log "🔐 Testing TLS/SSL encryption with arguments $arguments"
-docker run --quiet --rm -ti  drwetter/testssl.sh $arguments
+
+if [[ ${#other_args[@]} -gt 0 ]]
+then
+	log "🔐 Testing TLS/SSL encryption with uri $uri and arguments ${other_args[*]}"
+	docker run --quiet --rm -ti  drwetter/testssl.sh "${other_args[*]}" "$uri"
+else
+	log "🔐 Testing TLS/SSL encryption with uri $uri"
+	docker run --quiet --rm -ti  drwetter/testssl.sh "$uri"
+fi

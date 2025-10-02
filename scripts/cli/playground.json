@@ -1318,9 +1318,17 @@
         },
         {
           "name": "testssl",
-          "description": "🔐 Testing TLS/SSL encryption using https://testssl.sh/\n  \n  testssl <URI>, where <URI> is:\n  \n  host|host:port|URL|URL:port   port 443 is default, URL can only contain HTTPS protocol\n",
-          "usage": "playground debug testssl [ARGUMENTS]",
-          "options": []
+          "description": "🔐 Testing TLS/SSL encryption using https://testssl.sh/\n",
+          "usage": "playground debug testssl [OPTIONS] [--] [TESTSSL ARGUMENTS...]",
+          "options": [
+            {
+              "names": [
+                "--uri"
+              ],
+              "argument": "URI",
+              "description": "host|host:port|URL|URL:port   port 443 is default, URL can only contain HTTPS protocol\n\nRequired: ✓ Yes\n"
+            }
+          ]
         },
         {
           "name": "generate-diagnostics",
