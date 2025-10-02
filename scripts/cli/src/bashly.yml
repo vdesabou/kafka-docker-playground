@@ -466,31 +466,91 @@ commands:
 
     MCP servers are available:
 
-    1. Kafka MCP Server (https://docs.tuannvm.com/kafka-mcp-server)
+    1. mcp-playground-cli - 
+    
+      Tools:
+      - playground_command_help:
+          Get detailed help for playground commands
+      - playground_command_suggest:
+          Get command suggestions and completions for the Kafka Docker Playground CLI
+      - playground_command_validate:
+          Validate a complete playground command and suggest corrections
 
-      Here are the available tools for interacting with the Kafka cluster:
+    2. mcp-kafka - Kafka MCP Server (https://docs.tuannvm.com/kafka-mcp-server)
 
-        * cluster_overview: Aggregates high-level cluster health data.
-        * consume_messages: Consume a batch of messages from Kafka topics.
-        * describe_configs: Fetches configuration entries for a specific resource (topic or broker).
-        * describe_consumer_group: Shows details for a specific consumer group.
-        * describe_topic: Provides detailed metadata for a specific Kafka topic.
-        * list_brokers: Lists the configured Kafka broker addresses.
-        * list_consumer_groups: Enumerates active consumer groups.
-        * list_topics: Retrieves all topic names along with partition counts and replication factors.
-        * produce_message: Produce a message to a Kafka topic.
+      Tools:
+      - cluster_overview:
+          Aggregates high-level cluster health data, such as controller, broker/topic/partition counts, and under-replicated/offline partitions.
+      - consume_messages:
+          Consume a batch of messages from Kafka topics.
+      - describe_configs:
+          Fetches configuration entries for a specific resource (topic or broker).
+      - describe_consumer_group:
+          Shows details for a specific consumer group, including state, members, and optionally partition offsets and lag.
+      - describe_topic:
+          Provides detailed metadata for a specific Kafka topic, including partition leaders, replicas, and ISRs.
+      - list_brokers:
+          Lists the configured Kafka broker addresses.
+      - list_consumer_groups:
+          Enumerates active consumer groups known by the Kafka cluster.
+      - list_topics:
+          Retrieves all topic names along with partition counts and replication factors.
+      - produce_message:
+          Produce a message to a Kafka topic
 
-    2. Confluent Cloud MCP Server (https://github.com/confluentinc/mcp-confluent)
+      Prompts:
+      - kafka_cluster_overview:
+          Provides a summary of Kafka cluster health and metrics
+      - kafka_consumer_lag_report:
+          Provide a detailed report on consumer lag across all consumer groups
+      - kafka_health_check:
+          Run a comprehensive health check on the Kafka cluster
+      - kafka_under_replicated_partitions:
+          List topics and partitions where ISR count is less than replication factor
 
-      Here are the available tools for interacting with Confluent Cloud:
+    3. mcp-ccloud - Confluent Cloud MCP Server (https://github.com/confluentinc/mcp-confluent)
 
-        * ccloud_list_clusters: List all Kafka clusters in the Confluent Cloud account.
-        * ccloud_list_topics: List all topics in a specified Kafka cluster.
-        * ccloud_describe_topic: Describe details of a specific topic in a Kafka cluster.
-        * ccloud_list_consumer_groups: List all consumer groups in a specified Kafka cluster.
-        * ccloud_describe_consumer_group: Describe details of a specific consumer group in a Kafka cluster.
-        * ccloud_produce_message: Produce a message to a specified topic in a Kafka cluster.
-        * ccloud_consume_messages: Consume messages from a specified topic in a Kafka cluster.
+      Tools:
+      - add-tags-to-topic:
+          Assign existing tags to Kafka topics in Confluent Cloud.
+      - alter-topic-config:
+          Alter topic configuration in Confluent Cloud.
+      - create-connector:
+          Create a new connector. Returns the new connector information if successful.
+      - create-topic-tags:
+          Create new tag definitions in Confluent Cloud.
+      - create-topics:
+          Create one or more Kafka topics.
+      - delete-connector:
+          Delete an existing connector. Returns success message if deletion was successful.
+      - delete-tag:
+          Delete a tag definition from Confluent Cloud.
+      - delete-topics:
+          Delete the topic with the given names.
+      - get-topic-config:
+          Retrieve configuration details for a specific Kafka topic.
+      - list-clusters:
+          Get all clusters in the Confluent Cloud environment
+      - list-connectors:
+          Retrieve a list of "names" of the active connectors. You can then make a read request for a specific connector by name.
+      - list-environments:
+          Get all environments in Confluent Cloud with pagination support
+      - list-schemas:
+          List all schemas in the Schema Registry.
+      - list-tags:
+          Retrieve all tags with definitions from Confluent Cloud Schema Registry.
+      - list-topics:
+          List all topics in the Kafka cluster.
+      - read-connector:
+          Get information about the connector.
+      - read-environment:
+          Get details of a specific environment by ID
+      - remove-tag-from-entity:
+          Remove tag from an entity in Confluent Cloud.
+      - search-topics-by-name:
+          List all topics in the Kafka cluster matching the specified name.
+      - search-topics-by-tag:
+          List all topics in the Kafka cluster with the specified tag.
 
   catch_all:
     label: gemini cli arguments

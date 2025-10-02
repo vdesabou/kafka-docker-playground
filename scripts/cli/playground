@@ -1732,7 +1732,7 @@ playground_config_check_and_update_repo_version_usage() {
 playground_ai_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground ai\n\n"
-    printf "  🧞‍♂️  AI\n  \n  It is using Gemini CI (https://google-gemini.github.io/gemini-cli/) in\n  interactive mode.\n  \n  MCP servers are available:\n  \n  1. Kafka MCP Server (https://docs.tuannvm.com/kafka-mcp-server)\n  \n    Here are the available tools for interacting with the Kafka cluster:\n  \n      * cluster_overview: Aggregates high-level cluster health data.\n      * consume_messages: Consume a batch of messages from Kafka topics.\n      * describe_configs: Fetches configuration entries for a specific resource\n  (topic or broker).\n      * describe_consumer_group: Shows details for a specific consumer group.\n      * describe_topic: Provides detailed metadata for a specific Kafka topic.\n      * list_brokers: Lists the configured Kafka broker addresses.\n      * list_consumer_groups: Enumerates active consumer groups.\n      * list_topics: Retrieves all topic names along with partition counts and\n  replication factors.\n      * produce_message: Produce a message to a Kafka topic.\n  \n  2. Confluent Cloud MCP Server (https://github.com/confluentinc/mcp-confluent)\n  \n    Here are the available tools for interacting with Confluent Cloud:\n  \n      * ccloud_list_clusters: List all Kafka clusters in the Confluent Cloud\n  account.\n      * ccloud_list_topics: List all topics in a specified Kafka cluster.\n      * ccloud_describe_topic: Describe details of a specific topic in a Kafka\n  cluster.\n      * ccloud_list_consumer_groups: List all consumer groups in a specified\n  Kafka cluster.\n      * ccloud_describe_consumer_group: Describe details of a specific consumer\n  group in a Kafka cluster.\n      * ccloud_produce_message: Produce a message to a specified topic in a\n  Kafka cluster.\n      * ccloud_consume_messages: Consume messages from a specified topic in a\n  Kafka cluster.\n\n"
+    printf "  🧞‍♂️  AI\n  \n  It is using Gemini CI (https://google-gemini.github.io/gemini-cli/) in\n  interactive mode.\n  \n  MCP servers are available:\n  \n  1. mcp-playground-cli - \n  \n    Tools:\n    - playground_command_help:\n        Get detailed help for playground commands\n    - playground_command_suggest:\n        Get command suggestions and completions for the Kafka Docker Playground\n  CLI\n    - playground_command_validate:\n        Validate a complete playground command and suggest corrections\n  \n  2. mcp-kafka - Kafka MCP Server (https://docs.tuannvm.com/kafka-mcp-server)\n  \n    Tools:\n    - cluster_overview:\n        Aggregates high-level cluster health data, such as controller,\n  broker/topic/partition counts, and under-replicated/offline partitions.\n    - consume_messages:\n        Consume a batch of messages from Kafka topics.\n    - describe_configs:\n        Fetches configuration entries for a specific resource (topic or broker).\n    - describe_consumer_group:\n        Shows details for a specific consumer group, including state, members,\n  and optionally partition offsets and lag.\n    - describe_topic:\n        Provides detailed metadata for a specific Kafka topic, including\n  partition leaders, replicas, and ISRs.\n    - list_brokers:\n        Lists the configured Kafka broker addresses.\n    - list_consumer_groups:\n        Enumerates active consumer groups known by the Kafka cluster.\n    - list_topics:\n        Retrieves all topic names along with partition counts and replication\n  factors.\n    - produce_message:\n        Produce a message to a Kafka topic\n  \n    Prompts:\n    - kafka_cluster_overview:\n        Provides a summary of Kafka cluster health and metrics\n    - kafka_consumer_lag_report:\n        Provide a detailed report on consumer lag across all consumer groups\n    - kafka_health_check:\n        Run a comprehensive health check on the Kafka cluster\n    - kafka_under_replicated_partitions:\n        List topics and partitions where ISR count is less than replication\n  factor\n  \n  3. mcp-ccloud - Confluent Cloud MCP Server\n  (https://github.com/confluentinc/mcp-confluent)\n  \n    Tools:\n    - add-tags-to-topic:\n        Assign existing tags to Kafka topics in Confluent Cloud.\n    - alter-topic-config:\n        Alter topic configuration in Confluent Cloud.\n    - create-connector:\n        Create a new connector. Returns the new connector information if\n  successful.\n    - create-topic-tags:\n        Create new tag definitions in Confluent Cloud.\n    - create-topics:\n        Create one or more Kafka topics.\n    - delete-connector:\n        Delete an existing connector. Returns success message if deletion was\n  successful.\n    - delete-tag:\n        Delete a tag definition from Confluent Cloud.\n    - delete-topics:\n        Delete the topic with the given names.\n    - get-topic-config:\n        Retrieve configuration details for a specific Kafka topic.\n    - list-clusters:\n        Get all clusters in the Confluent Cloud environment\n    - list-connectors:\n        Retrieve a list of \"names\" of the active connectors. You can then make a\n  read request for a specific connector by name.\n    - list-environments:\n        Get all environments in Confluent Cloud with pagination support\n    - list-schemas:\n        List all schemas in the Schema Registry.\n    - list-tags:\n        Retrieve all tags with definitions from Confluent Cloud Schema Registry.\n    - list-topics:\n        List all topics in the Kafka cluster.\n    - read-connector:\n        Get information about the connector.\n    - read-environment:\n        Get details of a specific environment by ID\n    - remove-tag-from-entity:\n        Remove tag from an entity in Confluent Cloud.\n    - search-topics-by-name:\n        List all topics in the Kafka cluster matching the specified name.\n    - search-topics-by-tag:\n        List all topics in the Kafka cluster with the specified tag.\n\n"
   else
     printf "playground ai - 🧞‍♂️  AI\n\n"
   fi
@@ -15531,44 +15531,45 @@ playground_run_command() {
         unset 'options[27]'
         unset 'options[28]'
 
-        if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
-        then
-          if [ ! -z "$CLUSTER_TYPE" ]
-          then
-            unset CLUSTER_TYPE
-          fi
-          if [ ! -z "$CLUSTER_CLOUD" ]
-          then
-            unset CLUSTER_CLOUD
-          fi
-          if [ ! -z "$CLUSTER_REGION" ]
-          then
-            unset CLUSTER_REGION
-          fi
-          if [ ! -z "$ENVIRONMENT" ]
-          then
-            unset ENVIRONMENT
-          fi
-          if [ ! -z "$CLUSTER_NAME" ]
-          then
-            unset CLUSTER_NAME
-            cluster_name=""
-          fi
-          if [ ! -z "$CLUSTER_CREDS" ]
-          then
-            unset CLUSTER_CREDS
-          fi
+      #   if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
+      #   then
+      #     if [ ! -z "$CLUSTER_TYPE" ]
+      #     then
+      #       unset CLUSTER_TYPE
+      #     fi
+      #     if [ ! -z "$CLUSTER_CLOUD" ]
+      #     then
+      #       unset CLUSTER_CLOUD
+      #     fi
+      #     if [ ! -z "$CLUSTER_REGION" ]
+      #     then
+      #       unset CLUSTER_REGION
+      #     fi
+      #     if [ ! -z "$ENVIRONMENT" ]
+      #     then
+      #       unset ENVIRONMENT
+      #     fi
+      #     if [ ! -z "$CLUSTER_NAME" ]
+      #     then
+      #       unset CLUSTER_NAME
+      #       cluster_name=""
+      #     fi
+      #     if [ ! -z "$CLUSTER_CREDS" ]
+      #     then
+      #       unset CLUSTER_CREDS
+      #     fi
 
-          if [ ! -z "$SCHEMA_REGISTRY_CREDS" ]
-          then
-            unset SCHEMA_REGISTRY_CREDS
-          fi
-        fi
+      #     if [ ! -z "$SCHEMA_REGISTRY_CREDS" ]
+      #     then
+      #       unset SCHEMA_REGISTRY_CREDS
+      #     fi
+      #   fi
         if [ ! -z "$CLUSTER_NAME" ] || [[ -n "$cluster_name" ]]
         then
           if [ ! -z "$CLUSTER_NAME" ]
           then
             cluster_name=$CLUSTER_NAME
+  		  export CLUSTER_NAME=$cluster_name
           fi
           #
           # CLUSTER_NAME is set
@@ -16218,6 +16219,7 @@ playground_run_command() {
         options=(basic standard dedicated)
         cluster_type=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔋" --header="select a cluster type" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
         array_flag_list+=("--cluster-type $cluster_type")
+  	  export CLUSTER_TYPE=$cluster_type
       fi
 
       if [[ $res == *"$MENU_CLUSTER_CLOUD"* ]]
@@ -16226,6 +16228,7 @@ playground_run_command() {
         options=(aws gcp azure)
         cluster_cloud=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔋" --header="select a cluster type" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
         array_flag_list+=("--cluster-cloud $cluster_cloud")
+  	  export CLUSTER_CLOUD=$cluster_cloud
       fi
 
       if [[ $res == *"$MENU_CLUSTER_REGION"* ]]
@@ -16239,6 +16242,7 @@ playground_run_command() {
         fi
         cluster_region=$(echo "$cluster_region" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
         array_flag_list+=("--cluster-region $cluster_region")
+  	  export CLUSTER_REGION=$cluster_region
       fi
 
       if [[ $res == *"$MENU_CLUSTER_ENVIRONMENT"* ]]
@@ -16255,6 +16259,7 @@ playground_run_command() {
           cluster_environment=$(echo "$cluster_environment" | sed 's/[[:blank:]]//g' | cut -d "/" -f 1)
         fi
         array_flag_list+=("--cluster-environment $cluster_environment")
+  	  export ENVIRONMENT=$cluster_environment
       fi
 
       if [[ $res == *"$MENU_CLUSTER_NAME"* ]]
@@ -16271,6 +16276,7 @@ playground_run_command() {
           cluster_name=$(echo "$cluster_name" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
         fi
         array_flag_list+=("--cluster-name $cluster_name")
+  	  export CLUSTER_NAME=$cluster_name
       fi
 
       if [[ $res == *"$MENU_CLUSTER_CREDS"* ]]
@@ -16280,6 +16286,7 @@ playground_run_command() {
         cluster_creds=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔐" --header="Enter the Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_empty_pointer --print-query)
         set -e
         array_flag_list+=("--cluster-creds $cluster_creds")
+  	  export CLUSTER_CREDS=$cluster_creds
       fi
 
       if [[ $res == *"$MENU_CLUSTER_SR_CREDS"* ]]
@@ -16289,6 +16296,7 @@ playground_run_command() {
         cluster_schema_registry_creds=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔐" --header="Enter the Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_empty_pointer --print-query)
         set -e
         array_flag_list+=("--cluster-schema-registry-creds $cluster_schema_registry_creds")
+  	  export SCHEMA_REGISTRY_CREDS=$cluster_schema_registry_creds
       fi
     done # end while loop stop
 

@@ -622,43 +622,44 @@ then
       unset 'options[27]'
       unset 'options[28]'
 
-      if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
-      then
-        if [ ! -z "$CLUSTER_TYPE" ]
-        then
-          unset CLUSTER_TYPE
-        fi
-        if [ ! -z "$CLUSTER_CLOUD" ]
-        then
-          unset CLUSTER_CLOUD
-        fi
-        if [ ! -z "$CLUSTER_REGION" ]
-        then
-          unset CLUSTER_REGION
-        fi
-        if [ ! -z "$ENVIRONMENT" ]
-        then
-          unset ENVIRONMENT
-        fi
-        if [ ! -z "$CLUSTER_NAME" ]
-        then
-          unset CLUSTER_NAME
-          cluster_name=""
-        fi
-        if [ ! -z "$CLUSTER_CREDS" ]
-        then
-          unset CLUSTER_CREDS
-        fi 
-        if [ ! -z "$SCHEMA_REGISTRY_CREDS" ]
-        then
-          unset SCHEMA_REGISTRY_CREDS
-        fi
-      fi
+    #   if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
+    #   then
+    #     if [ ! -z "$CLUSTER_TYPE" ]
+    #     then
+    #       unset CLUSTER_TYPE
+    #     fi
+    #     if [ ! -z "$CLUSTER_CLOUD" ]
+    #     then
+    #       unset CLUSTER_CLOUD
+    #     fi
+    #     if [ ! -z "$CLUSTER_REGION" ]
+    #     then
+    #       unset CLUSTER_REGION
+    #     fi
+    #     if [ ! -z "$ENVIRONMENT" ]
+    #     then
+    #       unset ENVIRONMENT
+    #     fi
+    #     if [ ! -z "$CLUSTER_NAME" ]
+    #     then
+    #       unset CLUSTER_NAME
+    #       cluster_name=""
+    #     fi
+    #     if [ ! -z "$CLUSTER_CREDS" ]
+    #     then
+    #       unset CLUSTER_CREDS
+    #     fi 
+    #     if [ ! -z "$SCHEMA_REGISTRY_CREDS" ]
+    #     then
+    #       unset SCHEMA_REGISTRY_CREDS
+    #     fi
+    #   fi
       if [ ! -z "$CLUSTER_NAME" ] || [[ -n "$cluster_name" ]]
       then
         if [ ! -z "$CLUSTER_NAME" ]
         then
           cluster_name=$CLUSTER_NAME
+		  export CLUSTER_NAME=$cluster_name
         fi
         #
         # CLUSTER_NAME is set
@@ -1301,6 +1302,7 @@ then
       options=(basic standard dedicated)
       cluster_type=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔋" --header="select a cluster type" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
       array_flag_list+=("--cluster-type $cluster_type")
+	  export CLUSTER_TYPE=$cluster_type
     fi
 
     if [[ $res == *"$MENU_CLUSTER_CLOUD"* ]]
@@ -1309,6 +1311,7 @@ then
       options=(aws gcp azure)
       cluster_cloud=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔋" --header="select a cluster type" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
       array_flag_list+=("--cluster-cloud $cluster_cloud")
+	  export CLUSTER_CLOUD=$cluster_cloud
     fi
 
     if [[ $res == *"$MENU_CLUSTER_REGION"* ]]
@@ -1322,6 +1325,7 @@ then
       fi
       cluster_region=$(echo "$cluster_region" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
       array_flag_list+=("--cluster-region $cluster_region")
+	  export CLUSTER_REGION=$cluster_region
     fi
 
     if [[ $res == *"$MENU_CLUSTER_ENVIRONMENT"* ]]
@@ -1338,6 +1342,7 @@ then
         cluster_environment=$(echo "$cluster_environment" | sed 's/[[:blank:]]//g' | cut -d "/" -f 1)
       fi
       array_flag_list+=("--cluster-environment $cluster_environment")
+	  export ENVIRONMENT=$cluster_environment
     fi
 
     if [[ $res == *"$MENU_CLUSTER_NAME"* ]]
@@ -1354,6 +1359,7 @@ then
         cluster_name=$(echo "$cluster_name" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
       fi
       array_flag_list+=("--cluster-name $cluster_name")
+	  export CLUSTER_NAME=$cluster_name
     fi
 
     if [[ $res == *"$MENU_CLUSTER_CREDS"* ]]
@@ -1363,6 +1369,7 @@ then
       cluster_creds=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔐" --header="Enter the Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_empty_pointer --print-query)
       set -e
       array_flag_list+=("--cluster-creds $cluster_creds")
+	  export CLUSTER_CREDS=$cluster_creds
     fi
 
     if [[ $res == *"$MENU_CLUSTER_SR_CREDS"* ]]
@@ -1372,6 +1379,7 @@ then
       cluster_schema_registry_creds=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔐" --header="Enter the Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_empty_pointer --print-query)
       set -e
       array_flag_list+=("--cluster-schema-registry-creds $cluster_schema_registry_creds")
+	  export SCHEMA_REGISTRY_CREDS=$cluster_schema_registry_creds
     fi
   done # end while loop stop
 
