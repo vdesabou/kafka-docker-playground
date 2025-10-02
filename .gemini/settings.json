@@ -13,15 +13,9 @@
   "ide": {
     "enabled": true
   },
-  "mcp": {
-    "allowed": [
-      "mcp-playground-cli",
-      "mcp-ccloud",
-      "mcp-kafka"
-    ]
-  },
   "mcpServers": {
     "mcp-playground-cli": {
+      "trust": true,
       "args": [
         "run",
         "--rm",
