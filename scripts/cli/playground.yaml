@@ -103,6 +103,22 @@ subcommands:
         usage: playground config open-grafana-in-browser browser [BROWSER]
         options: []
 
+  - name: ai
+    description: | 
+        🧞‍♂️  AI
+        
+        It is using Gemini CI (https://google-gemini.github.io/gemini-cli/) in interactive mode.
+    usage: playground ai [OPTIONS] [--] [GEMINI CLI ARGUMENTS...]
+    options:
+    - names:
+      - --yolo
+      argument: ""
+      description: | 
+        🤟 Auto-approve all actions
+        Use with caution as it may lead to unintended consequences.
+        
+    subcommands:
+
   - name: ccloud-costs
     description: | 
         💰  Retrieve ccloud costs for a range of dates

@@ -110,6 +110,21 @@
       ]
     },
     {
+      "name": "ai",
+      "description": "🧞‍♂️  AI\n\nIt is using Gemini CI (https://google-gemini.github.io/gemini-cli/) in interactive mode.\n",
+      "usage": "playground ai [OPTIONS] [--] [GEMINI CLI ARGUMENTS...]",
+      "options": [
+        {
+          "names": [
+            "--yolo"
+          ],
+          "argument": "",
+          "description": "🤟 Auto-approve all actions\nUse with caution as it may lead to unintended consequences.\n"
+        }
+      ],
+      "subcommands": null
+    },
+    {
       "name": "ccloud-costs",
       "description": "💰  Retrieve ccloud costs for a range of dates\n\nAll you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n\nCost data can take up to 72 hours to become available.\n\nStart date can reach a maximum of one year into the past\n\nOne month is the maximum window between start and end dates\n\nFor accuracy, Confluent recommends using a start_date that is at least 72 hours prior to the current date and time.\n",
       "usage": "playground ccloud-costs [OPTIONS]",

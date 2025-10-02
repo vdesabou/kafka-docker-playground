@@ -1,0 +1,42 @@
+{
+  "general": {
+    "preferredEditor": "code",
+    "checkpointing": {
+      "enabled": true
+    }
+  },
+  "ui": {
+    "theme": "GitHub",
+    "hideBanner": true,
+    "hideTips": false
+  },
+  "ide": {
+    "enabled": true
+  },
+  "mcp": {
+    "allowed": [
+      "playground-cli",
+      "mcp-confluent"
+    ]
+  },
+  "mcpServers": {
+    "playground-cli": {
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "vdesabou/mcp-playground-server:latest",
+        "node",
+        "dist/index.js"
+      ],
+      "command": "docker"
+    }
+  },
+  "advanced": {
+    "excludedEnvVars": [
+      "DEBUG",
+      "DEBUG_MODE",
+      "NODE_ENV"
+    ]
+  }
+}

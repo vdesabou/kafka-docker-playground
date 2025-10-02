@@ -455,6 +455,25 @@ commands:
     - playground config check-and-update-repo-version false
     - playground config check-and-update-repo-version true
 
+- name: ai
+  dependencies:
+    gemini: visit https://github.com/google-gemini/gemini-cli/tree/main?tab=readme-ov-file#-installation to install
+  help: |-
+    🧞‍♂️  AI
+    
+    It is using Gemini CI (https://google-gemini.github.io/gemini-cli/) in interactive mode.
+  flags:
+    - long: --yolo
+      required: false
+      help: |- 
+        🤟 Auto-approve all actions
+        Use with caution as it may lead to unintended consequences.
+  catch_all:
+    label: gemini cli arguments
+    help: arguments to pass to gemini cli, see https://google-gemini.github.io/gemini-cli/docs/cli/configuration.html#command-line-arguments for all options
+  examples:
+    - playground ai --model gemini-1.5-pro-latest --output-format json
+
 - name: ccloud-costs
   dependencies:
     confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install

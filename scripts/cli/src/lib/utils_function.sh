@@ -3351,64 +3351,7 @@ function ccloud::destroy_ccloud_stack() {
   return 0
 }
 
-###############################################################################
-# Overview:
-#
-# This code reads a local Confluent Cloud configuration file
-# and writes delta configuration files into ./delta_configs for
-# Confluent Platform components and clients connecting to Confluent Cloud.
-#
-# Confluent Platform Components:
-# - Confluent Schema Registry
-# - KSQL Data Generator
-# - ksqlDB server
-# - Confluent Replicator (executable)
-# - Confluent Control Center
-# - Confluent Metrics Reporter
-# - Confluent REST Proxy
-# - Kafka Connect
-# - Kafka connector
-# - Kafka command line tools
-#
-# Kafka Clients:
-# - Java (Producer/Consumer)
-# - Java (Streams)
-# - librdkafka config
-# - Python
-# - .NET
-# - Go
-# - Node.js (https://github.com/Blizzard/node-rdkafka)
-# - C++
-#
-# Documentation for using this script:
-#
-#   https://docs.confluent.io/current/cloud/connect/auto-generate-configs.html
-#
-# Arguments:
-#
-#   CCLOUD_CONFIG_FILE, defaults to ~/.ccloud/config
-#
-# Example CCLOUD_CONFIG_FILE at ~/.ccloud/config
-#
-#   $ cat $HOME/.ccloud/config
-#
-#   bootstrap.servers=<BROKER ENDPOINT>
-#   security.protocol=SASL_SSL
-#   sasl.mechanism=PLAIN
-#   sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='<API KEY>' password='<API SECRET>';
-#
-# If you are using Confluent Cloud Schema Registry, add the following configuration parameters
-#
-#   basic.auth.credentials.source=USER_INFO
-#   basic.auth.user.info=<SR API KEY>:<SR API SECRET>
-#   schema.registry.url=https://<SR ENDPOINT>
-#
-# If you are using Confluent Cloud ksqlDB, add the following configuration parameters
-#
-#   ksql.endpoint=<ksqlDB ENDPOINT>
-#   ksql.basic.auth.user.info=<ksqlDB API KEY>:<ksqlDB API SECRET>
-#
-################################################################################
+
 function ccloud::generate_configs() {
   CCLOUD_CONFIG_FILE=$1
   if [[ -z "$CCLOUD_CONFIG_FILE" ]]; then
@@ -3460,277 +3403,6 @@ function ccloud::generate_configs() {
   KSQLDB_BASIC_AUTH_USER_INFO=$( grep "^ksql.basic.auth.user.info" $CCLOUD_CONFIG_FILE | awk -F'=' '{print $2;}' )
 
   ################################################################################
-  # Build configuration file with Confluent Cloud connection parameters and
-  # Confluent Monitoring Interceptors for Streams Monitoring in Confluent Control Center
-  ################################################################################
-  INTERCEPTORS_CONFIG_FILE=$DEST/interceptors-ccloud.config
-  rm -f $INTERCEPTORS_CONFIG_FILE
-  echo "# Configuration derived from $CCLOUD_CONFIG_FILE" > $INTERCEPTORS_CONFIG_FILE
-  while read -r line
-  do
-    # Skip lines that are commented out
-    if [[ ! -z $line && ${line:0:1} == '#' ]]; then
-      continue
-    fi
-    # Skip lines that contain just whitespace
-    if [[ -z "${line// }" ]]; then
-      continue
-    fi
-    if [[ ${line:0:9} == 'bootstrap' ]]; then
-      line=${line/\\/}
-    fi
-    echo $line >> $INTERCEPTORS_CONFIG_FILE
-  done < "$CCLOUD_CONFIG_FILE"
-  echo -e "\n# Confluent Monitoring Interceptor specific configuration" >> $INTERCEPTORS_CONFIG_FILE
-  while read -r line
-  do
-    # Skip lines that are commented out
-    if [[ ! -z $line && ${line:0:1} == '#' ]]; then
-      continue
-    fi
-    # Skip lines that contain just whitespace
-    if [[ -z "${line// }" ]]; then
-      continue
-    fi
-    if [[ ${line:0:9} == 'bootstrap' ]]; then
-      line=${line/\\/}
-    fi
-    if [[ ${line:0:4} == 'sasl' ||
-          ${line:0:3} == 'ssl' ||
-          ${line:0:8} == 'security' ||
-          ${line:0:9} == 'bootstrap' ]]; then
-      echo "confluent.monitoring.interceptor.$line" >> $INTERCEPTORS_CONFIG_FILE
-    fi
-  done < "$CCLOUD_CONFIG_FILE"
-  chmod $PERM $INTERCEPTORS_CONFIG_FILE
-
-  #log "Confluent Platform Components:"
-
-  ################################################################################
-  # Confluent Schema Registry instance (local) for Confluent Cloud
-  ################################################################################
-  SR_CONFIG_DELTA=$DEST/schema-registry-ccloud.delta
-  #echo "$SR_CONFIG_DELTA"
-  rm -f $SR_CONFIG_DELTA
-  while read -r line
-  do
-    if [[ ! -z $line && ${line:0:1} != '#' ]]; then
-      if [[ ${line:0:29} != 'basic.auth.credentials.source' && ${line:0:15} != 'schema.registry' ]]; then
-        echo "kafkastore.$line" >> $SR_CONFIG_DELTA
-      fi
-    fi
-  done < "$CCLOUD_CONFIG_FILE"
-  chmod $PERM $SR_CONFIG_DELTA
-
-  ################################################################################
-  # Confluent Replicator (executable) for Confluent Cloud
-  ################################################################################
-  REPLICATOR_PRODUCER_DELTA=$DEST/replicator-to-ccloud-producer.delta
-  #echo "$REPLICATOR_PRODUCER_DELTA"
-  rm -f $REPLICATOR_PRODUCER_DELTA
-  cp $INTERCEPTORS_CONFIG_FILE $REPLICATOR_PRODUCER_DELTA
-  echo -e "\n# Confluent Replicator (executable) specific configuration" >> $REPLICATOR_PRODUCER_DELTA
-  echo "interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor" >> $REPLICATOR_PRODUCER_DELTA
-  REPLICATOR_SASL_JAAS_CONFIG=$SASL_JAAS_CONFIG
-  REPLICATOR_SASL_JAAS_CONFIG=${REPLICATOR_SASL_JAAS_CONFIG//\\=/=}
-  REPLICATOR_SASL_JAAS_CONFIG=${REPLICATOR_SASL_JAAS_CONFIG//\"/\\\"}
-  chmod $PERM $REPLICATOR_PRODUCER_DELTA
-
-  ################################################################################
-  # ksqlDB Server runs locally and connects to Confluent Cloud
-  ################################################################################
-  KSQLDB_SERVER_DELTA=$DEST/ksqldb-server-ccloud.delta
-  #echo "$KSQLDB_SERVER_DELTA"
-  rm -f $KSQLDB_SERVER_DELTA
-  cp $INTERCEPTORS_CONFIG_FILE $KSQLDB_SERVER_DELTA
-  echo -e "\n# ksqlDB Server specific configuration" >> $KSQLDB_SERVER_DELTA
-  echo "producer.interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor" >> $KSQLDB_SERVER_DELTA
-  echo "consumer.interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor" >> $KSQLDB_SERVER_DELTA
-  echo "ksql.streams.producer.retries=2147483647" >> $KSQLDB_SERVER_DELTA
-  echo "ksql.streams.producer.confluent.batch.expiry.ms=9223372036854775807" >> $KSQLDB_SERVER_DELTA
-  echo "ksql.streams.producer.request.timeout.ms=300000" >> $KSQLDB_SERVER_DELTA
-  echo "ksql.streams.producer.max.block.ms=9223372036854775807" >> $KSQLDB_SERVER_DELTA
-  echo "ksql.streams.replication.factor=3" >> $KSQLDB_SERVER_DELTA
-  echo "ksql.internal.topic.replicas=3" >> $KSQLDB_SERVER_DELTA
-  echo "ksql.sink.replicas=3" >> $KSQLDB_SERVER_DELTA
-  echo -e "\n# Confluent Schema Registry configuration for ksqlDB Server" >> $KSQLDB_SERVER_DELTA
-  while read -r line
-  do
-    if [[ ${line:0:29} == 'basic.auth.credentials.source' ]]; then
-      echo "ksql.schema.registry.$line" >> $KSQLDB_SERVER_DELTA
-    elif [[ ${line:0:15} == 'schema.registry' ]]; then
-      echo "ksql.$line" >> $KSQLDB_SERVER_DELTA
-    fi
-  done < $CCLOUD_CONFIG_FILE
-  chmod $PERM $KSQLDB_SERVER_DELTA
-
-  ################################################################################
-  # KSQL DataGen for Confluent Cloud
-  ################################################################################
-  KSQL_DATAGEN_DELTA=$DEST/ksql-datagen.delta
-  #echo "$KSQL_DATAGEN_DELTA"
-  rm -f $KSQL_DATAGEN_DELTA
-  cp $INTERCEPTORS_CONFIG_FILE $KSQL_DATAGEN_DELTA
-  echo -e "\n# KSQL DataGen specific configuration" >> $KSQL_DATAGEN_DELTA
-  echo "interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor" >> $KSQL_DATAGEN_DELTA
-  echo -e "\n# Confluent Schema Registry configuration for KSQL DataGen" >> $KSQL_DATAGEN_DELTA
-  while read -r line
-  do
-    if [[ ${line:0:29} == 'basic.auth.credentials.source' ]]; then
-      echo "ksql.schema.registry.$line" >> $KSQL_DATAGEN_DELTA
-    elif [[ ${line:0:15} == 'schema.registry' ]]; then
-      echo "ksql.$line" >> $KSQL_DATAGEN_DELTA
-    fi
-  done < $CCLOUD_CONFIG_FILE
-  chmod $PERM $KSQL_DATAGEN_DELTA
-
-  ################################################################################
-  # Confluent Control Center runs locally, monitors Confluent Cloud, and uses Confluent Cloud cluster as the backstore
-  ################################################################################
-  C3_DELTA=$DEST/control-center-ccloud.delta
-  #echo "$C3_DELTA"
-  rm -f $C3_DELTA
-  echo -e "\n# Confluent Control Center specific configuration" >> $C3_DELTA
-  while read -r line
-    do
-    if [[ ! -z $line && ${line:0:1} != '#' ]]; then
-      if [[ ${line:0:9} == 'bootstrap' ]]; then
-        line=${line/\\/}
-        echo "$line" >> $C3_DELTA
-      fi
-      if [[ ${line:0:4} == 'sasl' || ${line:0:3} == 'ssl' || ${line:0:8} == 'security' ]]; then
-        echo "confluent.controlcenter.streams.$line" >> $C3_DELTA
-      fi
-    fi
-  done < "$CCLOUD_CONFIG_FILE"
-  # max.message.bytes is enforced to 8MB in Confluent Cloud
-  echo "confluent.metrics.topic.max.message.bytes=8388608" >> $C3_DELTA
-  echo -e "\n# Confluent Schema Registry configuration for Confluent Control Center" >> $C3_DELTA
-  while read -r line
-  do
-    if [[ ${line:0:29} == 'basic.auth.credentials.source' ]]; then
-      echo "confluent.controlcenter.schema.registry.$line" >> $C3_DELTA
-    elif [[ ${line:0:15} == 'schema.registry' ]]; then
-      echo "confluent.controlcenter.$line" >> $C3_DELTA
-    fi
-  done < $CCLOUD_CONFIG_FILE
-  chmod $PERM $C3_DELTA
-
-  ################################################################################
-  # Confluent Metrics Reporter to Confluent Cloud
-  ################################################################################
-  METRICS_REPORTER_DELTA=$DEST/metrics-reporter.delta
-  #echo "$METRICS_REPORTER_DELTA"
-  rm -f $METRICS_REPORTER_DELTA
-  echo "metric.reporters=io.confluent.metrics.reporter.ConfluentMetricsReporter" >> $METRICS_REPORTER_DELTA
-  echo "confluent.metrics.reporter.topic.replicas=3" >> $METRICS_REPORTER_DELTA
-  while read -r line
-    do
-    if [[ ! -z $line && ${line:0:1} != '#' ]]; then
-      if [[ ${line:0:9} == 'bootstrap' || ${line:0:4} == 'sasl' || ${line:0:3} == 'ssl' || ${line:0:8} == 'security' ]]; then
-        echo "confluent.metrics.reporter.$line" >> $METRICS_REPORTER_DELTA
-      fi
-    fi
-  done < "$CCLOUD_CONFIG_FILE"
-  chmod $PERM $METRICS_REPORTER_DELTA
-
-  ################################################################################
-  # Confluent REST Proxy to Confluent Cloud
-  ################################################################################
-  REST_PROXY_DELTA=$DEST/rest-proxy.delta
-  #echo "$REST_PROXY_DELTA"
-  rm -f $REST_PROXY_DELTA
-  while read -r line
-    do
-    if [[ ! -z $line && ${line:0:1} != '#' ]]; then
-      if [[ ${line:0:9} == 'bootstrap' || ${line:0:4} == 'sasl' || ${line:0:3} == 'ssl' || ${line:0:8} == 'security' ]]; then
-        echo "$line" >> $REST_PROXY_DELTA
-        echo "client.$line" >> $REST_PROXY_DELTA
-      fi
-    fi
-  done < "$CCLOUD_CONFIG_FILE"
-  echo -e "\n# Confluent Schema Registry configuration for REST Proxy" >> $REST_PROXY_DELTA
-  while read -r line
-  do
-    if [[ ${line:0:29} == 'basic.auth.credentials.source' || ${line:0:36} == 'schema.registry.basic.auth.user.info' ]]; then
-      echo "client.$line" >> $REST_PROXY_DELTA
-    elif [[ ${line:0:19} == 'schema.registry.url' ]]; then
-      echo "$line" >> $REST_PROXY_DELTA
-    fi
-  done < $CCLOUD_CONFIG_FILE
-  chmod $PERM $REST_PROXY_DELTA
-
-  ################################################################################
-  # Kafka Connect runs locally and connects to Confluent Cloud
-  ################################################################################
-  CONNECT_DELTA=$DEST/connect-ccloud.delta
-  #echo "$CONNECT_DELTA"
-  rm -f $CONNECT_DELTA
-  cat <<EOF > $CONNECT_DELTA
-# Configuration for embedded admin client
-replication.factor=3
-config.storage.replication.factor=3
-offset.storage.replication.factor=3
-status.storage.replication.factor=3
-
-EOF
-  while read -r line
-    do
-    if [[ ! -z $line && ${line:0:1} != '#' ]]; then
-      if [[ ${line:0:9} == 'bootstrap' ]]; then
-        line=${line/\\/}
-        echo "$line" >> $CONNECT_DELTA
-      fi
-      if [[ ${line:0:4} == 'sasl' || ${line:0:3} == 'ssl' || ${line:0:8} == 'security' ]]; then
-        echo "$line" >> $CONNECT_DELTA
-      fi
-    fi
-  done < "$CCLOUD_CONFIG_FILE"
-
-  for prefix in "producer" "consumer" "producer.confluent.monitoring.interceptor" "consumer.confluent.monitoring.interceptor" ; do
-
-  echo -e "\n# Configuration for embedded $prefix" >> $CONNECT_DELTA
-  while read -r line
-    do
-    if [[ ! -z $line && ${line:0:1} != '#' ]]; then
-      if [[ ${line:0:9} == 'bootstrap' ]]; then
-        line=${line/\\/}
-      fi
-      if [[ ${line:0:4} == 'sasl' || ${line:0:3} == 'ssl' || ${line:0:8} == 'security' ]]; then
-        echo "${prefix}.$line" >> $CONNECT_DELTA
-      fi
-    fi
-  done < "$CCLOUD_CONFIG_FILE"
-
-  done
-
-
-  cat <<EOF >> $CONNECT_DELTA
-
-# Confluent Schema Registry for Kafka Connect
-value.converter=io.confluent.connect.avro.AvroConverter
-value.converter.basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE
-value.converter.schema.registry.basic.auth.user.info=$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO
-value.converter.schema.registry.url=$SCHEMA_REGISTRY_URL
-EOF
-  chmod $PERM $CONNECT_DELTA
-
-  ################################################################################
-  # Kafka connector
-  ################################################################################
-  CONNECTOR_DELTA=$DEST/connector-ccloud.delta
-  #echo "$CONNECTOR_DELTA"
-  rm -f $CONNECTOR_DELTA
-  cat <<EOF >> $CONNECTOR_DELTA
-// Confluent Schema Registry for Kafka connectors
-value.converter=io.confluent.connect.avro.AvroConverter
-value.converter.basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE
-value.converter.schema.registry.basic.auth.user.info=$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO
-value.converter.schema.registry.url=$SCHEMA_REGISTRY_URL
-EOF
-  chmod $PERM $CONNECTOR_DELTA
-
-  ################################################################################
   # AK command line tools
   ################################################################################
   AK_TOOLS_DELTA=$DEST/ak-tools-ccloud.delta
@@ -3738,325 +3410,6 @@ EOF
   rm -f $AK_TOOLS_DELTA
   cp $CCLOUD_CONFIG_FILE $AK_TOOLS_DELTA
   chmod $PERM $AK_TOOLS_DELTA
-
-
-  #log "Kafka Clients:"
-
-  ################################################################################
-  # Java (Producer/Consumer)
-  ################################################################################
-  JAVA_PC_CONFIG=$DEST/java_producer_consumer.delta
-  #echo "$JAVA_PC_CONFIG"
-  rm -f $JAVA_PC_CONFIG
-
-  cat <<EOF >> $JAVA_PC_CONFIG
-import java.util.Properties;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.clients.producer.ConsumerConfig;
-import org.apache.kafka.common.config.SaslConfigs;
-
-Properties props = new Properties();
-
-// Basic Confluent Cloud Connectivity
-props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "$BOOTSTRAP_SERVERS");
-props.put(ProducerConfig.REPLICATION_FACTOR_CONFIG, 3);
-props.put(ProducerConfig.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
-props.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
-props.put(SaslConfigs.SASL_JAAS_CONFIG, "$SASL_JAAS_CONFIG");
-
-// Confluent Schema Registry for Java
-props.put("basic.auth.credentials.source", "$BASIC_AUTH_CREDENTIALS_SOURCE");
-props.put("schema.registry.basic.auth.user.info", "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO");
-props.put("schema.registry.url", "$SCHEMA_REGISTRY_URL");
-
-// Optimize Performance for Confluent Cloud
-props.put(ProducerConfig.RETRIES_CONFIG, 2147483647);
-props.put("producer.confluent.batch.expiry.ms", 9223372036854775807);
-props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 300000);
-props.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 9223372036854775807);
-
-// Required for Streams Monitoring in Confluent Control Center
-props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor");
-props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG + ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, confluent.monitoring.interceptor.bootstrap.servers, "$BOOTSTRAP_SERVERS");
-props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG + ProducerConfig.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
-props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG + SaslConfigs.SASL_MECHANISM, "PLAIN");
-props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG + SaslConfigs.SASL_JAAS_CONFIG, "$SASL_JAAS_CONFIG");
-props.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor");
-props.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG + ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, confluent.monitoring.interceptor.bootstrap.servers, "$BOOTSTRAP_SERVERS");
-props.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG + ProducerConfig.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
-props.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG + SaslConfigs.SASL_MECHANISM, "PLAIN");
-props.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG + SaslConfigs.SASL_JAAS_CONFIG, "$SASL_JAAS_CONFIG");
-
-// .... additional configuration settings
-EOF
-  chmod $PERM $JAVA_PC_CONFIG
-
-  ################################################################################
-  # Java (Streams)
-  ################################################################################
-  JAVA_STREAMS_CONFIG=$DEST/java_streams.delta
-  #echo "$JAVA_STREAMS_CONFIG"
-  rm -f $JAVA_STREAMS_CONFIG
-
-  cat <<EOF >> $JAVA_STREAMS_CONFIG
-import java.util.Properties;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.clients.producer.ConsumerConfig;
-import org.apache.kafka.common.config.SaslConfigs;
-import org.apache.kafka.streams.StreamsConfig;
-
-Properties props = new Properties();
-
-// Basic Confluent Cloud Connectivity
-props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "$BOOTSTRAP_SERVERS");
-props.put(StreamsConfig.REPLICATION_FACTOR_CONFIG, 3);
-props.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
-props.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
-props.put(SaslConfigs.SASL_JAAS_CONFIG, "$SASL_JAAS_CONFIG");
-
-// Confluent Schema Registry for Java
-props.put("basic.auth.credentials.source", "$BASIC_AUTH_CREDENTIALS_SOURCE");
-props.put("schema.registry.basic.auth.user.info", "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO");
-props.put("schema.registry.url", "$SCHEMA_REGISTRY_URL");
-
-// Optimize Performance for Confluent Cloud
-props.put(StreamsConfig.producerPrefix(ProducerConfig.RETRIES_CONFIG), 2147483647);
-props.put("producer.confluent.batch.expiry.ms", 9223372036854775807);
-props.put(StreamsConfig.producerPrefix(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG), 300000);
-props.put(StreamsConfig.producerPrefix(ProducerConfig.MAX_BLOCK_MS_CONFIG), 9223372036854775807);
-
-// Required for Streams Monitoring in Confluent Control Center
-props.put(StreamsConfig.PRODUCER_PREFIX + ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor");
-props.put(StreamsConfig.PRODUCER_PREFIX + ProducerConfig.INTERCEPTOR_CLASSES_CONFIG + StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, confluent.monitoring.interceptor.bootstrap.servers, "$BOOTSTRAP_SERVERS");
-props.put(StreamsConfig.PRODUCER_PREFIX + ProducerConfig.INTERCEPTOR_CLASSES_CONFIG + StreamsConfig.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
-props.put(StreamsConfig.PRODUCER_PREFIX + ProducerConfig.INTERCEPTOR_CLASSES_CONFIG + SaslConfigs.SASL_MECHANISM, "PLAIN");
-props.put(StreamsConfig.PRODUCER_PREFIX + ProducerConfig.INTERCEPTOR_CLASSES_CONFIG + SaslConfigs.SASL_JAAS_CONFIG, "$SASL_JAAS_CONFIG");
-props.put(StreamsConfig.CONSUMER_PREFIX + ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor");
-props.put(StreamsConfig.CONSUMER_PREFIX + ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG + StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, confluent.monitoring.interceptor.bootstrap.servers, "$BOOTSTRAP_SERVERS");
-props.put(StreamsConfig.CONSUMER_PREFIX + ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG + StreamsConfig.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
-props.put(StreamsConfig.CONSUMER_PREFIX + ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG + SaslConfigs.SASL_MECHANISM, "PLAIN");
-props.put(StreamsConfig.CONSUMER_PREFIX + ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG + SaslConfigs.SASL_JAAS_CONFIG, "$SASL_JAAS_CONFIG");
-
-// .... additional configuration settings
-EOF
-  chmod $PERM $JAVA_STREAMS_CONFIG
-
-  ################################################################################
-  # librdkafka
-  ################################################################################
-  LIBRDKAFKA_CONFIG=$DEST/librdkafka.delta
-  #echo "$LIBRDKAFKA_CONFIG"
-  rm -f $LIBRDKAFKA_CONFIG
-
-  cat <<EOF >> $LIBRDKAFKA_CONFIG
-bootstrap.servers="$BOOTSTRAP_SERVERS"
-security.protocol=SASL_SSL
-sasl.mechanisms=PLAIN
-sasl.username="$CLOUD_KEY"
-sasl.password="$CLOUD_SECRET"
-schema.registry.url="$SCHEMA_REGISTRY_URL"
-basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"
-EOF
-  chmod $PERM $LIBRDKAFKA_CONFIG
-
-  ################################################################################
-  # Python
-  ################################################################################
-  PYTHON_CONFIG=$DEST/python.delta
- # echo "$PYTHON_CONFIG"
-  rm -f $PYTHON_CONFIG
-
-  cat <<EOF >> $PYTHON_CONFIG
-from confluent_kafka import Producer, Consumer, KafkaError
-
-producer = Producer({
-           'bootstrap.servers': '$BOOTSTRAP_SERVERS',
-           'broker.version.fallback': '0.10.0.0',
-           'api.version.fallback.ms': 0,
-           'sasl.mechanisms': 'PLAIN',
-           'security.protocol': 'SASL_SSL',
-           'sasl.username': '$CLOUD_KEY',
-           'sasl.password': '$CLOUD_SECRET',
-           // 'ssl.ca.location': '/usr/local/etc/openssl/cert.pem', // varies by distro
-           'plugin.library.paths': 'monitoring-interceptor',
-           // .... additional configuration settings
-})
-
-consumer = Consumer({
-           'bootstrap.servers': '$BOOTSTRAP_SERVERS',
-           'broker.version.fallback': '0.10.0.0',
-           'api.version.fallback.ms': 0,
-           'sasl.mechanisms': 'PLAIN',
-           'security.protocol': 'SASL_SSL',
-           'sasl.username': '$CLOUD_KEY',
-           'sasl.password': '$CLOUD_SECRET',
-           // 'ssl.ca.location': '/usr/local/etc/openssl/cert.pem', // varies by distro
-           'plugin.library.paths': 'monitoring-interceptor',
-           // .... additional configuration settings
-})
-EOF
-  chmod $PERM $PYTHON_CONFIG
-
-  ################################################################################
-  # .NET
-  ################################################################################
-  DOTNET_CONFIG=$DEST/dotnet.delta
-  #echo "$DOTNET_CONFIG"
-  rm -f $DOTNET_CONFIG
-
-  cat <<EOF >> $DOTNET_CONFIG
-using Confluent.Kafka;
-
-var producerConfig = new Dictionary<string, object>
-{
-    { "bootstrap.servers", "$BOOTSTRAP_SERVERS" },
-    { "broker.version.fallback", "0.10.0.0" },
-    { "api.version.fallback.ms", 0 },
-    { "sasl.mechanisms", "PLAIN" },
-    { "security.protocol", "SASL_SSL" },
-    { "sasl.username", "$CLOUD_KEY" },
-    { "sasl.password", "$CLOUD_SECRET" },
-    // { "ssl.ca.location", "/usr/local/etc/openssl/cert.pem" }, // varies by distro
-    { “plugin.library.paths”, “monitoring-interceptor”},
-    // .... additional configuration settings
-};
-
-var consumerConfig = new Dictionary<string, object>
-{
-    { "bootstrap.servers", "$BOOTSTRAP_SERVERS" },
-    { "broker.version.fallback", "0.10.0.0" },
-    { "api.version.fallback.ms", 0 },
-    { "sasl.mechanisms", "PLAIN" },
-    { "security.protocol", "SASL_SSL" },
-    { "sasl.username", "$CLOUD_KEY" },
-    { "sasl.password", "$CLOUD_SECRET" },
-    // { "ssl.ca.location", "/usr/local/etc/openssl/cert.pem" }, // varies by distro
-    { “plugin.library.paths”, “monitoring-interceptor”},
-    // .... additional configuration settings
-};
-EOF
-  chmod $PERM $DOTNET_CONFIG
-
-  ################################################################################
-  # Go
-  ################################################################################
-  GO_CONFIG=$DEST/go.delta
-  #echo "$GO_CONFIG"
-  rm -f $GO_CONFIG
-
-  cat <<EOF >> $GO_CONFIG
-import (
-  "github.com/confluentinc/confluent-kafka-go/kafka"
-
-
-producer, err := kafka.NewProducer(&kafka.ConfigMap{
-           "bootstrap.servers": "$BOOTSTRAP_SERVERS",
-          "broker.version.fallback": "0.10.0.0",
-          "api.version.fallback.ms": 0,
-          "sasl.mechanisms": "PLAIN",
-          "security.protocol": "SASL_SSL",
-          "sasl.username": "$CLOUD_KEY",
-          "sasl.password": "$CLOUD_SECRET",
-                 // "ssl.ca.location": "/usr/local/etc/openssl/cert.pem", // varies by distro
-                 "plugin.library.paths": "monitoring-interceptor",
-                 // .... additional configuration settings
-                 })
-
-consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-     "bootstrap.servers": "$BOOTSTRAP_SERVERS",
-       "broker.version.fallback": "0.10.0.0",
-       "api.version.fallback.ms": 0,
-       "sasl.mechanisms": "PLAIN",
-       "security.protocol": "SASL_SSL",
-       "sasl.username": "$CLOUD_KEY",
-       "sasl.password": "$CLOUD_SECRET",
-                 // "ssl.ca.location": "/usr/local/etc/openssl/cert.pem", // varies by distro
-       "session.timeout.ms": 6000,
-                 "plugin.library.paths": "monitoring-interceptor",
-                 // .... additional configuration settings
-                 })
-EOF
-  chmod $PERM $GO_CONFIG
-
-  ################################################################################
-  # Node.js
-  ################################################################################
-  NODE_CONFIG=$DEST/node.delta
- # echo "$NODE_CONFIG"
-  rm -f $NODE_CONFIG
-
-  cat <<EOF >> $NODE_CONFIG
-var Kafka = require('node-rdkafka');
-
-var producer = new Kafka.Producer({
-    'metadata.broker.list': '$BOOTSTRAP_SERVERS',
-    'sasl.mechanisms': 'PLAIN',
-    'security.protocol': 'SASL_SSL',
-    'sasl.username': '$CLOUD_KEY',
-    'sasl.password': '$CLOUD_SECRET',
-     // 'ssl.ca.location': '/usr/local/etc/openssl/cert.pem', // varies by distro
-    'plugin.library.paths': 'monitoring-interceptor',
-    // .... additional configuration settings
-  });
-
-var consumer = Kafka.KafkaConsumer.createReadStream({
-    'metadata.broker.list': '$BOOTSTRAP_SERVERS',
-    'sasl.mechanisms': 'PLAIN',
-    'security.protocol': 'SASL_SSL',
-    'sasl.username': '$CLOUD_KEY',
-    'sasl.password': '$CLOUD_SECRET',
-     // 'ssl.ca.location': '/usr/local/etc/openssl/cert.pem', // varies by distro
-    'plugin.library.paths': 'monitoring-interceptor',
-    // .... additional configuration settings
-  }, {}, {
-    topics: '<topic name>',
-    waitInterval: 0,
-    objectMode: false
-});
-EOF
-  chmod $PERM $NODE_CONFIG
-
-  ################################################################################
-  # C++
-  ################################################################################
-  CPP_CONFIG=$DEST/cpp.delta
-  #echo "$CPP_CONFIG"
-  rm -f $CPP_CONFIG
-
-  cat <<EOF >> $CPP_CONFIG
-#include <librdkafka/rdkafkacpp.h>
-
-RdKafka::Conf *producerConfig = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-if (producerConfig->set("metadata.broker.list", "$BOOTSTRAP_SERVERS", errstr) != RdKafka::Conf::CONF_OK ||
-    producerConfig->set("sasl.mechanisms", "PLAIN", errstr) != RdKafka::Conf::CONF_OK ||
-    producerConfig->set("security.protocol", "SASL_SSL", errstr) != RdKafka::Conf::CONF_OK ||
-    producerConfig->set("sasl.username", "$CLOUD_KEY", errstr) != RdKafka::Conf::CONF_OK ||
-    producerConfig->set("sasl.password", "$CLOUD_SECRET", errstr) != RdKafka::Conf::CONF_OK ||
-    // producerConfig->set("ssl.ca.location", "/usr/local/etc/openssl/cert.pem", errstr) != RdKafka::Conf::CONF_OK || // varies by distro
-    producerConfig->set("plugin.library.paths", "monitoring-interceptor", errstr) != RdKafka::Conf::CONF_OK ||
-    // .... additional configuration settings
-   ) {
-        std::cerr << "Configuration failed: " << errstr << std::endl;
-        exit(1);
-}
-RdKafka::Producer *producer = RdKafka::Producer::create(producerConfig, errstr);
-
-RdKafka::Conf *consumerConfig = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-if (consumerConfig->set("metadata.broker.list", "$BOOTSTRAP_SERVERS", errstr) != RdKafka::Conf::CONF_OK ||
-    consumerConfig->set("sasl.mechanisms", "PLAIN", errstr) != RdKafka::Conf::CONF_OK ||
-    consumerConfig->set("security.protocol", "SASL_SSL", errstr) != RdKafka::Conf::CONF_OK ||
-    consumerConfig->set("sasl.username", "$CLOUD_KEY", errstr) != RdKafka::Conf::CONF_OK ||
-    consumerConfig->set("sasl.password", "$CLOUD_SECRET", errstr) != RdKafka::Conf::CONF_OK ||
-    // consumerConfig->set("ssl.ca.location", "/usr/local/etc/openssl/cert.pem", errstr) != RdKafka::Conf::CONF_OK || // varies by distro
-    consumerConfig->set("plugin.library.paths", "monitoring-interceptor", errstr) != RdKafka::Conf::CONF_OK ||
-    // .... additional configuration settings
-   ) {
-        std::cerr << "Configuration failed: " << errstr << std::endl;
-        exit(1);
-}
-RdKafka::Consumer *consumer = RdKafka::Consumer::create(consumerConfig, errstr);
-EOF
-  chmod $PERM $CPP_CONFIG
 
   ################################################################################
   # ENV
@@ -4081,6 +3434,56 @@ export KSQLDB_ENDPOINT="$KSQLDB_ENDPOINT"
 export KSQLDB_BASIC_AUTH_USER_INFO="$KSQLDB_BASIC_AUTH_USER_INFO"
 EOF
   chmod $PERM $ENV_CONFIG
+
+  ################################################################################
+  # GEMINI CLI
+  ################################################################################
+  GEMINI_MCP_CONFLUENT_CONFIG=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/.env
+  echo "$GEMINI_MCP_CONFLUENT_CONFIG"
+  rm -f $GEMINI_MCP_CONFLUENT_CONFIG
+
+  SCHEMA_REGISTRY_API_KEY=$(echo $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO | awk -F: '{print $1}')
+  SCHEMA_REGISTRY_API_SECRET=$(echo $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO | awk -F: '{print $2}')
+  KAFKA_REST_ENDPOINT=$(confluent kafka cluster describe $CLUSTER -o json | jq -r ".rest_endpoint")
+
+  if [ -z $CLOUD_API_KEY ]
+  then
+    logwarn "❌ environment variable CLOUD_API_KEY should be set to use MCP confluent server for Confluent Cloud"
+    logwarn "Set it with Cloud API key, see https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys"
+  fi
+
+  if [ -z $CLOUD_API_SECRET ]
+  then
+    logwarn "❌ environment variable CLOUD_API_SECRET should be set to use MCP confluent server for Confluent Cloud"
+    logwarn "Set it with Cloud API secret, see https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys"
+  fi
+
+  cat <<EOF >> $GEMINI_MCP_CONFLUENT_CONFIG
+# .env file
+BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS"
+KAFKA_API_KEY="$CLOUD_KEY"
+KAFKA_API_SECRET="$CLOUD_SECRET"
+KAFKA_REST_ENDPOINT="$KAFKA_REST_ENDPOINT"
+KAFKA_CLUSTER_ID="$CLUSTER"
+KAFKA_ENV_ID="$ENVIRONMENT"
+# FLINK_ENV_ID="env-..."
+# FLINK_ORG_ID=""
+# FLINK_REST_ENDPOINT="https://flink.us-east4.gcp.confluent.cloud"
+# FLINK_ENV_NAME=""
+# FLINK_DATABASE_NAME=""
+# FLINK_API_KEY=""
+# FLINK_API_SECRET=""
+# FLINK_COMPUTE_POOL_ID="lfcp-..."
+# TABLEFLOW_API_KEY=""
+# TABLEFLOW_API_SECRET=""
+CONFLUENT_CLOUD_API_KEY="$CLOUD_API_KEY"
+CONFLUENT_CLOUD_API_SECRET="$CLOUD_API_SECRET"
+CONFLUENT_CLOUD_REST_ENDPOINT="https://api.confluent.cloud"
+SCHEMA_REGISTRY_API_KEY="$SCHEMA_REGISTRY_API_KEY"
+SCHEMA_REGISTRY_API_SECRET="$SCHEMA_REGISTRY_API_SECRET"
+SCHEMA_REGISTRY_ENDPOINT="$SCHEMA_REGISTRY_URL"
+EOF
+  chmod $PERM $GEMINI_MCP_CONFLUENT_CONFIG
 
   return 0
 }
