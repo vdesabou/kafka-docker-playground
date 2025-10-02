@@ -1,0 +1,8 @@
+    "file": "",
+    "key.converter.converter.encoding": "UTF-8",
+    "key.converter.converter.type": "",
+    "value.converter.converter.type": "",
+    "value.converter.decimal.format": "BASE64",
+    "value.converter.replace.null.with.default": "true",
+    "value.converter.schemas.cache.size": "1000",
+    "value.converter.schemas.enable": "true",
