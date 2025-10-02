@@ -3412,6 +3412,24 @@ function ccloud::generate_configs() {
   chmod $PERM $AK_TOOLS_DELTA
 
   ################################################################################
+  # librdkafka
+  ################################################################################
+  LIBRDKAFKA_CONFIG=$DEST/librdkafka.delta
+  #echo "$LIBRDKAFKA_CONFIG"
+  rm -f $LIBRDKAFKA_CONFIG
+
+  cat <<EOF >> $LIBRDKAFKA_CONFIG
+bootstrap.servers="$BOOTSTRAP_SERVERS"
+security.protocol=SASL_SSL
+sasl.mechanisms=PLAIN
+sasl.username="$CLOUD_KEY"
+sasl.password="$CLOUD_SECRET"
+schema.registry.url="$SCHEMA_REGISTRY_URL"
+basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"
+EOF
+  chmod $PERM $LIBRDKAFKA_CONFIG
+  
+  ################################################################################
   # ENV
   ################################################################################
   get_kafka_docker_playground_dir
