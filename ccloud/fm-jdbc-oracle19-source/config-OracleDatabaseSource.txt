@@ -191,27 +191,27 @@ Database details
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: LIST
-	 - Importance: List of tables to include in copying. Use a comma-separated list to specify multiple tables (for example: "User, Address, Email").
+	 - Importance: (Deprecated) List of tables to include in copying. Use a comma-separated list to specify multiple tables (for example: "User, Address, Email"). This is deprecated, please use table.include.list.
 	 - Required: MEDIUM
 
-🔘 timestamp.column.name
+🔘 table.include.list
 
 
 
 	 - Type: false
 	 - Default: LIST
-	 - Importance: Comma separated list of one or more timestamp columns to detect new or modified rows using the COALESCE SQL function. Rows whose first non-null timestamp value is greater than the largest previous timestamp value seen will be discovered with each poll. At least one column should not be nullable.
+	 - Importance: A comma-separated list of regular expressions that match the fully-qualified names of tables to be copied. Use a comma-separated list to specify multiple regular expressions. Table names are case-sensitive. For example, ``table.include.list: schema1.customer.*,schema2.order.*``. If specified, ``table.whitelist`` cannot be set.
 	 - Required: MEDIUM
 
-🔘 incrementing.column.name
+🔘 table.exclude.list
 
 
 
 	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the strictly incrementing column to use to detect new rows. Any empty value indicates the column should be autodetected by looking for an auto-incrementing column. This column may not be nullable.
+	 - Default: LIST
+	 - Importance: A comma-separated list of regular expressions that match the fully-qualified names of tables to be excluded from copying. Use a comma-separated list to specify multiple regular expressions. Table names are case-sensitive. For example, ``table.exclude.list: schema1.customer.*,schema2.order.*``. If specified, ``table.whitelist`` cannot not be set.
 	 - Required: MEDIUM
 
 🔘 table.types
@@ -271,6 +271,24 @@ Mode
 	 - Importance: The mode for updating a table each time it is polled. BULK: perform a bulk load of the entire table each time it is polled. TIMESTAMP: use a timestamp (or timestamp-like) column to detect new and modified rows. This assumes the column is updated with each write, and that values are monotonically incrementing, but not necessarily unique. INCREMENTING: use a strictly incrementing column on each table to detect only new rows. Note that this will not detect modifications or deletions of existing rows. TIMESTAMP AND INCREMENTING: use two columns, a timestamp column that detects new and modified rows and a strictly incrementing column which provides a globally unique ID for updates so each row can be assigned a unique stream offset.
 	 - Required: MEDIUM
 
+🔘 timestamp.columns.mapping
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma-separated list of table regex to timestamp columns mappings. On specifying multiple timestamp columns, COALESCE SQL function would be used to find out the effective timestamp for a row. Expected format is ``regex1:[col1|col2],regex2:[col3]``. Regexes would be matched against the fully-qualified table names. Identifier names are case sensitive. Every table included for capture should match exactly one of the provided mappings. An example for a valid input would be ``.*\.customers.*:[updated_at|modified_at],.*\.orders.*:[changed_at]``.
+	 - Required: MEDIUM
+
+🔘 incrementing.column.mapping
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma-separated list of table regex to incrementing column mappings. Expected format is ``regex1:col1,regex2:col2``. Regexes would be matched against the fully-qualified table names. Identifier names are case sensitive. Every table included for capture should match exactly one of the provided mappings. An example for a valid input would be ``.*\.customers.*:id,.*\.orders.*:order_id``.
+	 - Required: MEDIUM
+
 🔘 quote.sql.identifiers
 
 When to quote table names, column names, and other identifiers in SQL statements. For backward compatibility, the default value is ALWAYS.
@@ -279,6 +297,24 @@ When to quote table names, column names, and other identifiers in SQL statements
 	 - Default: ALWAYS
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 timestamp.column.name
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: (Deprecated legacy configuration. Use timestamp.columns.mapping for new implementations.) Comma separated list of one or more timestamp columns to detect new or modified rows using the COALESCE SQL function. Rows whose first non-null timestamp value is greater than the largest previous timestamp value seen will be discovered with each poll. At least one column should not be nullable.
+	 - Required: MEDIUM
+
+🔘 incrementing.column.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: (Deprecated legacy configuration. Use incrementing.column.mapping for new implementations.) The name of the strictly incrementing column to use to detect new rows. Any empty value indicates the column should be autodetected by looking for an auto-incrementing column. This column may not be nullable.
+	 - Required: MEDIUM
 
 🔘 transaction.isolation.mode
 
@@ -297,6 +333,15 @@ Isolation level determines how transaction integrity is visible to other users a
 	 - Default: LONG
 	 - Importance: The epoch timestamp used for initial queries that use timestamp criteria. The value -1 sets the initial timestamp to the current time. If not specified, the connector retrieves all data. Once the connector has managed to successfully record a source offset, this property has no effect even if changed to a different value later on.
 	 - Required: MEDIUM
+
+🔘 date.calendar.system
+
+The time elapsed from epoch populated in the end table topic for DATE or TIMESTAMP type columns can have two different values based upon the Calendar used to interpret it. If LEGACY is used, it will use the hybrid Gregorian/Julian calendar which was the default in the older java date time APIs. However, if 'PROLEPTIC_GREGORIAN' is used, then it will use the proleptic gregorian calendar which extends the Gregorian rules backward indefinitely and does not apply the 1582 cutover. This matches the behavior of modern Java date/time APIs (java.time). This is defaulted to LEGACY for backward compatibility. Changing this configuration on an existing connector might lead to a drift in the kafka topic record values.
+
+	 - Type: STRING
+	 - Default: LEGACY
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Connection details

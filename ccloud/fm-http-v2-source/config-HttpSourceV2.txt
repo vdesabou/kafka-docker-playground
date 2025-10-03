@@ -706,7 +706,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``.
+	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
 🔘 api1.http.request.parameters.separator
@@ -819,10 +819,10 @@ Timestamp interval between start time and end time.
 
 🔘 api1.time.range.request.delay
 
-The time in milliseconds to wait between consecutive time range requests in timestamp mode with cursor pagination.
+The time in milliseconds to delay a timestamp-based pagination request to avoid potential time drift.
 
 	 - Type: LONG
-	 - Default: 60000
+	 - Default: 0
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -897,15 +897,6 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Default: STRING
 	 - Importance: Defines the JSON Pointer to the offset value within each record (relative to ``http.response.data.json.pointer``).  This offset becomes ``${primary_key}`` for subsequent requests and enables checkpointing and recovery if the connector fails or restarts. Only applicable when ``http.offset.mode`` is set to ``CHAINING``.
 	 - Required: MEDIUM
-
-🔘 api1.should.add.start.delay
-
-Whether to add delay (request.interval.ms) in starting the first operation.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
 
 ==========================
 API-2 Configs
@@ -1060,7 +1051,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``.
+	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
 🔘 api2.http.request.headers.separator
@@ -1182,10 +1173,10 @@ Timestamp interval between start time and end time.
 
 🔘 api2.time.range.request.delay
 
-The time in milliseconds to wait between consecutive time range requests in timestamp mode with cursor pagination.
+The time in milliseconds to delay a timestamp-based pagination request to avoid potential time drift.
 
 	 - Type: LONG
-	 - Default: 60000
+	 - Default: 0
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -1260,15 +1251,6 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Default: STRING
 	 - Importance: Defines the JSON Pointer to the offset value within each record (relative to ``http.response.data.json.pointer``).  This offset becomes ``${primary_key}`` for subsequent requests and enables checkpointing and recovery if the connector fails or restarts. Only applicable when ``http.offset.mode`` is set to ``CHAINING``.
 	 - Required: MEDIUM
-
-🔘 api2.should.add.start.delay
-
-Whether to add delay (request.interval.ms) in starting the first operation.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
 
 ==========================
 API-3 Configs
@@ -1423,7 +1405,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``.
+	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
 🔘 api3.http.request.headers.separator
@@ -1545,10 +1527,10 @@ Timestamp interval between start time and end time.
 
 🔘 api3.time.range.request.delay
 
-The time in milliseconds to wait between consecutive time range requests in timestamp mode with cursor pagination.
+The time in milliseconds to delay a timestamp-based pagination request to avoid potential time drift.
 
 	 - Type: LONG
-	 - Default: 60000
+	 - Default: 0
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -1623,15 +1605,6 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Default: STRING
 	 - Importance: Defines the JSON Pointer to the offset value within each record (relative to ``http.response.data.json.pointer``).  This offset becomes ``${primary_key}`` for subsequent requests and enables checkpointing and recovery if the connector fails or restarts. Only applicable when ``http.offset.mode`` is set to ``CHAINING``.
 	 - Required: MEDIUM
-
-🔘 api3.should.add.start.delay
-
-Whether to add delay (request.interval.ms) in starting the first operation.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
 
 ==========================
 API-4 Configs
@@ -1795,7 +1768,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``.
+	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
 🔘 api4.http.request.parameters.separator
@@ -1908,10 +1881,10 @@ Timestamp interval between start time and end time.
 
 🔘 api4.time.range.request.delay
 
-The time in milliseconds to wait between consecutive time range requests in timestamp mode with cursor pagination.
+The time in milliseconds to delay a timestamp-based pagination request to avoid potential time drift.
 
 	 - Type: LONG
-	 - Default: 60000
+	 - Default: 0
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -1986,15 +1959,6 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Default: STRING
 	 - Importance: Defines the JSON Pointer to the offset value within each record (relative to ``http.response.data.json.pointer``).  This offset becomes ``${primary_key}`` for subsequent requests and enables checkpointing and recovery if the connector fails or restarts. Only applicable when ``http.offset.mode`` is set to ``CHAINING``.
 	 - Required: MEDIUM
-
-🔘 api4.should.add.start.delay
-
-Whether to add delay (request.interval.ms) in starting the first operation.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
 
 ==========================
 API-5 Configs
@@ -2149,7 +2113,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``.
+	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
 🔘 api5.http.request.headers.separator
@@ -2271,10 +2235,10 @@ Timestamp interval between start time and end time.
 
 🔘 api5.time.range.request.delay
 
-The time in milliseconds to wait between consecutive time range requests in timestamp mode with cursor pagination.
+The time in milliseconds to delay a timestamp-based pagination request to avoid potential time drift.
 
 	 - Type: LONG
-	 - Default: 60000
+	 - Default: 0
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -2349,15 +2313,6 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Default: STRING
 	 - Importance: Defines the JSON Pointer to the offset value within each record (relative to ``http.response.data.json.pointer``).  This offset becomes ``${primary_key}`` for subsequent requests and enables checkpointing and recovery if the connector fails or restarts. Only applicable when ``http.offset.mode`` is set to ``CHAINING``.
 	 - Required: MEDIUM
-
-🔘 api5.should.add.start.delay
-
-Whether to add delay (request.interval.ms) in starting the first operation.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
 
 ==========================
 API-6 Configs
@@ -2521,7 +2476,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``.
+	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
 🔘 api6.http.request.parameters.separator
@@ -2634,10 +2589,10 @@ Timestamp interval between start time and end time.
 
 🔘 api6.time.range.request.delay
 
-The time in milliseconds to wait between consecutive time range requests in timestamp mode with cursor pagination.
+The time in milliseconds to delay a timestamp-based pagination request to avoid potential time drift.
 
 	 - Type: LONG
-	 - Default: 60000
+	 - Default: 0
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -2712,15 +2667,6 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Default: STRING
 	 - Importance: Defines the JSON Pointer to the offset value within each record (relative to ``http.response.data.json.pointer``).  This offset becomes ``${primary_key}`` for subsequent requests and enables checkpointing and recovery if the connector fails or restarts. Only applicable when ``http.offset.mode`` is set to ``CHAINING``.
 	 - Required: MEDIUM
-
-🔘 api6.should.add.start.delay
-
-Whether to add delay (request.interval.ms) in starting the first operation.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
 
 ==========================
 API-7 Configs
@@ -2884,7 +2830,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``.
+	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
 🔘 api7.request.interval.ms
@@ -2997,10 +2943,10 @@ Timestamp interval between start time and end time.
 
 🔘 api7.time.range.request.delay
 
-The time in milliseconds to wait between consecutive time range requests in timestamp mode with cursor pagination.
+The time in milliseconds to delay a timestamp-based pagination request to avoid potential time drift.
 
 	 - Type: LONG
-	 - Default: 60000
+	 - Default: 0
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3075,15 +3021,6 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Default: STRING
 	 - Importance: Defines the JSON Pointer to the offset value within each record (relative to ``http.response.data.json.pointer``).  This offset becomes ``${primary_key}`` for subsequent requests and enables checkpointing and recovery if the connector fails or restarts. Only applicable when ``http.offset.mode`` is set to ``CHAINING``.
 	 - Required: MEDIUM
-
-🔘 api7.should.add.start.delay
-
-Whether to add delay (request.interval.ms) in starting the first operation.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
 
 ==========================
 API-8 Configs
@@ -3238,7 +3175,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``.
+	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
 🔘 api8.http.request.headers.separator
@@ -3360,10 +3297,10 @@ Timestamp interval between start time and end time.
 
 🔘 api8.time.range.request.delay
 
-The time in milliseconds to wait between consecutive time range requests in timestamp mode with cursor pagination.
+The time in milliseconds to delay a timestamp-based pagination request to avoid potential time drift.
 
 	 - Type: LONG
-	 - Default: 60000
+	 - Default: 0
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3438,15 +3375,6 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Default: STRING
 	 - Importance: Defines the JSON Pointer to the offset value within each record (relative to ``http.response.data.json.pointer``).  This offset becomes ``${primary_key}`` for subsequent requests and enables checkpointing and recovery if the connector fails or restarts. Only applicable when ``http.offset.mode`` is set to ``CHAINING``.
 	 - Required: MEDIUM
-
-🔘 api8.should.add.start.delay
-
-Whether to add delay (request.interval.ms) in starting the first operation.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
 
 ==========================
 API-9 Configs
@@ -3601,7 +3529,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``.
+	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
 🔘 api9.http.request.headers.separator
@@ -3723,10 +3651,10 @@ Timestamp interval between start time and end time.
 
 🔘 api9.time.range.request.delay
 
-The time in milliseconds to wait between consecutive time range requests in timestamp mode with cursor pagination.
+The time in milliseconds to delay a timestamp-based pagination request to avoid potential time drift.
 
 	 - Type: LONG
-	 - Default: 60000
+	 - Default: 0
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3801,15 +3729,6 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Default: STRING
 	 - Importance: Defines the JSON Pointer to the offset value within each record (relative to ``http.response.data.json.pointer``).  This offset becomes ``${primary_key}`` for subsequent requests and enables checkpointing and recovery if the connector fails or restarts. Only applicable when ``http.offset.mode`` is set to ``CHAINING``.
 	 - Required: MEDIUM
-
-🔘 api9.should.add.start.delay
-
-Whether to add delay (request.interval.ms) in starting the first operation.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
 
 ==========================
 API-10 Configs
@@ -3973,7 +3892,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``.
+	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
 🔘 api10.request.interval.ms
@@ -4086,10 +4005,10 @@ Timestamp interval between start time and end time.
 
 🔘 api10.time.range.request.delay
 
-The time in milliseconds to wait between consecutive time range requests in timestamp mode with cursor pagination.
+The time in milliseconds to delay a timestamp-based pagination request to avoid potential time drift.
 
 	 - Type: LONG
-	 - Default: 60000
+	 - Default: 0
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4164,15 +4083,6 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Default: STRING
 	 - Importance: Defines the JSON Pointer to the offset value within each record (relative to ``http.response.data.json.pointer``).  This offset becomes ``${primary_key}`` for subsequent requests and enables checkpointing and recovery if the connector fails or restarts. Only applicable when ``http.offset.mode`` is set to ``CHAINING``.
 	 - Required: MEDIUM
-
-🔘 api10.should.add.start.delay
-
-Whether to add delay (request.interval.ms) in starting the first operation.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
 
 ==========================
 API-11 Configs
@@ -4327,7 +4237,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``.
+	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
 🔘 api11.http.request.headers.separator
@@ -4449,10 +4359,10 @@ Timestamp interval between start time and end time.
 
 🔘 api11.time.range.request.delay
 
-The time in milliseconds to wait between consecutive time range requests in timestamp mode with cursor pagination.
+The time in milliseconds to delay a timestamp-based pagination request to avoid potential time drift.
 
 	 - Type: LONG
-	 - Default: 60000
+	 - Default: 0
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4527,15 +4437,6 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Default: STRING
 	 - Importance: Defines the JSON Pointer to the offset value within each record (relative to ``http.response.data.json.pointer``).  This offset becomes ``${primary_key}`` for subsequent requests and enables checkpointing and recovery if the connector fails or restarts. Only applicable when ``http.offset.mode`` is set to ``CHAINING``.
 	 - Required: MEDIUM
-
-🔘 api11.should.add.start.delay
-
-Whether to add delay (request.interval.ms) in starting the first operation.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
 
 ==========================
 API-12 Configs
@@ -4699,7 +4600,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``.
+	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
 🔘 api12.request.interval.ms
@@ -4812,10 +4713,10 @@ Timestamp interval between start time and end time.
 
 🔘 api12.time.range.request.delay
 
-The time in milliseconds to wait between consecutive time range requests in timestamp mode with cursor pagination.
+The time in milliseconds to delay a timestamp-based pagination request to avoid potential time drift.
 
 	 - Type: LONG
-	 - Default: 60000
+	 - Default: 0
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4890,15 +4791,6 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Default: STRING
 	 - Importance: Defines the JSON Pointer to the offset value within each record (relative to ``http.response.data.json.pointer``).  This offset becomes ``${primary_key}`` for subsequent requests and enables checkpointing and recovery if the connector fails or restarts. Only applicable when ``http.offset.mode`` is set to ``CHAINING``.
 	 - Required: MEDIUM
-
-🔘 api12.should.add.start.delay
-
-Whether to add delay (request.interval.ms) in starting the first operation.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
 
 ==========================
 API-13 Configs
@@ -5053,7 +4945,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``.
+	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
 🔘 api13.http.request.headers.separator
@@ -5175,10 +5067,10 @@ Timestamp interval between start time and end time.
 
 🔘 api13.time.range.request.delay
 
-The time in milliseconds to wait between consecutive time range requests in timestamp mode with cursor pagination.
+The time in milliseconds to delay a timestamp-based pagination request to avoid potential time drift.
 
 	 - Type: LONG
-	 - Default: 60000
+	 - Default: 0
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -5253,15 +5145,6 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Default: STRING
 	 - Importance: Defines the JSON Pointer to the offset value within each record (relative to ``http.response.data.json.pointer``).  This offset becomes ``${primary_key}`` for subsequent requests and enables checkpointing and recovery if the connector fails or restarts. Only applicable when ``http.offset.mode`` is set to ``CHAINING``.
 	 - Required: MEDIUM
-
-🔘 api13.should.add.start.delay
-
-Whether to add delay (request.interval.ms) in starting the first operation.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
 
 ==========================
 API-14 Configs
@@ -5425,7 +5308,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``.
+	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
 🔘 api14.http.request.parameters.separator
@@ -5538,10 +5421,10 @@ Timestamp interval between start time and end time.
 
 🔘 api14.time.range.request.delay
 
-The time in milliseconds to wait between consecutive time range requests in timestamp mode with cursor pagination.
+The time in milliseconds to delay a timestamp-based pagination request to avoid potential time drift.
 
 	 - Type: LONG
-	 - Default: 60000
+	 - Default: 0
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -5616,15 +5499,6 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Default: STRING
 	 - Importance: Defines the JSON Pointer to the offset value within each record (relative to ``http.response.data.json.pointer``).  This offset becomes ``${primary_key}`` for subsequent requests and enables checkpointing and recovery if the connector fails or restarts. Only applicable when ``http.offset.mode`` is set to ``CHAINING``.
 	 - Required: MEDIUM
-
-🔘 api14.should.add.start.delay
-
-Whether to add delay (request.interval.ms) in starting the first operation.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
 
 ==========================
 API-15 Configs
@@ -5788,7 +5662,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``.
+	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
 🔘 api15.request.interval.ms
@@ -5901,10 +5775,10 @@ Timestamp interval between start time and end time.
 
 🔘 api15.time.range.request.delay
 
-The time in milliseconds to wait between consecutive time range requests in timestamp mode with cursor pagination.
+The time in milliseconds to delay a timestamp-based pagination request to avoid potential time drift.
 
 	 - Type: LONG
-	 - Default: 60000
+	 - Default: 0
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -5979,15 +5853,6 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Default: STRING
 	 - Importance: Defines the JSON Pointer to the offset value within each record (relative to ``http.response.data.json.pointer``).  This offset becomes ``${primary_key}`` for subsequent requests and enables checkpointing and recovery if the connector fails or restarts. Only applicable when ``http.offset.mode`` is set to ``CHAINING``.
 	 - Required: MEDIUM
-
-🔘 api15.should.add.start.delay
-
-Whether to add delay (request.interval.ms) in starting the first operation.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
 
 ==========================
 Auto-restart policy
