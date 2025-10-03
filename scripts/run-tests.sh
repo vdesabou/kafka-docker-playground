@@ -190,6 +190,24 @@ do
                 fi
             fi
 
+			# 🤖 CI: ignore examples with github issues opened and with label 'CI ignore ⏭️' #7203
+			title="🔥 ${dir}"
+			gh issue list --limit 500 | grep "$title" > /dev/null
+			if [ $? == 0 ]
+			then
+				issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
+				gh issue view ${issue_number} --json labels | grep "CI ignore ⏭️" > /dev/null
+				if [ $? == 0 ]
+				then
+					log "####################################################"
+					log "🐛 Skipping as test has an opened GH issue (${issue_number} $title) with label 'CI ignore ⏭️'"
+					log "####################################################"
+					skipped_tests=$skipped_tests"$dir[$script]\n"
+					let "nb_test_skipped++"
+					continue
+				fi
+			fi
+
             # for servicenow tests, run tests at least every 4 days
             if [[ "$dir" == "connect/connect-servicenow-"* ]] && [[ $elapsed_time -gt 322560 ]]
             then
