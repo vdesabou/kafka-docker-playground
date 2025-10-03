@@ -191,7 +191,10 @@ do
             fi
 
 			# 🤖 CI: ignore examples with github issues opened and with label 'CI ignore ⏭️' #7203
-			title="🔥 ${dir}"
+			base1="${dir##*/}" # connect-cdc-oracle12-source
+			dir1="${dir%/*}" #connect
+			dir2="${dir1##*/}/$base1" # connect/connect-cdc-oracle12-source
+			title="🔥 ${dir2}"
 			gh issue list --limit 500 | grep "$title" > /dev/null
 			if [ $? == 0 ]
 			then
