@@ -6,7 +6,7 @@ Jira
 Issues updated after this time will be processed by the connector. If left blank, the default time will be set to the time this connector is launched. The expected format for jira.since is yyyy-MM-dd HH:mm.
 
 	 - Type: STRING
-	 - Default: 2025-09-25 18:48
+	 - Default: 2025-10-03 11:13
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -163,6 +163,15 @@ Service URL.
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 jira.lookback.ms
+
+The number of milliseconds to look back when querying for issues. This creates a time window (lastUpdatedDate - X ms) to (currentTime) to handle potential race conditions and ensure no issues are missed. Default is 0 (disabled).
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
 ==========================
 Limits
 ==========================
@@ -195,10 +204,10 @@ The time in milliseconds to wait while polling for a full batch of records.
 
 🔘 request.interval.ms
 
-The time in milliseconds to wait before checking for updated records.
+The time in milliseconds to wait before checking for updated records. This is the interval to wait between consecutive requests to source system. Caution: setting this will overwrite any source-system specific delays specified for entities internally by the connector
 
 	 - Type: LONG
-	 - Default: 86400000
+	 - Default: 100
 	 - Importance: MEDIUM
 	 - Required: false
 
