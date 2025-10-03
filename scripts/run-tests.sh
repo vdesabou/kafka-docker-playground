@@ -140,13 +140,32 @@ do
                 fi
             fi
         fi
+
+		# 🤖 CI: ignore examples with github issues opened and with label 'CI ignore ⏭️' #7203
+		title="🔥 ${dir}"
+		gh issue list --limit 500 | grep "$title" > /dev/null
+		if [ $? == 0 ]
+		then
+			issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
+			gh issue view ${issue_number} --json labels | grep "CI ignore ⏭️" > /dev/null
+			if [ $? == 0 ]
+			then
+				log "####################################################"
+				log "🐛 Skipping as test has an opened GH issue (${issue_number} $title) with label 'CI ignore ⏭️'"
+				log "####################################################"
+				skipped_tests=$skipped_tests"$dir[$script]\n"
+				let "nb_test_skipped++"
+				continue
+			fi
+		fi
+
         testdir=$(echo "$dir" | sed 's/\//-/g')
         file="/tmp/$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
         s3_file="s3://kafka-docker-playground/ci/$file"
         set +e
         exists=$(aws s3 ls $s3_file --region us-east-1)
         if [ -z "$exists" ]; then
-            # log "DEBUG: $s3_file does not exist, run the test"
+            log "$s3_file does not exist on the bucket, run the test"
             :
         else
             aws s3 cp $s3_file . --region us-east-1
@@ -189,27 +208,6 @@ do
                     logerror "Could not retrieve job url!"
                 fi
             fi
-
-			# 🤖 CI: ignore examples with github issues opened and with label 'CI ignore ⏭️' #7203
-			base1="${dir##*/}" # connect-cdc-oracle12-source
-			dir1="${dir%/*}" #connect
-			dir2="${dir1##*/}/$base1" # connect/connect-cdc-oracle12-source
-			title="🔥 ${dir2}"
-			gh issue list --limit 500 | grep "$title" > /dev/null
-			if [ $? == 0 ]
-			then
-				issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
-				gh issue view ${issue_number} --json labels | grep "CI ignore ⏭️" > /dev/null
-				if [ $? == 0 ]
-				then
-					log "####################################################"
-					log "🐛 Skipping as test has an opened GH issue (${issue_number} $title) with label 'CI ignore ⏭️'"
-					log "####################################################"
-					skipped_tests=$skipped_tests"$dir[$script]\n"
-					let "nb_test_skipped++"
-					continue
-				fi
-			fi
 
             # for servicenow tests, run tests at least every 4 days
             if [[ "$dir" == "connect/connect-servicenow-"* ]] && [[ $elapsed_time -gt 322560 ]]
