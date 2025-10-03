@@ -273,7 +273,7 @@ In case of error when making a request to Salesforce, the connector will retry u
 The version of Salesforce API to use.
 
 	 - Type: STRING
-	 - Default: latest
+	 - Default: 64.0
 	 - Importance: LOW
 	 - Required: false
 

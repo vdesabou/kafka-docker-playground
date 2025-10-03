@@ -2,6 +2,7 @@
     "connector.class": "STRING",
     "datapreview.schemas.enable": "false",
     "jira.api.token": "PASSWORD",
+    "jira.lookback.ms": "0",
     "jira.resources": "LIST",
     "jira.since": "STRING",
     "jira.url": "STRING",
