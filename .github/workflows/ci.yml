@@ -82,6 +82,7 @@ jobs:
           SALESFORCE_SECURITY_TOKEN_ACCOUNT2: ${{ secrets.SALESFORCE_SECURITY_TOKEN_ACCOUNT2}}
           SALESFORCE_CONSUMER_KEY_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_KEY_ACCOUNT2}}
           SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2}}
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
   build:
     if: ${{ github.event.inputs.test_name == '' }}
@@ -536,6 +537,7 @@ jobs:
           CLICKHOUSE_CLOUD_HOSTNAME: ${{ secrets.CLICKHOUSE_CLOUD_HOSTNAME}}
           CLICKHOUSE_CLOUD_USERNAME: ${{ secrets.CLICKHOUSE_CLOUD_USERNAME}}
           CLICKHOUSE_CLOUD_PASSWORD: ${{ secrets.CLICKHOUSE_CLOUD_PASSWORD}}
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           
       - name: Commit connector config file if changed
         if: always()
