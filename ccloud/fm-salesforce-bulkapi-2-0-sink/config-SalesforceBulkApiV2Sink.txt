@@ -282,7 +282,7 @@ The Salesforce sink operation to perform on the SObject. This feature works if `
 The version of Salesforce API to use.
 
 	 - Type: STRING
-	 - Default: latest
+	 - Default: 64.0
 	 - Importance: LOW
 	 - Required: false
 

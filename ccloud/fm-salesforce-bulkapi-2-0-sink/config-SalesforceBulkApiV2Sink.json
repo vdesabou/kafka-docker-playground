@@ -32,7 +32,7 @@
     "salesforce.sink.object.operation": "insert",
     "salesforce.use.custom.id.field": "false",
     "salesforce.username": "STRING",
-    "salesforce.version": "latest",
+    "salesforce.version": "64.0",
     "schema.context.name": "default",
     "tasks.max": "INT",
     "topics": "LIST",
