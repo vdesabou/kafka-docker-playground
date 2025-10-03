@@ -165,7 +165,7 @@ do
         set -e
 
         testdir=$(echo "$dir" | sed 's/\//-/g')
-        file="/tmp/$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
+        file="$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
         s3_file="s3://kafka-docker-playground/ci/$file"
         set +e
         exists=$(aws s3 ls $s3_file --region us-east-1)
@@ -173,17 +173,17 @@ do
             log "$s3_file does not exist on the bucket, run the test"
             :
         else
-            aws s3 cp $s3_file . --region us-east-1
-            if [ ! -f $file ]
+            aws s3 cp $s3_file /tmp/ --region us-east-1
+            if [ ! -f /tmp/$file ]
             then
                 logwarn "Error getting $s3_file"
                 elapsed_time=999999999999
             else
-                last_execution_time=$(cat $file | tail -1 | cut -d "|" -f 2)
-                status=$(cat $file | tail -1 | cut -d "|" -f 3)
+                last_execution_time=$(cat /tmp/$file | tail -1 | cut -d "|" -f 2)
+                status=$(cat /tmp/$file | tail -1 | cut -d "|" -f 3)
                 now=$(date +%s)
                 elapsed_time=$((now-last_execution_time))
-                gh_run_id=$(cat $file | tail -1 | cut -d "|" -f 4)
+                gh_run_id=$(cat /tmp/$file | tail -1 | cut -d "|" -f 4)
 
                 if [ ! -f /tmp/${gh_run_id}_1.json ]
                 then
