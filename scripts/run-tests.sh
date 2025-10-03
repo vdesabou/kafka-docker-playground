@@ -50,6 +50,26 @@ do
 
     cd $dir > /dev/null
 
+    # 🤖 CI: ignore examples with github issues opened and with label 'CI ignore ⏭️' #7203
+    title="🔥 ${dir}"
+    gh issue list --limit 500 | grep "$title" > /dev/null 2>&1
+    if [ $? == 0 ]
+    then
+        issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}' 2>/dev/null)
+        if [ -n "$issue_number" ]; then
+            gh issue view ${issue_number} --json labels 2>/dev/null | grep "CI ignore ⏭️" > /dev/null 2>&1
+            if [ $? == 0 ]
+            then
+                log "####################################################"
+                log "🐛 Skipping as test has an opened GH issue (${issue_number} $title) with label 'CI ignore ⏭️'"
+                log "####################################################"
+                skipped_tests=$skipped_tests"$dir[$script]\n"
+                let "nb_test_skipped++"
+                continue
+            fi
+        fi
+    fi
+        
     curl -s https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o /tmp/README.txt
     for script in *.sh
     do
@@ -126,7 +146,6 @@ do
                     
                     # check if newer connector plugin version is available on hub
                     output=$(playground connector-plugin versions --connector-plugin "$owner/$name" --force-refresh --last 1)
-                    set +e
                     last_updated=$(echo "$output" | head -n 1 | grep -v "<unknown>" | cut -d "(" -f 2 | cut -d " " -f 1)
                     if [[ -n "$last_updated" ]]
                     then
@@ -136,33 +155,9 @@ do
                             force_test_connector_plugin_version=1
                         fi
                     fi
-                    set -e
                 fi
             fi
         fi
-
-        # 🤖 CI: ignore examples with github issues opened and with label 'CI ignore ⏭️' #7203
-        set +e
-        title="🔥 ${dir}"
-        gh issue list --limit 500 | grep "$title" > /dev/null 2>&1
-        if [ $? == 0 ]
-        then
-            issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}' 2>/dev/null)
-            if [ -n "$issue_number" ]; then
-                gh issue view ${issue_number} --json labels 2>/dev/null | grep "CI ignore ⏭️" > /dev/null 2>&1
-                if [ $? == 0 ]
-                then
-                    log "####################################################"
-                    log "🐛 Skipping as test has an opened GH issue (${issue_number} $title) with label 'CI ignore ⏭️'"
-                    log "####################################################"
-                    skipped_tests=$skipped_tests"$dir[$script]\n"
-                    let "nb_test_skipped++"
-                    set -e
-                    continue
-                fi
-            fi
-        fi
-        set -e
 
         testdir=$(echo "$dir" | sed 's/\//-/g')
         file="$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
