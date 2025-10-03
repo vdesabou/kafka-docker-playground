@@ -5,6 +5,7 @@
     "connector.class": "STRING",
     "csfle.enabled": "false",
     "database.aws.region": "STRING",
+    "database.exclude.list": "LIST",
     "database.hostname": "STRING",
     "database.include.list": "LIST",
     "database.password": "PASSWORD",
