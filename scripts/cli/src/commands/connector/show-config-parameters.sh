@@ -103,7 +103,7 @@ do
         fi
     fi
 
-    if [[ -n "$force_refresh" ]]
+    if [[ -n "$force_refresh" ]] || [ ! -z "$GITHUB_RUN_NUMBER" ]
     then
         if [ -f $filename ]
         then
