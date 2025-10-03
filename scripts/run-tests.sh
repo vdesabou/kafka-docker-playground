@@ -33,7 +33,7 @@ skipped_tests=""
 test_list="$1"
 if [ "$1" = "ALL" ]
 then
-    test_list=$(grep "🚀" ${DIR}/../.github/workflows/ci.yml | cut -d '"' -f 2 | tr '\n' ' ')
+    test_list=$(grep "🚀" ${DIR}/../.github/workflows/ci.yml | cut -d '"' -f 2 | tr '\n' ' ' | tr ' ' '\n' | grep -v "^🚀" | tr '\n' ' ')
 fi
 
 playground config container-kill-all-before-run true
@@ -141,23 +141,28 @@ do
             fi
         fi
 
-		# 🤖 CI: ignore examples with github issues opened and with label 'CI ignore ⏭️' #7203
-		title="🔥 ${dir}"
-		gh issue list --limit 500 | grep "$title" > /dev/null
-		if [ $? == 0 ]
-		then
-			issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
-			gh issue view ${issue_number} --json labels | grep "CI ignore ⏭️" > /dev/null
-			if [ $? == 0 ]
-			then
-				log "####################################################"
-				log "🐛 Skipping as test has an opened GH issue (${issue_number} $title) with label 'CI ignore ⏭️'"
-				log "####################################################"
-				skipped_tests=$skipped_tests"$dir[$script]\n"
-				let "nb_test_skipped++"
-				continue
-			fi
-		fi
+        # 🤖 CI: ignore examples with github issues opened and with label 'CI ignore ⏭️' #7203
+        set +e
+        title="🔥 ${dir}"
+        gh issue list --limit 500 | grep "$title" > /dev/null 2>&1
+        if [ $? == 0 ]
+        then
+            issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}' 2>/dev/null)
+            if [ -n "$issue_number" ]; then
+                gh issue view ${issue_number} --json labels 2>/dev/null | grep "CI ignore ⏭️" > /dev/null 2>&1
+                if [ $? == 0 ]
+                then
+                    log "####################################################"
+                    log "🐛 Skipping as test has an opened GH issue (${issue_number} $title) with label 'CI ignore ⏭️'"
+                    log "####################################################"
+                    skipped_tests=$skipped_tests"$dir[$script]\n"
+                    let "nb_test_skipped++"
+                    set -e
+                    continue
+                fi
+            fi
+        fi
+        set -e
 
         testdir=$(echo "$dir" | sed 's/\//-/g')
         file="/tmp/$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
