@@ -6,8 +6,4 @@
     "snmp.listen.protocol": "UDP",
     "snmp.poll.backoff.ms": "250",
     "snmp.v3.enabled": "false",
-    "v3.mysecurityname.auth.password": "",
-    "v3.mysecurityname.auth.protocol": "",
-    "v3.mysecurityname.privacy.password": "",
-    "v3.mysecurityname.privacy.protocol": "",
     "v3.security.context.users": "LIST",
