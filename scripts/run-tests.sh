@@ -65,6 +65,7 @@ do
                 log "####################################################"
                 skipped_tests=$skipped_tests"$dir[$script]\n"
                 let "nb_test_skipped++"
+                cd - > /dev/null
                 continue
             fi
         fi
