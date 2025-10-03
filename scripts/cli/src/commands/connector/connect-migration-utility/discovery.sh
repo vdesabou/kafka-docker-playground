@@ -15,7 +15,7 @@ rm -rf "$discovery_output_dir"
 
 set +e
 docker pull vdesabou/docker-connect-migration-utility:latest > /dev/null 2>&1
-docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "cd connect-migration-utility && python src/discovery_script.py --worker-urls 'http://localhost:8083' --output-dir /discovery_output_dir --disable-ssl-verify --environment-id $environment --cluster-id $cluster" > /tmp/output.log 2>&1
+docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "python src/discovery_script.py --worker-urls 'http://localhost:8083' --output-dir /discovery_output_dir --disable-ssl-verify --environment-id $environment --cluster-id $cluster" > /tmp/output.log 2>&1
 ret=$?
 set -e
 
