@@ -142,6 +142,15 @@ Jira details
 	 - Importance: The resources that are to be extracted and written to Kafka.
 	 - Required: HIGH
 
+🔘 jira.lookback.ms
+
+The number of milliseconds to look back when querying for issues. This creates a time window (lastUpdatedDate - X ms) to (currentTime) to handle potential race conditions and ensure no issues are missed. Default is 0 (disabled) and the maximum value is 9,00,000 ms (15 min)
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
 ==========================
 Connection details
 ==========================

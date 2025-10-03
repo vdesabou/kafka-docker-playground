@@ -214,13 +214,118 @@ The URL of the Salesforce endpoint to use. When using 'CLIENT_CREDENTIALS' grant
 	 - Importance: Password used to access JWT keystore file.
 	 - Required: MEDIUM
 
-🔘 salesforce.platform.event.name
+🔘 salesforce.platform.event.num
+
+The number of Salesforce platform events to write to. Must be between 1 and 5.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Platform Event 1 configuration
+==========================
+🔘 salesforce.platform.event1.name
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: STRING
-	 - Importance: The Salesforce platform event to publish to
+	 - Importance: The name of the Salesforce platform event 1 to publish to. The Event name should end with __e suffix. For example: LoginEvent__e.
+	 - Required: HIGH
+
+🔘 salesforce.platform.event1.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics to be used for platform event 1.
+	 - Required: HIGH
+
+==========================
+Platform Event 2 configuration
+==========================
+🔘 salesforce.platform.event2.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Salesforce platform event 2 to publish to. The Event name should end with __e suffix. For example: LoginEvent__e.
+	 - Required: HIGH
+
+🔘 salesforce.platform.event2.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics to be used for platform event 2.
+	 - Required: HIGH
+
+==========================
+Platform Event 3 configuration
+==========================
+🔘 salesforce.platform.event3.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Salesforce platform event 3 to publish to. The Event name should end with __e suffix. For example: LoginEvent__e.
+	 - Required: HIGH
+
+🔘 salesforce.platform.event3.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics to be used for platform event 3.
+	 - Required: HIGH
+
+==========================
+Platform Event 4 configuration
+==========================
+🔘 salesforce.platform.event4.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Salesforce platform event 4 to publish to. The Event name should end with __e suffix. For example: LoginEvent__e.
+	 - Required: HIGH
+
+🔘 salesforce.platform.event4.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics to be used for platform event 4.
+	 - Required: HIGH
+
+==========================
+Platform Event 5 configuration
+==========================
+🔘 salesforce.platform.event5.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Salesforce platform event 5 to publish to. The Event name should end with __e suffix. For example: LoginEvent__e.
+	 - Required: HIGH
+
+🔘 salesforce.platform.event5.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: List of topics to be used for platform event 5.
 	 - Required: HIGH
 
 ==========================
