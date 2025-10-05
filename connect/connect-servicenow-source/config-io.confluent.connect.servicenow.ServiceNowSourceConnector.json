@@ -13,7 +13,7 @@
     "read.timeout.ms": "20000",
     "retry.max.times": "3",
     "servicenow.password": "",
-    "servicenow.since": "2025-10-04",
+    "servicenow.since": "2025-10-05",
     "servicenow.ssl.keystore.password": "",
     "servicenow.ssl.keystore.path": "",
     "servicenow.ssl.truststore.password": "",
