@@ -6,7 +6,7 @@ Github
 Records created or updated after this time will be processed by the connector. If left blank, the default time will be  set to the time this connector is launched. Expected format is yyyy-MM-dd'T'HH:mm:ssXoryyyy-MM-dd
 
 	 - Type: STRING
-	 - Default: 2025-10-04T19:10:11Z
+	 - Default: 2025-10-05T18:56:41Z
 	 - Importance: MEDIUM
 	 - Required: false
 
