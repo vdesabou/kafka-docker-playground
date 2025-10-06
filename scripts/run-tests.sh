@@ -274,7 +274,8 @@ do
         log "🚀 Executing $script in dir $dir"
         log "####################################################"
         SECONDS=0
-        file_output="/tmp/$TAG-$testdir-$THE_CONNECTOR_TAG-$script.log"
+        tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+        file_output="$tmp_dir/$TAG-$testdir-$THE_CONNECTOR_TAG-$script.log"
         rm -f $file_output
         touch $file_output
         retry playground run -f "$PWD/$script" $flag_tag $flag_environment | tee "$file_output"
@@ -283,7 +284,7 @@ do
         let ELAPSED_TOTAL+=$SECONDS
         CUMULATED="cumulated time: $((($ELAPSED_TOTAL / 60) % 60))min $(($ELAPSED_TOTAL % 60))sec"
         testdir=$(echo "$dir" | sed 's/\//-/g')
-        file="/tmp/$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
+        file="$tmp_dir/$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
         rm -f $file
         touch $file
         if [ $ret -eq 0 ]

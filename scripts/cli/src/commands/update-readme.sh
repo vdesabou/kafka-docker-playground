@@ -179,7 +179,7 @@ do
 
         if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
         then
-          logerror "Could not retrieve job url! FIXTTHIS: NOT Forcing re-run for next time..."
+          logerror "Could not retrieve job url! FIXTHIS: NOT Forcing re-run for next time..."
           # s3_file="s3://kafka-docker-playground/ci/${image_version}-${testdir}-${version}-${script_name}"
           # aws s3 rm $s3_file --region us-east-1
         fi
