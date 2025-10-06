@@ -385,10 +385,10 @@ The AWS region to be used by the connector.
 
 🔘 s3.credentials.provider.class
 
-Credentials provider or provider chain to use for authentication to AWS. By default the connector uses 'DefaultAWSCredentialsProviderChain'.
+Credentials provider or provider chain to use for authentication to AWS. By default the connector uses 'DefaultCredentialsProvider'.
 
 	 - Type: CLASS
-	 - Default: com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+	 - Default: software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
 	 - Importance: LOW
 	 - Required: false
 

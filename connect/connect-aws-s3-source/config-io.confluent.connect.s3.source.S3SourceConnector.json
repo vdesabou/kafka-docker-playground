@@ -31,7 +31,7 @@
     "path.format": "STRING",
     "record.batch.max.size": "200",
     "s3.bucket.name": "",
-    "s3.credentials.provider.class": "com.amazonaws.auth.DefaultAWSCredentialsProviderChain",
+    "s3.credentials.provider.class": "software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider",
     "s3.http.send.expect.continue": "true",
     "s3.part.retries": "3",
     "s3.path.style.access": "true",
