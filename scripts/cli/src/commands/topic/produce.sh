@@ -176,7 +176,7 @@ function identify_schema() {
     then
         log "🔮 $type schema was identified as json schema"
         schema_type=json-schema
-    elif grep -q "_meta" $schema_file
+    elif grep -q "\"_meta" $schema_file
     then
         log "🔮 $type schema was identified as json"
         schema_type=json
