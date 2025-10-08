@@ -1,23 +1,125 @@
 ==========================
-Connector
+null
 ==========================
-🔘 azure.eventhubs.sas.keyname
+🔘 k8s.namespace
 
-Shared Access Signature keyname to the corresponding shared access policy rule for the namespace or entity.
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Kubernetes namespace where the service account resides for TokenRequest API.
+	 - Required: HIGH
+
+🔘 k8s.service.account.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Kubernetes service account name for TokenRequest API.
+	 - Required: HIGH
+
+🔘 k8s.token.expiration.seconds
+
+The expiration time in seconds for tokens generated via TokenRequest API. Should be long enough to cover all retry attempts with exponential backoff.
+
+	 - Type: LONG
+	 - Default: 600
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 provider.integration.max.retries
+
+The maximum number of retries for provider integration operations.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: LOW
+	 - Required: false
+
+🔘 provider.integration.retry.delay.millis
+
+The initial retry delay in milliseconds for provider integration operations.
+
+	 - Type: INT
+	 - Default: 2000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 resource.crn
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Confluent Cloud Resource Name (CRN) for the resource. Format: crn://confluent.cloud/organization=<org-id>/environment=<env-id>/...
+	 - Required: HIGH
+
+🔘 provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The provider integration ID used as HMAC key for computing the K8s token audience
+	 - Required: HIGH
+
+🔘 confluent.azure.multi.tenant.app.client.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Azure client ID (application ID) of the Entra ID Multi Tenant App that Confluent Cloud uses to access Azure resources.
+	 - Required: HIGH
+
+🔘 customer.azure.tenant.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Azure tenant ID (directory ID) where the Azure application is registered.
+	 - Required: HIGH
+
+🔘 azure.token.scope
+
+The scope for the Azure access token request (e.g., 'https://storage.azure.com/.default').
 
 	 - Type: STRING
-	 - Default: null
+	 - Default: https://management.azure.com/.default
 	 - Importance: HIGH
-	 - Required: true
+	 - Required: false
+
+==========================
+Connector
+==========================
+🔘 credentials.provider.class
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Credentials provider class for Microsoft Entra ID authentication
+	 - Required: LOW
+
+🔘 azure.eventhubs.sas.keyname
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Shared Access Signature keyname to the corresponding shared access policy rule for the namespace or entity.
+	 - Required: HIGH
 
 🔘 azure.eventhubs.sas.key
 
 Shared Access Signature key to the corresponding shared access policy rule of the namespace or entity.
 
 	 - Type: PASSWORD
-	 - Default: null
+	 - Default: [hidden]
 	 - Importance: HIGH
-	 - Required: true
+	 - Required: false
 
 🔘 azure.eventhubs.namespace
 
