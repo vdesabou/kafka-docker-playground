@@ -2,4 +2,4 @@
 services:
   connect:
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/jcustenborder-kafka-connect-spooldir
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-spooldir
