@@ -6,7 +6,7 @@
     "3": "SHORT",
     "LIST": "false",
     "aws.access.key.id": "[hidden]",
-    "aws.credentials.provider.class": "com.amazonaws.auth.DefaultAWSCredentialsProviderChain",
+    "aws.credentials.provider.class": "software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider",
     "aws.lambda.batch.size": "20",
     "aws.lambda.function.name": "",
     "aws.lambda.invocation.type": "sync",
