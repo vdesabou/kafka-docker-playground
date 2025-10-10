@@ -4,16 +4,22 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f confluentinc-kafka-connect-s3-10.5.13.zip ]
+S3_VERSION=${S3_VERSION:-"10.5.13"}
+cd ../../ccloud/custom-connector-connect-aws-s3-sink
+if [ ! -f confluentinc-kafka-connect-s3-$S3_VERSION.zip ]
 then
-    log "Downloading confluentinc-kafka-connect-s3-10.5.13.zip from confluent hub"
-    wget -q https://d2p6pa21dvn84.cloudfront.net/api/plugins/confluentinc/kafka-connect-s3/versions/10.5.13/confluentinc-kafka-connect-s3-10.5.13.zip
+    log "Downloading confluentinc-kafka-connect-s3-$S3_VERSION.zip from confluent hub"
+    wget -q https://d2p6pa21dvn84.cloudfront.net/api/plugins/confluentinc/kafka-connect-s3/versions/$S3_VERSION/confluentinc-kafka-connect-s3-$S3_VERSION.zip
 fi
 
-plugin_name="pg_${USER}_s3_sink_10_5_13"
+plugin_name="pg_${USER}_s3_sink"
+
+bootstrap_ccloud_environment "aws" "$AWS_REGION"
+
+ENVIRONMENT=$(playground state get ccloud.ENVIRONMENT)
 
 set +e
-for row in $(confluent connect custom-plugin list --output json | jq -r '.[] | @base64'); do
+for row in $(confluent ccpm plugin list --environment $ENVIRONMENT --output json | jq -r '.[] | @base64'); do
     _jq() {
     echo ${row} | base64 -d | jq -r ${1}
     }
@@ -23,62 +29,62 @@ for row in $(confluent connect custom-plugin list --output json | jq -r '.[] | @
 
     if [[ "$name" = "$plugin_name" ]]
     then
-        log "deleting plugin $id ($name)"
-        confluent connect custom-plugin delete $id --force
+        plugin_id=$id
+        log "deleting plugin $plugin_id ($name)"
+        confluent ccpm plugin delete $plugin_id --environment $ENVIRONMENT --force
     fi
 done
-set -e
-
-log "Uploading custom plugin $plugin_name"
-confluent connect custom-plugin create $plugin_name --plugin-file confluentinc-kafka-connect-s3-10.5.13.zip --connector-class io.confluent.connect.s3.S3SinkConnector --connector-type SINK --sensitive-properties "aws.secret.access.key"
-ret=$?
-
-function cleanup_resources {
-    log "Do you want to delete the custom plugin $plugin_name ($plugin_id) and custom connector $connector_name ?"
-    check_if_continue
-
-    playground connector delete --connector $connector_name
-    confluent connect custom-plugin delete $plugin_id --force
-}
-trap cleanup_resources EXIT
-
-set -e
-if [ $ret -eq 0 ]
+if [ "$plugin_id" != "" ]
 then
-    found=0
-    set +e
-    for row in $(confluent connect custom-plugin list --output json | jq -r '.[] | @base64'); do
+    for row in $(confluent ccpm plugin version list --plugin $plugin_id --environment $ENVIRONMENT --output json | jq -r '.[] | @base64'); do
         _jq() {
         echo ${row} | base64 -d | jq -r ${1}
         }
         
-        id=$(echo $(_jq '.id'))
+        plugin_version_id=$(echo $(_jq '.id'))
         name=$(echo $(_jq '.name'))
 
-        if [[ "$name" = "$plugin_name" ]]
-        then
-            plugin_id="$id"
-            log "custom plugin $plugin_name ($plugin_id) was successfully uploaded!"
-            found=1
-            break
-        fi
+        log "deleting plugin version $plugin_version_id"
+        confluent ccpm plugin version delete $plugin_version_id --plugin $plugin_id --environment $ENVIRONMENT --force
     done
-else
-    logerror "❌ command failed with error code $ret!"
-    exit 1
 fi
 set -e
-if [ $found -eq 0 ]
+
+log "Create a custom plugin $plugin_name in environment $ENVIRONMENT"
+output=$(confluent ccpm plugin create --name $plugin_name --description "Custom S3 Sink Connector" --cloud "aws" --environment $ENVIRONMENT --output json)
+if [ $ret -eq 0 ]
 then
-     logerror "❌ plugin could not be uploaded !"
-     exit 1
+    plugin_id=$(echo $output | jq -r '.id')
+    log "custom plugin $plugin_name ($plugin_id) was successfully created!"
+else
+    logerror "❌ command failed with error code $ret!"
+    echo "$output"
+    exit 1
 fi
 
+log "Uploading custom plugin $plugin_name version $S3_VERSION with plugin id $plugin_id in environment $ENVIRONMENT"
+output=$(confluent ccpm plugin version create --plugin $plugin_id --plugin-file "confluentinc-kafka-connect-s3-$S3_VERSION.zip" --version "$S3_VERSION" --connector-classes "io.confluent.connect.s3.S3SinkConnector:SINK" --sensitive-properties "aws.secret.access.key" --environment $ENVIRONMENT --output json)
+if [ $ret -eq 0 ]
+then
+    plugin_version_id=$(echo $output | jq -r '.id')
+    log "custom plugin version $S3_VERSION with id $plugin_version_id was successfully created!"
+else
+    logerror "❌ command failed with error code $ret!"
+    echo "$output"
+    exit 1
+fi
+
+function cleanup_resources {
+    log "Do you want to delete the custom plugin $plugin_name ($plugin_id), plugin version $plugin_version_id and custom connector $connector_name ?"
+    check_if_continue
+
+    playground connector delete --connector $connector_name
+    confluent ccpm plugin version delete $plugin_version_id --plugin $plugin_id --environment $ENVIRONMENT --force
+    confluent ccpm plugin delete $plugin_id --environment $ENVIRONMENT --force
+}
+trap cleanup_resources EXIT
+
 handle_aws_credentials
-
-bootstrap_ccloud_environment
-
-
 
 AWS_BUCKET_NAME=pg-bucket-${USER}
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
@@ -132,6 +138,7 @@ playground connector create-or-update --connector $connector_name << EOF
 {
     "confluent.connector.type": "CUSTOM",
     "confluent.custom.plugin.id": "$plugin_id",
+    "confluent.custom.plugin.version": "$S3_VERSION",
     "confluent.custom.connection.endpoints": "s3.$AWS_REGION.amazonaws.com:443:TCP",
     "connector.class": "io.confluent.connect.s3.S3SinkConnector",
 

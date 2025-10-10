@@ -4,16 +4,22 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f iceberg-iceberg-kafka-connect-1.9.2.zip ]
+ICEBERG_VERSION=${ICEBERG_VERSION:-"1.9.2"}
+cd ../../ccloud/custom-connector-connect-iceberg-sink
+if [ ! -f iceberg-iceberg-kafka-connect-$ICEBERG_VERSION.zip ]
 then
-    log "Downloading iceberg-iceberg-kafka-connect-1.9.2.zip from confluent hub"
-    wget -q https://hub-downloads.confluent.io/api/plugins/iceberg/iceberg-kafka-connect/versions/1.9.2/iceberg-iceberg-kafka-connect-1.9.2.zip
+    log "Downloading iceberg-iceberg-kafka-connect-$ICEBERG_VERSION.zip from confluent hub"
+    wget -q https://hub-downloads.confluent.io/api/plugins/iceberg/iceberg-kafka-connect/versions/$ICEBERG_VERSION/iceberg-iceberg-kafka-connect-$ICEBERG_VERSION.zip
 fi
 
-plugin_name="pg_${USER}_apache_iceberg_sink_1_9_2"
+plugin_name="pg_${USER}_apache_iceberg_sink"
+
+bootstrap_ccloud_environment
+
+ENVIRONMENT=$(playground state get ccloud.ENVIRONMENT)
 
 set +e
-for row in $(confluent connect custom-plugin list --output json | jq -r '.[] | @base64'); do
+for row in $(confluent ccpm plugin list --environment $ENVIRONMENT --output json | jq -r '.[] | @base64'); do
     _jq() {
     echo ${row} | base64 -d | jq -r ${1}
     }
@@ -23,64 +29,64 @@ for row in $(confluent connect custom-plugin list --output json | jq -r '.[] | @
 
     if [[ "$name" = "$plugin_name" ]]
     then
-        log "deleting plugin $id ($name)"
-        confluent connect custom-plugin delete $id --force
+        plugin_id=$id
+        log "deleting plugin $plugin_id ($name)"
+        confluent ccpm plugin delete $plugin_id --environment $ENVIRONMENT --force
     fi
 done
-set -e
-
-log "Uploading custom plugin $plugin_name"
-confluent connect custom-plugin create $plugin_name --plugin-file iceberg-iceberg-kafka-connect-1.9.2.zip --connector-class org.apache.iceberg.connect.IcebergSinkConnector --connector-type SINK --sensitive-properties "iceberg.kafka.sasl.jaas.config"
-ret=$?
-
-function cleanup_resources {
-    log "Do you want to delete the custom plugin $plugin_name ($plugin_id) and custom connector $connector_name ?"
-    check_if_continue
-
-    playground connector delete --connector $connector_name
-    confluent connect custom-plugin delete $plugin_id --force
-}
-trap cleanup_resources EXIT
-
-set -e
-if [ $ret -eq 0 ]
+if [ "$plugin_id" != "" ]
 then
-    found=0
-    set +e
-    for row in $(confluent connect custom-plugin list --output json | jq -r '.[] | @base64'); do
+    for row in $(confluent ccpm plugin version list --plugin $plugin_id --environment $ENVIRONMENT --output json | jq -r '.[] | @base64'); do
         _jq() {
         echo ${row} | base64 -d | jq -r ${1}
         }
         
-        id=$(echo $(_jq '.id'))
+        plugin_version_id=$(echo $(_jq '.id'))
         name=$(echo $(_jq '.name'))
 
-        if [[ "$name" = "$plugin_name" ]]
-        then
-            plugin_id="$id"
-            log "custom plugin $plugin_name ($plugin_id) was successfully uploaded!"
-            found=1
-            break
-        fi
+        log "deleting plugin version $plugin_version_id"
+        confluent ccpm plugin version delete $plugin_version_id --plugin $plugin_id --environment $ENVIRONMENT --force
     done
-else
-    logerror "❌ command failed with error code $ret!"
-    exit 1
 fi
 set -e
-if [ $found -eq 0 ]
+
+log "Create a custom plugin $plugin_name in environment $ENVIRONMENT"
+output=$(confluent ccpm plugin create --name $plugin_name --description "Custom Iceberg Sink Connector" --cloud "aws" --environment $ENVIRONMENT --output json)
+if [ $ret -eq 0 ]
 then
-     logerror "❌ plugin could not be uploaded !"
-     exit 1
+    plugin_id=$(echo $output | jq -r '.id')
+    log "custom plugin $plugin_name ($plugin_id) was successfully created!"
+else
+    logerror "❌ command failed with error code $ret!"
+    echo "$output"
+    exit 1
 fi
+
+log "Uploading custom plugin $plugin_name version $ICEBERG_VERSION with plugin id $plugin_id in environment $ENVIRONMENT"
+output=$(confluent ccpm plugin version create --plugin $plugin_id --plugin-file "iceberg-iceberg-kafka-connect-$ICEBERG_VERSION.zip" --version "$ICEBERG_VERSION" --connector-classes "io.confluent.connect.iceberg.IcebergSinkConnector:SINK" --sensitive-properties "iceberg.kafka.sasl.jaas.config" --environment $ENVIRONMENT --output json)
+if [ $ret -eq 0 ]
+then
+    plugin_version_id=$(echo $output | jq -r '.id')
+    log "custom plugin version $ICEBERG_VERSION with id $plugin_version_id was successfully created!"
+else
+    logerror "❌ command failed with error code $ret!"
+    echo "$output"
+    exit 1
+fi
+
+function cleanup_resources {
+    log "Do you want to delete the custom plugin $plugin_name ($plugin_id), plugin version $plugin_version_id and custom connector $connector_name ?"
+    check_if_continue
+
+    playground connector delete --connector $connector_name
+    confluent ccpm plugin version delete $plugin_version_id --plugin $plugin_id --environment $ENVIRONMENT --force
+    confluent ccpm plugin delete $plugin_id --environment $ENVIRONMENT --force
+}
+trap cleanup_resources EXIT
 
 NGROK_AUTH_TOKEN=${NGROK_AUTH_TOKEN:-$1}
 
 display_ngrok_warning
-
-bootstrap_ccloud_environment
-
-
 
 set +e
 playground topic delete --topic payments
@@ -144,6 +150,7 @@ playground connector create-or-update --connector $connector_name << EOF
 {
   "confluent.connector.type": "CUSTOM",
   "confluent.custom.plugin.id": "$plugin_id",
+  "confluent.custom.plugin.version": "$ICEBERG_VERSION",
   "confluent.custom.connection.endpoints": "$NGROK_HOSTNAME:$NGROK_PORT:TCP;$NGROK_HOSTNAME2:$NGROK_PORT2:TCP",
   "connector.class": "org.apache.iceberg.connect.IcebergSinkConnector",
 
