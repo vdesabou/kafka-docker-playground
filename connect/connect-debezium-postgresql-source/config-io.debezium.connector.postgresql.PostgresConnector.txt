@@ -1,16 +1,34 @@
 ==========================
-Transforms: unwrap
+Transforms: addTopicSuffix
 ==========================
-🔘 transforms.unwrap.type
+🔘 transforms.addTopicSuffix.type
 
-Class for the 'unwrap' transformation.
+Class for the 'addTopicSuffix' transformation.
 
 	 - Type: CLASS
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 transforms.unwrap.negate
+🔘 transforms.addTopicSuffix.regex
+
+Regular expression to use for matching.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.addTopicSuffix.replacement
+
+Replacement string.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.addTopicSuffix.negate
 
 Whether the configured predicate should be negated.
 
@@ -19,7 +37,7 @@ Whether the configured predicate should be negated.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 transforms.unwrap.predicate
+🔘 transforms.addTopicSuffix.predicate
 
 The alias of a predicate used to determine whether to apply this transformation.
 
@@ -27,105 +45,6 @@ The alias of a predicate used to determine whether to apply this transformation.
 	 - Default: null
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 transforms.unwrap.delete.handling.mode
-
-How to handle delete records. Options are: none - records are passed,drop - records are removed (the default),rewrite - __deleted field is added to records.Note: This option is scheduled for removal in a future release, use "delete.tombstone.handling.mode" instead
-
-	 - Type: STRING
-	 - Default: drop
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 transforms.unwrap.delete.tombstone.handling.mode
-
-How to handle delete records. Options are: drop - Remove the delete event and tombstone from the stream.tombstone (default) - For each delete event, leave only a tombstone in the stream.rewrite - Remove tombstone from the record, and add a `__deleted` field with the value `true`.rewrite-with-tombstone - Retain tombstone in record and add a `__deleted` field with the value `true`.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 transforms.unwrap.add.fields
-
-
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Adds each field listed, prefixed with __ (or __<struct>_ if the struct is specified). Example: 'version,connector,source.ts_ms' would add __version, __connector and __source_ts_ms fields. Optionally one can also map new field name like version:VERSION,connector:CONNECTOR,source.ts_ms:EVENT_TIMESTAMP.Please note that the new field name is case-sensitive.
-	 - Required: LOW
-
-🔘 transforms.unwrap.add.fields.prefix
-
-Adds this prefix to each field listed.
-
-	 - Type: STRING
-	 - Default: __
-	 - Importance: LOW
-	 - Required: false
-
-🔘 transforms.unwrap.add.headers
-
-
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Adds each field listed to the header,  __ (or __<struct>_ if the struct is specified). Example: 'version,connector,source.ts_ms' would add __version, __connector and __source_ts_ms fields. Optionally one can also map new field name like version:VERSION,connector:CONNECTOR,source.ts_ms:EVENT_TIMESTAMP.Please note that the new field name is case-sensitive.
-	 - Required: LOW
-
-🔘 transforms.unwrap.add.headers.prefix
-
-Adds this prefix listed to each header.
-
-	 - Type: STRING
-	 - Default: __
-	 - Importance: LOW
-	 - Required: false
-
-🔘 transforms.unwrap.drop.fields.from.key
-
-Specifies whether to apply the drop fields behavior to the event key as well as the value. Default behavior is to only remove fields from the event value, not the key.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
-	 - Required: false
-
-🔘 transforms.unwrap.drop.fields.header.name
-
-Specifies the name of a header that contains a list of fields to be removed from the event value.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: LOW
-	 - Required: false
-
-🔘 transforms.unwrap.drop.fields.keep.schema.compatible
-
-Controls the output event's schema compatibility when using the drop fields feature. `true`: dropped fields are removed if the schema indicates its optional leaving the schemas unchanged, `false`: dropped fields are removed from the key/value schemas, regardless of optionality.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: LOW
-	 - Required: false
-
-🔘 transforms.unwrap.drop.tombstones
-
-Debezium by default generates a tombstone record to enable Kafka compaction after a delete record was generated. This record is usually filtered out to avoid duplicates as a delete record is converted to a tombstone record, tooNote: This option is scheduled for removal in a future release, use "delete.tombstone.handling.mode" instead
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: LOW
-	 - Required: false
-
-🔘 transforms.unwrap.route.by.field
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The column which determines how the events will be routed, the value will replace the topic name.
-	 - Required: LOW
 
 ==========================
 Postgres
