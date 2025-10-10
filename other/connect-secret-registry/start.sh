@@ -57,7 +57,7 @@ EOF
 sleep 5
 
 log "Verify we have received the data in file"
-docker exec connect cat /tmp/output.json
+docker exec connect cat /tmp/output.json | grep "Dirty car"
 
 # Struct{f1=This is a message sent with RBAC SASL/PLAIN authentication 1,AddedBySMT=this-is-my-secret-value}
 # Struct{f1=This is a message sent with RBAC SASL/PLAIN authentication 2,AddedBySMT=this-is-my-secret-value}
