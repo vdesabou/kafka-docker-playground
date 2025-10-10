@@ -312,11 +312,11 @@ Specifies how the connector should react to exceptions during processing of even
 
 🔘 column.exclude.list
 
-To match the name of a column, Debezium applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire name string of the column; it does not match substrings that might be present in a column name.
+To match the name of a column, Debezium applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire name string of the column; it does not match substrings that might be present in a column name. Do not set ``column.include.list`` if you set this property.
 
 	 - Type: false
 	 - Default: LIST
-	 - Importance: An optional, comma-separated list of regular expressions that match the fully-qualified names of columns to exclude from change event record values. Fully-qualified names for columns are of the form `schemaName.tableName.columnName`. 
+	 - Importance: An optional, comma-separated list of regular expressions that match the fully-qualified names of columns to exclude from change event record values. Fully-qualified names for columns are of the form `databaseName.tableName.columnName`. 
 	 - Required: MEDIUM
 
 🔘 schema.name.adjustment.mode
