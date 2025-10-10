@@ -335,6 +335,7 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git pull
           git checkout -- scripts/cli/confluent-hub-plugin-list.txt
+          git checkout -- other/secrets-management/secrets/my-config-file.properties
           git add .
           git diff --cached --quiet || git commit -m "updated config file with latest version"
           git push
@@ -546,6 +547,7 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git pull
           git checkout -- scripts/cli/confluent-hub-plugin-list.txt
+          git checkout -- other/secrets-management/secrets/my-config-file.properties
           git add .
           git diff --cached --quiet || git commit -m "updated config file with latest version"
           git push
