@@ -68,6 +68,36 @@ This config key only applies to data preview requests and governs whether the da
 	 - Required: false
 
 ==========================
+Auth Mode
+==========================
+🔘 authentication.method
+
+Select how you want to authenticate the DB. Username Password or Google cloud service account impersonation.
+
+	 - Type: STRING
+	 - Default: Password
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing integration that has access to your resource. In case you need to integrate a new Google Service Account, use provider integration
+	 - Required: HIGH
+
+🔘 database.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Password of the PostgreSQL database user that has the required authorization.
+	 - Required: HIGH
+
+==========================
 How should we connect to your database?
 ==========================
 🔘 database.hostname
@@ -95,15 +125,6 @@ How should we connect to your database?
 	 - Type: true
 	 - Default: STRING
 	 - Importance: The name of the PostgreSQL database user that has the required authorization.
-	 - Required: HIGH
-
-🔘 database.password
-
-
-
-	 - Type: true
-	 - Default: PASSWORD
-	 - Importance: Password of the PostgreSQL database user that has the required authorization.
 	 - Required: HIGH
 
 🔘 database.dbname

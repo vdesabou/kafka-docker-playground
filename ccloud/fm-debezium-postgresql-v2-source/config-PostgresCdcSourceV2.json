@@ -1,4 +1,5 @@
     "after.state.only": "false",
+    "authentication.method": "Password",
     "auto.restart.on.user.error": "true",
     "column.exclude.list": "LIST",
     "connector.class": "STRING",
@@ -27,6 +28,7 @@
     "offsets.storage.topic": "STRING",
     "output.data.format": "JSON",
     "output.key.format": "JSON",
+    "provider.integration.id": "STRING",
     "publication.autocreate.mode": "all_tables",
     "publication.name": "dbz_publication",
     "publish.via.partition.root": "false",
