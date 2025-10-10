@@ -74,75 +74,6 @@ How should we connect to your data?
 	 - Required: HIGH
 
 ==========================
-Azure credentials
-==========================
-🔘 provider.integration.id
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Azure provider-integration to mint Microsoft Entra ID application tokens.
-	 - Required: HIGH
-
-🔘 authentication.method
-
-How Confluent Cloud authenticates with Azure.
-
-	 - Type: STRING
-	 - Default: Storage Account Key
-	 - Importance: HIGH
-	 - Required: false
-
-🔘 azure.datalake.gen2.access.key
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Access Key for the storage account.
-	 - Required: HIGH
-
-🔘 azure.datalake.gen2.client.id
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The client ID (GUID) of the client obtained from Azure Active Directory configuration.
-	 - Required: HIGH
-
-🔘 azure.datalake.gen2.client.key
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The secret key of the client.
-	 - Required: HIGH
-
-🔘 azure.datalake.gen2.token.endpoint
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The OAuth 2.0 token endpoint associated with the user's directory (obtain from Active Directory configuration)
-	 - Required: HIGH
-
-==========================
-How should we connect to your ADLS Gen2 storage account?
-==========================
-🔘 azure.datalake.gen2.account.name
-
-
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Must be between 3-23 alphanumeric characters.
-	 - Required: HIGH
-
-==========================
 Kafka Cluster credentials
 ==========================
 🔘 kafka.auth.mode
@@ -192,6 +123,57 @@ Top-level directory where ingested data is stored. The `topics.dir` entry should
 	 - Default: topics
 	 - Importance: HIGH
 	 - Required: false
+
+==========================
+How should we connect to your ADLS Gen2 storage account?
+==========================
+🔘 azure.datalake.gen2.account.name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Must be between 3-23 alphanumeric characters.
+	 - Required: HIGH
+
+🔘 azure.datalake.gen2.access.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Access Key for the storage account.
+	 - Required: HIGH
+
+==========================
+How should we connect to your Active Directory?
+==========================
+🔘 azure.datalake.gen2.client.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The client ID (GUID) of the client obtained from Azure Active Directory configuration.
+	 - Required: HIGH
+
+🔘 azure.datalake.gen2.client.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The secret key of the client.
+	 - Required: HIGH
+
+🔘 azure.datalake.gen2.token.endpoint
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The OAuth 2.0 token endpoint associated with the user's directory (obtain from Active Directory configuration)
+	 - Required: HIGH
 
 ==========================
 Output messages

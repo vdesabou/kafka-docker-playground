@@ -1,4 +1,3 @@
-    "authentication.method": "Storage Account Key",
     "auto.restart.on.user.error": "true",
     "azure.datalake.gen2.access.key": "PASSWORD",
     "azure.datalake.gen2.account.name": "STRING",
@@ -22,7 +21,6 @@
     "output.data.format": "${input.data.format}",
     "parquet.codec": "STRING",
     "path.format": "'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH",
-    "provider.integration.id": "STRING",
     "rotate.interval.ms": "${time.interval}",
     "rotate.schedule.interval.ms": "-1",
     "schema.context.name": "default",
