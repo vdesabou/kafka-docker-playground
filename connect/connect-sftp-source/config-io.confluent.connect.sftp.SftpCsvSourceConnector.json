@@ -9,6 +9,7 @@
     "csv.ignore.quotations": "false",
     "csv.keep.carriage.return": "false",
     "csv.null.field.indicator": "NEITHER",
+    "csv.null.field.mode": "BOTH",
     "csv.pre.validate.file.enabled": "false",
     "csv.quote.char": "34",
     "csv.rfc.4180.parser.enabled": "false",
