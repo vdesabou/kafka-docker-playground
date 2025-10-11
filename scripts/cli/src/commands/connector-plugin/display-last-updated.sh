@@ -3,8 +3,14 @@ vendor="${args[--vendor]}"
 
 if [ ! -f $root_folder/scripts/cli/confluent-hub-plugin-list.txt ]
 then
-    logwarn "file $root_folder/scripts/cli/confluent-hub-plugin-list.txt not found. Generating it now, it may take a while..."
+    log "file $root_folder/scripts/cli/confluent-hub-plugin-list.txt not found. Generating it now, it may take a while..."
     playground generate-connector-plugin-list
+fi
+
+if [ ! -f $root_folder/scripts/cli/confluent-hub-plugin-list.txt ]
+then
+    logerror "file $root_folder/scripts/cli/confluent-hub-plugin-list.txt could not be generated"
+    exit 1
 fi
 
 if [[ -n "$vendor" ]]
@@ -14,7 +20,7 @@ else
     log "🆕 Listing last updated connector plugins (within $days days) for all vendors"
 fi
 
-for plugin in $(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt)
+for plugin in $(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | cut -d "|" -f 1)
 do
     if [[ -n "$vendor" && ! "$plugin" =~ $vendor ]]
     then

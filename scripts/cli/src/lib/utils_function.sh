@@ -1476,6 +1476,9 @@ function get_3rdparty_file () {
     folder="repro-files"
   fi
   set +e
+  log "attempting to get the file $file from Confluent S3 bucket (only works for Confluent employees when aws creds are set)..."
+  log "command is <aws s3 ls s3://kafka-docker-playground/$folder/$file"
+  handle_aws_credentials
   aws s3 ls s3://kafka-docker-playground/$folder/$file > /dev/null 2>&1
   if [ $? -eq 0 ]
   then

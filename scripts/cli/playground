@@ -7990,7 +7990,7 @@ function get_plugin_list() {
     fzf_option_rounded=""
   fi
 
-  res=$(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔌" --header="select connector plugin" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+  res=$(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | cut -d "|" -f 1 | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔌" --header="select connector plugin" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
 }
 
 function choose_connector_tag() {
@@ -10658,6 +10658,9 @@ function get_3rdparty_file () {
     folder="repro-files"
   fi
   set +e
+  log "attempting to get the file $file from Confluent S3 bucket (only works for Confluent employees when aws creds are set)..."
+  log "command is <aws s3 ls s3://kafka-docker-playground/$folder/$file"
+  handle_aws_credentials
   aws s3 ls s3://kafka-docker-playground/$folder/$file > /dev/null 2>&1
   if [ $? -eq 0 ]
   then
@@ -13189,12 +13192,12 @@ function wait_for_end_of_hibernation () {
 function connect_cp_version_greater_than_8 () {
   if [ ! -z "$CP_CONNECT_TAG" ] && version_gt $CP_CONNECT_TAG "7.9.99"
   then
-    return 1
+    return 0
   elif [ ! -z "$TAG_BASE" ] && version_gt $TAG_BASE "7.9.99"
   then
-    return 1
-  else
     return 0
+  else
+    return 1
   fi
 }
 
@@ -13579,11 +13582,36 @@ playground_generate_tag_list_command() {
 playground_generate_connector_plugin_list_command() {
 
   # src/commands/generate-connector-plugin-list.sh
-  curl -s -S 'https://api.hub.confluent.io/api/plugins?per_page=100000' | jq '. | sort_by(.release_date) | reverse | .' > /tmp/allmanis.json
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
 
-  jq -r '.[] | "\(.owner.username)/\(.name)"' /tmp/allmanis.json | sort | uniq > $root_folder/scripts/cli/confluent-hub-plugin-list.txt
+  tmp_file=$tmp_dir/confluent-hub-plugin-list.txt
+  tmp_file2=$tmp_dir/allmanis.json
 
-  rm -f /tmp/allmanis.json
+  curl -s -S 'https://api.hub.confluent.io/api/plugins?per_page=100000' | jq '. | sort_by(.release_date) | reverse | .' > $tmp_file2
+
+  jq -r '.[] | "\(.owner.username)/\(.name)|\(.source_url)"' $tmp_file2 | sort | uniq > $tmp_file
+
+  rm -f $tmp_file2
+
+  cd $tmp_dir > /dev/null
+  get_3rdparty_file "confluent-plugin-sourcecode-mapping-list.txt"
+  cd - > /dev/null
+
+  if [ -f $tmp_dir/confluent-plugin-sourcecode-mapping-list.txt ]
+  then
+      # confluent only
+      grep -v confluentinc $tmp_file > $tmp_file2
+      cat $tmp_dir/confluent-plugin-sourcecode-mapping-list.txt >> $tmp_file2
+      cat $tmp_file2 | sort | uniq > $tmp_file
+  fi
+
+  cp $tmp_file $root_folder/scripts/cli/confluent-hub-plugin-list.txt
 }
 
 # :command.function
@@ -24419,7 +24447,7 @@ playground_connector_plugin_display_last_updated_command() {
       log "🆕 Listing last updated connector plugins (within $days days) for all vendors"
   fi
 
-  for plugin in $(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt)
+  for plugin in $(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | cut -d "|" -f 1)
   do
       if [[ -n "$vendor" && ! "$plugin" =~ $vendor ]]
       then
