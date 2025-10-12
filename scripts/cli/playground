@@ -930,6 +930,35 @@ playground_get_predefined_schemas_usage() {
 }
 
 # :command.usage
+playground_update_cache_versions_usage() {
+  printf "playground update-cache-versions\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground update-cache-versions\n"
+  printf "  playground update-cache-versions --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_environment_variables
+    printf "%s\n" "$(bold "Environment Variables:")"
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "GH_TOKEN")"
+    printf "    GH_TOKEN\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_update_readme_usage() {
   printf "playground update-readme\n\n"
 
@@ -14009,6 +14038,18 @@ playground_get_predefined_schemas_command() {
   cur="${args[cur]}"
 
   get_predefined_schemas_with_fzf "$cur"
+}
+
+# :command.function
+playground_update_cache_versions_command() {
+
+  # src/commands/update-cache-versions.sh
+  echo "# This file is located at 'src/commands/update-cache-versions.sh'."
+  echo "# It contains the implementation for the 'playground update-cache-versions' command."
+  echo "# The code you write here will be wrapped by a function named 'playground_update_cache_versions_command()'."
+  echo "# Feel free to edit this file; your changes will persist when regenerating."
+  inspect_args
+
 }
 
 # :command.function
@@ -28864,6 +28905,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    update-cache-versions)
+      action="update-cache-versions"
+      shift
+      playground_update_cache_versions_parse_requirements "$@"
+      shift $#
+      ;;
+
     update-readme)
       action="update-readme"
       shift
@@ -30513,6 +30561,55 @@ playground_get_predefined_schemas_parse_requirements() {
           printf "invalid argument: %s\n" "$key" >&2
           exit 1
         fi
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_update_cache_versions_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_update_cache_versions_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.environment_variables_filter
+
+  env_var_names+=("GH_TOKEN")
+
+  # :command.command_filter
+  action="update-cache-versions"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
 
         ;;
 
@@ -45263,6 +45360,7 @@ run() {
     "get-any-file-with-fzf") playground_get_any_file_with_fzf_command ;;
     "get-playground-repro-export-with-fzf") playground_get_playground_repro_export_with_fzf_command ;;
     "get-predefined-schemas") playground_get_predefined_schemas_command ;;
+    "update-cache-versions") playground_update_cache_versions_command ;;
     "update-readme") playground_update_readme_command ;;
     "force-ci") playground_force_ci_command ;;
     "update-docs") playground_update_docs_command ;;
