@@ -2554,22 +2554,8 @@
         },
         {
           "name": "sourcecode",
-          "description": "🧑‍💻 work with source code\n  \n",
-          "usage": "playground connector-plugin sourcecode COMMAND",
-          "options": []
-        }
-      ]
-    },
-    {
-      "name": "sourcecode",
-      "description": "🧑‍💻 work with source code\n",
-      "usage": "playground connector-plugin sourcecode COMMAND",
-      "options": [],
-      "subcommands": [
-        {
-          "name": "open",
-          "description": "🏹 open on github\n  \n",
-          "usage": "playground connector-plugin sourcecode open [OPTIONS]",
+          "description": "🧑‍💻 open source code url\n  \n  You can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode\n  \n",
+          "usage": "playground connector-plugin sourcecode [OPTIONS]",
           "options": [
             {
               "names": [

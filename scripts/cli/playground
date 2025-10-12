@@ -155,7 +155,7 @@ playground_usage() {
   printf "  %s   ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/ Search for specific class and display method signatures\n" "$(green "connector-plugin search-jar")               "
   printf "  %s   💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "connector-plugin versions")                 "
   printf "  %s   🆕 List last updated connector plugins from confluent hub https://www.confluent.io/hub/\n" "$(green "connector-plugin display-last-updated")     "
-  printf "  %s   🧑‍💻 work with source code\n" "$(green "connector-plugin sourcecode")               "
+  printf "  %s   🧑‍💻 open source code url\n" "$(green "connector-plugin sourcecode")               "
   echo
   printf "%s\n" "$(bold "Connector commands:")"
   printf "  %s   🔗 Connector commands\n" "$(green "connector")                                 "
@@ -5477,7 +5477,7 @@ playground_connector_plugin_usage() {
   printf "  %s   ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/ Search for specific class and display method signatures\n" "$(green "search-jar")          "
   printf "  %s   💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "versions")            "
   printf "  %s   🆕 List last updated connector plugins from confluent hub https://www.confluent.io/hub/\n" "$(green "display-last-updated")"
-  printf "  %s   🧑‍💻 work with source code\n" "$(green "sourcecode")          "
+  printf "  %s   🧑‍💻 open source code url\n" "$(green "sourcecode")          "
   echo
 
   # :command.long_usage
@@ -5620,44 +5620,14 @@ playground_connector_plugin_display_last_updated_usage() {
 playground_connector_plugin_sourcecode_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector-plugin sourcecode\n\n"
-    printf "  🧑‍💻 work with source code\n\n"
+    printf "  🧑‍💻 open source code url\n  \n  You can compare different sourcecode versions by specifying --connector-tag\n  two times, in such case it will open github in comparison mode\n\n"
   else
-    printf "playground connector-plugin sourcecode - 🧑‍💻 work with source code\n\n"
+    printf "playground connector-plugin sourcecode - 🧑‍💻 open source code url\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground connector-plugin sourcecode COMMAND\n"
-  printf "  playground connector-plugin sourcecode [COMMAND] --help | -h\n"
-  echo
-  # :command.usage_commands
-  printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   🏹 open on github\n" "$(green "open")"
-  echo
-
-  # :command.long_usage
-  if [[ -n "$long_usage" ]]; then
-    printf "%s\n" "$(bold "== Options ==")"
-
-    # :command.usage_fixed_flags
-    printf "  %s\n" "$(magenta "--help, -h")"
-    printf "    Show this help\n"
-    echo
-
-  fi
-}
-
-# :command.usage
-playground_connector_plugin_sourcecode_open_usage() {
-  if [[ -n $long_usage ]]; then
-    printf "playground connector-plugin sourcecode open\n\n"
-    printf "  🏹 open on github\n\n"
-  else
-    printf "playground connector-plugin sourcecode open - 🏹 open on github\n\n"
-  fi
-
-  printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground connector-plugin sourcecode open [OPTIONS]\n"
-  printf "  playground connector-plugin sourcecode open --help | -h\n"
+  printf "  playground connector-plugin sourcecode [OPTIONS]\n"
+  printf "  playground connector-plugin sourcecode --help | -h\n"
   echo
 
   # :command.long_usage
@@ -24556,9 +24526,9 @@ playground_connector_plugin_display_last_updated_command() {
 }
 
 # :command.function
-playground_connector_plugin_sourcecode_open_command() {
+playground_connector_plugin_sourcecode_command() {
 
-  # src/commands/connector-plugin/sourcecode/open.sh
+  # src/commands/connector-plugin/sourcecode.sh
   connector_plugin="${args[--connector-plugin]}"
   connector_tags="${args[--connector-tag]}"
 
@@ -24607,7 +24577,7 @@ playground_connector_plugin_sourcecode_open_command() {
   is_fully_managed=0
   if [[ "$connector_plugin" == *"confluentinc"* ]] && [[ "$connector_plugin" != *"-"* ]]
   then
-      log "🧩 connector was identified as fully managed connector"
+      log "🌥️ connector was identified as fully managed connector"
       is_fully_managed=1
   fi
 
@@ -41440,75 +41410,7 @@ playground_connector_plugin_sourcecode_parse_requirements() {
   done
 
   # :command.command_filter
-  action=${1:-}
-
-  case $action in
-    -*) ;;
-
-    open)
-      action="open"
-      shift
-      playground_connector_plugin_sourcecode_open_parse_requirements "$@"
-      shift $#
-      ;;
-
-    # :command.command_fallback
-    "")
-      playground_connector_plugin_sourcecode_usage >&2
-      exit 1
-      ;;
-
-    *)
-      printf "invalid command: %s\n" "$action" >&2
-      exit 1
-      ;;
-
-  esac
-
-  # :command.parse_requirements_while
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-
-      -?*)
-        printf "invalid option: %s\n" "$key" >&2
-        exit 1
-        ;;
-
-      *)
-        # :command.parse_requirements_case
-        # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
-
-        ;;
-
-    esac
-  done
-
-}
-
-# :command.parse_requirements
-playground_connector_plugin_sourcecode_open_parse_requirements() {
-  # :command.fixed_flags_filter
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-      --help | -h)
-        long_usage=yes
-        playground_connector_plugin_sourcecode_open_usage
-        exit
-        ;;
-
-      *)
-        break
-        ;;
-
-    esac
-  done
-
-  # :command.command_filter
-  action="connector-plugin sourcecode open"
+  action="connector-plugin sourcecode"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -45219,7 +45121,6 @@ run() {
     "connector-plugin versions") playground_connector_plugin_versions_command ;;
     "connector-plugin display-last-updated") playground_connector_plugin_display_last_updated_command ;;
     "connector-plugin sourcecode") playground_connector_plugin_sourcecode_command ;;
-    "connector-plugin sourcecode open") playground_connector_plugin_sourcecode_open_command ;;
     "connector") playground_connector_command ;;
     "connector status") playground_connector_status_command ;;
     "connector oracle-cdc-xstream") playground_connector_oracle_cdc_xstream_command ;;

@@ -3565,13 +3565,10 @@ commands:
       playground connector-plugin display-last-updated --days 7 --vendor confluentinc
   - name: sourcecode
     help: |
-      🧑‍💻 work with source code
+      🧑‍💻 open source code url
 
-    commands:
-    - name: open
-      help: |
-        🏹 open on github
-      flags:
+      You can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode
+    flags:
       - *connector-plugin
       - long: --connector-tag
         arg: connector_tag
