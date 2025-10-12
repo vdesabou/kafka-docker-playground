@@ -3563,7 +3563,18 @@ commands:
     examples: |
       playground connector-plugin display-last-updated --days 7
       playground connector-plugin display-last-updated --days 7 --vendor confluentinc
+  - name: sourcecode
+    help: |
+      🧑‍💻 work with source code
 
+    commands:
+    - name: open
+      help: |
+        🏹 open on github
+      flags:
+      - *connector-plugin
+      - *connector-tag
+      
 - name: connector
   expose: always
   group: Connector

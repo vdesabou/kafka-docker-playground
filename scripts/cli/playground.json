@@ -2551,6 +2551,42 @@
               "description": "🏢 Only display results for this vendor\n"
             }
           ]
+        },
+        {
+          "name": "sourcecode",
+          "description": "🧑‍💻 work with source code\n  \n",
+          "usage": "playground connector-plugin sourcecode COMMAND",
+          "options": []
+        }
+      ]
+    },
+    {
+      "name": "sourcecode",
+      "description": "🧑‍💻 work with source code\n",
+      "usage": "playground connector-plugin sourcecode COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "open",
+          "description": "🏹 open on github\n  \n",
+          "usage": "playground connector-plugin sourcecode open [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--connector-plugin",
+                "-c"
+              ],
+              "argument": "CONNECTOR-PLUGIN",
+              "description": "🔌 Connector plugin name\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--connector-tag"
+              ],
+              "argument": "CONNECTOR_TAG",
+              "description": "🔗 Connector version to use\n\nBy default, for each connector, the latest available version on Confluent Hub is used\n\n🎓 Tip: set to \" \" in order to select the version dynamically\n\nConflicts with: --connector-zip\n"
+            }
+          ]
         }
       ]
     },

@@ -2959,6 +2959,48 @@ subcommands:
           description: | 
             🏢 Only display results for this vendor
             
+      - name: sourcecode
+        description: | 
+          🧑‍💻 work with source code
+            
+        usage: playground connector-plugin sourcecode COMMAND
+        options: []
+  - name: sourcecode
+    description: | 
+        🧑‍💻 work with source code
+        
+    usage: playground connector-plugin sourcecode COMMAND
+    options: []
+    subcommands:
+      - name: open
+        description: | 
+          🏹 open on github
+            
+        usage: playground connector-plugin sourcecode open [OPTIONS]
+        options:
+        - names:
+          - --connector-plugin
+          - -c
+          argument: CONNECTOR-PLUGIN
+          description: | 
+            🔌 Connector plugin name
+            
+            🎓 Tip: use <tab> completion to trigger fzf completion
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --connector-tag
+          argument: CONNECTOR_TAG
+          description: | 
+            🔗 Connector version to use
+            
+            By default, for each connector, the latest available version on Confluent Hub is used
+            
+            🎓 Tip: set to " " in order to select the version dynamically
+            
+            Conflicts with: --connector-zip
+            
   - name: connector
     description: | 
         🔗 Connector commands
