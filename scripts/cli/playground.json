@@ -2584,7 +2584,7 @@
                 "--connector-tag"
               ],
               "argument": "CONNECTOR_TAG",
-              "description": "🔗 Connector version to use\n\nBy default, for each connector, the latest available version on Confluent Hub is used\n\n🎓 Tip: set to \" \" in order to select the version dynamically\n\nConflicts with: --connector-zip\n"
+              "description": "🔗 Connector version to use\n\nBy default, for each connector, the latest available version on Confluent Hub is used\n\n🎓 Tip: set to \" \" in order to select the version dynamically\n\n🎓 Tip: you can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode\n\nRepeatable: ✓ Yes\n"
             }
           ]
         }

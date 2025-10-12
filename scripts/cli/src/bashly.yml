@@ -3573,8 +3573,19 @@ commands:
         🏹 open on github
       flags:
       - *connector-plugin
-      - *connector-tag
-      
+      - long: --connector-tag
+        arg: connector_tag
+        repeatable: true
+        required: false
+        help: |- 
+          🔗 Connector version to use
+
+          By default, for each connector, the latest available version on Confluent Hub is used
+
+          🎓 Tip: set to " " in order to select the version dynamically
+
+          🎓 Tip: you can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode
+
 - name: connector
   expose: always
   group: Connector

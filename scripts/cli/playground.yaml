@@ -2999,7 +2999,9 @@ subcommands:
             
             🎓 Tip: set to " " in order to select the version dynamically
             
-            Conflicts with: --connector-zip
+            🎓 Tip: you can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode
+            
+            Repeatable: ✓ Yes
             
   - name: connector
     description: | 
