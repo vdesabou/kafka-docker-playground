@@ -87,13 +87,25 @@ then
             exit 1
         fi
     fi
+
+    if [ "$connector_tag1" == "\\" ]
+    then
+        ret=$(choose_connector_tag "$connector_plugin")
+        connector_tag1=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
+    fi
+
+    if [ "$connector_tag2" == "\\" ]
+    then
+        ret=$(choose_connector_tag "$connector_plugin")
+        connector_tag2=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
+    fi
     log "✨ --connector-tag flag is set 2 times, comparison mode will be opened with versions v$connector_tag1 and v$connector_tag2"
     comparison_mode_versions="v$connector_tag1...v$connector_tag2"
 else
-    connector_tag=$connector_tag1
+    connector_tag="${connector_tag_array[0]}"
     if [[ -n "$connector_tag" ]]
     then
-        if [ "$connector_tag" == " " ]
+        if [ "$connector_tag" == "\\" ]
         then
             ret=$(choose_connector_tag "$connector_plugin")
             connector_tag=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
