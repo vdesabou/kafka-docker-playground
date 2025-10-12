@@ -1611,7 +1611,23 @@ function cleanup {
   set +e
 
   connector_type=$(playground state get run.connector_type)
-  
+
+  if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
+  then
+      # playground connector-plugin display-last-updated
+    set +e
+    if ! pgrep -f "playground connector-plugin display-last-updated" > /dev/null
+    then
+      if [ -f ${connector_plugin_display_last_updated_file} ]
+      then
+        cat ${connector_plugin_display_last_updated_file}
+      fi
+    fi
+
+    playground connector versions
+    set -e
+  fi
+
   if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then
     if [ "$connector_name" != "" ]
@@ -1624,22 +1640,18 @@ function cleanup {
   fi
 
   playground open-docs --only-show-url
- 
+
+    if [ -z "$GITHUB_RUN_NUMBER" ]
+    then
+        if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] 
+        then
+            playground connector sourcecode --only-show-url
+        fi
+    fi
+
   if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
   then
-    playground connector versions
-
-    # playground connector-plugin display-last-updated
-    set +e
-    if ! pgrep -f "playground connector-plugin display-last-updated" > /dev/null
-    then
-      if [ -f ${connector_plugin_display_last_updated_file} ]
-      then
-        cat ${connector_plugin_display_last_updated_file}
-      fi
-    fi
     playground connector open-docs --only-show-url
-    set -e
   fi
   set -e
 }

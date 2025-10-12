@@ -1,5 +1,6 @@
 connector_plugin="${args[--connector-plugin]}"
 connector_tags="${args[--connector-tag]}"
+only_show_url="${args[--only-show-url]}"
 
 # Convert space-separated string to array
 IFS=' ' read -ra connector_tag_array <<< "$connector_tags"
@@ -177,11 +178,11 @@ else
     fi
 fi
 
-if [[ $(type -f open 2>&1) =~ "not found" ]]
+if [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]]
 then
-    log "🔗 Cannot open browser, use url:"
+    log "🧑‍💻🌐 sourcecode for plugin $connector_plugin$additional_text is available at:"
     echo "$sourcecode_url"
 else
-    log "🧑‍💻🌐 Opening sourcecode url $sourcecode_url for plugin $connector_plugin in browser$additional_text"
+    log "🧑‍💻 Opening sourcecode url $sourcecode_url for plugin $connector_plugin in browser$additional_text"
     open "$sourcecode_url"
 fi

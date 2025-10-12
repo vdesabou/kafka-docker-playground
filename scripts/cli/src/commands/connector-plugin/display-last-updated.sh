@@ -26,6 +26,11 @@ do
     then
         continue
     fi
+    if [[ "$vendor" == *"confluentinc"* ]] && [[ "$plugin" != *"-"* ]]
+    then
+        # fully managed connector, skipping
+        continue
+    fi
     output=$(playground connector-plugin versions --connector-plugin "$plugin" --force-refresh --last 1 | head -n 1)
     set +e
     if [[ -n "$days" ]]

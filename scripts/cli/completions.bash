@@ -493,7 +493,7 @@ _playground_completions() {
       ;;
 
     *'connector-plugin sourcecode'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector-plugin --connector-tag --help -c -h")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector-plugin --connector-tag --help --only-show-url -c -h")" -- "$cur")
       ;;
 
     *'schema set-normalize'*'--value')
@@ -817,7 +817,7 @@ _playground_completions() {
       ;;
 
     *'connector sourcecode'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector-tag --help -h")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector-tag --help --only-show-url -h")" -- "$cur")
       ;;
 
     *'topic produce'*'--value')

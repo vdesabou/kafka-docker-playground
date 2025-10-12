@@ -2979,6 +2979,12 @@ subcommands:
             Required: ✓ Yes
             
         - names:
+          - --only-show-url
+          argument: ""
+          description: | 
+            🌐 Only show url
+            
+        - names:
           - --connector-tag
           argument: CONNECTOR_TAG
           description: | 
@@ -3086,6 +3092,12 @@ subcommands:
             
         usage: playground connector sourcecode [OPTIONS]
         options:
+        - names:
+          - --only-show-url
+          argument: ""
+          description: | 
+            🌐 Only show url
+            
         - names:
           - --connector-tag
           argument: CONNECTOR_TAG

@@ -5642,6 +5642,11 @@ playground_connector_plugin_sourcecode_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--only-show-url")"
+    printf "    🌐 Only show url\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG (repeatable)")"
     printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n    \n    🎓 Tip: you can compare different sourcecode versions by specifying\n    --connector-tag two times, in such case it will open github in comparison\n    mode\n"
     echo
@@ -6117,6 +6122,11 @@ playground_connector_sourcecode_usage() {
     printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--only-show-url")"
+    printf "    🌐 Only show url\n"
+    echo
+
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG (repeatable)")"
     printf "    🔗 Connector version to use\n    \n    By default, for each connector, the current version is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n    \n    🎓 Tip: you can compare different sourcecode versions by specifying\n    --connector-tag two times, in such case it will open github in comparison\n    mode\n"
@@ -16654,6 +16664,22 @@ playground_run_command() {
 
     connector_type=$(playground state get run.connector_type)
 
+    if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
+    then
+        # playground connector-plugin display-last-updated
+      set +e
+      if ! pgrep -f "playground connector-plugin display-last-updated" > /dev/null
+      then
+        if [ -f ${connector_plugin_display_last_updated_file} ]
+        then
+          cat ${connector_plugin_display_last_updated_file}
+        fi
+      fi
+
+      playground connector versions
+      set -e
+    fi
+
     if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
     then
       if [ "$connector_name" != "" ]
@@ -16667,21 +16693,18 @@ playground_run_command() {
 
     playground open-docs --only-show-url
 
+      if [ -z "$GITHUB_RUN_NUMBER" ]
+      then
+          if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
+
+          then
+              playground connector sourcecode --only-show-url
+          fi
+      fi
+
     if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
     then
-      playground connector versions
-
-      # playground connector-plugin display-last-updated
-      set +e
-      if ! pgrep -f "playground connector-plugin display-last-updated" > /dev/null
-      then
-        if [ -f ${connector_plugin_display_last_updated_file} ]
-        then
-          cat ${connector_plugin_display_last_updated_file}
-        fi
-      fi
       playground connector open-docs --only-show-url
-      set -e
     fi
     set -e
   }
@@ -24540,6 +24563,11 @@ playground_connector_plugin_display_last_updated_command() {
       then
           continue
       fi
+      if [[ "$vendor" == *"confluentinc"* ]] && [[ "$plugin" != *"-"* ]]
+      then
+          # fully managed connector, skipping
+          continue
+      fi
       output=$(playground connector-plugin versions --connector-plugin "$plugin" --force-refresh --last 1 | head -n 1)
       set +e
       if [[ -n "$days" ]]
@@ -24565,6 +24593,7 @@ playground_connector_plugin_sourcecode_command() {
   # src/commands/connector-plugin/sourcecode.sh
   connector_plugin="${args[--connector-plugin]}"
   connector_tags="${args[--connector-tag]}"
+  only_show_url="${args[--only-show-url]}"
 
   # Convert space-separated string to array
   IFS=' ' read -ra connector_tag_array <<< "$connector_tags"
@@ -24742,12 +24771,12 @@ playground_connector_plugin_sourcecode_command() {
       fi
   fi
 
-  if [[ $(type -f open 2>&1) =~ "not found" ]]
+  if [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]]
   then
-      log "🔗 Cannot open browser, use url:"
+      log "🧑‍💻🌐 sourcecode for plugin $connector_plugin$additional_text is available at:"
       echo "$sourcecode_url"
   else
-      log "🧑‍💻🌐 Opening sourcecode url $sourcecode_url for plugin $connector_plugin in browser$additional_text"
+      log "🧑‍💻 Opening sourcecode url $sourcecode_url for plugin $connector_plugin in browser$additional_text"
       open "$sourcecode_url"
   fi
 }
@@ -25805,7 +25834,7 @@ playground_connector_versions_command() {
               continue
           fi
 
-          playground connector-plugin versions --connector-plugin $owner/$name --last 10
+          playground connector-plugin versions --connector-plugin $owner/$name --last 5
 
           # latest
           latest=$(playground connector-plugin versions --connector-plugin $owner/$name --last 1)
@@ -25843,6 +25872,7 @@ playground_connector_sourcecode_command() {
 
   # src/commands/connector/sourcecode.sh
   connector_tags="${args[--connector-tag]}"
+  only_show_url="${args[--only-show-url]}"
 
   # Convert space-separated string to array
   IFS=' ' read -ra connector_tag_array <<< "$connector_tags"
@@ -25863,6 +25893,11 @@ playground_connector_sourcecode_command() {
       exit 1
   fi
 
+  maybe_only_show_url=""
+  if [[ -n "$only_show_url" ]]
+  then
+      maybe_only_show_url="--only-show-url"
+  fi
   if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
   then
       owner="confluentinc"
@@ -25878,14 +25913,14 @@ playground_connector_sourcecode_command() {
           fi
           connector_tag1="${connector_tag_array[0]}"
           connector_tag2="${connector_tag_array[1]}"
-          playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag1" --connector-tag "$connector_tag2"
+          playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag1" --connector-tag "$connector_tag2" $maybe_only_show_url
       else
           if ((length == 1))
           then
               connector_tag="${connector_tag_array[0]}"
-              playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag"
+              playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag" $maybe_only_show_url
           else
-              playground connector-plugin sourcecode --connector-plugin "$owner/$name"
+              playground connector-plugin sourcecode --connector-plugin "$owner/$name" $maybe_only_show_url
           fi
       fi
       exit 0
@@ -25924,18 +25959,18 @@ playground_connector_sourcecode_command() {
               fi
               connector_tag1="${connector_tag_array[0]}"
               connector_tag2="${connector_tag_array[1]}"
-              playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag1" --connector-tag "$connector_tag2"
+              playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag1" --connector-tag "$connector_tag2" $maybe_only_show_url
           else
               if ((length == 1))
               then
                   connector_tag="${connector_tag_array[0]}"
-                  playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag"
+                  playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag" $maybe_only_show_url
               else
                   manifest_file="$root_folder/confluent-hub/$full_connector_name/manifest.json"
                   if [ -f $manifest_file ]
                   then
                       version=$(cat $manifest_file | jq -r '.version')
-                      playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$version"
+                      playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$version" $maybe_only_show_url
                   else
                       logwarn "file $manifest_file does not exist, could not retrieve version"
                       exit 0
@@ -41573,6 +41608,14 @@ playground_connector_plugin_sourcecode_parse_requirements() {
         ;;
 
       # :flag.case
+      --only-show-url)
+
+        # :flag.case_no_arg
+        args['--only-show-url']=1
+        shift
+        ;;
+
+      # :flag.case
       --connector-tag)
 
         # :flag.case_arg
@@ -42632,6 +42675,14 @@ playground_connector_sourcecode_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --only-show-url)
+
+        # :flag.case_no_arg
+        args['--only-show-url']=1
+        shift
+        ;;
+
       # :flag.case
       --connector-tag)
 

@@ -35,7 +35,7 @@ else
             continue
         fi
 
-        playground connector-plugin versions --connector-plugin $owner/$name --last 10
+        playground connector-plugin versions --connector-plugin $owner/$name --last 5
 
         # latest
         latest=$(playground connector-plugin versions --connector-plugin $owner/$name --last 1)

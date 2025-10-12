@@ -1,4 +1,5 @@
 connector_tags="${args[--connector-tag]}"
+only_show_url="${args[--only-show-url]}"
 
 # Convert space-separated string to array
 IFS=' ' read -ra connector_tag_array <<< "$connector_tags"
@@ -18,6 +19,11 @@ then
     exit 1
 fi
 
+maybe_only_show_url=""
+if [[ -n "$only_show_url" ]]
+then
+    maybe_only_show_url="--only-show-url"
+fi
 if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
 then
     owner="confluentinc"
@@ -33,14 +39,14 @@ then
         fi
         connector_tag1="${connector_tag_array[0]}"
         connector_tag2="${connector_tag_array[1]}"
-        playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag1" --connector-tag "$connector_tag2"
+        playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag1" --connector-tag "$connector_tag2" $maybe_only_show_url
     else
         if ((length == 1))
         then
             connector_tag="${connector_tag_array[0]}"
-            playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag"
+            playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag" $maybe_only_show_url
         else
-            playground connector-plugin sourcecode --connector-plugin "$owner/$name"
+            playground connector-plugin sourcecode --connector-plugin "$owner/$name" $maybe_only_show_url
         fi
     fi
     exit 0
@@ -80,19 +86,19 @@ else
             fi
             connector_tag1="${connector_tag_array[0]}"
             connector_tag2="${connector_tag_array[1]}"
-            playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag1" --connector-tag "$connector_tag2"
+            playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag1" --connector-tag "$connector_tag2" $maybe_only_show_url
         else
             if ((length == 1))
             then
                 connector_tag="${connector_tag_array[0]}"
-                playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag"
+                playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag" $maybe_only_show_url
             else
                 ## current version
                 manifest_file="$root_folder/confluent-hub/$full_connector_name/manifest.json"
                 if [ -f $manifest_file ]
                 then
                     version=$(cat $manifest_file | jq -r '.version')
-                    playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$version"
+                    playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$version" $maybe_only_show_url
                 else
                     logwarn "file $manifest_file does not exist, could not retrieve version"
                     exit 0
