@@ -30,19 +30,23 @@ then
 fi
 
 set +e
+is_confluent_employee=0
+output=$(grep "CONFLUENT EMPLOYEE VERSION" $root_folder/scripts/cli/confluent-hub-plugin-list.txt)
+if [ $ret -eq 0 ]
+then
+    is_confluent_employee=1
+else
+    logerror "❌ playground connector-plugin sourcecode is not working with fully managed connectors"
+    logerror "❌ if you're a Confluent employee, make sure your aws creds are set and then run <playground generate-connector-plugin-list>"
+    exit 1
+fi
+
 output=$(grep "$connector_plugin|" $root_folder/scripts/cli/confluent-hub-plugin-list.txt)
 ret=$?
 set -e
 if [ $ret -ne 0 ]
 then
     logerror "❌ could not found $connector_plugin in $root_folder/scripts/cli/confluent-hub-plugin-list.txt"
-    logerror "❌ the file can be re-generated with <playground generate-connector-plugin-list>"
-
-    if [ $is_fully_managed -eq 1 ]
-    then
-        logerror "❌ if you're a Confluent employee, make sure your aws creds are set and then run <playground generate-connector-plugin-list>"
-        exit 1
-    fi
     exit 1
 fi
 
@@ -52,10 +56,62 @@ then
     logerror "❌ could not found sourcecode url for plugin $connector_plugin. It is probably proprietary"
     if [[ "$sourcecode_url" == *"confluentinc"* ]]
     then
-        logerror "❌ if you're a Confluent employee, make sure your aws creds are set and then run <playground generate-connector-plugin-list>"
+        if [ $is_confluent_employee -eq 1 ]
+        then
+            logerror "❌ if you're a Confluent employee, make sure your aws creds are set and then run <playground generate-connector-plugin-list>"
+            exit 1
+        fi
     fi
     exit 1
 fi
+
+if [ $is_confluent_employee -eq 1 ] || [ $is_fully_managed -eq 1 ]
+then
+    connector_name_cache_versions=$(echo "$output" | cut -d "|" -f 3)
+fi
+
+function get_latest_version_from_cc_docker_connect_cache_versions_env () {
+    tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+    if [ -z "$PG_VERBOSE_MODE" ]
+    then
+        trap 'rm -rf $tmp_dir' EXIT
+    else
+        log "🐛📂 not deleting tmp dir $tmp_dir"
+    fi
+    # confluent only
+    cd $tmp_dir > /dev/null
+    get_3rdparty_file "cache-versions.env"
+    cd - > /dev/null
+    if [ -f $tmp_dir/cache-versions.env ]
+    then
+        last_version=$(grep "$connector_name_cache_versions" $tmp_dir/cache-versions.env  | cut -d "=" -f 2)
+        if [ $ret -eq 0 ]
+        then
+            log "✨ --connector-tag was not set, using latest version on cc-docker-connect (cache-versions.env file https://github.com/confluentinc/cc-docker-connect/blob/master/cc-connect/cache-versions.env) which is $last_version"
+            connector_tag="$last_version"
+        else
+            logerror "❌ could not find $connector_name_cache_versions in $tmp_dir/cache-versions.env"
+            exit 1
+        fi
+    else
+        logerror "❌ file cache-versions.env could not be downloaded from s3 bucket"
+        exit 1
+    fi
+}
+
+function get_latest_version_from_confluent_hub () {
+    output=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --last 1 | head -n 1)
+    last_version=$(echo "$output" | grep -v "<unknown>" | cut -d " " -f 2 | cut -d "v" -f 2)
+    if [[ -n "$last_version" ]]
+    then
+        log "✨ --connector-tag was not set, using latest version on hub $last_version"
+        connector_tag="$last_version"
+    else
+        logwarn "could not find latest version using <playground connector-plugin versions --connector-plugin \"$connector_plugin\" --last 1>"
+        logerror "❌ --connector-tag flag is set 2 times, but one of them is set to latest. Comparison between version can only works when providing versions"
+        exit 1
+    fi
+}
 
 comparison_mode_versions=""
 length=${#connector_tag_array[@]}
@@ -78,38 +134,22 @@ then
     then
         if [ $is_fully_managed -eq 1 ]
         then
-            logerror "❌ --connector-tag set with \"latest\" cannot work when using fully managed connector plugin, please specify actual versions"
-            exit 1
-        fi
-        output=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --last 1 | head -n 1)
-        last_version=$(echo "$output" | grep -v "<unknown>" | cut -d " " -f 2 | cut -d "v" -f 2)
-        if [[ -n "$last_version" ]]
-        then
-            log "✨ --connector-tag was not set, using latest version on hub $last_version"
-            connector_tag1="$last_version"
+            get_latest_version_from_cc_docker_connect_cache_versions_env
+            connector_tag1=$connector_tag
         else
-            logwarn "could not find latest version using <playground connector-plugin versions --connector-plugin \"$connector_plugin\" --last 1>"
-            logerror "❌ --connector-tag flag is set 2 times, but one of them is set to latest. Comparison between version can only works when providing versions"
-            exit 1
+            get_latest_version_from_confluent_hub
+            connector_tag1=$connector_tag
         fi
     fi
     if [ "$connector_tag2" == "latest" ]
     then
         if [ $is_fully_managed -eq 1 ]
         then
-            logerror "❌ --connector-tag set with \"latest\" cannot work when using fully managed connector plugin, please specify actual versions"
-            exit 1
-        fi
-        output=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --last 1 | head -n 1)
-        last_version=$(echo "$output" | grep -v "<unknown>" | cut -d " " -f 2 | cut -d "v" -f 2)
-        if [[ -n "$last_version" ]]
-        then
-            log "✨ --connector-tag was not set, using latest version on hub $last_version"
-            connector_tag2="$last_version"
+            get_latest_version_from_cc_docker_connect_cache_versions_env
+            connector_tag2=$connector_tag
         else
-            logwarn "could not find latest version using <playground connector-plugin versions --connector-plugin \"$connector_plugin\" --last 1>"
-            logerror "❌ --connector-tag flag is set 2 times, but one of them is set to latest. Comparison between version can only works when providing versions"
-            exit 1
+            get_latest_version_from_confluent_hub
+            connector_tag2=$connector_tag
         fi
     fi
 
@@ -164,7 +204,7 @@ else
                 connector_tag="latest"
             fi
         else
-            connector_tag="latest"
+            get_latest_version_from_cc_docker_connect_cache_versions_env
         fi
     fi
 fi

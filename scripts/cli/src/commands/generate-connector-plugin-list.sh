@@ -19,7 +19,8 @@ get_3rdparty_file "confluent-plugin-sourcecode-mapping-list.txt"
 cd - > /dev/null
 if [ -f $tmp_dir/confluent-plugin-sourcecode-mapping-list.txt ]
 then
-    grep -v confluentinc $tmp_file > $tmp_file2
+    echo "# CONFLUENT EMPLOYEE VERSION" > $tmp_file2
+    grep -v confluentinc $tmp_file >> $tmp_file2
     cat $tmp_dir/confluent-plugin-sourcecode-mapping-list.txt >> $tmp_file2
     cat $tmp_file2 | sort | uniq > $tmp_file
 fi
