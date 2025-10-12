@@ -2669,6 +2669,20 @@
           "options": []
         },
         {
+          "name": "sourcecode",
+          "description": "🧑‍💻 open source code url for connector(s) used in example\n  \n  You can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode\n  \n",
+          "usage": "playground connector sourcecode [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--connector-tag"
+              ],
+              "argument": "CONNECTOR_TAG",
+              "description": "🔗 Connector version to use\n\nBy default, for each connector, the current version is used\n\n🎓 Tip: set to \" \" in order to select the version dynamically\n\n🎓 Tip: you can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode\n\nRepeatable: ✓ Yes\n"
+            }
+          ]
+        },
+        {
           "name": "restart",
           "description": "♻️  Restart connector\n",
           "usage": "playground connector restart [OPTIONS]",

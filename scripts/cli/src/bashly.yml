@@ -3562,7 +3562,6 @@ commands:
         🏢 Only display results for this vendor
     examples: |
       playground connector-plugin display-last-updated --days 7
-      playground connector-plugin display-last-updated --days 7 --vendor confluentinc
   - name: sourcecode
     help: |
       🧑‍💻 open source code url
@@ -3678,6 +3677,25 @@ commands:
   - name: versions
     help:  |
       🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example
+
+  - name: sourcecode
+    help: |
+      🧑‍💻 open source code url for connector(s) used in example
+
+      You can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode
+    flags:
+      - long: --connector-tag
+        arg: connector_tag
+        repeatable: true
+        required: false
+        help: |- 
+          🔗 Connector version to use
+
+          By default, for each connector, the current version is used
+
+          🎓 Tip: set to " " in order to select the version dynamically
+
+          🎓 Tip: you can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode
 
   - name: restart
     help: ♻️  Restart connector

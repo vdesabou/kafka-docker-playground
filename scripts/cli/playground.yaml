@@ -3078,6 +3078,28 @@ subcommands:
             
         usage: playground connector versions
         options: []
+      - name: sourcecode
+        description: | 
+          🧑‍💻 open source code url for connector(s) used in example
+            
+            You can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode
+            
+        usage: playground connector sourcecode [OPTIONS]
+        options:
+        - names:
+          - --connector-tag
+          argument: CONNECTOR_TAG
+          description: | 
+            🔗 Connector version to use
+            
+            By default, for each connector, the current version is used
+            
+            🎓 Tip: set to " " in order to select the version dynamically
+            
+            🎓 Tip: you can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode
+            
+            Repeatable: ✓ Yes
+            
       - name: restart
         description: | 
           ♻️  Restart connector
