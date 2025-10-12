@@ -22,6 +22,13 @@ then
     exit 1
 fi
 
+is_fully_managed=0
+if [[ "$connector_plugin" == *"confluentinc"* ]] && [[ "$connector_plugin" != *"-"* ]]
+then
+    log "🌥️ connector was identified as fully managed connector"
+    is_fully_managed=1
+fi
+
 set +e
 output=$(grep "$connector_plugin|" $root_folder/scripts/cli/confluent-hub-plugin-list.txt)
 ret=$?
@@ -30,6 +37,12 @@ if [ $ret -ne 0 ]
 then
     logerror "❌ could not found $connector_plugin in $root_folder/scripts/cli/confluent-hub-plugin-list.txt"
     logerror "❌ the file can be re-generated with <playground generate-connector-plugin-list>"
+
+    if [ $is_fully_managed -eq 1 ]
+    then
+        logerror "❌ if you're a Confluent employee, make sure your aws creds are set and then run <playground generate-connector-plugin-list>"
+        exit 1
+    fi
     exit 1
 fi
 
@@ -42,13 +55,6 @@ then
         logerror "❌ if you're a Confluent employee, make sure your aws creds are set and then run <playground generate-connector-plugin-list>"
     fi
     exit 1
-fi
-
-is_fully_managed=0
-if [[ "$connector_plugin" == *"confluentinc"* ]] && [[ "$connector_plugin" != *"-"* ]]
-then
-    log "🌥️ connector was identified as fully managed connector"
-    is_fully_managed=1
 fi
 
 comparison_mode_versions=""
@@ -171,10 +177,7 @@ else
     additional_text=" for $connector_tag version"
     if [ "$connector_tag" != "latest" ] && [[ "$sourcecode_url" == *"github.com"* ]]
     then
-        if [ $is_fully_managed -eq 0 ]
-        then
-            sourcecode_url="$sourcecode_url/tree/v$connector_tag"
-        fi
+        sourcecode_url="$sourcecode_url/tree/v$connector_tag"
     fi
 fi
 
