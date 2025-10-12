@@ -43,6 +43,13 @@ then
     exit 1
 fi
 
+is_fully_managed=0
+if [[ "$connector_plugin" == *"confluentinc"* ]] && [[ "$connector_plugin" != *"-"* ]]
+then
+    log "🌥️ connector was identified as fully managed connector"
+    is_fully_managed=1
+fi
+
 comparison_mode_versions=""
 length=${#connector_tag_array[@]}
 if ((length > 1))
@@ -59,8 +66,14 @@ then
     fi
     connector_tag1="${connector_tag_array[0]}"
     connector_tag2="${connector_tag_array[1]}"
+
     if [ "$connector_tag1" == "latest" ]
     then
+        if [ $is_fully_managed -eq 1 ]
+        then
+            logerror "❌ --connector-tag set with \"latest\" cannot work when using fully managed connector plugin, please specify actual versions"
+            exit 1
+        fi
         output=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --last 1 | head -n 1)
         last_version=$(echo "$output" | grep -v "<unknown>" | cut -d " " -f 2 | cut -d "v" -f 2)
         if [[ -n "$last_version" ]]
@@ -75,6 +88,11 @@ then
     fi
     if [ "$connector_tag2" == "latest" ]
     then
+        if [ $is_fully_managed -eq 1 ]
+        then
+            logerror "❌ --connector-tag set with \"latest\" cannot work when using fully managed connector plugin, please specify actual versions"
+            exit 1
+        fi
         output=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --last 1 | head -n 1)
         last_version=$(echo "$output" | grep -v "<unknown>" | cut -d " " -f 2 | cut -d "v" -f 2)
         if [[ -n "$last_version" ]]
@@ -90,12 +108,22 @@ then
 
     if [ "$connector_tag1" == "\\" ]
     then
+        if [ $is_fully_managed -eq 1 ]
+        then
+            logerror "❌ --connector-tag set with \" \" cannot work when using fully managed connector plugin"
+            exit 1
+        fi
         ret=$(choose_connector_tag "$connector_plugin")
         connector_tag1=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
     fi
 
     if [ "$connector_tag2" == "\\" ]
     then
+        if [ $is_fully_managed -eq 1 ]
+        then
+            logerror "❌ --connector-tag set with \" \" cannot work when using fully managed connector plugin"
+            exit 1
+        fi
         ret=$(choose_connector_tag "$connector_plugin")
         connector_tag2=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
     fi
@@ -107,18 +135,28 @@ else
     then
         if [ "$connector_tag" == "\\" ]
         then
+            if [ $is_fully_managed -eq 1 ]
+            then
+                logerror "❌ --connector-tag set with \" \" cannot work when using fully managed connector plugin"
+                exit 1
+            fi
             ret=$(choose_connector_tag "$connector_plugin")
             connector_tag=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
         fi
     else
-        output=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --last 1 | head -n 1)
-        last_version=$(echo "$output" | grep -v "<unknown>" | cut -d " " -f 2 | cut -d "v" -f 2)
-        if [[ -n "$last_version" ]]
+        if [ $is_fully_managed -eq 0 ]
         then
-            log "✨ --connector-tag was not set, using latest version on hub $last_version"
-            connector_tag="$last_version"
+            output=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --last 1 | head -n 1)
+            last_version=$(echo "$output" | grep -v "<unknown>" | cut -d " " -f 2 | cut -d "v" -f 2)
+            if [[ -n "$last_version" ]]
+            then
+                log "✨ --connector-tag was not set, using latest version on hub $last_version"
+                connector_tag="$last_version"
+            else
+                logwarn "could not find latest version using <playground connector-plugin versions --connector-plugin \"$connector_plugin\" --last 1>, using latest"
+                connector_tag="latest"
+            fi
         else
-            logwarn "could not find latest version using <playground connector-plugin versions --connector-plugin \"$connector_plugin\" --last 1>, using latest"
             connector_tag="latest"
         fi
     fi
@@ -132,7 +170,10 @@ else
     additional_text=" for $connector_tag version"
     if [ "$connector_tag" != "latest" ] && [[ "$sourcecode_url" == *"github.com"* ]]
     then
-        sourcecode_url="$sourcecode_url/tree/v$connector_tag"
+        if [ $is_fully_managed -eq 0 ]
+        then
+            sourcecode_url="$sourcecode_url/tree/v$connector_tag"
+        fi
     fi
 fi
 
