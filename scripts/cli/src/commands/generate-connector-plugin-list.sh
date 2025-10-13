@@ -15,7 +15,7 @@ rm -f $tmp_file2
 
 # confluent only
 cd $tmp_dir > /dev/null
-get_3rdparty_file "confluent-plugin-sourcecode-mapping-list.txt"
+get_3rdparty_file "confluent-plugin-sourcecode-mapping-list.txt" > /dev/null
 cd - > /dev/null
 if [ -f $tmp_dir/confluent-plugin-sourcecode-mapping-list.txt ]
 then

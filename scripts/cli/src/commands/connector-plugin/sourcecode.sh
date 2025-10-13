@@ -80,7 +80,7 @@ function get_latest_version_from_cc_docker_connect_cache_versions_env () {
     fi
     # confluent only
     cd $tmp_dir > /dev/null
-    get_3rdparty_file "cache-versions.env"
+    get_3rdparty_file "cache-versions.env" > /dev/null
     cd - > /dev/null
     if [ -f $tmp_dir/cache-versions.env ]
     then
