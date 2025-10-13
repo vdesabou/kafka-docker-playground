@@ -156,7 +156,7 @@ Maximum number of rows to include in a single batch when polling for new data. T
 Time to start fetching all updates/creation. Default uses the time connector launched. Note that the time is in UTC and has required format: yyyy-MM-dd
 
 	 - Type: STRING
-	 - Default: 2025-10-12
+	 - Default: 2025-10-13
 	 - Importance: MEDIUM
 	 - Required: false
 
