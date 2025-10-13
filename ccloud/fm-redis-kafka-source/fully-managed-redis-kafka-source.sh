@@ -75,6 +75,7 @@ playground connector create-or-update --connector $connector_name << EOF
 	"source.type": "KEYS",
 	"kafka.topic": "redis_users_source",
 	"redis.keys.pattern": "users:*",
+    "keys.batch.size": "1",
 	"tasks.max" : "1"
 }
 EOF
