@@ -32,6 +32,7 @@ fi
 set +e
 is_confluent_employee=0
 output=$(grep "CONFLUENT EMPLOYEE VERSION" $root_folder/scripts/cli/confluent-hub-plugin-list.txt)
+ret=$?
 if [ $ret -eq 0 ]
 then
     is_confluent_employee=1
