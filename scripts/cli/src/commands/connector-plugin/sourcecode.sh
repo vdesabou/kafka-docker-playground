@@ -42,7 +42,7 @@ else
     exit 1
 fi
 
-output=$(grep "$connector_plugin|" $root_folder/scripts/cli/confluent-hub-plugin-list.txt)
+output=$(grep "^$connector_plugin|" $root_folder/scripts/cli/confluent-hub-plugin-list.txt)
 ret=$?
 set -e
 if [ $ret -ne 0 ]
