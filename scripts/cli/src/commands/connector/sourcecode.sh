@@ -85,12 +85,24 @@ else
                 exit 1
             fi
             connector_tag1="${connector_tag_array[0]}"
+            if [ "$connector_tag1" == "\\" ]
+            then
+                connector_tag1=" "
+            fi
             connector_tag2="${connector_tag_array[1]}"
+            if [ "$connector_tag2" == "\\" ]
+            then
+                connector_tag2=" "
+            fi
             playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag1" --connector-tag "$connector_tag2" $maybe_only_show_url
         else
             if ((length == 1))
             then
                 connector_tag="${connector_tag_array[0]}"
+                if [ "$connector_tag" == "\\" ]
+                then
+                    connector_tag=" "
+                fi
                 playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag" $maybe_only_show_url
             else
                 ## current version
