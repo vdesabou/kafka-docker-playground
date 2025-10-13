@@ -2961,7 +2961,7 @@ subcommands:
             
       - name: sourcecode
         description: | 
-          🧑‍💻 open source code url
+          🧑‍💻 Open source code url in your browser
             
             You can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode
             
@@ -2990,7 +2990,7 @@ subcommands:
           description: | 
             🔗 Connector version to use
             
-            By default, for each connector, the latest available version on Confluent Hub is used
+            By default, for each connector, the latest available version on Confluent Hub is used (for Confluent employees, it will also get latest versions for fully managed connectors)
             
             🎓 Tip: set to " " in order to select the version dynamically
             
@@ -3104,7 +3104,7 @@ subcommands:
           description: | 
             🔗 Connector version to use
             
-            By default, for each connector, the current version is used
+            By default, for each connector, the current version is used (for Confluent employees, it will also get latest versions for fully managed connectors)
             
             🎓 Tip: set to " " in order to select the version dynamically
             

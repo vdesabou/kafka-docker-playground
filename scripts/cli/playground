@@ -155,7 +155,7 @@ playground_usage() {
   printf "  %s   ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/ Search for specific class and display method signatures\n" "$(green "connector-plugin search-jar")               "
   printf "  %s   💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "connector-plugin versions")                 "
   printf "  %s   🆕 List last updated connector plugins from confluent hub https://www.confluent.io/hub/\n" "$(green "connector-plugin display-last-updated")     "
-  printf "  %s   🧑‍💻 open source code url\n" "$(green "connector-plugin sourcecode")               "
+  printf "  %s   🧑‍💻 Open source code url in your browser\n" "$(green "connector-plugin sourcecode")               "
   echo
   printf "%s\n" "$(bold "Connector commands:")"
   printf "  %s   🔗 Connector commands\n" "$(green "connector")                                 "
@@ -5507,7 +5507,7 @@ playground_connector_plugin_usage() {
   printf "  %s   ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/ Search for specific class and display method signatures\n" "$(green "search-jar")          "
   printf "  %s   💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "versions")            "
   printf "  %s   🆕 List last updated connector plugins from confluent hub https://www.confluent.io/hub/\n" "$(green "display-last-updated")"
-  printf "  %s   🧑‍💻 open source code url\n" "$(green "sourcecode")          "
+  printf "  %s   🧑‍💻 Open source code url in your browser\n" "$(green "sourcecode")          "
   echo
 
   # :command.long_usage
@@ -5650,9 +5650,9 @@ playground_connector_plugin_display_last_updated_usage() {
 playground_connector_plugin_sourcecode_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector-plugin sourcecode\n\n"
-    printf "  🧑‍💻 open source code url\n  \n  You can compare different sourcecode versions by specifying --connector-tag\n  two times, in such case it will open github in comparison mode\n\n"
+    printf "  🧑‍💻 Open source code url in your browser\n  \n  You can compare different sourcecode versions by specifying --connector-tag\n  two times, in such case it will open github in comparison mode\n\n"
   else
-    printf "playground connector-plugin sourcecode - 🧑‍💻 open source code url\n\n"
+    printf "playground connector-plugin sourcecode - 🧑‍💻 Open source code url in your browser\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -5677,12 +5677,17 @@ playground_connector_plugin_sourcecode_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG (repeatable)")"
-    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n    \n    🎓 Tip: you can compare different sourcecode versions by specifying\n    --connector-tag two times, in such case it will open github in comparison\n    mode\n"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used (for Confluent employees, it will also get latest versions for\n    fully managed connectors)\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n    \n    🎓 Tip: you can compare different sourcecode versions by specifying\n    --connector-tag two times, in such case it will open github in comparison\n    mode\n"
     echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  # will open latest version from hub source code\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-hdfs\n  \n  # will ask you to select a version\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-hdfs --connector-tag \" \"\n  \n  # if you're a confluent employee (make sure to set your aws credentials), it\n  will also work on proprietary connectors and fully managed connectors\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/MqttSource\n  \n  # comparison mode:\n  playground connector sourcecode --connector-tag \"10.2.1\" --connector-tag\n  \"10.2.0\"\n  \n  # comparison mode (with versions selection):\n  playground connector sourcecode --connector-tag \" \" --connector-tag \" \"\n"
     echo
 
   fi
@@ -6158,12 +6163,17 @@ playground_connector_sourcecode_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG (repeatable)")"
-    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the current version is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n    \n    🎓 Tip: you can compare different sourcecode versions by specifying\n    --connector-tag two times, in such case it will open github in comparison\n    mode\n"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the current version is used (for Confluent\n    employees, it will also get latest versions for fully managed connectors)\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n    \n    🎓 Tip: you can compare different sourcecode versions by specifying\n    --connector-tag two times, in such case it will open github in comparison\n    mode\n"
     echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  # will open current version source code\n  # if you're a confluent employee (make sure to set your aws credentials), it\n  will also work on proprietary connectors and fully managed connectors\n  playground connector sourcecode\n  \n  # will ask you to select a version\n  playground connector sourcecode  --connector-tag \" \"\n  \n  # comparison mode:\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-hdfs --connector-tag \"10.2.1\" --connector-tag\n  \"10.2.0\"\n  \n  # comparison mode (with versions selection):\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-hdfs --connector-tag \" \" --connector-tag \" \"\n"
     echo
 
   fi

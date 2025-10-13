@@ -2554,7 +2554,7 @@
         },
         {
           "name": "sourcecode",
-          "description": "🧑‍💻 open source code url\n  \n  You can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode\n  \n",
+          "description": "🧑‍💻 Open source code url in your browser\n  \n  You can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode\n  \n",
           "usage": "playground connector-plugin sourcecode [OPTIONS]",
           "options": [
             {
@@ -2577,7 +2577,7 @@
                 "--connector-tag"
               ],
               "argument": "CONNECTOR_TAG",
-              "description": "🔗 Connector version to use\n\nBy default, for each connector, the latest available version on Confluent Hub is used\n\n🎓 Tip: set to \" \" in order to select the version dynamically\n\n🎓 Tip: you can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode\n\nRepeatable: ✓ Yes\n"
+              "description": "🔗 Connector version to use\n\nBy default, for each connector, the latest available version on Confluent Hub is used (for Confluent employees, it will also get latest versions for fully managed connectors)\n\n🎓 Tip: set to \" \" in order to select the version dynamically\n\n🎓 Tip: you can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode\n\nRepeatable: ✓ Yes\n"
             }
           ]
         }
@@ -2692,7 +2692,7 @@
                 "--connector-tag"
               ],
               "argument": "CONNECTOR_TAG",
-              "description": "🔗 Connector version to use\n\nBy default, for each connector, the current version is used\n\n🎓 Tip: set to \" \" in order to select the version dynamically\n\n🎓 Tip: you can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode\n\nRepeatable: ✓ Yes\n"
+              "description": "🔗 Connector version to use\n\nBy default, for each connector, the current version is used (for Confluent employees, it will also get latest versions for fully managed connectors)\n\n🎓 Tip: set to \" \" in order to select the version dynamically\n\n🎓 Tip: you can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode\n\nRepeatable: ✓ Yes\n"
             }
           ]
         },
