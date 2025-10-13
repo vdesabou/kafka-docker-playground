@@ -6,7 +6,7 @@ Jira
 Issues updated after this time will be processed by the connector. If left blank, the default time will be set to the time this connector is launched. The expected format for jira.since is yyyy-MM-dd HH:mm.
 
 	 - Type: STRING
-	 - Default: 2025-10-12 18:47
+	 - Default: 2025-10-13 11:20
 	 - Importance: MEDIUM
 	 - Required: false
 
