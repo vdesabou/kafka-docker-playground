@@ -1598,6 +1598,9 @@ log "####################################################"
 SECONDS=0
 cd $test_file_directory
 function cleanup {
+  # 💡 Capture the original exit status immediately!
+  local original_exit_status=$?
+  set +e
   if [[ -n "$enable_multiple_connect_workers" ]]
   then
     if [ -f /tmp/playground-backup-docker-compose.yml ]
@@ -1608,14 +1611,12 @@ function cleanup {
   rm /tmp/playground-run-command-used
   echo ""
   sleep 3
-  set +e
-
+  
   connector_type=$(playground state get run.connector_type)
 
   if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
   then
       # playground connector-plugin display-last-updated
-    set +e
     if ! pgrep -f "playground connector-plugin display-last-updated" > /dev/null
     then
       if [ -f ${connector_plugin_display_last_updated_file} ]
@@ -1625,7 +1626,6 @@ function cleanup {
     fi
 
     playground connector versions
-    set -e
   fi
 
   if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
@@ -1653,7 +1653,8 @@ function cleanup {
   then
     playground connector open-docs --only-show-url
   fi
-  set -e
+  # 💡 Exit the function (and the script) with the captured status
+  exit "$original_exit_status"
 }
 trap cleanup EXIT
 
@@ -1699,7 +1700,7 @@ else
     log "🧑‍🚒 open full logs with '<playground container logs --open --container <container>', example:"
     echo "playground container logs --open --container connect"
   fi
-  exit 1
+  exit $ret
 fi
 check_for_ec2_instance_running
 

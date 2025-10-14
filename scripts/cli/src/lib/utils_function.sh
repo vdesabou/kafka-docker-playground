@@ -11,13 +11,13 @@ function verbose_begin () {
 }
 
 function verbose_end () {
-  ret="$?"
+  return_code="$?"
   # If set -x was initially active, re-enable it
   if [[ $was_x_set -eq 1 ]]
   then
     set -x
   fi
-  return $ret
+  return $return_code
 }
 
 function log() {
