@@ -8,4 +8,4 @@ services:
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
       # JDK 17
-      KAFKA_OPTS: --add-opens java.base/java.nio=ALL-UNNAMED
+      KAFKA_OPTS: "--add-opens java.base/java.nio=ALL-UNNAMED"
