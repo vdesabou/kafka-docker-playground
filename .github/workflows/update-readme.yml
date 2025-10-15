@@ -26,7 +26,7 @@ jobs:
       - name: Update README and update cache-versions.env
         run: |
           cd ./scripts/cli
-          ./playground update-readme --tags "8.0.2"
+          ./playground update-readme --tags "8.1.0"
           ./playground update-cache-versions
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
