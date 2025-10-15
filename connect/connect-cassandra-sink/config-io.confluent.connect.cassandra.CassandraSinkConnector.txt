@@ -10,6 +10,15 @@ Class for the 'createKey' transformation.
 	 - Importance: HIGH
 	 - Required: true
 
+🔘 transforms.createKey.plugin.version
+
+Version of the 'createKey' transformation.
+
+	 - Type: STRING
+	 - Default: 8.1.0-ce
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 transforms.createKey.fields
 
 Field names on the record value to extract as the record key.

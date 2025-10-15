@@ -26,6 +26,7 @@
     "connect.cassandra.principal": "STRING",
     "transforms.createKey.fields": "",
     "transforms.createKey.negate": "false",
+    "transforms.createKey.plugin.version": "8.1.0-ce",
     "transforms.createKey.predicate": "",
     "transforms.createKey.replace.null.with.default": "true",
     "transforms.createKey.type": "",

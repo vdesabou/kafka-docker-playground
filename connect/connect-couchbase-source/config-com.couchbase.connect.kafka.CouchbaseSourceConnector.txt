@@ -163,33 +163,6 @@ Controls maximum size of the batch for writing into topic.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 couchbase.topic
-
-Name of the Kafka topic to publish data to.
-
-	 - Type: STRING
-	 - Default: ${bucket}.${scope}.${collection}
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.headers
-
-- *`bucket`* - Name of the bucket the document came from.
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Comma-delimited list of Couchbase metadata headers to add to records. Recognized values:
-	 - Required: MEDIUM
-
-🔘 couchbase.collections
-
-If you specify neither "couchbase.scope" nor "couchbase.collections", the connector will stream from all collections of all scopes in the bucket.
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: If you wish to stream from specific collections, specify the qualified collection names here, separated by commas. A qualified name is the name of the scope followed by a dot (.) and then the name of the collection. For example: "tenant-foo.invoices".
-	 - Required: MEDIUM
-
 🔘 couchbase.collection.to.topic
 
 Collection and Topic are joined by an equals sign. Map entries are delimited by commas.
@@ -287,6 +260,33 @@ If you specify neither "couchbase.scope" nor "couchbase.collections", the connec
 	 - Type: false
 	 - Default: STRING
 	 - Importance: If you wish to stream from all collections within a scope, specify the scope name here.
+	 - Required: MEDIUM
+
+🔘 couchbase.topic
+
+Name of the Kafka topic to publish data to.
+
+	 - Type: STRING
+	 - Default: ${bucket}.${scope}.${collection}
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.headers
+
+- *`bucket`* - Name of the bucket the document came from.
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma-delimited list of Couchbase metadata headers to add to records. Recognized values:
+	 - Required: MEDIUM
+
+🔘 couchbase.collections
+
+If you specify neither "couchbase.scope" nor "couchbase.collections", the connector will stream from all collections of all scopes in the bucket.
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: If you wish to stream from specific collections, specify the qualified collection names here, separated by commas. A qualified name is the name of the scope followed by a dot (.) and then the name of the collection. For example: "tenant-foo.invoices".
 	 - Required: MEDIUM
 
 ==========================
