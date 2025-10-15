@@ -194,7 +194,9 @@ do
             fi
             echo -e "    \"$param\": \"$default\"," >> "$json_filename"
             sort "$json_filename" -o /tmp/tmp
-            mv /tmp/tmp "$json_filename"
+            # fix unwanted commits like this one #7231
+            cat /tmp/tmp | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z/YYYY-MM-DDTHH:mm:ss/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}/YYYY-MM-DD HH:mm/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}/YYYY-MM-DD/g' > /tmp/tmp2
+            mv /tmp/tmp2 "$json_filename"
         done <<< "$(echo "$configs" | jq -c '.[]')"
     fi
 
@@ -210,6 +212,9 @@ do
         then
             filename=$json_filename
         else
+            # fix unwanted commits like this one #7231
+            cat $filename | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z/YYYY-MM-DDTHH:mm:ss/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}/YYYY-MM-DD HH:mm/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}/YYYY-MM-DD/g' > /tmp/tmp
+            mv /tmp/tmp "$filename"
             cat $filename > "/tmp/config-$connector_class-$version.txt"
             filename="/tmp/config-$connector_class-$version.txt"
             cat $json_filename >> $filename
