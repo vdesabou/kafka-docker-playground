@@ -72,7 +72,7 @@ then
 else
      if version_gt $TAG_BASE "7.9.9"
      then
-          playground container exec --root --command "yum -y install libnsl2"
+          playground container exec --root --command "microdnf -y install libnsl2"
           playground container exec --root --command "ln -s /usr/lib64/libnsl.so.3 /usr/lib64/libnsl.so.1"
      else
           playground container exec --root --command "ln -s /usr/lib64/libnsl.so.2 /usr/lib64/libnsl.so.1"
