@@ -26,6 +26,7 @@
     "oauth.refresh.token": "PASSWORD",
     "partitioning.type": "DAY",
     "project": "STRING",
+    "provider.integration.id": "STRING",
     "sanitize.field.names": "false",
     "sanitize.field.names.in.array": "false",
     "sanitize.topics": "true",

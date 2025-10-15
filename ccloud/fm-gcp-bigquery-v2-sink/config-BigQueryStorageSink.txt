@@ -124,6 +124,15 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 ==========================
 GCP credentials
 ==========================
+🔘 provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing integration that has access to your resource. In case you need to integrate a new Google Service Account, use provider integration
+	 - Required: HIGH
+
 🔘 authentication.method
 
 Select how you want to authenticate with BigQuery.
