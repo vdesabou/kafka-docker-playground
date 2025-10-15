@@ -1,4 +1,43 @@
 ==========================
+Azure credentials
+==========================
+🔘 provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Azure provider-integration to mint Microsoft Entra ID application tokens.
+	 - Required: HIGH
+
+🔘 authentication.method
+
+How Confluent Cloud authenticates with Azure.
+
+	 - Type: STRING
+	 - Default: SAS Key
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 azure.eventhubs.sas.keyname
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Shared access policy name to use for access authentication.
+	 - Required: HIGH
+
+🔘 azure.eventhubs.sas.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Shared access key to use for access authentication.
+	 - Required: HIGH
+
+==========================
 How should we connect to your data?
 ==========================
 🔘 connector.class
@@ -18,6 +57,42 @@ How should we connect to your data?
 	 - Default: STRING
 	 - Importance: Sets a name for your connector.
 	 - Required: HIGH
+
+🔘 azure.eventhubs.namespace
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Event Hubs namespace to connect to.
+	 - Required: HIGH
+
+🔘 azure.eventhubs.hub.name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Event Hub to read from.
+	 - Required: HIGH
+
+🔘 azure.eventhubs.consumer.group
+
+Specific consumer group to read from.
+
+	 - Type: STRING
+	 - Default: $Default
+	 - Importance: LOW
+	 - Required: false
+
+🔘 azure.eventhubs.domain
+
+Specifies the domain of the Event Hub to connect to. Available options include: `servicebus.windows.net`, `servicebus.usgovcloudapi.net`, `servicebus.cloudapi.de`, `servicebus.chinacloudapi.cn`. Default is `servicebus.windows.net`.
+
+	 - Type: STRING
+	 - Default: servicebus.windows.net
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Kafka Cluster credentials
@@ -80,63 +155,6 @@ Which topic do you want to send data to?
 	 - Required: HIGH
 
 ==========================
-How should we connect to your Event Hub?
-==========================
-🔘 azure.eventhubs.sas.keyname
-
-
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Shared access policy name to use for access authentication.
-	 - Required: HIGH
-
-🔘 azure.eventhubs.sas.key
-
-
-
-	 - Type: true
-	 - Default: PASSWORD
-	 - Importance: Shared access key to use for access authentication.
-	 - Required: HIGH
-
-🔘 azure.eventhubs.namespace
-
-
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Event Hubs namespace to connect to.
-	 - Required: HIGH
-
-🔘 azure.eventhubs.hub.name
-
-
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Event Hub to read from.
-	 - Required: HIGH
-
-🔘 azure.eventhubs.consumer.group
-
-Specific consumer group to read from.
-
-	 - Type: STRING
-	 - Default: $Default
-	 - Importance: LOW
-	 - Required: false
-
-🔘 azure.eventhubs.domain
-
-Specifies the domain of the Event Hub to connect to. Available options include: `servicebus.windows.net`, `servicebus.usgovcloudapi.net`, `servicebus.cloudapi.de`, `servicebus.chinacloudapi.cn`. Default is `servicebus.windows.net`.
-
-	 - Type: STRING
-	 - Default: servicebus.windows.net
-	 - Importance: LOW
-	 - Required: false
-
-==========================
 Connection details
 ==========================
 🔘 azure.eventhubs.partition.starting.position
@@ -188,18 +206,6 @@ Number of tasks for this connector
 	 - Required: HIGH
 
 ==========================
-Auto-restart policy
-==========================
-🔘 auto.restart.on.user.error
-
-Enable connector to automatically restart on user-actionable errors.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: MEDIUM
-	 - Required: false
-
-==========================
 Additional Configs
 ==========================
 🔘 value.converter.decimal.format
@@ -217,6 +223,15 @@ Set the subject reference name strategy for value. Valid entries are DefaultRefe
 
 	 - Type: STRING
 	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: none
 	 - Importance: LOW
 	 - Required: false
 
@@ -245,5 +260,17 @@ How to construct the subject name for key schema registration.
 	 - Type: STRING
 	 - Default: TopicNameStrategy
 	 - Importance: LOW
+	 - Required: false
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
 	 - Required: false
 

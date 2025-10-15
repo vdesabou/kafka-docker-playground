@@ -1,4 +1,25 @@
 ==========================
+Azure credentials
+==========================
+🔘 provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Azure provider-integration to mint Microsoft Entra ID application tokens.
+	 - Required: HIGH
+
+🔘 authentication.method
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: How Confluent Cloud authenticates with Azure.
+	 - Required: HIGH
+
+==========================
 How should we connect to your data?
 ==========================
 🔘 connector.class
@@ -201,15 +222,6 @@ Flag to indicate whether to use gateway mode. By default it is false, means SDK 
 	 - Default: STRING
 	 - Importance: Preferred regions list to be used for a multi region Cosmos DB account. This is a comma separated value (e.g., `[East US, West US]` or `East US, West US`) provided preferred regions will be used as hint. You should use a collocated kafka cluster with your Cosmos DB account and pass the kafka cluster region as preferred region. See list of azure regions - https://docs.microsoft.com/dotnet/api/microsoft.azure.documents.locationnames?view=azure-dotnet&preserve-view=true.
 	 - Required: LOW
-
-🔘 azure.cosmos.auth.type
-
-Cosmos connection auth type
-
-	 - Type: STRING
-	 - Default: MasterKey
-	 - Importance: HIGH
-	 - Required: true
 
 🔘 azure.cosmos.account.key
 
