@@ -134,7 +134,7 @@ wait_container_ready
 set +e
 playground container exec --root --command "sed -i "s/packages\.adoptium\.net/adoptium\.jfrog\.io/g" /etc/yum.repos.d/adoptium.repo"
 set -e
-playground container exec --root --command "yum -y install libaio"
+playground container exec --root --command "microdnf -y install libaio"
 
 if [ "$(uname -m)" = "arm64" ]
 then
