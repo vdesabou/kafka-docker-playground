@@ -10,6 +10,15 @@ Class for the 'dropTombstone' transformation.
 	 - Importance: HIGH
 	 - Required: true
 
+🔘 transforms.dropTombstone.plugin.version
+
+Version of the 'dropTombstone' transformation.
+
+	 - Type: STRING
+	 - Default: undefined
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 transforms.dropTombstone.expr
 
 

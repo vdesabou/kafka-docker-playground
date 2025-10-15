@@ -2,6 +2,7 @@
     "transforms.dropTombstone.expr": "STRING",
     "transforms.dropTombstone.max.depth": "1000",
     "transforms.dropTombstone.negate": "false",
+    "transforms.dropTombstone.plugin.version": "undefined",
     "transforms.dropTombstone.predicate": "",
     "transforms.dropTombstone.timeout.ms": "5000",
     "transforms.dropTombstone.type": "",
