@@ -100,6 +100,7 @@
     "topic.prefix": "",
     "transaction.metadata.factory": "io.debezium.pipeline.txmetadata.DefaultTransactionMetadataFactory",
     "transforms.addTopicSuffix.negate": "false",
+    "transforms.addTopicSuffix.plugin.version": "8.1.0-ce",
     "transforms.addTopicSuffix.predicate": "",
     "transforms.addTopicSuffix.regex": "",
     "transforms.addTopicSuffix.replacement": "",

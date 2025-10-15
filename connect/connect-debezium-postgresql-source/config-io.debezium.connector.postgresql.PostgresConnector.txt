@@ -10,6 +10,15 @@ Class for the 'addTopicSuffix' transformation.
 	 - Importance: HIGH
 	 - Required: true
 
+🔘 transforms.addTopicSuffix.plugin.version
+
+Version of the 'addTopicSuffix' transformation.
+
+	 - Type: STRING
+	 - Default: 8.1.0-ce
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 transforms.addTopicSuffix.regex
 
 Regular expression to use for matching.

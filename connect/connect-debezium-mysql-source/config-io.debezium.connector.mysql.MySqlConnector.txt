@@ -10,6 +10,15 @@ Class for the 'RemoveDots' transformation.
 	 - Importance: HIGH
 	 - Required: true
 
+🔘 transforms.RemoveDots.plugin.version
+
+Version of the 'RemoveDots' transformation.
+
+	 - Type: STRING
+	 - Default: 8.1.0-ce
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 transforms.RemoveDots.regex
 
 Regular expression to use for matching.

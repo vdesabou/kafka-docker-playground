@@ -99,6 +99,7 @@
     "topic.prefix": "",
     "transaction.metadata.factory": "io.debezium.pipeline.txmetadata.DefaultTransactionMetadataFactory",
     "transforms.RemoveDots.negate": "false",
+    "transforms.RemoveDots.plugin.version": "8.1.0-ce",
     "transforms.RemoveDots.predicate": "",
     "transforms.RemoveDots.regex": "",
     "transforms.RemoveDots.replacement": "",
