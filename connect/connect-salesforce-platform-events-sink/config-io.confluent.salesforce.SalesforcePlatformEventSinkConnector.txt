@@ -31,6 +31,15 @@ Class for the 'MaskField' transformation.
 	 - Importance: HIGH
 	 - Required: true
 
+🔘 transforms.MaskField.plugin.version
+
+Version of the 'MaskField' transformation.
+
+	 - Type: STRING
+	 - Default: 8.1.0-ce
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 transforms.MaskField.fields
 
 Names of fields to mask.
