@@ -40,10 +40,6 @@ public class SimpleStream {
         // Confluent Schema Registry for Java
         props.put("schema.registry.url", "http://schema-registry:8081" );
 
-        // interceptors for C3
-        // props.put(StreamsConfig.PRODUCER_PREFIX + ProducerConfig.INTERCEPTOR_CLASSES_CONFIG,"io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor");
-        // props.put(StreamsConfig.CONSUMER_PREFIX + ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,"io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor");
-        // props.put("confluent.monitoring.interceptor.bootstrap.servers", "broker-europe:9092");
         props.put(StreamsConfig.DEFAULT_DESERIALIZATION_EXCEPTION_HANDLER_CLASS_CONFIG,LogAndContinueExceptionHandler.class.getName());
 
         final Serde<String> stringSerde = Serdes.String();
