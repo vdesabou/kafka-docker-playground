@@ -10,6 +10,15 @@ Class for the 'ExtractField' transformation.
 	 - Importance: HIGH
 	 - Required: true
 
+🔘 transforms.ExtractField.plugin.version
+
+Version of the 'ExtractField' transformation.
+
+	 - Type: STRING
+	 - Default: 8.1.0-ce
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 transforms.ExtractField.field
 
 Field name to extract.

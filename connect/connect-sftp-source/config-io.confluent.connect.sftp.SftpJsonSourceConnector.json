@@ -36,6 +36,7 @@
     "transforms.ExtractField.field": "",
     "transforms.ExtractField.field.syntax.version": "V1",
     "transforms.ExtractField.negate": "false",
+    "transforms.ExtractField.plugin.version": "8.1.0-ce",
     "transforms.ExtractField.predicate": "",
     "transforms.ExtractField.replace.null.with.default": "true",
     "transforms.ExtractField.type": "",
