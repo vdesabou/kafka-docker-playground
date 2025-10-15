@@ -138,12 +138,48 @@ How should we connect to your database?
 
 🔘 database.ssl.mode
 
-Whether to use an encrypted connection to the MySQL server. Possible settings are: `disabled`, `preferred`, and `required`. 
+Whether to use an encrypted connection to the MySQL server. Possible settings are: `disabled`, `preferred`, `required`, `verify_ca`, and `verify_identity`. 
 
 	 - Type: STRING
 	 - Default: preferred
 	 - Importance: HIGH
 	 - Required: false
+
+🔘 database.ssl.keystore
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Path to the SSL keystore file for MySQL connection. Only needed when SSL certificate verification is required (verify_ca or verify_identity modes).
+	 - Required: MEDIUM
+
+🔘 database.ssl.keystore.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Password for the SSL keystore file for MySQL connection. Only needed when SSL certificate verification is required and the keystore is password-protected.
+	 - Required: MEDIUM
+
+🔘 database.ssl.truststore
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Path to the SSL truststore file for MySQL connection. Only needed when SSL certificate verification is required (verify_ca or verify_identity modes).
+	 - Required: MEDIUM
+
+🔘 database.ssl.truststore.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Password for the SSL truststore file for MySQL connection. Only needed when SSL certificate verification is required and the truststore is password-protected.
+	 - Required: MEDIUM
 
 ==========================
 CSFLE
@@ -366,6 +402,15 @@ A Boolean value that specifies whether the connector records schema structures f
 	 - Default: false
 	 - Importance: LOW
 	 - Required: false
+
+🔘 driver.connectionTimeZone
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Specifies how the server's session time zone is determined. This property can take one of three values: LOCAL, SERVER, or a user-defined time zone.
+	 - Required: LOW
 
 ==========================
 Schema Config

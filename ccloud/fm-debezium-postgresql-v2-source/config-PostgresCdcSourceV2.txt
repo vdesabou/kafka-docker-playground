@@ -145,6 +145,42 @@ Whether to use an encrypted connection to the PostgreSQL server. Possible settin
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 database.sslrootcert
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The path to the file that contains the root certificate(s) against which the server is validated.
+	 - Required: HIGH
+
+🔘 database.sslcert
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Path to the SSL client certificate file for PostgreSQL connection. Only needed when mutual TLS authentication is enabled. Note: AWS RDS does not support client certificates.
+	 - Required: MEDIUM
+
+🔘 database.sslkey
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Path to the SSL client private key file for PostgreSQL connection. Only needed when mutual TLS authentication is enabled (ssl_mode=verify-full or verify-ca). Must be used together with SSL Client Certificate. The private key must be in PKCS#8 format.
+	 - Required: MEDIUM
+
+🔘 database.sslpassword
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Password for the SSL client private key file for PostgreSQL connection. Only needed when mutual TLS authentication is enabled and the private key is password-protected.
+	 - Required: MEDIUM
+
 ==========================
 Exactly Once Semantics
 ==========================
