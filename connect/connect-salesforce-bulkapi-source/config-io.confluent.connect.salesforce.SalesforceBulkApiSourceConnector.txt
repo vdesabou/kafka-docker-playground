@@ -174,7 +174,7 @@ Maximum number of Salesforce table rows/records within each batch returned by Bu
 CreatedDate after which the records should be pulled. The format should be yyyy-MM-dd
 
 	 - Type: STRING
-	 - Default: 2025-10-15
+	 - Default: YYYY-MM-DD
 	 - Importance: HIGH
 	 - Required: false
 
