@@ -4,6 +4,7 @@
     "transforms.InsertField.negate": "false",
     "transforms.InsertField.offset.field": "",
     "transforms.InsertField.partition.field": "",
+    "transforms.InsertField.plugin.version": "8.1.0-ce",
     "transforms.InsertField.predicate": "",
     "transforms.InsertField.replace.null.with.default": "true",
     "transforms.InsertField.static.field": "",

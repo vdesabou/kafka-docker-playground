@@ -10,6 +10,15 @@ Class for the 'InsertField' transformation.
 	 - Importance: HIGH
 	 - Required: true
 
+🔘 transforms.InsertField.plugin.version
+
+Version of the 'InsertField' transformation.
+
+	 - Type: STRING
+	 - Default: 8.1.0-ce
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 transforms.InsertField.negate
 
 Whether the configured predicate should be negated.
