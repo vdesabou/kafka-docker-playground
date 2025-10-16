@@ -16,5 +16,5 @@ services:
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-azure-blob-storage
       # https://support.confluent.io/hc/en-us/articles/16480297311124-How-to-bypass-Azure-Blob-Storage-sink-connector-failing-with-InaccessibleObjectException
-      KAFKA_OPTS: "--add-opens=java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED"
+      KAFKA_OPTS: "--add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED"
     # dns: 0.0.0.0
