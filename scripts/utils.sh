@@ -139,7 +139,6 @@ then
       export CP_KSQL_CLI_TAG="latest"
     fi
     set_kafka_client_tag
-    maybe_create_image
 else
     if [ -z "$CP_KAFKA_IMAGE" ]
     then
