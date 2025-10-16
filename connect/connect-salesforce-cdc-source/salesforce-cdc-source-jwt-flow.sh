@@ -84,6 +84,9 @@ playground connector create-or-update --connector salesforce-cdc-source  << EOF
      "confluent.topic.bootstrap.servers": "broker:9092",
      "confluent.topic.replication.factor": "1",
 
+     "_comment:": "fixing com.sforce.ws.ConnectionException: RESOURCE_NOT_FOUNDNot a valid enumeration", 
+     "salesforce.version": "64.0",
+     
      "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY_WITH_JWT",
      "salesforce.jwt.keystore.path": "/tmp/salesforce-confluent.keystore.jks",
      "salesforce.jwt.keystore.password": "confluent"

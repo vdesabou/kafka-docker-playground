@@ -76,6 +76,8 @@ playground connector create-or-update --connector salesforce-cdc-source  << EOF
      "http.proxy": "nginx-proxy:8888",
      "salesforce.initial.start" : "latest",
      "connection.max.message.size": "10048576",
+     "_comment:": "fixing com.sforce.ws.ConnectionException: RESOURCE_NOT_FOUNDNot a valid enumeration", 
+     "salesforce.version": "64.0",
      "key.converter": "org.apache.kafka.connect.json.JsonConverter",
      "value.converter": "org.apache.kafka.connect.json.JsonConverter",
      "confluent.license": "",
