@@ -11,7 +11,7 @@ check_docker_compose_version
 check_bash_version
 check_and_update_playground_version
 
-playground tools certs-create --output-folder "${PWD}/../../environment/sasl-ssl/security"
+playground tools certs-create --output-folder "${PWD}/../../environment/sasl-ssl/security" --verbose
 
 nb_connect_services=0
 ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
