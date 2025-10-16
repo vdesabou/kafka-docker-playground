@@ -17,6 +17,13 @@ then
      exit 111
 fi
 
+export COMPONENT_NAME="awscredentialsprovider"
+if version_gt $CONNECTOR_TAG "1.9.9"
+then
+    export COMPONENT_NAME="awscredentialsprovider-v2"
+fi
+
+
 logwarn "⚠️ This example and associated custom code is not supported, use at your own risks !"
 
 AWS_STS_ROLE_ARN=${AWS_STS_ROLE_ARN:-$1}
@@ -41,7 +48,7 @@ fi
 
 handle_aws_credentials
 
-for component in awscredentialsprovider
+for component in $COMPONENT_NAME
 do
     set +e
     log "🏗 Building jar for ${component}"
@@ -95,6 +102,7 @@ playground connector create-or-update --connector kinesis-source  << EOF
     "kinesis.stream": "$KINESIS_STREAM_NAME",
     "kinesis.region": "$AWS_REGION",
     "kinesis.credentials.provider.class": "com.github.vdesabou.AwsAssumeRoleCredentialsProvider",
+    "_comment": "The following sts parameters are not used when using v2 of the connector",
     "kinesis.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
     "kinesis.credentials.provider.sts.role.session.name": "session-name",
     "kinesis.credentials.provider.sts.role.external.id": "123",
