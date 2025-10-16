@@ -75,7 +75,7 @@ The AWS secret key that will be used to connect to Kinesis with.
 Credentials provider or provider chain to use for authentication to AWS. By default the connector uses 'DefaultAWSCredentialsProviderChain'.
 
 	 - Type: CLASS
-	 - Default: com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+	 - Default: software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
 	 - Importance: LOW
 	 - Required: false
 
@@ -114,7 +114,7 @@ The position in the stream to reset to if no offsets are stored. Note: AFTER_SEQ
 The AWS region for the Kinesis stream.
 
 	 - Type: STRING
-	 - Default: US_EAST_1
+	 - Default: us-east-1
 	 - Importance: MEDIUM
 	 - Required: false
 
