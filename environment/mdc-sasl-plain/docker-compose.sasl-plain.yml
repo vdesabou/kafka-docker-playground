@@ -115,6 +115,14 @@ services:
               username=\"connect\" \
               password=\"connect-secret\";"
 
+          # centralized license is needed with CP 8.1+
+          # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+          CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: PLAIN
+          CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: SASL_PLAINTEXT
+          CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+              username=\"connect\" \
+              password=\"connect-secret\";"
+
   connect-europe:
       environment:
           # Configure the Connect workers to use SASL/PLAIN.
@@ -137,6 +145,14 @@ services:
               username=\"connect\" \
               password=\"connect-secret\";"
 
+          # centralized license is needed with CP 8.1+
+          # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+          CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: PLAIN
+          CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: SASL_PLAINTEXT
+          CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+              username=\"connect\" \
+              password=\"connect-secret\";"
+              
   schema-registry-europe:
       environment:
           SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SASL_PLAINTEXT

@@ -299,6 +299,23 @@ services:
       CONNECT_CONSUMER_SSL_KEYSTORE_PASSWORD: confluent
       CONNECT_CONSUMER_SSL_KEY_PASSWORD: confluent
 
+      # centralized license is needed with CP 8.1+
+      # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+      CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: GSSAPI
+      CONNECT_CONFLUENT_TOPIC_SASL_KERBEROS_SERVICE_NAME: kafka
+      CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: SASL_SSL
+      CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-connect.key\" \
+        principal=\"connect@TEST.CONFLUENT.IO\";"
+      # SSL Additions
+      CONNECT_CONFLUENT_TOPIC_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.connect.truststore.jks
+      CONNECT_CONFLUENT_TOPIC_SSL_TRUSTSTORE_PASSWORD: confluent
+      CONNECT_CONFLUENT_TOPIC_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.connect.keystore.jks
+      CONNECT_CONFLUENT_TOPIC_SSL_KEYSTORE_PASSWORD: confluent
+      CONNECT_CONFLUENT_TOPIC_SSL_KEY_PASSWORD: confluent
+
   connect2:
     volumes:
       - secret:/var/lib/secret
@@ -386,6 +403,23 @@ services:
       CONNECT_CONSUMER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.connect.keystore.jks
       CONNECT_CONSUMER_SSL_KEYSTORE_PASSWORD: confluent
       CONNECT_CONSUMER_SSL_KEY_PASSWORD: confluent
+
+      # centralized license is needed with CP 8.1+
+      # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+      CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: GSSAPI
+      CONNECT_CONFLUENT_TOPIC_SASL_KERBEROS_SERVICE_NAME: kafka
+      CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: SASL_SSL
+      CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-connect.key\" \
+        principal=\"connect@TEST.CONFLUENT.IO\";"
+      # SSL Additions
+      CONNECT_CONFLUENT_TOPIC_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.connect.truststore.jks
+      CONNECT_CONFLUENT_TOPIC_SSL_TRUSTSTORE_PASSWORD: confluent
+      CONNECT_CONFLUENT_TOPIC_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.connect.keystore.jks
+      CONNECT_CONFLUENT_TOPIC_SSL_KEYSTORE_PASSWORD: confluent
+      CONNECT_CONFLUENT_TOPIC_SSL_KEY_PASSWORD: confluent
 
   connect3:
     volumes:
@@ -475,6 +509,22 @@ services:
       CONNECT_CONSUMER_SSL_KEYSTORE_PASSWORD: confluent
       CONNECT_CONSUMER_SSL_KEY_PASSWORD: confluent
 
+      # centralized license is needed with CP 8.1+
+      # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+      CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: GSSAPI
+      CONNECT_CONFLUENT_TOPIC_SASL_KERBEROS_SERVICE_NAME: kafka
+      CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: SASL_SSL
+      CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-connect.key\" \
+        principal=\"connect@TEST.CONFLUENT.IO\";"
+      # SSL Additions
+      CONNECT_CONFLUENT_TOPIC_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.connect.truststore.jks
+      CONNECT_CONFLUENT_TOPIC_SSL_TRUSTSTORE_PASSWORD: confluent
+      CONNECT_CONFLUENT_TOPIC_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.connect.keystore.jks
+      CONNECT_CONFLUENT_TOPIC_SSL_KEYSTORE_PASSWORD: confluent
+      CONNECT_CONFLUENT_TOPIC_SSL_KEY_PASSWORD: confluent
 
   schema-registry:
     # Required to wait for the keytab to get generated

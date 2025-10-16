@@ -199,6 +199,11 @@ services:
       # # With JDK9+, need to specify address=*:5005, see https://www.baeldung.com/java-application-remote-debugging#from-java9
       # JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
       CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
+
+      # centralized license is needed with CP 8.1+
+      # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+      CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: 'broker-us:9092'
+      CONNECT_CONFLUENT_TOPIC_REPLICATION_FACTOR: "1"
     volumes:
       - ../../confluent-hub:/usr/share/confluent-hub-components
 
@@ -244,6 +249,11 @@ services:
       # # With JDK9+, need to specify address=*:5005, see https://www.baeldung.com/java-application-remote-debugging#from-java9
       # JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
       CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
+
+      # centralized license is needed with CP 8.1+
+      # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+      CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: 'broker-europe:9092'
+      CONNECT_CONFLUENT_TOPIC_REPLICATION_FACTOR: "1"
     volumes:
       - ../../confluent-hub:/usr/share/confluent-hub-components
       

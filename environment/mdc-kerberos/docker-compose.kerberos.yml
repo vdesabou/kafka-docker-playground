@@ -158,6 +158,17 @@ services:
         keyTab=\"/var/lib/secret/kafka-connect.key\" \
         principal=\"connect@TEST.CONFLUENT.IO\";"
 
+      # centralized license is needed with CP 8.1+
+      # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+      CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: GSSAPI
+      CONNECT_CONFLUENT_TOPIC_SASL_KERBEROS_SERVICE_NAME: kafka
+      CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-connect.key\" \
+        principal=\"connect@TEST.CONFLUENT.IO\";"
+
   connect-europe:
     volumes:
         - secret:/var/lib/secret
@@ -192,6 +203,17 @@ services:
         keyTab=\"/var/lib/secret/kafka-connect.key\" \
         principal=\"connect@TEST.CONFLUENT.IO\";"
 
+      # centralized license is needed with CP 8.1+
+      # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+      CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: GSSAPI
+      CONNECT_CONFLUENT_TOPIC_SASL_KERBEROS_SERVICE_NAME: kafka
+      CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-connect.key\" \
+        principal=\"connect@TEST.CONFLUENT.IO\";"
+        
   control-center:
     volumes:
         - secret:/var/lib/secret

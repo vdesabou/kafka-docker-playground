@@ -299,7 +299,11 @@ services:
                   # -XX:MaxInlineLevel=15 -Djava.awt.headless=true
       PYROSCOPE_APPLICATION_NAME: "connect"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
-
+      # centralized license is needed with CP 8.1+
+      # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+      CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: 'broker:9092'
+      CONNECT_CONFLUENT_TOPIC_REPLICATION_FACTOR: "1"
+      
   connect2:
     image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     hostname: connect2
@@ -371,6 +375,10 @@ services:
                   # -XX:MaxInlineLevel=15 -Djava.awt.headless=true
       PYROSCOPE_APPLICATION_NAME: "connect2"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
+      # centralized license is needed with CP 8.1+
+      # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+      CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: 'broker:9092'
+      CONNECT_CONFLUENT_TOPIC_REPLICATION_FACTOR: "1"
 
   connect3:
     image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
@@ -443,6 +451,10 @@ services:
                   # -XX:MaxInlineLevel=15 -Djava.awt.headless=true
       PYROSCOPE_APPLICATION_NAME: "connect3"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
+      # centralized license is needed with CP 8.1+
+      # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+      CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: 'broker:9092'
+      CONNECT_CONFLUENT_TOPIC_REPLICATION_FACTOR: "1"
 
   ksqldb-server:
     image: ${CP_KSQL_IMAGE}:${CP_KSQL_TAG}

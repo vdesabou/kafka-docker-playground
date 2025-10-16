@@ -106,6 +106,14 @@ services:
                 username=\"connect\" \
                 password=\"connect-secret\";"
 
+            # centralized license is needed with CP 8.1+
+            # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+            CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: SCRAM-SHA-256
+            CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
+                username=\"connect\" \
+                password=\"connect-secret\";"
+
     connect2:
         volumes:
             - ../../environment/sasl-scram/client.properties:/tmp/client.properties
@@ -139,6 +147,14 @@ services:
             CONNECT_CONSUMER_SASL_MECHANISM: SCRAM-SHA-256
             CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_PLAINTEXT
             CONNECT_CONSUMER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
+                username=\"connect\" \
+                password=\"connect-secret\";"
+
+            # centralized license is needed with CP 8.1+
+            # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+            CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: SCRAM-SHA-256
+            CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
                 username=\"connect\" \
                 password=\"connect-secret\";"
 
@@ -178,6 +194,14 @@ services:
                 username=\"connect\" \
                 password=\"connect-secret\";"
 
+            # centralized license is needed with CP 8.1+
+            # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+            CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: SCRAM-SHA-256
+            CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
+                username=\"connect\" \
+                password=\"connect-secret\";"
+                
     schema-registry:
         volumes:
             - ../../environment/sasl-scram/client.properties:/tmp/client.properties

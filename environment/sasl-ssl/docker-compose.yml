@@ -220,6 +220,19 @@ services:
       # https://github.com/vdesabou/kafka-docker-playground/issues/18
       #CONNECT_SSL_CIPHER_SUITES: "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"
 
+      # centralized license is needed with CP 8.1+
+      # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+      CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: SASL_SSL
+      CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+        username=\"client\" \
+        password=\"client-secret\";"
+      CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: PLAIN
+      CONNECT_CONFLUENT_TOPIC_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.connect.truststore.jks
+      CONNECT_CONFLUENT_TOPIC_SSL_TRUSTSTORE_PASSWORD: confluent
+      CONNECT_CONFLUENT_TOPIC_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.connect.keystore.jks
+      CONNECT_CONFLUENT_TOPIC_SSL_KEYSTORE_PASSWORD: confluent
+      CONNECT_CONFLUENT_TOPIC_SSL_KEY_PASSWORD: confluent
+
   connect2:
     depends_on:
       - broker
@@ -296,6 +309,19 @@ services:
       SCHEMA_REGISTRY_OPTS: $LEGACY_CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_SSL
       # https://github.com/vdesabou/kafka-docker-playground/issues/18
       #CONNECT_SSL_CIPHER_SUITES: "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"
+
+      # centralized license is needed with CP 8.1+
+      # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+      CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: SASL_SSL
+      CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+        username=\"client\" \
+        password=\"client-secret\";"
+      CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: PLAIN
+      CONNECT_CONFLUENT_TOPIC_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.connect.truststore.jks
+      CONNECT_CONFLUENT_TOPIC_SSL_TRUSTSTORE_PASSWORD: confluent
+      CONNECT_CONFLUENT_TOPIC_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.connect.keystore.jks
+      CONNECT_CONFLUENT_TOPIC_SSL_KEYSTORE_PASSWORD: confluent
+      CONNECT_CONFLUENT_TOPIC_SSL_KEY_PASSWORD: confluent
 
   connect3:
     depends_on:
@@ -374,6 +400,19 @@ services:
       # https://github.com/vdesabou/kafka-docker-playground/issues/18
       #CONNECT_SSL_CIPHER_SUITES: "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"
 
+      # centralized license is needed with CP 8.1+
+      # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+      CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: SASL_SSL
+      CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+        username=\"client\" \
+        password=\"client-secret\";"
+      CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: PLAIN
+      CONNECT_CONFLUENT_TOPIC_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.connect.truststore.jks
+      CONNECT_CONFLUENT_TOPIC_SSL_TRUSTSTORE_PASSWORD: confluent
+      CONNECT_CONFLUENT_TOPIC_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.connect.keystore.jks
+      CONNECT_CONFLUENT_TOPIC_SSL_KEYSTORE_PASSWORD: confluent
+      CONNECT_CONFLUENT_TOPIC_SSL_KEY_PASSWORD: confluent
+      
   ksqldb-server:
     volumes:
       - ../../environment/sasl-ssl/security:/etc/kafka/secrets

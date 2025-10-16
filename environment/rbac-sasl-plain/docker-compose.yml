@@ -408,6 +408,17 @@ services:
             CONNECT_CONFLUENT_METADATA_BASIC_AUTH_USER_INFO: 'connectAdmin:connectAdmin'
             CONNECT_CONFLUENT_METADATA_HTTP_AUTH_CREDENTIALS_PROVIDER: 'BASIC'
 
+            # centralized license is needed with CP 8.1+
+            # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+            CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: 'OAUTHBEARER'
+            CONNECT_CONFLUENT_TOPIC_SASL_LOGIN_CALLBACK_HANDLER_CLASS: 'io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler'
+            CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+                    username="connectAdmin" \
+                    password="connectAdmin" \
+                    metadataServerUrls="http://broker:8091";
+      
+
     connect2:
         volumes:
           - ../../environment/rbac-sasl-plain/conf:/tmp/conf
@@ -486,6 +497,16 @@ services:
             CONNECT_CONFLUENT_METADATA_BOOTSTRAP_SERVER_URLS: http://broker:8091
             CONNECT_CONFLUENT_METADATA_BASIC_AUTH_USER_INFO: 'connectAdmin:connectAdmin'
             CONNECT_CONFLUENT_METADATA_HTTP_AUTH_CREDENTIALS_PROVIDER: 'BASIC'
+
+            # centralized license is needed with CP 8.1+
+            # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+            CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: 'OAUTHBEARER'
+            CONNECT_CONFLUENT_TOPIC_SASL_LOGIN_CALLBACK_HANDLER_CLASS: 'io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler'
+            CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+                    username="connectAdmin" \
+                    password="connectAdmin" \
+                    metadataServerUrls="http://broker:8091";
 
     connect3:
         volumes:
@@ -566,6 +587,16 @@ services:
             CONNECT_CONFLUENT_METADATA_BASIC_AUTH_USER_INFO: 'connectAdmin:connectAdmin'
             CONNECT_CONFLUENT_METADATA_HTTP_AUTH_CREDENTIALS_PROVIDER: 'BASIC'
 
+            # centralized license is needed with CP 8.1+
+            # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+            CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: 'OAUTHBEARER'
+            CONNECT_CONFLUENT_TOPIC_SASL_LOGIN_CALLBACK_HANDLER_CLASS: 'io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler'
+            CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+                    username="connectAdmin" \
+                    password="connectAdmin" \
+                    metadataServerUrls="http://broker:8091";
+                    
     ksqldb-server:
       volumes:
         - ../../environment/rbac-sasl-plain/conf:/tmp/conf
