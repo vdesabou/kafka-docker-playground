@@ -3,7 +3,7 @@
     "aws.cloudwatch.log.streams": "LIST",
     "aws.cloudwatch.logs.url": "",
     "aws.cloudwatch.signing.region": "",
-    "aws.credentials.provider.class": "com.amazonaws.auth.DefaultAWSCredentialsProviderChain",
+    "aws.credentials.provider.class": "software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider",
     "aws.poll.interval.ms": "1000",
     "aws.secret.access.key": "[hidden]",
     "behavior.on.error": "FAIL",

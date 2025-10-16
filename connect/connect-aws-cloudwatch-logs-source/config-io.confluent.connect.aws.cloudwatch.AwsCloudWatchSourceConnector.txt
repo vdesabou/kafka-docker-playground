@@ -24,7 +24,7 @@ The secret access key used to authenticate personal AWS credentials such as IAM 
 Credentials provider or provider chain to use for authentication to AWS.
 
 	 - Type: CLASS
-	 - Default: com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+	 - Default: software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
 	 - Importance: LOW
 	 - Required: false
 
