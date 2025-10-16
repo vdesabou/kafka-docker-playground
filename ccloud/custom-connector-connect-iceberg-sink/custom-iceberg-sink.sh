@@ -52,6 +52,7 @@ set -e
 
 log "Create a custom plugin $plugin_name in environment $ENVIRONMENT"
 output=$(confluent ccpm plugin create --name $plugin_name --description "Custom Iceberg Sink Connector" --cloud "aws" --environment $ENVIRONMENT --output json)
+ret=$?
 if [ $ret -eq 0 ]
 then
     plugin_id=$(echo $output | jq -r '.id')
@@ -64,6 +65,7 @@ fi
 
 log "Uploading custom plugin $plugin_name version $ICEBERG_VERSION with plugin id $plugin_id in environment $ENVIRONMENT"
 output=$(confluent ccpm plugin version create --plugin $plugin_id --plugin-file "iceberg-iceberg-kafka-connect-$ICEBERG_VERSION.zip" --version "$ICEBERG_VERSION" --connector-classes "io.confluent.connect.iceberg.IcebergSinkConnector:SINK" --sensitive-properties "iceberg.kafka.sasl.jaas.config" --environment $ENVIRONMENT --output json)
+ret=$?
 if [ $ret -eq 0 ]
 then
     plugin_version_id=$(echo $output | jq -r '.id')

@@ -52,6 +52,7 @@ set -e
 
 log "Create a custom plugin $plugin_name in environment $ENVIRONMENT"
 output=$(confluent ccpm plugin create --name $plugin_name --description "Custom S3 Sink Connector" --cloud "aws" --environment $ENVIRONMENT --output json)
+ret=$?
 if [ $ret -eq 0 ]
 then
     plugin_id=$(echo $output | jq -r '.id')
@@ -64,6 +65,7 @@ fi
 
 log "Uploading custom plugin $plugin_name version $S3_VERSION with plugin id $plugin_id in environment $ENVIRONMENT"
 output=$(confluent ccpm plugin version create --plugin $plugin_id --plugin-file "confluentinc-kafka-connect-s3-$S3_VERSION.zip" --version "$S3_VERSION" --connector-classes "io.confluent.connect.s3.S3SinkConnector:SINK" --sensitive-properties "aws.secret.access.key" --environment $ENVIRONMENT --output json)
+ret=$?
 if [ $ret -eq 0 ]
 then
     plugin_version_id=$(echo $output | jq -r '.id')
