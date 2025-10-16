@@ -26,5 +26,5 @@ services:
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jms
       # JDK 17
-      KAFKA_OPTS: -verbose:class --add-opens java.base/java.io=ALL-UNNAMED
+      KAFKA_OPTS: "--add-opens java.base/java.io=ALL-UNNAMED"
       # CONNECT_LOG4J_ROOT_LOGLEVEL: TRACE
