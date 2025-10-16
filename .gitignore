@@ -85,3 +85,4 @@ connect-migration-utility-discovery-output
 .vscode
 ._aws_credentials_aws_account_with_assume_role
 ._aws_credentials_with_assuming_iam_role
+certs-create.sh
