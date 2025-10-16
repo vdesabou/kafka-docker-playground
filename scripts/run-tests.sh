@@ -52,6 +52,7 @@ do
 
     # 🤖 CI: ignore examples with github issues opened and with label 'CI ignore ⏭️' #7203
     title="🔥 ${dir}"
+    set +e
     gh issue list --limit 500 | grep "$title" > /dev/null 2>&1
     if [ $? == 0 ]
     then
