@@ -46,6 +46,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-europe:2181'
+      KAFKA_LISTENERS: PLAINTEXT://broker-europe:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker-europe:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
@@ -89,6 +90,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-us:2181'
+      KAFKA_LISTENERS: PLAINTEXT://broker-us:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker-us:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
