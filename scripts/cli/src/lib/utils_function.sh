@@ -1761,58 +1761,6 @@ function create_or_get_oracle_image() {
   log "✨ Using Oracle prebuilt image $ORACLE_IMAGE (oracle version 🔢 $ORACLE_VERSION and 📂 setup folder $SETUP_FOLDER)"
 }
 
-function print_code_pass() {
-  local MESSAGE=""
-	local CODE=""
-  OPTIND=1
-  while getopts ":c:m:" opt; do
-    case ${opt} in
-			c ) CODE=${OPTARG};;
-      m ) MESSAGE=${OPTARG};;
-		esac
-	done
-  shift $((OPTIND-1))
-	printf "${PRETTY_PASS}${PRETTY_CODE}%s\e[0m\n" "${CODE}"
-	[[ -z "$MESSAGE" ]] || printf "\t$MESSAGE\n"
-}
-function print_code_error() {
-  local MESSAGE=""
-	local CODE=""
-  OPTIND=1
-  while getopts ":c:m:" opt; do
-    case ${opt} in
-			c ) CODE=${OPTARG};;
-      m ) MESSAGE=${OPTARG};;
-		esac
-	done
-  shift $((OPTIND-1))
-	printf "${PRETTY_ERROR}${PRETTY_CODE}%s\e[0m\n" "${CODE}"
-	[[ -z "$MESSAGE" ]] || printf "\t$MESSAGE\n"
-}
-
-function exit_with_error()
-{
-  local USAGE="\nUsage: exit_with_error -c code -n name -m message -l line_number\n"
-  local NAME=""
-  local MESSAGE=""
-  local CODE=$UNSPECIFIED_ERROR
-  local LINE=
-  OPTIND=1
-  while getopts ":n:m:c:l:" opt; do
-    case ${opt} in
-      n ) NAME=${OPTARG};;
-      m ) MESSAGE=${OPTARG};;
-      c ) CODE=${OPTARG};;
-      l ) LINE=${OPTARG};;
-      ? ) printf $USAGE;return 1;;
-    esac
-  done
-  shift $((OPTIND-1))
-  print_error "error ${CODE} occurred in ${NAME} at line $LINE"
-	printf "\t${MESSAGE}\n"
-  exit $CODE
-}
-
 function get_kafka_docker_playground_dir () {
   DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
   KAFKA_DOCKER_PLAYGROUND_DIR="$(echo $DIR_UTILS | sed 's|\(.*kafka-docker-playground\).*|\1|')"
@@ -2129,15 +2077,13 @@ function bootstrap_ccloud_environment () {
 
   check_expected_ccloud_details "$expected_cloud" "$expected_region"
 
-  ccloud::create_ccloud_stack false  \
-    && print_code_pass -c "ccloud::create_ccloud_stack false"
+  ccloud::create_ccloud_stack false
 
   CCLOUD_CONFIG_FILE=/tmp/tmp.config
   export CCLOUD_CONFIG_FILE=$CCLOUD_CONFIG_FILE
   ccloud::validate_ccloud_config $CCLOUD_CONFIG_FILE || exit 1
 
-  ccloud::generate_configs $CCLOUD_CONFIG_FILE \
-    && print_code_pass -c "ccloud::generate_configs $CCLOUD_CONFIG_FILE"
+  ccloud::generate_configs $CCLOUD_CONFIG_FILE
 
   if [ -f $DELTA_CONFIGS_ENV ]
   then

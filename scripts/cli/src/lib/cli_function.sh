@@ -1533,7 +1533,7 @@ function cleanup_confluent_cloud_resources () {
       if [[ $name = *_${user}* ]]
       then
           log "deleting connector $id ($name)"
-          check_if_skip "confluent connect cluster delete $id --force"
+          check_if_skip "confluent connect cluster delete $id --force || true"
       fi
   done
 
@@ -1548,14 +1548,14 @@ function cleanup_confluent_cloud_resources () {
       if [[ $name = pg-${user}-sa-* ]]
       then
           log "deleting environment $id ($name)"
-          check_if_skip "confluent environment delete $id --force"
+          check_if_skip "confluent environment delete $id --force || true"
       fi
   done
 
   for topic in $(confluent kafka topic list | awk '{if(NR>2) print $1}')
   do
       log "delete topic $topic"
-      check_if_skip "confluent kafka topic delete \"$topic\" --force"
+      check_if_skip "confluent kafka topic delete \"$topic\" --force || true"
   done
 
   if [ ! -z "$GITHUB_RUN_NUMBER" ]
@@ -1576,7 +1576,7 @@ function cleanup_confluent_cloud_resources () {
         name=$(echo $(_jq '.name'))
 
         log "deleting service-account $id ($description)"
-        check_if_skip "confluent iam service-account delete $id --force"
+        check_if_skip "confluent iam service-account delete $id --force || true"
     done
   fi
 }
