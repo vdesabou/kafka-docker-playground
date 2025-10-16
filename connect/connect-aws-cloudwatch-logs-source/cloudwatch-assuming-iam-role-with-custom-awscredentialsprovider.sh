@@ -13,6 +13,12 @@ fi
 
 logwarn "⚠️ This example and associated custom code is not supported, use at your own risks !"
 
+export COMPONENT_NAME="awscredentialsprovider"
+if version_gt $CONNECTOR_TAG "1.9.9"
+then
+    export COMPONENT_NAME="awscredentialsprovider-v2"
+fi
+
 AWS_STS_ROLE_ARN=${AWS_STS_ROLE_ARN:-$1}
 
 if [ -z "$AWS_STS_ROLE_ARN" ]
@@ -35,7 +41,7 @@ fi
 
 handle_aws_credentials
 
-for component in awscredentialsprovider
+for component in $COMPONENT_NAME
 do
     set +e
     log "🏗 Building jar for ${component}"
@@ -101,6 +107,7 @@ playground connector create-or-update --connector aws-cloudwatch-logs-source  <<
     "aws.cloudwatch.log.group": "$LOG_GROUP",
     "aws.cloudwatch.log.streams": "$LOG_STREAM",
     "aws.credentials.provider.class": "com.github.vdesabou.AwsAssumeRoleCredentialsProvider",
+    "_comment": "The following sts parameters are not used when using v2 of the connector",
     "aws.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
     "aws.credentials.provider.sts.role.session.name": "session-name",
     "aws.credentials.provider.sts.role.external.id": "123",
