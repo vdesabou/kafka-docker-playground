@@ -395,8 +395,6 @@ then
           fi
           export CP_CONNECT_TAG="$TAG"
 
-          maybe_create_image
-
           if [ "$first_loop" = true ]
           then
             if [[ "$OSTYPE" == "darwin"* ]]
@@ -457,7 +455,6 @@ then
               set -e
               log "🔮 Remplacing $name-$CONNECTOR_TAG.jar by $connector_jar_name"
               cp $CONNECTOR_JAR $current_jar_path
-              maybe_create_image
             fi
           fi
           ((i=i+1))
@@ -518,7 +515,6 @@ else
         if [ -z "$CP_CONNECT_TAG" ]
         then
           export CP_CONNECT_TAG="$TAG"
-          maybe_create_image
         fi
       else
         ###
@@ -546,7 +542,6 @@ else
             if [ -z "$CP_CONNECT_TAG" ]
             then
               export CP_CONNECT_TAG="$TAG"
-              maybe_create_image
             fi
           else
             if [ -z "$CP_CONNECT_TAG" ]
@@ -567,8 +562,6 @@ else
               log "🎯🤐 CONNECTOR_ZIP (--connector-zip option) is set with $CONNECTOR_ZIP"
               connector_zip_name=$(basename ${CONNECTOR_ZIP})
               cp $CONNECTOR_ZIP /tmp/
-
-              maybe_create_image
 
               log "🎱 Installing connector from zip $connector_zip_name"
               set +e
@@ -610,8 +603,6 @@ else
                 version_to_get_from_hub="5.0.1"
               fi
             fi
-
-            maybe_create_image
 
             log "🎱 Installing connector $owner/$name:$version_to_get_from_hub"
             set +e
@@ -659,8 +650,6 @@ else
               set -e
               log "🔮 Remplacing $name-$version.jar by $connector_jar_name"
               cp $CONNECTOR_JAR $current_jar_path
-
-              maybe_create_image
             ###
             #  Neither CONNECTOR_ZIP or CONNECTOR_JAR are set
             ###
