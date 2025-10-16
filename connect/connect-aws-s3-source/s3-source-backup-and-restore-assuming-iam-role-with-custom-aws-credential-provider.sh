@@ -21,6 +21,12 @@ then
      exit 111
 fi
 
+export COMPONENT_NAME="awscredentialsprovider"
+if version_gt $CONNECTOR_TAG "2.9.9"
+then
+    export COMPONENT_NAME="awscredentialsprovider-v2"
+fi
+
 AWS_STS_ROLE_ARN=${AWS_STS_ROLE_ARN:-$1}
 
 if [ -z "$AWS_STS_ROLE_ARN" ]
@@ -43,7 +49,7 @@ fi
 
 handle_aws_credentials
 
-for component in awscredentialsprovider-v2 awscredentialsprovider
+for component in $COMPONENT_NAME
 do
     set +e
     log "🏗 Building jar for ${component}"
@@ -140,6 +146,7 @@ playground connector create-or-update --connector s3-source  << EOF
     "s3.bucket.name": "$AWS_BUCKET_NAME",
     "topics.dir": "$TAG",
     "s3.credentials.provider.class": "com.github.vdesabou.AwsAssumeRoleCredentialsProvider",
+    "_comment": "The following sts parameters are not used when using v3 of the connector",
     "s3.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
     "s3.credentials.provider.sts.role.session.name": "session-name",
     "s3.credentials.provider.sts.role.external.id": "123",
