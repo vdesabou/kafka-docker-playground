@@ -81,4 +81,4 @@ curl -X POST \
 sleep 5
 
 log "Verify we have received the data in topic-servicenow topic"
-playground topic consume --topic topic-servicenow --min-expected-messages 1 --timeout 60
+playground topic consume --topic topic-servicenow --min-expected-messages 1 --max-messages 3 --timeout 60
