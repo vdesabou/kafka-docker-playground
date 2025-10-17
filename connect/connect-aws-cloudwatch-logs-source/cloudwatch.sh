@@ -64,6 +64,7 @@ playground connector create-or-update --connector aws-cloudwatch-logs-source  <<
     "aws.cloudwatch.logs.url": "$CLOUDWATCH_LOGS_URL",
     "aws.cloudwatch.log.group": "$LOG_GROUP",
     "aws.cloudwatch.log.streams": "$LOG_STREAM",
+    "aws.cloudwatch.signing.region": "$AWS_REGION",
     "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
     "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
     "confluent.license": "",
