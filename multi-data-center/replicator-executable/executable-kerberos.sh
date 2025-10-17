@@ -18,6 +18,11 @@ seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i client bash -c
 log "Sending sales in US cluster"
 seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --bootstrap-server broker-us:9092 --topic sales_US --producer.config /etc/kafka/producer-us.properties'
 
+if version_gt $TAG_BASE "8.0.99"
+then
+    playground container exec --root --command "microdnf -y install krb5-workstation" -c replicator-europe
+    playground container exec --root --command "microdnf -y install krb5-workstation" -c replicator-europuse
+fi
 docker container exec -i replicator-us bash -c 'kinit -k -t /var/lib/secret/kafka-connect.key connect'
 docker container exec -i replicator-europe bash -c 'kinit -k -t /var/lib/secret/kafka-connect.key connect'
 
