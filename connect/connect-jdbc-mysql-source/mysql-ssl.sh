@@ -44,9 +44,7 @@ then
     chmod -R a+rw .
 else
     # on CI, docker is run as runneradmin user, need to use sudo
-    ls -lrt
     sudo chmod -R a+rw .
-    ls -lrt
 fi
 docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keytool -importcert -alias MySQLCACert -noprompt -file /tmp/ca.pem -keystore /tmp/truststore.jks -storepass mypassword
 # Convert the client key and certificate files to a PKCS #12 archive
@@ -57,9 +55,7 @@ then
     chmod -R a+rw .
 else
     # on CI, docker is run as runneradmin user, need to use sudo
-    ls -lrt
     sudo chmod -R a+rw .
-    ls -lrt
 fi
 # Import the client key and certificate into a Java keystore:
 docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keytool -importkeystore -srckeystore /tmp/client-keystore.p12 -srcstoretype pkcs12 -srcstorepass mypassword -destkeystore /tmp/keystore.jks -deststoretype JKS -deststorepass mypassword

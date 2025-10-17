@@ -100,9 +100,7 @@ then
     chmod -R a+rw .
 else
     # on CI, docker is run as runneradmin user, need to use sudo
-    ls -lrt
     sudo chmod -R a+rw .
-    ls -lrt
 fi
 cd ${DIR}
 

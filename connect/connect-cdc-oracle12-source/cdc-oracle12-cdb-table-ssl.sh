@@ -135,9 +135,7 @@ then
     chmod -R a+rw .
 else
     # on CI, docker is run as runneradmin user, need to use sudo
-    ls -lrt
     sudo chmod -R a+rw .
-    ls -lrt
 fi
 log "Create a JKS truststore"
 rm -f truststore.jks
@@ -148,9 +146,7 @@ then
     chmod -R a+rw .
 else
     # on CI, docker is run as runneradmin user, need to use sudo
-    ls -lrt
     sudo chmod -R a+rw .
-    ls -lrt
 fi
 # We import the test CA certificate
 docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keytool -import -v -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/truststore.jks -storetype JKS -storepass 'welcome123' -noprompt

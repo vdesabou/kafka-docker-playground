@@ -47,9 +47,7 @@ then
     chmod -R a+rw .
 else
     # on CI, docker is run as runneradmin user, need to use sudo
-    ls -lrt
     sudo chmod -R a+rw .
-    ls -lrt
 fi
 log "LDAPS: Creating a Root Certificate Authority (CA)"
 docker run --quiet --rm -v $PWD:/tmp alpine/openssl req -new -x509 -days 365 -nodes -out /tmp/ca.crt -keyout /tmp/ca.key -subj "/CN=root-ca"
@@ -89,9 +87,7 @@ then
     chmod -R a+rw .
 else
     # on CI, docker is run as runneradmin user, need to use sudo
-    ls -lrt
     sudo chmod -R a+rw .
-    ls -lrt
 fi
 cd -
 cd ${OLDDIR}

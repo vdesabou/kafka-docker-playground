@@ -149,9 +149,7 @@ then
     chmod -R a+rw .
 else
     # on CI, docker is run as runneradmin user, need to use sudo
-    ls -lrt
     sudo chmod -R a+rw .
-    ls -lrt
 fi
 log "Create a JKS keystore"
 # Create a new private/public key pair for 'CN=connect,C=US'
@@ -171,9 +169,7 @@ then
     chmod -R a+rw .
 else
     # on CI, docker is run as runneradmin user, need to use sudo
-    ls -lrt
     sudo chmod -R a+rw .
-    ls -lrt
 fi
 docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keytool -import -v -noprompt -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
 # Import the signed certificate
@@ -184,9 +180,7 @@ then
     chmod -R a+rw .
 else
     # on CI, docker is run as runneradmin user, need to use sudo
-    ls -lrt
     sudo chmod -R a+rw .
-    ls -lrt
 fi
 docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keytool -import -v -alias testclient -file /tmp/cert.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
 log "Displaying keystore"
