@@ -149,5 +149,5 @@ select * from PLAYGROUNDTABLE;
 
   exit;
 EOF
-cat /tmp/result.log
+# cat /tmp/result.log
 grep "This is my message 1" /tmp/result.log

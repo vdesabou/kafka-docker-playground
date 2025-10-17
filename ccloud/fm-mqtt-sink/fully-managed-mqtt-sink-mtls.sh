@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 mkdir -p ../../ccloud/fm-mqtt-sink/security
 cd ../../ccloud/fm-mqtt-sink/security
-playground tools certs-create --output-folder "$PWD" --container connect --container mosquitto --verbose
+playground tools certs-create --output-folder "$PWD" --container connect --container mosquitto
 base64_truststore=$(cat $PWD/kafka.connect.truststore.jks | base64 | tr -d '\n')
 base64_keystore=$(cat $PWD/kafka.connect.keystore.jks | base64 | tr -d '\n')
 cd -

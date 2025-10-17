@@ -34,7 +34,7 @@ sed -e "s|:CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY:|$CCLOUD_REST_PROXY_SECURIT
 
 mkdir -p ../../ccloud/rest-proxy-security-plugin/security
 cd ../../ccloud/rest-proxy-security-plugin/security
-playground tools certs-create --output-folder "$PWD" --container restproxy --container $CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY --verbose
+playground tools certs-create --output-folder "$PWD" --container restproxy --container $CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY
 cd -
 
 docker compose -f "${PWD}/docker-compose.yml" up -d --quiet-pull
