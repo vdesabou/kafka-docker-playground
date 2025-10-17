@@ -464,3 +464,5 @@ cat ./docs/introduction-header.md > ./docs/introduction.md
 cat $badges_file >> ./docs/introduction.md
 echo "" >> ./docs/introduction.md
 cat ./docs/introduction-footer.md >> ./docs/introduction.md
+
+log "It's over Michael!"

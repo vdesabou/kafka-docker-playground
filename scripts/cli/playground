@@ -14501,6 +14501,8 @@ playground_update_readme_command() {
   echo "" >> ./docs/introduction.md
   cat ./docs/introduction-footer.md >> ./docs/introduction.md
 
+  log "It's over Michael!"
+
 }
 
 # :command.function
