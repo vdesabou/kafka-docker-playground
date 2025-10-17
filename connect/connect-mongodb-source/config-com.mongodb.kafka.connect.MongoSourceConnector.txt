@@ -343,7 +343,7 @@ Resuming a change stream requires a resume token, which the connector stores as 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Actuated only if 'startup.mode = timestamp'. Specifies the starting point for the change stream. Must be either an integer number of seconds since the Epoch in the decimal format (example: 30), or an instant in the ISO-8601 format with one second precision (example: '1970-01-01T00:00:30Z'), or a BSON Timestamp in the canonical extended JSON (v2) format (example: '{"$timestamp": {"t": 30, "i": 0}}'). You may specify '0' to start at the beginning of the oplog. Requires MongoDB 4.0 or above. See https://www.mongodb.com/docs/current/reference/operator/aggregation/changeStream/.
+	 - Importance: Actuated only if 'startup.mode = timestamp'. Specifies the starting point for the change stream. Must be either an integer number of seconds since the Epoch in the decimal format (example: 30), or an instant in the ISO-8601 format with one second precision (example: 'YYYY-MM-DDTHH:mm:ss'), or a BSON Timestamp in the canonical extended JSON (v2) format (example: '{"$timestamp": {"t": 30, "i": 0}}'). You may specify '0' to start at the beginning of the oplog. Requires MongoDB 4.0 or above. See https://www.mongodb.com/docs/current/reference/operator/aggregation/changeStream/.
 	 - Required: MEDIUM
 
 🔘 startup.mode.copy.existing.max.threads
