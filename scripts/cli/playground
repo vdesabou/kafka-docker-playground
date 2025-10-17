@@ -14056,6 +14056,7 @@ playground_update_readme_command() {
   badges_tmp_file=$tmp_dir/badges.md
   gh_msg_file=$tmp_dir/gh.txt
   gh_msg_file_intro=$tmp_dir/gh_intro.txt
+  gh_msg_file_final=$tmp_dir/gh_final.txt
 
   cp $content_template_file $content_file
   cp $badges_template_file $badges_file
@@ -14093,6 +14094,8 @@ playground_update_readme_command() {
     touch ${gh_msg_file}
     rm -f ${gh_msg_file_intro}
     touch ${gh_msg_file_intro}
+    rm -f ${gh_msg_file_final}
+    touch ${gh_msg_file_final}
     gh_issue_number=""
     if [ ! -d $test ]
     then
@@ -14180,16 +14183,6 @@ playground_update_readme_command() {
         testdir=$(echo "$test" | sed 's/\//-/g')
         ci_file="${ci_folder}/${image_version}-${testdir}-${version}-${script_name}"
         ci_output_file="${ci_output_folder}/${image_version}-${testdir}-${version}-${script_name}.log"
-
-        MAX_SIZE=60000
-
-        # Check if the file exists and is larger than the limit
-        if [ -f "$ci_output_file" ] && [ $(wc -c < "$ci_output_file" | awk '{print $1}') -gt $MAX_SIZE ]
-        then
-            logwarn "✂️ log file $ci_output_file exceeds $MAX_SIZE characters. Truncating..."
-            # Keep only the first $MAX_SIZE bytes/characters and overwrite the file
-            head -c $MAX_SIZE "$ci_output_file" > "$ci_output_file.tmp" && mv "$ci_output_file.tmp" "$ci_output_file"
-        fi
 
         if [ -f ${ci_file} ]
         then
@@ -14293,15 +14286,15 @@ playground_update_readme_command() {
           let "nb_total_success++"
           TEST_SUCCESS[$image_version_no_dot]="$html_url"
           echo -e "👍 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
-          if [ -f ${ci_output_file} ]; then
-          echo -e "<details><summary>Logs</summary>" >> ${gh_msg_file}
-          echo -e "<pre>\n" >> ${gh_msg_file}
-          echo -e "<code>\n" >> ${gh_msg_file}
-          perl -pe 's/\e\[[0-9;]*[mGKH]//g; s/^-+$/###################################################################/' ${ci_output_file} >> ${gh_msg_file}
-          echo -e "\n</code>" >> ${gh_msg_file}
-          echo -e "</pre>\n" >> ${gh_msg_file}
-          echo -e "</details>\n" >> ${gh_msg_file}
-          fi
+          # if [ -f ${ci_output_file} ]; then
+          # echo -e "<details><summary>Logs</summary>" >> ${gh_msg_file}
+          # echo -e "<pre>\n" >> ${gh_msg_file}
+          # echo -e "<code>\n" >> ${gh_msg_file}
+          # perl -pe 's/\e\[[0-9;]*[mGKH]//g; s/^-+$/###################################################################/' ${ci_output_file} >> ${gh_msg_file}
+          # echo -e "\n</code>" >> ${gh_msg_file}
+          # echo -e "</pre>\n" >> ${gh_msg_file}
+          # echo -e "</details>\n" >> ${gh_msg_file}
+          # fi
           log "👍 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
         fi
       done #end image_version
@@ -14312,6 +14305,14 @@ playground_update_readme_command() {
       # GH issues
       if [ "$html_url" != "" ]
       then
+        MAX_SIZE=65000
+        # Check if the file exists and is larger than the limit
+        if [ -f "$gh_msg_file" ] && [ $(wc -c < "$gh_msg_file" | awk '{print $1}') -gt $MAX_SIZE ]
+        then
+            logwarn "✂️ log file $gh_msg_file exceeds $MAX_SIZE characters. Truncating..."
+            # Keep only the first $MAX_SIZE bytes/characters and overwrite the file
+            head -c $MAX_SIZE "$gh_msg_file" > "$gh_msg_file.tmp" && mv "$gh_msg_file.tmp" "$gh_msg_file"
+        fi
         t=$(echo ${testdir} | sed 's/-/\//')
         title="🔥 ${t}"
         log "Number of successful tests: $nb_success/${nb_tests}"
@@ -14321,15 +14322,17 @@ playground_update_readme_command() {
           if [ $? != 0 ]
           then
             echo -e "🆕💥 New issue !\n" >> ${gh_msg_file_intro}
-            msg=$(cat ${gh_msg_file_intro} ${gh_msg_file})
+            cat ${gh_msg_file_intro} >> ${gh_msg_file_final}
+            cat ${gh_msg_file} >> ${gh_msg_file_final}
             log "Creating GH issue with title $title"
-            gh issue create --title "$title" --body "$msg" --assignee vdesabou --label "new 🆕"
+            gh issue create --title "$title" --body-file "$gh_msg_file_final" --assignee vdesabou --label "new 🆕"
           else
             echo -e "🤦‍♂️💥 Still failing !\n" >> ${gh_msg_file_intro}
-            msg=$(cat ${gh_msg_file_intro} ${gh_msg_file})
+            cat ${gh_msg_file_intro} >> ${gh_msg_file_final}
+            cat ${gh_msg_file} >> ${gh_msg_file_final}
             log "GH issue with title $title already exist, adding comment..."
             issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
-            gh issue comment ${issue_number} --body "$msg"
+            gh issue comment ${issue_number} --body-file "$gh_msg_file_final"
             gh issue edit ${issue_number} --add-label "CI failing 🔥" --remove-label "new 🆕"
           fi
           gh_issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
@@ -14342,8 +14345,9 @@ playground_update_readme_command() {
           then
             issue_number=$(gh issue list --limit 500 | grep "$title" | head -1 | awk '{print $1;}')
             echo -e "👍✅ Issue fixed !\n" >> ${gh_msg_file_intro}
-            msg=$(cat ${gh_msg_file_intro} ${gh_msg_file})
-            gh issue comment ${issue_number} --body "$msg"
+            cat ${gh_msg_file_intro} >> ${gh_msg_file_final}
+            cat ${gh_msg_file} >> ${gh_msg_file_final}
+            gh issue comment ${issue_number} --body-file "$gh_msg_file_final"
             log "Closing GH issue #${issue_number} with title $title"
             gh issue close ${issue_number}
           fi
