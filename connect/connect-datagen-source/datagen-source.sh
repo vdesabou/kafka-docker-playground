@@ -32,60 +32,60 @@ EOF
 
 wait_for_datagen_connector_to_inject_data "orders" "10"
 
-log "Create topic shipments"
-playground connector create-or-update --connector datagen-shipments  << EOF
-{
-      "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-      "kafka.topic": "shipments",
-      "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-      "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-      "value.converter.schemas.enable": "false",
-      "max.interval": 1,
-      "iterations": "10000",
-      "tasks.max": "10",
-      "schema.filename" : "/tmp/schemas/shipments.avro",
-      "schema.keyfield" : "orderid"
-}
-EOF
+# log "Create topic shipments"
+# playground connector create-or-update --connector datagen-shipments  << EOF
+# {
+#       "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
+#       "kafka.topic": "shipments",
+#       "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+#       "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+#       "value.converter.schemas.enable": "false",
+#       "max.interval": 1,
+#       "iterations": "10000",
+#       "tasks.max": "10",
+#       "schema.filename" : "/tmp/schemas/shipments.avro",
+#       "schema.keyfield" : "orderid"
+# }
+# EOF
 
-wait_for_datagen_connector_to_inject_data "shipments" "10"
+# wait_for_datagen_connector_to_inject_data "shipments" "10"
 
-log "Create topic products"
+# log "Create topic products"
 
-playground connector create-or-update --connector datagen-products  << EOF
-{
-      "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-      "kafka.topic": "products",
-      "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-      "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-      "value.converter.schemas.enable": "false",
-      "max.interval": 1,
-      "iterations": "100",
-      "tasks.max": "10",
-      "schema.filename" : "/tmp/schemas/products.avro",
-      "schema.keyfield" : "productid"
-}
-EOF
-wait_for_datagen_connector_to_inject_data "products" "10"
+# playground connector create-or-update --connector datagen-products  << EOF
+# {
+#       "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
+#       "kafka.topic": "products",
+#       "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+#       "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+#       "value.converter.schemas.enable": "false",
+#       "max.interval": 1,
+#       "iterations": "100",
+#       "tasks.max": "10",
+#       "schema.filename" : "/tmp/schemas/products.avro",
+#       "schema.keyfield" : "productid"
+# }
+# EOF
+# wait_for_datagen_connector_to_inject_data "products" "10"
 
-log "Create topic customers"
-playground connector create-or-update --connector datagen-customers  << EOF
-{
-      "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-      "kafka.topic": "customers",
-      "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-      "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-      "value.converter.schemas.enable": "false",
-      "max.interval": 1,
-      "iterations": "1000",
-      "tasks.max": "10",
-      "schema.filename" : "/tmp/schemas/customers.avro",
-      "schema.keyfield" : "customerid"
-}
-EOF
-wait_for_datagen_connector_to_inject_data "customers" "10"
+# log "Create topic customers"
+# playground connector create-or-update --connector datagen-customers  << EOF
+# {
+#       "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
+#       "kafka.topic": "customers",
+#       "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+#       "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+#       "value.converter.schemas.enable": "false",
+#       "max.interval": 1,
+#       "iterations": "1000",
+#       "tasks.max": "10",
+#       "schema.filename" : "/tmp/schemas/customers.avro",
+#       "schema.keyfield" : "customerid"
+# }
+# EOF
+# wait_for_datagen_connector_to_inject_data "customers" "10"
 
-sleep 10
+# sleep 10
 
 log "Verify we have received the data in orders topic"
-playground topic consume --topic orders --min-expected-messages 1 --timeout 60
+playground topic consume --topic orders --min-expected-messages 1 --max-messages 3 --timeout 60
