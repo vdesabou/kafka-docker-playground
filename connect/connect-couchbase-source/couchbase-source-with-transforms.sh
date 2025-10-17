@@ -44,12 +44,12 @@ EOF
 sleep 10
 
 log "Verifying topic airline"
-playground topic consume --topic airline --min-expected-messages 1 --timeout 60
+playground topic consume --topic airline --min-expected-messages 1 --max-messages 3 --timeout 60
 log "Verifying topic airport"
-playground topic consume --topic airport --min-expected-messages 1 --timeout 60
+playground topic consume --topic airport --min-expected-messages 1 --max-messages 3 --timeout 60
 log "Verifying topic hotel"
-playground topic consume --topic hotel --min-expected-messages 1 --timeout 60
+playground topic consume --topic hotel --min-expected-messages 1 --max-messages 3 --timeout 60
 log "Verifying topic landmark"
-playground topic consume --topic landmark --min-expected-messages 1 --timeout 60
+playground topic consume --topic landmark --min-expected-messages 1 --max-messages 3 --timeout 60
 log "Verifying topic route"
-playground topic consume --topic route --min-expected-messages 1 --timeout 60
+playground topic consume --topic route --min-expected-messages 1 --max-messages 3 --timeout 60
