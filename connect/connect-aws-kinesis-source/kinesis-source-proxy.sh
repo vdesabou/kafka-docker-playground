@@ -62,7 +62,7 @@ playground connector create-or-update --connector kinesis-source  << EOF
     "kinesis.region": "$AWS_REGION",
     "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
     "aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY",
-    "kinesis.proxy.url": "https://nginx-proxy:8888",
+    "kinesis.proxy.url": "http://nginx-proxy:8888",
     "confluent.license": "",
     "confluent.topic.bootstrap.servers": "broker:9092",
     "confluent.topic.replication.factor": "1"

@@ -102,7 +102,7 @@ playground connector create-or-update --connector s3-source  << EOF
                "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
                "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
                "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
-               "s3.proxy.url": "https://nginx-proxy:8888",
+               "s3.proxy.url": "http://nginx-proxy:8888",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
