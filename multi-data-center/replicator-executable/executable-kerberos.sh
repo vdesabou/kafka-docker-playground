@@ -21,7 +21,7 @@ seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i client bash -c 'kini
 if version_gt $TAG_BASE "8.0.99"
 then
     playground container exec --root --command "microdnf -y install krb5-workstation" -c replicator-europe
-    playground container exec --root --command "microdnf -y install krb5-workstation" -c replicator-europuse
+    playground container exec --root --command "microdnf -y install krb5-workstation" -c replicator-us
 fi
 docker container exec -i replicator-us bash -c 'kinit -k -t /var/lib/secret/kafka-connect.key connect'
 docker container exec -i replicator-europe bash -c 'kinit -k -t /var/lib/secret/kafka-connect.key connect'
