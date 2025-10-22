@@ -34,4 +34,5 @@
     "couchbase.trust.store.password": "[hidden]",
     "couchbase.trust.store.path": "STRING",
     "couchbase.username": "",
+    "couchbase.value.schema": "STRING",
     "couchbase.xattrs": "false",

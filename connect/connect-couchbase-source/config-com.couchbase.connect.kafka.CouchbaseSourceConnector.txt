@@ -156,7 +156,7 @@ Source Behavior
 ==========================
 🔘 couchbase.batch.size.max
 
-Controls maximum size of the batch for writing into topic.
+When the Kafka Connect framework polls the connector for new records, the connector returns no more than this many records at a time.
 
 	 - Type: INT
 	 - Default: 2000
@@ -278,6 +278,15 @@ Name of the Kafka topic to publish data to.
 	 - Type: false
 	 - Default: LIST
 	 - Importance: Comma-delimited list of Couchbase metadata headers to add to records. Recognized values:
+	 - Required: MEDIUM
+
+🔘 couchbase.value.schema
+
+This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The schema to apply to the value of each record.
 	 - Required: MEDIUM
 
 🔘 couchbase.collections
