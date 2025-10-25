@@ -1,4 +1,127 @@
 ==========================
+Transforms: KeyExample
+==========================
+🔘 transforms.KeyExample.type
+
+Class for the 'KeyExample' transformation.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.KeyExample.plugin.version
+
+Version of the 'KeyExample' transformation.
+
+	 - Type: STRING
+	 - Default: undefined
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 transforms.KeyExample.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Field name or header key to use when extracting the topic name. Required when extracting from a header. Otherwise, if left blank, the entire key or value is used (and assumed to be a string).
+	 - Required: MEDIUM
+
+🔘 transforms.KeyExample.field.format
+
+Determine the format of fieldconfig. If set to JSON_PATH, the transformer will interpret the field with json path interpreter. If left blank or set to PLAIN, the transformer evaluates field config as non nested field name.
+
+	 - Type: STRING
+	 - Default: PLAIN
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.KeyExample.negate
+
+Whether the configured predicate should be negated.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.KeyExample.predicate
+
+The alias of a predicate used to determine whether to apply this transformation.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.KeyExample.skip.missing.or.null
+
+How to handle missing fields and null fields, keys, and values. By default, this transformation will throw an exception if a field specified via the field configuration is missing or null, or if no field is specified but the message's key or value is null. If this configuration is set to true, the transformation will instead silently ignore these conditions and all the record to pass through unaltered.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Transforms: dropSufffix
+==========================
+🔘 transforms.dropSufffix.type
+
+Class for the 'dropSufffix' transformation.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.dropSufffix.plugin.version
+
+Version of the 'dropSufffix' transformation.
+
+	 - Type: STRING
+	 - Default: 8.1.0-ce
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 transforms.dropSufffix.regex
+
+Regular expression to use for matching.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.dropSufffix.replacement
+
+Replacement string.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.dropSufffix.negate
+
+Whether the configured predicate should be negated.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.dropSufffix.predicate
+
+The alias of a predicate used to determine whether to apply this transformation.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
 Connection
 ==========================
 🔘 couchbase.password
