@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   akhq:
     image: tchiotludo/akhq
@@ -37,8 +35,8 @@ services:
       - ../../other/syslog-logstash-ksqldb/logstash/pipeline:/usr/share/logstash/pipeline
     ports:
       - "5044:5044"
-      - "5000:5000/tcp"
-      - "5000:5000/udp"
+      # - "5000:5000/tcp"
+      # - "5000:5000/udp"
       - "9600:9600"
     environment:
       LS_JAVA_OPTS: "-Xmx1G -Xms1G"
