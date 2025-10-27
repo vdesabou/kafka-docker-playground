@@ -26,7 +26,7 @@ else
 
 	if [[ "$environment" == "plaintext" ]]
 	then
-		log "🌩️ plaintext environment is used, using kafka-mcp-server (https://docs.tuannvm.com/kafka-mcp-server) to interact with the cluster"
+		log "📭 plaintext environment is used, using kafka-mcp-server (https://docs.tuannvm.com/kafka-mcp-server) to interact with the cluster"
 		gemini mcp remove mcp-kafka > /dev/null 2>&1 || true
 		gemini mcp add --trust mcp-kafka kafka-mcp-server -e "KAFKA_BROKERS=localhost:29092" -e "KAFKA_CLIENT_ID=kafka-mcp-server" -e "MCP_TRANSPORT=stdio"
 	else
