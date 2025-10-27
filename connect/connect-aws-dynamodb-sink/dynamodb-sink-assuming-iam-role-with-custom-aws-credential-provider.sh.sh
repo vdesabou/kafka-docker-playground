@@ -61,7 +61,7 @@ do
     set -e
 done
 
-DYNAMODB_TABLE="pg${USER}dynamo${TAG}"
+DYNAMODB_TABLE="pg${USER}dynamo${GITHUB_RUN_NUMBER}${TAG}"
 DYNAMODB_ENDPOINT="https://dynamodb.$AWS_REGION.amazonaws.com"
 
 set +e

@@ -22,7 +22,7 @@ sed -e "s|:PASSWORD:|$PASSWORD|g" \
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-CLUSTER_NAME=pg${USER}redshift${TAG}
+CLUSTER_NAME=pg${USER}redshift${GITHUB_RUN_NUMBER}${TAG}
 CLUSTER_NAME=${CLUSTER_NAME//[-._]/}
 
 log "Delete AWS Redshift cluster, if required"

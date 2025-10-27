@@ -5,7 +5,7 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-CLUSTER_NAME=pg${USER}jdbcredshift${TAG}
+CLUSTER_NAME=pg${USER}jdbcredshift${GITHUB_RUN_NUMBER}${TAG}
 CLUSTER_NAME=${CLUSTER_NAME//[-._]/}
 # getting cluster URL
 CLUSTER=$(aws redshift describe-clusters --cluster-identifier $CLUSTER_NAME | jq -r .Clusters[0].Endpoint.Address)

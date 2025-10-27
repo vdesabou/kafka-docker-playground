@@ -25,7 +25,7 @@ handle_aws_credentials
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-CLUSTER_NAME=pg${USER}jdbcredshift${TAG}
+CLUSTER_NAME=pg${USER}jdbcredshift${GITHUB_RUN_NUMBER}${TAG}
 CLUSTER_NAME=${CLUSTER_NAME//[-._]/}
 
 log "Delete AWS Redshift cluster, if required"

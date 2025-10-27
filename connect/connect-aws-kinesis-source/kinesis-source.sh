@@ -22,7 +22,7 @@ handle_aws_credentials
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-KINESIS_STREAM_NAME=pg${USER}${TAG}
+KINESIS_STREAM_NAME=pg${USER}${GITHUB_RUN_NUMBER}${TAG}
 KINESIS_STREAM_NAME=${KINESIS_STREAM_NAME//[-.]/}
 
 set +e

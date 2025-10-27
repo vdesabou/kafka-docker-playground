@@ -7,11 +7,11 @@ source ${DIR}/../../scripts/utils.sh
 
 stop_all "$DIR"
 
-LAMBDA_ROLE_NAME=playground_lambda_role$TAG
-LAMBDA_ROLE_NAME=${LAMBDA_ROLE_NAME//[-.]/}
+LAMBDA_ROLE_NAME=pg${USER}lambdabrole${GITHUB_RUN_NUMBER}${TAG}
+LAMBDA_ROLE_NAME=${LAMBDA_ROLE_NAME//[-._]/}
 
-LAMBDA_FUNCTION_NAME=playground_lambda_function$TAG
-LAMBDA_FUNCTION_NAME=${LAMBDA_FUNCTION_NAME//[-.]/}
+LAMBDA_FUNCTION_NAME=pg${USER}lambdafn${GITHUB_RUN_NUMBER}${TAG}
+LAMBDA_FUNCTION_NAME=${LAMBDA_FUNCTION_NAME//[-._]/}
 
 set +e
 log "Cleanup, this might fail..."

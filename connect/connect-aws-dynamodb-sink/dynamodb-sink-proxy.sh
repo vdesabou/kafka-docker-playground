@@ -22,7 +22,7 @@ handle_aws_credentials
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.proxy.yml"
 
-DYNAMODB_TABLE="pg${USER}dynamo${TAG}"
+DYNAMODB_TABLE="pg${USER}dynamo${GITHUB_RUN_NUMBER}${TAG}"
 DYNAMODB_ENDPOINT="https://dynamodb.$AWS_REGION.amazonaws.com"
 
 set +e
