@@ -279,7 +279,7 @@ do
         file_output="$tmp_dir/$TAG-$testdir-$THE_CONNECTOR_TAG-$script.log"
         rm -f $file_output
         touch $file_output
-        retry playground run -f "$PWD/$script" $flag_tag $flag_environment | tee "$file_output"
+        retry playground run -f "$PWD/$script" $flag_tag $flag_environment 2>&1 | tee "$file_output"
         ret=${PIPESTATUS[0]}
         ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
         let ELAPSED_TOTAL+=$SECONDS
