@@ -31,7 +31,7 @@ bootstrap_ccloud_environment
 
 
 
-DATASET=pgfm${USER}ds${GITHUB_RUN_NUMBER}${TAG_BASE}
+DATASET=pg${USER}fmds${GITHUB_RUN_NUMBER}${TAG_BASE}
 DATASET=${DATASET//[-._]/}
 
 log "Doing gsutil authentication"

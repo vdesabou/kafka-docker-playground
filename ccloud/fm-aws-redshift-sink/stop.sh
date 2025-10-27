@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 
 maybe_delete_ccloud_environment
 
-CLUSTER_NAME=pg${USER}redshift${GITHUB_RUN_NUMBER}${TAG_BASE}
+CLUSTER_NAME=pg${USER}fmredshift${GITHUB_RUN_NUMBER}${TAG_BASE}
 CLUSTER_NAME=${CLUSTER_NAME//[-._]/}
 
 set +e

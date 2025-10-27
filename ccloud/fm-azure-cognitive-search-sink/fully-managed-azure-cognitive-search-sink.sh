@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 login_and_maybe_set_azure_subscription
 
-AZURE_NAME=pgfm${USER}s${GITHUB_RUN_NUMBER}${TAG_BASE}
+AZURE_NAME=pg${USER}fms${GITHUB_RUN_NUMBER}${TAG_BASE}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 if [ ${#AZURE_NAME} -gt 24 ]; then
   AZURE_NAME=${AZURE_NAME:0:24}
@@ -14,7 +14,7 @@ fi
 AZURE_RESOURCE_GROUP=$AZURE_NAME
 AZURE_SEARCH_SERVICE_NAME=$AZURE_NAME
 AZURE_REGION=westeurope
-AZURE_AD_APP=pgfm${USER}
+AZURE_AD_APP=pg${USER}
 
 set +e
 az group delete --name $AZURE_RESOURCE_GROUP --yes

@@ -19,7 +19,7 @@ do
      set -e
 done
 
-AZURE_NAME=pgfm${USER}sb${GITHUB_RUN_NUMBER}${TAG_BASE}
+AZURE_NAME=pg${USER}fmsb${GITHUB_RUN_NUMBER}${TAG_BASE}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 if [ ${#AZURE_NAME} -gt 24 ]; then
   AZURE_NAME=${AZURE_NAME:0:24}

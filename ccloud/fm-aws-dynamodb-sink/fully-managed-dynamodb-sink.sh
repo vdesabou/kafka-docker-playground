@@ -12,7 +12,7 @@ fi
 
 handle_aws_credentials
 
-DYNAMODB_TABLE="pgfm${USER}dynamo${GITHUB_RUN_NUMBER}${TAG_BASE}"
+DYNAMODB_TABLE="pg${USER}fmdynamo${GITHUB_RUN_NUMBER}${TAG_BASE}"
 
 set +e
 aws dynamodb describe-table --table-name "$DYNAMODB_TABLE" --region $AWS_REGION --query 'Table.TableStatus' --output text 2>/dev/null

@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 
 maybe_delete_ccloud_environment
 
-AZURE_NAME=pg${USER}dl${GITHUB_RUN_NUMBER}${TAG_BASE}
+AZURE_NAME=pg${USER}fmdl${GITHUB_RUN_NUMBER}${TAG_BASE}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 if [ ${#AZURE_NAME} -gt 24 ]; then
   AZURE_NAME=${AZURE_NAME:0:24}

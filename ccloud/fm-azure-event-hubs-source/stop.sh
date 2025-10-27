@@ -9,7 +9,7 @@ docker compose down -v --remove-orphans
 
 maybe_delete_ccloud_environment
 
-AZURE_NAME=pg${USER}feh${GITHUB_RUN_NUMBER}${TAG_BASE}
+AZURE_NAME=pg${USER}fmfeh${GITHUB_RUN_NUMBER}${TAG_BASE}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 if [ ${#AZURE_NAME} -gt 24 ]; then
   AZURE_NAME=${AZURE_NAME:0:24}

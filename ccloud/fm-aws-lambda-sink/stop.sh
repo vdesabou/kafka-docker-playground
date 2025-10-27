@@ -5,10 +5,10 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-LAMBDA_ROLE_NAME=pg${USER}lambdabrole${GITHUB_RUN_NUMBER}${TAG_BASE}
+LAMBDA_ROLE_NAME=pg${USER}fmlambdabrole${GITHUB_RUN_NUMBER}${TAG_BASE}
 LAMBDA_ROLE_NAME=${LAMBDA_ROLE_NAME//[-._]/}
 
-LAMBDA_FUNCTION_NAME=pg${USER}lambdafn${GITHUB_RUN_NUMBER}${TAG_BASE}
+LAMBDA_FUNCTION_NAME=pg${USER}fmlambdafn${GITHUB_RUN_NUMBER}${TAG_BASE}
 LAMBDA_FUNCTION_NAME=${LAMBDA_FUNCTION_NAME//[-._]/}
 
 set +e
