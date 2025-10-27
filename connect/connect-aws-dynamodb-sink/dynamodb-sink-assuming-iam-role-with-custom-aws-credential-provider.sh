@@ -20,10 +20,13 @@ fi
 logwarn "⚠️ This example and associated custom code is not supported, use at your own risks !"
 
 export COMPONENT_NAME="awscredentialsprovider"
-if version_gt $CONNECTOR_TAG "1.5.0"
-then
-    export COMPONENT_NAME="awscredentialsprovider-v2"
-fi
+# FIXTHIS: see https://github.com/vdesabou/kafka-docker-playground/issues/7281
+# v2 is not yet supported with 1.5.x
+# 
+# if version_gt $CONNECTOR_TAG "1.5.0"
+# then
+#     export COMPONENT_NAME="awscredentialsprovider-v2"
+# fi
 
 AWS_STS_ROLE_ARN=${AWS_STS_ROLE_ARN:-$1}
 
