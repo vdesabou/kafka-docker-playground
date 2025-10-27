@@ -76,8 +76,9 @@ aws logs create-log-stream --log-group-name $LOG_GROUP --log-stream $LOG_STREAM
 
 function cleanup_cloud_resources {
     set +e
-    log "Do you want to delete the log group $LOG_GROUP ?"
+    log "Do you want to delete the log group $LOG_GROUP (connector will be deleted first)?"
     check_if_continue
+    playground connector delete
     aws logs delete-log-stream --log-group-name "$LOG_GROUP" --log-stream-name "$LOG_STREAM"
     aws logs delete-log-group --log-group-name "$LOG_GROUP"
 }

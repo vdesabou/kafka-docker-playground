@@ -33,10 +33,18 @@ aws logs create-log-group --log-group-name $LOG_GROUP
 log "Create a log stream in AWS CloudWatch Logs."
 aws logs create-log-stream --log-group-name $LOG_GROUP --log-stream $LOG_STREAM
 
+connector_name="CloudWatchLogsSource_$USER"
+set +e
+playground connector delete --connector $connector_name > /dev/null 2>&1
+set -e
+
+
 function cleanup_cloud_resources {
     set +e
-    log "Do you want to delete the log group $LOG_GROUP ?"
+    log "Do you want to delete the log group $LOG_GROUP (connector will be deleted first)?"
     check_if_continue
+    playground connector delete --connector $connector_name
+
     aws logs delete-log-stream --log-group-name "$LOG_GROUP" --log-stream-name "$LOG_STREAM"
     aws logs delete-log-group --log-group-name "$LOG_GROUP"
 }
@@ -53,11 +61,6 @@ do
      token=$(aws logs describe-log-streams --log-group-name $LOG_GROUP | jq -r .logStreams[0].uploadSequenceToken)
      aws logs put-log-events --log-group-name $LOG_GROUP --log-stream $LOG_STREAM --log-events timestamp=`date +%s000`,message="This is a log #${i}" --sequence-token ${token}
 done
-
-connector_name="CloudWatchLogsSource_$USER"
-set +e
-playground connector delete --connector $connector_name > /dev/null 2>&1
-set -e
 
 log "Creating AWS CloudWatch Logs Source connector"
 playground connector create-or-update --connector $connector_name << EOF
