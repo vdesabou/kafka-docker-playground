@@ -91,7 +91,7 @@ then
 
     if [ -z "$CP_KSQL_CLI_IMAGE" ]
     then
-      export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-cli
+      export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-server
     fi
 
     if [ -z "$CP_ZOOKEEPER_TAG" ]
@@ -136,7 +136,7 @@ then
 
     if [ -z "$CP_KSQL_CLI_TAG" ]
     then
-      export CP_KSQL_CLI_TAG="latest"
+      export CP_KSQL_CLI_TAG="$TAG"
     fi
     set_kafka_client_tag
     maybe_create_image
@@ -243,9 +243,17 @@ else
       then
         export CP_KSQL_IMAGE=confluentinc/cp-ksqldb-server
       fi
-      if [ -z "$CP_KSQL_CLI_IMAGE" ]
+      if version_gt $first_version 8.0.99
       then
-        export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-cli
+        if [ -z "$CP_KSQL_CLI_IMAGE" ]
+        then
+            export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-server
+        fi
+      else
+        if [ -z "$CP_KSQL_CLI_IMAGE" ]
+        then
+            export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-cli
+        fi
       fi
       if [ -z "$CP_KSQL_CLI_TAG" ]
       then
