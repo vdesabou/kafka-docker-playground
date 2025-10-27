@@ -14,7 +14,7 @@ sleep 3
 playground topic create --topic test-sqs-source --nb-partitions 1
 set -e
 
-QUEUE_NAME=pgfm${USER}sqs${TAG}
+QUEUE_NAME=pgfm${USER}sqs${GITHUB_RUN_NUMBER}${TAG}
 QUEUE_NAME=${QUEUE_NAME//[-._]/}
 
 QUEUE_URL_RAW=$(aws sqs create-queue --queue-name $QUEUE_NAME --region ${AWS_REGION} --tags "cflt_managed_by=user,cflt_managed_id=$USER" | jq .QueueUrl)

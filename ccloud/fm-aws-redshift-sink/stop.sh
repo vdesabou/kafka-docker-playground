@@ -7,10 +7,8 @@ source ${DIR}/../../scripts/utils.sh
 
 maybe_delete_ccloud_environment
 
-CLUSTER_NAME=pg${USER}redshift${TAG}
+CLUSTER_NAME=pg${USER}redshift${GITHUB_RUN_NUMBER}${TAG}
 CLUSTER_NAME=${CLUSTER_NAME//[-._]/}
-# getting cluster URL
-CLUSTER=$(aws redshift describe-clusters --cluster-identifier $CLUSTER_NAME | jq -r .Clusters[0].Endpoint.Address)
 
 set +e
 log "Delete AWS Redshift cluster"

@@ -26,7 +26,7 @@ sleep 3
 playground topic create --topic orders
 set -e
 
-CLUSTER_NAME=pg${USER}redshift${TAG}
+CLUSTER_NAME=pg${USER}redshift${GITHUB_RUN_NUMBER}${TAG}
 CLUSTER_NAME=${CLUSTER_NAME//[-._]/}
 
 log "Delete AWS Redshift cluster, if required"

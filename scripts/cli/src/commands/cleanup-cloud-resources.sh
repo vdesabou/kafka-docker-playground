@@ -157,12 +157,12 @@ function cleanup_azure () {
 }
 
 function cleanup_gcp () {
-    log "Cleanup GCP GCS buckets"
     GCP_KEYFILE="$tmp_dir/keyfile.json"
     echo -e "$GCP_KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${GCP_KEYFILE}
     docker rm -f gcloud-config-cleanup-resources > /dev/null 2>&1
     docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud auth activate-service-account --project ${GCP_PROJECT} --key-file /tmp/keyfile.json > /dev/null 2>&1
 
+    log "Cleanup GCP GCS buckets"
     for bucket in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gsutil ls)
     do
         if [[ $bucket = *kafkadockerplaygroundbucket${user}* ]]
@@ -182,26 +182,46 @@ function cleanup_gcp () {
         fi
     done
 
-    GCP_SPANNER_INSTANCE="spanner-instance-$USER"
-    GCP_SPANNER_DATABASE="spanner-db-$USER"
-    log "Deleting Spanner database $GCP_SPANNER_DATABASE"
-    docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner databases delete $GCP_SPANNER_DATABASE --instance $GCP_SPANNER_INSTANCE --project $GCP_PROJECT << EOF > /dev/null 2>&1
-Y
-EOF
-    log "Deleting Spanner instance $GCP_SPANNER_INSTANCE"
-    docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner instances delete $GCP_SPANNER_INSTANCE --project $GCP_PROJECT  << EOF > /dev/null 2>&1
-Y
-EOF
+    log "Cleanup Spanner instances"
+    for spanner_instance in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner instances list --project $GCP_PROJECT --format="value(NAME)")
+    do
+        if [[ $spanner_instance = *pg${user}* ]]
+        then
 
-    GCP_BIGTABLE_INSTANCE="pg${USER}bg${TAG}"
-    GCP_BIGTABLE_INSTANCE=${GCP_BIGTABLE_INSTANCE//[-.]/}
-    log "Delete BigTable table kafka_big_query_stats"
-    docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $GCP_BIGTABLE_INSTANCE deletetable kafka_big_query_stats
+#             for spanner_db in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner databases list --project $GCP_PROJECT --instance $spanner_instance --format="value(NAME)")
+#             do
+#                 log "Remove Spanner database $spanner_db"
+#                 docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner databases delete $spanner_db --instance $spanner_instance --project $GCP_PROJECT << EOF
+# Y
+# EOF
+#             done
 
-    log "Deleting BigTable instance $GCP_BIGTABLE_INSTANCE"
-    docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud bigtable instances delete $GCP_BIGTABLE_INSTANCE --project $GCP_PROJECT << EOF > /dev/null 2>&1
+            for spanner_backup in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner backups list --project $GCP_PROJECT --instance $spanner_instance --format="value(NAME)")
+            do
+                log "Remove Spanner backup $spanner_backup"
+                docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner backups delete $spanner_backup --instance $spanner_instance --project $GCP_PROJECT << EOF
 Y
 EOF
+            done
+
+            log "Remove Spanner instance $spanner_instance"
+            docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner instances delete $spanner_instance --project $GCP_PROJECT << EOF
+Y
+EOF
+        fi
+    done
+
+    log "Cleanup BigTable instances"
+    for bigtable_instance in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud bigtable instances list --project $GCP_PROJECT --format="value(NAME)")
+    do
+        if [[ $bigtable_instance = *pg${user}* ]]
+        then
+            log "Remove BigTable instance $bigtable_instance"
+            docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud bigtable instances delete $bigtable_instance --project $GCP_PROJECT << EOF
+Y
+EOF
+        fi
+    done
 }
 
 function cleanup_ccloud () {

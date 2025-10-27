@@ -10,11 +10,8 @@ then
      exit 1
 fi
 
-# generate an 8-character random suffix to make the resource names unique per run
-UNIQUE_SUFFIX=$(uuidgen | tr '[:upper:]' '[:lower:]' | cut -c1-8)
-
-GCP_SPANNER_INSTANCE="spanner-instance-$USER-$UNIQUE_SUFFIX"
-GCP_SPANNER_DATABASE="spanner-db-$USER-$UNIQUE_SUFFIX"
+GCP_SPANNER_INSTANCE="spanner-instance-$USER-$GITHUB_RUN_NUMBER"
+GCP_SPANNER_DATABASE="spanner-db-$USER-$GITHUB_RUN_NUMBER"
 GCP_SPANNER_REGION=${1:-europe-west2}
 
 cd ../../ccloud/fm-gcp-spanner-sink

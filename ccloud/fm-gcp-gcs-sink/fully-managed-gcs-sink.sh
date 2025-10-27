@@ -27,7 +27,7 @@ else
 fi
 cd -
 
-GCS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${TAG}
+GCS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${GITHUB_RUN_NUMBER}${TAG}
 GCS_BUCKET_NAME=${GCS_BUCKET_NAME//[-.]/}
 GCS_BUCKET_REGION=${1:-europe-west2}
 

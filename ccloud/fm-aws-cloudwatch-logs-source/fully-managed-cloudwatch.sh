@@ -8,7 +8,7 @@ handle_aws_credentials
 
 bootstrap_ccloud_environment "aws" "$AWS_REGION"
 
-LOG_GROUP=pgfm${USER}lg${TAG}
+LOG_GROUP=pgfm${USER}lg${GITHUB_RUN_NUMBER}${TAG}
 LOG_GROUP=${LOG_GROUP//[-.]/}
 LOG_STREAM=pgfm${USER}ls${TAG}
 LOG_STREAM=${LOG_STREAM//[-.]/}
