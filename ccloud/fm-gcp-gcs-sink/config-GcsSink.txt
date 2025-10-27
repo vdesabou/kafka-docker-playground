@@ -252,7 +252,7 @@ The connector’s rotation interval specifies the maximum timespan (in milliseco
 
 🔘 path.format
 
-This configuration is used to set the format of the data directories when partitioning with TimeBasedPartitioner. The format set in this configuration converts the Unix timestamp to proper directories strings. If you want to organize files like the following example, s3://<s3-bucket-name>/json_logs/daily/<Topic-Name>/dt=2020-02-06/hr=09/<files>, please put topic.directory=json_logs/daily, path.format='dt'=YYYY-MM-dd/'hr'=HH, and time.interval=HOURLY.
+This configuration is used to set the format of the data directories when partitioning with TimeBasedPartitioner. The format set in this configuration converts the Unix timestamp to proper directories strings. If you want to organize files like the following example, s3://<s3-bucket-name>/json_logs/daily/<Topic-Name>/dt=YYYY-MM-DD/hr=09/<files>, please put topic.directory=json_logs/daily, path.format='dt'=YYYY-MM-dd/'hr'=HH, and time.interval=HOURLY.
 
 	 - Type: STRING
 	 - Default: 'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH

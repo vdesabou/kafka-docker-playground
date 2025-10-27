@@ -219,7 +219,7 @@ Organize my data by...
 ==========================
 🔘 path.format
 
-This configuration is used to set the format of the data directories when partitioning with TimeBasedPartitioner. The format set in this configuration converts the Unix timestamp to a valid directory string. To organize files like this example, https://<storage-account-name>.blob.core.windows.net/<container-name>/json_logs/daily/<Topic-Name>/dt=2020-02-06/hr=09/<files>, use the properties: topics.dir=json_logs/daily, and time.interval=HOURLY.
+This configuration is used to set the format of the data directories when partitioning with TimeBasedPartitioner. The format set in this configuration converts the Unix timestamp to a valid directory string. To organize files like this example, https://<storage-account-name>.blob.core.windows.net/<container-name>/json_logs/daily/<Topic-Name>/dt=YYYY-MM-DD/hr=09/<files>, use the properties: topics.dir=json_logs/daily, and time.interval=HOURLY.
 
 	 - Type: STRING
 	 - Default: 'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH

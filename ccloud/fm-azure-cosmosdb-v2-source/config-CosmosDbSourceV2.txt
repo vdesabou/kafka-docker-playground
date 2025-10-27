@@ -501,7 +501,7 @@ ChangeFeed mode (LatestVersion or AllVersionsAndDeletes)
 
 🔘 azure.cosmos.source.changeFeed.startFrom
 
-ChangeFeed Start from settings (Now, Beginning or a certain point in time (UTC) for example 2020-02-10T14:15:03) - the default value is ``Beginning``.
+ChangeFeed Start from settings (Now, Beginning or a certain point in time (UTC) for example YYYY-MM-DDT14:15:03) - the default value is ``Beginning``.
 
 	 - Type: STRING
 	 - Default: Beginning
