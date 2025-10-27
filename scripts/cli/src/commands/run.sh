@@ -1688,6 +1688,13 @@ then
   log "####################################################"
   log "✅ RESULT: SUCCESS for $filename ($ELAPSED - $CUMULATED)"
   log "####################################################"
+elif [ $ret -eq 111 ]
+then
+  log "####################################################"
+  log "⏭ RESULT: SKIPPED for $filename ($ELAPSED - $CUMULATED)"
+  log "####################################################"
+  
+  exit $ret
 else
   logerror "####################################################"
   logerror "🔥 RESULT: FAILURE for $filename ($ELAPSED - $CUMULATED)"
