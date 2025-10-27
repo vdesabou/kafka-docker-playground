@@ -89,3 +89,5 @@ wait_for_datagen_connector_to_inject_data "orders" "10"
 
 log "Verify we have received the data in orders topic"
 playground topic consume --topic orders --min-expected-messages 1 --max-messages 3 --timeout 60
+
+playground connector delete
