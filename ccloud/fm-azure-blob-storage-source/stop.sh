@@ -5,7 +5,7 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-AZURE_NAME=pg${USER}bs${GITHUB_RUN_NUMBER}${TAG}
+AZURE_NAME=pg${USER}bs${GITHUB_RUN_NUMBER}${TAG_BASE}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 if [ ${#AZURE_NAME} -gt 24 ]; then
   AZURE_NAME=${AZURE_NAME:0:24}

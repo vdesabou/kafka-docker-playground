@@ -28,7 +28,7 @@ done
 
 login_and_maybe_set_azure_subscription
 
-AZURE_NAME=pg${USER}eh${GITHUB_RUN_NUMBER}${TAG}
+AZURE_NAME=pg${USER}eh${GITHUB_RUN_NUMBER}${TAG_BASE}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 if [ ${#AZURE_NAME} -gt 24 ]; then
   AZURE_NAME=${AZURE_NAME:0:24}

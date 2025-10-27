@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 login_and_maybe_set_azure_subscription
 
 # https://github.com/microsoft/kafka-connect-cosmosdb/blob/dev/doc/CosmosDB_Setup.md
-AZURE_NAME=pgfm${USER}cs${GITHUB_RUN_NUMBER}${TAG}
+AZURE_NAME=pgfm${USER}cs${GITHUB_RUN_NUMBER}${TAG_BASE}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 if [ ${#AZURE_NAME} -gt 24 ]; then
   AZURE_NAME=${AZURE_NAME:0:24}

@@ -5,7 +5,7 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-CLUSTER_NAME=pg${USER}redshift${GITHUB_RUN_NUMBER}${TAG}
+CLUSTER_NAME=pg${USER}redshift${GITHUB_RUN_NUMBER}${TAG_BASE}
 CLUSTER_NAME=${CLUSTER_NAME//[-._]/}
 
 set +e

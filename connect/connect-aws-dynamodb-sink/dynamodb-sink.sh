@@ -19,7 +19,7 @@ fi
 
 handle_aws_credentials
 
-DYNAMODB_TABLE="pg${USER}dynamo${GITHUB_RUN_NUMBER}${TAG}"
+DYNAMODB_TABLE="pg${USER}dynamo${GITHUB_RUN_NUMBER}${TAG_BASE}"
 DYNAMODB_ENDPOINT="https://dynamodb.$AWS_REGION.amazonaws.com"
 
 set +e

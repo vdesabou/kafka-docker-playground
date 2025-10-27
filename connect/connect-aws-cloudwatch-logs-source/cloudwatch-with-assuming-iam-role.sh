@@ -23,7 +23,7 @@ handle_aws_credentials
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.with-assuming-iam-role.yml"
 
-LOG_GROUP=pg${USER}lg${GITHUB_RUN_NUMBER}${TAG}
+LOG_GROUP=pg${USER}lg${GITHUB_RUN_NUMBER}${TAG_BASE}
 LOG_GROUP=${LOG_GROUP//[-.]/}
 LOG_STREAM=pg${USER}ls${TAG}
 LOG_STREAM=${LOG_STREAM//[-.]/}

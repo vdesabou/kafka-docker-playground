@@ -18,7 +18,7 @@ then
 fi
 
 GCP_BIGTABLE_REGION=${1:-europe-west2-a}
-GCP_BIGTABLE_INSTANCE="pg${USER}bg${GITHUB_RUN_NUMBER}${TAG}"
+GCP_BIGTABLE_INSTANCE="pg${USER}bg${GITHUB_RUN_NUMBER}${TAG_BASE}"
 GCP_BIGTABLE_INSTANCE=${GCP_BIGTABLE_INSTANCE//[-.]/}
 
 cd ../../connect/connect-gcp-bigtable-sink

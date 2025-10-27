@@ -43,7 +43,7 @@ else
 fi
 cd -
 
-DATASET=pg${USER}ds${GITHUB_RUN_NUMBER}${TAG}
+DATASET=pg${USER}ds${GITHUB_RUN_NUMBER}${TAG_BASE}
 DATASET=${DATASET//[-._]/}
 
 log "Doing gsutil authentication"
