@@ -100,6 +100,8 @@ curl -s -X PUT \
 
 wait_for_datagen_connector_to_inject_data "pageviews" "1"
 
+playground connector delete
+
 log "Creating Databricks Delta Lake Sink connector"
 playground connector create-or-update --connector databricks-delta-lake-sink  << EOF
 {
@@ -124,27 +126,4 @@ playground connector create-or-update --connector databricks-delta-lake-sink  <<
 }
 EOF
 
-
-sleep 90
-
-log "Listing staging Amazon S3 bucket"
-export AWS_ACCESS_KEY_ID="$DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID"
-export AWS_SECRET_ACCESS_KEY="$DATABRICKS_AWS_STAGING_S3_SECRET_ACCESS_KEY"
-aws s3api list-objects --bucket "$DATABRICKS_AWS_BUCKET_NAME" > /tmp/result.log 2>&1
-if [ $? != 0 ]
-then
-     logerror "FAILED"
-     docker container logs connect >  connect.log 2>&1
-     tail -500 connect.log
-     exit 1
-fi
-
-if [ $(wc -l /tmp/result.log | cut -d" " -f1) = 0 ]
-then
-     logerror "FAILED"
-     docker container logs connect >  connect.log 2>&1
-     tail -500 connect.log
-     exit 1
-fi
-
-cat /tmp/result.log
+playground connector show-lag --max-wait 120
