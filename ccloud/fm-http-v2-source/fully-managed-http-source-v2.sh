@@ -72,7 +72,6 @@ playground connector create-or-update --connector $connector_name << EOF
   "kafka.api.key": "$CLOUD_KEY",
   "kafka.api.secret": "$CLOUD_SECRET",
   "output.data.format": "AVRO",
-  "http.api.base.url": "http://$NGROK_HOSTNAME:$NGROK_PORT",
   "tasks.max" : "1",
 
   "http.api.base.url": "http://$NGROK_HOSTNAME:$NGROK_PORT",
