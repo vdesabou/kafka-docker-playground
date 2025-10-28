@@ -73,6 +73,24 @@ Backoff time in milliseconds between connection attempts.
 	 - Importance: List of tables to exclude from copying. If specified, ``table.whitelist`` may not be set. Use a comma-separated list to specify multiple tables (for example, ``table.blacklist: "User, Address, Email"``).
 	 - Required: MEDIUM
 
+🔘 table.include.list
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma-separated list of regular expressions that match the fully-qualified names of tables to be copied. Use a comma-separated list to specify multiple regular expressions. Table names are case-sensitive. For example, ``table.include.list: "schema1.customer.*,schema2.order.*"``. If specified, the legacy configs of ``table.whitelist``, and ``table.blacklist`` cannot be set.
+	 - Required: MEDIUM
+
+🔘 table.exclude.list
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma-separated list of regular expressions that match the fully-qualified names of tables not to be copied. This only applies to tables that match the include list. REQUIRES ``table.include.list`` to be specified. Use a comma-separated list to specify multiple regular expressions. Table names are case-sensitive. For example, ``table.exclude.list: ".*.temp.*,.*.staging.*"``. If specified, ``table.whitelist`` and ``table.blacklist`` cannot not be set.
+	 - Required: MEDIUM
+
 🔘 catalog.pattern
 
 Catalog pattern to fetch table metadata from the database.
@@ -118,6 +136,15 @@ Map NUMERIC values by precision and optionally scale to integral or decimal type
 	 - Importance: The name of the database dialect that should be used for this connector. By default this is empty, and the connector automatically determines the dialect based upon the JDBC connection URL. Use this if you want to override that behavior and use a specific dialect. All properly-packaged dialects in the JDBC connector plugin can be used.
 	 - Required: LOW
 
+🔘 date.calendar.system
+
+The time elapsed from epoch populated in the end table topic for DATE or TIMESTAMP type columns can have two different values based upon the Calendar used to interpret it. If LEGACY is used, it will use the hybrid Gregorian/Julian calendar which was the default in the older java date time APIs. However, if 'PROLEPTIC_GREGORIAN' is used, then it will use the proleptic gregorian calendar which extends the Gregorian rules backward indefinitely and does not apply the 1582 cutover. This matches the behavior of modern Java date/time APIs (java.time). This is defaulted to LEGACY for backward compatibility. Changing this configuration on an existing connector might lead to a drift in the kafka topic record values.
+
+	 - Type: STRING
+	 - Default: LEGACY
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 Mode
 ==========================
@@ -146,6 +173,24 @@ Mode
 	 - Type: false
 	 - Default: LIST
 	 - Importance: Comma separated list of one or more timestamp columns to detect new or modified rows using the COALESCE SQL function. Rows whose first non-null timestamp value is greater than the largest previous timestamp value seen will be discovered with each poll. At least one column should not be nullable.
+	 - Required: MEDIUM
+
+🔘 timestamp.columns.mapping
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma separated list of table regex to timestamp columns mappings. On specifying multiple timestamp columns, COALESCE SQL function would be used to find out the effective timestamp for a row. Expected format is ``regex1:[col1|col2],regex2:[col3]``. Regexes would be matched against the fully-qualified table names of tables. Every table included for capture should match exactly one of the provided mappings. An example for a valid input would be ``SCHEMA1.EMPLOYEES.SALARY.*:[UPDATED_AT|MODIFIED_AT],ACCOUNTS.*:[CHANGED_AT]``
+	 - Required: MEDIUM
+
+🔘 incrementing.column.mapping
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma separated list of table regex to incrementing column mappings. Expected format is ``regex1:col2,regex2:col1``. Regexes would be matched against the fully-qualified table names of tables. Every table included for capture should match exactly one of the provided mappings. An example for a valid input would be ``SCHEMA1.EMPLOYEES.SALARY*:EMP_ID,ACCOUNTS.*:ID``
 	 - Required: MEDIUM
 
 🔘 timestamp.initial
@@ -237,7 +282,25 @@ Frequency in ms to poll for new data in each table.
 Maximum number of rows to include in a single batch when polling for new data. This setting can be used to limit the amount of data buffered internally in the connector.
 
 	 - Type: INT
-	 - Default: 100
+	 - Default: 1000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.buffer.size
+
+The maximum number of records from the source database that can be buffered into memory. The default of 0 means a buffer size will be based on the maximum batch size.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 poll.linger.ms
+
+The maximum time to wait for a record before returning an empty batch. The default is 5 seconds.
+
+	 - Type: LONG
+	 - Default: 5000
 	 - Importance: LOW
 	 - Required: false
 
