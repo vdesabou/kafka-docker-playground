@@ -6,6 +6,7 @@
     "connection.password": "",
     "connection.url": "",
     "connection.user": "",
+    "date.calendar.system": "LEGACY",
     "date.timezone": "DB_TIMEZONE",
     "db.timezone": "UTC",
     "delete.enabled": "false",
