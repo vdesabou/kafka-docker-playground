@@ -133,6 +133,7 @@ playground connector create-or-update --connector ibmdb2-source  << EOF
   "connection.user":"db2inst1",
   "connection.password":"passw0rd",
   "mode": "bulk",
+  "table.whitelist": "PURCHASEORDER",
   "topic.prefix": "db2-",
   "errors.log.enable": "true",
   "errors.log.include.messages": "true"
