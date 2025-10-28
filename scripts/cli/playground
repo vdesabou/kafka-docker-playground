@@ -17075,7 +17075,7 @@ playground_switch_ccloud_command() {
   playground state set run.connector_type_before_switch "$(playground state get run.connector_type)"
   playground state set run.connector_type "$CONNECTOR_TYPE_FULLY_MANAGED"
 
-  log "🔌 boostrapping ccloud environment"
+  log "🔌 bootstrapping ccloud environment"
   bootstrap_ccloud_environment
 }
 
@@ -27619,7 +27619,7 @@ playground_connector_connect_migration_utility_discovery_command() {
   log "👨‍🔬 Discover connectors in the local connect cluster and export their configurations to files"
   log "🛠️ It is using Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster"
 
-  log "🔌 boostrapping ccloud environment"
+  log "🔌 bootstrapping ccloud environment"
   bootstrap_ccloud_environment "" "" "true"
 
   get_ccloud_connect
@@ -27720,7 +27720,7 @@ playground_connector_connect_migration_utility_migrate_command() {
   	fi
   fi
 
-  log "🔌 boostrapping ccloud environment"
+  log "🔌 bootstrapping ccloud environment"
   bootstrap_ccloud_environment "" "" "true"
 
   get_ccloud_connect

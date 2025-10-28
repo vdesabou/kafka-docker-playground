@@ -5,7 +5,7 @@ get_connect_url_and_security
 log "👨‍🔬 Discover connectors in the local connect cluster and export their configurations to files"
 log "🛠️ It is using Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster"
 
-log "🔌 boostrapping ccloud environment"
+log "🔌 bootstrapping ccloud environment"
 bootstrap_ccloud_environment "" "" "true"
 
 get_ccloud_connect

@@ -21,7 +21,7 @@ then
 	fi
 fi
 
-log "🔌 boostrapping ccloud environment"
+log "🔌 bootstrapping ccloud environment"
 bootstrap_ccloud_environment "" "" "true"
 
 get_ccloud_connect
