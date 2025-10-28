@@ -6,6 +6,12 @@ then
     exit 1
 fi
 
+if grep -q "Not Found" /tmp/cache-versions.env
+then
+    logerror "❌ could not download cache-versions.env, got 404 Not Found"
+    exit 1
+fi
+
 aws s3 cp --only-show-errors /tmp/cache-versions.env s3://kafka-docker-playground/3rdparty/cache-versions.env
 if [ $? -ne 0 ]
 then

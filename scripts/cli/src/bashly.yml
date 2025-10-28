@@ -245,12 +245,14 @@ commands:
   environment_variables:
   - name: GH_TOKEN 
     help: GH_TOKEN
+    required: true
 
 - name: update-readme
   private: true
   environment_variables:
   - name: GH_TOKEN 
     help: GH_TOKEN
+    required: true
   flags:
     - long: --tags
       required: false

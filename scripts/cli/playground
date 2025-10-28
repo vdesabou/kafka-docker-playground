@@ -951,7 +951,7 @@ playground_update_cache_versions_usage() {
     printf "%s\n" "$(bold "Environment Variables:")"
 
     # :environment_variable.usage
-    printf "  %s\n" "$(cyan "GH_TOKEN")"
+    printf "  %s\n" "$(cyan "GH_TOKEN (required)")"
     printf "    GH_TOKEN\n"
     echo
 
@@ -991,7 +991,7 @@ playground_update_readme_usage() {
     printf "%s\n" "$(bold "Environment Variables:")"
 
     # :environment_variable.usage
-    printf "  %s\n" "$(cyan "GH_TOKEN")"
+    printf "  %s\n" "$(cyan "GH_TOKEN (required)")"
     printf "    GH_TOKEN\n"
     echo
 
@@ -14020,6 +14020,12 @@ playground_update_cache_versions_command() {
       exit 1
   fi
 
+  if grep -q "Not Found" /tmp/cache-versions.env
+  then
+      logerror "❌ could not download cache-versions.env, got 404 Not Found"
+      exit 1
+  fi
+
   aws s3 cp --only-show-errors /tmp/cache-versions.env s3://kafka-docker-playground/3rdparty/cache-versions.env
   if [ $? -ne 0 ]
   then
@@ -14827,7 +14833,7 @@ playground_ai_command() {
 
   	if [[ "$environment" == "plaintext" ]]
   	then
-  		log "🌩️ plaintext environment is used, using kafka-mcp-server (https://docs.tuannvm.com/kafka-mcp-server) to interact with the cluster"
+  		log "📭 plaintext environment is used, using kafka-mcp-server (https://docs.tuannvm.com/kafka-mcp-server) to interact with the cluster"
   		gemini mcp remove mcp-kafka > /dev/null 2>&1 || true
   		gemini mcp add --trust mcp-kafka kafka-mcp-server -e "KAFKA_BROKERS=localhost:29092" -e "KAFKA_CLIENT_ID=kafka-mcp-server" -e "MCP_TRANSPORT=stdio"
   	else
@@ -30671,6 +30677,10 @@ playground_update_cache_versions_parse_requirements() {
   # :command.environment_variables_filter
 
   env_var_names+=("GH_TOKEN")
+  if [[ -z "${GH_TOKEN:-}" ]]; then
+    printf "missing required environment variable: GH_TOKEN\n" >&2
+    exit 1
+  fi
 
   # :command.command_filter
   action="update-cache-versions"
@@ -30720,6 +30730,10 @@ playground_update_readme_parse_requirements() {
   # :command.environment_variables_filter
 
   env_var_names+=("GH_TOKEN")
+  if [[ -z "${GH_TOKEN:-}" ]]; then
+    printf "missing required environment variable: GH_TOKEN\n" >&2
+    exit 1
+  fi
 
   # :command.command_filter
   action="update-readme"
