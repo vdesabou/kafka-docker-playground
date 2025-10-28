@@ -10,7 +10,7 @@ services:
 
   httpserver:
     build:
-      context: ../../connect/connect-http-v2-sink/httpserver
+      context: ../../connect/connect-http-sink/httpserver
     hostname: httpserver
     container_name: httpserver
     ports:

@@ -9,7 +9,7 @@ services:
 
   httpserver:
     build:
-      context: ../../connect/connect-http-v2-sink/httpserver-oauth2
+      context: ../../connect/connect-http-sink/httpserver-oauth2
     hostname: httpserver
     container_name: httpserver
     ports:
