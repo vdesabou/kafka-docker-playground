@@ -172,7 +172,8 @@ playground connector connect-migration-utility discovery
 #   }
 # }
 
-playground connector connect-migration-utility migrate --migration-mode create_latest_offset
+playground connector connect-migration-utility migrate --migration-mode create_latest_offset --sensitive-property "aws.access.key.id=$AWS_ACCESS_KEY_ID" --sensitive-property "aws.secret.access.key=$AWS_SECRET_ACCESS_KEY"
+
 
 # 16:36:00 ℹ️ 🧩 Displaying status for 🌤️🤖fully managed connector aws-cloudwatch-metrics-sink (lcc-526mn2)
 # Name                           Status       Tasks                                                        Stack Trace                                       

@@ -121,7 +121,7 @@ _playground_completions() {
       ;;
 
     *'connector connect-migration-utility migrate'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --migration-mode -h")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --migration-mode --sensitive-property -h")" -- "$cur")
       ;;
 
     *'topic produce'*'--value-subject-name-strategy')

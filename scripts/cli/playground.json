@@ -3341,6 +3341,13 @@
               ],
               "argument": "create",
               "description": "- create: Create connector without any offset consideration\n- stop_create_latest_offset: Create a connector with no data loss/duplication (the python script stops the self-managed connector and fetches the latest offset and creates a fully-managed connector on Confluent Cloud using the fetched offset). See https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#create-a-connector-with-no-data-lossduplication.\n- create_latest_offset: Create a connector with no downtime (the python script fetches the latest offset without stopping the connector and creates a fully-managed connector on Confluent Cloud using the fetched offset. This option may cause data duplication as the self-managed connector is still running). See https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#create-a-connector-with-no-downtime.\n\nDefault value: create\n\nAllowed values: stop_create_latest_offset, create, create_latest_offset\n"
+            },
+            {
+              "names": [
+                "--sensitive-property"
+              ],
+              "argument": "SENSITIVE-PROPERTY",
+              "description": "🔐 Pass sensitive config properties when migrating connector\n\n🎓 Tip: you can pass multiple properties by specifying --sensitive-property multiple times\n\nExample: --sensitive-property \"aws.access.key.id=xxx\" --sensitive-property \"aws.secret.access.key=xxx\"\n\nRepeatable: ✓ Yes\n"
             }
           ]
         }

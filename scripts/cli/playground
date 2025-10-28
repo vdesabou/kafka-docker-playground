@@ -6757,6 +6757,11 @@ playground_connector_connect_migration_utility_migrate_usage() {
     printf "    %s\n" "Default: create"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--sensitive-property SENSITIVE-PROPERTY (repeatable)")"
+    printf "    🔐 Pass sensitive config properties when migrating connector\n    \n    🎓 Tip: you can pass multiple properties by specifying --sensitive-property\n    multiple times\n    \n    Example: --sensitive-property \"aws.access.key.id=xxx\" --sensitive-property\n    \"aws.secret.access.key=xxx\"\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -27698,6 +27703,7 @@ playground_connector_connect_migration_utility_migrate_command() {
 
   # src/commands/connector/connect-migration-utility/migrate.sh
   migration_mode=${args[--migration-mode]}
+  eval "sensitive_property=(${args[--sensitive-property]})"
 
   get_connect_url_and_security
 
@@ -27727,12 +27733,33 @@ playground_connector_connect_migration_utility_migrate_command() {
 
   for json_file in "$discovery_output_dir/discovered_configs/successful_configs/fm_configs"/*.json
   do
-  	if [ -f "$json_file" ]
-  	then
-  		log "📄 $(basename "$json_file")"
-  		log "✨ Update the connector config file $(basename "$json_file") as per your needs, save and close the file to continue"
-  		playground open --file "$json_file" --wait
-  	fi
+      length=${#sensitive_property[@]}
+      if ((length > 0)) # Check if the array is not empty
+      then
+          for sensitive_prop in "${sensitive_property[@]}"
+          do
+              json_key=$(echo "$sensitive_prop" | cut -d'=' -f1)
+              shell_var_name=$(echo "$sensitive_prop" | cut -d'=' -f2)
+              actual_secret_value=$(eval echo "$shell_var_name")
+              escaped_secret_value=$(echo "$actual_secret_value" | sed 's/[\/&]/\\&/g')
+              escaped_key=$(echo "$json_key" | sed 's/[\/&]/\\&/g')
+
+              if [ -f "$json_file" ]; then
+                  # Use a temporary file for sed replacement
+                  temp_file=$(mktemp)
+                  sed -E "s@(\"$escaped_key\":[[:space:]]*)\"[^\"]*\"@\1\"$escaped_secret_value\"@" "$json_file" > "$temp_file"
+                  mv "$temp_file" "$json_file"
+                  log "🔐 Updated $json_key in $(basename "$json_file")"
+              fi
+          done
+      fi
+
+      if [ -f "$json_file" ]
+      then
+          log "📄 $(basename "$json_file")"
+          log "✨ Update the connector config file $(basename "$json_file") as per your needs, save and close the file to continue"
+          playground open --file "$json_file" --wait
+      fi
   done
 
   set +e
@@ -44153,6 +44180,25 @@ playground_connector_connect_migration_utility_migrate_parse_requirements() {
           shift
         else
           printf "%s\n" "--migration-mode requires an argument: --migration-mode MIGRATION-MODE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --sensitive-property)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--sensitive-property']+x} ]]; then
+            args['--sensitive-property']="$escaped"
+          else
+            args['--sensitive-property']="${args['--sensitive-property']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--sensitive-property requires an argument: --sensitive-property SENSITIVE-PROPERTY" >&2
           exit 1
         fi
         ;;

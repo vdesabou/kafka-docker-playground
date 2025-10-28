@@ -1,4 +1,5 @@
 migration_mode=${args[--migration-mode]}
+eval "sensitive_property=(${args[--sensitive-property]})"
 
 get_connect_url_and_security
 
@@ -28,12 +29,33 @@ get_ccloud_connect
 
 for json_file in "$discovery_output_dir/discovered_configs/successful_configs/fm_configs"/*.json
 do
-	if [ -f "$json_file" ]
-	then
-		log "📄 $(basename "$json_file")"
-		log "✨ Update the connector config file $(basename "$json_file") as per your needs, save and close the file to continue"
-		playground open --file "$json_file" --wait
-	fi
+    length=${#sensitive_property[@]}
+    if ((length > 0)) # Check if the array is not empty
+    then
+        for sensitive_prop in "${sensitive_property[@]}"
+        do
+            json_key=$(echo "$sensitive_prop" | cut -d'=' -f1)
+            shell_var_name=$(echo "$sensitive_prop" | cut -d'=' -f2)
+            actual_secret_value=$(eval echo "$shell_var_name")
+            escaped_secret_value=$(echo "$actual_secret_value" | sed 's/[\/&]/\\&/g')
+            escaped_key=$(echo "$json_key" | sed 's/[\/&]/\\&/g')
+
+            if [ -f "$json_file" ]; then
+                # Use a temporary file for sed replacement
+                temp_file=$(mktemp)
+                sed -E "s@(\"$escaped_key\":[[:space:]]*)\"[^\"]*\"@\1\"$escaped_secret_value\"@" "$json_file" > "$temp_file"
+                mv "$temp_file" "$json_file"
+                log "🔐 Updated $json_key in $(basename "$json_file")"
+            fi
+        done
+    fi
+
+    if [ -f "$json_file" ]
+    then
+        log "📄 $(basename "$json_file")"
+        log "✨ Update the connector config file $(basename "$json_file") as per your needs, save and close the file to continue"
+        playground open --file "$json_file" --wait
+    fi
 done
 
 set +e

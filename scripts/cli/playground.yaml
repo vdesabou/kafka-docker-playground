@@ -3750,6 +3750,18 @@ subcommands:
             
             Allowed values: stop_create_latest_offset, create, create_latest_offset
             
+        - names:
+          - --sensitive-property
+          argument: SENSITIVE-PROPERTY
+          description: | 
+            🔐 Pass sensitive config properties when migrating connector
+            
+            🎓 Tip: you can pass multiple properties by specifying --sensitive-property multiple times
+            
+            Example: --sensitive-property "aws.access.key.id=xxx" --sensitive-property "aws.secret.access.key=xxx"
+            
+            Repeatable: ✓ Yes
+            
   - name: ec2
     description: | 
         ✨ Create and manage AWS EC2 instances (using Cloud Formation) to run kafka-docker-playground
