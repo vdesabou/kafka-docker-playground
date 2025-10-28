@@ -36,7 +36,7 @@ jobs:
         run: |
           cd ./scripts/cli
           ./playground cleanup-cloud-resources --force
-          ./playground cleanup-cloud-resources --force --user vsaboulin
+          ./playground cleanup-cloud-resources --force --user vsaboulin --resource ccloud --resource aws --resource azure --resource gcp
         env:
           AZ_USER: ${{ secrets.AZ_USER}}
           AZ_PASS: ${{ secrets.AZ_PASS}}
