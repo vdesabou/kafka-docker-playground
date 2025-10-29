@@ -645,11 +645,10 @@ jobs:
           cd ./scripts/cli
           ./playground update-docs
 
-      - name: Update README and update cache-versions.env
+      - name: Update README
         run: |
           cd ./scripts/cli
           ./playground update-readme --tags "8.1.0"
-          ./playground update-cache-versions
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
