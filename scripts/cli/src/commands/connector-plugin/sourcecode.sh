@@ -26,7 +26,7 @@ fi
 is_fully_managed=0
 if [[ "$connector_plugin" == *"confluentinc"* ]] && [[ "$connector_plugin" != *"-"* ]]
 then
-    log "🌥️ connector was identified as fully managed connector"
+    log "🌥️ connector-plugin $connector_plugin was identified as fully managed connector"
     is_fully_managed=1
 fi
 
@@ -340,12 +340,13 @@ then
         # --branch $tag_name: Checks out the specific tag or branch
         clone_command="git clone --depth 1 --branch $tag_name $repo_url"
     else
-        # URL is a standard repo URL (no /tree/ or /blob/)    
+        # URL is a standard repo URL (no /tree/ or /blob/) 
         # Append .git if it's not already there
-        if [[ "$sourcecode_url" != *.git ]]; then
-            repo_url="${sourcecode_url}.git"
+        temp_url="${sourcecode_url%/}"
+        if [[ "$temp_url" != *.git ]]; then
+            repo_url="${temp_url}.git"
         else
-            repo_url="$sourcecode_url"
+            repo_url="$temp_url"
         fi
         
         repo_name=$(basename "$repo_url" .git)
@@ -355,18 +356,22 @@ then
         # Clone default branch, but still use --depth 1 for speed
         clone_command="git clone --depth 1 $repo_url"
     fi
-
+    repo_root_folder="${root_folder}/connector-plugin-sourcecode"
+    mkdir -p "${repo_root_folder}"
+    repo_folder="${repo_root_folder}/${repo_name}"
     # --- 2. Checkout (Clone) Project ---
-    if [ -d "${root_folder}/${repo_name}" ]
+    if [ -d "${repo_folder}" ]
     then
-        logwarn "📂 Directory ${root_folder}/${repo_name} already exists."
+        logwarn "📂 Directory ${repo_folder} already exists."
         logwarn "🧹 Do you want to delete it ?"
         check_if_continue
-        rm -rf "${root_folder}/${repo_name}"
+        rm -rf "${repo_folder}"
     fi
 
     log "🐏🐏 Cloning..."
+    cd ${repo_root_folder} > /dev/null 2>&1
     $clone_command
+    cd - > /dev/null 2>&1
 
     mvn_settings_file="/tmp/settings.xml"
     if [[ "$sourcecode_url" == *"confluentinc"* ]]
@@ -388,29 +393,31 @@ then
     fi
 
     # --- 3. Compile with Maven ---
-    log "🏗 Building with Maven (mvn clean package)...It can take a while..⏳"
-    docker run -i --rm -v "${root_folder}/${repo_name}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s $mvn_settings_file -Dcheckstyle.skip -DskipTests -Dlicense.skip=true clean package > /tmp/result.log 2>&1
+    log "🏗 Building with Maven ${repo_folder}...It can take a while..⏳"
+    set +e
+    docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s $mvn_settings_file -Dcheckstyle.skip -DskipTests -Dlicense.skip=true clean package > /tmp/result.log 2>&1
     if [ $? != 0 ]
     then
-        logerror "ERROR: failed to build java component "
+        logerror "❌ failed to build ${repo_folder}"
         tail -500 /tmp/result.log
         exit 1
     fi
+    set -e
 
-    log "👌 Build complete! Artifacts are in the '${root_folder}/${repo_name}/target/components/packages' directory."
+    log "👌 Build complete! Artifacts are in the '${repo_folder}/target/components/packages' directory."
 
     # Display the directory structure
     if command -v tree >/dev/null 2>&1; then
-        tree "${root_folder}/${repo_name}/target/components/packages"
+        tree "${repo_folder}/target/components/packages"
     else
-        find "${root_folder}/${repo_name}/target/components/packages" -type f -name "*.zip" | sort
+        find "${repo_folder}/target/components/packages" -type f -name "*.zip" | sort
     fi
     
     echo ""
     
     # Display each zip file
     found=0
-    for zip_file in "${root_folder}/${repo_name}/target/components/packages"/*.zip
+    for zip_file in "${repo_folder}/target/components/packages"/*.zip
     do
         if [ -f "$zip_file" ]
         then
@@ -435,7 +442,7 @@ then
 
     if [ $found == 0 ]
     then
-        logerror "❌ no zip file in '${root_folder}/${repo_name}/target/components/packages', maybe it was generated elsewhere in project ?"
+        logerror "❌ no zip file in '${repo_folder}/target/components/packages', maybe it was generated elsewhere in project ?"
         exit 1
     fi
 fi
