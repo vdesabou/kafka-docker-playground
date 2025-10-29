@@ -3592,6 +3592,13 @@ commands:
           🎓 Tip: set to " " in order to select the version dynamically
 
           🎓 Tip: you can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode
+      - long: --cc-connect-image-version
+        required: false
+        validate: not_empty
+        arg: cc_connect_image_version
+        help: |-
+          🔢 Confluent only: cc-connect image version for the pcc. Only for fully managed connectors.
+          
     examples: |
 
       # will open latest version from hub source code

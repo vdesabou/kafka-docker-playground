@@ -5680,6 +5680,11 @@ playground_connector_plugin_sourcecode_usage() {
     printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used (for Confluent employees, it will also get latest versions for\n    fully managed connectors)\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n    \n    🎓 Tip: you can compare different sourcecode versions by specifying\n    --connector-tag two times, in such case it will open github in comparison\n    mode\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cc-connect-image-version CC_CONNECT_IMAGE_VERSION")"
+    printf "    🔢 Confluent only: cc-connect image version for the pcc. Only for fully\n    managed connectors.\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -24667,6 +24672,7 @@ playground_connector_plugin_sourcecode_command() {
   connector_plugin="${args[--connector-plugin]}"
   connector_tags="${args[--connector-tag]}"
   only_show_url="${args[--only-show-url]}"
+  cc_connect_image_version="${args[--cc-connect-image-version]}"
 
   # Convert space-separated string to array
   IFS=' ' read -ra connector_tag_array <<< "$connector_tags"
@@ -24746,16 +24752,44 @@ playground_connector_plugin_sourcecode_command() {
           log "🐛📂 not deleting tmp dir $tmp_dir"
       fi
       # confluent only
-      cd $tmp_dir > /dev/null
-      get_3rdparty_file "cache-versions.env" > /dev/null
-      cd - > /dev/null
+
+      if [[ -n "$cc_connect_image_version" ]]
+      then
+          if [ -z $GH_TOKEN ] && [ -z $GITHUB_TOKEN ]
+          then
+              logerror "❌ --cc-connect-image-version is set with $cc_connect_image_version but neither GITHUB_TOKEN or GH_TOKEN are set"
+              exit 1
+          fi
+          token="$GITHUB_TOKEN"
+          if [ ! -z $GH_TOKEN ]
+          then
+              token="$GH_TOKEN"
+          fi
+          curl -H "Authorization: Token $token" -s "https://raw.githubusercontent.com/confluentinc/cc-docker-connect/refs/tags/v$cc_connect_image_version/cc-connect/cache-versions.env" -o $tmp_dir/cache-versions.env
+
+          if [ ! -f $tmp_dir/cache-versions.env ]
+          then
+              logerror "❌ could not download cache-versions.env from https://raw.githubusercontent.com/confluentinc/cc-docker-connect/refs/tags/v$cc_connect_image_version/cc-connect/cache-versions.env"
+              exit 1
+          fi
+      else
+          cd $tmp_dir > /dev/null
+          get_3rdparty_file "cache-versions.env" > /dev/null
+          cd - > /dev/null
+      fi
+
       if [ -f $tmp_dir/cache-versions.env ]
       then
-          last_version=$(grep "$connector_name_cache_versions" $tmp_dir/cache-versions.env  | cut -d "=" -f 2)
+          version=$(grep "$connector_name_cache_versions" $tmp_dir/cache-versions.env | cut -d "=" -f 2)
           if [ $ret -eq 0 ]
           then
-              log "✨ --connector-tag was not set, using latest version on cc-docker-connect (cache-versions.env file https://github.com/confluentinc/cc-docker-connect/blob/master/cc-connect/cache-versions.env) which is $last_version"
-              connector_tag="$last_version"
+              if [[ -n "$cc_connect_image_version" ]]
+              then
+                  log "✨ --cc-connect-image-version is set with $cc_connect_image_version, using version on cc-docker-connect (cache-versions.env file https://raw.githubusercontent.com/confluentinc/cc-docker-connect/refs/tags/v$cc_connect_image_version/cc-connect/cache-versions.env) which is $version"
+              else
+                  log "✨ --connector-tag was not set, using latest version on cc-docker-connect (cache-versions.env file https://github.com/confluentinc/cc-docker-connect/blob/master/cc-connect/cache-versions.env) which is $version"
+              fi
+              connector_tag="$version"
           else
               logerror "❌ could not find $connector_name_cache_versions in $tmp_dir/cache-versions.env"
               exit 1
@@ -41861,6 +41895,20 @@ playground_connector_plugin_sourcecode_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cc-connect-image-version)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cc-connect-image-version']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cc-connect-image-version requires an argument: --cc-connect-image-version CC_CONNECT_IMAGE_VERSION" >&2
+          exit 1
+        fi
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -41881,6 +41929,16 @@ playground_connector_plugin_sourcecode_parse_requirements() {
   if [[ -z ${args['--connector-plugin']+x} ]]; then
     printf "missing required flag: --connector-plugin, -c CONNECTOR-PLUGIN\n" >&2
     exit 1
+  fi
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--cc-connect-image-version'] ]]; then
+    validation_output="$(validate_not_empty "${args['--cc-connect-image-version']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--cc-connect-image-version CC_CONNECT_IMAGE_VERSION" "$validation_output" >&2
+      exit 1
+    fi
   fi
 
 }

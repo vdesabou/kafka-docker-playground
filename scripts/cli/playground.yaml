@@ -2998,6 +2998,12 @@ subcommands:
             
             Repeatable: ✓ Yes
             
+        - names:
+          - --cc-connect-image-version
+          argument: CC_CONNECT_IMAGE_VERSION
+          description: | 
+            🔢 Confluent only: cc-connect image version for the pcc. Only for fully managed connectors.
+            
   - name: connector
     description: | 
         🔗 Connector commands

@@ -2578,6 +2578,13 @@
               ],
               "argument": "CONNECTOR_TAG",
               "description": "🔗 Connector version to use\n\nBy default, for each connector, the latest available version on Confluent Hub is used (for Confluent employees, it will also get latest versions for fully managed connectors)\n\n🎓 Tip: set to \" \" in order to select the version dynamically\n\n🎓 Tip: you can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode\n\nRepeatable: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--cc-connect-image-version"
+              ],
+              "argument": "CC_CONNECT_IMAGE_VERSION",
+              "description": "🔢 Confluent only: cc-connect image version for the pcc. Only for fully managed connectors.\n"
             }
           ]
         }

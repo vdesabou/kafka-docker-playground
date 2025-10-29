@@ -1,6 +1,7 @@
 connector_plugin="${args[--connector-plugin]}"
 connector_tags="${args[--connector-tag]}"
 only_show_url="${args[--only-show-url]}"
+cc_connect_image_version="${args[--cc-connect-image-version]}"
 
 # Convert space-separated string to array
 IFS=' ' read -ra connector_tag_array <<< "$connector_tags"
@@ -80,16 +81,43 @@ function get_latest_version_from_cc_docker_connect_cache_versions_env () {
         log "🐛📂 not deleting tmp dir $tmp_dir"
     fi
     # confluent only
-    cd $tmp_dir > /dev/null
-    get_3rdparty_file "cache-versions.env" > /dev/null
-    cd - > /dev/null
+    if [[ -n "$cc_connect_image_version" ]]
+    then
+        if [ -z $GH_TOKEN ] && [ -z $GITHUB_TOKEN ]
+        then
+            logerror "❌ --cc-connect-image-version is set with $cc_connect_image_version but neither GITHUB_TOKEN or GH_TOKEN are set"
+            exit 1
+        fi
+        token="$GITHUB_TOKEN"
+        if [ ! -z $GH_TOKEN ]
+        then
+            token="$GH_TOKEN"
+        fi
+        curl -H "Authorization: Token $token" -s "https://raw.githubusercontent.com/confluentinc/cc-docker-connect/refs/tags/v$cc_connect_image_version/cc-connect/cache-versions.env" -o $tmp_dir/cache-versions.env
+
+        if [ ! -f $tmp_dir/cache-versions.env ]
+        then
+            logerror "❌ could not download cache-versions.env from https://raw.githubusercontent.com/confluentinc/cc-docker-connect/refs/tags/v$cc_connect_image_version/cc-connect/cache-versions.env"
+            exit 1
+        fi
+    else
+        cd $tmp_dir > /dev/null
+        get_3rdparty_file "cache-versions.env" > /dev/null
+        cd - > /dev/null
+    fi
+
     if [ -f $tmp_dir/cache-versions.env ]
     then
-        last_version=$(grep "$connector_name_cache_versions" $tmp_dir/cache-versions.env  | cut -d "=" -f 2)
+        version=$(grep "$connector_name_cache_versions" $tmp_dir/cache-versions.env | cut -d "=" -f 2)
         if [ $ret -eq 0 ]
         then
-            log "✨ --connector-tag was not set, using latest version on cc-docker-connect (cache-versions.env file https://github.com/confluentinc/cc-docker-connect/blob/master/cc-connect/cache-versions.env) which is $last_version"
-            connector_tag="$last_version"
+            if [[ -n "$cc_connect_image_version" ]]
+            then
+                log "✨ --cc-connect-image-version is set with $cc_connect_image_version, using version on cc-docker-connect (cache-versions.env file https://raw.githubusercontent.com/confluentinc/cc-docker-connect/refs/tags/v$cc_connect_image_version/cc-connect/cache-versions.env) which is $version"
+            else
+                log "✨ --connector-tag was not set, using latest version on cc-docker-connect (cache-versions.env file https://github.com/confluentinc/cc-docker-connect/blob/master/cc-connect/cache-versions.env) which is $version"
+            fi
+            connector_tag="$version"
         else
             logerror "❌ could not find $connector_name_cache_versions in $tmp_dir/cache-versions.env"
             exit 1
