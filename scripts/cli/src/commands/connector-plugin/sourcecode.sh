@@ -338,7 +338,7 @@ then
         
         # --depth 1: Downloads only that commit, not the full history (much faster)
         # --branch $tag_name: Checks out the specific tag or branch
-        clone_command="git clone --depth 1 --branch $tag_name $repo_url"
+        clone_command="git clone --recursive --depth 1 --branch $tag_name $repo_url"
     else
         # URL is a standard repo URL (no /tree/ or /blob/) 
         # Append .git if it's not already there
@@ -354,7 +354,7 @@ then
         log "🧑‍💻 Repo Directory: $repo_name"
         
         # Clone default branch, but still use --depth 1 for speed
-        clone_command="git clone --depth 1 $repo_url"
+        clone_command="git clone --recursive --depth 1 $repo_url"
     fi
     repo_root_folder="${root_folder}/connector-plugin-sourcecode"
     mkdir -p "${repo_root_folder}"
@@ -373,6 +373,17 @@ then
     $clone_command
     cd - > /dev/null 2>&1
 
+    if [[ "${repo_name}" == *-private ]]
+    then
+        repo_folder="${repo_folder}/${repo_name%-private}"
+    fi
+
+    if [ ! -f "${repo_folder}/pom.xml" ]
+    then
+        logerror "❌ there is no pom.xml file in ${repo_folder}. Only maven projects can be compiled for now."
+        exit 1
+    fi
+
     mvn_settings_file="/tmp/settings.xml"
     if [[ "$sourcecode_url" == *"confluentinc"* ]]
     then
@@ -385,7 +396,7 @@ then
                 exit 1
             fi
 
-            log "Did you execute <maven-login> command in the last 12 hours ?"
+            log "🎓 Make sure you have executed <maven-login> command in the last 12 hours"
             check_if_call_maven_login
 
             mvn_settings_file="/root/.m2/settings.xml"
@@ -393,18 +404,20 @@ then
     fi
 
     # --- 3. Compile with Maven ---
+    file_output="${repo_folder}/playground-compilation-$repo_name.log"
     log "🏗 Building with Maven ${repo_folder}...It can take a while..⏳"
+    log "🏗 Compilation logs are also present in ${file_output}"
     set +e
-    docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s $mvn_settings_file -Dcheckstyle.skip -DskipTests -Dlicense.skip=true clean package > /tmp/result.log 2>&1
-    if [ $? != 0 ]
+    docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s $mvn_settings_file -Dcheckstyle.skip -DskipTests -Dlicense.skip=true clean package 2>&1 | tee "$file_output"
+    ret=${PIPESTATUS[0]}
+    if [ $ret != 0 ]
     then
-        logerror "❌ failed to build ${repo_folder}"
-        tail -500 /tmp/result.log
+        logerror "❌ failed to build ${repo_folder}, check the logs at ${file_output}"
         exit 1
     fi
-    set -e
+    set +e
 
-    log "👌 Build complete! Artifacts are in the '${repo_folder}/target/components/packages' directory."
+    log "👌 Build complete! Artifacts are generally in the '${repo_folder}/target/components/packages' directory."
 
     # Display the directory structure
     if command -v tree >/dev/null 2>&1; then
