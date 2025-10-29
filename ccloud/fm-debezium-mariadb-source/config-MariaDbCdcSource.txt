@@ -417,7 +417,7 @@ A Boolean value that specifies whether the connector records schema structures f
 An integer value that specifies the maximum number of milliseconds the connector should wait during startup/recovery while polling for persisted data.
 
 	 - Type: INT
-	 - Default: 1000
+	 - Default: 100
 	 - Importance: LOW
 	 - Required: false
 

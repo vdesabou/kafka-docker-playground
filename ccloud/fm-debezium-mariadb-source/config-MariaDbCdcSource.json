@@ -37,7 +37,7 @@
     "schema.context.name": "default",
     "schema.history.internal.kafka.create.timeout.ms": "30000",
     "schema.history.internal.kafka.query.timeout.ms": "3000",
-    "schema.history.internal.kafka.recovery.poll.interval.ms": "1000",
+    "schema.history.internal.kafka.recovery.poll.interval.ms": "100",
     "schema.history.internal.kafka.topic": "dbhistory.${topic.prefix}.{{.logicalClusterId}}",
     "schema.history.internal.skip.unparseable.ddl": "false",
     "schema.history.internal.store.only.captured.databases.ddl": "false",
