@@ -1,6 +1,7 @@
 connector_plugin="${args[--connector-plugin]}"
 connector_tags="${args[--connector-tag]}"
 only_show_url="${args[--only-show-url]}"
+compile="${args[--compile]}"
 
 # Convert space-separated string to array
 IFS=' ' read -ra connector_tag_array <<< "$connector_tags"
@@ -152,6 +153,13 @@ then
         logerror "❌ --connector-tag can only be set 2 times"
         exit 1
     fi
+
+    if [[ -n "$compile" ]]
+    then
+        logerror "❌ --compile flag does not work when --connector-tag is set 2 times"
+        exit 1
+    fi
+    
     if [[ "$sourcecode_url" != *"github.com"* ]]
     then
         logerror "❌ --connector-tag flag is set 2 times, but sourcecode is not hosted on github, comparison between version can only works with github"
@@ -255,23 +263,145 @@ else
     fi
 fi
 
+maybe_v_prefix=""
+if [[ "$sourcecode_url" == *"confluentinc"* ]]
+then
+    # confluent use v prefix for tags example v1.5.0
+    maybe_v_prefix="v"
+fi
+
 if [ "$comparison_mode_versions" != "" ]
 then
-    additional_text=", comparing v$connector_tag1 and v$connector_tag2"
+    additional_text=", comparing $maybe_v_prefix$connector_tag1 and $maybe_v_prefix$connector_tag2"
     sourcecode_url="$sourcecode_url/compare/$comparison_mode_versions"
 else
     additional_text=" for $connector_tag version"
     if [ "$connector_tag" != "latest" ] && [[ "$sourcecode_url" == *"github.com"* ]]
     then
-        sourcecode_url="$sourcecode_url/tree/v$connector_tag"
+        sourcecode_url="$sourcecode_url/tree/$maybe_v_prefix$connector_tag"
     fi
 fi
 
-if [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]]
+if [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]] || [[ -n "$compile" ]]
 then
     log "🧑‍💻🌐 sourcecode for plugin $connector_plugin$additional_text is available at:"
     echo "$sourcecode_url"
 else
     log "🧑‍💻 Opening sourcecode url $sourcecode_url for plugin $connector_plugin in browser$additional_text"
     open "$sourcecode_url"
+fi
+
+if [[ -n "$compile" ]]
+then
+    if [[ "$sourcecode_url" != *"github.com"* ]]
+    then
+        logerror "❌ --compile flag does not work when sourcecode is not hosted on github"
+        exit 1
+    fi
+
+    if [[ $(type -f git 2>&1) =~ "not found" ]]
+    then
+        logerror "❌ --compile flag is set but git command is not installed"
+        exit 1
+    fi
+
+    # --- 1. Parse the URL ---
+    # Regex to capture:
+    # 1: The base repo URL (e.g., https://github.com/user/repo)
+    # 4: The tag/branch name (e.g., v1.3.30)
+    regex="^(https:(//)[^/]+/[^/]+/[^/]+)/(tree|blob)/([^/]+)"
+
+    if [[ "$sourcecode_url" =~ $regex ]]; then
+        # URL has a /tree/ or /blob/ part
+        repo_url="${BASH_REMATCH[1]}.git"
+        tag_name="${BASH_REMATCH[4]}"
+        repo_name=$(basename "${BASH_REMATCH[1]}")
+        
+        log "🏷️  Tag/Branch: $tag_name"
+        log "🔗 Base Repo URL: $repo_url"
+        log "🧑‍💻 Repo Directory: $repo_name"
+        
+        # --depth 1: Downloads only that commit, not the full history (much faster)
+        # --branch $tag_name: Checks out the specific tag or branch
+        clone_command="git clone --depth 1 --branch $tag_name $repo_url"
+    else
+        # URL is a standard repo URL (no /tree/ or /blob/)    
+        # Append .git if it's not already there
+        if [[ "$sourcecode_url" != *.git ]]; then
+            repo_url="${sourcecode_url}.git"
+        else
+            repo_url="$sourcecode_url"
+        fi
+        
+        repo_name=$(basename "$repo_url" .git)
+        log "🔗 Repo URL: $repo_url"
+        log "🧑‍💻 Repo Directory: $repo_name"
+        
+        # Clone default branch, but still use --depth 1 for speed
+        clone_command="git clone --depth 1 $repo_url"
+    fi
+
+    # --- 2. Checkout (Clone) Project ---
+    if [ -d "${root_folder}/${repo_name}" ]
+    then
+        logwarn "📂 Directory ${root_folder}/${repo_name} already exists."
+        logwarn "🧹 Do you want to delete it ?"
+        check_if_continue
+        rm -rf "${root_folder}/${repo_name}"
+    fi
+
+    log "🐏🐏 Cloning..."
+    $clone_command
+
+    # --- 3. Compile with Maven ---
+    log "🏗 Building with Maven (mvn clean package)...It can take a while..⏳"
+    docker run -i --rm -v "${root_folder}/${repo_name}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dcheckstyle.skip -DskipTests -Dlicense.skip=true clean package > /tmp/result.log 2>&1
+    if [ $? != 0 ]
+    then
+        logerror "ERROR: failed to build java component "
+        tail -500 /tmp/result.log
+        exit 1
+    fi
+
+    log "👌 Build complete! Artifacts are in the '${root_folder}/${repo_name}/target/components/packages' directory."
+
+    # Display the directory structure
+    if command -v tree >/dev/null 2>&1; then
+        tree "${root_folder}/${repo_name}/target/components/packages"
+    else
+        find "${root_folder}/${repo_name}/target/components/packages" -type f -name "*.zip" | sort
+    fi
+    
+    echo ""
+    
+    # Display each zip file
+    found=0
+    for zip_file in "${root_folder}/${repo_name}/target/components/packages"/*.zip
+    do
+        if [ -f "$zip_file" ]
+        then
+            found=1
+            log "📄🥳 zip file $zip_file generated !"
+            if [[ "$OSTYPE" == "darwin"* ]]
+            then
+                clipboard=$(playground config get clipboard)
+                if [ "$clipboard" == "" ]
+                then
+                    playground config set clipboard true
+                fi
+
+                if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
+                then
+                    echo "$zip_file"| pbcopy
+                    log "📋 path to the zip file $zip_file has been copied to the clipboard (disable with 'playground config clipboard false')"
+                fi
+            fi
+        fi
+    done
+
+    if [ $found == 0 ]
+    then
+        logerror "❌ no zip file in '${root_folder}/${repo_name}/target/components/packages', maybe it was generated elsewhere in project ?"
+        exit 1
+    fi
 fi
