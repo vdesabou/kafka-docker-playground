@@ -372,7 +372,7 @@ The partitioner to use when writing data to the Object store
 
 🔘 topics.dir
 
-Configures the directory to store the data ingested from Kafka. For a file like ``s3://<s3-bucket-name>/json_logs/daily/<Topic-Name>/dt=2020-02-06/hr=09/<files>``, set ``topics.dir=json_logs/daily``, ``path.format='dt'=YYYY-MM-dd/'hr'=HH``, and ``time.interval=HOURLY``. For another file like ``s3://<s3-bucket-name>/<Topic-Name>/dt=2020-02-06/hr=09/<files>``, set ``topics.dir=" "``, but keep ``path.format`` and ``time.interval`` the same as in the previous example. This configures the ``topics.dir`` to a space. In the UI, enter a blank space, and use ``" "`` for CLI and API configurations.
+Configures the directory to store the data ingested from Kafka. For a file like ``s3://<s3-bucket-name>/json_logs/daily/<Topic-Name>/dt=YYYY-MM-DD/hr=09/<files>``, set ``topics.dir=json_logs/daily``, ``path.format='dt'=YYYY-MM-dd/'hr'=HH``, and ``time.interval=HOURLY``. For another file like ``s3://<s3-bucket-name>/<Topic-Name>/dt=YYYY-MM-DD/hr=09/<files>``, set ``topics.dir=" "``, but keep ``path.format`` and ``time.interval`` the same as in the previous example. This configures the ``topics.dir`` to a space. In the UI, enter a blank space, and use ``" "`` for CLI and API configurations.
 
 	 - Type: STRING
 	 - Default: topics
@@ -417,7 +417,7 @@ The connector’s rotation interval specifies the maximum timespan (in milliseco
 
 🔘 path.format
 
-This configuration is used to set the format of the data directories when partitioning with TimeBasedPartitioner. The format set in this configuration converts the Unix timestamp to a valid directory string. To organize files like this example, s3://<s3-bucket-name>/json_logs/daily/<Topic-Name>/dt=2020-02-06/hr=09/<files>, use the properties: topics.dir=json_logs/daily, path.format='dt'=YYYY-MM-dd/'hr'=HH, and time.interval=HOURLY.
+This configuration is used to set the format of the data directories when partitioning with TimeBasedPartitioner. The format set in this configuration converts the Unix timestamp to a valid directory string. To organize files like this example, s3://<s3-bucket-name>/json_logs/daily/<Topic-Name>/dt=YYYY-MM-DD/hr=09/<files>, use the properties: topics.dir=json_logs/daily, path.format='dt'=YYYY-MM-dd/'hr'=HH, and time.interval=HOURLY.
 
 	 - Type: STRING
 	 - Default: 'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH
