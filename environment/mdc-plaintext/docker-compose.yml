@@ -207,6 +207,8 @@ services:
       # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
       CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: 'broker-us:9092'
       CONNECT_CONFLUENT_TOPIC_REPLICATION_FACTOR: "1"
+      # internal - do not use 
+      CONNECT_CONFLUENT_CLOUD_CONNECT: "true"
     volumes:
       - ../../confluent-hub:/usr/share/confluent-hub-components
 
@@ -257,6 +259,8 @@ services:
       # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
       CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: 'broker-europe:9092'
       CONNECT_CONFLUENT_TOPIC_REPLICATION_FACTOR: "1"
+      # internal - do not use 
+      CONNECT_CONFLUENT_CLOUD_CONNECT: "true"
     volumes:
       - ../../confluent-hub:/usr/share/confluent-hub-components
       

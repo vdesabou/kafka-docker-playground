@@ -303,6 +303,8 @@ services:
       # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
       CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: 'broker:9092'
       CONNECT_CONFLUENT_TOPIC_REPLICATION_FACTOR: "1"
+      # internal - do not use 
+      CONNECT_CONFLUENT_CLOUD_CONNECT: "true"
       
   connect2:
     image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
@@ -379,6 +381,8 @@ services:
       # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
       CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: 'broker:9092'
       CONNECT_CONFLUENT_TOPIC_REPLICATION_FACTOR: "1"
+      # internal - do not use 
+      CONNECT_CONFLUENT_CLOUD_CONNECT: "true"
 
   connect3:
     image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
@@ -455,7 +459,9 @@ services:
       # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
       CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: 'broker:9092'
       CONNECT_CONFLUENT_TOPIC_REPLICATION_FACTOR: "1"
-
+      # internal - do not use 
+      CONNECT_CONFLUENT_CLOUD_CONNECT: "true"
+      
   ksqldb-server:
     image: ${CP_KSQL_IMAGE}:${CP_KSQL_TAG}
     hostname: ksqldb-server
