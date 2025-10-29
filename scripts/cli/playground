@@ -951,8 +951,8 @@ playground_update_cache_versions_usage() {
     printf "%s\n" "$(bold "Environment Variables:")"
 
     # :environment_variable.usage
-    printf "  %s\n" "$(cyan "GH_TOKEN (required)")"
-    printf "    GH_TOKEN\n"
+    printf "  %s\n" "$(cyan "GITHUB_TOKEN (required)")"
+    printf "    GITHUB_TOKEN\n"
     echo
 
   fi
@@ -14017,13 +14017,13 @@ playground_get_predefined_schemas_command() {
 playground_update_cache_versions_command() {
 
   # src/commands/update-cache-versions.sh
-  if [ -z $GH_TOKEN ]
+  if [ -z $GITHUB_TOKEN ]
   then
-      logerror "❌ GH_TOKEN environment variable is not set"
+      logerror "❌ GITHUB_TOKEN environment variable is not set"
       exit 1
   fi
 
-  curl -H "Authorization: Token $GH_TOKEN" -s "https://raw.githubusercontent.com/confluentinc/cc-docker-connect/refs/heads/master/cc-connect/cache-versions.env" -o /tmp/cache-versions.env
+  curl -H "Authorization: Token $GITHUB_TOKEN" -s "https://raw.githubusercontent.com/confluentinc/cc-docker-connect/refs/heads/master/cc-connect/cache-versions.env" -o /tmp/cache-versions.env
 
   if [ ! -f /tmp/cache-versions.env ]
   then
@@ -16787,7 +16787,10 @@ playground_run_command() {
   playground generate-kafka-region-list > /dev/null 2>&1 &
   if [ "$USER" == "vsaboulin" ]
   then
-      playground update-cache-versions > /dev/null 2>&1 &
+      if [ ! -z $GITHUB_TOKEN ]
+      then
+          playground update-cache-versions > /dev/null 2>&1 &
+      fi
   fi
   set -e
   if [ $ret -eq 0 ]
@@ -30764,9 +30767,9 @@ playground_update_cache_versions_parse_requirements() {
 
   # :command.environment_variables_filter
 
-  env_var_names+=("GH_TOKEN")
-  if [[ -z "${GH_TOKEN:-}" ]]; then
-    printf "missing required environment variable: GH_TOKEN\n" >&2
+  env_var_names+=("GITHUB_TOKEN")
+  if [[ -z "${GITHUB_TOKEN:-}" ]]; then
+    printf "missing required environment variable: GITHUB_TOKEN\n" >&2
     exit 1
   fi
 

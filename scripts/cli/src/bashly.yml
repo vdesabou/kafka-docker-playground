@@ -243,8 +243,8 @@ commands:
 - name: update-cache-versions
   private: true
   environment_variables:
-  - name: GH_TOKEN 
-    help: GH_TOKEN
+  - name: GITHUB_TOKEN 
+    help: GITHUB_TOKEN
     required: true
 
 - name: update-readme

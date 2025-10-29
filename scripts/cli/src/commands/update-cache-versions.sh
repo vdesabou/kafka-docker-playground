@@ -1,10 +1,10 @@
-if [ -z $GH_TOKEN ]
+if [ -z $GITHUB_TOKEN ]
 then
-    logerror "❌ GH_TOKEN environment variable is not set"
+    logerror "❌ GITHUB_TOKEN environment variable is not set"
     exit 1
 fi
 
-curl -H "Authorization: Token $GH_TOKEN" -s "https://raw.githubusercontent.com/confluentinc/cc-docker-connect/refs/heads/master/cc-connect/cache-versions.env" -o /tmp/cache-versions.env
+curl -H "Authorization: Token $GITHUB_TOKEN" -s "https://raw.githubusercontent.com/confluentinc/cc-docker-connect/refs/heads/master/cc-connect/cache-versions.env" -o /tmp/cache-versions.env
 
 if [ ! -f /tmp/cache-versions.env ]
 then
