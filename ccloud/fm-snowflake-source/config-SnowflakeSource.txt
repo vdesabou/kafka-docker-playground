@@ -237,7 +237,7 @@ By default, the connector will only detect tables with type TABLE. This config a
 
 🔘 timestamp.granularity
 
-Define the granularity of the Timestamp column. `CONNECT_LOGICAL`: Represents timestamp values using Kafka Connect built-in representations. This may lead to loss of precision as this only supports milliseconds precision. `NANOS_LONG`: Represents timestamp values as nanos since epoch. Avoid this if any of the eligible timestamp columns contains timestamps greater than `2262-11-04 23:47:16.854775807 GMT`, nanos since epoch value would not fit in the range for long and hence would lead to erroneous values. Use `nanos_string` in such cases. `NANOS_STRING`: represents timestamp values as nanos since epoch in string.
+Define the granularity of the Timestamp column. `CONNECT_LOGICAL`: Represents timestamp values using Kafka Connect built-in representations. This may lead to loss of precision as this only supports milliseconds precision. `NANOS_LONG`: Represents timestamp values as nanos since epoch. Avoid this if any of the eligible timestamp columns contains timestamps greater than `YYYY-MM-DD HH:mm:16.854775807 GMT`, nanos since epoch value would not fit in the range for long and hence would lead to erroneous values. Use `nanos_string` in such cases. `NANOS_STRING`: represents timestamp values as nanos since epoch in string.
 
 	 - Type: STRING
 	 - Default: NANOS_LONG

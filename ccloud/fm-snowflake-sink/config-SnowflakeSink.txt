@@ -142,6 +142,15 @@ How should we connect to your Snowflake database?
 	 - Importance: The URL for accessing your Snowflake account, in the form of https://<account_name>.<region_id>.snowflakecomputing.com:443. Note that the https:// and port number are optional. The region ID is not used if your account is in the AWS US West region and you are not using AWS PrivateLink.
 	 - Required: HIGH
 
+🔘 authentication.method
+
+Select how you want to authenticate with Snowflake.
+
+	 - Type: STRING
+	 - Default: Password
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 snowflake.user.name
 
 
@@ -151,23 +160,23 @@ How should we connect to your Snowflake database?
 	 - Importance: User login name for the Snowflake account
 	 - Required: HIGH
 
-🔘 snowflake.private.key
-
-
-
-	 - Type: true
-	 - Default: PASSWORD
-	 - Importance: The private key to authenticate the user. Include only the key, not the header or footer. If the key is split across multiple lines, remove the line breaks. You can provide either an unencrypted key or an encrypted key. If you use an encrypted key, provide the snowflake.private.key.passphrase parameter so Snowflake can decrypt the key. Use this parameter only if the snowflake.private.key parameter value is encrypted.
-	 - Required: HIGH
-
 🔘 snowflake.role.name
 
 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Access control role to use when inserting the rows into the table. If Ingestion method is Snowpipe_Streaming Ingestion then it's required. If Ingestion method is Snowpipe then its not required and use default role
+	 - Importance: Access control role to use when inserting the rows into the table. If Ingestion method is Snowpipe_Streaming Ingestion then it's required. If Ingestion method is Snowpipe then it's not required and use default role
 	 - Required: LOW
+
+🔘 snowflake.private.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The private key to authenticate the user. Include only the key, not the header or footer. If the key is split across multiple lines, remove the line breaks. You can provide either an unencrypted key or an encrypted key. If you use an encrypted key, provide the snowflake.private.key.passphrase parameter so Snowflake can decrypt the key. Use this parameter only if the snowflake.private.key parameter value is encrypted.
+	 - Required: HIGH
 
 🔘 snowflake.database.name
 
@@ -258,7 +267,7 @@ Snowflake connection
 ==========================
 🔘 snowflake.ingestion.method
 
-Choose the preferred ingestion method. The connector supports the SNOWPIPE (default) and SNOWPIPE_STREAMIMG for Kafka data ingestion. Using SNOWPIPE_STREAMING may provide a cost-benefit for your Snowflake project.
+Choose the preferred ingestion method. The connector supports the SNOWPIPE (default) and SNOWPIPE_STREAMING for Kafka data ingestion. Using SNOWPIPE_STREAMING may provide a cost-benefit for your Snowflake project.
 
 	 - Type: STRING
 	 - Default: SNOWPIPE
@@ -268,15 +277,6 @@ Choose the preferred ingestion method. The connector supports the SNOWPIPE (defa
 ==========================
 Connection details
 ==========================
-🔘 snowflake.private.key.passphrase
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: If snowflake.private.key is encrypted, this passphrase is used to decrypt the key. If the value of this parameter is not empty, Kafka uses this phrase to try to decrypt the private key.
-	 - Required: MEDIUM
-
 🔘 snowflake.metadata.createtime
 
 If the value is set to FALSE, the CreateTime property value is omitted from the metadata in the RECORD_METADATA column. The default value is TRUE.
@@ -285,6 +285,15 @@ If the value is set to FALSE, the CreateTime property value is omitted from the 
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 snowflake.private.key.passphrase
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: If snowflake.private.key is encrypted, this passphrase is used to decrypt the key. If the value of this parameter is not empty, Kafka uses this phrase to try to decrypt the private key.
+	 - Required: MEDIUM
 
 🔘 snowflake.metadata.topic
 
@@ -313,6 +322,15 @@ If the value is set to TRUE, the ConnectorPushTime property value is added to th
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 oauth.client.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Client (or Application) ID of your Snowflake Security Integration
+	 - Required: MEDIUM
+
 🔘 snowflake.metadata.all
 
 If the value is set to FALSE, the metadata in the RECORD_METADATA column is completely empty. The default value is TRUE.
@@ -321,6 +339,15 @@ If the value is set to FALSE, the metadata in the RECORD_METADATA column is comp
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 oauth.client.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Client secret of your Snowflake Security Integration.
+	 - Required: HIGH
 
 🔘 snowflake.enable.schematization
 
@@ -331,18 +358,36 @@ Specify to TRUE to enable schema detection and evolution for Kafka Connector wit
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 oauth.refresh.token
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: OAuth 2.0 Refresh Token for Snowflake.
+	 - Required: HIGH
+
 🔘 buffer.flush.time
 
-Number of seconds between buffer flushes, where the flush is from the Kafka’s memory cache to the internal stage. The default value is 120 seconds. Minimum value allowed is 10 for snowflake.ingestion.method=SNOWPIPE, and 1 for snowflake.ingestion.method=SNOWPIPE_STREAMING. The connector uses buffer.count.records and buffer.size.bytes=10,000,000 (10MB) as well. Whichever comes first, the connector will flush Kafka records to Snowflake.
+Number of seconds between buffer flushes, where the flush is from the Kafka's memory cache to the internal stage. The default value is 120 seconds. Minimum value allowed is 10 for snowflake.ingestion.method=SNOWPIPE, and 1 for snowflake.ingestion.method=SNOWPIPE_STREAMING. The connector uses buffer.count.records and buffer.size.bytes=10,000,000 (10MB) as well. Whichever comes first, the connector will flush Kafka records to Snowflake.
 
 	 - Type: LONG
 	 - Default: 120
 	 - Importance: LOW
 	 - Required: false
 
+🔘 oauth.auth.endpoint
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Auth endpoint - {snowflake.url.name}/oauth/authorize
+	 - Required: HIGH
+
 🔘 buffer.count.records
 
-Number of records between buffer flushes, where the flush is from the Kafka’s memory cache to the internal stage. The default and minimum value is 10,000 records. The connector uses buffer.flush.time and buffer.size.bytes=10,000,000 (10MB) as well. Whichever comes first, the connector will flush Kafka records to Snowflake.
+Number of records between buffer flushes, where the flush is from the Kafka's memory cache to the internal stage. The default and minimum value is 10,000 records. The connector uses buffer.flush.time and buffer.size.bytes=10,000,000 (10MB) as well. Whichever comes first, the connector will flush Kafka records to Snowflake.
 
 	 - Type: LONG
 	 - Default: 10000
@@ -358,6 +403,15 @@ Kafka records are cached in a buffer (per partition) before being written to Sno
 	 - Importance: LOW
 	 - Required: false
 
+🔘 oauth.token.endpoint
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Token endpoint - {snowflake.url.name}/oauth/token-request
+	 - Required: HIGH
+
 🔘 snowflake.streaming.iceberg.enabled
 
 Interested in integrating with Iceberg? Take a look at Tableflow — a solution designed to simplify and streamline your Iceberg workflows, refer https://www.confluent.io/product/tableflow/.
@@ -366,6 +420,15 @@ Interested in integrating with Iceberg? Take a look at Tableflow — a solution 
 	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 oauth.query.params
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: In the form of scope=session:role:{snowflakeRoleName}
+	 - Required: HIGH
 
 🔘 enable.task.fail.on.authorization.errors
 
