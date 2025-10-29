@@ -516,10 +516,10 @@ Size of the batch of records to be fetched from the ServiceNow table. Note that 
 
 🔘 table1.start.timestamp
 
-Time to start fetching all updates/creation. Defaults to `1970-01-01 00:00:00`. Note that the time is in UTC and requires format: `yyyy-MM-dd HH:mm:ss`.
+Time to start fetching all updates/creation. Defaults to `YYYY-MM-DD HH:mm:00`. Note that the time is in UTC and requires format: `yyyy-MM-dd HH:mm:ss`.
 
 	 - Type: STRING
-	 - Default: 1970-01-01 00:00:00
+	 - Default: YYYY-MM-DD HH:mm:00
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -654,10 +654,10 @@ Size of the batch of records to be fetched from the ServiceNow table. Note that 
 
 🔘 table2.start.timestamp
 
-Time to start fetching all updates/creation. Defaults to `1970-01-01 00:00:00`. Note that the time is in UTC and requires format: `yyyy-MM-dd HH:mm:ss`.
+Time to start fetching all updates/creation. Defaults to `YYYY-MM-DD HH:mm:00`. Note that the time is in UTC and requires format: `yyyy-MM-dd HH:mm:ss`.
 
 	 - Type: STRING
-	 - Default: 1970-01-01 00:00:00
+	 - Default: YYYY-MM-DD HH:mm:00
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -792,10 +792,10 @@ Size of the batch of records to be fetched from the ServiceNow table. Note that 
 
 🔘 table3.start.timestamp
 
-Time to start fetching all updates/creation. Defaults to `1970-01-01 00:00:00`. Note that the time is in UTC and requires format: `yyyy-MM-dd HH:mm:ss`.
+Time to start fetching all updates/creation. Defaults to `YYYY-MM-DD HH:mm:00`. Note that the time is in UTC and requires format: `yyyy-MM-dd HH:mm:ss`.
 
 	 - Type: STRING
-	 - Default: 1970-01-01 00:00:00
+	 - Default: YYYY-MM-DD HH:mm:00
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -930,10 +930,10 @@ Size of the batch of records to be fetched from the ServiceNow table. Note that 
 
 🔘 table4.start.timestamp
 
-Time to start fetching all updates/creation. Defaults to `1970-01-01 00:00:00`. Note that the time is in UTC and requires format: `yyyy-MM-dd HH:mm:ss`.
+Time to start fetching all updates/creation. Defaults to `YYYY-MM-DD HH:mm:00`. Note that the time is in UTC and requires format: `yyyy-MM-dd HH:mm:ss`.
 
 	 - Type: STRING
-	 - Default: 1970-01-01 00:00:00
+	 - Default: YYYY-MM-DD HH:mm:00
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -1068,10 +1068,10 @@ Size of the batch of records to be fetched from the ServiceNow table. Note that 
 
 🔘 table5.start.timestamp
 
-Time to start fetching all updates/creation. Defaults to `1970-01-01 00:00:00`. Note that the time is in UTC and requires format: `yyyy-MM-dd HH:mm:ss`.
+Time to start fetching all updates/creation. Defaults to `YYYY-MM-DD HH:mm:00`. Note that the time is in UTC and requires format: `yyyy-MM-dd HH:mm:ss`.
 
 	 - Type: STRING
-	 - Default: 1970-01-01 00:00:00
+	 - Default: YYYY-MM-DD HH:mm:00
 	 - Importance: MEDIUM
 	 - Required: false
 
