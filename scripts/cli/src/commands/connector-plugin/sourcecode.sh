@@ -1,7 +1,6 @@
 connector_plugin="${args[--connector-plugin]}"
 connector_tags="${args[--connector-tag]}"
 only_show_url="${args[--only-show-url]}"
-cc_connect_image_version="${args[--cc-connect-image-version]}"
 
 # Convert space-separated string to array
 IFS=' ' read -ra connector_tag_array <<< "$connector_tags"
@@ -72,7 +71,9 @@ then
     connector_name_cache_versions=$(echo "$output" | cut -d "|" -f 3)
 fi
 
-function get_latest_version_from_cc_docker_connect_cache_versions_env () {
+function get_version_from_cc_docker_connect_cache_versions_env () {
+    arg_version="$1"
+
     tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
     if [ -z "$PG_VERBOSE_MODE" ]
     then
@@ -81,11 +82,11 @@ function get_latest_version_from_cc_docker_connect_cache_versions_env () {
         log "🐛📂 not deleting tmp dir $tmp_dir"
     fi
     # confluent only
-    if [[ -n "$cc_connect_image_version" ]]
+    if [ "$arg_version" != "latest" ]
     then
         if [ -z $GH_TOKEN ] && [ -z $GITHUB_TOKEN ]
         then
-            logerror "❌ --cc-connect-image-version is set with $cc_connect_image_version but neither GITHUB_TOKEN or GH_TOKEN are set"
+            logerror "❌ --connector-tag set with $arg_version using fully managed connector plugin but neither GITHUB_TOKEN or GH_TOKEN environment variable are set"
             exit 1
         fi
         token="$GITHUB_TOKEN"
@@ -93,11 +94,11 @@ function get_latest_version_from_cc_docker_connect_cache_versions_env () {
         then
             token="$GH_TOKEN"
         fi
-        curl -H "Authorization: Token $token" -s "https://raw.githubusercontent.com/confluentinc/cc-docker-connect/refs/tags/v$cc_connect_image_version/cc-connect/cache-versions.env" -o $tmp_dir/cache-versions.env
+        curl -H "Authorization: Token $token" -s "https://raw.githubusercontent.com/confluentinc/cc-docker-connect/refs/tags/v$arg_version/cc-connect/cache-versions.env" -o $tmp_dir/cache-versions.env
 
         if [ ! -f $tmp_dir/cache-versions.env ]
         then
-            logerror "❌ could not download cache-versions.env from https://raw.githubusercontent.com/confluentinc/cc-docker-connect/refs/tags/v$cc_connect_image_version/cc-connect/cache-versions.env"
+            logerror "❌ could not download cache-versions.env from https://raw.githubusercontent.com/confluentinc/cc-docker-connect/refs/tags/v$arg_version/cc-connect/cache-versions.env"
             exit 1
         fi
     else
@@ -111,9 +112,9 @@ function get_latest_version_from_cc_docker_connect_cache_versions_env () {
         version=$(grep "$connector_name_cache_versions" $tmp_dir/cache-versions.env | cut -d "=" -f 2)
         if [ $ret -eq 0 ]
         then
-            if [[ -n "$cc_connect_image_version" ]]
+            if [ "$arg_version" != "latest" ]
             then
-                log "✨ --cc-connect-image-version is set with $cc_connect_image_version, using version on cc-docker-connect (cache-versions.env file https://raw.githubusercontent.com/confluentinc/cc-docker-connect/refs/tags/v$cc_connect_image_version/cc-connect/cache-versions.env) which is $version"
+                log "✨ --connector-tag is set with $arg_version, using version on cc-docker-connect (cache-versions.env file https://raw.githubusercontent.com/confluentinc/cc-docker-connect/refs/tags/v$cc_connect_image_version/cc-connect/cache-versions.env) which is $version"
             else
                 log "✨ --connector-tag was not set, using latest version on cc-docker-connect (cache-versions.env file https://github.com/confluentinc/cc-docker-connect/blob/master/cc-connect/cache-versions.env) which is $version"
             fi
@@ -123,7 +124,7 @@ function get_latest_version_from_cc_docker_connect_cache_versions_env () {
             exit 1
         fi
     else
-        logerror "❌ file cache-versions.env could not be downloaded from s3 bucket"
+        logerror "❌ file cache-versions.env could not be downloaded from s3 bucket, make sure your aws creds are set"
         exit 1
     fi
 }
@@ -159,25 +160,38 @@ then
     connector_tag1="${connector_tag_array[0]}"
     connector_tag2="${connector_tag_array[1]}"
 
-    if [ "$connector_tag1" == "latest" ]
+    if [ "$connector_tag1" == "" ] || [ "$connector_tag1" == "latest" ]
     then
         if [ $is_fully_managed -eq 1 ]
         then
-            get_latest_version_from_cc_docker_connect_cache_versions_env
+            get_version_from_cc_docker_connect_cache_versions_env "latest"
             connector_tag1=$connector_tag
         else
             get_latest_version_from_confluent_hub
             connector_tag1=$connector_tag
         fi
+    else
+        if [ $is_fully_managed -eq 1 ]
+        then
+            get_version_from_cc_docker_connect_cache_versions_env "$connector_tag1"
+            connector_tag1=$connector_tag
+        fi
     fi
-    if [ "$connector_tag2" == "latest" ]
+
+    if [ "$connector_tag2" == "" ] || [ "$connector_tag2" == "latest" ]
     then
         if [ $is_fully_managed -eq 1 ]
         then
-            get_latest_version_from_cc_docker_connect_cache_versions_env
+            get_version_from_cc_docker_connect_cache_versions_env "latest"
             connector_tag2=$connector_tag
         else
             get_latest_version_from_confluent_hub
+            connector_tag2=$connector_tag
+        fi
+    else
+        if [ $is_fully_managed -eq 1 ]
+        then
+            get_version_from_cc_docker_connect_cache_versions_env "$connector_tag2"
             connector_tag2=$connector_tag
         fi
     fi
@@ -207,19 +221,17 @@ then
     comparison_mode_versions="v$connector_tag1...v$connector_tag2"
 else
     connector_tag="${connector_tag_array[0]}"
-    if [[ -n "$connector_tag" ]]
+    if [ "$connector_tag" == "\\" ]
     then
-        if [ "$connector_tag" == "\\" ]
+        if [ $is_fully_managed -eq 1 ]
         then
-            if [ $is_fully_managed -eq 1 ]
-            then
-                logerror "❌ --connector-tag set with \" \" cannot work when using fully managed connector plugin"
-                exit 1
-            fi
-            ret=$(choose_connector_tag "$connector_plugin")
-            connector_tag=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
+            logerror "❌ --connector-tag set with \" \" cannot work when using fully managed connector plugin"
+            exit 1
         fi
-    else
+        ret=$(choose_connector_tag "$connector_plugin")
+        connector_tag=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
+    elif [ "$connector_tag" == "" ] || [ "$connector_tag" == "latest" ]
+    then
         if [ $is_fully_managed -eq 0 ]
         then
             output=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --last 1 | head -n 1)
@@ -233,7 +245,12 @@ else
                 connector_tag="latest"
             fi
         else
-            get_latest_version_from_cc_docker_connect_cache_versions_env
+            get_version_from_cc_docker_connect_cache_versions_env "latest"
+        fi
+    else
+        if [ $is_fully_managed -eq 1 ]
+        then
+            get_version_from_cc_docker_connect_cache_versions_env "$connector_tag"
         fi
     fi
 fi
