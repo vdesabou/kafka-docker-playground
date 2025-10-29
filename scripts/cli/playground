@@ -16787,7 +16787,7 @@ playground_run_command() {
   playground generate-kafka-region-list > /dev/null 2>&1 &
   if [ "$USER" == "vsaboulin" ]
   then
-      if [ ! -z $GITHUB_TOKEN ]
+      if [ ! -z $GITHUB_TOKEN ] && [[ "$OSTYPE" == "darwin"* ]]
       then
           playground update-cache-versions > /dev/null 2>&1 &
       fi
@@ -27796,6 +27796,7 @@ playground_connector_connect_migration_utility_migrate_command() {
           chmod a+rw $json_file
       else
           sudo chmod a+rw $json_file
+          sudo chown $(id -u $USER):$(id -g $USER) $json_file
       fi
           length=${#sensitive_property[@]}
       if ((length > 0)) # Check if the array is not empty
@@ -27812,7 +27813,8 @@ playground_connector_connect_migration_utility_migrate_command() {
                   # Use a temporary file for sed replacement
                   temp_file=$(mktemp)
                   sed -E "s@(\"$escaped_key\":[[:space:]]*)\"[^\"]*\"@\1\"$escaped_secret_value\"@" "$json_file" > "$temp_file"
-                  mv "$temp_file" "$json_file"
+                  cp "$temp_file" "$json_file"
+                  rm -f "$temp_file"
                   log "🔐 Updated $json_key in $(basename "$json_file")"
               fi
           done

@@ -34,6 +34,7 @@ do
         chmod a+rw $json_file
     else
         sudo chmod a+rw $json_file
+        sudo chown $(id -u $USER):$(id -g $USER) $json_file
     fi
         length=${#sensitive_property[@]}
     if ((length > 0)) # Check if the array is not empty
@@ -50,7 +51,8 @@ do
                 # Use a temporary file for sed replacement
                 temp_file=$(mktemp)
                 sed -E "s@(\"$escaped_key\":[[:space:]]*)\"[^\"]*\"@\1\"$escaped_secret_value\"@" "$json_file" > "$temp_file"
-                mv "$temp_file" "$json_file"
+                cp "$temp_file" "$json_file"
+                rm -f "$temp_file"
                 log "🔐 Updated $json_key in $(basename "$json_file")"
             fi
         done

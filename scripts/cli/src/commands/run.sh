@@ -1684,7 +1684,7 @@ playground generate-connector-plugin-list > /dev/null 2>&1 &
 playground generate-kafka-region-list > /dev/null 2>&1 &
 if [ "$USER" == "vsaboulin" ]
 then
-    if [ ! -z $GITHUB_TOKEN ]
+    if [ ! -z $GITHUB_TOKEN ] && [[ "$OSTYPE" == "darwin"* ]]
     then
         playground update-cache-versions > /dev/null 2>&1 &
     fi
