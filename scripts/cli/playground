@@ -27692,7 +27692,7 @@ playground_connector_connect_migration_utility_discovery_command() {
 
   set +e
   docker pull vdesabou/docker-connect-migration-utility:latest > /dev/null 2>&1
-  docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "python src/discovery_script.py --worker-urls 'http://localhost:8083' --output-dir /discovery_output_dir --disable-ssl-verify --redact --environment-id $environment --cluster-id $cluster" > /tmp/output.log 2>&1
+  docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "python src/discovery_script.py --worker-urls 'http://localhost:8083' --output-dir /discovery_output_dir --disable-ssl-verify --redact --environment-id $environment --cluster-id $cluster && chown -R $(id -u $USER):$(id -g $USER) /discovery_output_dir" > /tmp/output.log 2>&1
   ret=$?
   set -e
 
@@ -27791,14 +27791,7 @@ playground_connector_connect_migration_utility_migrate_command() {
 
   for json_file in "$discovery_output_dir/discovered_configs/successful_configs/fm_configs"/*.json
   do
-      if [[ "$OSTYPE" == "darwin"* ]]
-      then
-          chmod a+rw $json_file
-      else
-          sudo chmod a+rw $json_file
-          sudo chown $(id -u $USER):$(id -g $USER) $json_file
-      fi
-          length=${#sensitive_property[@]}
+      length=${#sensitive_property[@]}
       if ((length > 0)) # Check if the array is not empty
       then
           for sensitive_prop in "${sensitive_property[@]}"

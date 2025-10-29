@@ -29,14 +29,7 @@ get_ccloud_connect
 
 for json_file in "$discovery_output_dir/discovered_configs/successful_configs/fm_configs"/*.json
 do
-    if [[ "$OSTYPE" == "darwin"* ]]
-    then
-        chmod a+rw $json_file
-    else
-        sudo chmod a+rw $json_file
-        sudo chown $(id -u $USER):$(id -g $USER) $json_file
-    fi
-        length=${#sensitive_property[@]}
+    length=${#sensitive_property[@]}
     if ((length > 0)) # Check if the array is not empty
     then
         for sensitive_prop in "${sensitive_property[@]}"
