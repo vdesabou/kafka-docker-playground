@@ -144,6 +144,21 @@ function get_latest_version_from_confluent_hub () {
     fi
 }
 
+function check_if_call_maven_login()
+{
+  if [ ! -z "$GITHUB_RUN_NUMBER" ]
+  then
+      # running with github actions, continue
+      return
+  fi
+  read -p "Execute maven-login (y/n)?" choice
+  case "$choice" in
+  y|Y ) source $HOME/.cc-dotfiles/caas.sh && code_artifact::maven_login -f;;
+  n|N ) ;;
+  * ) logwarn "invalid response <$choice>! Please enter y or n."; check_if_call_maven_login;;
+  esac
+}
+
 comparison_mode_versions=""
 length=${#connector_tag_array[@]}
 if ((length > 1))
@@ -353,9 +368,28 @@ then
     log "🐏🐏 Cloning..."
     $clone_command
 
+    mvn_settings_file="/tmp/settings.xml"
+    if [[ "$sourcecode_url" == *"confluentinc"* ]]
+    then
+        if [ $is_confluent_employee -eq 1 ]
+        then
+            if [ ! -d "$HOME/.cc-dotfiles" ]
+            then
+                logerror "❌ You're a Confluent employee, but maven-login is not installed (directory $HOME/.cc-dotfiles does not exist), please follow:"
+                echo "🔗 Maven FAQ https://confluentinc.atlassian.net/wiki/spaces/TOOLS/pages/2930704487/Maven+FAQ#How-do-I-get-access-locally%3F"
+                exit 1
+            fi
+
+            log "Did you execute <maven-login> command in the last 12 hours ?"
+            check_if_call_maven_login
+
+            mvn_settings_file="/root/.m2/settings.xml"
+        fi
+    fi
+
     # --- 3. Compile with Maven ---
     log "🏗 Building with Maven (mvn clean package)...It can take a while..⏳"
-    docker run -i --rm -v "${root_folder}/${repo_name}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dcheckstyle.skip -DskipTests -Dlicense.skip=true clean package > /tmp/result.log 2>&1
+    docker run -i --rm -v "${root_folder}/${repo_name}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s $mvn_settings_file -Dcheckstyle.skip -DskipTests -Dlicense.skip=true clean package > /tmp/result.log 2>&1
     if [ $? != 0 ]
     then
         logerror "ERROR: failed to build java component "
