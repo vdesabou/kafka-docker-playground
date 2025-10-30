@@ -7,13 +7,13 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -f ${DIR}/udf-simple-logging/target/udf-simple-logging-1.0.0.jar ]
 then
     log "Building udf-simple-logging jar"
-    docker run -i --rm -v "${DIR}/udf-simple-logging":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/udf-simple-logging/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
+    docker run -i --rm -v "${DIR}/udf-simple-logging":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/udf-simple-logging/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.1-eclipse-temurin-11 mvn package
 fi
 
 if [ ! -f ${DIR}/udf-custom-logger/target/udf-custom-logger-1.0.0-jar-with-dependencies.jar ]
 then
     log "Building udf-custom-logger jar"
-    docker run -i --rm -v "${DIR}/udf-custom-logger":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/udf-custom-logger/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
+    docker run -i --rm -v "${DIR}/udf-custom-logger":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/udf-custom-logger/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.1-eclipse-temurin-11 mvn package
 fi
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
