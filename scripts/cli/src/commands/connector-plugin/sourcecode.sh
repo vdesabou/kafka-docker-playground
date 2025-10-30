@@ -153,6 +153,12 @@ function check_if_call_maven_login()
         # running with github actions, continue
         return
     fi
+    if [[ -n "$skip_maven_login_check" ]]
+    then
+        return
+    fi
+    log "🎓 Make sure you have executed <maven-login> command in the last 12 hours"
+    echo ""
     read -p "Execute maven-login (y/n)?" choice
     case "$choice" in
     y|Y ) source $HOME/.cc-dotfiles/caas.sh && code_artifact::maven_login -f;;
@@ -322,7 +328,6 @@ function compile () {
                 exit 1
             fi
 
-            log "🎓 Make sure you have executed <maven-login> command in the last 12 hours"
             check_if_call_maven_login
 
             mvn_settings_file="/root/.m2/settings.xml"
@@ -401,12 +406,6 @@ then
     if ((length > 2))
     then
         logerror "❌ --connector-tag can only be set 2 times"
-        exit 1
-    fi
-
-    if [[ -n "$compile" ]]
-    then
-        logerror "❌ --compile flag does not work when --connector-tag is set 2 times"
         exit 1
     fi
     
@@ -523,6 +522,7 @@ fi
 if [ "$comparison_mode_versions" != "" ]
 then
     additional_text=", comparing $maybe_v_prefix$connector_tag1 and $maybe_v_prefix$connector_tag2"
+    original_sourcecode_url="$sourcecode_url"
     sourcecode_url="$sourcecode_url/compare/$comparison_mode_versions"
 else
     additional_text=" for $connector_tag version"
@@ -541,7 +541,31 @@ else
     open "$sourcecode_url"
 fi
 
-if [[ -n "$compile" ]]
+if [ "$comparison_mode_versions" != "" ]
 then
-    compile "$connector_tag"
+    if [[ -n "$compile" ]]
+    then
+        if [ "$connector_tag1" != "latest" ] && [[ "$original_sourcecode_url" == *"github.com"* ]]
+        then
+            sourcecode_url="$original_sourcecode_url/tree/$maybe_v_prefix$connector_tag1"
+        fi
+        compile "$connector_tag1"
+
+        if [ "$connector_tag2" != "latest" ] && [[ "$original_sourcecode_url" == *"github.com"* ]]
+        then
+            sourcecode_url="$original_sourcecode_url/tree/$maybe_v_prefix$connector_tag2"
+        fi
+        skip_maven_login_check=1
+        compile "$connector_tag2"
+    fi
+else
+    if [ "$connector_tag" != "latest" ] && [[ "$sourcecode_url" == *"github.com"* ]]
+    then
+        sourcecode_url="$sourcecode_url/tree/$maybe_v_prefix$connector_tag"
+    fi
+
+    if [[ -n "$compile" ]]
+    then
+        compile "$connector_tag"
+    fi
 fi
