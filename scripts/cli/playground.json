@@ -2584,7 +2584,19 @@
                 "--compile"
               ],
               "argument": "",
-              "description": "🏗️ Checkout and copile code\n"
+              "description": "🏗️ Checkout and compile code\n\nYou must have git installed.\n\nConfluent employees only: make sure to follow \"Maven FAQ\"\n"
+            },
+            {
+              "names": [
+                "--compile-jdk-version"
+              ],
+              "argument": [
+                8,
+                11,
+                17,
+                20
+              ],
+              "description": "🤎 JDK version to use when compiling\nIt will check in pom.xml for maven-compiler-plugin source/target version or release version and set jdk accordingly\nDefault is 11\n\nAllowed values: 8, 11, 17, 20\n"
             }
           ]
         }

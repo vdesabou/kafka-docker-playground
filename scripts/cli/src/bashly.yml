@@ -3597,7 +3597,23 @@ commands:
       - long: --compile
         required: false
         help: |-
-          🏗️ Checkout and copile code
+          🏗️ Checkout and compile code
+
+          You must have git installed.
+
+          Confluent employees only: make sure to follow "Maven FAQ"
+      - long: --compile-jdk-version
+        required: false
+        arg: version
+        allowed: 
+          - "8"
+          - "11"
+          - "17"
+          - "20"
+        help: |-
+          🤎 JDK version to use when compiling
+          It will check in pom.xml for maven-compiler-plugin source/target version or release version and set jdk accordingly
+          Default is 11
     examples: |
 
       # will open latest version from hub source code

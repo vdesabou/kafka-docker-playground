@@ -3004,7 +3004,21 @@ subcommands:
           - --compile
           argument: ""
           description: | 
-            🏗️ Checkout and copile code
+            🏗️ Checkout and compile code
+            
+            You must have git installed.
+            
+            Confluent employees only: make sure to follow "Maven FAQ"
+            
+        - names:
+          - --compile-jdk-version
+          argument: [8, 11, 17, 20]
+          description: | 
+            🤎 JDK version to use when compiling
+            It will check in pom.xml for maven-compiler-plugin source/target version or release version and set jdk accordingly
+            Default is 11
+            
+            Allowed values: 8, 11, 17, 20
             
   - name: connector
     description: | 

@@ -5682,7 +5682,13 @@ playground_connector_plugin_sourcecode_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--compile")"
-    printf "    🏗️ Checkout and copile code\n"
+    printf "    🏗️ Checkout and compile code\n    \n    You must have git installed.\n    \n    Confluent employees only: make sure to follow \"Maven FAQ\"\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--compile-jdk-version VERSION")"
+    printf "    🤎 JDK version to use when compiling\n    It will check in pom.xml for maven-compiler-plugin source/target version or\n    release version and set jdk accordingly\n    Default is 11\n"
+    printf "    %s\n" "Allowed: 8, 11, 17, 20"
     echo
 
     # :command.usage_fixed_flags
@@ -24686,6 +24692,7 @@ playground_connector_plugin_sourcecode_command() {
   connector_tags="${args[--connector-tag]}"
   only_show_url="${args[--only-show-url]}"
   compile="${args[--compile]}"
+  compile_jdk_version="${args[--compile-jdk-version]}"
 
   # Convert space-separated string to array
   IFS=' ' read -ra connector_tag_array <<< "$connector_tags"
@@ -25069,6 +25076,75 @@ playground_connector_plugin_sourcecode_command() {
           exit 1
       fi
 
+      # --- Determine compile_jdk_version from pom.xml if not explicitly provided ---
+      # This looks first for maven-compiler-plugin <release> or <source>/<target> in the plugin
+      # and then for properties maven.compiler.release / maven.compiler.source / maven.compiler.target.
+      # It also resolves simple property references like ${java.version} defined in the same pom.
+      if [[ ! -n "$compile_jdk_version" ]]
+      then
+          log "🤎 --compile-jdk-version was not set, attempting to detect maven compiler version from pom.xml..."
+          pom_file="${repo_folder}/pom.xml"
+
+          # helper: resolve a single-level ${prop} reference from pom.xml
+          resolve_prop() {
+              val="$1"
+              if [[ "$val" =~ \$\{([^}]+)\} ]]; then
+                  pname="${BASH_REMATCH[1]}"
+                  # look for property in pom.xml
+                  pval=$(sed -n "s:.*<${pname}>\(.*\)</${pname}>.*:\1:p" "$pom_file" | head -n1)
+                  if [ -n "$pval" ]; then
+                      echo "$pval"
+                      return
+                  fi
+              fi
+              echo "$val"
+          }
+
+          # 1) properties
+          prop_release=$(sed -n 's:.*<maven.compiler.release>\(.*\)</maven.compiler.release>.*:\1:p' "$pom_file" | head -n1)
+          prop_source=$(sed -n 's:.*<maven.compiler.source>\(.*\)</maven.compiler.source>.*:\1:p' "$pom_file" | head -n1)
+          prop_target=$(sed -n 's:.*<maven.compiler.target>\(.*\)</maven.compiler.target>.*:\1:p' "$pom_file" | head -n1)
+
+          # 2) plugin configuration (search the plugin block)
+          plugin_block=$(sed -n '/<artifactId>maven-compiler-plugin<\/artifactId>/,/<\/plugin>/p' "$pom_file" 2>/dev/null || true)
+          plugin_release=$(echo "$plugin_block" | sed -n 's:.*<release>\(.*\)</release>.*:\1:p' | head -n1)
+          plugin_source=$(echo "$plugin_block" | sed -n 's:.*<source>\(.*\)</source>.*:\1:p' | head -n1)
+          plugin_target=$(echo "$plugin_block" | sed -n 's:.*<target>\(.*\)</target>.*:\1:p' | head -n1)
+
+          # order of precedence: plugin <release> > properties release > plugin <source> > properties source > plugin <target> > properties target
+
+          # pick the first non-empty among the collected candidates
+          chosen=""
+          for c in "$plugin_release" "$prop_release" "$plugin_source" "$prop_source" "$plugin_target" "$prop_target"; do
+              if [ -n "$c" ]; then
+                  chosen="$c"
+                  break
+              fi
+          done
+
+          if [ -n "$chosen" ]; then
+              # resolve ${...}
+              chosen=$(resolve_prop "$chosen")
+
+              # normalize common formats: 1.8 -> 8, 17.0.1 -> 17
+              if [[ "$chosen" =~ ^1\.([0-9]+)$ ]]; then
+                  chosen="${BASH_REMATCH[1]}"
+              elif [[ "$chosen" =~ ^([0-9]+) ]]; then
+                  chosen="${BASH_REMATCH[1]}"
+              fi
+
+              if [ -n "$chosen" ]; then
+                  compile_jdk_version="$chosen"
+                  log "✨ Detected maven compiler version '$chosen' from pom.xml, using --compile-jdk-version $compile_jdk_version"
+              fi
+          fi
+
+          if [ -z "$compile_jdk_version" ]; then
+              compile_jdk_version=11
+              log "⚠️ Could not detect maven compiler version in pom.xml, defaulting to --compile-jdk-version $compile_jdk_version"
+          fi
+      fi
+
       mvn_settings_file="/tmp/settings.xml"
       if [[ "$sourcecode_url" == *"confluentinc"* ]]
       then
@@ -25093,7 +25169,7 @@ playground_connector_plugin_sourcecode_command() {
       log "🏗 Building with Maven ${repo_folder}...It can take a while..⏳"
       log "🏗 Compilation logs are also present in ${file_output}"
       set +e
-      docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s $mvn_settings_file -Dcheckstyle.skip -DskipTests -Dlicense.skip=true clean package 2>&1 | tee "$file_output"
+      docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.1-eclipse-temurin-${compile_jdk_version} mvn -s $mvn_settings_file -Dcheckstyle.skip -DskipTests -Dlicense.skip=true clean package 2>&1 | tee "$file_output"
       ret=${PIPESTATUS[0]}
       if [ $ret != 0 ]
       then
@@ -42112,6 +42188,20 @@ playground_connector_plugin_sourcecode_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --compile-jdk-version)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--compile-jdk-version']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--compile-jdk-version requires an argument: --compile-jdk-version VERSION" >&2
+          exit 1
+        fi
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -42131,6 +42221,12 @@ playground_connector_plugin_sourcecode_parse_requirements() {
   # :command.required_flags_filter
   if [[ -z ${args['--connector-plugin']+x} ]]; then
     printf "missing required flag: --connector-plugin, -c CONNECTOR-PLUGIN\n" >&2
+    exit 1
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--compile-jdk-version']:-} ]] && [[ ! ${args['--compile-jdk-version']:-} =~ ^(8|11|17|20)$ ]]; then
+    printf "%s\n" "--compile-jdk-version must be one of: 8, 11, 17, 20" >&2
     exit 1
   fi
 
