@@ -28,7 +28,7 @@ fi
 is_fully_managed=0
 if [[ "$connector_plugin" == *"confluentinc"* ]] && [[ "$connector_plugin" != *"-"* ]]
 then
-    log "🌥️ connector-plugin $connector_plugin was identified as fully managed connector"
+    log "🌥️ connector plugin $connector_plugin was identified as fully managed connector"
     is_fully_managed=1
 fi
 
@@ -194,9 +194,9 @@ function compile () {
         tag_name="${BASH_REMATCH[4]}"
         repo_name=$(basename "${BASH_REMATCH[1]}")
         
-        log "🏷️  Tag/Branch: $tag_name"
-        log "🔗 Base Repo URL: $repo_url"
-        log "🧑‍💻 Repo Directory: $repo_name"
+        log "🏷️  tag/branch: $tag_name"
+        log "🔗 base repo url: $repo_url"
+        log "🧑‍💻 repo directory: $repo_name"
         
         # --depth 1: Downloads only that commit, not the full history (much faster)
         # --branch $tag_name: Checks out the specific tag or branch
@@ -212,8 +212,8 @@ function compile () {
         fi
         
         repo_name=$(basename "$repo_url" .git)
-        log "🔗 Repo URL: $repo_url"
-        log "🧑‍💻 Repo Directory: $repo_name"
+        log "🔗 repo url: $repo_url"
+        log "🧑‍💻 repo directory: $repo_name"
         
         # Clone default branch, but still use --depth 1 for speed
         clone_command="git clone --recursive --depth 1 $repo_url"
@@ -224,15 +224,21 @@ function compile () {
     # --- 2. Checkout (Clone) Project ---
     if [ -d "${repo_folder}" ]
     then
-        logwarn "📂 Directory ${repo_folder} already exists."
-        logwarn "🧹 Do you want to delete it ?"
+        logwarn "📂 directory ${repo_folder} already exists."
+        logwarn "🧹 do you want to delete it ?"
         check_if_continue
         rm -rf "${repo_folder}"
     fi
 
-    log "🐏🐏 Cloning..."
+    log "🐏🐏 cloning github repository..."
     cd ${repo_root_folder} > /dev/null 2>&1
-    $clone_command
+    $clone_command > /tmp/result.log 2>&1
+    if [ $? != 0 ]
+    then
+        logerror "❌ git clone command <$clone_command> failed"
+        cat /tmp/result.log
+        exit 1
+    fi
     mv "${repo_root_folder}/${repo_name}" "${repo_folder}"
     cd - > /dev/null 2>&1
 
@@ -306,13 +312,13 @@ function compile () {
 
             if [ -n "$chosen" ]; then
                 compile_jdk_version="$chosen"
-                log "✨ Detected maven compiler version '$chosen' from pom.xml, using --compile-jdk-version $compile_jdk_version"
+                log "✨ detected maven compiler version '$chosen' from pom.xml, using --compile-jdk-version $compile_jdk_version"
             fi
         fi
 
         if [ -z "$compile_jdk_version" ]; then
             compile_jdk_version=11
-            log "⚠️ Could not detect maven compiler version in pom.xml, defaulting to --compile-jdk-version $compile_jdk_version"
+            log "⚠️  could not detect maven compiler version in pom.xml, defaulting to --compile-jdk-version $compile_jdk_version"
         fi
     fi
 
@@ -323,7 +329,7 @@ function compile () {
         then
             if [ ! -d "$HOME/.cc-dotfiles" ]
             then
-                logerror "❌ You're a Confluent employee, but maven-login is not installed (directory $HOME/.cc-dotfiles does not exist), please follow:"
+                logerror "❌ you're a Confluent employee, but maven-login is not installed (directory $HOME/.cc-dotfiles does not exist), please follow:"
                 echo "🔗 Maven FAQ https://confluentinc.atlassian.net/wiki/spaces/TOOLS/pages/2930704487/Maven+FAQ#How-do-I-get-access-locally%3F"
                 exit 1
             fi
@@ -336,8 +342,8 @@ function compile () {
 
     # --- 3. Compile with Maven ---
     file_output="${repo_folder}/playground-compilation-$repo_name.log"
-    log "🏗 Building with Maven ${repo_folder}...It can take a while..⏳"
-    log "🏗 Compilation logs are also present in ${file_output}"
+    log "🏗  building with maven ${repo_folder}...it can take a while..⏳"
+    log "🏗  use --compile-verbose to see full output. compilation logs are also present in ${file_output}"
     set +e
 
     if [[ -n "$verbose" ]]
@@ -356,7 +362,7 @@ function compile () {
     fi
     set +e
 
-    log "👌 Build complete! Artifacts are generally in the '${repo_folder}/target/components/packages' directory."
+    log "👌 build complete! Artifacts are generally present in the '${repo_folder}/target/components/packages' directory."
 
     # Display the directory structure
     if command -v tree >/dev/null 2>&1; then
@@ -537,7 +543,7 @@ then
     log "🧑‍💻🌐 sourcecode for plugin $connector_plugin$additional_text is available at:"
     echo "$sourcecode_url"
 else
-    log "🧑‍💻 Opening sourcecode url $sourcecode_url for plugin $connector_plugin in browser$additional_text"
+    log "🧑‍💻 opening sourcecode url $sourcecode_url for plugin $connector_plugin in browser$additional_text"
     open "$sourcecode_url"
 fi
 
