@@ -5730,7 +5730,7 @@ playground_connector_plugin_sourcecode_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  # will open latest version from hub source code\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-hdfs\n  \n  # will ask you to select a version\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-hdfs --connector-tag \" \"\n  \n  # if you're a confluent employee (make sure to set your aws credentials), it\n  will also work on proprietary connectors and fully managed connectors\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/MqttSource\n  \n  # comparison mode:\n  playground connector sourcecode --connector-tag \"10.2.1\" --connector-tag\n  \"10.2.0\"\n  \n  # comparison mode (with versions selection):\n  playground connector sourcecode --connector-tag \" \" --connector-tag \" \"\n"
+    printf "  # will open latest version from hub source code\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-hdfs\n  \n  # will ask you to select a version\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-hdfs --connector-tag \" \"\n  \n  # if you're a confluent employee (make sure to set your aws credentials), it\n  will also work on proprietary connectors and fully managed connectors\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/MqttSource\n  \n  # comparison mode:\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-hdfs --connector-tag \"10.2.1\" --connector-tag\n  \"10.2.0\"\n  \n  # comparison mode (with versions selection):\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-hdfs --connector-tag \" \" --connector-tag \" \"\n  \n  # compile \n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-jdbc\n  \n  # if you're a confluent employee (make sure to set your aws credentials and\n  follow Maven FAQ), it will also work on proprietary connectors and fully\n  managed connectors\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-oracle-xstream-cdc-source --compile --connector-tag\n  \"1.2.0\" --compile-verbose\n"
     echo
 
   fi
@@ -25315,8 +25315,15 @@ playground_connector_plugin_sourcecode_command() {
           ret=$(choose_connector_tag "$connector_plugin")
           connector_tag2=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
       fi
-      log "✨ --connector-tag flag is set 2 times, comparison mode will be opened with versions v$connector_tag1 and v$connector_tag2"
-      comparison_mode_versions="v$connector_tag1...v$connector_tag2"
+
+      if version_gt $connector_tag1 $connector_tag2
+      then
+          log "✨ --connector-tag flag is set 2 times, comparison mode will be opened with versions v$connector_tag2 and v$connector_tag1"
+          comparison_mode_versions="v$connector_tag2...v$connector_tag1"
+      else
+          log "✨ --connector-tag flag is set 2 times, comparison mode will be opened with versions v$connector_tag1 and v$connector_tag2"
+          comparison_mode_versions="v$connector_tag1...v$connector_tag2"
+      fi
   else
       connector_tag="${connector_tag_array[0]}"
       if [ "$connector_tag" == "\\" ]
@@ -25372,7 +25379,12 @@ playground_connector_plugin_sourcecode_command() {
 
   if [ "$comparison_mode_versions" != "" ]
   then
-      additional_text=", comparing $maybe_v_prefix$connector_tag1 and $maybe_v_prefix$connector_tag2"
+      if version_gt $connector_tag1 $connector_tag2
+      then
+          additional_text=", comparing $maybe_v_prefix$connector_tag2 and $maybe_v_prefix$connector_tag1"
+      else
+          additional_text=", comparing $maybe_v_prefix$connector_tag1 and $maybe_v_prefix$connector_tag2"
+      fi
       original_sourcecode_url="$sourcecode_url"
       sourcecode_url="$sourcecode_url/compare/$comparison_mode_versions"
   else

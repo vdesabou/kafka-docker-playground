@@ -523,8 +523,15 @@ then
         ret=$(choose_connector_tag "$connector_plugin")
         connector_tag2=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
     fi
-    log "✨ --connector-tag flag is set 2 times, comparison mode will be opened with versions v$connector_tag1 and v$connector_tag2"
-    comparison_mode_versions="v$connector_tag1...v$connector_tag2"
+
+    if version_gt $connector_tag1 $connector_tag2
+    then
+        log "✨ --connector-tag flag is set 2 times, comparison mode will be opened with versions v$connector_tag2 and v$connector_tag1"
+        comparison_mode_versions="v$connector_tag2...v$connector_tag1"
+    else
+        log "✨ --connector-tag flag is set 2 times, comparison mode will be opened with versions v$connector_tag1 and v$connector_tag2"
+        comparison_mode_versions="v$connector_tag1...v$connector_tag2"
+    fi
 else
     connector_tag="${connector_tag_array[0]}"
     if [ "$connector_tag" == "\\" ]
@@ -580,7 +587,12 @@ fi
 
 if [ "$comparison_mode_versions" != "" ]
 then
-    additional_text=", comparing $maybe_v_prefix$connector_tag1 and $maybe_v_prefix$connector_tag2"
+    if version_gt $connector_tag1 $connector_tag2
+    then
+        additional_text=", comparing $maybe_v_prefix$connector_tag2 and $maybe_v_prefix$connector_tag1"
+    else
+        additional_text=", comparing $maybe_v_prefix$connector_tag1 and $maybe_v_prefix$connector_tag2"
+    fi
     original_sourcecode_url="$sourcecode_url"
     sourcecode_url="$sourcecode_url/compare/$comparison_mode_versions"
 else
