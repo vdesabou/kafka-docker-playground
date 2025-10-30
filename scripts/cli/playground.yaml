@@ -3020,6 +3020,13 @@ subcommands:
             
             Allowed values: 8, 11, 17, 20
             
+        - names:
+          - --compile-verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show output of compilation.
+            
   - name: connector
     description: | 
         🔗 Connector commands

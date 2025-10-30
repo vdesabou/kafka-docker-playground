@@ -509,7 +509,7 @@ _playground_completions() {
       ;;
 
     *'connector-plugin sourcecode'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--compile --compile-jdk-version --connector-plugin --connector-tag --help --only-show-url -c -h")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--compile --compile-jdk-version --compile-verbose --connector-plugin --connector-tag --help --only-show-url -c -h -v")" -- "$cur")
       ;;
 
     *'connector pause'*'--connector')

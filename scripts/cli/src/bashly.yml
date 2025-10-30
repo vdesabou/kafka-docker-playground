@@ -3614,6 +3614,9 @@ commands:
           🤎 JDK version to use when compiling
           It will check in pom.xml for maven-compiler-plugin source/target version or release version and set jdk accordingly
           Default is 11
+      - long: --compile-verbose
+        short: -v
+        help: 🐞 Show output of compilation.
     examples: |
 
       # will open latest version from hub source code

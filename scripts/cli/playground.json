@@ -2597,6 +2597,14 @@
                 20
               ],
               "description": "🤎 JDK version to use when compiling\nIt will check in pom.xml for maven-compiler-plugin source/target version or release version and set jdk accordingly\nDefault is 11\n\nAllowed values: 8, 11, 17, 20\n"
+            },
+            {
+              "names": [
+                "--compile-verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show output of compilation.\n"
             }
           ]
         }
