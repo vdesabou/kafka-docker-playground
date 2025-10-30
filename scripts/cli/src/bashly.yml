@@ -77,6 +77,15 @@ commands:
   help: Return some completion for zazkia connections list
   private: true
 
+- name: compile-all-connector-plugins
+  help: Call playground connector-plugin sourcecode --compile for all plugins in confluent-hub-plugin-list.txt
+  private: true
+  flags:
+  - long: --confluent-only
+    required: false
+    help: |-
+      confluent only
+
 - name: generate-fzf-find-files
   help: force call to generate_fzf_find_files
   private: true
@@ -3575,6 +3584,9 @@ commands:
       🧑‍💻 Open source code url in your browser
 
       You can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode
+      
+      🏗️ Compile code and generate zip file(s) by providing --compile flag
+
     flags:
       - *connector-plugin
       - long: --only-show-url

@@ -2965,6 +2965,8 @@ subcommands:
             
             You can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode
             
+            🏗️ Compile code and generate zip file(s) by providing --compile flag
+            
         usage: playground connector-plugin sourcecode [OPTIONS]
         options:
         - names:

@@ -393,6 +393,33 @@ playground_get_zazkia_connection_list_usage() {
 }
 
 # :command.usage
+playground_compile_all_connector_plugins_usage() {
+  printf "playground compile-all-connector-plugins - Call playground connector-plugin sourcecode --compile for all plugins in confluent-hub-plugin-list.txt\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground compile-all-connector-plugins [OPTIONS]\n"
+  printf "  playground compile-all-connector-plugins --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--confluent-only")"
+    printf "    confluent only\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_generate_fzf_find_files_usage() {
   printf "playground generate-fzf-find-files - force call to generate_fzf_find_files\n\n"
 
@@ -5650,7 +5677,7 @@ playground_connector_plugin_display_last_updated_usage() {
 playground_connector_plugin_sourcecode_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector-plugin sourcecode\n\n"
-    printf "  🧑‍💻 Open source code url in your browser\n  \n  You can compare different sourcecode versions by specifying --connector-tag\n  two times, in such case it will open github in comparison mode\n\n"
+    printf "  🧑‍💻 Open source code url in your browser\n  \n  You can compare different sourcecode versions by specifying --connector-tag\n  two times, in such case it will open github in comparison mode\n  \n  🏗️ Compile code and generate zip file(s) by providing --compile flag\n\n"
   else
     printf "playground connector-plugin sourcecode - 🧑‍💻 Open source code url in your browser\n\n"
   fi
@@ -13630,6 +13657,66 @@ playground_get_zazkia_connection_list_command() {
 
   # src/commands/get-zazkia-connection-list.sh
   get_zazkia_id_list
+}
+
+# :command.function
+playground_compile_all_connector_plugins_command() {
+
+  # src/commands/compile-all-connector-plugins.sh
+  confluent_only="${args[--confluent-only]}"
+
+  rm -rf "${root_folder}/connector-plugin-sourcecode"
+
+  function handle_signal {
+    echo "Stopping..."
+    stop=1
+  }
+  # Set the signal handler
+  trap handle_signal SIGINT
+
+  set +e
+
+  export GITHUB_RUN_NUMBER=1
+
+  if [ ! -f $root_folder/scripts/cli/confluent-hub-plugin-list.txt ]
+  then
+      log "file $root_folder/scripts/cli/confluent-hub-plugin-list.txt not found. Generating it now, it may take a while..."
+      playground generate-connector-plugin-list
+  fi
+
+  if [ ! -f $root_folder/scripts/cli/confluent-hub-plugin-list.txt ]
+  then
+      logerror "❌ file $root_folder/scripts/cli/confluent-hub-plugin-list.txt could not be generated"
+      exit 1
+  fi
+
+  stop=0
+  while read -r line || [ $stop != 1 ]; do
+      # Skip empty lines or lines starting with # (allowing for leading whitespace)
+      if [[ -z "$line" ]] || [[ "$line" =~ ^[[:space:]]*# ]]; then
+          continue
+      fi
+
+      # Extract the first column using "|" as a delimiter
+      # Pipe to 'xargs' to trim any leading/trailing whitespace from the result
+      connector_plugin=$(echo "$line" | cut -d "|" -f 1 | xargs)
+
+      if [[ -n "$confluent_only" ]]
+      then
+          if [[ "${connector_plugin}" != *"confluentinc"* ]]
+          then
+              log "⏭️ --confluent-only is set skipping non confluent plugin ${connector_plugin}"
+              continue
+          fi
+      fi
+
+      log "🧩 processing plugin: $connector_plugin"
+      playground connector-plugin sourcecode --connector-plugin "$connector_plugin" --compile < /dev/null
+
+      echo "---"
+      echo ""
+
+  done < "${root_folder}/scripts/cli/confluent-hub-plugin-list.txt"
 }
 
 # :command.function
@@ -24731,7 +24818,7 @@ playground_connector_plugin_sourcecode_command() {
   is_fully_managed=0
   if [[ "$connector_plugin" == *"confluentinc"* ]] && [[ "$connector_plugin" != *"-"* ]]
   then
-      log "🌥️ connector plugin $connector_plugin was identified as fully managed connector"
+      log "🌥️  connector plugin $connector_plugin was identified as fully managed connector"
       is_fully_managed=1
   fi
 
@@ -24860,13 +24947,32 @@ playground_connector_plugin_sourcecode_command() {
       then
           return
       fi
-      log "🎓 Make sure you have executed <maven-login> command in the last 12 hours"
+      log "🎓 make sure you have executed <maven-login> command in the last 12 hours"
       echo ""
-      read -p "Execute maven-login (y/n)?" choice
+      read -p "🛂 execute maven-login (y/n)?" choice
       case "$choice" in
       y|Y ) source $HOME/.cc-dotfiles/caas.sh && code_artifact::maven_login -f;;
       n|N ) ;;
       * ) logwarn "invalid response <$choice>! Please enter y or n."; check_if_call_maven_login;;
+      esac
+  }
+
+  function check_if_delete_folder()
+  {
+      if [ ! -z "$GITHUB_RUN_NUMBER" ]
+      then
+          # running with github actions, delete
+          rm -rf "${repo_folder}"
+          return
+      fi
+
+      logwarn "📂 directory ${repo_folder} already exists."
+      echo ""
+      read -p "🧹 do you want to delete it ? (y/n)?" choice
+      case "$choice" in
+      y|Y ) rm -rf "${repo_folder}";;
+      n|N ) ;;
+      * ) logwarn "invalid response <$choice>! Please enter y or n."; check_if_delete_folder;;
       esac
   }
 
@@ -24928,27 +25034,46 @@ playground_connector_plugin_sourcecode_command() {
       # --- 2. Checkout (Clone) Project ---
       if [ -d "${repo_folder}" ]
       then
-          logwarn "📂 directory ${repo_folder} already exists."
-          logwarn "🧹 do you want to delete it ?"
-          check_if_continue
-          rm -rf "${repo_folder}"
+          check_if_delete_folder
       fi
 
-      log "🐏🐏 cloning github repository..."
-      cd ${repo_root_folder} > /dev/null 2>&1
-      $clone_command > /tmp/result.log 2>&1
-      if [ $? != 0 ]
+      if [ ! -d "${repo_folder}" ]
       then
-          logerror "❌ git clone command <$clone_command> failed"
-          cat /tmp/result.log
-          exit 1
+          log "🐏🐏 cloning github repository with git command <$clone_command>"
+          cd ${repo_root_folder} > /dev/null 2>&1
+          set +e
+          $clone_command > /tmp/result.log 2>&1
+          if [ $? != 0 ]
+          then
+              logerror "❌ git clone command <$clone_command> failed"
+              cat /tmp/result.log
+              exit 1
+          fi
+          set -e
+          mv "${repo_root_folder}/${repo_name}" "${repo_folder}"
+          cd - > /dev/null 2>&1
       fi
-      mv "${repo_root_folder}/${repo_name}" "${repo_folder}"
-      cd - > /dev/null 2>&1
-
       if [[ "${repo_name}" == *-private ]]
       then
-          repo_folder="${repo_folder}/${repo_name%-private}"
+          if [[ "${repo_name}" == "kafka-connect-cosmosdb-v2-private" ]]
+          then
+              # specific case
+              repo_folder="${repo_folder}/azure-sdk-for-java"
+          elif [[ "${repo_name}" == "kafka-connect-couchbasedb-private" ]]
+          then
+              # specific case
+              repo_folder="${repo_folder}/kafka-connect-couchbase"
+          elif [[ "${repo_name}" == "kafka-connect-redis-private" ]]
+          then
+              # specific case
+              repo_folder="${repo_folder}/redis-kafka-connect"
+          elif [[ "${repo_name}" == "kafka-connect-s3-private" ]]
+          then
+              # specific case
+              repo_folder="${repo_folder}/kafka-connect-storage-cloud"
+          else
+              repo_folder="${repo_folder}/${repo_name%-private}"
+          fi
       fi
 
       if [ ! -f "${repo_folder}/pom.xml" ]
@@ -25016,7 +25141,17 @@ playground_connector_plugin_sourcecode_command() {
 
               if [ -n "$chosen" ]; then
                   compile_jdk_version="$chosen"
-                  log "✨ detected maven compiler version '$chosen' from pom.xml, using --compile-jdk-version $compile_jdk_version"
+                  if [ "$chosen" == "8" ]
+                  then
+                      compile_jdk_version=11
+                      log "⚠️  detected maven compiler version '$chosen' from pom.xml, but 8 is too old, forcing --compile-jdk-version to $compile_jdk_version"
+                  elif [ "$chosen" == "\${java.version}" ]
+                  then
+                      compile_jdk_version=11
+                      log "⚠️  detected maven compiler version '$chosen' from pom.xml, but it is not valid, forcing --compile-jdk-version to $compile_jdk_version"
+                  else
+                      log "✨ detected maven compiler version '$chosen' from pom.xml, using --compile-jdk-version $compile_jdk_version"
+                  fi
               fi
           fi
 
@@ -25067,20 +25202,14 @@ playground_connector_plugin_sourcecode_command() {
       fi
       set +e
 
-      log "👌 build complete! Artifacts are generally present in the '${repo_folder}/target/components/packages' directory."
-
-      # Display the directory structure
-      if command -v tree >/dev/null 2>&1; then
-          tree "${repo_folder}/target/components/packages"
-      else
-          find "${repo_folder}/target/components/packages" -type f -name "*.zip" | sort
-      fi
+      log "👌 build complete! zip artifacts found are:"
+      find "${repo_folder}" -type f -name "*.zip" | sort
 
       echo ""
 
       # Display each zip file
       found=0
-      for zip_file in "${repo_folder}/target/components/packages"/*.zip
+      for zip_file in $(find "${repo_folder}" -type f -name "*.zip" | sort)
       do
           if [ -f "$zip_file" ]
           then
@@ -25097,7 +25226,8 @@ playground_connector_plugin_sourcecode_command() {
                   if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
                   then
                       echo "$zip_file"| pbcopy
-                      log "📋 path to the zip file $zip_file has been copied to the clipboard (disable with 'playground config clipboard false')"
+                      zip_file_name=$(basename "$zip_file")
+                      log "📋 path to the zip file $zip_file_name has been copied to the clipboard (disable with 'playground config clipboard false')"
                   fi
               fi
           fi
@@ -25226,8 +25356,18 @@ playground_connector_plugin_sourcecode_command() {
   maybe_v_prefix=""
   if [[ "$sourcecode_url" == *"confluentinc"* ]]
   then
-      # confluent use v prefix for tags example v1.5.0
-      maybe_v_prefix="v"
+      if [[ "$sourcecode_url" == *"kafka-connect-cosmosdb" ]]
+      then
+          # specific case
+          maybe_v_prefix="kafka-connect-cosmos-"
+      elif [[ "$sourcecode_url" == *"kafka-connect-couchbase" ]]
+      then
+          # specific case
+          maybe_v_prefix=""
+      else
+          # confluent use v prefix for tags example v1.5.0
+          maybe_v_prefix="v"
+      fi
   fi
 
   if [ "$comparison_mode_versions" != "" ]
@@ -29284,6 +29424,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    compile-all-connector-plugins)
+      action="compile-all-connector-plugins"
+      shift
+      playground_compile_all_connector_plugins_parse_requirements "$@"
+      shift $#
+      ;;
+
     generate-fzf-find-files)
       action="generate-fzf-find-files"
       shift
@@ -30039,6 +30186,58 @@ playground_get_zazkia_connection_list_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_compile_all_connector_plugins_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_compile_all_connector_plugins_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="compile-all-connector-plugins"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --confluent-only)
+
+        # :flag.case_no_arg
+        args['--confluent-only']=1
+        shift
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
@@ -45904,6 +46103,7 @@ run() {
     "get-ec2-instance-list") playground_get_ec2_instance_list_command ;;
     "get-ec2-cloudformation-list") playground_get_ec2_cloudformation_list_command ;;
     "get-zazkia-connection-list") playground_get_zazkia_connection_list_command ;;
+    "compile-all-connector-plugins") playground_compile_all_connector_plugins_command ;;
     "generate-fzf-find-files") playground_generate_fzf_find_files_command ;;
     "generate-tag-list") playground_generate_tag_list_command ;;
     "generate-connector-plugin-list") playground_generate_connector_plugin_list_command ;;

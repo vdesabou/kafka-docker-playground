@@ -2554,7 +2554,7 @@
         },
         {
           "name": "sourcecode",
-          "description": "🧑‍💻 Open source code url in your browser\n  \n  You can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode\n  \n",
+          "description": "🧑‍💻 Open source code url in your browser\n  \n  You can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode\n  \n  🏗️ Compile code and generate zip file(s) by providing --compile flag\n  \n",
           "usage": "playground connector-plugin sourcecode [OPTIONS]",
           "options": [
             {

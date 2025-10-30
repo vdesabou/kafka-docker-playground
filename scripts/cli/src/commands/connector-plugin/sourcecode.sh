@@ -28,7 +28,7 @@ fi
 is_fully_managed=0
 if [[ "$connector_plugin" == *"confluentinc"* ]] && [[ "$connector_plugin" != *"-"* ]]
 then
-    log "🌥️ connector plugin $connector_plugin was identified as fully managed connector"
+    log "🌥️  connector plugin $connector_plugin was identified as fully managed connector"
     is_fully_managed=1
 fi
 
@@ -157,13 +157,32 @@ function check_if_call_maven_login()
     then
         return
     fi
-    log "🎓 Make sure you have executed <maven-login> command in the last 12 hours"
+    log "🎓 make sure you have executed <maven-login> command in the last 12 hours"
     echo ""
-    read -p "Execute maven-login (y/n)?" choice
+    read -p "🛂 execute maven-login (y/n)?" choice
     case "$choice" in
     y|Y ) source $HOME/.cc-dotfiles/caas.sh && code_artifact::maven_login -f;;
     n|N ) ;;
     * ) logwarn "invalid response <$choice>! Please enter y or n."; check_if_call_maven_login;;
+    esac
+}
+
+function check_if_delete_folder()
+{
+    if [ ! -z "$GITHUB_RUN_NUMBER" ]
+    then
+        # running with github actions, delete
+        rm -rf "${repo_folder}"
+        return
+    fi
+
+    logwarn "📂 directory ${repo_folder} already exists."
+    echo ""
+    read -p "🧹 do you want to delete it ? (y/n)?" choice
+    case "$choice" in
+    y|Y ) rm -rf "${repo_folder}";;
+    n|N ) ;;
+    * ) logwarn "invalid response <$choice>! Please enter y or n."; check_if_delete_folder;;
     esac
 }
 
@@ -224,27 +243,46 @@ function compile () {
     # --- 2. Checkout (Clone) Project ---
     if [ -d "${repo_folder}" ]
     then
-        logwarn "📂 directory ${repo_folder} already exists."
-        logwarn "🧹 do you want to delete it ?"
-        check_if_continue
-        rm -rf "${repo_folder}"
+        check_if_delete_folder
     fi
 
-    log "🐏🐏 cloning github repository..."
-    cd ${repo_root_folder} > /dev/null 2>&1
-    $clone_command > /tmp/result.log 2>&1
-    if [ $? != 0 ]
+    if [ ! -d "${repo_folder}" ]
     then
-        logerror "❌ git clone command <$clone_command> failed"
-        cat /tmp/result.log
-        exit 1
+        log "🐏🐏 cloning github repository with git command <$clone_command>"
+        cd ${repo_root_folder} > /dev/null 2>&1
+        set +e
+        $clone_command > /tmp/result.log 2>&1
+        if [ $? != 0 ]
+        then
+            logerror "❌ git clone command <$clone_command> failed"
+            cat /tmp/result.log
+            exit 1
+        fi
+        set -e
+        mv "${repo_root_folder}/${repo_name}" "${repo_folder}"
+        cd - > /dev/null 2>&1
     fi
-    mv "${repo_root_folder}/${repo_name}" "${repo_folder}"
-    cd - > /dev/null 2>&1
-
     if [[ "${repo_name}" == *-private ]]
     then
-        repo_folder="${repo_folder}/${repo_name%-private}"
+        if [[ "${repo_name}" == "kafka-connect-cosmosdb-v2-private" ]]
+        then
+            # specific case
+            repo_folder="${repo_folder}/azure-sdk-for-java"
+        elif [[ "${repo_name}" == "kafka-connect-couchbasedb-private" ]]
+        then
+            # specific case
+            repo_folder="${repo_folder}/kafka-connect-couchbase"
+        elif [[ "${repo_name}" == "kafka-connect-redis-private" ]]
+        then
+            # specific case
+            repo_folder="${repo_folder}/redis-kafka-connect"
+        elif [[ "${repo_name}" == "kafka-connect-s3-private" ]]
+        then
+            # specific case
+            repo_folder="${repo_folder}/kafka-connect-storage-cloud"
+        else
+            repo_folder="${repo_folder}/${repo_name%-private}"
+        fi
     fi
 
     if [ ! -f "${repo_folder}/pom.xml" ]
@@ -312,7 +350,17 @@ function compile () {
 
             if [ -n "$chosen" ]; then
                 compile_jdk_version="$chosen"
-                log "✨ detected maven compiler version '$chosen' from pom.xml, using --compile-jdk-version $compile_jdk_version"
+                if [ "$chosen" == "8" ]
+                then
+                    compile_jdk_version=11
+                    log "⚠️  detected maven compiler version '$chosen' from pom.xml, but 8 is too old, forcing --compile-jdk-version to $compile_jdk_version"
+                elif [ "$chosen" == "\${java.version}" ]
+                then
+                    compile_jdk_version=11
+                    log "⚠️  detected maven compiler version '$chosen' from pom.xml, but it is not valid, forcing --compile-jdk-version to $compile_jdk_version"
+                else
+                    log "✨ detected maven compiler version '$chosen' from pom.xml, using --compile-jdk-version $compile_jdk_version"
+                fi
             fi
         fi
 
@@ -362,20 +410,14 @@ function compile () {
     fi
     set +e
 
-    log "👌 build complete! Artifacts are generally present in the '${repo_folder}/target/components/packages' directory."
-
-    # Display the directory structure
-    if command -v tree >/dev/null 2>&1; then
-        tree "${repo_folder}/target/components/packages"
-    else
-        find "${repo_folder}/target/components/packages" -type f -name "*.zip" | sort
-    fi
+    log "👌 build complete! zip artifacts found are:"
+    find "${repo_folder}" -type f -name "*.zip" | sort
     
     echo ""
     
     # Display each zip file
     found=0
-    for zip_file in "${repo_folder}/target/components/packages"/*.zip
+    for zip_file in $(find "${repo_folder}" -type f -name "*.zip" | sort)
     do
         if [ -f "$zip_file" ]
         then
@@ -392,7 +434,8 @@ function compile () {
                 if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
                 then
                     echo "$zip_file"| pbcopy
-                    log "📋 path to the zip file $zip_file has been copied to the clipboard (disable with 'playground config clipboard false')"
+                    zip_file_name=$(basename "$zip_file")
+                    log "📋 path to the zip file $zip_file_name has been copied to the clipboard (disable with 'playground config clipboard false')"
                 fi
             fi
         fi
@@ -521,8 +564,18 @@ fi
 maybe_v_prefix=""
 if [[ "$sourcecode_url" == *"confluentinc"* ]]
 then
-    # confluent use v prefix for tags example v1.5.0
-    maybe_v_prefix="v"
+    if [[ "$sourcecode_url" == *"kafka-connect-cosmosdb" ]]
+    then
+        # specific case
+        maybe_v_prefix="kafka-connect-cosmos-"
+    elif [[ "$sourcecode_url" == *"kafka-connect-couchbase" ]]
+    then
+        # specific case
+        maybe_v_prefix=""
+    else
+        # confluent use v prefix for tags example v1.5.0
+        maybe_v_prefix="v"
+    fi
 fi
 
 if [ "$comparison_mode_versions" != "" ]
