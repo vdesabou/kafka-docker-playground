@@ -397,10 +397,10 @@ function compile () {
     if [[ -n "$verbose" ]]
     then
         log "🐞 --compile-verbose is set, showing full output of compilation:"
-        docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.1-eclipse-temurin-${compile_jdk_version} mvn -s $mvn_settings_file -Dcheckstyle.skip -DskipTests -Dlicense.skip=true clean package 2>&1 | tee "$file_output"
+        docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.1-eclipse-temurin-${compile_jdk_version} mvn -s $mvn_settings_file -Dcheckstyle.skip -DskipTests -Dlicense.skip=true -DskipITs -Dskip.unit.tests=true clean package 2>&1 | tee "$file_output"
         ret=${PIPESTATUS[0]}
     else
-        docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.1-eclipse-temurin-${compile_jdk_version} mvn -s $mvn_settings_file -Dcheckstyle.skip -DskipTests -Dlicense.skip=true clean package 2>&1 > "$file_output" 
+        docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.1-eclipse-temurin-${compile_jdk_version} mvn -s $mvn_settings_file -Dcheckstyle.skip -DskipTests -Dlicense.skip=true -DskipITs -Dskip.unit.tests=true clean package 2>&1 > "$file_output" 
         ret=$?
     fi
     if [ $ret != 0 ]
@@ -443,7 +443,7 @@ function compile () {
 
     if [ $found == 0 ]
     then
-        logerror "❌ no zip file in '${repo_folder}/target/components/packages', maybe it was generated elsewhere in project ?"
+        logerror "❌ no zip file in '${repo_folder}', that project is probably packaging releases in different way"
         exit 1
     fi
 }
