@@ -2720,6 +2720,33 @@
               ],
               "argument": "CONNECTOR_TAG",
               "description": "🔗 Connector version to use\n\nBy default, for each connector, the current version is used (for Confluent employees, it will also get latest versions for fully managed connectors)\n\n🎓 Tip: set to \" \" in order to select the version dynamically\n\n🎓 Tip: you can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode\n\nRepeatable: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--compile"
+              ],
+              "argument": "",
+              "description": "🏗️ Checkout and compile code, then restart the connector with new compiled code 💫\n\nYou must have git installed.\n\nConfluent employees only: make sure to follow \"Maven FAQ\"\n\nThis does not work for fully and custom connectors.\n"
+            },
+            {
+              "names": [
+                "--compile-verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show output of compilation.\n"
+            },
+            {
+              "names": [
+                "--compile-jdk-version"
+              ],
+              "argument": [
+                8,
+                11,
+                17,
+                20
+              ],
+              "description": "🤎 JDK version to use when compiling\nIt will check in pom.xml for maven-compiler-plugin source/target version or release version and set jdk accordingly\nDefault is 11\n\nAllowed values: 8, 11, 17, 20\n"
             }
           ]
         },

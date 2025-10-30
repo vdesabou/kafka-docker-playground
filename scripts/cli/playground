@@ -5713,7 +5713,7 @@ playground_connector_plugin_sourcecode_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--compile-jdk-version VERSION")"
+    printf "  %s\n" "$(magenta "--compile-jdk-version COMPILE_JDK_VERSION")"
     printf "    🤎 JDK version to use when compiling\n    It will check in pom.xml for maven-compiler-plugin source/target version or\n    release version and set jdk accordingly\n    Default is 11\n"
     printf "    %s\n" "Allowed: 8, 11, 17, 20"
     echo
@@ -6207,6 +6207,22 @@ playground_connector_sourcecode_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG (repeatable)")"
     printf "    🔗 Connector version to use\n    \n    By default, for each connector, the current version is used (for Confluent\n    employees, it will also get latest versions for fully managed connectors)\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n    \n    🎓 Tip: you can compare different sourcecode versions by specifying\n    --connector-tag two times, in such case it will open github in comparison\n    mode\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--compile")"
+    printf "    🏗️ Checkout and compile code, then restart the connector with new compiled\n    code 💫\n    \n    You must have git installed.\n    \n    Confluent employees only: make sure to follow \"Maven FAQ\"\n    \n    This does not work for fully and custom connectors.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--compile-verbose, -v")"
+    printf "    🐞 Show output of compilation.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--compile-jdk-version COMPILE_JDK_VERSION")"
+    printf "    🤎 JDK version to use when compiling\n    It will check in pom.xml for maven-compiler-plugin source/target version or\n    release version and set jdk accordingly\n    Default is 11\n"
+    printf "    %s\n" "Allowed: 8, 11, 17, 20"
     echo
 
     # :command.usage_fixed_flags
@@ -24957,6 +24973,20 @@ playground_connector_plugin_sourcecode_command() {
       esac
   }
 
+  function check_if_ready_to_continue()
+  {
+    if [ ! -z "$GITHUB_RUN_NUMBER" ]
+    then
+        # running with github actions, continue
+        return
+    fi
+    read -p "👍 are you ready to build (y)?" choice
+    case "$choice" in
+    y|Y ) ;;
+    * ) logwarn "invalid response <$choice>! Please enter y."; check_if_ready_to_continue;;
+    esac
+  }
+
   function check_if_delete_folder()
   {
       if [ ! -z "$GITHUB_RUN_NUMBER" ]
@@ -25179,6 +25209,10 @@ playground_connector_plugin_sourcecode_command() {
           fi
       fi
 
+      log "🧑‍💻 now is a good time if you want to make changes to the code"
+      echo ""
+      check_if_ready_to_continue
+
       # --- 3. Compile with Maven ---
       file_output="${repo_folder}/playground-compilation-$repo_name.log"
       log "🏗  building with maven ${repo_folder}...it can take a while..⏳"
@@ -25209,12 +25243,14 @@ playground_connector_plugin_sourcecode_command() {
 
       # Display each zip file
       found=0
+      declare -a array_zip_file_list=()
       for zip_file in $(find "${repo_folder}" -type f -name "*.zip" | sort)
       do
           if [ -f "$zip_file" ]
           then
               found=1
               log "📄🥳 zip file $zip_file generated !"
+              array_zip_file_list+=("$zip_file")
               if [[ "$OSTYPE" == "darwin"* ]]
               then
                   clipboard=$(playground config get clipboard)
@@ -25237,6 +25273,10 @@ playground_connector_plugin_sourcecode_command() {
       then
           logerror "❌ no zip file in '${repo_folder}', that project is probably packaging releases in different way"
           exit 1
+      else
+          array_declaration=$(declare -p array_zip_file_list)
+          encoded_array=$(echo "$array_declaration" | base64)
+          playground state set run.array_zip_file_list_base64 "$encoded_array"
       fi
   }
 
@@ -26526,6 +26566,9 @@ playground_connector_sourcecode_command() {
   # src/commands/connector/sourcecode.sh
   connector_tags="${args[--connector-tag]}"
   only_show_url="${args[--only-show-url]}"
+  compile="${args[--compile]}"
+  compile_jdk_version="${args[--compile-jdk-version]}"
+  compile_verbose="${args[--compile-verbose]}"
 
   # Convert space-separated string to array
   IFS=' ' read -ra connector_tag_array <<< "$connector_tags"
@@ -26535,7 +26578,7 @@ playground_connector_sourcecode_command() {
   connector_type=$(playground state get run.connector_type)
   if [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then
-      log "connector versions command is not supported with $connector_type connector"
+      log "playground connector sourcecode command is not supported with $connector_type connector"
       exit 0
   fi
 
@@ -26551,8 +26594,15 @@ playground_connector_sourcecode_command() {
   then
       maybe_only_show_url="--only-show-url"
   fi
+
   if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
   then
+      if [[ -n "$compile" ]]
+      then
+          logerror "❌ --compile does not work when using fully managed connectors"
+          exit 1
+      fi
+
       owner="confluentinc"
       name=$(grep "connector.class" $test_file | head -1 | cut -d '"' -f4)
 
@@ -26579,6 +26629,38 @@ playground_connector_sourcecode_command() {
       exit 0
   fi
 
+  maybe_compile=""
+  if [[ -n "$compile" ]]
+  then
+      maybe_compile="--compile"
+
+      if [[ -n "$compile_jdk_version" ]]
+      then
+          maybe_compile_jdk_version="--compile_jdk_version $compile_jdk_version"
+      fi
+
+      if [[ -n "$compile_verbose" ]]
+      then
+          maybe_compile_verbose="--compile-verbose"
+      fi
+  fi
+
+  function choosezip()
+  {
+    log "🧩 select the zip to use:"
+    select zip
+    do
+      # Check the selected menu jar number
+      if [ 1 -le "$REPLY" ] && [ "$REPLY" -le $# ];
+      then
+        break;
+      else
+        logwarn "wrong selection <$zip>! select any number from 1-$#"
+        choosezip
+      fi
+    done
+  }
+
   get_connector_paths
   if [ "$connector_paths" == "" ]
   then
@@ -26598,16 +26680,18 @@ playground_connector_sourcecode_command() {
               continue
           fi
 
-          # # latest
-          # latest=$(playground connector-plugin versions --connector-plugin $owner/$name --last 1)
-          # latest_to_compare=$(echo "$latest" | head -n 1 | sed 's/ ([0-9]* days ago)//')
-
           length=${#connector_tag_array[@]}
           if ((length > 1))
           then
               if ((length > 2))
               then
                   logerror "❌ --connector-tag can only be set 2 times"
+                  exit 1
+              fi
+
+              if [[ -n "$compile" ]]
+              then
+                  logerror "❌ --compile does not work when --connector-tag is set twice"
                   exit 1
               fi
               connector_tag1="${connector_tag_array[0]}"
@@ -26629,17 +26713,36 @@ playground_connector_sourcecode_command() {
                   then
                       connector_tag=" "
                   fi
-                  playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag" $maybe_only_show_url
+                  playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag" $maybe_only_show_url $maybe_compile $maybe_compile_jdk_version $maybe_compile_verbose
               else
                   manifest_file="$root_folder/confluent-hub/$full_connector_name/manifest.json"
-                  if [ -f $manifest_file ]
+                  if [ -f "$manifest_file" ]
                   then
                       version=$(cat $manifest_file | jq -r '.version')
-                      playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$version" $maybe_only_show_url
+                      playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$version" $maybe_only_show_url $maybe_compile $maybe_compile_jdk_version $maybe_compile_verbose
                   else
-                      logwarn "file $manifest_file does not exist, could not retrieve version"
-                      exit 0
+                      logerror "❌ file $manifest_file does not exist, could not retrieve version"
+                      exit 1
                   fi
+              fi
+
+              if [[ -n "$compile" ]]
+              then
+                  declare -a array_zip_file_list=()
+                  encoded_array="$(playground state get run.array_zip_file_list_base64)"
+                  eval "$(echo "$encoded_array" | base64 -d)"
+
+                  zip_list_length=${#array_zip_file_list[@]}
+                  if ((zip_list_length > 1))
+                  then
+                      log "🧩 multiple zip files have been compiled, which one do you want to use ?"
+                      choosezip "${array_zip_file_list[@]}"
+                  else
+                      zip="${array_zip_file_list[0]}"
+                  fi
+
+                  log "💫 executing playground update-version --connector-zip $zip"
+                  playground update-version --connector-zip "$zip"
               fi
           fi
       done
@@ -42468,7 +42571,7 @@ playground_connector_plugin_sourcecode_parse_requirements() {
           shift
           shift
         else
-          printf "%s\n" "--compile-jdk-version requires an argument: --compile-jdk-version VERSION" >&2
+          printf "%s\n" "--compile-jdk-version requires an argument: --compile-jdk-version COMPILE_JDK_VERSION" >&2
           exit 1
         fi
         ;;
@@ -43555,6 +43658,36 @@ playground_connector_sourcecode_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --compile)
+
+        # :flag.case_no_arg
+        args['--compile']=1
+        shift
+        ;;
+
+      # :flag.case
+      --compile-verbose | -v)
+
+        # :flag.case_no_arg
+        args['--compile-verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --compile-jdk-version)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--compile-jdk-version']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--compile-jdk-version requires an argument: --compile-jdk-version COMPILE_JDK_VERSION" >&2
+          exit 1
+        fi
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -43570,6 +43703,12 @@ playground_connector_sourcecode_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--compile-jdk-version']:-} ]] && [[ ! ${args['--compile-jdk-version']:-} =~ ^(8|11|17|20)$ ]]; then
+    printf "%s\n" "--compile-jdk-version must be one of: 8, 11, 17, 20" >&2
+    exit 1
+  fi
 
 }
 

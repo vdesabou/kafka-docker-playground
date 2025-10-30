@@ -3614,9 +3614,10 @@ commands:
           You must have git installed.
 
           Confluent employees only: make sure to follow "Maven FAQ"
-      - long: --compile-jdk-version
+      - &compile_jdk_version
+        long: --compile-jdk-version
         required: false
-        arg: version
+        arg: compile_jdk_version
         allowed: 
           - "8"
           - "11"
@@ -3626,7 +3627,8 @@ commands:
           🤎 JDK version to use when compiling
           It will check in pom.xml for maven-compiler-plugin source/target version or release version and set jdk accordingly
           Default is 11
-      - long: --compile-verbose
+      - &compile_verbose
+        long: --compile-verbose
         short: -v
         help: 🐞 Show output of compilation.
     examples: |
@@ -3769,6 +3771,18 @@ commands:
           🎓 Tip: set to " " in order to select the version dynamically
 
           🎓 Tip: you can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode
+      - long: --compile
+        required: false
+        help: |-
+          🏗️ Checkout and compile code, then restart the connector with new compiled code 💫
+
+          You must have git installed.
+
+          Confluent employees only: make sure to follow "Maven FAQ"
+
+          This does not work for fully and custom connectors.
+      - *compile_verbose
+      - *compile_jdk_version
     examples: |
 
       # will open current version source code

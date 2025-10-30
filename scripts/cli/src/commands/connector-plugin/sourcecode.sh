@@ -167,6 +167,20 @@ function check_if_call_maven_login()
     esac
 }
 
+function check_if_ready_to_continue()
+{
+  if [ ! -z "$GITHUB_RUN_NUMBER" ]
+  then
+      # running with github actions, continue
+      return
+  fi
+  read -p "👍 are you ready to build (y)?" choice
+  case "$choice" in
+  y|Y ) ;;
+  * ) logwarn "invalid response <$choice>! Please enter y."; check_if_ready_to_continue;;
+  esac
+}
+
 function check_if_delete_folder()
 {
     if [ ! -z "$GITHUB_RUN_NUMBER" ]
@@ -387,6 +401,10 @@ function compile () {
             mvn_settings_file="/root/.m2/settings.xml"
         fi
     fi
+    
+    log "🧑‍💻 now is a good time if you want to make changes to the code"
+    echo ""
+    check_if_ready_to_continue
 
     # --- 3. Compile with Maven ---
     file_output="${repo_folder}/playground-compilation-$repo_name.log"
@@ -417,12 +435,14 @@ function compile () {
     
     # Display each zip file
     found=0
+    declare -a array_zip_file_list=()
     for zip_file in $(find "${repo_folder}" -type f -name "*.zip" | sort)
     do
         if [ -f "$zip_file" ]
         then
             found=1
             log "📄🥳 zip file $zip_file generated !"
+            array_zip_file_list+=("$zip_file")
             if [[ "$OSTYPE" == "darwin"* ]]
             then
                 clipboard=$(playground config get clipboard)
@@ -445,6 +465,10 @@ function compile () {
     then
         logerror "❌ no zip file in '${repo_folder}', that project is probably packaging releases in different way"
         exit 1
+    else
+        array_declaration=$(declare -p array_zip_file_list)
+        encoded_array=$(echo "$array_declaration" | base64)
+        playground state set run.array_zip_file_list_base64 "$encoded_array"
     fi
 }
 

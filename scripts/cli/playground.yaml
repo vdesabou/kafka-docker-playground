@@ -3143,6 +3143,35 @@ subcommands:
             
             Repeatable: ✓ Yes
             
+        - names:
+          - --compile
+          argument: ""
+          description: | 
+            🏗️ Checkout and compile code, then restart the connector with new compiled code 💫
+            
+            You must have git installed.
+            
+            Confluent employees only: make sure to follow "Maven FAQ"
+            
+            This does not work for fully and custom connectors.
+            
+        - names:
+          - --compile-verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show output of compilation.
+            
+        - names:
+          - --compile-jdk-version
+          argument: [8, 11, 17, 20]
+          description: | 
+            🤎 JDK version to use when compiling
+            It will check in pom.xml for maven-compiler-plugin source/target version or release version and set jdk accordingly
+            Default is 11
+            
+            Allowed values: 8, 11, 17, 20
+            
       - name: restart
         description: | 
           ♻️  Restart connector
