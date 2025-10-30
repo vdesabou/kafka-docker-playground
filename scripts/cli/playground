@@ -16776,6 +16776,14 @@ playground_run_command() {
   generate_connector_versions > /dev/null 2>&1 &
   set +e
 
+  if [ ! -z "$ENABLE_CONTROL_CENTER" ]
+  then
+        if [ -z "$ENABLE_LEGACY_CONTROL_CENTER" ]
+        then
+          log "Checking if newer control-center next-gen image is available.."
+          docker pull confluentinc/cp-enterprise-control-center-next-gen:latest
+        fi
+  fi
   connector_plugin_display_last_updated_file="/tmp/connector-plugin-display-last-updated-$(date +%Y-%m-%d).txt"
   connector_type=$(playground state get run.connector_type)
   if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
