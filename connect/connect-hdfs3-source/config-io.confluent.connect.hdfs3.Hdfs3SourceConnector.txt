@@ -10,6 +10,15 @@ Class for the 'AddPrefix' transformation.
 	 - Importance: HIGH
 	 - Required: true
 
+🔘 transforms.AddPrefix.plugin.version
+
+Version of the 'AddPrefix' transformation.
+
+	 - Type: STRING
+	 - Default: 8.1.0-ce
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 transforms.AddPrefix.regex
 
 Regular expression to use for matching.
