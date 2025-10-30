@@ -147,168 +147,22 @@ function get_latest_version_from_confluent_hub () {
 
 function check_if_call_maven_login()
 {
-  if [ ! -z "$GITHUB_RUN_NUMBER" ]
-  then
-      # running with github actions, continue
-      return
-  fi
-  read -p "Execute maven-login (y/n)?" choice
-  case "$choice" in
-  y|Y ) source $HOME/.cc-dotfiles/caas.sh && code_artifact::maven_login -f;;
-  n|N ) ;;
-  * ) logwarn "invalid response <$choice>! Please enter y or n."; check_if_call_maven_login;;
-  esac
+    if [ ! -z "$GITHUB_RUN_NUMBER" ]
+    then
+        # running with github actions, continue
+        return
+    fi
+    read -p "Execute maven-login (y/n)?" choice
+    case "$choice" in
+    y|Y ) source $HOME/.cc-dotfiles/caas.sh && code_artifact::maven_login -f;;
+    n|N ) ;;
+    * ) logwarn "invalid response <$choice>! Please enter y or n."; check_if_call_maven_login;;
+    esac
 }
 
-comparison_mode_versions=""
-length=${#connector_tag_array[@]}
-if ((length > 1))
-then
-    if ((length > 2))
-    then
-        logerror "❌ --connector-tag can only be set 2 times"
-        exit 1
-    fi
+function compile () {
+    arg_version="$1"
 
-    if [[ -n "$compile" ]]
-    then
-        logerror "❌ --compile flag does not work when --connector-tag is set 2 times"
-        exit 1
-    fi
-    
-    if [[ "$sourcecode_url" != *"github.com"* ]]
-    then
-        logerror "❌ --connector-tag flag is set 2 times, but sourcecode is not hosted on github, comparison between version can only works with github"
-        exit 1
-    fi
-    connector_tag1="${connector_tag_array[0]}"
-    connector_tag2="${connector_tag_array[1]}"
-
-    if [ "$connector_tag1" == "" ] || [ "$connector_tag1" == "latest" ]
-    then
-        if [ $is_fully_managed -eq 1 ]
-        then
-            get_version_from_cc_docker_connect_cache_versions_env "latest"
-            connector_tag1=$connector_tag
-        else
-            get_latest_version_from_confluent_hub
-            connector_tag1=$connector_tag
-        fi
-    else
-        if [ $is_fully_managed -eq 1 ]
-        then
-            get_version_from_cc_docker_connect_cache_versions_env "$connector_tag1"
-            connector_tag1=$connector_tag
-        fi
-    fi
-
-    if [ "$connector_tag2" == "" ] || [ "$connector_tag2" == "latest" ]
-    then
-        if [ $is_fully_managed -eq 1 ]
-        then
-            get_version_from_cc_docker_connect_cache_versions_env "latest"
-            connector_tag2=$connector_tag
-        else
-            get_latest_version_from_confluent_hub
-            connector_tag2=$connector_tag
-        fi
-    else
-        if [ $is_fully_managed -eq 1 ]
-        then
-            get_version_from_cc_docker_connect_cache_versions_env "$connector_tag2"
-            connector_tag2=$connector_tag
-        fi
-    fi
-
-    if [ "$connector_tag1" == "\\" ]
-    then
-        if [ $is_fully_managed -eq 1 ]
-        then
-            logerror "❌ --connector-tag set with \" \" cannot work when using fully managed connector plugin"
-            exit 1
-        fi
-        ret=$(choose_connector_tag "$connector_plugin")
-        connector_tag1=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
-    fi
-
-    if [ "$connector_tag2" == "\\" ]
-    then
-        if [ $is_fully_managed -eq 1 ]
-        then
-            logerror "❌ --connector-tag set with \" \" cannot work when using fully managed connector plugin"
-            exit 1
-        fi
-        ret=$(choose_connector_tag "$connector_plugin")
-        connector_tag2=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
-    fi
-    log "✨ --connector-tag flag is set 2 times, comparison mode will be opened with versions v$connector_tag1 and v$connector_tag2"
-    comparison_mode_versions="v$connector_tag1...v$connector_tag2"
-else
-    connector_tag="${connector_tag_array[0]}"
-    if [ "$connector_tag" == "\\" ]
-    then
-        if [ $is_fully_managed -eq 1 ]
-        then
-            logerror "❌ --connector-tag set with \" \" cannot work when using fully managed connector plugin"
-            exit 1
-        fi
-        ret=$(choose_connector_tag "$connector_plugin")
-        connector_tag=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
-    elif [ "$connector_tag" == "" ] || [ "$connector_tag" == "latest" ]
-    then
-        if [ $is_fully_managed -eq 0 ]
-        then
-            output=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --last 1 | head -n 1)
-            last_version=$(echo "$output" | grep -v "<unknown>" | cut -d " " -f 2 | cut -d "v" -f 2)
-            if [[ -n "$last_version" ]]
-            then
-                log "✨ --connector-tag was not set, using latest version on hub $last_version"
-                connector_tag="$last_version"
-            else
-                logwarn "could not find latest version using <playground connector-plugin versions --connector-plugin \"$connector_plugin\" --last 1>, using latest"
-                connector_tag="latest"
-            fi
-        else
-            get_version_from_cc_docker_connect_cache_versions_env "latest"
-        fi
-    else
-        if [ $is_fully_managed -eq 1 ]
-        then
-            get_version_from_cc_docker_connect_cache_versions_env "$connector_tag"
-        fi
-    fi
-fi
-
-maybe_v_prefix=""
-if [[ "$sourcecode_url" == *"confluentinc"* ]]
-then
-    # confluent use v prefix for tags example v1.5.0
-    maybe_v_prefix="v"
-fi
-
-if [ "$comparison_mode_versions" != "" ]
-then
-    additional_text=", comparing $maybe_v_prefix$connector_tag1 and $maybe_v_prefix$connector_tag2"
-    sourcecode_url="$sourcecode_url/compare/$comparison_mode_versions"
-else
-    additional_text=" for $connector_tag version"
-    if [ "$connector_tag" != "latest" ] && [[ "$sourcecode_url" == *"github.com"* ]]
-    then
-        sourcecode_url="$sourcecode_url/tree/$maybe_v_prefix$connector_tag"
-    fi
-fi
-
-if [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]] || [[ -n "$compile" ]]
-then
-    log "🧑‍💻🌐 sourcecode for plugin $connector_plugin$additional_text is available at:"
-    echo "$sourcecode_url"
-else
-    log "🧑‍💻 Opening sourcecode url $sourcecode_url for plugin $connector_plugin in browser$additional_text"
-    open "$sourcecode_url"
-fi
-
-if [[ -n "$compile" ]]
-then
     if [[ "$sourcecode_url" != *"github.com"* ]]
     then
         logerror "❌ --compile flag does not work when sourcecode is not hosted on github"
@@ -359,7 +213,7 @@ then
     fi
     repo_root_folder="${root_folder}/connector-plugin-sourcecode"
     mkdir -p "${repo_root_folder}"
-    repo_folder="${repo_root_folder}/${repo_name}"
+    repo_folder="${repo_root_folder}/${repo_name}-${arg_version}"
     # --- 2. Checkout (Clone) Project ---
     if [ -d "${repo_folder}" ]
     then
@@ -372,6 +226,7 @@ then
     log "🐏🐏 Cloning..."
     cd ${repo_root_folder} > /dev/null 2>&1
     $clone_command
+    mv "${repo_root_folder}/${repo_name}" "${repo_folder}"
     cd - > /dev/null 2>&1
 
     if [[ "${repo_name}" == *-private ]]
@@ -528,4 +383,156 @@ then
         logerror "❌ no zip file in '${repo_folder}/target/components/packages', maybe it was generated elsewhere in project ?"
         exit 1
     fi
+}
+
+comparison_mode_versions=""
+length=${#connector_tag_array[@]}
+if ((length > 1))
+then
+    if ((length > 2))
+    then
+        logerror "❌ --connector-tag can only be set 2 times"
+        exit 1
+    fi
+
+    if [[ -n "$compile" ]]
+    then
+        logerror "❌ --compile flag does not work when --connector-tag is set 2 times"
+        exit 1
+    fi
+    
+    if [[ "$sourcecode_url" != *"github.com"* ]]
+    then
+        logerror "❌ --connector-tag flag is set 2 times, but sourcecode is not hosted on github, comparison between version can only works with github"
+        exit 1
+    fi
+    connector_tag1="${connector_tag_array[0]}"
+    connector_tag2="${connector_tag_array[1]}"
+
+    if [ "$connector_tag1" == "" ] || [ "$connector_tag1" == "latest" ]
+    then
+        if [ $is_fully_managed -eq 1 ]
+        then
+            get_version_from_cc_docker_connect_cache_versions_env "latest"
+            connector_tag1=$connector_tag
+        else
+            get_latest_version_from_confluent_hub
+            connector_tag1=$connector_tag
+        fi
+    else
+        if [ $is_fully_managed -eq 1 ]
+        then
+            get_version_from_cc_docker_connect_cache_versions_env "$connector_tag1"
+            connector_tag1=$connector_tag
+        fi
+    fi
+
+    if [ "$connector_tag2" == "" ] || [ "$connector_tag2" == "latest" ]
+    then
+        if [ $is_fully_managed -eq 1 ]
+        then
+            get_version_from_cc_docker_connect_cache_versions_env "latest"
+            connector_tag2=$connector_tag
+        else
+            get_latest_version_from_confluent_hub
+            connector_tag2=$connector_tag
+        fi
+    else
+        if [ $is_fully_managed -eq 1 ]
+        then
+            get_version_from_cc_docker_connect_cache_versions_env "$connector_tag2"
+            connector_tag2=$connector_tag
+        fi
+    fi
+
+    if [ "$connector_tag1" == "\\" ]
+    then
+        if [ $is_fully_managed -eq 1 ]
+        then
+            logerror "❌ --connector-tag set with \" \" cannot work when using fully managed connector plugin"
+            exit 1
+        fi
+        ret=$(choose_connector_tag "$connector_plugin")
+        connector_tag1=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
+    fi
+
+    if [ "$connector_tag2" == "\\" ]
+    then
+        if [ $is_fully_managed -eq 1 ]
+        then
+            logerror "❌ --connector-tag set with \" \" cannot work when using fully managed connector plugin"
+            exit 1
+        fi
+        ret=$(choose_connector_tag "$connector_plugin")
+        connector_tag2=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
+    fi
+    log "✨ --connector-tag flag is set 2 times, comparison mode will be opened with versions v$connector_tag1 and v$connector_tag2"
+    comparison_mode_versions="v$connector_tag1...v$connector_tag2"
+else
+    connector_tag="${connector_tag_array[0]}"
+    if [ "$connector_tag" == "\\" ]
+    then
+        if [ $is_fully_managed -eq 1 ]
+        then
+            logerror "❌ --connector-tag set with \" \" cannot work when using fully managed connector plugin"
+            exit 1
+        fi
+        ret=$(choose_connector_tag "$connector_plugin")
+        connector_tag=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
+    elif [ "$connector_tag" == "" ] || [ "$connector_tag" == "latest" ]
+    then
+        if [ $is_fully_managed -eq 0 ]
+        then
+            output=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --last 1 | head -n 1)
+            last_version=$(echo "$output" | grep -v "<unknown>" | cut -d " " -f 2 | cut -d "v" -f 2)
+            if [[ -n "$last_version" ]]
+            then
+                log "✨ --connector-tag was not set, using latest version on hub $last_version"
+                connector_tag="$last_version"
+            else
+                logwarn "could not find latest version using <playground connector-plugin versions --connector-plugin \"$connector_plugin\" --last 1>, using latest"
+                connector_tag="latest"
+            fi
+        else
+            get_version_from_cc_docker_connect_cache_versions_env "latest"
+        fi
+    else
+        if [ $is_fully_managed -eq 1 ]
+        then
+            get_version_from_cc_docker_connect_cache_versions_env "$connector_tag"
+        fi
+    fi
+fi
+
+maybe_v_prefix=""
+if [[ "$sourcecode_url" == *"confluentinc"* ]]
+then
+    # confluent use v prefix for tags example v1.5.0
+    maybe_v_prefix="v"
+fi
+
+if [ "$comparison_mode_versions" != "" ]
+then
+    additional_text=", comparing $maybe_v_prefix$connector_tag1 and $maybe_v_prefix$connector_tag2"
+    sourcecode_url="$sourcecode_url/compare/$comparison_mode_versions"
+else
+    additional_text=" for $connector_tag version"
+    if [ "$connector_tag" != "latest" ] && [[ "$sourcecode_url" == *"github.com"* ]]
+    then
+        sourcecode_url="$sourcecode_url/tree/$maybe_v_prefix$connector_tag"
+    fi
+fi
+
+if [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]] || [[ -n "$compile" ]]
+then
+    log "🧑‍💻🌐 sourcecode for plugin $connector_plugin$additional_text is available at:"
+    echo "$sourcecode_url"
+else
+    log "🧑‍💻 Opening sourcecode url $sourcecode_url for plugin $connector_plugin in browser$additional_text"
+    open "$sourcecode_url"
+fi
+
+if [[ -n "$compile" ]]
+then
+    compile "$connector_tag"
 fi
