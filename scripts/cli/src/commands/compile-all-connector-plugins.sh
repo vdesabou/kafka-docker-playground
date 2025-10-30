@@ -26,7 +26,7 @@ then
 fi
 
 stop=0
-while read -r line || [ $stop != 1 ]; do
+while read -r line && [ $stop != 1 ]; do
     # Skip empty lines or lines starting with # (allowing for leading whitespace)
     if [[ -z "$line" ]] || [[ "$line" =~ ^[[:space:]]*# ]]; then
         continue
