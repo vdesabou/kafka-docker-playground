@@ -8,7 +8,7 @@ if [ ! -f ${DIR}/create-topic-policy/target/mytopicpolicy-1.0.0-SNAPSHOT.jar ]
 then
      # build mytopicpolicy
      log "Build mytopicpolicy"
-     docker run -i --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/create-topic-policy":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/create-topic-policy/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
+     docker run -i --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/create-topic-policy":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/create-topic-policy/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.1-eclipse-temurin-11 mvn package
 fi
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
