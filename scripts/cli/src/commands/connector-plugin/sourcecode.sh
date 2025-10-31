@@ -274,6 +274,8 @@ function compile () {
         fi
         set -e
         mv "${repo_root_folder}/${repo_name}" "${repo_folder}"
+        mkdir -p ${repo_folder}/.vscode
+        cp ${root_folder}/scripts/cli/launch.json ${repo_folder}/.vscode/
         cd - > /dev/null 2>&1
     fi
     if [[ "${repo_name}" == *-private ]]
@@ -403,6 +405,7 @@ function compile () {
     fi
     
     log "🧑‍💻 now is a good time if you want to make changes to the code"
+    open_file_with_editor "${repo_folder}"
     echo ""
     check_if_ready_to_continue
 
