@@ -1566,6 +1566,12 @@ subcommands:
             
             Default value: connect
             
+        - names:
+          - --skip-vs-code-config-display
+          argument: ""
+          description: | 
+            
+            
       - name: testssl
         description: | 
           🔐 Testing TLS/SSL encryption using https://testssl.sh/
@@ -3171,6 +3177,16 @@ subcommands:
             Default is 11
             
             Allowed values: 8, 11, 17, 20
+            
+        - names:
+          - --enable-remote-debugging
+          argument: ""
+          description: | 
+            ✨ This will enable java remote debugging for connect container
+            
+            👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%e2%9c%a8-remote-debugging
+            
+            This does not work for fully and custom connectors.
             
       - name: restart
         description: | 

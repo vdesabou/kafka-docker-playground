@@ -1974,6 +1974,9 @@ commands:
           🐳 Container name
 
           🎓 Tip: you can pass multiple containers by specifying --container multiple times
+      - long: --skip-vs-code-config-display
+        required: false
+        private: true
     examples:
     - playground debug enable-remote-debugging
     - playground debug enable-remote-debugging --container broker
@@ -3617,6 +3620,7 @@ commands:
       - &compile_jdk_version
         long: --compile-jdk-version
         required: false
+        needs: [--compile]
         arg: compile_jdk_version
         allowed: 
           - "8"
@@ -3630,6 +3634,7 @@ commands:
       - &compile_verbose
         long: --compile-verbose
         short: -v
+        needs: [--compile]
         help: 🐞 Show output of compilation.
     examples: |
 
@@ -3780,23 +3785,32 @@ commands:
 
           Confluent employees only: make sure to follow "Maven FAQ"
 
-          This does not work for fully and custom connectors.
+          ⚠️ This does not work for fully and custom connectors.
       - *compile_verbose
       - *compile_jdk_version
+      - long: --enable-remote-debugging
+        required: false
+        needs: [--compile]
+        help: |-
+          ✨ This will enable java remote debugging for connect container
+      
+          👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%e2%9c%a8-remote-debugging
+
+          ⚠️ This does not work for fully and custom connectors.
     examples: |
 
-      # will open current version source code
+      # will open current version source code for current running connector
       # if you're a confluent employee (make sure to set your aws credentials), it will also work on proprietary connectors and fully managed connectors
       playground connector sourcecode
 
       # will ask you to select a version
-      playground connector sourcecode  --connector-tag " "
+      playground connector sourcecode --connector-tag " "
 
       # comparison mode:
-      playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-hdfs --connector-tag "10.2.1" --connector-tag "10.2.0"
+      playground connector --connector-tag "10.2.1" --connector-tag "10.2.0"
 
       # comparison mode (with versions selection):
-      playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-hdfs --connector-tag " " --connector-tag " "
+      playground connector --connector-tag " " --connector-tag " "
 
   - name: restart
     help: ♻️  Restart connector

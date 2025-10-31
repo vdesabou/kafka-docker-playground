@@ -825,7 +825,7 @@ _playground_completions() {
       ;;
 
     *'connector sourcecode'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--compile --compile-jdk-version --compile-verbose --connector-tag --help --only-show-url -h -v")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--compile --compile-jdk-version --compile-verbose --connector-tag --enable-remote-debugging --help --only-show-url -h -v")" -- "$cur")
       ;;
 
     *'topic consume'*'--topic')

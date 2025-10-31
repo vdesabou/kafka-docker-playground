@@ -5716,11 +5716,13 @@ playground_connector_plugin_sourcecode_usage() {
     printf "  %s\n" "$(magenta "--compile-jdk-version COMPILE_JDK_VERSION")"
     printf "    🤎 JDK version to use when compiling\n    It will check in pom.xml for maven-compiler-plugin source/target version or\n    release version and set jdk accordingly\n    Default is 11\n"
     printf "    %s\n" "Allowed: 8, 11, 17, 20"
+    printf "    %s\n" "Needs: --compile"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--compile-verbose, -v")"
     printf "    🐞 Show output of compilation.\n"
+    printf "    %s\n" "Needs: --compile"
     echo
 
     # :command.usage_fixed_flags
@@ -6217,12 +6219,20 @@ playground_connector_sourcecode_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--compile-verbose, -v")"
     printf "    🐞 Show output of compilation.\n"
+    printf "    %s\n" "Needs: --compile"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--compile-jdk-version COMPILE_JDK_VERSION")"
     printf "    🤎 JDK version to use when compiling\n    It will check in pom.xml for maven-compiler-plugin source/target version or\n    release version and set jdk accordingly\n    Default is 11\n"
     printf "    %s\n" "Allowed: 8, 11, 17, 20"
+    printf "    %s\n" "Needs: --compile"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--enable-remote-debugging")"
+    printf "    ✨ This will enable java remote debugging for connect container\n    \n    👉 Check documentation\n    https://kafka-docker-playground.io/#/reusables?id=%%e2%%9c%%a8-remote-debugging\n    \n    This does not work for fully and custom connectors.\n"
+    printf "    %s\n" "Needs: --compile"
     echo
 
     # :command.usage_fixed_flags
@@ -6232,7 +6242,7 @@ playground_connector_sourcecode_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  # will open current version source code\n  # if you're a confluent employee (make sure to set your aws credentials), it\n  will also work on proprietary connectors and fully managed connectors\n  playground connector sourcecode\n  \n  # will ask you to select a version\n  playground connector sourcecode  --connector-tag \" \"\n  \n  # comparison mode:\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-hdfs --connector-tag \"10.2.1\" --connector-tag\n  \"10.2.0\"\n  \n  # comparison mode (with versions selection):\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-hdfs --connector-tag \" \" --connector-tag \" \"\n"
+    printf "  # will open current version source code for current running connector\n  # if you're a confluent employee (make sure to set your aws credentials), it\n  will also work on proprietary connectors and fully managed connectors\n  playground connector sourcecode\n  \n  # will ask you to select a version\n  playground connector sourcecode --connector-tag \" \"\n  \n  # comparison mode:\n  playground connector --connector-tag \"10.2.1\" --connector-tag \"10.2.0\"\n  \n  # comparison mode (with versions selection):\n  playground connector --connector-tag \" \" --connector-tag \" \"\n"
     echo
 
   fi
@@ -21111,36 +21121,40 @@ playground_debug_enable_remote_debugging_command() {
 
   # src/commands/debug/enable-remote-debugging.sh
   containers="${args[--container]}"
+  skip_vs_code_config_display="${args[--skip-vs-code-config-display]}"
 
   # Convert space-separated string to array
   IFS=' ' read -ra container_array <<< "$containers"
 
   for container in "${container_array[@]}"
   do
-  	log "✨ enable remote debugging for $container"
-  	playground container set-environment-variables --container "${container}" --env "KAFKA_DEBUG: 'true'" --env "JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'"
+      log "✨ enable remote debugging for $container"
+      playground container set-environment-variables --container "${container}" --env "KAFKA_DEBUG: 'true'" --env "JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'"
 
-  	log "If you use Visual Studio Code:"
-  	log "Edit .vscode/launch.json with"
+      if [[ ! -n "$skip_vs_code_config_display" ]]
+      then
+          log "If you use Visual Studio Code:"
+          log "Edit .vscode/launch.json with"
 
-  	log "
-  	{
-  		\"version\": \"0.2.0\",
-  		\"configurations\": [
+          log "
+          {
+              \"version\": \"0.2.0\",
+              \"configurations\": [
 
-  			{
-  				\"type\": \"java\",
-  				\"name\": \"Debug $component container\",
-  				\"request\": \"attach\",
-  				\"hostName\": \"127.0.0.1\",
-  				\"port\": 5005,
-  				\"timeout\": 30000
-  			}
-  		]
-  	}
-  	"
+                  {
+                      \"type\": \"java\",
+                      \"name\": \"Debug $component container\",
+                      \"request\": \"attach\",
+                      \"hostName\": \"127.0.0.1\",
+                      \"port\": 5005,
+                      \"timeout\": 30000
+                  }
+              ]
+          }
+          "
+      fi
 
-  	log "See https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging"
+      log "see https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging"
   done
 }
 
@@ -26572,6 +26586,7 @@ playground_connector_sourcecode_command() {
   compile="${args[--compile]}"
   compile_jdk_version="${args[--compile-jdk-version]}"
   compile_verbose="${args[--compile-verbose]}"
+  enable_remote_debugging="${args[--enable-remote-debugging]}"
 
   # Convert space-separated string to array
   IFS=' ' read -ra connector_tag_array <<< "$connector_tags"
@@ -26746,6 +26761,11 @@ playground_connector_sourcecode_command() {
 
                   log "💫 executing playground update-version --connector-zip $zip"
                   playground update-version --connector-zip "$zip"
+
+                  if [[ -n "$enable_remote_debugging" ]]
+                  then
+                      playground debug enable-remote-debugging --skip-vs-code-config-display
+                  fi
               fi
           fi
       done
@@ -38005,6 +38025,14 @@ playground_debug_enable_remote_debugging_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --skip-vs-code-config-display)
+
+        # :flag.case_no_arg
+        args['--skip-vs-code-config-display']=1
+        shift
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -42609,6 +42637,19 @@ playground_connector_plugin_sourcecode_parse_requirements() {
     exit 1
   fi
 
+  # :command.needy_flags_filter
+  # :flag.needs
+  if [[ -n ${args['--compile-jdk-version']+x} ]] && [[ -z "${args[--compile]:-}" ]]; then
+    printf "%s\n" "--compile-jdk-version needs --compile" >&2
+    exit 1
+  fi
+
+  # :flag.needs
+  if [[ -n ${args['--compile-verbose']+x} ]] && [[ -z "${args[--compile]:-}" ]]; then
+    printf "%s\n" "--compile-verbose needs --compile" >&2
+    exit 1
+  fi
+
   # :command.whitelist_filter
   if [[ ${args['--compile-jdk-version']:-} ]] && [[ ! ${args['--compile-jdk-version']:-} =~ ^(8|11|17|20)$ ]]; then
     printf "%s\n" "--compile-jdk-version must be one of: 8, 11, 17, 20" >&2
@@ -43691,6 +43732,14 @@ playground_connector_sourcecode_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --enable-remote-debugging)
+
+        # :flag.case_no_arg
+        args['--enable-remote-debugging']=1
+        shift
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -43706,6 +43755,25 @@ playground_connector_sourcecode_parse_requirements() {
 
     esac
   done
+
+  # :command.needy_flags_filter
+  # :flag.needs
+  if [[ -n ${args['--compile-verbose']+x} ]] && [[ -z "${args[--compile]:-}" ]]; then
+    printf "%s\n" "--compile-verbose needs --compile" >&2
+    exit 1
+  fi
+
+  # :flag.needs
+  if [[ -n ${args['--compile-jdk-version']+x} ]] && [[ -z "${args[--compile]:-}" ]]; then
+    printf "%s\n" "--compile-jdk-version needs --compile" >&2
+    exit 1
+  fi
+
+  # :flag.needs
+  if [[ -n ${args['--enable-remote-debugging']+x} ]] && [[ -z "${args[--compile]:-}" ]]; then
+    printf "%s\n" "--enable-remote-debugging needs --compile" >&2
+    exit 1
+  fi
 
   # :command.whitelist_filter
   if [[ ${args['--compile-jdk-version']:-} ]] && [[ ! ${args['--compile-jdk-version']:-} =~ ^(8|11|17|20)$ ]]; then

@@ -403,11 +403,12 @@ function compile () {
             mvn_settings_file="/root/.m2/settings.xml"
         fi
     fi
-    
-    log "🧑‍💻 now is a good time if you want to make changes to the code"
+
+    editor=$(playground config get editor)
+    log "🧑‍💻 opening ${repo_folder} with editor ${editor}"
     open_file_with_editor "${repo_folder}"
-    echo ""
-    check_if_ready_to_continue
+    # echo ""
+    # check_if_ready_to_continue
 
     # --- 3. Compile with Maven ---
     file_output="${repo_folder}/playground-compilation-$repo_name.log"

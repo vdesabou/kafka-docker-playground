@@ -3,6 +3,7 @@ only_show_url="${args[--only-show-url]}"
 compile="${args[--compile]}"
 compile_jdk_version="${args[--compile-jdk-version]}"
 compile_verbose="${args[--compile-verbose]}"
+enable_remote_debugging="${args[--enable-remote-debugging]}"
 
 # Convert space-separated string to array
 IFS=' ' read -ra connector_tag_array <<< "$connector_tags"
@@ -178,6 +179,11 @@ else
 
                 log "💫 executing playground update-version --connector-zip $zip"
                 playground update-version --connector-zip "$zip"
+
+                if [[ -n "$enable_remote_debugging" ]]
+                then
+                    playground debug enable-remote-debugging --skip-vs-code-config-display
+                fi
             fi
         fi
     done
