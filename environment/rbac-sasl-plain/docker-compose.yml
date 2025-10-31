@@ -409,7 +409,9 @@ services:
             CONNECT_CONFLUENT_METADATA_HTTP_AUTH_CREDENTIALS_PROVIDER: 'BASIC'
 
             # centralized license is needed with CP 8.1+
-            # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+            # https://docs.confluent.io/platform/current/connect/license.html#centralized-license-in-the-kconnect-long-worker
+            CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: broker:10091
+            CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: SASL_PLAINTEXT
             CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: 'OAUTHBEARER'
             CONNECT_CONFLUENT_TOPIC_SASL_LOGIN_CALLBACK_HANDLER_CLASS: 'io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler'
             CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: |
@@ -499,7 +501,9 @@ services:
             CONNECT_CONFLUENT_METADATA_HTTP_AUTH_CREDENTIALS_PROVIDER: 'BASIC'
 
             # centralized license is needed with CP 8.1+
-            # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+            # https://docs.confluent.io/platform/current/connect/license.html#centralized-license-in-the-kconnect-long-worker
+            CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: broker:10091
+            CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: SASL_PLAINTEXT
             CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: 'OAUTHBEARER'
             CONNECT_CONFLUENT_TOPIC_SASL_LOGIN_CALLBACK_HANDLER_CLASS: 'io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler'
             CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: |
@@ -588,7 +592,9 @@ services:
             CONNECT_CONFLUENT_METADATA_HTTP_AUTH_CREDENTIALS_PROVIDER: 'BASIC'
 
             # centralized license is needed with CP 8.1+
-            # https://docs.confluent.io/operator/current/co-manage-connectors.html#authenticate-to-kconnect-cluster
+            # https://docs.confluent.io/platform/current/connect/license.html#centralized-license-in-the-kconnect-long-worker
+            CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: broker:10091
+            CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: SASL_PLAINTEXT
             CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: 'OAUTHBEARER'
             CONNECT_CONFLUENT_TOPIC_SASL_LOGIN_CALLBACK_HANDLER_CLASS: 'io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler'
             CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: |
