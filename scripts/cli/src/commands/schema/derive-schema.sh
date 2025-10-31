@@ -90,7 +90,7 @@ EOF
 
 set +e
 log "🔮 Calling derive-schema maven plugin (see https://docs.confluent.io/platform/current/schema-registry/develop/maven-plugin.html#schema-registry-derive-schema)"
-docker run -i --rm -v "${tmp_dir}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.1-eclipse-temurin-11 mvn -s /tmp/settings.xml io.confluent:kafka-schema-registry-maven-plugin:derive-schema > /tmp/result.log 2>&1
+docker run -i --rm -v "${tmp_dir}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11-alpine mvn -s /tmp/settings.xml io.confluent:kafka-schema-registry-maven-plugin:derive-schema > /tmp/result.log 2>&1
 if [ $? != 0 ]
 then
     logerror "❌ error while calling derive-schema"

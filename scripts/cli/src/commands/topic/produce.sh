@@ -714,7 +714,7 @@ then
         exit 1
     fi
     log "🏗 Building jar for schema-validator"
-    docker run -i --rm -e TAG=$tag -v "${root_folder}/scripts/cli/src/schema-validator":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "${root_folder}/scripts/cli/src/schema-validator/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.1-eclipse-temurin-11 mvn -s /tmp/settings.xml -Dkafka.tag=$tag package > /tmp/result.log 2>&1
+    docker run -i --rm -e TAG=$tag -v "${root_folder}/scripts/cli/src/schema-validator":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "${root_folder}/scripts/cli/src/schema-validator/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11-alpine mvn -s /tmp/settings.xml -Dkafka.tag=$tag package > /tmp/result.log 2>&1
     if [ $? != 0 ]
     then
         logerror "❌ failed to build java component schema-validator"

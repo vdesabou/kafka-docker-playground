@@ -164,21 +164,21 @@ else
 
             if [[ -n "$compile" ]]
             then
-                declare -a array_zip_file_list=()
-                encoded_array="$(playground state get run.array_zip_file_list_base64)"
-                eval "$(echo "$encoded_array" | base64 -d)"
+                # declare -a array_zip_file_list=()
+                # encoded_array="$(playground state get run.array_zip_file_list_base64)"
+                # eval "$(echo "$encoded_array" | base64 -d)"
 
-                zip_list_length=${#array_zip_file_list[@]}
-                if ((zip_list_length > 1))
-                then
-                    log "🧩 multiple zip files have been compiled, which one do you want to use ?"
-                    choosezip "${array_zip_file_list[@]}"
-                else
-                    zip="${array_zip_file_list[0]}"
-                fi
+                # zip_list_length=${#array_zip_file_list[@]}
+                # if ((zip_list_length > 1))
+                # then
+                #     log "🧩 multiple zip files have been compiled, which one do you want to use ?"
+                #     choosezip "${array_zip_file_list[@]}"
+                # else
+                #     zip="${array_zip_file_list[0]}"
+                # fi
 
-                log "💫 executing playground update-version --connector-zip $zip"
-                playground update-version --connector-zip "$zip"
+                # log "💫 executing playground update-version --connector-zip $zip"
+                # playground update-version --connector-zip "$zip"
 
                 if [[ -n "$enable_remote_debugging" ]]
                 then

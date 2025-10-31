@@ -166,6 +166,7 @@ playground_usage() {
   printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")                           "
   printf "  %s   🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n" "$(green "connector versions")                        "
   printf "  %s   🧑‍💻 open source code url for connector(s) used in example\n" "$(green "connector sourcecode")                      "
+  printf "  %s   ✨ Enable java remote debugging for the connector.\n" "$(green "connector enable-remote-debugging")         "
   printf "  %s   ♻️  Restart connector\n" "$(green "connector restart")                         "
   printf "  %s   🛑 Stop connector (only available if CP > 7.5)\n" "$(green "connector stop")                            "
   printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")                          "
@@ -5704,18 +5705,18 @@ playground_connector_plugin_sourcecode_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG (repeatable)")"
-    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used (for Confluent employees, it will also get latest versions for\n    fully managed connectors)\n    \n    🔢 Confluent employees only: for fully managed connectors, use the cc-connect\n    image version for the pcc. You must have a Confluent Github token set with\n    GITHUB_TOKEN or GH_TOKEN environment variable and also be using Confluent\n    VPN.\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n    \n    🎓 Tip: you can compare different sourcecode versions by specifying\n    --connector-tag two times, in such case it will open github in comparison\n    mode\n"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used (for Confluent employees, it will also get latest versions for\n    fully managed connectors)\n    \n    💌 Confluent employees only: for fully managed connectors, use the cc-connect\n    image version for the pcc. You must have a Confluent Github token set with\n    GITHUB_TOKEN or GH_TOKEN environment variable and also be using Confluent\n    VPN.\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n    \n    🎓 Tip: you can compare different sourcecode versions by specifying\n    --connector-tag two times, in such case it will open github in comparison\n    mode\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--compile")"
-    printf "    🏗️ Checkout and compile code\n    \n    You must have git installed.\n    \n    Confluent employees only: make sure to follow \"Maven FAQ\"\n"
+    printf "    🏗️ Checkout and compile code\n    \n    You must have git installed.\n    \n    💌 Confluent employees only: make sure to follow \"Maven FAQ\", you also need\n    to be on Confluent VPN with proper AWS credentials set in order to be able\n    to download proprietary dependencies.\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--compile-jdk-version COMPILE_JDK_VERSION")"
     printf "    🤎 JDK version to use when compiling\n    It will check in pom.xml for maven-compiler-plugin source/target version or\n    release version and set jdk accordingly\n    Default is 11\n"
-    printf "    %s\n" "Allowed: 8, 11, 17, 20"
+    printf "    %s\n" "Allowed: 8, 11, 17, 21, 25"
     printf "    %s\n" "Needs: --compile"
     echo
 
@@ -5755,6 +5756,7 @@ playground_connector_usage() {
   printf "  %s   ⏸️  Pause connector\n" "$(green "pause")                           "
   printf "  %s   🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n" "$(green "versions")                        "
   printf "  %s   🧑‍💻 open source code url for connector(s) used in example\n" "$(green "sourcecode")                      "
+  printf "  %s   ✨ Enable java remote debugging for the connector.\n" "$(green "enable-remote-debugging")         "
   printf "  %s   ♻️  Restart connector\n" "$(green "restart")                         "
   printf "  %s   🛑 Stop connector (only available if CP > 7.5)\n" "$(green "stop")                            "
   printf "  %s   ⏯️  Resume connector\n" "$(green "resume")                          "
@@ -6186,7 +6188,7 @@ playground_connector_versions_usage() {
 playground_connector_sourcecode_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector sourcecode\n\n"
-    printf "  🧑‍💻 open source code url for connector(s) used in example\n  \n  You can compare different sourcecode versions by specifying --connector-tag\n  two times, in such case it will open github in comparison mode\n\n"
+    printf "  🧑‍💻 open source code url for connector(s) used in example\n  \n  You can compare different sourcecode versions by specifying --connector-tag\n  two times, in such case it will open github in comparison mode\n  \n  💌 Confluent employees only: for fully managed connectors, use the cc-connect\n  image version for the pcc. You must have a Confluent Github token set with\n  GITHUB_TOKEN or GH_TOKEN environment variable and also be using Confluent VPN.\n\n"
   else
     printf "playground connector sourcecode - 🧑‍💻 open source code url for connector(s) used in example\n\n"
   fi
@@ -6211,30 +6213,6 @@ playground_connector_sourcecode_usage() {
     printf "    🔗 Connector version to use\n    \n    By default, for each connector, the current version is used (for Confluent\n    employees, it will also get latest versions for fully managed connectors)\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n    \n    🎓 Tip: you can compare different sourcecode versions by specifying\n    --connector-tag two times, in such case it will open github in comparison\n    mode\n"
     echo
 
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--compile")"
-    printf "    🏗️ Checkout and compile code, then restart the connector with new compiled\n    code 💫\n    \n    You must have git installed.\n    \n    Confluent employees only: make sure to follow \"Maven FAQ\"\n    \n    This does not work for fully and custom connectors.\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--compile-verbose, -v")"
-    printf "    🐞 Show output of compilation.\n"
-    printf "    %s\n" "Needs: --compile"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--compile-jdk-version COMPILE_JDK_VERSION")"
-    printf "    🤎 JDK version to use when compiling\n    It will check in pom.xml for maven-compiler-plugin source/target version or\n    release version and set jdk accordingly\n    Default is 11\n"
-    printf "    %s\n" "Allowed: 8, 11, 17, 20"
-    printf "    %s\n" "Needs: --compile"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--enable-remote-debugging")"
-    printf "    ✨ This will enable java remote debugging for connect container\n    \n    👉 Check documentation\n    https://kafka-docker-playground.io/#/reusables?id=%%e2%%9c%%a8-remote-debugging\n    \n    This does not work for fully and custom connectors.\n"
-    printf "    %s\n" "Needs: --compile"
-    echo
-
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -6243,6 +6221,32 @@ playground_connector_sourcecode_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  # will open current version source code for current running connector\n  # if you're a confluent employee (make sure to set your aws credentials), it\n  will also work on proprietary connectors and fully managed connectors\n  playground connector sourcecode\n  \n  # will ask you to select a version\n  playground connector sourcecode --connector-tag \" \"\n  \n  # comparison mode:\n  playground connector --connector-tag \"10.2.1\" --connector-tag \"10.2.0\"\n  \n  # comparison mode (with versions selection):\n  playground connector --connector-tag \" \" --connector-tag \" \"\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_enable_remote_debugging_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector enable-remote-debugging\n\n"
+    printf "  ✨ Enable java remote debugging for the connector.\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/reusables?id=%%e2%%9c%%a8-remote-debugging\n  \n  🏗️ It will checkout (you need git installed) and compile code for the\n  connector (required for remote debugging).\n  \n  💌 Confluent employees only: make sure to follow \"Maven FAQ\", you also need to\n  be on Confluent VPN with proper AWS credentials set in order to be able to\n  download proprietary dependencies.\n  \n  ⚠️ This does not work for fully and custom connectors.\n\n"
+  else
+    printf "playground connector enable-remote-debugging - ✨ Enable java remote debugging for the connector.\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector enable-remote-debugging\n"
+  printf "  playground connector enable-remote-debugging --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
     echo
 
   fi
@@ -19237,7 +19241,7 @@ for component in $list
 do
     set +e
     log "🏗 Building jar for \${component}"
-    docker run -i --rm -e KAFKA_CLIENT_TAG=\$KAFKA_CLIENT_TAG -e TAG=\$TAG_BASE -v "\${DIR}/\${component}":/usr/src/mymaven -v "\$HOME/.m2":/root/.m2 -v "\$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "\${DIR}/\${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.1-eclipse-temurin-11 mvn -s /tmp/settings.xml -Dkafka.tag=\$TAG -Dkafka.client.tag=\$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
+    docker run -i --rm -e KAFKA_CLIENT_TAG=\$KAFKA_CLIENT_TAG -e TAG=\$TAG_BASE -v "\${DIR}/\${component}":/usr/src/mymaven -v "\$HOME/.m2":/root/.m2 -v "\$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "\${DIR}/\${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11-alpine mvn -s /tmp/settings.xml -Dkafka.tag=\$TAG -Dkafka.client.tag=\$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
     if [ \$? != 0 ]
     then
         logerror "❌ failed to build java component $component"
@@ -19411,7 +19415,7 @@ for component in $custom_smt_name
 do
     set +e
     log "🏗 Building jar for \${component}"
-    docker run -i --rm -e KAFKA_CLIENT_TAG=\$KAFKA_CLIENT_TAG -e TAG=\$TAG_BASE -v "\${DIR}/\${component}":/usr/src/mymaven -v "\$HOME/.m2":/root/.m2 -v "\$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "\${DIR}/\${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.1-eclipse-temurin-11 mvn -s /tmp/settings.xml -Dkafka.tag=\$TAG -Dkafka.client.tag=\$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
+    docker run -i --rm -e KAFKA_CLIENT_TAG=\$KAFKA_CLIENT_TAG -e TAG=\$TAG_BASE -v "\${DIR}/\${component}":/usr/src/mymaven -v "\$HOME/.m2":/root/.m2 -v "\$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "\${DIR}/\${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11-alpine mvn -s /tmp/settings.xml -Dkafka.tag=\$TAG -Dkafka.client.tag=\$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
     if [ \$? != 0 ]
     then
         logerror "❌ failed to build java component $component"
@@ -20551,7 +20555,7 @@ EOF
 
   set +e
   log "🔮 Calling derive-schema maven plugin (see https://docs.confluent.io/platform/current/schema-registry/develop/maven-plugin.html#schema-registry-derive-schema)"
-  docker run -i --rm -v "${tmp_dir}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.1-eclipse-temurin-11 mvn -s /tmp/settings.xml io.confluent:kafka-schema-registry-maven-plugin:derive-schema > /tmp/result.log 2>&1
+  docker run -i --rm -v "${tmp_dir}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11-alpine mvn -s /tmp/settings.xml io.confluent:kafka-schema-registry-maven-plugin:derive-schema > /tmp/result.log 2>&1
   if [ $? != 0 ]
   then
       logerror "❌ error while calling derive-schema"
@@ -23793,7 +23797,7 @@ playground_topic_produce_command() {
           exit 1
       fi
       log "🏗 Building jar for schema-validator"
-      docker run -i --rm -e TAG=$tag -v "${root_folder}/scripts/cli/src/schema-validator":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "${root_folder}/scripts/cli/src/schema-validator/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.1-eclipse-temurin-11 mvn -s /tmp/settings.xml -Dkafka.tag=$tag package > /tmp/result.log 2>&1
+      docker run -i --rm -e TAG=$tag -v "${root_folder}/scripts/cli/src/schema-validator":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "${root_folder}/scripts/cli/src/schema-validator/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11-alpine mvn -s /tmp/settings.xml -Dkafka.tag=$tag package > /tmp/result.log 2>&1
       if [ $? != 0 ]
       then
           logerror "❌ failed to build java component schema-validator"
@@ -24888,6 +24892,8 @@ playground_connector_plugin_sourcecode_command() {
       fi
       exit 1
   fi
+  # remove trailing slash if any
+  sourcecode_url=${sourcecode_url%/}
 
   if [ $is_confluent_employee -eq 1 ] || [ $is_fully_managed -eq 1 ]
   then
@@ -24954,7 +24960,7 @@ playground_connector_plugin_sourcecode_command() {
 
   function get_latest_version_from_confluent_hub () {
       output=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --last 1 | head -n 1)
-      last_version=$(echo "$output" | grep -v "<unknown>" | cut -d " " -f 2 | cut -d "v" -f 2)
+      last_version=$(echo "$output" | cut -d " " -f 2 | cut -d "v" -f 2)
       if [[ -n "$last_version" ]]
       then
           log "✨ --connector-tag was not set, using latest version on hub $last_version"
@@ -25156,6 +25162,7 @@ playground_connector_plugin_sourcecode_command() {
           prop_release=$(sed -n 's:.*<maven.compiler.release>\(.*\)</maven.compiler.release>.*:\1:p' "$pom_file" | head -n1)
           prop_source=$(sed -n 's:.*<maven.compiler.source>\(.*\)</maven.compiler.source>.*:\1:p' "$pom_file" | head -n1)
           prop_target=$(sed -n 's:.*<maven.compiler.target>\(.*\)</maven.compiler.target>.*:\1:p' "$pom_file" | head -n1)
+          prop_debezium_source=$(sed -n 's:.*<debezium.java.source>\(.*\)</debezium.java.source>.*:\1:p' "$pom_file" | head -n1)
 
           # 2) plugin configuration (search the plugin block)
           plugin_block=$(sed -n '/<artifactId>maven-compiler-plugin<\/artifactId>/,/<\/plugin>/p' "$pom_file" 2>/dev/null || true)
@@ -25167,7 +25174,7 @@ playground_connector_plugin_sourcecode_command() {
 
           # pick the first non-empty among the collected candidates
           chosen=""
-          for c in "$plugin_release" "$prop_release" "$plugin_source" "$prop_source" "$plugin_target" "$prop_target"; do
+          for c in "$prop_debezium_source" "$plugin_release" "$prop_release" "$plugin_source" "$prop_source" "$plugin_target" "$prop_target"; do
               if [ -n "$c" ]; then
                   chosen="$c"
                   break
@@ -25225,10 +25232,11 @@ playground_connector_plugin_sourcecode_command() {
           fi
       fi
 
-      log "🧑‍💻 now is a good time if you want to make changes to the code"
+      editor=$(playground config get editor)
+      log "🧑‍💻 opening ${repo_folder} with editor ${editor}"
       open_file_with_editor "${repo_folder}"
-      echo ""
-      check_if_ready_to_continue
+      # echo ""
+      # check_if_ready_to_continue
 
       # --- 3. Compile with Maven ---
       file_output="${repo_folder}/playground-compilation-$repo_name.log"
@@ -25239,11 +25247,10 @@ playground_connector_plugin_sourcecode_command() {
       if [[ -n "$verbose" ]]
       then
           log "🐞 --compile-verbose is set, showing full output of compilation:"
-          docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.1-eclipse-temurin-${compile_jdk_version} mvn -s $mvn_settings_file -Dcheckstyle.skip -DskipTests -Dlicense.skip=true -DskipITs -Dskip.unit.tests=true clean package 2>&1 | tee "$file_output"
+          docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-${compile_jdk_version}-alpine mvn -s $mvn_settings_file -Dquick -Dcheckstyle.skip -DskipTests -Dlicense.skip=true -DskipITs -Dskip.unit.tests=true clean package 2>&1 | tee "$file_output"
           ret=${PIPESTATUS[0]}
       else
-          docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.1-eclipse-temurin-${compile_jdk_version} mvn -s $mvn_settings_file -Dcheckstyle.skip -DskipTests -Dlicense.skip=true -DskipITs -Dskip.unit.tests=true clean package 2>&1 > "$file_output"
-
+          docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-${compile_jdk_version}-alpine mvn -s $mvn_settings_file -Dquick -Dcheckstyle.skip -DskipTests -Dlicense.skip=true -DskipITs -Dskip.unit.tests=true clean package > "$file_output" 2>&1
           ret=$?
       fi
       if [ $ret != 0 ]
@@ -25260,14 +25267,14 @@ playground_connector_plugin_sourcecode_command() {
 
       # Display each zip file
       found=0
-      declare -a array_zip_file_list=()
+      # declare -a array_zip_file_list=()
       for zip_file in $(find "${repo_folder}" -type f -name "*.zip" | sort)
       do
           if [ -f "$zip_file" ]
           then
               found=1
               log "📄🥳 zip file $zip_file generated !"
-              array_zip_file_list+=("$zip_file")
+              # array_zip_file_list+=("$zip_file")
               if [[ "$OSTYPE" == "darwin"* ]]
               then
                   clipboard=$(playground config get clipboard)
@@ -25288,12 +25295,11 @@ playground_connector_plugin_sourcecode_command() {
 
       if [ $found == 0 ]
       then
-          logerror "❌ no zip file in '${repo_folder}', that project is probably packaging releases in different way"
-          exit 1
-      else
-          array_declaration=$(declare -p array_zip_file_list)
-          encoded_array=$(echo "$array_declaration" | base64)
-          playground state set run.array_zip_file_list_base64 "$encoded_array"
+          logwarn "❌ no zip file in '${repo_folder}', that project is probably packaging releases in different way"
+      #else
+          # array_declaration=$(declare -p array_zip_file_list)
+          # encoded_array=$(echo "$array_declaration" | base64)
+          # playground state set run.array_zip_file_list_base64 "$encoded_array"
       fi
   }
 
@@ -25397,7 +25403,7 @@ playground_connector_plugin_sourcecode_command() {
           if [ $is_fully_managed -eq 0 ]
           then
               output=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --last 1 | head -n 1)
-              last_version=$(echo "$output" | grep -v "<unknown>" | cut -d " " -f 2 | cut -d "v" -f 2)
+              last_version=$(echo "$output" | cut -d " " -f 2 | cut -d "v" -f 2)
               if [[ -n "$last_version" ]]
               then
                   log "✨ --connector-tag was not set, using latest version on hub $last_version"
@@ -25417,30 +25423,36 @@ playground_connector_plugin_sourcecode_command() {
       fi
   fi
 
-  maybe_v_prefix=""
+  maybe_tag_prefix=""
+  maybe_tag_suffix=""
   if [[ "$sourcecode_url" == *"confluentinc"* ]]
   then
       if [[ "$sourcecode_url" == *"kafka-connect-cosmosdb" ]]
       then
           # specific case
-          maybe_v_prefix="kafka-connect-cosmos-"
+          maybe_tag_prefix="kafka-connect-cosmos-"
       elif [[ "$sourcecode_url" == *"kafka-connect-couchbase" ]]
       then
           # specific case
-          maybe_v_prefix=""
+          maybe_tag_prefix=""
       else
           # confluent use v prefix for tags example v1.5.0
-          maybe_v_prefix="v"
+          maybe_tag_prefix="v"
       fi
+  elif [[ "$sourcecode_url" == *"debezium/debezium"* ]]
+  then
+      # debezium use v prefix for tags example 1.5.0
+      maybe_tag_prefix="v"
+      maybe_tag_suffix=".Final"
   fi
 
   if [ "$comparison_mode_versions" != "" ]
   then
       if version_gt $connector_tag1 $connector_tag2
       then
-          additional_text=", comparing $maybe_v_prefix$connector_tag2 and $maybe_v_prefix$connector_tag1"
+          additional_text=", comparing $maybe_tag_prefix$connector_tag2$maybe_tag_suffix and $maybe_tag_prefix$connector_tag1$maybe_tag_suffix"
       else
-          additional_text=", comparing $maybe_v_prefix$connector_tag1 and $maybe_v_prefix$connector_tag2"
+          additional_text=", comparing $maybe_tag_prefix$connector_tag1$maybe_tag_suffix and $maybe_tag_prefix$connector_tag2$maybe_tag_suffix"
       fi
       original_sourcecode_url="$sourcecode_url"
       sourcecode_url="$sourcecode_url/compare/$comparison_mode_versions"
@@ -25448,7 +25460,7 @@ playground_connector_plugin_sourcecode_command() {
       additional_text=" for $connector_tag version"
       if [ "$connector_tag" != "latest" ] && [[ "$sourcecode_url" == *"github.com"* ]]
       then
-          sourcecode_url="$sourcecode_url/tree/$maybe_v_prefix$connector_tag"
+          sourcecode_url="$sourcecode_url/tree/$maybe_tag_prefix$connector_tag$maybe_tag_suffix"
       fi
   fi
 
@@ -25467,22 +25479,22 @@ playground_connector_plugin_sourcecode_command() {
       then
           if [ "$connector_tag1" != "latest" ] && [[ "$original_sourcecode_url" == *"github.com"* ]]
           then
-              sourcecode_url="$original_sourcecode_url/tree/$maybe_v_prefix$connector_tag1"
+              sourcecode_url="$original_sourcecode_url/tree/$maybe_tag_prefix$connector_tag1$maybe_tag_suffix"
           fi
           compile "$connector_tag1"
 
           if [ "$connector_tag2" != "latest" ] && [[ "$original_sourcecode_url" == *"github.com"* ]]
           then
-              sourcecode_url="$original_sourcecode_url/tree/$maybe_v_prefix$connector_tag2"
+              sourcecode_url="$original_sourcecode_url/tree/$maybe_tag_prefix$connector_tag2$maybe_tag_suffix"
           fi
           skip_maven_login_check=1
           compile "$connector_tag2"
       fi
   else
-      if [ "$connector_tag" != "latest" ] && [[ "$sourcecode_url" == *"github.com"* ]]
-      then
-          sourcecode_url="$sourcecode_url/tree/$maybe_v_prefix$connector_tag"
-      fi
+      # if [ "$connector_tag" != "latest" ] && [[ "$sourcecode_url" == *"github.com"* ]]
+      # then
+      #     sourcecode_url="$sourcecode_url/tree/$maybe_tag_prefix$connector_tag$maybe_tag_suffix"
+      # fi
 
       if [[ -n "$compile" ]]
       then
@@ -26746,21 +26758,21 @@ playground_connector_sourcecode_command() {
 
               if [[ -n "$compile" ]]
               then
-                  declare -a array_zip_file_list=()
-                  encoded_array="$(playground state get run.array_zip_file_list_base64)"
-                  eval "$(echo "$encoded_array" | base64 -d)"
+                  # declare -a array_zip_file_list=()
+                  # encoded_array="$(playground state get run.array_zip_file_list_base64)"
+                  # eval "$(echo "$encoded_array" | base64 -d)"
 
-                  zip_list_length=${#array_zip_file_list[@]}
-                  if ((zip_list_length > 1))
-                  then
-                      log "🧩 multiple zip files have been compiled, which one do you want to use ?"
-                      choosezip "${array_zip_file_list[@]}"
-                  else
-                      zip="${array_zip_file_list[0]}"
-                  fi
+                  # zip_list_length=${#array_zip_file_list[@]}
+                  # if ((zip_list_length > 1))
+                  # then
+                  #     log "🧩 multiple zip files have been compiled, which one do you want to use ?"
+                  #     choosezip "${array_zip_file_list[@]}"
+                  # else
+                  #     zip="${array_zip_file_list[0]}"
+                  # fi
 
-                  log "💫 executing playground update-version --connector-zip $zip"
-                  playground update-version --connector-zip "$zip"
+                  # log "💫 executing playground update-version --connector-zip $zip"
+                  # playground update-version --connector-zip "$zip"
 
                   if [[ -n "$enable_remote_debugging" ]]
                   then
@@ -26770,6 +26782,17 @@ playground_connector_sourcecode_command() {
           fi
       done
   fi
+}
+
+# :command.function
+playground_connector_enable_remote_debugging_command() {
+
+  # src/commands/connector/enable-remote-debugging.sh
+  log "✨ enable remote debugging for connector"
+
+  playground connector sourcecode --enable-remote-debugging --compile
+
+  log "✨ now you can set breakpoints and use Hot Code Replace feature (see https://devblogs.microsoft.com/java/hot-code-replacement-for-java-comes-to-visual-studio-code/)!"
 }
 
 # :command.function
@@ -42651,8 +42674,8 @@ playground_connector_plugin_sourcecode_parse_requirements() {
   fi
 
   # :command.whitelist_filter
-  if [[ ${args['--compile-jdk-version']:-} ]] && [[ ! ${args['--compile-jdk-version']:-} =~ ^(8|11|17|20)$ ]]; then
-    printf "%s\n" "--compile-jdk-version must be one of: 8, 11, 17, 20" >&2
+  if [[ ${args['--compile-jdk-version']:-} ]] && [[ ! ${args['--compile-jdk-version']:-} =~ ^(8|11|17|21|25)$ ]]; then
+    printf "%s\n" "--compile-jdk-version must be one of: 8, 11, 17, 21, 25" >&2
     exit 1
   fi
 
@@ -42729,6 +42752,13 @@ playground_connector_parse_requirements() {
       action="sourcecode"
       shift
       playground_connector_sourcecode_parse_requirements "$@"
+      shift $#
+      ;;
+
+    enable-remote-debugging)
+      action="enable-remote-debugging"
+      shift
+      playground_connector_enable_remote_debugging_parse_requirements "$@"
       shift $#
       ;;
 
@@ -43711,14 +43741,6 @@ playground_connector_sourcecode_parse_requirements() {
         ;;
 
       # :flag.case
-      --compile-verbose | -v)
-
-        # :flag.case_no_arg
-        args['--compile-verbose']=1
-        shift
-        ;;
-
-      # :flag.case
       --compile-jdk-version)
 
         # :flag.case_arg
@@ -43730,6 +43752,14 @@ playground_connector_sourcecode_parse_requirements() {
           printf "%s\n" "--compile-jdk-version requires an argument: --compile-jdk-version COMPILE_JDK_VERSION" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --compile-verbose | -v)
+
+        # :flag.case_no_arg
+        args['--compile-verbose']=1
+        shift
         ;;
 
       # :flag.case
@@ -43758,14 +43788,14 @@ playground_connector_sourcecode_parse_requirements() {
 
   # :command.needy_flags_filter
   # :flag.needs
-  if [[ -n ${args['--compile-verbose']+x} ]] && [[ -z "${args[--compile]:-}" ]]; then
-    printf "%s\n" "--compile-verbose needs --compile" >&2
+  if [[ -n ${args['--compile-jdk-version']+x} ]] && [[ -z "${args[--compile]:-}" ]]; then
+    printf "%s\n" "--compile-jdk-version needs --compile" >&2
     exit 1
   fi
 
   # :flag.needs
-  if [[ -n ${args['--compile-jdk-version']+x} ]] && [[ -z "${args[--compile]:-}" ]]; then
-    printf "%s\n" "--compile-jdk-version needs --compile" >&2
+  if [[ -n ${args['--compile-verbose']+x} ]] && [[ -z "${args[--compile]:-}" ]]; then
+    printf "%s\n" "--compile-verbose needs --compile" >&2
     exit 1
   fi
 
@@ -43776,10 +43806,70 @@ playground_connector_sourcecode_parse_requirements() {
   fi
 
   # :command.whitelist_filter
-  if [[ ${args['--compile-jdk-version']:-} ]] && [[ ! ${args['--compile-jdk-version']:-} =~ ^(8|11|17|20)$ ]]; then
-    printf "%s\n" "--compile-jdk-version must be one of: 8, 11, 17, 20" >&2
+  if [[ ${args['--compile-jdk-version']:-} ]] && [[ ! ${args['--compile-jdk-version']:-} =~ ^(8|11|17|21|25)$ ]]; then
+    printf "%s\n" "--compile-jdk-version must be one of: 8, 11, 17, 21, 25" >&2
     exit 1
   fi
+
+}
+
+# :command.parse_requirements
+playground_connector_enable_remote_debugging_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_enable_remote_debugging_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v git >/dev/null 2>&1; then
+    printf "missing dependency: git\n" >&2
+    printf "%s\n\n" "visit https://docs.confluent.io/confluent-cli/current/overview.html to install" >&2
+    missing_deps=1
+  else
+    deps['git']="$(command -v git | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
+
+  # :command.command_filter
+  action="connector enable-remote-debugging"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -46482,6 +46572,7 @@ run() {
     "connector pause") playground_connector_pause_command ;;
     "connector versions") playground_connector_versions_command ;;
     "connector sourcecode") playground_connector_sourcecode_command ;;
+    "connector enable-remote-debugging") playground_connector_enable_remote_debugging_command ;;
     "connector restart") playground_connector_restart_command ;;
     "connector stop") playground_connector_stop_command ;;
     "connector resume") playground_connector_resume_command ;;

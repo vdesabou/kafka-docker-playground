@@ -3604,7 +3604,7 @@ commands:
 
           By default, for each connector, the latest available version on Confluent Hub is used (for Confluent employees, it will also get latest versions for fully managed connectors)
 
-          🔢 Confluent employees only: for fully managed connectors, use the cc-connect image version for the pcc. You must have a Confluent Github token set with GITHUB_TOKEN or GH_TOKEN environment variable and also be using Confluent VPN.
+          💌 Confluent employees only: for fully managed connectors, use the cc-connect image version for the pcc. You must have a Confluent Github token set with GITHUB_TOKEN or GH_TOKEN environment variable and also be using Confluent VPN.
 
           🎓 Tip: set to " " in order to select the version dynamically
 
@@ -3616,9 +3616,8 @@ commands:
 
           You must have git installed.
 
-          Confluent employees only: make sure to follow "Maven FAQ"
-      - &compile_jdk_version
-        long: --compile-jdk-version
+          💌 Confluent employees only: make sure to follow "Maven FAQ", you also need to be on Confluent VPN with proper AWS credentials set in order to be able to download proprietary dependencies.
+      - long: --compile-jdk-version
         required: false
         needs: [--compile]
         arg: compile_jdk_version
@@ -3626,13 +3625,13 @@ commands:
           - "8"
           - "11"
           - "17"
-          - "20"
+          - "21"
+          - "25"
         help: |-
           🤎 JDK version to use when compiling
           It will check in pom.xml for maven-compiler-plugin source/target version or release version and set jdk accordingly
           Default is 11
-      - &compile_verbose
-        long: --compile-verbose
+      - long: --compile-verbose
         short: -v
         needs: [--compile]
         help: 🐞 Show output of compilation.
@@ -3760,6 +3759,8 @@ commands:
       🧑‍💻 open source code url for connector(s) used in example
 
       You can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode
+
+      💌 Confluent employees only: for fully managed connectors, use the cc-connect image version for the pcc. You must have a Confluent Github token set with GITHUB_TOKEN or GH_TOKEN environment variable and also be using Confluent VPN.
     flags:
       - long: --only-show-url
         help: |-
@@ -3778,18 +3779,38 @@ commands:
           🎓 Tip: you can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode
       - long: --compile
         required: false
+        private: true
+        # help: |-
+        #   🏗️ Checkout and compile code
+
+        #   You must have git installed.
+
+        #   💌 Confluent employees only: make sure to follow "Maven FAQ", you also need to be on Confluent VPN with proper AWS credentials set in order to be able to download proprietary dependencies.
+
+        #   ⚠️ This does not work for fully and custom connectors.
+      - long: --compile-jdk-version
+        required: false
+        private: true
+        needs: [--compile]
+        arg: compile_jdk_version
+        allowed: 
+          - "8"
+          - "11"
+          - "17"
+          - "21"
+          - "25"
         help: |-
-          🏗️ Checkout and compile code, then restart the connector with new compiled code 💫
-
-          You must have git installed.
-
-          Confluent employees only: make sure to follow "Maven FAQ"
-
-          ⚠️ This does not work for fully and custom connectors.
-      - *compile_verbose
-      - *compile_jdk_version
+          🤎 JDK version to use when compiling
+          It will check in pom.xml for maven-compiler-plugin source/target version or release version and set jdk accordingly
+          Default is 11
+      - long: --compile-verbose
+        short: -v
+        private: true
+        needs: [--compile]
+        help: 🐞 Show output of compilation.
       - long: --enable-remote-debugging
         required: false
+        private: true
         needs: [--compile]
         help: |-
           ✨ This will enable java remote debugging for connect container
@@ -3811,6 +3832,20 @@ commands:
 
       # comparison mode (with versions selection):
       playground connector --connector-tag " " --connector-tag " "
+
+  - name: enable-remote-debugging
+    dependencies:
+      git: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+    help: |-
+      ✨ Enable java remote debugging for the connector.
+
+      👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%e2%9c%a8-remote-debugging
+
+      🏗️ It will checkout (you need git installed) and compile code for the connector (required for remote debugging).
+
+      💌 Confluent employees only: make sure to follow "Maven FAQ", you also need to be on Confluent VPN with proper AWS credentials set in order to be able to download proprietary dependencies.
+
+      ⚠️ This does not work for fully and custom connectors.
 
   - name: restart
     help: ♻️  Restart connector

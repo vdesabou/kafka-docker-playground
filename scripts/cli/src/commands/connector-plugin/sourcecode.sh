@@ -68,6 +68,8 @@ then
     fi
     exit 1
 fi
+# remove trailing slash if any
+sourcecode_url=${sourcecode_url%/}
 
 if [ $is_confluent_employee -eq 1 ] || [ $is_fully_managed -eq 1 ]
 then
@@ -134,7 +136,7 @@ function get_version_from_cc_docker_connect_cache_versions_env () {
 
 function get_latest_version_from_confluent_hub () {
     output=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --last 1 | head -n 1)
-    last_version=$(echo "$output" | grep -v "<unknown>" | cut -d " " -f 2 | cut -d "v" -f 2)
+    last_version=$(echo "$output" | cut -d " " -f 2 | cut -d "v" -f 2)
     if [[ -n "$last_version" ]]
     then
         log "✨ --connector-tag was not set, using latest version on hub $last_version"
@@ -335,6 +337,7 @@ function compile () {
         prop_release=$(sed -n 's:.*<maven.compiler.release>\(.*\)</maven.compiler.release>.*:\1:p' "$pom_file" | head -n1)
         prop_source=$(sed -n 's:.*<maven.compiler.source>\(.*\)</maven.compiler.source>.*:\1:p' "$pom_file" | head -n1)
         prop_target=$(sed -n 's:.*<maven.compiler.target>\(.*\)</maven.compiler.target>.*:\1:p' "$pom_file" | head -n1)
+        prop_debezium_source=$(sed -n 's:.*<debezium.java.source>\(.*\)</debezium.java.source>.*:\1:p' "$pom_file" | head -n1)
 
         # 2) plugin configuration (search the plugin block)
         plugin_block=$(sed -n '/<artifactId>maven-compiler-plugin<\/artifactId>/,/<\/plugin>/p' "$pom_file" 2>/dev/null || true)
@@ -346,7 +349,7 @@ function compile () {
 
         # pick the first non-empty among the collected candidates
         chosen=""
-        for c in "$plugin_release" "$prop_release" "$plugin_source" "$prop_source" "$plugin_target" "$prop_target"; do
+        for c in "$prop_debezium_source" "$plugin_release" "$prop_release" "$plugin_source" "$prop_source" "$plugin_target" "$prop_target"; do
             if [ -n "$c" ]; then
                 chosen="$c"
                 break
@@ -419,10 +422,10 @@ function compile () {
     if [[ -n "$verbose" ]]
     then
         log "🐞 --compile-verbose is set, showing full output of compilation:"
-        docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.1-eclipse-temurin-${compile_jdk_version} mvn -s $mvn_settings_file -Dcheckstyle.skip -DskipTests -Dlicense.skip=true -DskipITs -Dskip.unit.tests=true clean package 2>&1 | tee "$file_output"
+        docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-${compile_jdk_version}-alpine mvn -s $mvn_settings_file -Dquick -Dcheckstyle.skip -DskipTests -Dlicense.skip=true -DskipITs -Dskip.unit.tests=true clean package 2>&1 | tee "$file_output"
         ret=${PIPESTATUS[0]}
     else
-        docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.1-eclipse-temurin-${compile_jdk_version} mvn -s $mvn_settings_file -Dcheckstyle.skip -DskipTests -Dlicense.skip=true -DskipITs -Dskip.unit.tests=true clean package 2>&1 > "$file_output" 
+        docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-${compile_jdk_version}-alpine mvn -s $mvn_settings_file -Dquick -Dcheckstyle.skip -DskipTests -Dlicense.skip=true -DskipITs -Dskip.unit.tests=true clean package > "$file_output" 2>&1
         ret=$?
     fi
     if [ $ret != 0 ]
@@ -439,14 +442,14 @@ function compile () {
     
     # Display each zip file
     found=0
-    declare -a array_zip_file_list=()
+    # declare -a array_zip_file_list=()
     for zip_file in $(find "${repo_folder}" -type f -name "*.zip" | sort)
     do
         if [ -f "$zip_file" ]
         then
             found=1
             log "📄🥳 zip file $zip_file generated !"
-            array_zip_file_list+=("$zip_file")
+            # array_zip_file_list+=("$zip_file")
             if [[ "$OSTYPE" == "darwin"* ]]
             then
                 clipboard=$(playground config get clipboard)
@@ -467,12 +470,11 @@ function compile () {
 
     if [ $found == 0 ]
     then
-        logerror "❌ no zip file in '${repo_folder}', that project is probably packaging releases in different way"
-        exit 1
-    else
-        array_declaration=$(declare -p array_zip_file_list)
-        encoded_array=$(echo "$array_declaration" | base64)
-        playground state set run.array_zip_file_list_base64 "$encoded_array"
+        logwarn "🤷‍♂️ no zip file in '${repo_folder}', that project is probably packaging releases in different way"
+    #else
+        # array_declaration=$(declare -p array_zip_file_list)
+        # encoded_array=$(echo "$array_declaration" | base64)
+        # playground state set run.array_zip_file_list_base64 "$encoded_array"
     fi
 }
 
@@ -576,7 +578,7 @@ else
         if [ $is_fully_managed -eq 0 ]
         then
             output=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --last 1 | head -n 1)
-            last_version=$(echo "$output" | grep -v "<unknown>" | cut -d " " -f 2 | cut -d "v" -f 2)
+            last_version=$(echo "$output" | cut -d " " -f 2 | cut -d "v" -f 2)
             if [[ -n "$last_version" ]]
             then
                 log "✨ --connector-tag was not set, using latest version on hub $last_version"
@@ -596,30 +598,37 @@ else
     fi
 fi
 
-maybe_v_prefix=""
+maybe_tag_prefix=""
+maybe_tag_suffix=""
 if [[ "$sourcecode_url" == *"confluentinc"* ]]
 then
     if [[ "$sourcecode_url" == *"kafka-connect-cosmosdb" ]]
     then
         # specific case
-        maybe_v_prefix="kafka-connect-cosmos-"
+        maybe_tag_prefix="kafka-connect-cosmos-"
     elif [[ "$sourcecode_url" == *"kafka-connect-couchbase" ]]
     then
         # specific case
-        maybe_v_prefix=""
+        maybe_tag_prefix=""
     else
         # confluent use v prefix for tags example v1.5.0
-        maybe_v_prefix="v"
+        maybe_tag_prefix="v"
     fi
+elif [[ "$sourcecode_url" == *"debezium/debezium"* ]]
+then
+    # debezium use v prefix for tags example 1.5.0
+    maybe_tag_prefix="v"
+    maybe_tag_suffix=".Final"
 fi
+
 
 if [ "$comparison_mode_versions" != "" ]
 then
     if version_gt $connector_tag1 $connector_tag2
     then
-        additional_text=", comparing $maybe_v_prefix$connector_tag2 and $maybe_v_prefix$connector_tag1"
+        additional_text=", comparing $maybe_tag_prefix$connector_tag2$maybe_tag_suffix and $maybe_tag_prefix$connector_tag1$maybe_tag_suffix"
     else
-        additional_text=", comparing $maybe_v_prefix$connector_tag1 and $maybe_v_prefix$connector_tag2"
+        additional_text=", comparing $maybe_tag_prefix$connector_tag1$maybe_tag_suffix and $maybe_tag_prefix$connector_tag2$maybe_tag_suffix"
     fi
     original_sourcecode_url="$sourcecode_url"
     sourcecode_url="$sourcecode_url/compare/$comparison_mode_versions"
@@ -627,7 +636,7 @@ else
     additional_text=" for $connector_tag version"
     if [ "$connector_tag" != "latest" ] && [[ "$sourcecode_url" == *"github.com"* ]]
     then
-        sourcecode_url="$sourcecode_url/tree/$maybe_v_prefix$connector_tag"
+        sourcecode_url="$sourcecode_url/tree/$maybe_tag_prefix$connector_tag$maybe_tag_suffix"
     fi
 fi
 
@@ -646,22 +655,22 @@ then
     then
         if [ "$connector_tag1" != "latest" ] && [[ "$original_sourcecode_url" == *"github.com"* ]]
         then
-            sourcecode_url="$original_sourcecode_url/tree/$maybe_v_prefix$connector_tag1"
+            sourcecode_url="$original_sourcecode_url/tree/$maybe_tag_prefix$connector_tag1$maybe_tag_suffix"
         fi
         compile "$connector_tag1"
 
         if [ "$connector_tag2" != "latest" ] && [[ "$original_sourcecode_url" == *"github.com"* ]]
         then
-            sourcecode_url="$original_sourcecode_url/tree/$maybe_v_prefix$connector_tag2"
+            sourcecode_url="$original_sourcecode_url/tree/$maybe_tag_prefix$connector_tag2$maybe_tag_suffix"
         fi
         skip_maven_login_check=1
         compile "$connector_tag2"
     fi
 else
-    if [ "$connector_tag" != "latest" ] && [[ "$sourcecode_url" == *"github.com"* ]]
-    then
-        sourcecode_url="$sourcecode_url/tree/$maybe_v_prefix$connector_tag"
-    fi
+    # if [ "$connector_tag" != "latest" ] && [[ "$sourcecode_url" == *"github.com"* ]]
+    # then
+    #     sourcecode_url="$sourcecode_url/tree/$maybe_tag_prefix$connector_tag$maybe_tag_suffix"
+    # fi
 
     if [[ -n "$compile" ]]
     then
