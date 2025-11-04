@@ -1984,6 +1984,12 @@ commands:
     - playground debug enable-remote-debugging -c connect -c broker
     - playground debug enable-remote-debugging --container schema-registry --container ksqldb-server --container control-center
 
+  - name: disable-remote-debugging
+    help: |-
+      🛑 Disable java remote debugging for container
+    flags:
+      - *container
+
   - name: testssl
     help: |-
       🔐 Testing TLS/SSL encryption using https://testssl.sh/
@@ -3846,6 +3852,10 @@ commands:
       💌 Confluent employees only: make sure to follow "Maven FAQ", you also need to be on Confluent VPN with proper AWS credentials set in order to be able to download proprietary dependencies.
 
       ⚠️ This does not work for fully and custom connectors.
+
+  - name: disable-remote-debugging
+    help: |-
+      🛑 Disable java remote debugging for the connector.
 
   - name: restart
     help: ♻️  Restart connector
