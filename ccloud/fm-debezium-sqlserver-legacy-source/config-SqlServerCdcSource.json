@@ -4,6 +4,7 @@
     "cleanup.policy": "delete",
     "column.exclude.list": "LIST",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "database.applicationIntent": "ReadWrite",
     "database.dbname": "STRING",
     "database.history.skip.unparseable.ddl": "false",

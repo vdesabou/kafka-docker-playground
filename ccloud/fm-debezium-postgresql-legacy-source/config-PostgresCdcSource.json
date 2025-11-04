@@ -4,6 +4,7 @@
     "cleanup.policy": "delete",
     "column.exclude.list": "LIST",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "database.dbname": "STRING",
     "database.hostname": "STRING",
     "database.password": "PASSWORD",

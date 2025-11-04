@@ -3,6 +3,7 @@
     "auto.restart.on.user.error": "true",
     "column.exclude.list": "LIST",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "csfle.enabled": "false",
     "database.dbname": "STRING",
     "database.hostname": "STRING",

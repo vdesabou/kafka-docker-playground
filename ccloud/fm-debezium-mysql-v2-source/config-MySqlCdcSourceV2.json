@@ -3,6 +3,7 @@
     "auto.restart.on.user.error": "true",
     "column.exclude.list": "LIST",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "csfle.enabled": "false",
     "database.aws.region": "STRING",
     "database.exclude.list": "LIST",
