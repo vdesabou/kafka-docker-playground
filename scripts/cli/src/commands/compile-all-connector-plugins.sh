@@ -1,9 +1,8 @@
 confluent_only="${args[--confluent-only]}"
 
-rm -rf "${root_folder}/connector-plugin-sourcecode"
-
 function handle_signal {
   echo "Stopping..."
+  playground config clipboard true
   stop=1
 }
 # Set the signal handler
@@ -11,6 +10,7 @@ trap handle_signal SIGINT
 
 set +e
 
+playground config clipboard false
 export GITHUB_RUN_NUMBER=1
 
 if [ ! -f $root_folder/scripts/cli/confluent-hub-plugin-list.txt ]
@@ -52,3 +52,5 @@ while read -r line && [ $stop != 1 ]; do
     echo ""
 
 done < "${root_folder}/scripts/cli/confluent-hub-plugin-list.txt"
+
+playground config clipboard true

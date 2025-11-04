@@ -23,7 +23,7 @@ then
      do
           set +e
           log "🏗 Building jar for ${component}"
-          docker run -i --rm -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/modules/scala_2.13/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11-alpine mvn install -DskipTests > /tmp/result.log 2>&1
+          docker run -i --rm -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/modules/scala_2.13/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11 mvn install -DskipTests > /tmp/result.log 2>&1
           if [ $? != 0 ]
           then
                logerror "❌ failed to build java component $component"

@@ -57,7 +57,7 @@ fi
 sourcecode_url=$(echo "$output" | cut -d "|" -f 2)
 if [ "$sourcecode_url" == "null" ] || [ "$sourcecode_url" == "" ]
 then
-    logerror "❌ could not found sourcecode url for plugin $connector_plugin. It is probably proprietary"
+    logwarn "🤷‍♂️ could not found sourcecode url for plugin $connector_plugin. It is probably proprietary"
     if [[ "$sourcecode_url" == *"confluentinc"* ]]
     then
         if [ $is_confluent_employee -eq 1 ]
@@ -183,12 +183,26 @@ function check_if_ready_to_continue()
   esac
 }
 
+function check_if_compile()
+{
+  if [ ! -z "$GITHUB_RUN_NUMBER" ]
+  then
+      recompile="0"
+      # running with github actions, continue
+      return
+  fi
+  read -p "👷 do you want to compile anyway (y/n)?" choice
+  case "$choice" in
+  y|Y ) recompile="1";;
+  n|N ) recompile="0";;
+  * ) logwarn "invalid response <$choice>! Please enter y or n."; check_if_compile;;
+  esac
+}
+
 function check_if_delete_folder()
 {
     if [ ! -z "$GITHUB_RUN_NUMBER" ]
     then
-        # running with github actions, delete
-        rm -rf "${repo_folder}"
         return
     fi
 
@@ -290,6 +304,10 @@ function compile () {
         then
             # specific case
             repo_folder="${repo_folder}/kafka-connect-couchbase"
+        elif [[ "${repo_name}" == "debezium-v2-private" ]]
+        then
+            # specific case
+            repo_folder="${repo_folder}/debezium"
         elif [[ "${repo_name}" == "kafka-connect-redis-private" ]]
         then
             # specific case
@@ -373,6 +391,10 @@ function compile () {
                 then
                     compile_jdk_version=11
                     log "⚠️  detected maven compiler version '$chosen' from pom.xml, but 8 is too old, forcing --compile-jdk-version to $compile_jdk_version"
+                elif [ "$chosen" == "12" ]
+                then
+                    compile_jdk_version=11
+                    log "⚠️  detected maven compiler version '$chosen' from pom.xml, but 12 is not supported, forcing --compile-jdk-version to $compile_jdk_version"
                 elif [ "$chosen" == "\${java.version}" ]
                 then
                     compile_jdk_version=11
@@ -383,9 +405,16 @@ function compile () {
             fi
         fi
 
-        if [ -z "$compile_jdk_version" ]; then
-            compile_jdk_version=11
-            log "⚠️  could not detect maven compiler version in pom.xml, defaulting to --compile-jdk-version $compile_jdk_version"
+        if [ -z "$compile_jdk_version" ]
+        then
+            if [[ "${repo_name}" == *"kafka-connect-salesforce" ]]
+            then
+                compile_jdk_version=17
+                log "⚠️  kafka-connect-salesforce requires Jdk 17, forcing --compile-jdk-version to $compile_jdk_version"
+            else
+                compile_jdk_version=11
+                log "🤷‍♂️ could not detect maven compiler version in pom.xml, defaulting to --compile-jdk-version $compile_jdk_version"
+            fi
         fi
     fi
 
@@ -401,7 +430,9 @@ function compile () {
                 exit 1
             fi
 
-            check_if_call_maven_login
+            # check_if_call_maven_login
+            log "🛂 execute maven-login"
+            source $HOME/.cc-dotfiles/caas.sh && code_artifact::maven_login -f;
 
             mvn_settings_file="/root/.m2/settings.xml"
         fi
@@ -413,29 +444,56 @@ function compile () {
     # echo ""
     # check_if_ready_to_continue
 
-    # --- 3. Compile with Maven ---
-    file_output="${repo_folder}/playground-compilation-$repo_name.log"
-    log "🏗  building with maven ${repo_folder}...it can take a while..⏳"
-    log "🏗  use --compile-verbose to see full output. compilation logs are also present in ${file_output}"
-    set +e
+    # Display each zip file
+    found=0
+    # declare -a array_zip_file_list=()
+    for zip_file in $(find "${repo_folder}" -type f -name "*.zip" | sort)
+    do
+        if [ -f "$zip_file" ]
+        then
+            found=1
+            log "📄 zip file $zip_file already present"
+        fi
+    done
 
-    if [[ -n "$verbose" ]]
+    recompile=1
+    if [ $found == 1 ]
     then
-        log "🐞 --compile-verbose is set, showing full output of compilation:"
-        docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-${compile_jdk_version}-alpine mvn -s $mvn_settings_file -Dquick -Dcheckstyle.skip -DskipTests -Dlicense.skip=true -DskipITs -Dskip.unit.tests=true clean package 2>&1 | tee "$file_output"
-        ret=${PIPESTATUS[0]}
+        log "some zip files are already present, do you want to recompile ?"
+        echo "" 
+        check_if_compile
+    fi
+
+    if [ $recompile == 1 ]
+    then
+
+        # --- 3. Compile with Maven ---
+        file_output="${repo_folder}/playground-compilation-$repo_name.log"
+        log "🏗  building with maven ${repo_folder}...it can take a while..⏳"
+        log "🏗  use --compile-verbose to see full output. compilation logs are also present in ${file_output}"
+        set +e
+
+        if [[ -n "$verbose" ]]
+        then
+            log "🐞 --compile-verbose is set, showing full output of compilation:"
+            docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-${compile_jdk_version} mvn -s $mvn_settings_file -Dquick -Dcheckstyle.skip -DskipTests -Dlicense.skip=true -DskipITs -Dskip.unit.tests=true clean package 2>&1 | tee "$file_output"
+            ret=${PIPESTATUS[0]}
+        else
+            docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-${compile_jdk_version} mvn -s $mvn_settings_file -Dquick -Dcheckstyle.skip -DskipTests -Dlicense.skip=true -DskipITs -Dskip.unit.tests=true clean package > "$file_output" 2>&1
+            ret=$?
+        fi
+        if [ $ret != 0 ]
+        then
+            logerror "❌ failed to build ${repo_folder}, check the logs at ${file_output}"
+            exit 1
+        fi
+        set +e
+
+        log "👌 build complete! zip artifacts found are:"
     else
-        docker run -i --rm -v "${repo_folder}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-${compile_jdk_version}-alpine mvn -s $mvn_settings_file -Dquick -Dcheckstyle.skip -DskipTests -Dlicense.skip=true -DskipITs -Dskip.unit.tests=true clean package > "$file_output" 2>&1
-        ret=$?
+        log "👌 zip artifacts found are:"
     fi
-    if [ $ret != 0 ]
-    then
-        logerror "❌ failed to build ${repo_folder}, check the logs at ${file_output}"
-        exit 1
-    fi
-    set +e
 
-    log "👌 build complete! zip artifacts found are:"
     find "${repo_folder}" -type f -name "*.zip" | sort
     
     echo ""
@@ -598,7 +656,7 @@ else
     fi
 fi
 
-maybe_tag_prefix=""
+maybe_tag_prefix="v"
 maybe_tag_suffix=""
 if [[ "$sourcecode_url" == *"confluentinc"* ]]
 then
@@ -610,6 +668,10 @@ then
     then
         # specific case
         maybe_tag_prefix=""
+    elif [[ "$sourcecode_url" == *"kafka-connect-spooldir" ]]
+    then
+        # specific case
+        maybe_tag_prefix="kafka-connect-spooldir-"
     else
         # confluent use v prefix for tags example v1.5.0
         maybe_tag_prefix="v"
@@ -619,6 +681,12 @@ then
     # debezium use v prefix for tags example 1.5.0
     maybe_tag_prefix="v"
     maybe_tag_suffix=".Final"
+elif [[ "$sourcecode_url" == *"kafka-connect-transform-tojsonstring"* ]] || [[ "$sourcecode_url" == *"kafka-connect-zeebe"* ]] || [[ "$sourcecode_url" == *"kafka-connect-shell-source"* ]]
+then
+    maybe_tag_prefix=""
+elif [[ "$sourcecode_url" == *"kafka-connect-mongodb"* ]]
+then
+    maybe_tag_prefix="r"
 fi
 
 
