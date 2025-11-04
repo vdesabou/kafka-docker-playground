@@ -3,6 +3,7 @@
     "aws.access.key.id": "PASSWORD",
     "aws.secret.key.id": "PASSWORD",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "datapreview.schemas.enable": "false",
     "ignore.default.for.nullables": "false",
     "kafka.api.key": "STRING",
