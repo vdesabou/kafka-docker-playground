@@ -32,7 +32,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Create Release Notes
-        uses: vdesabou/release-notes-generator-action
+        uses: vdesabou/release-notes-generator-action@1.0.0
         id: Changelog
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
