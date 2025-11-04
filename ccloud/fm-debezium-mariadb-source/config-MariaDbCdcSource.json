@@ -4,6 +4,7 @@
     "column.exclude.list": "LIST",
     "connect.timeout.ms": "5000",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "csfle.enabled": "false",
     "database.exclude.list": "LIST",
     "database.hostname": "STRING",
