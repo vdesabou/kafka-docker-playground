@@ -5,22 +5,24 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 if [ -z "$CONNECTOR_ZIP" ]
 then
-    HTTP_SOURCE_CONNECTOR_ZIP="confluentinc-kafka-connect-http-v2-0.1.0-SNAPSHOT.zip"
-    export CONNECTOR_ZIP="$PWD/$HTTP_SOURCE_CONNECTOR_ZIP"
+    HTTP_V2_CONNECTOR_ZIP="confluentinc-kafka-connect-http-v2-0.1.0-SNAPSHOT.zip"
+    export CONNECTOR_ZIP="$PWD/$HTTP_V2_CONNECTOR_ZIP"
 fi
 
-source ${DIR}/../../scripts/utils.sh
+source ${DIR}/../../scripts/cli/src/lib/utils_function.sh
 
-if [ -z "$CONNECTOR_ZIP" ]
+if [ ! -z "$HTTP_V2_CONNECTOR_ZIP" ]
 then
-    get_3rdparty_file "$HTTP_SOURCE_CONNECTOR_ZIP"
+    get_3rdparty_file "$HTTP_V2_CONNECTOR_ZIP"
 
-    if [ ! -f ${PWD}/$HTTP_SOURCE_CONNECTOR_ZIP ]
+    if [ ! -f ${PWD}/$HTTP_V2_CONNECTOR_ZIP ]
     then
-        logerror "ERROR: ${PWD}/$HTTP_SOURCE_CONNECTOR_ZIP is missing. You must be a Confluent Employee to run this example !"
+        logerror "ERROR: ${PWD}/$HTTP_V2_CONNECTOR_ZIP is missing. You must be a Confluent Employee to run this example !"
         exit 1
     fi
 fi
+
+source ${DIR}/../../scripts/utils.sh
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.no-auth.yml"
@@ -35,7 +37,7 @@ playground connector create-or-update --connector http-source  << EOF
     "tasks.max": "1",
     "connector.class": "io.confluent.connect.http.source.GenericHttpSourceConnector",
 
-    "http.api.base.url": "http://httpserver:8080",
+    "http.api.base.url": "http://httpserver:9006",
 
     "connection.disallow.local.ips": "false",
     "connection.disallow.private.ips": "false",
@@ -45,11 +47,6 @@ playground connector create-or-update --connector http-source  << EOF
   "api1.topics": "http-source-topic-v2",
   "api1.http.request.headers": "Content-Type: application/json",
   "api1.test.api": "false",
-  "auth.type": "OAUTH2",
-  "oauth2.token.url": "http://httpserver:8080/oauth/token",
-  "oauth2.client.id": "kc-client",
-  "oauth2.client.secret": "kc-secret",
-  "oauth2.client.mode": "header",
   "api1.http.offset.mode": "SIMPLE_INCREMENTING",
   "api1.http.initial.offset": "0"
 }

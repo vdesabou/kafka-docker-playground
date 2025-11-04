@@ -5,22 +5,24 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 if [ -z "$CONNECTOR_ZIP" ]
 then
-    HTTP_SINK_CONNECTOR_ZIP="confluentinc-kafka-connect-http-v2-0.1.0-SNAPSHOT.zip"
-    export CONNECTOR_ZIP="$PWD/$HTTP_SINK_CONNECTOR_ZIP"
+    HTTP_V2_CONNECTOR_ZIP="confluentinc-kafka-connect-http-v2-0.1.0-SNAPSHOT.zip"
+    export CONNECTOR_ZIP="$PWD/$HTTP_V2_CONNECTOR_ZIP"
 fi
 
-source ${DIR}/../../scripts/utils.sh
+source ${DIR}/../../scripts/cli/src/lib/utils_function.sh
 
-if [ -z "$CONNECTOR_ZIP" ]
+if [ ! -z "$HTTP_V2_CONNECTOR_ZIP" ]
 then
-    get_3rdparty_file "$HTTP_SINK_CONNECTOR_ZIP"
+    get_3rdparty_file "$HTTP_V2_CONNECTOR_ZIP"
 
-    if [ ! -f ${PWD}/$HTTP_SINK_CONNECTOR_ZIP ]
+    if [ ! -f ${PWD}/$HTTP_V2_CONNECTOR_ZIP ]
     then
-        logerror "ERROR: ${PWD}/$HTTP_SINK_CONNECTOR_ZIP is missing. You must be a Confluent Employee to run this example !"
+        logerror "ERROR: ${PWD}/$HTTP_V2_CONNECTOR_ZIP is missing. You must be a Confluent Employee to run this example !"
         exit 1
     fi
 fi
+
+source ${DIR}/../../scripts/utils.sh
 
 cd ../../connect/connect-http-v2-sink/
 if [ ! -f jcl-over-slf4j-2.0.7.jar ]
