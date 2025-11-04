@@ -170,6 +170,21 @@ END;
 /
 EOF
 
+if [ ! -f orclcdc_readiness.sql ]
+then
+     log "Downloading orclcdc_readiness.sql"
+     wget https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/_downloads/35f0e2f456c5dae965ee476492943e9e/orclcdc_readiness.sql
+fi
+
+log "Running orclcdc_readiness.sql, see https://docs.confluent.io/cloud/current/connectors/cc-oracle-xstream-cdc-source/prereqs-validation.html#validate-prerequisites-completion"
+docker cp orclcdc_readiness.sql oracle:/orclcdc_readiness.sql
+docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+     CONNECT sys/Admin123 AS SYSDBA
+     @/orclcdc_readiness.sql C##CFLTADMIN C##CFLTUSER XOUT ''
+END;
+/
+EOF
+
 log "Create CUSTOMERS table and inserting initial data"
 docker exec -i oracle sqlplus c\#\#cfltuser/password@//localhost:1521/ORCLCDB << EOF
 
