@@ -2,6 +2,7 @@
     "behavior.on.dictionary.mismatch": "fail",
     "behavior.on.unparsable.statement": "fail",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "datapreview.schemas.enable": "false",
     "db.timezone": "UTC",
     "db.timezone.date": "STRING",
