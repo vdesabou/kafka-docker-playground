@@ -78,6 +78,27 @@ sleep 10
 log "Verify we have received the data in test-sqs-source topic"
 playground topic consume --topic test-sqs-source --min-expected-messages 2 --timeout 60
 
+log "Asserting that SQS queue is empty after connector processing"
+QUEUE_ATTRIBUTES=$(aws sqs get-queue-attributes \
+    --queue-url $QUEUE_URL \
+    --attribute-names ApproximateNumberOfMessages ApproximateNumberOfMessagesNotVisible \
+    --region ${AWS_REGION} \
+    --query "Attributes" \
+    --output json)
+
+VISIBLE_MESSAGES=$(echo "$QUEUE_ATTRIBUTES" | jq -r '.ApproximateNumberOfMessages // "0" | tonumber')
+IN_FLIGHT_MESSAGES=$(echo "$QUEUE_ATTRIBUTES" | jq -r '.ApproximateNumberOfMessagesNotVisible // "0" | tonumber')
+TOTAL_MESSAGES=$((VISIBLE_MESSAGES + IN_FLIGHT_MESSAGES))
+
+log "Queue message count - Visible: $VISIBLE_MESSAGES, In-flight: $IN_FLIGHT_MESSAGES, Total: $TOTAL_MESSAGES"
+
+if [ "$TOTAL_MESSAGES" -eq 0 ]; then
+    log "✅ SUCCESS: SQS queue is empty - commitRecord API working correctly"
+else
+    log "❌ FAILURE: $TOTAL_MESSAGES messages still remain in SQS queue (Visible: $VISIBLE_MESSAGES, In-flight: $IN_FLIGHT_MESSAGES)"
+    exit 1
+fi
+
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
