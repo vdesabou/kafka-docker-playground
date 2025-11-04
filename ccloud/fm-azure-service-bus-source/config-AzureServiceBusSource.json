@@ -5,6 +5,7 @@
     "azure.servicebus.sas.keyname": "STRING",
     "azure.servicebus.subscription": "STRING",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "datapreview.schemas.enable": "false",
     "kafka.api.key": "STRING",
     "kafka.api.secret": "PASSWORD",
