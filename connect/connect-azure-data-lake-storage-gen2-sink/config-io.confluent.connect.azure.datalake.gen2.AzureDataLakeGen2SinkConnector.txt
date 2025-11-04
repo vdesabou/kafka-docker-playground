@@ -386,6 +386,15 @@ The SAS key obtained from Azure Active Directory configuration. This configurati
 ==========================
 null
 ==========================
+🔘 credentials.provider.class
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: 
+	 - Required: LOW
+
 🔘 azure.datalake.gen2.block.size
 
 

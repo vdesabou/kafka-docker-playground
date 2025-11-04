@@ -12,6 +12,7 @@
     "behavior.on.null.values": "FAIL",
     "connect.azure.datalake.gen2.useragent": "APN/1.0 Confluent/1.0 AzureDataLakeGen2Sink/",
     "connect.meta.data": "true",
+    "credentials.provider.class": "STRING",
     "directory.delim": "/",
     "enhanced.avro.schema.support": "true",
     "file.delim": "+",
