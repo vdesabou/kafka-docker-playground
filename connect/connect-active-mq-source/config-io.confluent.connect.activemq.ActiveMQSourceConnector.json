@@ -2,6 +2,7 @@
     "activemq.url": "",
     "activemq.username": "STRING",
     "batch.size": "1024",
+    "behavior.on.error": "FAIL",
     "character.encoding": "UTF-8",
     "confluent.license": "[hidden]",
     "confluent.topic": "_confluent-command",
