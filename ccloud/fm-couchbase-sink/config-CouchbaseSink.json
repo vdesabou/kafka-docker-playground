@@ -1,5 +1,6 @@
     "auto.restart.on.user.error": "true",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "couchbase.analytics.max.records.in.batch": "100",
     "couchbase.analytics.max.size.in.batch": "5m",
     "couchbase.analytics.query.timeout": "5m",

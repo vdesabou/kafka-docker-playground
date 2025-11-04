@@ -1,5 +1,6 @@
     "auto.restart.on.user.error": "true",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "couchbase.batch.size.max": "2000",
     "couchbase.black.hole.topic": "STRING",
     "couchbase.bucket": "STRING",
