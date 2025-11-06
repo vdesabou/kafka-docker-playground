@@ -392,6 +392,18 @@ Whether to use a more permissive schema with an optional messageID in the key an
 	 - Required: false
 
 ==========================
+Behavior On Errors
+==========================
+🔘 behavior.on.error
+
+Error handling behavior setting for the connector. Must be configured to one of the following: IGNORE, FAIL
+
+	 - Type: STRING
+	 - Default: FAIL
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
 Confluent Platform
 ==========================
 🔘 confluent.license
