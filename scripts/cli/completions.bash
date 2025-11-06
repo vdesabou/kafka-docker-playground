@@ -9,23 +9,45 @@ _playground_completions_filter() {
   local cur=${COMP_WORDS[COMP_CWORD]}
   local result=()
 
+  # words the user already typed (excluding the command itself)
+  local used=()
+  if ((COMP_CWORD > 1)); then
+    used=("${COMP_WORDS[@]:1:$((COMP_CWORD - 1))}")
+  fi
+
   if [[ "${cur:0:1}" == "-" ]]; then
+    # Completing an option: offer everything (including options)
     echo "$words"
 
   else
+    # Completing a non-option: offer only non-options,
+    # and don't re-offer ones already used earlier in the line.
     for word in $words; do
-      [[ "${word:0:1}" != "-" ]] && result+=("$word")
+      [[ "${word:0:1}" == "-" ]] && continue
+
+      local seen=0
+      for u in "${used[@]}"; do
+        if [[ "$u" == "$word" ]]; then
+          seen=1
+          break
+        fi
+      done
+      ((!seen)) && result+=("$word")
     done
 
     echo "${result[*]}"
-
   fi
 }
 
 _playground_completions() {
   local cur=${COMP_WORDS[COMP_CWORD]}
-  local compwords=("${COMP_WORDS[@]:1:$COMP_CWORD-1}")
+  local compwords=()
+  if ((COMP_CWORD > 0)); then
+    compwords=("${COMP_WORDS[@]:1:$((COMP_CWORD - 1))}")
+  fi
   local compline="${compwords[*]}"
+
+  COMPREPLY=()
 
   case "$compline" in
     *'connector connect-migration-utility migrate'*'--migration-mode')
