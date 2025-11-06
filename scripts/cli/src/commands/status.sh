@@ -31,7 +31,6 @@ fi
 playground connector status | grep -v "applying command to all connectors"
 playground connector show-config | grep -v "applying command to all connectors"
 playground connector show-config-parameters --only-show-file-path | grep -v "applying command to all connectors"
-playground connector-plugin display-last-updated
 
 playground topic list
 
