@@ -8,6 +8,7 @@ if connect_cp_version_greater_than_8 && [ ! -z "$CONNECTOR_TAG" ] && ! version_g
 then
      logwarn "minimal supported connector version is 1.0.6 for CP 8.0"
      logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     logerror "this connector is broken with CP 8"
      exit 111
 fi
 
