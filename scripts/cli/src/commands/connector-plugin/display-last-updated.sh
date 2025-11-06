@@ -20,13 +20,13 @@ else
     log "🆕 Listing last updated connector plugins (within $days days) for all vendors"
 fi
 
-for plugin in $(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | cut -d "|" -f 1)
+for plugin in $(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | grep -v "CONFLUENT EMPLOYEE VERSION" | cut -d "|" -f 1)
 do
     if [[ -n "$vendor" && ! "$plugin" =~ $vendor ]]
     then
         continue
     fi
-    if [[ "$vendor" == *"confluentinc"* ]] && [[ "$plugin" != *"-"* ]]
+    if [[ "$plugin" != *"-"* ]]
     then
         # fully managed connector, skipping
         continue
