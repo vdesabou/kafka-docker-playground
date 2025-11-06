@@ -10,7 +10,7 @@ exit 111
 if version_gt $TAG_BASE "7.9.99"
 then
      logwarn "preview connectors are no longer supported with CP 8.0"
-     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.0.html#supported-connector-versions-in-cp-8-0"
+     logwarn "see https://docs.confluent.io/platform/current/connect/supported-connector-version-8.1.html#supported-connector-versions-in-cp-8-1"
      exit 111
 fi
 
