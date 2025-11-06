@@ -93,17 +93,6 @@ docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -trusted_cert 
 # add the user certificate to the wallet:
 docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -user_cert -cert /tmp/server/cert.txt -pwd WalletPasswd123"
 
-cd ${DIR}/ssl
-if [[ "$OSTYPE" == "darwin"* ]]
-then
-    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-    chmod -R a+rw .
-else
-    # on CI, docker is run as runneradmin user, need to use sudo
-    sudo chmod -R a+rw .
-fi
-cd ${DIR}
-
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
 docker cp ${PWD}/ssl/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
 docker cp ${PWD}/ssl/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
@@ -120,7 +109,7 @@ sleep 60
 
 set_profiles
 docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f "${PWD}/docker-compose.plaintext.ssl.yml" ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} up -d --quiet-pull
-command="source ${DIR}/../../scripts/utils.sh && docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ${PWD}/docker-compose.plaintext.ssl.yml $${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} up -d"
+command="source ${DIR}/../../scripts/utils.sh && docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ${PWD}/docker-compose.plaintext.ssl.yml ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} up -d"
 playground state set run.docker_command "$command"
 playground state set run.environment "plaintext"
 log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command 'playground container recreate'"
@@ -337,7 +326,7 @@ playground connector create-or-update --connector cdc-xstream-oracle-source << E
      "confluent.topic.replication.factor": "1",
 
      "_comment:": "remove _ to use ExtractNewRecordState smt",
-     "_transforms": "unwrap,RemoveDots",
+     "_transforms": "unwrap",
      "_transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
 }
 EOF

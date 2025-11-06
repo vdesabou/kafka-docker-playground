@@ -59,9 +59,9 @@ cd -
 
 # required to make utils.sh script being able to work, do not remove:
 # PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-#playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssl.wallet"
+#playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssl.yml"
 log "Starting up oracle container to get generated cert from oracle server wallet"
-docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f "${PWD}/docker-compose.plaintext.ssl.wallet" up -d oracle
+docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f "${PWD}/docker-compose.plaintext.ssl.yml" up -d oracle
 
 
 log "Setting up SSL on oracle server..."
@@ -93,10 +93,26 @@ docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -trusted_cert 
 # add the user certificate to the wallet:
 docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -user_cert -cert /tmp/server/cert.txt -pwd WalletPasswd123"
 
+# client (connect)
+docker exec oracle bash -c "orapki wallet create -wallet /tmp/client -pwd WalletPasswd123 -auto_login"
+docker exec oracle bash -c "orapki wallet add -wallet /tmp/client -dn CN=connect,C=US -pwd WalletPasswd123 -keysize 2048"
+docker exec oracle bash -c "orapki wallet export -wallet /tmp/client -dn CN=connect,C=US -pwd WalletPasswd123  -request /tmp/client/creq.txt"
+docker exec oracle bash -c "orapki cert create -wallet /tmp/root -request /tmp/client/creq.txt -cert /tmp/client/cert.txt -validity 3650 -pwd WalletPasswd123"
+# View the signed certificate:
+docker exec oracle bash -c "orapki cert display -cert /tmp/client/cert.txt -complete"
+# Add the test CA's trusted certificate to the wallet
+docker exec oracle bash -c "orapki wallet add -wallet /tmp/client -trusted_cert -cert /tmp/root/b64certificate.txt -pwd WalletPasswd123"
+# add the user certificate to the wallet:
+docker exec oracle bash -c "orapki wallet add -wallet /tmp/client -user_cert -cert /tmp/client/cert.txt -pwd WalletPasswd123"
+
+
+
+
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
-docker cp ${PWD}/ssl/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
-docker cp ${PWD}/ssl/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
-docker cp ${PWD}/ssl/tnsnames.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
+docker cp ${PWD}/mtls/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
+docker cp ${PWD}/mtls/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
+docker cp ${PWD}/mtls/tnsnames.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
+
 
 docker exec -i oracle lsnrctl << EOF
 reload
@@ -108,8 +124,8 @@ log "Sleeping 60 seconds"
 sleep 60
 
 set_profiles
-docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f "${PWD}/docker-compose.plaintext.ssl.wallet" ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} up -d --quiet-pull
-command="source ${DIR}/../../scripts/utils.sh && docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ${PWD}/docker-compose.plaintext.ssl.wallet ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} up -d"
+docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f "${PWD}/docker-compose.plaintext.ssl.yml" ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} up -d --quiet-pull
+command="source ${DIR}/../../scripts/utils.sh && docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ${PWD}/docker-compose.plaintext.ssl.yml ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} up -d"
 playground state set run.docker_command "$command"
 playground state set run.environment "plaintext"
 log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command 'playground container recreate'"
@@ -117,7 +133,7 @@ log "✨ If you modify a docker-compose file and want to re-create the container
 wait_container_ready
 
 log "🔏 copy cwallet.sso to connect container"
-docker cp oracle:/tmp/server/cwallet.sso /tmp
+docker cp oracle:/tmp/client/cwallet.sso /tmp
 docker cp /tmp/cwallet.sso connect:/tmp/cwallet.sso
 playground container exec --root --command "chown appuser /tmp/cwallet.sso"
 
@@ -314,7 +330,7 @@ playground connector create-or-update --connector cdc-xstream-oracle-source << E
     "database.port": "1532",
     "database.user": "c##cfltuser",
     
-    "database.tls.mode": "one-way",
+    "database.tls.mode": "two-way",
     "database.wallet.location": "/tmp/",
 
     "topic.prefix": "cflt",
