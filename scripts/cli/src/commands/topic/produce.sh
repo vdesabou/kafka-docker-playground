@@ -576,14 +576,36 @@ function generate_data() {
     if [ $nb_messages -gt $max_nb_messages_per_batch ] || [ $nb_messages = -1 ]
     then
         set +e
-        LINE=$(<"$input2_file")
-        yes "$LINE" | head -n "$max_nb_messages_per_batch" > "$output_file"
+        awk '
+        # This block runs for every line in the file, but since it is a single-line file, it runs once.
+        {
+            content = $0
+        }
+        # The END block runs after the entire file has been read.
+        END {
+            # Enter an infinite loop to print the content variable repeatedly.
+            while (1) {
+            print content
+            }
+        }
+        ' "$input2_file" | head -n "$max_nb_messages_per_batch" > "$output_file"
         set -e
     elif [ $lines_count -lt $nb_messages ]
     then
         set +e
-        LINE=$(<"$input2_file")
-        yes "$LINE" | head -n "$nb_messages" > "$output_file"
+        awk '
+        # This block runs for every line in the file, but since it is a single-line file, it runs once.
+        {
+            content = $0
+        }
+        # The END block runs after the entire file has been read.
+        END {
+            # Enter an infinite loop to print the content variable repeatedly.
+            while (1) {
+            print content
+            }
+        }
+        ' "$input2_file" | head -n "$nb_messages" > "$output_file"
         set -e
     else
         cp $input2_file $output_file
