@@ -435,10 +435,10 @@ Enable MDC context to prepend log messages. Note that this is only available aft
 
 🔘 enable.streaming.channel.offset.migration
 
-This config is used to enable/disable streaming channel offset migration logic. If true, we will migrate offset token from channel name format V2 to name format v1. V2 channel format is deprecated and V1 will be used always, disabling this config could have ramifications. Please consult Snowflake support before setting this to false.
+This config is used to enable/disable streaming channel offset migration logic. If true, we will migrate offset token from channel name format V2 to name format v1. V2 channel format is deprecated and V1 will be used unless explicit usage of V2 format is enabled, disabling this config could have ramifications. Please consult Snowflake support before setting this to false.
 
 	 - Type: BOOLEAN
-	 - Default: true
+	 - Default: false
 	 - Importance: LOW
 	 - Required: false
 
@@ -472,6 +472,15 @@ Whether to enable streaming channel offset verification function. The function c
 
 	 - Type: BOOLEAN
 	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.streaming.channel.name.include.connector.name
+
+If enabled, the Snowflake Streaming channel names are prefixed with the connector name. This config enables/disables usage of channel names that were used solely in Kafka Connector versions 2.1.0 and 2.1.1 and is intended for users that previously used these versions and did not update the connector since. IMPORTANT: Enabling this config in any other case will result in data duplication. Cannot be used together with `enable.streaming.channel.offset.migration=true`
+
+	 - Type: BOOLEAN
+	 - Default: false
 	 - Importance: LOW
 	 - Required: false
 
