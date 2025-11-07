@@ -94,4 +94,12 @@ sleep 5
 log "Verify we have received the data in from-weblogic-messages topic"
 playground topic consume --topic from-weblogic-messages --min-expected-messages 1 --timeout 60
 
+sleep 5
 
+log "Asserting that WebLogic JMS queue is empty after connector processing"
+if docker exec jms-sender bash -c 'java -cp "/tmp/weblogic.jar:/tmp/wlthint3client.jar:/jms-sender-1.0.0.jar" com.sample.jms.toolkit.JMSSender check'; then
+    log "✅ SUCCESS: WebLogic JMS queue is empty - message was successfully consumed and deleted"
+else
+    log "❌ FAILURE: Messages still remain in WebLogic JMS queue - message was not deleted"
+    exit 1
+fi

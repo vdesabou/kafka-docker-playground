@@ -17,10 +17,17 @@ services:
     container_name: weblogic-jms
     ports:
       - '7001:7001'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7001/weblogic/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
 
   connect:
     depends_on:
-      - weblogic-jms
+      weblogic-jms:
+        condition: service_healthy
     volumes:
         - ../../connect/connect-jms-weblogic-source/jms-sender/lib/wlthint3client.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms/lib/wlthint3client.jar
     environment:
