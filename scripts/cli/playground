@@ -23382,8 +23382,15 @@ playground_topic_produce_command() {
 
       if [ $nb_messages -ge 100000 ] && [ $record_size -ge 10000 ]
       then
-          logwarn "💫 --record-size with high value $record_size and --nb-messages $nb_messages is high, forcing --max-nb-messages-to-generate to 100"
-          max_nb_messages_to_generate=100
+          if [ $record_size -ge 100000 ]
+          then
+              max_nb_messages_to_generate=1
+              max_nb_messages_per_batch=1000
+              logwarn "💫 --record-size is set with high value $record_size and --nb-messages $nb_messages is also high, forcing --max-nb-messages-to-generate to $max_nb_messages_to_generate and --max-nb-messages-per-batch to $max_nb_messages_per_batch"
+          else
+              max_nb_messages_to_generate=100
+              logwarn "💫 --record-size is set with high value $record_size and --nb-messages $nb_messages is also high, forcing --max-nb-messages-to-generate to $max_nb_messages_to_generate"
+          fi
       fi
   fi
 
@@ -23747,7 +23754,12 @@ playground_topic_produce_command() {
                       then
                           log "🔮 Replacing first string field $first_string_field value with long payload"
                       fi
-                      jq -c --arg new_val "$new_value" ".${first_string_field} |= \$new_val" $record_size_temp_file_line > $record_size_temp_file_output
+                      if [ "$first_string_field" == "string" ]
+                      then
+                          jq -c --arg new_val "$new_value" 'walk(if type == "object" and has("string") then .string = $new_val else . end)' $record_size_temp_file_line > $record_size_temp_file_output
+                      else
+                          jq -c --arg new_val "$new_value" ".${first_string_field} |= \$new_val" $record_size_temp_file_line > $record_size_temp_file_output
+                      fi
                   else
 
                       cat "$record_size_temp_file_line" > $record_size_temp_file_output
@@ -23802,11 +23814,14 @@ playground_topic_produce_command() {
           {
               content = $0
           }
-          # The END block runs after the entire file has been read.
           END {
-              # Enter an infinite loop to print the content variable repeatedly.
+              # Define the message to print, including the necessary newline.
+              # This prevents repeated string concatenation inside the loop.
+              message = content "\n"
+
+              # Use printf, which is generally faster for raw output than print.
               while (1) {
-              print content
+                  printf "%s", message
               }
           }
           ' "$input2_file" | head -n "$max_nb_messages_per_batch" > "$output_file"
@@ -23819,11 +23834,16 @@ playground_topic_produce_command() {
           {
               content = $0
           }
-          # The END block runs after the entire file has been read.
-          END {
-              # Enter an infinite loop to print the content variable repeatedly.
+          END
+
+          {
+              # Define the message to print, including the necessary newline.
+              # This prevents repeated string concatenation inside the loop.
+              message = content "\n"
+
+              # Use printf, which is generally faster for raw output than print.
               while (1) {
-              print content
+                  printf "%s", message
               }
           }
           ' "$input2_file" | head -n "$nb_messages" > "$output_file"
