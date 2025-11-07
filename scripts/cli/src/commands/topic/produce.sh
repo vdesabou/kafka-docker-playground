@@ -168,6 +168,12 @@ if [ "$record_size" != 0 ]
 then
     log "💫 --record-size is set, forcing --no-null"
     no_null="true"
+
+    if [ $nb_messages -ge 100000 ] && [ $record_size -ge 10000 ]
+    then
+        logwarn "💫 --record-size with high value $record_size and --nb-messages $nb_messages is high, forcing --max-nb-messages-to-generate to 100"
+        max_nb_messages_to_generate=100
+    fi
 fi
 
 function identify_schema() {
