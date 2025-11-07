@@ -2393,7 +2393,7 @@
                 "--record-size"
               ],
               "argument": 0,
-              "description": "🏋️ Record size in bytes, eg. 1048576 for 1MB\n\n📢 If size is > 1Mb, --producer-property max.request.size and topic max.message.bytes will be automatically set to support the record size.\n\nDefault value: 0\n"
+              "description": "🏋️ Record size in bytes, eg. 1048576 for 1MB\n\n📢 If size is > 1Mb, --producer-property max.request.size and topic max.message.bytes will be automatically set to support the record size.\n\nNote that --no-null will be used when this option is set\n\nDefault value: 0\n"
             },
             {
               "names": [

@@ -2805,6 +2805,8 @@ subcommands:
             
             📢 If size is > 1Mb, --producer-property max.request.size and topic max.message.bytes will be automatically set to support the record size.
             
+            Note that --no-null will be used when this option is set
+            
             Default value: 0
             
         - names:

@@ -373,14 +373,6 @@ then
     fi
 fi
 
-# https://stackoverflow.com/questions/22818814/repeat-a-file-content-until-reach-a-defined-line-count
-function repcat() {
-    while cat "$1"
-    do 
-        :
-    done
-}
-
 function generate_data() {
     schema_type=$1
     schema_file=$2
@@ -475,19 +467,22 @@ function generate_data() {
                 then
                     log "💫 payload is one json per line, one json record per line will be sent"
                     set +e
-                    repcat "$schema_file" | head -n "$nb_messages_to_generate" > $tmp_dir/out.json
+                    LINE=$(<"$schema_file")
+                    yes "$LINE" | head -n "$nb_messages_to_generate" > $tmp_dir/out.json
                     set -e
                 elif jq -e . >/dev/null 2>&1 <<< "$(cat "$schema_file")"
                 then
                     log "💫 payload is single json, it will be sent as one record"
                     jq -c . "$schema_file" > $tmp_dir/minified.json
                     set +e
-                    repcat "$tmp_dir/minified.json" | head -n "$nb_messages_to_generate" > $tmp_dir/out.json
+                    LINE=$(<"$tmp_dir/minified.json")
+                    yes "$LINE" | head -n "$nb_messages_to_generate" > $tmp_dir/out.json
                     set -e
                 else
                     log "💫 payload is not single json, one record per line will be sent"
                     set +e
-                    repcat "$schema_file" | head -n "$nb_messages_to_generate" > $tmp_dir/out.json
+                    LINE=$(<"$schema_file")
+                    yes "$LINE" | head -n "$nb_messages_to_generate" > $tmp_dir/out.json
                     set -e
                 fi
             ;;
@@ -581,12 +576,14 @@ function generate_data() {
     if [ $nb_messages -gt $max_nb_messages_per_batch ] || [ $nb_messages = -1 ]
     then
         set +e
-        repcat "$input2_file" | head -n "$max_nb_messages_per_batch" > "$output_file"
+        LINE=$(<"$input2_file")
+        yes "$LINE" | head -n "$max_nb_messages_per_batch" > "$output_file"
         set -e
     elif [ $lines_count -lt $nb_messages ]
     then
         set +e
-        repcat "$input2_file" | head -n "$nb_messages" > "$output_file"
+        LINE=$(<"$input2_file")
+        yes "$LINE" | head -n "$nb_messages" > "$output_file"
         set -e
     else
         cp $input2_file $output_file
