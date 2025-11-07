@@ -3024,6 +3024,8 @@ commands:
 
           📢 If size is > 1Mb, --producer-property max.request.size and topic max.message.bytes will be automatically set to support the record size.
 
+          Note that --no-null will be used when this option is set
+
       - long: --value-schema-id
         arg: value-schema-id
         private: true
@@ -3814,6 +3816,10 @@ commands:
         private: true
         needs: [--compile]
         help: 🐞 Show output of compilation.
+      - long: --forced-url
+        private: true
+        needs: [--compile]
+        help: 🔗 Set github url (to compile cp for example)
       - long: --enable-remote-debugging
         required: false
         private: true

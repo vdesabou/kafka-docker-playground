@@ -3193,6 +3193,12 @@ subcommands:
             🐞 Show output of compilation.
             
         - names:
+          - --forced-url
+          argument: ""
+          description: | 
+            🔗 Set github url (to compile cp for example)
+            
+        - names:
           - --enable-remote-debugging
           argument: ""
           description: | 

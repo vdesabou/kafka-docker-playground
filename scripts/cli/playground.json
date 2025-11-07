@@ -2774,6 +2774,13 @@
             },
             {
               "names": [
+                "--forced-url"
+              ],
+              "argument": "",
+              "description": "🔗 Set github url (to compile cp for example)\n"
+            },
+            {
+              "names": [
                 "--enable-remote-debugging"
               ],
               "argument": "",

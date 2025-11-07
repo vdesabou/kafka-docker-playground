@@ -23375,6 +23375,12 @@ playground_topic_produce_command() {
       fi
   fi
 
+  if [ "$record_size" != 0 ]
+  then
+      log "💫 --record-size is set, forcing --no-null"
+      no_null="true"
+  fi
+
   function identify_schema() {
       schema_file=$1
       type=$2
@@ -23735,11 +23741,18 @@ playground_topic_produce_command() {
 
                   first_string_field=$(echo "$line" | jq -r 'path(.. | select(type == "string")) | .[-1]' | head -1)
 
-                  if [ $lines_count -eq 0 ]
+                  if [ "$first_string_field" != "" ]
                   then
-                      log "🔮 Replacing first string field $first_string_field value with long payload"
+                      if [ $lines_count -eq 0 ]
+                      then
+                          log "🔮 Replacing first string field $first_string_field value with long payload"
+                      fi
+                      jq -c --arg new_val "$new_value" ".${first_string_field} |= \$new_val" $record_size_temp_file_line > $record_size_temp_file_output
+                  else
+
+                      cat "$record_size_temp_file_line" > $record_size_temp_file_output
+                      logwarn "😕 could not find string field, that record will not have expected --record-size !"
                   fi
-                  jq -c --arg new_val "$new_value" ".${first_string_field} |= \$new_val" $record_size_temp_file_line > $record_size_temp_file_output
               fi
 
               # The size needed for the new_value
@@ -24960,77 +24973,7 @@ playground_connector_plugin_sourcecode_command() {
   compile="${args[--compile]}"
   compile_jdk_version="${args[--compile-jdk-version]}"
   verbose="${args[--compile-verbose]}"
-
-  # Convert space-separated string to array
-  IFS=' ' read -ra connector_tag_array <<< "$connector_tags"
-
-  if [[ $connector_plugin == *"@"* ]]
-  then
-    connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
-  fi
-
-  if [ ! -f $root_folder/scripts/cli/confluent-hub-plugin-list.txt ]
-  then
-      log "file $root_folder/scripts/cli/confluent-hub-plugin-list.txt not found. Generating it now, it may take a while..."
-      playground generate-connector-plugin-list
-  fi
-
-  if [ ! -f $root_folder/scripts/cli/confluent-hub-plugin-list.txt ]
-  then
-      logerror "❌ file $root_folder/scripts/cli/confluent-hub-plugin-list.txt could not be generated"
-      exit 1
-  fi
-
-  is_fully_managed=0
-  if [[ "$connector_plugin" == *"confluentinc"* ]] && [[ "$connector_plugin" != *"-"* ]]
-  then
-      log "🌥️  connector plugin $connector_plugin was identified as fully managed connector"
-      is_fully_managed=1
-  fi
-
-  set +e
-  is_confluent_employee=0
-  output=$(grep "CONFLUENT EMPLOYEE VERSION" $root_folder/scripts/cli/confluent-hub-plugin-list.txt)
-  ret=$?
-  if [ $ret -eq 0 ]
-  then
-      is_confluent_employee=1
-  else
-      logerror "❌ playground connector-plugin sourcecode is not working with fully managed connectors"
-      logerror "❌ if you're a Confluent employee, make sure your aws creds are set and then run <playground generate-connector-plugin-list>"
-      exit 1
-  fi
-
-  output=$(grep "^$connector_plugin|" $root_folder/scripts/cli/confluent-hub-plugin-list.txt)
-  ret=$?
-  set -e
-  if [ $ret -ne 0 ]
-  then
-      logerror "❌ could not found $connector_plugin in $root_folder/scripts/cli/confluent-hub-plugin-list.txt"
-      exit 1
-  fi
-
-  sourcecode_url=$(echo "$output" | cut -d "|" -f 2)
-  if [ "$sourcecode_url" == "null" ] || [ "$sourcecode_url" == "" ]
-  then
-      logwarn "🤷‍♂️ could not found sourcecode url for plugin $connector_plugin. It is probably proprietary"
-      if [[ "$sourcecode_url" == *"confluentinc"* ]]
-      then
-          if [ $is_confluent_employee -eq 1 ]
-          then
-              logerror "❌ if you're a Confluent employee, make sure your aws creds are set and then run <playground generate-connector-plugin-list>"
-              exit 1
-          fi
-      fi
-      exit 1
-  fi
-  # remove trailing slash if any
-  sourcecode_url=${sourcecode_url%/}
-
-  if [ $is_confluent_employee -eq 1 ] || [ $is_fully_managed -eq 1 ]
-  then
-      connector_name_cache_versions=$(echo "$output" | cut -d "|" -f 3)
-  fi
+  forced_url="${args[--forced-url]}"
 
   function get_version_from_cc_docker_connect_cache_versions_env () {
       arg_version="$1"
@@ -25493,6 +25436,85 @@ playground_connector_plugin_sourcecode_command() {
           # playground state set run.array_zip_file_list_base64 "$encoded_array"
       fi
   }
+
+  if [[ -n "$forced_url" ]]
+  then
+      sourcecode_url="$forced_url"
+      compile "$connector_tag"
+
+      exit 0
+  fi
+
+  # Convert space-separated string to array
+  IFS=' ' read -ra connector_tag_array <<< "$connector_tags"
+
+  if [[ $connector_plugin == *"@"* ]]
+  then
+    connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+  fi
+
+  if [ ! -f $root_folder/scripts/cli/confluent-hub-plugin-list.txt ]
+  then
+      log "file $root_folder/scripts/cli/confluent-hub-plugin-list.txt not found. Generating it now, it may take a while..."
+      playground generate-connector-plugin-list
+  fi
+
+  if [ ! -f $root_folder/scripts/cli/confluent-hub-plugin-list.txt ]
+  then
+      logerror "❌ file $root_folder/scripts/cli/confluent-hub-plugin-list.txt could not be generated"
+      exit 1
+  fi
+
+  is_fully_managed=0
+  if [[ "$connector_plugin" == *"confluentinc"* ]] && [[ "$connector_plugin" != *"-"* ]]
+  then
+      log "🌥️  connector plugin $connector_plugin was identified as fully managed connector"
+      is_fully_managed=1
+  fi
+
+  set +e
+  is_confluent_employee=0
+  output=$(grep "CONFLUENT EMPLOYEE VERSION" $root_folder/scripts/cli/confluent-hub-plugin-list.txt)
+  ret=$?
+  if [ $ret -eq 0 ]
+  then
+      is_confluent_employee=1
+  else
+      logerror "❌ playground connector-plugin sourcecode is not working with fully managed connectors"
+      logerror "❌ if you're a Confluent employee, make sure your aws creds are set and then run <playground generate-connector-plugin-list>"
+      exit 1
+  fi
+
+  output=$(grep "^$connector_plugin|" $root_folder/scripts/cli/confluent-hub-plugin-list.txt)
+  ret=$?
+  set -e
+  if [ $ret -ne 0 ]
+  then
+      logerror "❌ could not found $connector_plugin in $root_folder/scripts/cli/confluent-hub-plugin-list.txt"
+      exit 1
+  fi
+
+  sourcecode_url=$(echo "$output" | cut -d "|" -f 2)
+  if [ "$sourcecode_url" == "null" ] || [ "$sourcecode_url" == "" ]
+  then
+      logwarn "🤷‍♂️ could not found sourcecode url for plugin $connector_plugin. It is probably proprietary"
+      if [[ "$sourcecode_url" == *"confluentinc"* ]]
+      then
+          if [ $is_confluent_employee -eq 1 ]
+          then
+              logerror "❌ if you're a Confluent employee, make sure your aws creds are set and then run <playground generate-connector-plugin-list>"
+              exit 1
+          fi
+      fi
+      exit 1
+  fi
+  # remove trailing slash if any
+  sourcecode_url=${sourcecode_url%/}
+
+  if [ $is_confluent_employee -eq 1 ] || [ $is_fully_managed -eq 1 ]
+  then
+      connector_name_cache_versions=$(echo "$output" | cut -d "|" -f 3)
+  fi
 
   comparison_mode_versions=""
   length=${#connector_tag_array[@]}
@@ -44054,6 +44076,14 @@ playground_connector_sourcecode_parse_requirements() {
         ;;
 
       # :flag.case
+      --forced-url)
+
+        # :flag.case_no_arg
+        args['--forced-url']=1
+        shift
+        ;;
+
+      # :flag.case
       --enable-remote-debugging)
 
         # :flag.case_no_arg
@@ -44087,6 +44117,12 @@ playground_connector_sourcecode_parse_requirements() {
   # :flag.needs
   if [[ -n ${args['--compile-verbose']+x} ]] && [[ -z "${args[--compile]:-}" ]]; then
     printf "%s\n" "--compile-verbose needs --compile" >&2
+    exit 1
+  fi
+
+  # :flag.needs
+  if [[ -n ${args['--forced-url']+x} ]] && [[ -z "${args[--compile]:-}" ]]; then
+    printf "%s\n" "--forced-url needs --compile" >&2
     exit 1
   fi
 

@@ -164,6 +164,12 @@ then
     fi
 fi
 
+if [ "$record_size" != 0 ]
+then
+    log "💫 --record-size is set, forcing --no-null"
+    no_null="true"
+fi
+
 function identify_schema() {
     schema_file=$1
     type=$2
@@ -520,11 +526,17 @@ function generate_data() {
                 
                 first_string_field=$(echo "$line" | jq -r 'path(.. | select(type == "string")) | .[-1]' | head -1)
 
-                if [ $lines_count -eq 0 ]
+                if [ "$first_string_field" != "" ]
                 then
-                    log "🔮 Replacing first string field $first_string_field value with long payload"
+                    if [ $lines_count -eq 0 ]
+                    then
+                        log "🔮 Replacing first string field $first_string_field value with long payload"
+                    fi
+                    jq -c --arg new_val "$new_value" ".${first_string_field} |= \$new_val" $record_size_temp_file_line > $record_size_temp_file_output
+                else 
+                    cat "$record_size_temp_file_line" > $record_size_temp_file_output
+                    logwarn "😕 could not find string field, that record will not have expected --record-size !"
                 fi
-                jq -c --arg new_val "$new_value" ".${first_string_field} |= \$new_val" $record_size_temp_file_line > $record_size_temp_file_output
             fi
 
             # The size needed for the new_value
