@@ -619,8 +619,7 @@ function generate_data() {
         {
             content = $0
         }
-        END 
-        {
+        END {
             # Define the message to print, including the necessary newline.
             # This prevents repeated string concatenation inside the loop.
             message = content "\n"
@@ -968,7 +967,7 @@ then
     producer_properties="$producer_properties --producer-property linger.ms=1000 --producer-property batch.size=500000"
 fi
 
-if [ $record_size -gt 1048576 ]
+if [ $record_size -ge 1048576 ]
 then
     log "✨ record-size $record_size is greater than 1Mb (1048576), setting --producer-property max.request.size=$((record_size + 1000)) and --producer-property buffer.memory=67108864"
     producer_properties="$producer_properties --producer-property max.request.size=$((record_size + 1000)) --producer-property buffer.memory=67108864"
@@ -983,7 +982,7 @@ done
 
 if [ "$producer_properties" != "" ]
 then
-    log "⚙️ following producer properties will be used: $producer_properties"
+    log "⚙️  following producer properties will be used: $producer_properties"
 fi
 
 if [[ -n "$compression_codec" ]]
