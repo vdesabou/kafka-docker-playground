@@ -142,6 +142,6 @@ playground connector create-or-update --connector jdbc-synapse-source  << EOF
 }
 EOF
 
-sleep 5
+sleep 15
 
 playground topic consume --topic synapse-customers --min-expected-messages 4
