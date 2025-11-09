@@ -124,7 +124,7 @@ playground connector create-or-update --connector redshift-jdbc-source  << EOF
 }
 EOF
 
-sleep 30
+sleep 60
 
 log "Verifying topic redshift-customers"
 playground topic consume --topic redshift-customers --min-expected-messages 5 --timeout 60
