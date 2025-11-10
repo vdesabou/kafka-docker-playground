@@ -1,6 +1,7 @@
     "auto.restart.on.user.error": "true",
     "character.encoding": "UTF-8",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "input.data.format": "STRING",
     "jms.destination.name": "STRING",
     "jms.destination.type": "queue",
