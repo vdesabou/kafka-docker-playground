@@ -10,6 +10,7 @@
     "connect.cosmos.task.poll.interval": "1000",
     "connect.cosmos.task.timeout": "5000",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "datapreview.schemas.enable": "false",
     "kafka.api.key": "STRING",
     "kafka.api.secret": "PASSWORD",
