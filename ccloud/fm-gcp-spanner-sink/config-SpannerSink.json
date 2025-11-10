@@ -2,6 +2,7 @@
     "auto.evolve": "false",
     "auto.restart.on.user.error": "true",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "gcp.spanner.credentials.json": "PASSWORD",
     "gcp.spanner.database.id": "STRING",
     "gcp.spanner.instance.id": "STRING",
