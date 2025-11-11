@@ -39,6 +39,7 @@
     "azure.cosmos.throughputControl.targetThroughput": "INT",
     "azure.cosmos.throughputControl.targetThroughputThreshold": "DOUBLE",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "csfle.enabled": "false",
     "csfle.onFailure": "ERROR",
     "errors.deadletterqueue.topic.name": "dlq-${connector}",

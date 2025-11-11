@@ -4,6 +4,7 @@
     "connect.cosmos.databasename": "STRING",
     "connect.cosmos.master.key": "PASSWORD",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "cosmos.id.strategy": "FullKeyStrategy",
     "input.data.format": "STRING",
     "kafka.api.key": "STRING",
