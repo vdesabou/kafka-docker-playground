@@ -4,6 +4,7 @@
     "auto.update.schemas": "DISABLED",
     "commit.interval": "60",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "csfle.enabled": "false",
     "csfle.onFailure": "ERROR",
     "datasets": "STRING",
