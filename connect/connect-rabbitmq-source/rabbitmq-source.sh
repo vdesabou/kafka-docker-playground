@@ -20,8 +20,8 @@ log "Send message to RabbitMQ in myqueue"
 docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"
 
 # Get the number of messages remaining in the queue
-remaining_messages=$(docker exec rabbitmq rabbitmqctl -q -p "/" list_queues name messages | awk -v q="myqueue" '$1==q{print $2}')
-log "Number of messages in myqueue before connector processing: $remaining_messages"
+num_messages=$(docker exec rabbitmq rabbitmqctl -q -p "/" list_queues name messages | awk -v q="myqueue" '$1==q{print $2}')
+log "Number of messages in myqueue before connector processing: $num_messages"
 
 log "Creating RabbitMQ Source connector"
 playground connector create-or-update --connector rabbitmq-source  << EOF
@@ -44,21 +44,19 @@ sleep 5
 log "Verify we have received the data in rabbitmq topic"
 playground topic consume --topic rabbitmq --min-expected-messages 5 --timeout 60
 
-
-sleep 5
 log "Asserting that RabbitMQ queue is empty after connector processing"
 QUEUE_NAME="myqueue"
 VHOST="/"
 # Get the number of messages remaining in the queue
-remaining_messages=$(docker exec rabbitmq rabbitmqctl -q -p "$VHOST" list_queues name messages | awk -v q="$QUEUE_NAME" '$1==q{print $2}')
+num_messages=$(docker exec rabbitmq rabbitmqctl -q -p "$VHOST" list_queues name messages | awk -v q="$QUEUE_NAME" '$1==q{print $2}')
 
-if [ -z "$remaining_messages" ]; then
+if [ -z "$num_messages" ]; then
 logerror "failed to inspect queue $QUEUE_NAME in vhost $VHOST"
 exit 1
 fi
 
-if [ "$remaining_messages" -gt 0 ]; then
-logerror "queue $QUEUE_NAME still contains $remaining_messages messages, expected 0 after connector processing (all messages should be acked and removed)"
+if [ "$num_messages" -gt 0 ]; then
+logerror "queue $QUEUE_NAME still contains $num_messages messages, expected 0 after connector processing (all messages should be acked and removed)"
 exit 1
 fi
 
