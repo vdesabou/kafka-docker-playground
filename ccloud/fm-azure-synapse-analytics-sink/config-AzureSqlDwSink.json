@@ -7,6 +7,7 @@
     "azure.sql.dw.user": "STRING",
     "batch.size": "3000",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "db.timezone": "UTC",
     "fields.whitelist": "LIST",
     "input.data.format": "STRING",

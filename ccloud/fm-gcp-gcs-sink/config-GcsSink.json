@@ -2,6 +2,7 @@
     "auto.restart.on.user.error": "true",
     "behavior.on.null.values": "ignore",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "enhanced.avro.schema.support": "true",
     "errors.deadletterqueue.topic.name": "dlq-${connector}",
     "errors.tolerance": "all",

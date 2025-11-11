@@ -6,6 +6,7 @@
     "azure.datalake.gen2.client.key": "PASSWORD",
     "azure.datalake.gen2.token.endpoint": "STRING",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "errors.deadletterqueue.topic.name": "dlq-${connector}",
     "errors.tolerance": "all",
     "flush.size": "1000",
