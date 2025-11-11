@@ -100,7 +100,6 @@ sleep 10
 log "Verify messages are in topic pubsub-topic"
 playground topic consume --topic pubsub-topic --min-expected-messages 3 --timeout 60
 
-
 log "Verify acknowledgement by checking for duplicate messages"
 messages=$(playground topic consume --topic pubsub-topic --min-expected-messages 3 --timeout 60 --max-messages 5000)
 
