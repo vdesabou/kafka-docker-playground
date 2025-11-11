@@ -11,6 +11,7 @@
     "aws.secret.access.key": "PASSWORD",
     "behavior.on.error": "log",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "errors.deadletterqueue.topic.name": "dlq-${connector}",
     "errors.tolerance": "all",
     "input.data.format": "STRING",

@@ -9,6 +9,7 @@
     "aws.redshift.user": "STRING",
     "batch.size": "3000",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "db.timezone": "UTC",
     "errors.tolerance": "all",
     "input.data.format": "STRING",
