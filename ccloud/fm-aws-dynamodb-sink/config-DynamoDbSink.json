@@ -5,6 +5,7 @@
     "aws.dynamodb.pk.sort": "offset",
     "aws.secret.access.key": "PASSWORD",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "errors.deadletterqueue.topic.name": "dlq-${connector}",
     "errors.tolerance": "all",
     "input.data.format": "JSON",

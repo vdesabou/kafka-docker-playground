@@ -4,6 +4,7 @@
     "auto.restart.on.user.error": "true",
     "auto.update.schemas": "false",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "convert.double.special.values": "false",
     "datasets": "STRING",
     "errors.deadletterqueue.topic.name": "dlq-${connector}",

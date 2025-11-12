@@ -5,6 +5,7 @@
     "azblob.container.name": "STRING",
     "behavior.on.null.values": "ignore",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "errors.deadletterqueue.topic.name": "dlq-${connector}",
     "errors.tolerance": "all",
     "file.delim": "+",

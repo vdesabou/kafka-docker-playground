@@ -8,6 +8,7 @@
     "aws.secret.access.key": "PASSWORD",
     "behavior.on.error": "FAIL",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "datapreview.schemas.enable": "false",
     "errors.tolerance": "none",
     "kafka.api.key": "STRING",

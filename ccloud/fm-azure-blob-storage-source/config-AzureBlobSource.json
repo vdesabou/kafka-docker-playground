@@ -7,6 +7,7 @@
     "azblob.sas.token": "PASSWORD",
     "behavior.on.error": "FAIL",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "csfle.enabled": "false",
     "datapreview.schemas.enable": "false",
     "directory.delim": "/",

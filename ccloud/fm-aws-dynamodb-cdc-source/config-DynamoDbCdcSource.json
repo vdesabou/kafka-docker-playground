@@ -6,6 +6,7 @@
     "cdc.start.position.timestamp": "STRING",
     "cdc.start.position.timestamp.format": "yyyy-MM-dd'T'HH:mm:ss'Z'",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "datapreview.schemas.enable": "false",
     "dynamodb.cdc.checkpointing.table.prefix": "connect-KCL-",
     "dynamodb.cdc.checkpointing.table.read.capacity": "50",
