@@ -10,6 +10,7 @@
     "connection.ssl.truststorePassword": "PASSWORD",
     "connection.user": "STRING",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "csfle.enabled": "false",
     "csfle.onFailure": "ERROR",
     "database": "STRING",

@@ -1,6 +1,7 @@
     "auto.restart.on.user.error": "true",
     "batch.enable": "true",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "datapreview.schemas.enable": "false",
     "errors.tolerance": "none",
     "kafka.api.key": "STRING",
