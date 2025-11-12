@@ -100,17 +100,29 @@ sleep 10
 log "Verify messages are in topic pubsub-topic"
 playground topic consume --topic pubsub-topic --min-expected-messages 3 --timeout 60
 
-log "Verify acknowledgement by checking for duplicate messages"
-messages=$(playground topic consume --topic pubsub-topic --min-expected-messages 3 --timeout 60 --max-messages 5000)
+log "⏳ Waiting 80 seconds (ack deadline is 60s) to verify acknowledgement behavior..."
+log "If ACK is working: messages are acknowledged, no redelivery will occur"
+log "If ACK is broken: messages will be redelivered after the 60s ack deadline expires"
+sleep 80
 
-# Extract message data and count occurrences
-message_count=$(echo "$messages" | grep -o "Peter\|Megan\|Erin" | wc -l | tr -d ' ')
-unique_count=$(echo "$messages" | grep -o "Peter\|Megan\|Erin" | sort -u | wc -l | tr -d ' ')
+log "Checking for duplicate messages after ack deadline..."
+# Get all messages that have accumulated in the topic
+all_messages=$(playground topic consume --topic pubsub-topic --min-expected-messages 3 --timeout 60 --max-messages 5000)
+
+# Count total occurrences and unique messages
+message_count=$(echo "$all_messages" | grep -o "Peter\|Megan\|Erin" | wc -l | tr -d ' ')
+unique_count=$(echo "$all_messages" | grep -o "Peter\|Megan\|Erin" | sort -u | wc -l | tr -d ' ')
+
+log "After ack deadline: Found $message_count total messages, $unique_count unique names"
 
 if [ "$message_count" -eq 3 ] && [ "$unique_count" -eq 3 ]
 then
-    log "✅ Acknowledgement verified: received exactly 3 unique messages (Peter, Megan, Erin) - no duplicates"
+    log "✅ Acknowledgement verified: received exactly 3 unique messages (Peter, Megan, Erin) - no duplicates after ack deadline"
+    log "✅ Messages were properly acknowledged by the connector"
 else
-    logerror "❌ Message mismatch — potential commit/ACK failure. Found $message_count total messages, $unique_count unique (expected 3 unique)"
+    logerror "❌ Acknowledgement failure detected!"
+    logerror "Expected: 3 total messages (3 unique)"
+    logerror "Found: $message_count total messages, $unique_count unique"
+    logerror "This indicates messages were NOT acknowledged and were redelivered by Pub/Sub"
     exit 1
 fi
