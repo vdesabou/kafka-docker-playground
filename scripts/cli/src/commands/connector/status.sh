@@ -45,6 +45,9 @@ do
         elif [ "$status" == "FAILED" ]
         then
             status="❌ FAILED"
+        elif [ "$status" == "UNASSIGNED" ]
+        then
+            status="⌛ UNASSIGNED"
         elif [ "$status" == "STOPPED" ]
         then
             status="🛑 STOPPED"
@@ -69,6 +72,9 @@ do
         elif [[ "$tasks" == *"FAILED"* ]]
         then
             tasks="${tasks//FAILED/🛑 FAILED}"
+        elif [[ "$tasks" == *"UNASSIGNED"* ]]
+        then
+            tasks="${tasks//UNASSIGNED/⌛ UNASSIGNED}"
         elif [[ "$tasks" == *"USER_ACTIONABLE_ERROR"* ]]
         then
             tasks="${tasks//USER_ACTIONABLE_ERROR/💪 USER_ACTIONABLE_ERROR}"
@@ -120,6 +126,9 @@ do
         elif [ "$status" == "FAILED" ]
         then
             status="❌ FAILED"
+        elif [ "$status" == "UNASSIGNED" ]
+        then
+            status="⌛ UNASSIGNED"
         elif [ "$status" == "STOPPED" ]
         then
             status="🛑 STOPPED"
@@ -141,6 +150,9 @@ do
         elif [[ "$tasks" == *"FAILED"* ]]
         then
             tasks="${tasks//FAILED/🛑 FAILED}"
+        elif [[ "$tasks" == *"UNASSIGNED"* ]]
+        then
+            tasks="${tasks//UNASSIGNED/⌛ UNASSIGNED}"
         else
             tasks="🤔 N/A"
         fi
