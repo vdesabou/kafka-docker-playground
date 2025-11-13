@@ -14,6 +14,7 @@
     "connection.ssl.truststorePassword": "PASSWORD",
     "connection.user": "STRING",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "database": "STRING",
     "datapreview.schemas.enable": "false",
     "errors.tolerance": "none",

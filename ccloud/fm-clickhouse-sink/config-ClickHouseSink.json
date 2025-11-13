@@ -2,6 +2,7 @@
     "bypassRowBinary": "false",
     "clickhouseSettings": "STRING",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "csfle.enabled": "false",
     "csfle.onFailure": "ERROR",
     "database": "default",
