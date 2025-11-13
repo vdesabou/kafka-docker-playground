@@ -11,6 +11,7 @@
     "connection.password": "PASSWORD",
     "connection.user": "STRING",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "csfle.enabled": "false",
     "csfle.onFailure": "ERROR",
     "errors.tolerance": "all",

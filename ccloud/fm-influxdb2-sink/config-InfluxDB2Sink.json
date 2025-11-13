@@ -1,5 +1,6 @@
     "auto.restart.on.user.error": "true",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "event.time.fieldname": "STRING",
     "influxdb.bucket": "STRING",
     "influxdb.gzip.enable": "false",

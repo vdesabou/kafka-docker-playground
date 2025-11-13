@@ -4,6 +4,7 @@
     "connection.password": "PASSWORD",
     "connection.user": "STRING",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "datapreview.schemas.enable": "false",
     "entity.names": "LIST",
     "http.initial.offset": "STRING",

@@ -1,6 +1,7 @@
     "auto.restart.on.user.error": "true",
     "batch.size": "5000",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "datapreview.schemas.enable": "false",
     "influxdb.bucket": "STRING",
     "influxdb.measurement.blacklist": "STRING",
