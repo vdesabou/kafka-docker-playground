@@ -46,6 +46,15 @@ The type of resource the connector writes to, such as indices, datastreams or al
 	 - Importance: A list of topic-to-resource mappings in the format 'topic:resource'. If specified, the connector will use the provided resource name (index, data stream, or alias) instead of the topic name for writing to Elasticsearch. The resource must exist in Elasticsearch before configuring the connector. The type of resource (index, data stream, or alias) is determined by the 'external.resource.usage' configuration.
 	 - Required: HIGH
 
+🔘 max.external.resource.mappings
+
+The maximum number of topic-to-external-resource mappings allowed.
+
+	 - Type: INT
+	 - Default: 15
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 data.stream.type
 
 Generic type describing the data to be written to data stream. The default is NONE which indicates the connector will write to regular indices instead. If set, this configuration will be used alongside data.stream.dataset and data.stream.namespace to construct the data stream name in the form of {``data.stream.type``}-{``data.stream.dataset``}-{``data.stream.namespace``}. Custom index templates defined in the destination cluster are supported.

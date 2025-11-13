@@ -43,6 +43,7 @@
     "linger.ms": "1",
     "max.buffered.records": "20000",
     "max.connection.idle.time.ms": "60000",
+    "max.external.resource.mappings": "15",
     "max.in.flight.requests": "5",
     "max.retries": "5",
     "proxy.host": "STRING",
