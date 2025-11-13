@@ -82,11 +82,29 @@ Which topic do you want to send data to?
 ==========================
 GCP credentials
 ==========================
+🔘 provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing integration that has access to your resource. In case you need to integrate a new Google Service Account, use provider integration
+	 - Required: HIGH
+
+🔘 authentication.method
+
+Select how you want to authenticate with GCP.
+
+	 - Type: STRING
+	 - Default: Google cloud service account
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 gcp.pubsub.credentials.json
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: PASSWORD
 	 - Importance: GCP service account JSON file with read permissions for Pub/Sub.
 	 - Required: HIGH
@@ -267,4 +285,16 @@ Enable connector to automatically restart on user-actionable errors.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
+
+==========================
+Egress allowlist
+==========================
+🔘 connector.egress.whitelist
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
 

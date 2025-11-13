@@ -5,6 +5,7 @@
     "connection.url": "STRING",
     "connection.user": "STRING",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "csfle.enabled": "false",
     "datapreview.schemas.enable": "false",
     "db.timezone": "STRING",

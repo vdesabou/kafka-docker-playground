@@ -205,6 +205,69 @@ Authentication method of the connector. Valid values are ``None``, ``Google Clou
 	 - Importance: GCP service account JSON file.
 	 - Required: HIGH
 
+🔘 gcf.ssl.enabled
+
+Determine whether the connection to the endpoint should use SSL.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 gcf.ssl.keystorefile
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The keystore that contains the client certificate and private key. Supported formats are JKS or PKCS12. File system paths are not supported.
+	 - Required: LOW
+
+🔘 gcf.ssl.keystore.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The store password for the key store file.
+	 - Required: HIGH
+
+🔘 gcf.ssl.key.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The password for the private key in the key store file.
+	 - Required: HIGH
+
+🔘 gcf.ssl.truststorefile
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The truststore that contains the server CA certificate(s). Supported formats are JKS or PKCS12. File system paths are not supported.
+	 - Required: HIGH
+
+🔘 gcf.ssl.truststore.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The trust store password containing a server CA certificate.
+	 - Required: HIGH
+
+🔘 gcf.ssl.protocol
+
+The protocol to use for SSL connections.
+
+	 - Type: STRING
+	 - Default: TLSv1.3
+	 - Importance: MEDIUM
+	 - Required: false
+
 ==========================
 Behavior on error
 ==========================
@@ -296,9 +359,9 @@ Google Cloud Functions configurations
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: STRING
-	 - Importance: Name of the function to be invoked
+	 - Importance: The name of the function to invoke. You don't need to set this if you use the Custom URL option.
 	 - Required: HIGH
 
 🔘 gcf.region.name
@@ -307,17 +370,44 @@ Google Cloud Functions configurations
 
 	 - Type: true
 	 - Default: STRING
-	 - Importance: Region of the given function to be invoked as in 'https://<region-name>-<project-id>.cloudfunctions.net/' 
+	 - Importance: The region where the function is located (for example, in the URL: https://<region-name>-<project-id>.cloudfunctions.net/.)
 	 - Required: HIGH
 
 🔘 gcf.project.id
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: STRING
-	 - Importance: Project ID for the given function to be invoked as in 'https://<region-name>-<project-id>.cloudfunctions.net/' 
+	 - Importance: The Project ID for the function to invoke (for example, in the URL: https://<region-name>-<project-id>.cloudfunctions.net/). You don't need to set this if you use the Custom URL option.
 	 - Required: HIGH
+
+🔘 gcf.custom.url.enabled
+
+Set to true to use a custom URL for the Google Cloud Function instead of https://<region-name>-<project-id>.cloudfunctions.net/<function-name>.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 gcf.custom.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom URL for the Google Cloud Function to invoke instead of https://<region-name>-<project-id>.cloudfunctions.net/<function-name>. Note that you must set ``enable.custom.url`` to ``true``. Do not append a trailing slash (/); the connector automatically appends it for proper path resolution.
+	 - Required: MEDIUM
+
+🔘 gcf.audience.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The audience URL the connector uses to generate the token sent in the Authorization header. If you do not set this, the connector uses the function URL as the audience. Note that you must set ``gcf.custom.url.enabled`` to ``true``.
+	 - Required: MEDIUM
 
 ==========================
 Batch configurations
@@ -352,15 +442,6 @@ Whether to report only the status code to the success topic. If the API response
 ==========================
 Additional Configs
 ==========================
-🔘 value.converter.decimal.format
-
-Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
-
-	 - Type: STRING
-	 - Default: BASE64
-	 - Importance: LOW
-	 - Required: false
-
 🔘 value.converter.replace.null.with.default
 
 Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
@@ -397,6 +478,24 @@ Use this property if you would like to configure the connector's error handling 
 	 - Importance: LOW
 	 - Required: false
 
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.connect.meta.data
 
 
@@ -424,15 +523,6 @@ How to construct the subject name for key schema registration.
 	 - Importance: LOW
 	 - Required: false
 
-🔘 value.converter.ignore.default.for.nullables
-
-When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
-	 - Required: false
-
 ==========================
 Auto-restart policy
 ==========================
@@ -444,4 +534,16 @@ Enable connector to automatically restart on user-actionable errors.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
+
+==========================
+Egress allowlist
+==========================
+🔘 connector.egress.whitelist
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
 

@@ -4,6 +4,7 @@
     "aws.secret.access.key": "PASSWORD",
     "behavior.on.malformed.metric": "FAIL",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "errors.deadletterqueue.topic.name": "dlq-${connector}",
     "errors.tolerance": "all",
     "input.data.format": "JSON",

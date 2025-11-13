@@ -3,6 +3,7 @@
     "behavior.on.null.record": "fail",
     "connection.timeout": "30000",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "errors.deadletterqueue.topic.name": "dlq-${connector}",
     "errors.tolerance": "all",
     "input.data.format": "STRING",
