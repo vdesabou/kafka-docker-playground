@@ -7,8 +7,25 @@ source ${DIR}/../../scripts/utils.sh
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
+# Wait for Schema Registry readiness
+log "Waiting for Schema Registry to be ready..."
+MAX_WAIT=60
+cur_wait=0
+until docker exec -i connect curl -s http://schema-registry:8081/subjects >/dev/null 2>&1
+do
+  sleep 1
+  cur_wait=$(( cur_wait+1 ))
+  if [[ "$cur_wait" -gt "$MAX_WAIT" ]]
+  then
+    logerror "❌ Schema Registry is still not ready after $MAX_WAIT seconds"
+    docker logs --tail 100 schema-registry || true
+    exit 1
+  fi
+done
+
 # CASE 1 -> With an optional field
 log "Register an Avro schema with an Optional field"
+sleep 2
 docker exec -i connect curl -s -H "Content-Type: application/vnd.schemaregistry.v1+json" -X POST http://schema-registry:8081/subjects/orders-value/versions --data '{"schema":"{\"type\":\"record\",\"name\":\"myrecord\",\"fields\":[{\"name\":\"id\",\"type\":\"int\"},{\"name\":\"product\",\"type\":\"string\"},{\"name\":\"quantity\",\"type\":\"int\"},{\"name\":\"description\",\"type\":[\"null\",\"string\"],\"default\":null}]}"}'
 
 log "Checking the schema existence in the schema registry"
