@@ -1,6 +1,7 @@
     "auto.restart.on.user.error": "true",
     "connection.timeout.ms": "50000",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "csfle.enabled": "false",
     "csfle.onFailure": "ERROR",
     "errors.deadletterqueue.topic.name": "dlq-${connector}",

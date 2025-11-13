@@ -1,6 +1,7 @@
     "auto.restart.on.user.error": "true",
     "connection.timeout": "30000",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "csfle.enabled": "false",
     "datapreview.schemas.enable": "false",
     "errors.tolerance": "none",
