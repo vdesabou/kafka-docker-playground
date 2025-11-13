@@ -336,8 +336,23 @@ The Azure Storage account key.
 	 - Type: PASSWORD
 	 - Default: null
 	 - Importance: HIGH
-	 - Required: true
+	 - Required: false
 
+==========================
+null
+==========================
+🔘 credentials.provider.class
+
+
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Azure
+==========================
 🔘 azblob.container.name
 
 The container name. Must be between 3-63 alphanumeric and '-' characters
