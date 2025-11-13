@@ -13,6 +13,21 @@ fi
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
+log "Waiting for Schema Registry to be ready..."
+MAX_WAIT=60
+cur_wait=0
+until curl -s http://localhost:8081/subjects >/dev/null 2>&1
+do
+  sleep 1
+  cur_wait=$(( cur_wait+1 ))
+  if [[ "$cur_wait" -gt "$MAX_WAIT" ]]
+  then
+    logerror "❌ Schema Registry is still not ready after $MAX_WAIT seconds"
+    docker logs --tail 100 schema-registry || true
+    exit 1
+  fi
+done
+
 log "Register schema for customer"
 curl -X POST http://localhost:8081/subjects/customer/versions \
   --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
