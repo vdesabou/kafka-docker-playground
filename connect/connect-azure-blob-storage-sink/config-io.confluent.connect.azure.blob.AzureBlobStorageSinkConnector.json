@@ -18,6 +18,7 @@
     "behavior.on.null.values": "FAIL",
     "connect.azblob.useragent": "APN/1.0 Confluent/1.0 AzureBlobSink/",
     "connect.meta.data": "true",
+    "credentials.provider.class": "",
     "directory.delim": "/",
     "enhanced.avro.schema.support": "true",
     "file.delim": "+",
