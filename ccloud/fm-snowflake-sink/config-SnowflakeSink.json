@@ -4,6 +4,7 @@
     "buffer.flush.time": "120",
     "buffer.size.bytes": "10000000",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "csfle.enabled": "false",
     "csfle.onFailure": "ERROR",
     "enable.task.fail.on.authorization.errors": "true",
