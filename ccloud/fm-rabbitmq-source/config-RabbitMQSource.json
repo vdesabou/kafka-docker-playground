@@ -2,6 +2,7 @@
     "backoff.time.ms": "100",
     "batch.size": "1024",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "datapreview.schemas.enable": "false",
     "kafka.api.key": "STRING",
     "kafka.api.secret": "PASSWORD",
