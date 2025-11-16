@@ -2,6 +2,7 @@
     "batch.max.rows": "10000",
     "connection.timeout.ms": "50000",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "csfle.enabled": "false",
     "datapreview.schemas.enable": "false",
     "errors.tolerance": "none",
