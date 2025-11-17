@@ -116,6 +116,10 @@ log "✨ If you modify a docker-compose file and want to re-create the container
 
 wait_container_ready
 
+if ! (version_gt $CP_CONNECT_TAG "7.6.99")
+then
+     playground container change-jdk --version 17 --container connect
+fi
 
 # https://github.com/confluentinc/common-docker/pull/743 and https://github.com/adoptium/adoptium-support/issues/1285
 set +e

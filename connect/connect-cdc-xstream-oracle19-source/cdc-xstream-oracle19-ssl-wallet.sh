@@ -121,6 +121,11 @@ docker cp oracle:/tmp/server/cwallet.sso /tmp
 docker cp /tmp/cwallet.sso connect:/tmp/cwallet.sso
 playground container exec --root --command "chown appuser /tmp/cwallet.sso"
 
+if ! (version_gt $CP_CONNECT_TAG "7.6.99")
+then
+     playground container change-jdk --version 17 --container connect
+fi
+
 # https://github.com/confluentinc/common-docker/pull/743 and https://github.com/adoptium/adoptium-support/issues/1285
 set +e
 playground container exec --root --command "sed -i "s/packages\.adoptium\.net/adoptium\.jfrog\.io/g" /etc/yum.repos.d/adoptium.repo"

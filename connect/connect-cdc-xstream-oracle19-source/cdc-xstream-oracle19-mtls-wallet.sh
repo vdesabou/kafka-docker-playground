@@ -132,6 +132,11 @@ log "✨ If you modify a docker-compose file and want to re-create the container
 
 wait_container_ready
 
+if ! (version_gt $CP_CONNECT_TAG "7.6.99")
+then
+     playground container change-jdk --version 17 --container connect
+fi
+
 log "🔏 copy cwallet.sso to connect container"
 docker cp oracle:/tmp/client/cwallet.sso /tmp
 docker cp /tmp/cwallet.sso connect:/tmp/cwallet.sso
