@@ -166,15 +166,6 @@ What SSL mode should we use to connect to your database. `disabled` disables SSL
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 ssl.truststorepassword
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The trust store password containing server CA certificate. Only required if using `verify-ca` or `verify-full` ssl mode.
-	 - Required: LOW
-
 🔘 ssl.server.cert.dn
 
 
@@ -182,6 +173,15 @@ What SSL mode should we use to connect to your database. `disabled` disables SSL
 	 - Type: false
 	 - Default: STRING
 	 - Importance: Use this paramter to specify the distinguished name (DN) of the database server. Only required if using `verify-full` ssl mode.
+	 - Required: LOW
+
+🔘 ssl.truststorepassword
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The trust store password containing server CA certificate. Only required if using `verify-ca` or `verify-full` ssl mode.
 	 - Required: LOW
 
 ==========================
@@ -400,15 +400,6 @@ Number of tasks for this connector
 ==========================
 Additional Configs
 ==========================
-🔘 value.converter.decimal.format
-
-Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
-
-	 - Type: STRING
-	 - Default: BASE64
-	 - Importance: LOW
-	 - Required: false
-
 🔘 value.converter.replace.null.with.default
 
 Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
@@ -445,6 +436,24 @@ Use this property if you would like to configure the connector's error handling 
 	 - Importance: LOW
 	 - Required: false
 
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.connect.meta.data
 
 
@@ -472,15 +481,6 @@ How to construct the subject name for key schema registration.
 	 - Importance: LOW
 	 - Required: false
 
-🔘 value.converter.ignore.default.for.nullables
-
-When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
-	 - Required: false
-
 ==========================
 Auto-restart policy
 ==========================
@@ -492,4 +492,16 @@ Enable connector to automatically restart on user-actionable errors.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
+
+==========================
+Egress allowlist
+==========================
+🔘 connector.egress.whitelist
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
 

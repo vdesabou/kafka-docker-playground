@@ -5,6 +5,7 @@
     "batch.size": "INT",
     "character.encoding": "UTF-8",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "datapreview.schemas.enable": "false",
     "errors.tolerance": "none",
     "jms.destination.name": "STRING",

@@ -7,6 +7,7 @@
     "connection.port": "INT",
     "connection.user": "STRING",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "date.calendar.system": "LEGACY",
     "date.timezone": "DB_TIMEZONE",
     "db.name": "STRING",

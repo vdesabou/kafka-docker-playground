@@ -2,6 +2,7 @@
     "connection.max.message.size": "1048576",
     "connection.timeout": "30000",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "convert.changed.fields": "false",
     "csfle.enabled": "false",
     "datapreview.schemas.enable": "false",

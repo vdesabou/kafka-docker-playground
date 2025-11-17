@@ -1,6 +1,7 @@
     "auto.restart.on.user.error": "true",
     "behavior.on.error": "log",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "function.name": "STRING",
     "gcf.credentials.json": "PASSWORD",
     "input.data.format": "STRING",

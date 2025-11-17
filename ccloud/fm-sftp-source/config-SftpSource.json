@@ -3,6 +3,7 @@
     "behavior.on.error": "FAIL",
     "cleanup.policy": "MOVE",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "csv.escape.char": "92",
     "csv.file.charset": "UTF-8",
     "csv.first.row.as.header": "STRING",

@@ -3,6 +3,7 @@
     "aws.access.key.id": "PASSWORD",
     "aws.secret.access.key": "PASSWORD",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "csfle.enabled": "false",
     "csv.escape.char": "92",
     "csv.file.charset": "UTF-8",

@@ -469,3 +469,15 @@ Enable connector to automatically restart on user-actionable errors.
 	 - Importance: MEDIUM
 	 - Required: false
 
+==========================
+Egress allowlist
+==========================
+🔘 connector.egress.whitelist
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+

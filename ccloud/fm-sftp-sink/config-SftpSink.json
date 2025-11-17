@@ -1,6 +1,7 @@
     "auto.restart.on.user.error": "true",
     "compression.codec": "STRING",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "errors.tolerance": "all",
     "flush.size": "1000",
     "input.data.format": "JSON",

@@ -1,6 +1,7 @@
     "auto.restart.on.user.error": "true",
     "behavior.on.error": "log",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "datadog.api.key": "PASSWORD",
     "datadog.domain": "COM",
     "datadog.site": "STRING",

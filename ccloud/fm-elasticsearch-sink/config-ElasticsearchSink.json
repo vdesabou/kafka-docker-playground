@@ -6,6 +6,7 @@
     "connection.url": "LIST",
     "connection.username": "STRING",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "data.stream.dataset": "STRING",
     "data.stream.namespace": "${topic}",
     "data.stream.timestamp.field": "LIST",

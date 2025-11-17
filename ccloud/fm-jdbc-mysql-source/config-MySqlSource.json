@@ -5,6 +5,7 @@
     "connection.port": "INT",
     "connection.user": "STRING",
     "connector.class": "STRING",
+    "connector.egress.whitelist": "STRING",
     "datapreview.schemas.enable": "false",
     "date.calendar.system": "LEGACY",
     "db.name": "STRING",

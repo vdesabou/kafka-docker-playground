@@ -307,7 +307,7 @@ Determine whether the connection to the endpoint should use SSL.
 
 	 - Type: false
 	 - Default: PASSWORD
-	 - Importance: The key store containing the server certificate.
+	 - Importance: The keystore that contains the client certificate and private key. Supported formats are JKS or PKCS12. File system paths are not supported.
 	 - Required: LOW
 
 🔘 servicenow.ssl.keystore.password
@@ -334,7 +334,7 @@ Determine whether the connection to the endpoint should use SSL.
 
 	 - Type: false
 	 - Default: PASSWORD
-	 - Importance: The trust store containing a server CA certificate.
+	 - Importance: The truststore that contains the server CA certificate(s). Supported formats are JKS or PKCS12. File system paths are not supported.
 	 - Required: HIGH
 
 🔘 servicenow.ssl.truststore.password
@@ -1185,4 +1185,16 @@ Enable connector to automatically restart on user-actionable errors.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
+
+==========================
+Egress allowlist
+==========================
+🔘 connector.egress.whitelist
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
 
