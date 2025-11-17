@@ -26,8 +26,21 @@ if ! version_gt $TAG_BASE "5.4.99"; then
   logwarn "Replicator Monitoring is disabled as you're using an old version"
   DISABLE_REPLICATOR_MONITORING="-f ../../environment/mdc-plaintext/docker-compose.no-replicator-monitoring.yml"
 else
+  set +e
   log "🎱 Installing replicator confluentinc/kafka-connect-replicator:$TAG for Replicator Monitoring"
   docker run -u0 -i --rm -v ${DIR}/../../confluent-hub:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "confluent-hub install --no-prompt confluentinc/kafka-connect-replicator:$TAG && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components"
+  if [ $? -ne 0 ]
+  then
+    LATEST_TAG=$(grep "export TAG" ${DIR}/../../scripts/utils.sh | head -1 | cut -d "=" -f 2 | cut -d " " -f 1)
+    logwarn "Installing replicator confluentinc/kafka-connect-replicator:$TAG failed, trying now with default tag $LATEST_TAG"
+    docker run -u0 -i --rm -v ${DIR}/../../confluent-hub:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "confluent-hub install --no-prompt confluentinc/kafka-connect-replicator:$LATEST_TAG && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components"
+    if [ -z "$LATEST_TAG" ]
+    then
+        logerror "❌ error while getting default TAG "
+        exit 1
+    fi
+  fi
+  set -e
 fi
 
 docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} build
