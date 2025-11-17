@@ -9,48 +9,55 @@ IFS=' ' read -ra container_array <<< "$containers"
 
 for container in "${container_array[@]}"
 do
-	docker exec $container type jmap > /dev/null 2>&1
-	if [ $? != 0 ]
-	then
-		logerror "❌ jmap is not installed on container $container"
-		exit 1
-	fi
+    docker exec $container type jmap > /dev/null 2>&1
+    if [ $? != 0 ]
+    then
+        logwarn "jmap is not installed on container $container, attempting to install jdk 17"
+        playground container change-jdk --version 17
 
-	if [[ -n "$histo" ]]
-	then
-		filename="heap-dump-$container-histo-$(date '+%Y-%m-%d-%H-%M-%S').txt"
-		set -e
-		if [[ -n "$live" ]]
-		then
-			log "📊 Taking histo (with live option) heap dump on container ${container}"
-			docker exec $container jmap -histo:live 1 > /tmp/${filename}
-		else
-			log "📊 Taking histo (without live option) heap dump on container ${container}"
-			docker exec $container jmap -histo 1 > /tmp/${filename}
-		fi
-		if [ $? -eq 0 ]
-		then
-			log "👻 heap dump is available at /tmp/${filename}"
-		else
-			logerror "❌ Failed to take heap dump"
-		fi
-	else
-		filename="heap-dump-$container-$(date '+%Y-%m-%d-%H-%M-%S').hprof"
-		set -e
-		if [[ -n "$live" ]]
-		then
-			log "🎯 Taking heap dump (with live option) on container ${container}"
-			docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
-		else
-			log "🎯 Taking heap dump (without live option) on container ${container}"
-			docker exec $container jmap -dump:format=b,file=/tmp/${filename} 1
-		fi
-		if [ $? -eq 0 ]
-		then
-			log "👻 heap dump is available at ${filename}"
-			docker cp ${container}:/tmp/${filename} ${filename}
-		else
-			logerror "❌ Failed to take heap dump"
-		fi
-	fi
+        docker exec $container type jmap > /dev/null 2>&1
+        if [ $? != 0 ]
+        then
+            logerror "❌ jmap could not be installed on container $container"
+            exit 1
+        fi
+    fi
+
+    if [[ -n "$histo" ]]
+    then
+        filename="heap-dump-$container-histo-$(date '+%Y-%m-%d-%H-%M-%S').txt"
+        set -e
+        if [[ -n "$live" ]]
+        then
+            log "📊 Taking histo (with live option) heap dump on container ${container}"
+            docker exec $container jmap -histo:live 1 > /tmp/${filename}
+        else
+            log "📊 Taking histo (without live option) heap dump on container ${container}"
+            docker exec $container jmap -histo 1 > /tmp/${filename}
+        fi
+        if [ $? -eq 0 ]
+        then
+            log "👻 heap dump is available at /tmp/${filename}"
+        else
+            logerror "❌ Failed to take heap dump"
+        fi
+    else
+        filename="heap-dump-$container-$(date '+%Y-%m-%d-%H-%M-%S').hprof"
+        set -e
+        if [[ -n "$live" ]]
+        then
+            log "🎯 Taking heap dump (with live option) on container ${container}"
+            docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
+        else
+            log "🎯 Taking heap dump (without live option) on container ${container}"
+            docker exec $container jmap -dump:format=b,file=/tmp/${filename} 1
+        fi
+        if [ $? -eq 0 ]
+        then
+            log "👻 heap dump is available at ${filename}"
+            docker cp ${container}:/tmp/${filename} ${filename}
+        else
+            logerror "❌ Failed to take heap dump"
+        fi
+    fi
 done

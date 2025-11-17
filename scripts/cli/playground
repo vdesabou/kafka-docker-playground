@@ -21333,24 +21333,31 @@ playground_debug_thread_dump_command() {
 
   for container in "${container_array[@]}"
   do
-  	filename="/tmp/thread-dump-$container-$(date '+%Y-%m-%d-%H-%M-%S').log"
+      filename="/tmp/thread-dump-$container-$(date '+%Y-%m-%d-%H-%M-%S').log"
 
-  	set +e
-  	docker exec $container type jstack > /dev/null 2>&1
-  	if [ $? != 0 ]
-  	then
-  		logerror "❌ jstack is not installed on container $container"
-  		exit 1
-  	fi
-  	set -e
-  	log "🎯 Taking thread dump on container ${container} for pid 1"
-  	docker exec $container jstack 1 > "$filename" 2>&1
-  	if [ $? -eq 0 ]
-  	then
-  		playground open --file "${filename}"
-  	else
-  		logerror "❌ Failed to take thread dump"
-  	fi
+      set +e
+      docker exec $container type jstack > /dev/null 2>&1
+      if [ $? != 0 ]
+      then
+          logwarn "jstack is not installed on container $container, attempting to install jdk 17"
+          playground container change-jdk --version 17
+
+          docker exec $container type jstack > /dev/null 2>&1
+          if [ $? != 0 ]
+          then
+              logerror "❌ jstack could not be installed on container $container"
+              exit 1
+          fi
+      fi
+      set -e
+      log "🎯 Taking thread dump on container ${container} for pid 1"
+      docker exec $container jstack 1 > "$filename" 2>&1
+      if [ $? -eq 0 ]
+      then
+          playground open --file "${filename}"
+      else
+          logerror "❌ failed to take thread dump"
+      fi
   done
 
 }
@@ -21370,50 +21377,57 @@ playground_debug_heap_dump_command() {
 
   for container in "${container_array[@]}"
   do
-  	docker exec $container type jmap > /dev/null 2>&1
-  	if [ $? != 0 ]
-  	then
-  		logerror "❌ jmap is not installed on container $container"
-  		exit 1
-  	fi
+      docker exec $container type jmap > /dev/null 2>&1
+      if [ $? != 0 ]
+      then
+          logwarn "jmap is not installed on container $container, attempting to install jdk 17"
+          playground container change-jdk --version 17
 
-  	if [[ -n "$histo" ]]
-  	then
-  		filename="heap-dump-$container-histo-$(date '+%Y-%m-%d-%H-%M-%S').txt"
-  		set -e
-  		if [[ -n "$live" ]]
-  		then
-  			log "📊 Taking histo (with live option) heap dump on container ${container}"
-  			docker exec $container jmap -histo:live 1 > /tmp/${filename}
-  		else
-  			log "📊 Taking histo (without live option) heap dump on container ${container}"
-  			docker exec $container jmap -histo 1 > /tmp/${filename}
-  		fi
-  		if [ $? -eq 0 ]
-  		then
-  			log "👻 heap dump is available at /tmp/${filename}"
-  		else
-  			logerror "❌ Failed to take heap dump"
-  		fi
-  	else
-  		filename="heap-dump-$container-$(date '+%Y-%m-%d-%H-%M-%S').hprof"
-  		set -e
-  		if [[ -n "$live" ]]
-  		then
-  			log "🎯 Taking heap dump (with live option) on container ${container}"
-  			docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
-  		else
-  			log "🎯 Taking heap dump (without live option) on container ${container}"
-  			docker exec $container jmap -dump:format=b,file=/tmp/${filename} 1
-  		fi
-  		if [ $? -eq 0 ]
-  		then
-  			log "👻 heap dump is available at ${filename}"
-  			docker cp ${container}:/tmp/${filename} ${filename}
-  		else
-  			logerror "❌ Failed to take heap dump"
-  		fi
-  	fi
+          docker exec $container type jmap > /dev/null 2>&1
+          if [ $? != 0 ]
+          then
+              logerror "❌ jmap could not be installed on container $container"
+              exit 1
+          fi
+      fi
+
+      if [[ -n "$histo" ]]
+      then
+          filename="heap-dump-$container-histo-$(date '+%Y-%m-%d-%H-%M-%S').txt"
+          set -e
+          if [[ -n "$live" ]]
+          then
+              log "📊 Taking histo (with live option) heap dump on container ${container}"
+              docker exec $container jmap -histo:live 1 > /tmp/${filename}
+          else
+              log "📊 Taking histo (without live option) heap dump on container ${container}"
+              docker exec $container jmap -histo 1 > /tmp/${filename}
+          fi
+          if [ $? -eq 0 ]
+          then
+              log "👻 heap dump is available at /tmp/${filename}"
+          else
+              logerror "❌ Failed to take heap dump"
+          fi
+      else
+          filename="heap-dump-$container-$(date '+%Y-%m-%d-%H-%M-%S').hprof"
+          set -e
+          if [[ -n "$live" ]]
+          then
+              log "🎯 Taking heap dump (with live option) on container ${container}"
+              docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
+          else
+              log "🎯 Taking heap dump (without live option) on container ${container}"
+              docker exec $container jmap -dump:format=b,file=/tmp/${filename} 1
+          fi
+          if [ $? -eq 0 ]
+          then
+              log "👻 heap dump is available at ${filename}"
+              docker cp ${container}:/tmp/${filename} ${filename}
+          else
+              logerror "❌ Failed to take heap dump"
+          fi
+      fi
   done
 }
 
@@ -22103,25 +22117,29 @@ playground_container_change_jdk_command() {
 
   for container in "${container_array[@]}"
   do
-  	log "🤎 Installing Azul JDK ${version} on container ${container}" /usr/lib/jvm/java-11-zulu-openjdk/bin/java
-  	playground container exec --container "${container}" --root --command "yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm ; yum -y install zulu${version}-jdk"
-  	if [ $? -eq 0 ]
-  	then
-  		java_path=$(playground --output-level ERROR container exec --container "${container}" --root --command "update-alternatives --display java | grep \"java-${version}-zulu-openjdk\" | grep \"priority\" | head -1 | cut -d \" \" -f 1")
-  		if [ -n "$java_path" ]
-  		then
-  			playground container exec --container "${container}" --root --command "update-alternatives --set java \"$java_path\""
-  		else
-  			logerror "could not find java ${version} in alternatives list"
-  		fi
-  		playground container restart --container "${container}"
+      set +e
+      # for 8.x install yum
+      playground container exec --root --command "microdnf -y install yum" > /dev/null 2>&1
+      set -e
+      log "🤎 Installing Azul JDK ${version} on container ${container}" /usr/lib/jvm/java-11-zulu-openjdk/bin/java
+      playground container exec --container "${container}" --root --command "yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm ; yum -y install zulu${version}-jdk"
+      if [ $? -eq 0 ]
+      then
+          java_path=$(playground --output-level ERROR container exec --container "${container}" --root --command "update-alternatives --display java | grep \"java-${version}-zulu-openjdk\" | grep \"priority\" | head -1 | cut -d \" \" -f 1")
+          if [ -n "$java_path" ]
+          then
+              playground container exec --container "${container}" --root --command "update-alternatives --set java \"$java_path\""
+          else
+              logerror "could not find java ${version} in alternatives list"
+          fi
+          playground container restart --container "${container}"
 
-  		sleep 5
+          sleep 5
 
-  		playground container exec --container "${container}" --command "java -version"
-  	else
-  		logerror "❌ failed to install Azul JDK ${version}"
-  	fi
+          playground container exec --container "${container}" --command "java -version"
+      else
+          logerror "❌ failed to install Azul JDK ${version}"
+      fi
   done
 }
 
