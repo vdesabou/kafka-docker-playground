@@ -23,6 +23,10 @@ Full details available [here](https://docs.confluent.io/current/connect/kafka-co
 
 Steps are:
 
+* Make sure "Allow creation of connected apps" is enabled, see screenshot:
+
+![Create a connected app](../../ccloud/fm-salesforce-cdc-source/allow-creation-connected-apps.png)
+
 * Select the gear icon in the upper right hand corner and choose Setup.
 
 * Enter App in the Quick Find search box, and choose *App Manager* in the filtered results.
