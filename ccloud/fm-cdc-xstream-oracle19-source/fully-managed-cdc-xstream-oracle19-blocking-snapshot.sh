@@ -284,7 +284,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "database.out.server.name": "XOUT",
      "database.service.name": "ORCLCDB",
      "database.processor.licenses": "1",
-     "table.include.list": "C##CFLTUSER[.]CUSTOMERS,C##CFLTUSER[.]CFLT_SIGNALS",
+     "table.include.list": "C##CFLTUSER[.]CUSTOMERS",
      "signal.data.collection": "ORCLCDB.C##CFLTUSER.CFLT_SIGNALS",
      "database.password": "password",
      "database.user": "c##cfltuser",

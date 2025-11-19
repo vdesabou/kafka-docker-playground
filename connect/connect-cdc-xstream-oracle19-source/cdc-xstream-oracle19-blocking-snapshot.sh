@@ -281,7 +281,7 @@ playground connector create-or-update --connector cdc-xstream-oracle-source << E
     "database.os.timezone": "UTC",
     "database.out.server.name": "XOUT",
     "database.service.name": "ORCLCDB",
-    "table.include.list": "C##CFLTUSER[.]CUSTOMERS,C##CFLTUSER[.]CFLT_SIGNALS",
+    "table.include.list": "C##CFLTUSER[.]CUSTOMERS",
     "database.password": "password",
     "database.port": "1521",
     "database.user": "c##cfltuser",
