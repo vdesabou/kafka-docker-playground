@@ -481,7 +481,9 @@ function generate_data() {
                     log "💫 payload is one json per line, one json record per line will be sent"
                     set +e
                     LINE=$(<"$schema_file")
-                    yes "$LINE" | head -n "$nb_messages_to_generate" > $tmp_dir/out.json
+                    for ((i=0; i<nb_messages_to_generate; i++)); do
+                        printf "%s\n" "$LINE" > $tmp_dir/out.json
+                    done
                     set -e
                 elif jq -e . >/dev/null 2>&1 <<< "$(cat "$schema_file")"
                 then
@@ -489,13 +491,17 @@ function generate_data() {
                     jq -c . "$schema_file" > $tmp_dir/minified.json
                     set +e
                     LINE=$(<"$tmp_dir/minified.json")
-                    yes "$LINE" | head -n "$nb_messages_to_generate" > $tmp_dir/out.json
+                    for ((i=0; i<nb_messages_to_generate; i++)); do
+                        printf "%s\n" "$LINE" > $tmp_dir/out.json
+                    done
                     set -e
                 else
                     log "💫 payload is not single json, one record per line will be sent"
                     set +e
                     LINE=$(<"$schema_file")
-                    yes "$LINE" | head -n "$nb_messages_to_generate" > $tmp_dir/out.json
+                    for ((i=0; i<nb_messages_to_generate; i++)); do
+                        printf "%s\n" "$LINE" > $tmp_dir/out.json
+                    done
                     set -e
                 fi
             ;;
