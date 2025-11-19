@@ -5,13 +5,17 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 source ${DIR}/../../scripts/utils.sh
 
-# https://confluentinc.atlassian.net/wiki/spaces/~62c938d4fa577c57c3b80d59/pages/4038003034/DRAFT+User+facing+documentation+Oracle+XStream+CDC+source+connector+Early+Access
+NGROK_AUTH_TOKEN=${NGROK_AUTH_TOKEN:-$1}
+
+display_ngrok_warning
+
+bootstrap_ccloud_environment
 
 create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "../../connect/connect-cdc-oracle19-source/ora-setup-scripts-cdb-table"
 
 if [ ! -z "$SQL_DATAGEN" ]
 then
-     cd ../../connect/connect-cdc-xstream-oracle19-source
+     cd ../../ccloud/fm-cdc-xstream-oracle19-source
      log "🌪️ SQL_DATAGEN is set"
      for component in oracle-datagen
      do
@@ -31,58 +35,14 @@ else
      log "🛑 SQL_DATAGEN is not set"
 fi
 
-cd ../../connect/connect-cdc-xstream-oracle19-source
-if [ ! -d "lib/instantclient" ]
-then
-     if [ -z "${ZIP_FILE}" ]
-     then
-          if [ `uname -m` = "arm64" ]
-          then
-               ZIP_FILE="instantclient_19_25_arm64.zip"
-          else
-               ZIP_FILE="instantclient_19_25_x86.zip"
-          fi
-          get_3rdparty_file "${ZIP_FILE}"
-     fi
-
-     if [ ! -f ${PWD}/${ZIP_FILE} ]
-     then
-          logerror "❌ ${PWD}/${ZIP_FILE} is missing. It must be downloaded manually in order to acknowledge user agreement"
-          logerror "You can download it from https://www.oracle.com/in/database/technologies/instant-client/downloads.html"
-          exit 1
-     fi
-
-     unzip ${ZIP_FILE} -d lib
-     mv lib/instantclient_* lib/instantclient
-fi
-cd -
-
-PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
-
-if ! (version_gt $CP_CONNECT_TAG "7.6.99")
-then
-     playground container change-jdk --version 17 --container connect
-fi
-
-# https://github.com/confluentinc/common-docker/pull/743 and https://github.com/adoptium/adoptium-support/issues/1285
 set +e
-playground container exec --root --command "sed -i "s/packages\.adoptium\.net/adoptium\.jfrog\.io/g" /etc/yum.repos.d/adoptium.repo"
+playground topic delete --topic cflt.C__CFLTUSER.CUSTOMERS
 set -e
-playground container exec --root --command "microdnf -y install libaio"
 
-if [ "$(uname -m)" = "arm64" ]
-then
-     :
-else
-     if version_gt $TAG_BASE "7.9.9"
-     then
-          playground container exec --root --command "microdnf -y install libnsl2"
-          playground container exec --root --command "ln -s /usr/lib64/libnsl.so.3 /usr/lib64/libnsl.so.1"
-     else
-          playground container exec --root --command "ln -s /usr/lib64/libnsl.so.2 /usr/lib64/libnsl.so.1"
-     fi
-fi
+set_profiles
+docker compose build
+docker compose ${profile_sql_datagen_command} down -v --remove-orphans
+docker compose ${profile_sql_datagen_command} up -d --quiet-pull
 
 playground container logs --container oracle --wait-for-log "DATABASE IS READY TO USE" --max-wait 600
 log "Oracle DB has started!"
@@ -210,6 +170,7 @@ BEGIN
 END;
 /
 EOF
+
 if [ ! -f orclcdc_readiness.sql ]
 then
      log "Downloading orclcdc_readiness.sql"
@@ -224,6 +185,19 @@ docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nol
 END;
 /
 EOF
+
+log "Creating signal table"
+docker exec -i oracle sqlplus c\#\#cfltuser/password@//localhost:1521/ORCLCDB << EOF
+
+     CREATE TABLE CFLT_SIGNALS (
+          id VARCHAR(42) PRIMARY KEY,
+          type VARCHAR(32) NOT NULL,
+          data VARCHAR(2048)
+     );
+     exit;
+EOF
+
+sleep 2
 
 log "Create CUSTOMERS table and inserting initial data"
 docker exec -i oracle sqlplus c\#\#cfltuser/password@//localhost:1521/ORCLCDB << EOF
@@ -259,47 +233,70 @@ docker exec -i oracle sqlplus c\#\#cfltuser/password@//localhost:1521/ORCLCDB <<
      exit;
 EOF
 
-log "Creating signal table"
-docker exec -i oracle sqlplus c\#\#cfltuser/password@//localhost:1521/ORCLCDB << EOF
 
-     CREATE TABLE CFLT_SIGNALS (
-          id VARCHAR(42) PRIMARY KEY,
-          type VARCHAR(32) NOT NULL,
-          data VARCHAR(2048)
-     );
-     exit;
-EOF
 
-sleep 2
+log "Waiting for ngrok to start"
+while true
+do
+  container_id=$(docker ps -q -f name=ngrok)
+  if [ -n "$container_id" ]
+  then
+    status=$(docker inspect --format '{{.State.Status}}' $container_id)
+    if [ "$status" = "running" ]
+    then
+      log "Getting ngrok hostname and port"
+      NGROK_URL=$(curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+      NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
+      NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
 
-log "Creating Oracle Xstream CDC source connector"
-playground connector create-or-update --connector cdc-xstream-oracle-source << EOF
+      if ! [[ $NGROK_PORT =~ ^[0-9]+$ ]]
+      then
+        log "NGROK_PORT is not a valid number, keep retrying..."
+        continue
+      else 
+        break
+      fi
+    fi
+  fi
+  log "Waiting for container ngrok to start..."
+  sleep 5
+done
+
+connector_name="OracleXStreamSource_$USER"
+set +e
+playground connector delete --connector $connector_name > /dev/null 2>&1
+set -e
+
+log "Creating fully managed connector"
+playground connector create-or-update --connector $connector_name << EOF
 {
-    "connector.class": "io.confluent.connect.oracle.xstream.cdc.OracleXStreamSourceConnector",
-    "database.dbname": "ORCLCDB",
-    "database.hostname": "oracle",
-    "database.os.timezone": "UTC",
-    "database.out.server.name": "XOUT",
-    "database.service.name": "ORCLCDB",
-    "table.include.list": "C##CFLTUSER[.]CUSTOMERS,C##CFLTUSER[.]CFLT_SIGNALS",
-    "database.password": "password",
-    "database.port": "1521",
-    "database.user": "c##cfltuser",
-    "topic.prefix": "cflt",
-    "schema.history.internal.kafka.bootstrap.servers": "broker:9092",
-    "schema.history.internal.kafka.topic": "__orcl-schema-changes.cflt",
-    "confluent.license": "",
-    "confluent.topic.bootstrap.servers": "broker:9092",
-    "confluent.topic.replication.factor": "1",
-    "database.processor.licenses": "1",
-    "signal.data.collection": "ORCLCDB.C##CFLTUSER.CFLT_SIGNALS",
-
-    "_comment:": "remove _ to use ExtractNewRecordState smt",
-    "_transforms": "unwrap",
-    "_transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
+     "connector.class": "OracleXStreamSource",
+     "name": "$connector_name",
+     "kafka.auth.mode": "KAFKA_API_KEY",
+     "kafka.api.key": "$CLOUD_KEY",
+     "kafka.api.secret": "$CLOUD_SECRET",
+     "output.data.key.format": "AVRO",
+     "output.data.value.format": "AVRO",
+     "database.dbname": "ORCLCDB",
+     "database.hostname": "$NGROK_HOSTNAME",
+     "database.port": "$NGROK_PORT",
+     "database.os.timezone": "UTC",
+     "database.out.server.name": "XOUT",
+     "database.service.name": "ORCLCDB",
+     "database.processor.licenses": "1",
+     "table.include.list": "C##CFLTUSER[.]CUSTOMERS,C##CFLTUSER[.]CFLT_SIGNALS",
+     "signal.data.collection": "ORCLCDB.C##CFLTUSER.CFLT_SIGNALS",
+     "database.password": "password",
+     "database.user": "c##cfltuser",
+     "topic.prefix": "cflt",
+     "tasks.max" : "1"
 }
 EOF
+wait_for_ccloud_connector_up $connector_name 180
 
+sleep 10
+
+log "Insert 2 customers in CUSTOMERS table"
 docker exec -i oracle sqlplus c\#\#cfltuser/password@//localhost:1521/ORCLCDB << EOF
      insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('streaming', 'One', 'fkafka@confluent.io', 'Male', 'bronze', 'first streaming record');
      insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Signal', 'One', 'fkafka@confluent.io', 'Male', 'bronze', 'first signal record');
@@ -312,33 +309,14 @@ sleep 30
 log "we should now have 7 records"
 playground topic consume --topic cflt.C__CFLTUSER.CUSTOMERS --min-expected-messages 7 --timeout 60
 
-#log "how to snapshot specific record"
-#docker exec -i oracle sqlplus c\#\#cfltuser/password@//localhost:1521/ORCLCDB << EOF
-#INSERT INTO CFLT_SIGNALS (id, type, data) VALUES (
-#  '8a474adc-caca-4cf4-85d7-2b42e056ef5c',
-#  'execute-snapshot',
-#  '{
-#      "type": "blocking",
-#      "data-collections": ["ORCLCDB.C##CFLTUSER.CUSTOMERS"],
-#      "additional-conditions": [
-#        {
-#          "data-collection": "ORCLCDB.C##CFLTUSER.CUSTOMERS",
-#          "filter": "SELECT * FROM C##CFLTUSER.CUSTOMERS WHERE id = <someID>"
-#        }
-#      ]
-#    }'
-#);
-#exit;
-#EOF
-
 log "execute blocking snapshot to capture all records within ORCLCDB.C##CFLTUSER.CUSTOMERS table"
 docker exec -i oracle sqlplus c\#\#cfltuser/password@//localhost:1521/ORCLCDB << EOF
 INSERT INTO CFLT_SIGNALS(ID, TYPE, DATA) VALUES (
   '19640', 
   'execute-snapshot', 
   '{
-      "type":"blocking", 
-      "data-collections":["ORCLCDB.C##CFLTUSER.CUSTOMERS"]
+  	"type":"blocking", 
+  	"data-collections":["ORCLCDB.C##CFLTUSER.CUSTOMERS"]
   }'
 );
 EOF
@@ -353,12 +331,10 @@ EOF
 log "we should now have 14"
 playground topic consume --topic cflt.C__CFLTUSER.CUSTOMERS --min-expected-messages 14 --timeout 60
 
-if [ ! -z "$SQL_DATAGEN" ]
-then
-     DURATION=10
-     log "Injecting data for $DURATION minutes"
-     docker exec sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username c##cfltuser --password password --sidOrServerName sid --sidOrServerNameVal ORCLCDB --maxPoolSize 10 --durationTimeMin $DURATION"
-fi
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name
 
 log "⚙️ You can use <playground connector oracle-cdc-xstream generate-report> to generate oracle cdc xstream connector diagnostics report"
 log "🐞 You can use <playground connector oracle-cdc-xstream debug> to execute various SQL commands to debug xstream components"
