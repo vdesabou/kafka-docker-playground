@@ -108,12 +108,48 @@ How should we connect to your database?
 
 🔘 database.ssl.mode
 
-Whether to use an encrypted connection to the MariaDB server. Possible settings are: `disable`, `trust`.  
+Whether to use an encrypted connection to the MariaDB server. Possible settings are ``disable``, ``trust``, ``verify-ca``, and ``verify-full``. 
 
 	 - Type: STRING
 	 - Default: disable
 	 - Importance: HIGH
 	 - Required: false
+
+🔘 database.ssl.keystore
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Path to the SSL keystore file for MariaDB connection. This property is only required when you enable SSL certificate verification (``verify-ca`` or ``verify-full`` modes)
+	 - Required: MEDIUM
+
+🔘 database.ssl.keystore.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Password for the SSL keystore file for MariaDB connection. This property is only required when you enable SSL certificate verification (``verify-ca`` or ``verify-full`` modes)
+	 - Required: MEDIUM
+
+🔘 database.ssl.truststore
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Path to the SSL truststore file for MariaDB connection. This property is only required when you enable SSL certificate verification (``verify-ca`` or ``verify-full`` modes)
+	 - Required: MEDIUM
+
+🔘 database.ssl.truststore.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Password for the SSL truststore file for MariaDB connection. This property is only required when you enable SSL certificate verification (``verify-ca`` or ``verify-full`` modes)
+	 - Required: MEDIUM
 
 ==========================
 Output messages
@@ -622,6 +658,6 @@ Egress allowlist
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: 
+	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 	 - Required: HIGH
 
