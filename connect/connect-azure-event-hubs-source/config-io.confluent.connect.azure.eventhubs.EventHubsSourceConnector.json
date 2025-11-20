@@ -8,6 +8,7 @@
     "azure.eventhubs.offset.type": "OFFSET",
     "azure.eventhubs.partition.id.regex": ".gitignore",
     "azure.eventhubs.partition.starting.position": "start_of_stream",
+    "azure.eventhubs.poll.timeout.ms": "3600000",
     "azure.eventhubs.sas.key": "[hidden]",
     "azure.eventhubs.sas.keyname": "STRING",
     "azure.eventhubs.transport.type": "AMQP",
