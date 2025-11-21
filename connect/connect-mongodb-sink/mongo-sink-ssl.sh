@@ -138,6 +138,10 @@ playground connector create-or-update --connector mongodb-sink  << EOF
     "connector.class" : "com.mongodb.kafka.connect.MongoSinkConnector",
     "tasks.max" : "1",
     "connection.uri" : "mongodb://myuser:mypassword@mongodb:27017/?tls=true",
+
+    "connection.ssl.truststore": "/tmp/truststore.jks",
+    "connection.ssl.truststorePassword": "confluent",
+    
     "database":"inventory",
     "collection":"customers",
     "topics":"orders"

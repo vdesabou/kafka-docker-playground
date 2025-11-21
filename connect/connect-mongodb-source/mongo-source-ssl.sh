@@ -91,6 +91,10 @@ playground connector create-or-update --connector mongodb-source  << EOF
     "connector.class" : "com.mongodb.kafka.connect.MongoSourceConnector",
     "tasks.max" : "1",
     "connection.uri" : "mongodb://myuser:mypassword@mongodb:27017/?tls=true",
+
+    "connection.ssl.truststore": "/tmp/truststore.jks",
+    "connection.ssl.truststorePassword": "confluent",
+    
     "database":"inventory",
     "collection":"customers",
     "topic.prefix":"mongo"
