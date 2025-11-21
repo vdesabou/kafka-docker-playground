@@ -166,6 +166,15 @@ The amount of time to wait (backoff) before the first retry.
 	 - Importance: LOW
 	 - Required: false
 
+🔘 azure.eventhubs.poll.timeout.ms
+
+Timeout in milliseconds for waiting for Event Hub partition receive operations to complete. If a receive operation times out, the connector will retry by closing and recreating receivers using the configured retry settings (max retries and initial backoff). This prevents indefinite blocking when Azure Event Hub service is unresponsive or network issues occur.
+
+	 - Type: LONG
+	 - Default: 3600000
+	 - Importance: LOW
+	 - Required: false
+
 🔘 kafka.topic
 
 The kafka topic to write the data to.

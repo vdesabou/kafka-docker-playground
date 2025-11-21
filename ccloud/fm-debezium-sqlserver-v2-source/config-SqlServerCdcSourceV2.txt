@@ -68,6 +68,27 @@ This config key only applies to data preview requests and governs whether the da
 	 - Required: false
 
 ==========================
+Authentication method
+==========================
+🔘 authentication.method
+
+Select how you want to authenticate with the database. Valid options are ``Microsoft Entra ID application`` and ``Password``.
+
+	 - Type: STRING
+	 - Default: Password
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing integration that has access to your resource.
+	 - Required: HIGH
+
+==========================
 How should we connect to your database?
 ==========================
 🔘 database.hostname
@@ -92,7 +113,7 @@ How should we connect to your database?
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: STRING
 	 - Importance: The name of the SQL Server database user that has the required authorization.
 	 - Required: HIGH
@@ -101,7 +122,7 @@ How should we connect to your database?
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: PASSWORD
 	 - Importance: The password for the SQL Server database user that has the required authorization.
 	 - Required: HIGH
@@ -496,6 +517,6 @@ Egress allowlist
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: 
+	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 	 - Required: HIGH
 
