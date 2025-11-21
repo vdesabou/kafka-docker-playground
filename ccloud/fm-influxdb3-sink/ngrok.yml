@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  influxdb3:
+    addr: influxdb3:8181
+    proto: tcp
