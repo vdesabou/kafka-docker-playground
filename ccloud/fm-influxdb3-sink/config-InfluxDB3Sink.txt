@@ -1,0 +1,384 @@
+==========================
+Which topics do you want to get data from?
+==========================
+🔘 topics.regex
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A regular expression that matches the names of the topics to consume from. This is useful when you want to consume from multiple topics that match a certain pattern without having to list them all individually.
+	 - Required: LOW
+
+🔘 topics
+
+
+
+	 - Type: true
+	 - Default: LIST
+	 - Importance: Identifies the topic name or a comma-separated list of topic names.
+	 - Required: HIGH
+
+🔘 errors.deadletterqueue.topic.name
+
+The name of the topic to be used as the dead letter queue (DLQ) for messages that result in an error when processed by this sink connector, or its transformations or converters. Defaults to 'dlq-${connector}' if not set. The DLQ topic will be created automatically if it does not exist. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: dlq-${connector}
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Input messages
+==========================
+🔘 input.data.format
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, or plain JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+	 - Required: HIGH
+
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+
+	 - Type: STRING
+	 - Default: KAFKA_API_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+==========================
+InfluxDB
+==========================
+🔘 influxdb.url
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Fully qualified InfluxDB v3 API URL used for establishing connection.
+	 - Required: HIGH
+
+🔘 influxdb.token
+
+
+
+	 - Type: true
+	 - Default: PASSWORD
+	 - Importance: Token to authenticate with InfluxDB v3.
+	 - Required: HIGH
+
+🔘 influxdb.database
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Database name for InfluxDB v3.
+	 - Required: HIGH
+
+🔘 influxdb.ssl.enabled
+
+Controls whether to enable SSL/TLS for InfluxDB connections. If true, SSL/TLS will be enforced for secure connections.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 influxdb.ssl.disable.server.certificate.validation
+
+Disable server SSL certificate validation. Use with caution in production environments.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 influxdb.ssl.roots.file
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Upload the certificates file in PEM format for custom CA certificates.
+	 - Required: MEDIUM
+
+🔘 influxdb.ssl.protocol
+
+The SSL/TLS protocol to use for connections.
+
+	 - Type: STRING
+	 - Default: TLSv1.2
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Write Configuration
+==========================
+🔘 write.precision
+
+Write precision of InfluxDB timestamp. Valid values are Seconds, Milliseconds, Microseconds, and Nanoseconds. Note that if the kafka record timestamp is used, instead of specifying a timestamp field, using 'event.time.fieldname', then the kafka timestamp(in Milliseconds) will be converted the precision defined here. Otherwise you must provide the correct time unit of the 'event.time.fieldname' here.
+
+	 - Type: STRING
+	 - Default: Milliseconds
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 event.time.fieldname
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of field in the Kafka record that contains the event time to be written to an InfluxDB data point. By default (if this config is unspecified), the timestamp written to InfluxDB is the Kafka record timestamp (when the Kafka record was created) which corresponds to the time that the event was processed.
+	 - Required: MEDIUM
+
+🔘 measurement.name.format
+
+For example, ``kafka_${topic}`` for the topic 'orders' will map to the measurement (table) name 'kafka_orders'. If the measurement (table) name format is not provided the connector will use the 'measurement' field value present in the kafka message. If such a field is not present in the message the message will be sent to the dlq.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A format string for the destination measurement (table) name, which may contain '${topic}' as a placeholder for the originating topic name.
+	 - Required: MEDIUM
+
+🔘 influxdb.gzip.enable
+
+Flag to determine if gzip should be enabled.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+CSFLE
+==========================
+🔘 csfle.enabled
+
+Determines whether the connector honours CSFLE rules or not
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sr.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
+	 - Required: HIGH
+
+🔘 csfle.onFailure
+
+Configures the behavior for decryption failures. If set to ERROR, the connector will behave as configured for error behaviour. If set to NONE, the connector will ignore the decryption failure and proceed to write the data in its encrypted form.
+
+	 - Type: STRING
+	 - Default: ERROR
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Retries
+==========================
+🔘 retry.backoff.ms
+
+Backoff time duration to wait before retrying
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Consumer configuration
+==========================
+🔘 max.poll.interval.ms
+
+The maximum delay between subsequent consume requests to Kafka. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 300000 milliseconds (5 minutes).
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.poll.records
+
+The maximum number of records to consume from Kafka in a single request. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 500 records.
+
+	 - Type: LONG
+	 - Default: 500
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: all
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Egress allowlist
+==========================
+🔘 connector.egress.whitelist
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
+	 - Required: HIGH
+
