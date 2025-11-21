@@ -3,21 +3,30 @@ IBM MQ Connection
 ==========================
 🔘 mq.hostname
 
-The hostname of the IBM MQ broker.
 
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The hostname of the IBM MQ broker. Either mq.hostname or mq.connection.list must be specified, but not both.
+	 - Required: HIGH
 
 🔘 mq.port
 
-The TCP listener port of the IBM MQ broker.
+The TCP listener port of the IBM MQ broker. This is only used when mq.hostname is configured. Ignored when mq.connection.list is used.
 
 	 - Type: INT
 	 - Default: 1414
 	 - Importance: HIGH
 	 - Required: false
+
+🔘 mq.connection.list
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Comma-separated list of IBM MQ broker connections in the format host1:port1,host2:port2,host3:port3. When configured, the connector will attempt to connect to each instance in sequence until a successful connection is established. This property is mutually exclusive with mq.hostname. Either mq.hostname or mq.connection.list must be specified, but not both.
+	 - Required: HIGH
 
 🔘 mq.username
 
