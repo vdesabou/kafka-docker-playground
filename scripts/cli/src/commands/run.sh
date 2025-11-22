@@ -53,7 +53,7 @@ fi
 
 if [[ $test_file == *"@"* ]]
 then
-  test_file=$(echo "$test_file" | cut -d "@" -f 2)
+  test_file=${test_file#*@}
 fi
 
 if [ ! -f "$test_file" ]
@@ -110,7 +110,7 @@ if [[ -n "$tag" ]]
 then
   if [[ $tag == *"@"* ]]
   then
-    tag=$(echo "$tag" | cut -d "@" -f 2)
+    tag=${tag#*@}
   fi
   array_flag_list+=("--tag=$tag")
   export TAG=$tag
@@ -120,7 +120,7 @@ if [[ -n "$connect_tag" ]]
 then
   if [[ $connect_tag == *"@"* ]]
   then
-    connect_tag=$(echo "$connect_tag" | cut -d "@" -f 2)
+    connect_tag=${connect_tag#*@}
   fi
   array_flag_list+=("--connect-tag=$connect_tag")
   export CP_CONNECT_TAG=$connect_tag
@@ -167,7 +167,8 @@ then
           fi
 
           ret=$(choose_connector_tag "$owner/$name")
-          connector_tag=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
+          connector_tag=${ret#* }
+          connector_tag=${connector_tag#v}
           
           if [ -z "$connector_tags" ]; then
             connector_tags="$connector_tag"
@@ -188,7 +189,7 @@ if [[ -n "$connector_zip" ]]
 then
   if [[ $connector_zip == *"@"* ]]
   then
-    connector_zip=$(echo "$connector_zip" | cut -d "@" -f 2)
+    connector_zip=${connector_zip#*@}
   fi
   array_flag_list+=("--connector-zip=$connector_zip")
   export CONNECTOR_ZIP=$connector_zip
@@ -198,7 +199,7 @@ if [[ -n "$connector_jar" ]]
 then
   if [[ $connector_jar == *"@"* ]]
   then
-    connector_jar=$(echo "$connector_jar" | cut -d "@" -f 2)
+    connector_jar=${connector_jar#*@}
   fi
   array_flag_list+=("--connector-jar=$connector_jar")
   export CONNECTOR_JAR=$connector_jar
@@ -406,11 +407,12 @@ if [[ -n "$cluster_environment" ]]
 then
   if [[ $cluster_environment == *"@"* ]]
   then
-    cluster_environment=$(echo "$cluster_environment" | cut -d "@" -f 2)
+    cluster_environment=${cluster_environment#*@}
   fi
   if [[ $cluster_environment == *"/"* ]]
   then
-    cluster_environment=$(echo "$cluster_environment" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
+    cluster_environment=${cluster_environment//[$' \t']/}
+    cluster_environment=${cluster_environment#*/}
   fi
   array_flag_list+=("--cluster-environment $cluster_environment")
   export ENVIRONMENT=$cluster_environment
@@ -420,11 +422,12 @@ if [[ -n "$cluster_name" ]]
 then
   if [[ $cluster_name == *"@"* ]]
   then
-    cluster_name=$(echo "$cluster_name" | cut -d "@" -f 2)
+    cluster_name=${cluster_name#*@}
   fi
   if [[ $cluster_name == *"/"* ]]
   then
-    cluster_name=$(echo "$cluster_name" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
+    cluster_name=${cluster_name//[$' \t']/}
+    cluster_name=${cluster_name#*/}
   fi
   array_flag_list+=("--cluster-name $cluster_name")
   export CLUSTER_NAME=$cluster_name
@@ -456,10 +459,10 @@ fi
 if [ $interactive_mode == 1 ]
 then
   terminal_columns=$(tput cols)
+  fzf_version=$(get_fzf_version)
   if [[ $terminal_columns -gt 180 ]]
   then
     MAX_LENGTH=$((${terminal_columns}-120))
-    fzf_version=$(get_fzf_version)
     if version_gt $fzf_version "0.38"
     then
       fzf_option_wrap="--preview-window=30%,wrap"
@@ -474,7 +477,6 @@ then
     fi
   else
     MAX_LENGTH=$((${terminal_columns}-65))
-    fzf_version=$(get_fzf_version)
     if version_gt $fzf_version "0.38"
     then
       fzf_option_wrap="--preview-window=20%,wrap"
@@ -1208,11 +1210,11 @@ then
       tag=$(playground get-tag-list)
       if [[ $tag == *"@"* ]]
       then
-        tag=$(echo "$tag" | cut -d "@" -f 2)
+        tag=${tag#*@}
       fi
       if [[ $tag == *" "* ]]
       then
-        tag=$(echo "$tag" | cut -d " " -f 1)
+        tag=${tag%% *}
       fi
       array_flag_list+=("--tag=$tag")
       export TAG=$tag
@@ -1225,11 +1227,11 @@ then
       connect_tag=$(playground get-tag-list --connect-only)
       if [[ $connect_tag == *"@"* ]]
       then
-        connect_tag=$(echo "$connect_tag" | cut -d "@" -f 2)
+        connect_tag=${connect_tag#*@}
       fi
       if [[ $connect_tag == *" "* ]]
       then
-        connect_tag=$(echo "$connect_tag" | cut -d " " -f 1)
+        connect_tag=${connect_tag%% *}
       fi
       array_flag_list+=("--connect-tag=$connect_tag")
       export CP_CONNECT_TAG=$connect_tag
@@ -1253,7 +1255,8 @@ then
         fi
 
         ret=$(choose_connector_tag "$owner/$name")
-        connector_tag=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
+        connector_tag=${ret#* }
+        connector_tag=${connector_tag#v}
         
         if [ -z "$connector_tags" ]; then
           connector_tags="$connector_tag"
@@ -1276,7 +1279,7 @@ then
       connector_zip=$(playground get-zip-or-jar-with-fzf --type zip)
       if [[ $connector_zip == *"@"* ]]
       then
-        connector_zip=$(echo "$connector_zip" | cut -d "@" -f 2)
+        connector_zip=${connector_zip#*@}
       fi
       array_flag_list+=("--connector-zip=$connector_zip")
       export CONNECTOR_ZIP=$connector_zip
@@ -1290,7 +1293,7 @@ then
       connector_jar=$(playground get-zip-or-jar-with-fzf --type jar)
       if [[ $connector_jar == *"@"* ]]
       then
-        connector_jar=$(echo "$connector_jar" | cut -d "@" -f 2)
+        connector_jar=${connector_jar#*@}
       fi
       array_flag_list+=("--connector-jar=$connector_jar")
       export CONNECTOR_JAR=$connector_jar
@@ -1321,9 +1324,10 @@ then
       
       if [[ $cluster_region == *"@"* ]]
       then
-        cluster_region=$(echo "$cluster_region" | cut -d "@" -f 2)
+        cluster_region=${cluster_region#*@}
       fi
-      cluster_region=$(echo "$cluster_region" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
+      cluster_region=${cluster_region//[$' \t']/}
+      cluster_region=${cluster_region#*/}
       array_flag_list+=("--cluster-region $cluster_region")
 	  export CLUSTER_REGION=$cluster_region
     fi
@@ -1335,11 +1339,12 @@ then
       
       if [[ $cluster_environment == *"@"* ]]
       then
-        cluster_environment=$(echo "$cluster_environment" | cut -d "@" -f 2)
+        cluster_environment=${cluster_environment#*@}
       fi
       if [[ $cluster_environment == *"/"* ]]
       then
-        cluster_environment=$(echo "$cluster_environment" | sed 's/[[:blank:]]//g' | cut -d "/" -f 1)
+        cluster_environment=${cluster_environment//[$' \t']/}
+        cluster_environment=${cluster_environment%%/*}
       fi
       array_flag_list+=("--cluster-environment $cluster_environment")
 	  export ENVIRONMENT=$cluster_environment
@@ -1352,11 +1357,12 @@ then
       
       if [[ $cluster_name == *"@"* ]]
       then
-        cluster_name=$(echo "$cluster_name" | cut -d "@" -f 2)
+        cluster_name=${cluster_name#*@}
       fi
       if [[ $cluster_name == *"/"* ]]
       then
-        cluster_name=$(echo "$cluster_name" | sed 's/[[:blank:]]//g' | cut -d "/" -f 2)
+        cluster_name=${cluster_name//[$' \t']/}
+        cluster_name=${cluster_name#*/}
       fi
       array_flag_list+=("--cluster-name $cluster_name")
 	  export CLUSTER_NAME=$cluster_name
