@@ -128,7 +128,7 @@ fi
 
 if [[ -n "$environment" ]]
 then
-  get_connector_paths
+  if [ -z "${connector_paths:-}" ]; then get_connector_paths; fi
   if [ "$connector_paths" == "" ] && [ "$environment" != "plaintext" ]
   then
     logerror "❌ using --environment is only supported with connector examples"
@@ -146,7 +146,7 @@ if [[ -n "$connector_tag" ]]
 then
   if [ "$connector_tag" == " " ]
   then
-    get_connector_paths
+    if [ -z "${connector_paths:-}" ]; then get_connector_paths; fi
     if [ "$connector_paths" == "" ]
     then
         logwarn "❌ skipping as it is not an example with connector, but --connector-tag is set"
@@ -267,15 +267,21 @@ then
   array_flag_list+=("--enable-multiple-connect-workers")
   export ENABLE_CONNECT_NODES=true
 
-  # determining the docker-compose file from from test_file
-  docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
-  docker_compose_file="${test_file_directory}/${docker_compose_file}"
-  if [ -f $docker_compose_file ]
+  # determining the docker-compose file from test_file (compute once)
+  if [ -z "${docker_compose_file:-}" ]
   then
-    cp $docker_compose_file /tmp/playground-backup-docker-compose.yml
+    DCF=$(awk '/start-environment/ {val=$6} END {print val}' "$test_file")
+    DCF=${DCF%\"}
+    DCF=${DCF#\"}
+    DCF=${DCF#*/}
+    docker_compose_file="${test_file_directory}/${DCF}"
+  fi
+  if [ -f "$docker_compose_file" ]
+  then
+    cp "$docker_compose_file" /tmp/playground-backup-docker-compose.yml
     yq -i '.services.connect2 = .services.connect' /tmp/playground-backup-docker-compose.yml
     yq -i '.services.connect3 = .services.connect' /tmp/playground-backup-docker-compose.yml
-    cp /tmp/playground-backup-docker-compose.yml $docker_compose_file
+    cp /tmp/playground-backup-docker-compose.yml "$docker_compose_file"
   fi
 fi
 
@@ -570,7 +576,7 @@ then
   example="$last_two_folders/$filename"
 
   connector_example=0
-  get_connector_paths
+  if [ -z "${connector_paths:-}" ]; then get_connector_paths; fi
   if [ "$connector_paths" != "" ]
   then
     connector_tags=""
@@ -595,6 +601,12 @@ then
   then
     sql_datagen=1
   fi
+
+  # Precompute mandatory env var names from the example (once)
+  declare -a mandatory_env_vars=()
+  while IFS= read -r __mev; do
+    [ -n "$__mev" ] && mandatory_env_vars+=("$__mev")
+  done < <(awk -F '"' '/Export it as environment variable or pass it as argument/ { split($2,a," "); print a[1] }' "$test_file")
 
   stop=0
   while [ $stop != 1 ]
@@ -857,8 +869,8 @@ then
     missing_env=""
     declare -a missing_env_list=()
 
-    # generic check
-    for mandatory_environment_variable in $(grep "Export it as environment variable or pass it as argument" $test_file | cut -d "\"" -f2 | cut -d " " -f 1)
+    # generic check (precomputed list)
+    for mandatory_environment_variable in "${mandatory_env_vars[@]}"
     do
       if [ ! -v $mandatory_environment_variable ]
       then
