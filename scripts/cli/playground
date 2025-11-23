@@ -22627,107 +22627,105 @@ playground_topic_get_number_records_command() {
   get_environment_used
 
   items=($topic)
-  for topic in ${items[@]}
+
+  # ------------------------------------------------------
+  # PREPARATION: Cache configs and Start Containers
+  # ------------------------------------------------------
+
+  # Cache broker tag and container (non-ccloud) once
+  cached_tag=""
+  cached_broker_container=""
+  if [[ "$environment" != "ccloud" ]]; then
+      cached_tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+      if [ -z "$cached_tag" ]; then
+          logerror "Could not find current CP version from docker ps"
+          exit 1
+      fi
+      get_broker_container
+      cached_broker_container="$broker_container"
+  fi
+
+  # Optimization: Prepare CCloud Kcat container once
+  kcat_container_name="kcat_worker_$$"
+  if [[ "$environment" == "ccloud" ]]; then
+      if [ ! -f $root_folder/.ccloud/librdkafka.delta ]
+      then
+          logerror "❌ $root_folder/.ccloud/librdkafka.delta has not been generated"
+          exit 1
+      fi
+
+      tr -d '"' < $root_folder/.ccloud/librdkafka.delta > $root_folder/.ccloud/librdkafka_no_quotes_tmp.delta
+      grep -v "basic.auth.user.info" $root_folder/.ccloud/librdkafka_no_quotes_tmp.delta > $root_folder/.ccloud/librdkafka_no_quotes.delta
+
+      # FIXED: Added --entrypoint to override the default 'kcat' entrypoint
+      docker run -d --rm --name "$kcat_container_name" --network=host \
+          -v $root_folder/.ccloud/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
+          --entrypoint tail \
+          confluentinc/cp-kcat:latest -f /dev/null > /dev/null 2>&1
+
+      trap "docker stop $kcat_container_name > /dev/null 2>&1" EXIT
+  fi
+
+  # ------------------------------------------------------
+  # MAIN LOOP
+  # ------------------------------------------------------
+
+  for topic in "${items[@]}"
   do
       log "💯 Get number of records in topic $topic"
+
       set +e
-      playground topic describe --topic $topic > /tmp/result.log 2>/tmp/result.log
-      grep "does not exist" /tmp/result.log > /dev/null 2>&1
-      if [ $? == 0 ]
-      then
+      describe_output=$(playground topic describe --topic "$topic" 2>&1)
+      if echo "$describe_output" | grep -q "does not exist"; then
           logwarn "topic $topic does not exist !"
           continue
       fi
       set +e
+
       if [[ "$environment" == "ccloud" ]]
       then
-          get_sr_url_and_security
+          # --- OFFSET MODE (Default) ---
+          # Note: We must explicitly call 'kcat' in the exec command now
+          offsets=$(docker exec "$kcat_container_name" kcat \
+              -F /tmp/configuration/ccloud.properties \
+              -C -t "$topic" \
+              -o -1 -e -q \
+              -f '%o\n' 2>/dev/null)
 
-          value_type=""
-          version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-value/versions/1" | jq -r .version)
-          if [ "$version" != "null" ]
-          then
-          schema_type=$(curl $sr_security -s "${sr_url}/subjects/${topic}-value/versions/1"  | jq -r .schemaType)
-          case "${schema_type}" in
-              JSON)
-              value_type="json-schema"
-              ;;
-              PROTOBUF)
-              value_type="protobuf"
-              ;;
-              AVRO|null)
-              value_type="avro"
-              ;;
-          esac
+          if [ -z "$offsets" ]; then
+              echo "0"
+          else
+              # Sum offsets + 1 (0-based index)
+              echo "$offsets" | awk '{s+=$1+1} END {print s}'
           fi
 
-          if [ ! -f $root_folder/.ccloud/librdkafka.delta ]
-          then
-              logerror "❌ $root_folder/.ccloud/librdkafka.delta has not been generated"
-              exit 1
-          fi
-          tr -d '"' < $root_folder/.ccloud/librdkafka.delta > $root_folder/.ccloud/librdkafka_no_quotes_tmp.delta
-          sr_url=$(grep "schema.registry.url=" $root_folder/.ccloud/librdkafka_no_quotes_tmp.delta | cut -d "=" -f2)
-          sr_url_hostname=$(echo $sr_url | cut -d "/" -f 3)
-          sr_auth=$(grep "basic.auth.user.info=" $root_folder/.ccloud/librdkafka_no_quotes_tmp.delta | cut -d "=" -f2)
-          sr_username=$(echo $sr_auth | cut -d ":" -f 1)
-          sr_password=$(echo $sr_auth | cut -d ":" -f 2)
-          # sr_password_url_encoded=$(urlencode $sr_password)
-          grep -v "basic.auth.user.info" $root_folder/.ccloud/librdkafka_no_quotes_tmp.delta > $root_folder/.ccloud/librdkafka_no_quotes.delta
-
-          case "${value_type}" in
-          avro)
-          docker run -i --network=host \
-                  -v $root_folder/.ccloud/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
-              confluentinc/cp-kcat:latest kcat \
-                  -F /tmp/configuration/ccloud.properties \
-                  -C -t $topic \
-                  -s value=avro \
-                  -r https://$sr_username:$sr_password@$sr_url_hostname \
-                  -e -q > /tmp/result.log 2>/dev/null
-              ;;
-          *)
-          docker run -i --network=host \
-                  -v $root_folder/.ccloud/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
-              confluentinc/cp-kcat:latest kcat \
-                  -F /tmp/configuration/ccloud.properties \
-                  -C -t $topic \
-                  -e -q > /tmp/result.log 2>/dev/null
-          ;;
-          esac
-          wc -l /tmp/result.log | awk '{print $1}'
       else
-          tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
-          if [ $? != 0 ] || [ "$tag" == "" ]
-          then
-              logerror "Could not find current CP version from docker ps"
-              exit 1
-          fi
-          get_broker_container
-          if ! version_gt $tag "6.9.9" && [ "$security" != "" ]
-          then
-              # GetOffsetShell does not support security before 7.x
-              get_security_broker "--consumer.config"
+          # --- ON-PREM / LOCAL LOGIC ---
+          tag="$cached_tag"
+          broker_container="$cached_broker_container"
 
+          if ! version_gt "$tag" "6.9.9" && [ -n "$security" ]
+          then
+              get_security_broker "--consumer.config"
               set +e
-              docker exec $container timeout 15 kafka-console-consumer --bootstrap-server $broker_container:9092 --topic $topic $security --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
+              docker exec "$container" timeout 15 kafka-console-consumer --bootstrap-server "$broker_container":9092 --topic "$topic" $security --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
               set -e
           else
               class_name="kafka.tools.GetOffsetShell"
-              if version_gt $tag "7.6.9"
+              if version_gt "$tag" "7.6.9"
               then
                   class_name="org.apache.kafka.tools.GetOffsetShell"
               fi
               parameter_for_list_broker="--bootstrap-server"
-              if ! version_gt $tag "5.3.99"
+              if ! version_gt "$tag" "5.3.99"
               then
                   parameter_for_list_broker="--broker-list"
               fi
-              docker exec $broker_container kafka-run-class $class_name $parameter_for_list_broker $broker_container:9092 $security --topic $topic --time -1 | grep -v "No configuration found" | awk -F ":" '{sum += $3} END {print sum}'
+
+              docker exec "$broker_container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$broker_container":9092 $security --topic "$topic" --time -1 | grep -v "No configuration found" | awk -F ":" '{sum += $3} END {print sum}'
           fi
       fi
   done
-
 }
 
 # :command.function
