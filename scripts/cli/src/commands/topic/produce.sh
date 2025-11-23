@@ -858,9 +858,8 @@ then
 fi
 
 set +e
-playground topic describe --topic $topic > /tmp/result.log 2>/tmp/result.log
-grep "does not exist" /tmp/result.log > /dev/null 2>&1
-if [ $? == 0 ]
+existing_topics=$(playground get-topic-list)
+if ! echo "$existing_topics" | grep -qFw "$topic"
 then
     log "✨ topic $topic does not exist, it will be created.."
     if [[ "$environment" == "ccloud" ]]

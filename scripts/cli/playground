@@ -22675,8 +22675,9 @@ playground_topic_get_number_records_command() {
       log "💯 Get number of records in topic $topic"
 
       set +e
-      describe_output=$(playground topic describe --topic "$topic" 2>&1)
-      if echo "$describe_output" | grep -q "does not exist"; then
+      existing_topics=$(playground get-topic-list)
+
+      if ! echo "$existing_topics" | grep -qFw "$topic"; then
           logwarn "topic $topic does not exist !"
           continue
       fi
@@ -24304,9 +24305,8 @@ playground_topic_produce_command() {
   fi
 
   set +e
-  playground topic describe --topic $topic > /tmp/result.log 2>/tmp/result.log
-  grep "does not exist" /tmp/result.log > /dev/null 2>&1
-  if [ $? == 0 ]
+  existing_topics=$(playground get-topic-list)
+  if ! echo "$existing_topics" | grep -qFw "$topic"
   then
       log "✨ topic $topic does not exist, it will be created.."
       if [[ "$environment" == "ccloud" ]]

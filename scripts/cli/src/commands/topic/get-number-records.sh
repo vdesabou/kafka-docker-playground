@@ -64,8 +64,9 @@ do
     log "💯 Get number of records in topic $topic"
 
     set +e
-    describe_output=$(playground topic describe --topic "$topic" 2>&1)
-    if echo "$describe_output" | grep -q "does not exist"; then
+    existing_topics=$(playground get-topic-list)
+
+    if ! echo "$existing_topics" | grep -qFw "$topic"; then
         logwarn "topic $topic does not exist !"
         continue
     fi
