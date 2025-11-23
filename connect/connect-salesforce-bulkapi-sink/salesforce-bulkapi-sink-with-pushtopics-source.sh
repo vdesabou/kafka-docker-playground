@@ -11,6 +11,19 @@ then
      exit 111
 fi
 
+# Temporary skip: Salesforce has disabled Connected Apps creation by default since Nov 2025
+# This test requires two separate Salesforce accounts with Connected Apps properly configured
+# See: https://github.com/vdesabou/kafka-docker-playground/issues/7364
+# Once credentials are updated with proper Connected Apps enablement, remove this skip
+if connect_cp_version_greater_than_8
+then
+     logwarn "Temporarily skipping this test due to Salesforce Connected Apps policy change"
+     logwarn "Salesforce now requires manual enablement of 'Allow creation of connected apps'"
+     logwarn "This test requires two separate Salesforce accounts with Connected Apps enabled"
+     logwarn "See README.md for setup instructions and https://github.com/vdesabou/kafka-docker-playground/issues/7364"
+     exit 111
+fi
+
 SALESFORCE_USERNAME=${SALESFORCE_USERNAME:-$1}
 SALESFORCE_PASSWORD=${SALESFORCE_PASSWORD:-$2}
 SALESFORCE_CONSUMER_KEY=${SALESFORCE_CONSUMER_KEY:-$3}
