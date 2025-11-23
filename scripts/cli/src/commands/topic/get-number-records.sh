@@ -62,16 +62,14 @@ fi
 for topic in "${items[@]}"
 do
     log "💯 Get number of records in topic $topic"
-
     set +e
     existing_topics=$(playground get-topic-list)
-
-    if ! echo "$existing_topics" | grep -qFw "$topic"; then
+    if ! echo "$existing_topics" | grep -qFw "$topic"
+    then
         logwarn "topic $topic does not exist !"
         continue
     fi
     set +e
-
     if [[ "$environment" == "ccloud" ]]
     then
         # --- OFFSET MODE (Default) ---

@@ -3,10 +3,9 @@ topic="${args[--topic]}"
 get_security_broker "--command-config"
 get_environment_used
 
-playground topic get-number-records --topic $topic > /tmp/result.log 2>/tmp/result.log
 set +e
-grep "does not exist" /tmp/result.log > /dev/null 2>&1
-if [ $? == 0 ]
+existing_topics=$(playground get-topic-list)
+if ! echo "$existing_topics" | grep -qFw "$topic"
 then
     logwarn "🆕 topic $topic does not exist, creating it..."
     playground topic create --topic $topic
