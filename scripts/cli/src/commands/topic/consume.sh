@@ -11,6 +11,28 @@ value_subject="${args[--value-subject]}"
 max_characters="${args[--max-characters]}"
 open="${args[--open]}"
 
+# Optimized helpers (reduce repeated external calls and parsing) with caching
+declare -A SUBJECT_CACHE
+get_subject_info() {
+  local subject="$1"
+  if [ -n "${SUBJECT_CACHE[$subject]}" ]; then
+    echo "${SUBJECT_CACHE[$subject]}"; return 0
+  fi
+  local json version schema_type out
+  json=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/latest" 2>/dev/null) || { SUBJECT_CACHE[$subject]=""; echo ""; return 0; }
+  version=$(jq -r .version <<< "$json" 2>/dev/null)
+  [ "$version" = "null" ] && { SUBJECT_CACHE[$subject]=""; echo ""; return 0; }
+  schema_type=$(jq -r '.schemaType // ""' <<< "$json" 2>/dev/null)
+  case "$schema_type" in
+    JSON) out="json-schema" ;;
+    PROTOBUF) out="protobuf" ;;
+    AVRO|""|null) out="avro" ;;
+    *) out="" ;;
+  esac
+  SUBJECT_CACHE[$subject]="$out"
+  echo "$out"
+}
+
 if [[ -n "$key_subject" ]]
 then
   original_key_subject=$key_subject
@@ -219,49 +241,13 @@ do
   then
     log "📈 plotting results.."
   fi
-  key_type=""
-  version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/latest" | jq -r .version)
-  if [ "$version" != "null" ]
-  then
-    schema_type=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/latest" | jq -r .schemaType)
-    case "${schema_type}" in
-      JSON)
-        key_type="json-schema"
-      ;;
-      PROTOBUF)
-        key_type="protobuf"
-      ;;
-      null)
-        key_type="avro"
-      ;;
-    esac
-  fi
-
-  if [[ -n "$original_key_subject" ]]
-  then
+  if [[ -n "$original_key_subject" ]]; then
     log "📛 key subject is set with $original_key_subject"
     key_subject=$original_key_subject
   else
     key_subject="${topic}-key"
   fi
-
-  key_type=""
-  version=$(curl $sr_security -s "${sr_url}/subjects/${key_subject}/versions/latest" | jq -r .version)
-  if [ "$version" != "null" ]
-  then
-    schema_type=$(curl $sr_security -s "${sr_url}/subjects/${key_subject}/versions/latest"  | jq -r .schemaType)
-    case "${schema_type}" in
-      JSON)
-        key_type="json-schema"
-      ;;
-      PROTOBUF)
-        key_type="protobuf"
-      ;;
-      null)
-        key_type="avro"
-      ;;
-    esac
-  fi
+  key_type=$(get_subject_info "$key_subject")
 
   if [ "$key_type" != "" ]
   then
@@ -279,23 +265,7 @@ do
     value_subject="${topic}-value"
   fi
 
-  value_type=""
-  version=$(curl $sr_security -s "${sr_url}/subjects/${value_subject}/versions/latest" | jq -r .version)
-  if [ "$version" != "null" ]
-  then
-    schema_type=$(curl $sr_security -s "${sr_url}/subjects/${value_subject}/versions/latest"  | jq -r .schemaType)
-    case "${schema_type}" in
-      JSON)
-        value_type="json-schema"
-      ;;
-      PROTOBUF)
-        value_type="protobuf"
-      ;;
-      AVRO|null)
-        value_type="avro"
-      ;;
-    esac
-  fi
+  value_type=$(get_subject_info "$value_subject")
 
   if [ "$value_type" != "" ]
   then
@@ -419,12 +389,15 @@ fi
     if [[ $line =~ "CreateTime:" ]]
     then
       # Extract the timestamp from the line
-      timestamp_ms=$(echo "$line" | cut -d ":" -f 2 | cut -d "|" -f 1)
+      # Extract millisecond timestamp without external cut pipelines
+      timestamp_ms_part=${line#CreateTime:}
+      timestamp_ms=${timestamp_ms_part%%|*}
       # Convert milliseconds to seconds
       timestamp_sec=$((timestamp_ms / 1000))
       milliseconds=$((timestamp_ms % 1000))
       readable_date="$(${date_command}${timestamp_sec} "+%Y-%m-%d %H:%M:%S.${milliseconds}")"
-      line_with_date=$(echo "$line" | sed -E "s/CreateTime:[0-9]{13}/CreateTime:${readable_date}/")
+      original_prefix="CreateTime:${timestamp_ms}"
+      line_with_date="${line/$original_prefix/$(printf 'CreateTime:%s' "$readable_date")}" || line_with_date="$line"
 
       if [ $first_record -eq 1 ]
       then
@@ -455,8 +428,13 @@ fi
 
       if [ $is_base64 -eq 1 ]
       then
-        base64=$(echo "$payload" | tr -d '"' | base64 -d)
-        line_with_date=$(echo "$line_with_date" | awk -v new_value="$base64" 'BEGIN {FS=OFS="|"} {$6=new_value}1')
+        base64=$(echo "$payload" | tr -d '"' | base64 -d 2>/dev/null)
+        if [ -n "$base64" ]; then
+          line_with_date=$(awk -v new_value="$base64" -v l="$line_with_date" 'BEGIN{FS=OFS="|"} {
+            split(l,a,"|"); a[6]=new_value;
+            for(i=1;i<=length(a);i++){printf i==length(a)?a[i]"\n":a[i]"|"}
+          }')
+        fi
       fi
 
       if [[ -n "$grep_string" ]]
@@ -474,7 +452,8 @@ fi
       then
         if [ $display_line -eq 1 ]
         then
-          payload=$(echo "$line_with_date" | cut -d "|" -f 6)
+          payload_field=${line_with_date#*|*|*|*|*|}
+          payload=${payload_field%%|*}
           if [ ${#payload} -lt $max_characters ]
           then
             if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
@@ -496,7 +475,8 @@ fi
 
       if [[ -n "$timestamp_field" ]]
       then
-        payload=$(echo "$line" | cut -d "|" -f 6)
+        payload_field=${line#*|*|*|*|*|}
+        payload=${payload_field%%|*}
         # JSON is invalid
         if ! echo "$payload" | jq -e .  > /dev/null 2>&1
         then
@@ -530,7 +510,8 @@ fi
 
       if [ $display_line -eq 1 ]
       then
-        payload=$(echo "$line" | cut -d "|" -f 6)
+        payload_field=${line#*|*|*|*|*|}
+        payload=${payload_field%%|*}
         if [ ${#payload} -lt $max_characters ]
         then
           echo "$line"
