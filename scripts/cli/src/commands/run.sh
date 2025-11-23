@@ -1254,6 +1254,7 @@ then
       maybe_remove_flag "--connector-zip"
       maybe_remove_flag "--connector-tag"
       connector_tags=""
+      if [ -z "${connector_paths:-}" ]; then get_connector_paths; fi
       for connector_path in ${connector_paths//,/ }
       do
         full_connector_name=$(basename "$connector_path")
