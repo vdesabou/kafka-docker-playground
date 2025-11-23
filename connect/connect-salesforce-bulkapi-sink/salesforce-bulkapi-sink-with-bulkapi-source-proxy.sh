@@ -11,10 +11,11 @@ then
      exit 111
 fi
 
-# Temporary skip: Salesforce has disabled Connected Apps creation by default since Nov 2025
+# Temporary skip for CP 8.0+: Salesforce has disabled Connected Apps creation by default since Nov 2025
 # This test requires two separate Salesforce accounts with Connected Apps properly configured
+# The skip is applied to CP 8.0+ as that's the version currently being tested in CI
 # See: https://github.com/vdesabou/kafka-docker-playground/issues/7364
-# Once credentials are updated with proper Connected Apps enablement, remove this skip
+# Once test credentials are updated with proper Connected Apps enablement, remove this skip
 if connect_cp_version_greater_than_8
 then
      logwarn "Temporarily skipping this test due to Salesforce Connected Apps policy change"
