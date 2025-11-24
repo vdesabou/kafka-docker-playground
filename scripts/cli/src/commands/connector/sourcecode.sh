@@ -41,6 +41,40 @@ if [[ -n "$compile" ]]; then
     fi
 fi
 
+if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
+then
+    if [[ -n "$compile" ]]
+    then
+        logerror "❌ --compile does not work when using fully managed connectors"
+        exit 1
+    fi
+
+    owner="confluentinc"
+    name=$(grep "connector.class" $test_file | head -1 | cut -d '"' -f4)
+
+    length=${#connector_tag_array[@]}
+    if ((length > 1))
+    then
+        if ((length > 2))
+        then
+            logerror "❌ --connector-tag can only be set 2 times"
+            exit 1
+        fi
+        connector_tag1="${connector_tag_array[0]}"
+        connector_tag2="${connector_tag_array[1]}"
+        playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag1" --connector-tag "$connector_tag2" $maybe_only_show_url
+    else
+        if ((length == 1))
+        then
+            connector_tag="${connector_tag_array[0]}"
+            playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag" $maybe_only_show_url
+        else
+            playground connector-plugin sourcecode --connector-plugin "$owner/$name" $maybe_only_show_url
+        fi
+    fi
+    exit 0
+fi
+
 get_connector_paths
 if [ "$connector_paths" == "" ]; then
     logwarn "❌ skipping as it is not an example with connector, but --connector-tag is set"
