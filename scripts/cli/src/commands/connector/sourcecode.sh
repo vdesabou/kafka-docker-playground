@@ -101,13 +101,20 @@ fi
 chosen_path="${eligible_paths[0]}"
 if [ ${#eligible_paths[@]} -gt 1 ]; then
     log "🔌 multiple connectors detected, please choose one"
-    if command -v fzf >/dev/null 2>&1; then
-        chosen_path=$(printf '%s\n' "${eligible_paths[@]}" | fzf --prompt="Select connector path: ")
+
+    if [[ -n "$only_show_url" ]]
+    then
+        chosen_path="${eligible_paths[0]}"
     else
-        PS3="Enter number of connector to use: "
-        select cp in "${eligible_paths[@]}"; do
-            if [ -n "$cp" ]; then chosen_path="$cp"; break; fi
-        done
+        log "🔌 multiple connectors detected, please choose one"
+        if command -v fzf >/dev/null 2>&1; then
+            chosen_path=$(printf '%s\n' "${eligible_paths[@]}" | fzf --prompt="Select connector path: ")
+        else
+            PS3="Enter number of connector to use: "
+            select cp in "${eligible_paths[@]}"; do
+                if [ -n "$cp" ]; then chosen_path="$cp"; break; fi
+            done
+        fi
     fi
 fi
 
