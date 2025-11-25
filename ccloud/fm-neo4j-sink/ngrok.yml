@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  neo4j:
+    addr: neo4j:7687
+    proto: tcp
