@@ -380,7 +380,7 @@ cat $tmp_dir/intro > $tmp_dir/tmp_file
 cat $repro_test_file | grep -v "#!/bin/bash" >> $tmp_dir/tmp_file
 mv $tmp_dir/tmp_file $repro_test_file
 
-for file in README.md docker-compose*.yml keyfile.json stop.sh sql-datagen
+for file in README.md docker-compose*.yml keyfile.json stop.sh sql-datagen config-*.json config-*.txt
 do
   if [ -f $file ]
   then
