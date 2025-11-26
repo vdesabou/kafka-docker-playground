@@ -3154,6 +3154,8 @@ commands:
         }
         EOF
 
+        playground  topic produce -t topic-datagen-json-schema --nb-messages 1 --quickstart purchase --derive-value-schema-as JSON 
+
         playground topic produce -t topic-avro --nb-messages 10 << 'EOF'
         {
           "fields": [

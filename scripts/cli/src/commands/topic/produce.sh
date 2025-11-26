@@ -32,6 +32,44 @@ eval "validate_config=(${args[--validate-config]})"
 eval "producer_property=(${args[--producer-property]})"
 eval "references=(${args[--reference]})"
 
+function identify_schema() {
+    schema_file=$1
+    type=$2
+
+    if grep -q "proto3" $schema_file
+    then
+        log "🔮 $type schema was identified as protobuf"
+        schema_type=protobuf
+    elif grep -q "\"type\"\s*:\s*\"object\"" $schema_file
+    then
+        log "🔮 $type schema was identified as json schema"
+        schema_type=json-schema
+    elif grep -q "\"_meta" $schema_file
+    then
+        log "🔮 $type schema was identified as json"
+        schema_type=json
+    elif grep -q "CREATE TABLE" $schema_file
+    then
+        log "🔮 $type schema was identified as sql"
+        schema_type=sql
+    elif grep -q "arg.properties" $schema_file
+    then
+        log "🔮 $type schema was identified as datagen"
+        schema_type=datagen
+    elif grep -q "\"type\"\s*:\s*\"record\"" $schema_file
+    then
+        log "🔮 $type schema was identified as avro"
+        schema_type=avro
+    elif grep -xq "\".*\"" $schema_file
+    then
+        log "🔮 $type schema was identified as avro (single line surrounded by double quotes)"
+        schema_type=avro
+    else
+        log "📢 $type no known schema could be identified, payload will be sent as raw data"
+        schema_type=raw
+    fi
+}
+
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 if [ -z "$PG_VERBOSE_MODE" ]
 then
@@ -85,6 +123,15 @@ else
         value_content=$value
         echo "$value_content" > $value_schema_file
     fi
+fi
+
+is_datagen=0
+set +e
+identify_schema "$value_schema_file" "value" > /dev/null 2>&1
+set -e
+if [[ "$schema_type" == "datagen" ]]
+then
+    is_datagen=1
 fi
 
 get_environment_used
@@ -190,44 +237,6 @@ then
         fi
     fi
 fi
-
-function identify_schema() {
-    schema_file=$1
-    type=$2
-
-    if grep -q "proto3" $schema_file
-    then
-        log "🔮 $type schema was identified as protobuf"
-        schema_type=protobuf
-    elif grep -q "\"type\"\s*:\s*\"object\"" $schema_file
-    then
-        log "🔮 $type schema was identified as json schema"
-        schema_type=json-schema
-    elif grep -q "\"_meta" $schema_file
-    then
-        log "🔮 $type schema was identified as json"
-        schema_type=json
-    elif grep -q "CREATE TABLE" $schema_file
-    then
-        log "🔮 $type schema was identified as sql"
-        schema_type=sql
-    elif grep -q "arg.properties" $schema_file
-    then
-        log "🔮 $type schema was identified as datagen"
-        schema_type=datagen
-    elif grep -q "\"type\"\s*:\s*\"record\"" $schema_file
-    then
-        log "🔮 $type schema was identified as avro"
-        schema_type=avro
-    elif grep -xq "\".*\"" $schema_file
-    then
-        log "🔮 $type schema was identified as avro (single line surrounded by double quotes)"
-        schema_type=avro
-    else
-        log "📢 $type no known schema could be identified, payload will be sent as raw data"
-        schema_type=raw
-    fi
-}
 
 ref_array_schema_file=$tmp_dir/ref_array_schema
   if [ ${#references[@]} -ne 0 ]
@@ -350,20 +359,42 @@ if [[ ! -n "$tombstone" ]]
 then
     if [[ -n "$derive_value_schema_as" ]]
     then
-        log "🪄 --derive-value-schema-as $derive_value_schema_as is used"
-        set +e
-        output=$(playground --output-level ERROR  schema derive-schema --schema-type "${derive_value_schema_as}" < "$value_schema_file")
-        if [ $? -ne 0 ]
+        if [[ "$is_datagen" == "1" ]]
         then
-            logerror "❌ schema derivation failed"
-            echo "$output"
-            exit 1
+            log "🍦 --derive-value-schema-as $derive_value_schema_as is used with datagen schema, generating a payload:"
+            cp ${value_schema_file} $tmp_dir/original_quickstart.avro
+            schema_file_name="$(basename "${value_schema_file}")"
+            docker run --quiet --rm -v $tmp_dir:/tmp/ vdesabou/avro-random-generator -f /tmp/$schema_file_name -i 1 -c > $tmp_dir/tmp_quickstart_value.json 2> /dev/null
+            cat $tmp_dir/tmp_quickstart_value.json
+            set +e
+            output=$(playground --output-level ERROR schema derive-schema --schema-type "${derive_value_schema_as}" < "$tmp_dir/tmp_quickstart_value.json")
+            if [ $? -ne 0 ]
+            then
+                logerror "❌ schema derivation failed"
+                echo "$output"
+                exit 1
+            else
+                log "🪄 generated $derive_value_schema_as schema:"
+                echo "$output"
+            fi
+            set -e
+            echo "$output" > $value_schema_file
         else
-            log "🪄 generated $derive_value_schema_as schema:"
-            echo "$output"
+            log "🪄 --derive-value-schema-as $derive_value_schema_as is used"
+            set +e
+            output=$(playground --output-level ERROR schema derive-schema --schema-type "${derive_value_schema_as}" < "$value_schema_file")
+            if [ $? -ne 0 ]
+            then
+                logerror "❌ schema derivation failed"
+                echo "$output"
+                exit 1
+            else
+                log "🪄 generated $derive_value_schema_as schema:"
+                echo "$output"
+            fi
+            set -e
+            echo "$output" > $value_schema_file
         fi
-        set -e
-        echo "$output" > $value_schema_file
     fi
     identify_schema "$value_schema_file" "value"
     value_schema_type=$schema_type
@@ -477,7 +508,7 @@ function generate_data() {
             ;;
             datagen)
                 schema_file_name="$(basename "${schema_file}")"
-                docker run --quiet --rm -v $tmp_dir:/tmp/ vdesabou/avro-random-generator -f /tmp/$schema_file_name -i $nb_messages_to_generate -c > $tmp_dir/out.json
+                docker run --quiet --rm -v $tmp_dir:/tmp/ vdesabou/avro-random-generator -f /tmp/$schema_file_name -i $nb_messages_to_generate -c > $tmp_dir/out.json 2> /dev/null
             ;;
             json-schema)
                 # https://github.com/json-schema-faker/json-schema-faker/tree/master/docs
@@ -668,8 +699,19 @@ then
 fi
 if [[ ! -n "$tombstone" ]]
 then
-    log "✨ generating value data..."
-    generate_data "$value_schema_type" "$value_schema_file" "$output_value_file" "VALUE"
+    if [[ -n "$derive_value_schema_as" ]] && [[ -n "$quickstart" ]]
+    then
+        log "✨🍟 generating value data using quickstart $quickstart..."
+        generate_data "datagen" "$tmp_dir/original_quickstart.avro" "$output_value_file" "VALUE"
+    elif [[ -n "$derive_value_schema_as" ]] && [[ "$is_datagen" == "1" ]]
+    then
+        log "✨🍦 generating value data using datagen..."
+        generate_data "datagen" "$tmp_dir/original_quickstart.avro" "$output_value_file" "VALUE"
+    else
+        log "✨ generating value data..."
+        generate_data "$value_schema_type" "$value_schema_file" "$output_value_file" "VALUE"
+    fi
+    
     nb_generated_messages=$(wc -l < $output_value_file)
 else
     nb_generated_messages=$(wc -l < $output_key_file)
