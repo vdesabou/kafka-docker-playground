@@ -46,34 +46,7 @@ do
   sleep 5
 done
 
-connector_name="DatagenSource_$USER"
-set +e
-playground connector delete --connector $connector_name > /dev/null 2>&1
-set -e
-
-log "Creating fully managed connector"
-playground connector create-or-update --connector $connector_name << EOF
-{
-     "connector.class": "DatagenSource",
-     "name": "DatagenSource",
-     "kafka.auth.mode": "KAFKA_API_KEY",
-     "kafka.api.key": "$CLOUD_KEY",
-     "kafka.api.secret": "$CLOUD_SECRET",
-     "kafka.topic" : "users",
-     "output.data.format" : "AVRO",
-     "quickstart" : "USERS",
-     "max.interval": "10",
-     "tasks.max" : "1"
-}
-EOF
-wait_for_ccloud_connector_up $connector_name 180
-
-log "let topic 'users' be populated for 10 seconds"
-sleep 10
-
-playground connector delete --connector $connector_name
-
-playground topic get-number-records --topic users
+playground topic produce --topic users --quickstart users_schema --derive-value-schema-as AVRO --nb-messages 10000 --key User%g
 
 connector_name="Neo4jSink_$USER"
 set +e

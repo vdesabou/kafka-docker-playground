@@ -65,7 +65,9 @@ set +e
 aws s3 rm s3://$DATABRICKS_AWS_BUCKET_NAME --recursive --region $DATABRICKS_AWS_BUCKET_REGION
 set -e
 
-connector_name="DatagenSource_$USER"
+playground topic produce --topic pageviews --quickstart pageviews_schema --derive-value-schema-as AVRO --nb-messages 100
+
+connector_name="DatabricksDeltaLakeSink_$USER"
 set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
@@ -73,33 +75,9 @@ set -e
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
-     "connector.class": "DatagenSource",
-     "name": "DatagenSource",
-     "kafka.auth.mode": "KAFKA_API_KEY",
-     "kafka.api.key": "$CLOUD_KEY",
-     "kafka.api.secret": "$CLOUD_SECRET",
-     "kafka.topic" : "pageviews",
-     "output.data.format" : "AVRO",
-     "quickstart" : "PAGEVIEWS",
-     "max.interval": "10000",
-     "tasks.max" : "1"
-}
-EOF
-wait_for_ccloud_connector_up $connector_name 180
-
-playground connector delete --connector $connector_name
-
-connector_name2="DatabricksDeltaLakeSink_$USER"
-set +e
-playground connector delete --connector $connector_name2 > /dev/null 2>&1
-set -e
-
-log "Creating fully managed connector"
-playground connector create-or-update --connector $connector_name2 << EOF
-{
      "topics": "pageviews",
      "input.data.format": "AVRO",
-     "name": "$connector_name2",
+     "name": "$connector_name",
      "connector.class": "DatabricksDeltaLakeSink",
      "kafka.auth.mode": "KAFKA_API_KEY",
      "kafka.api.key": "$CLOUD_KEY",
@@ -116,11 +94,11 @@ playground connector create-or-update --connector $connector_name2 << EOF
      "tasks.max": "1"
 }
 EOF
-wait_for_ccloud_connector_up $connector_name2 180
+wait_for_ccloud_connector_up $connector_name 180
 
-playground connector show-lag --connector $connector_name2 --max-wait 300
+playground connector show-lag --connector $connector_name --max-wait 300
 
-log "Do you want to delete the fully managed connector $connector_name2 ?"
+log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
-playground connector delete --connector $connector_name2
+playground connector delete --connector $connector_name
