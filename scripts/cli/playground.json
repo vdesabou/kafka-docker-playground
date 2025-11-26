@@ -2202,7 +2202,7 @@
                 "--max-nb-messages-to-generate"
               ],
               "argument": "MAX-NB-MESSAGES-TO-GENERATE",
-              "description": "🔨 Max number of different messages to generate.\n\n   - when protobuf is used, default is 50 as protobuf generation is really slow\n   - when --record-size is set, default is 100\n   --when nb-messages is set to -1, default is 1000\n   - otherwise default is 100000\n"
+              "description": "🔨 Max number of different messages to generate.\n\n   - when protobuf is used, default is 50 as protobuf generation is really slow\n   - when json or sql datagen format is used, default is 1000\n   - when --record-size is set, default is 100\n   --when nb-messages is set to -1, default is 1000\n   - otherwise default is 100000\n"
             },
             {
               "names": [

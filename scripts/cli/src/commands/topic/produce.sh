@@ -401,6 +401,9 @@ function generate_data() {
         if [ "$schema_type" == "protobuf" ]
         then
             nb_max_messages_to_generate=50
+        elif [ "$schema_type" == "json" ] || [ "$schema_type" == "sql" ]
+        then
+            nb_max_messages_to_generate=1000
         else
             if [ "$record_size" != 0 ] && [ "$type" == "VALUE" ]
             then
@@ -601,18 +604,16 @@ function generate_data() {
     then
         set +e
         awk '
-        # This block runs for every line in the file, but since it is a single-line file, it runs once.
         {
-            content = $0
+            # Store each line in an array indexed by the line number (NR)
+            lines[NR] = $0
         }
         END {
-            # Define the message to print, including the necessary newline.
-            # This prevents repeated string concatenation inside the loop.
-            message = content "\n"
-
-            # Use printf, which is generally faster for raw output than print.
+            # NR now holds the total number of lines read
             while (1) {
-                printf "%s", message
+                for (i = 1; i <= NR; i++) {
+                    print lines[i]
+                }
             }
         }
         ' "$input2_file" | head -n "$max_nb_messages_per_batch" > "$output_file"
@@ -621,18 +622,16 @@ function generate_data() {
     then
         set +e
         awk '
-        # This block runs for every line in the file, but since it is a single-line file, it runs once.
         {
-            content = $0
+            # Store each line in an array indexed by the line number (NR)
+            lines[NR] = $0
         }
         END {
-            # Define the message to print, including the necessary newline.
-            # This prevents repeated string concatenation inside the loop.
-            message = content "\n"
-
-            # Use printf, which is generally faster for raw output than print.
+            # NR now holds the total number of lines read
             while (1) {
-                printf "%s", message
+                for (i = 1; i <= NR; i++) {
+                    print lines[i]
+                }
             }
         }
         ' "$input2_file" | head -n "$nb_messages" > "$output_file"
