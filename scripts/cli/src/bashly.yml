@@ -2721,6 +2721,8 @@ commands:
           
           * You can also generate json data using json or sql format using syntax from https://github.com/MaterializeInc/datagen
 
+          * You can also generate json data using syntax from https://github.com/vdesabou/avro-random-generator (same as datagen source connector)
+
           * Use completion to select predefined schemas (or use your own schema file) 🎓 Tip: use <tab> completion to trigger fzf completion
 
           * Directly set payload ("%g" can be used to generate a counter)
@@ -2750,6 +2752,8 @@ commands:
           * Set your own schema (avro, json-schema, protobuf) with stdin (see example section). 
           
           * You can also generate json data using json or sql format using syntax from https://github.com/MaterializeInc/datagen
+
+          * You can also generate json data using syntax from https://github.com/vdesabou/avro-random-generator (same as datagen source connector)
 
           * Use completion to select predefined schemas (or use your own schema file) 🎓 Tip: use <tab> completion to trigger fzf completion
 
@@ -3059,6 +3063,47 @@ commands:
             "website": "faker.internet.domainName()",
             "city": "faker.location.city()",
             "company": "faker.company.name()"
+        }
+        EOF
+
+        playground topic produce -t topic-datagen-users --nb-messages 10 << 'EOF'
+        {
+                "namespace": "ksql",
+                "name": "users",
+                "type": "record",
+                "fields": [
+                        {"name": "registertime", "type": {
+                            "type": "long",
+                            "arg.properties": {
+                                "range": {
+                                    "min": 1487715775521,
+                                    "max": 1519273364600
+                                }
+                            }
+                        }},
+                        {"name": "userid", "type": {
+                            "type": "string",
+                            "arg.properties": {
+                                "regex": "User_[1-9]"
+                            }
+                        }},
+                        {"name": "regionid", "type": {
+                            "type": "string",
+                            "arg.properties": {
+                                "regex": "Region_[1-9]"
+                            }
+                        }},
+                        {"name": "gender", "type": {
+                            "type": "string",
+                            "arg.properties": {
+                                "options": [
+                                    "MALE",
+                                    "FEMALE",
+                                    "OTHER"
+                                ]
+                            }
+                        }}
+                ]
         }
         EOF
 

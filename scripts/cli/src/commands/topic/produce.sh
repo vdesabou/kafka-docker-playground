@@ -203,6 +203,10 @@ function identify_schema() {
     then
         log "🔮 $type schema was identified as sql"
         schema_type=sql
+    elif grep -q "arg.properties" $schema_file
+    then
+        log "🔮 $type schema was identified as datagen"
+        schema_type=datagen
     elif grep -q "\"type\"\s*:\s*\"record\"" $schema_file
     then
         log "🔮 $type schema was identified as avro"
@@ -462,6 +466,10 @@ function generate_data() {
                 schema_file_name="$(basename "${schema_file}")"
                 docker run --quiet --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/$schema_file_name --count $nb_messages_to_generate --no-null "$no_null"
                 docker run --quiet --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
+            ;;
+            datagen)
+                schema_file_name="$(basename "${schema_file}")"
+                docker run --quiet --rm -v $tmp_dir:/tmp/ vdesabou/avro-random-generator -f /tmp/$schema_file_name -i $nb_messages_to_generate -c > $tmp_dir/out.json
             ;;
             json-schema)
                 # https://github.com/json-schema-faker/json-schema-faker/tree/master/docs
@@ -1077,7 +1085,7 @@ do
         switch_schema_type="${value_schema_type}"
     fi
     case "${switch_schema_type}" in
-        json|sql|raw)
+        json|sql|raw|datagen)
             if [[ "$environment" == "ccloud" ]]
             then
                 if [[ -n "$key" ]]
