@@ -25,6 +25,7 @@ consume="${args[--consume]}"
 delete_topic="${args[--delete-topic]}"
 derive_key_schema_as="${args[--derive-key-schema-as]}"
 derive_value_schema_as="${args[--derive-value-schema-as]}"
+quickstart="${args[--quickstart]}"
 
 # Convert the space delimited string to an array
 eval "validate_config=(${args[--validate-config]})"
@@ -49,6 +50,13 @@ fi
 ref_schema_file=$tmp_dir/ref_schema
 key_schema_file=$tmp_dir/key_schema
 value_schema_file=$tmp_dir/value_schema
+
+if [[ -n "$quickstart" ]]
+then
+    log "🍟 --quickstart $quickstart is used, retrieving schema from quickstart https://raw.githubusercontent.com/confluentinc/kafka-connect-datagen/refs/heads/master/src/main/resources/$quickstart.avro"
+    wget -q https://raw.githubusercontent.com/confluentinc/kafka-connect-datagen/refs/heads/master/src/main/resources/$quickstart.avro -O $tmp_dir/$quickstart.avro
+    value="@$tmp_dir/$quickstart.avro"
+fi
 
 if [ "$value" = "-" ]
 then

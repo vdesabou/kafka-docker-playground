@@ -2911,6 +2911,53 @@ commands:
         help: |-
           ☑️ Validate schema according to connect sink converter used
 
+      - long: --quickstart
+        required: false
+        arg: quickstart
+        help: |-
+            🍟 Name of quickstart(https://github.com/confluentinc/kafka-connect-datagen/tree/master/src/main/resources) to use
+
+        conflicts: [--value]
+        allowed: 
+        - clickstream_codes_schema
+        - clickstream_schema
+        - clickstream_users_schema
+        - inventory
+        - orders_schema
+        - ratings_schema
+        - pageviews_schema
+        - stock_trades_schema
+        - users_array_map_schema
+        - users_schema
+        - campaign_finance
+        - credit_cards
+        - device_information
+        - fleet_mgmt_description
+        - fleet_mgmt_location
+        - fleet_mgmt_sensors
+        - gaming_games
+        - gaming_player_activity
+        - gaming_players
+        - insurance_customer_activity
+        - insurance_customers
+        - insurance_offers
+        - payroll_bonus
+        - payroll_employee
+        - payroll_employee_location
+        - pizza_orders
+        - pizza_orders_cancelled
+        - pizza_orders_completed
+        - product
+        - purchase
+        - shoe_clickstream
+        - shoe_customers
+        - shoe_orders
+        - shoes
+        - siem_logs
+        - stores
+        - syslog_logs
+        - transactions
+
       - long: --derive-key-schema-as
         required: false
         arg: derive-key-schema-as
