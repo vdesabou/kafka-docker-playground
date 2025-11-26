@@ -639,7 +639,7 @@ _playground_completions() {
       ;;
 
     *'topic produce'*'--quickstart')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "clickstream_codes_schema clickstream_schema clickstream_users_schema inventory orders_schema ratings_schema pageviews_schema stock_trades_schema users_array_map_schema users_schema campaign_finance credit_cards device_information fleet_mgmt_description fleet_mgmt_location fleet_mgmt_sensors gaming_games gaming_player_activity gaming_players insurance_customer_activity insurance_customers insurance_offers payroll_bonus payroll_employee payroll_employee_location pizza_orders pizza_orders_cancelled pizza_orders_completed product purchase shoe_clickstream shoe_customers shoe_orders shoes siem_logs stores syslog_logs transactions")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-predefined-schemas "$cur" --only-datagen)")" -- "$cur")
       ;;
 
     *'connector offsets alter'*'-c')

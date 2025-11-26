@@ -91,9 +91,8 @@ value_schema_file=$tmp_dir/value_schema
 
 if [[ -n "$quickstart" ]]
 then
-    log "🍟 --quickstart $quickstart is used, retrieving schema from quickstart https://raw.githubusercontent.com/confluentinc/kafka-connect-datagen/refs/heads/master/src/main/resources/$quickstart.avro"
-    wget -q https://raw.githubusercontent.com/confluentinc/kafka-connect-datagen/refs/heads/master/src/main/resources/$quickstart.avro -O $tmp_dir/$quickstart.avro
-    value="@$tmp_dir/$quickstart.avro"
+    log "🍟 --quickstart $quickstart is used"
+    value="$quickstart"
 fi
 
 if [ "$value" = "-" ]
@@ -113,25 +112,24 @@ then
 else
     if [[ $value == @* ]]
     then
-        # this is a schema file
-        argument_schema_file=$(echo "$value" | cut -d "@" -f 2)
-        cp $argument_schema_file $value_schema_file
+        # this is a predefined schema file
+        predefined_folder="$root_folder/scripts/cli/predefined-schemas"
+        predefined_selection=$(echo "$value" | cut -d "@" -f 2)
+        cp "$predefined_folder/$predefined_selection" "$value_schema_file"
     elif [ -f "$value" ]
     then
-        cp $value $value_schema_file
+        cp "$value" "$value_schema_file"
     else
         value_content=$value
-        echo "$value_content" > $value_schema_file
+        echo "$value_content" > "$value_schema_file"
     fi
 fi
 
-is_datagen=0
-set +e
+is_value_datagen=0
 identify_schema "$value_schema_file" "value" > /dev/null 2>&1
-set -e
 if [[ "$schema_type" == "datagen" ]]
 then
-    is_datagen=1
+    is_value_datagen=1
 fi
 
 get_environment_used
@@ -324,21 +322,33 @@ if [[ -n "$key" ]]
 then
     if [[ $key == @* ]]
     then
-        # this is a schema file
-        argument_schema_file=$(echo "$key" | cut -d "@" -f 2)
-        cp $argument_schema_file $key_schema_file
+        # this is a predefined schema file
+        predefined_folder="$root_folder/scripts/cli/predefined-schemas"
+        predefined_selection=$(echo "$key" | cut -d "@" -f 2)
+        cp "$predefined_folder/$predefined_selection" "$key_schema_file"
     elif [ -f "$key" ]
     then
-        cp $key $key_schema_file
+        cp "$key" "$key_schema_file"
     else
         echo "$key" > "$key_schema_file"
     fi
-    
-    if [[ -n "$derive_key_schema_as" ]]
+
+    is_key_datagen=0
+    identify_schema "$key_schema_file" "key" > /dev/null 2>&1
+    if [[ "$schema_type" == "datagen" ]]
     then
-        log "🪄 --derive-key-schema-as $derive_key_schema_as is used"
+        is_key_datagen=1
+    fi
+    
+    if [[ "$is_key_datagen" == "1" ]]
+    then
+        log "🍦 --derive-key-schema-as $derive_key_schema_as is used with datagen schema, generating a payload:"
+        cp "${key_schema_file}" "$tmp_dir/original_key_datagen.avro"
+        schema_file_name="$(basename "${key_schema_file}")"
+        docker run --quiet --rm -v "$tmp_dir:/tmp/" vdesabou/avro-random-generator -f "/tmp/$schema_file_name" -i 1 -c > "$tmp_dir/tmp_datagen_key.json" 2> /dev/null
+        cat "$tmp_dir/tmp_datagen_key.json"
         set +e
-        output=$(playground --output-level ERROR  schema derive-schema --schema-type "${derive_key_schema_as}" < "$key_schema_file")
+        output=$(playground --output-level ERROR schema derive-schema --schema-type "${derive_key_schema_as}" < "$tmp_dir/tmp_datagen_key.json")
         if [ $? -ne 0 ]
         then
             logerror "❌ schema derivation failed"
@@ -349,7 +359,25 @@ then
             echo "$output"
         fi
         set -e
-        echo "$output" > $key_schema_file
+        echo "$output" > ${key_schema_file}
+    else 
+        if [[ -n "$derive_key_schema_as" ]]
+        then
+            log "🪄 --derive-key-schema-as $derive_key_schema_as is used"
+            set +e
+            output=$(playground --output-level ERROR  schema derive-schema --schema-type "${derive_key_schema_as}" < "$key_schema_file")
+            if [ $? -ne 0 ]
+            then
+                logerror "❌ schema derivation failed"
+                echo "$output"
+                exit 1
+            else
+                log "🪄 generated $derive_key_schema_as schema:"
+                echo "$output"
+            fi
+            set -e
+            echo "$output" > "$key_schema_file"
+        fi
     fi
     identify_schema "$key_schema_file" "key"
     key_schema_type=$schema_type
@@ -359,15 +387,15 @@ if [[ ! -n "$tombstone" ]]
 then
     if [[ -n "$derive_value_schema_as" ]]
     then
-        if [[ "$is_datagen" == "1" ]]
+        if [[ "$is_value_datagen" == "1" ]]
         then
             log "🍦 --derive-value-schema-as $derive_value_schema_as is used with datagen schema, generating a payload:"
-            cp ${value_schema_file} $tmp_dir/original_quickstart.avro
+            cp "${value_schema_file}" "$tmp_dir/original_value_datagen.avro"
             schema_file_name="$(basename "${value_schema_file}")"
-            docker run --quiet --rm -v $tmp_dir:/tmp/ vdesabou/avro-random-generator -f /tmp/$schema_file_name -i 1 -c > $tmp_dir/tmp_quickstart_value.json 2> /dev/null
-            cat $tmp_dir/tmp_quickstart_value.json
+            docker run --quiet --rm -v "$tmp_dir:/tmp/" vdesabou/avro-random-generator -f "/tmp/$schema_file_name" -i 1 -c > "$tmp_dir/tmp_datagen_value.json" 2> /dev/null
+            cat "$tmp_dir/tmp_datagen_value.json"
             set +e
-            output=$(playground --output-level ERROR schema derive-schema --schema-type "${derive_value_schema_as}" < "$tmp_dir/tmp_quickstart_value.json")
+            output=$(playground --output-level ERROR schema derive-schema --schema-type "${derive_value_schema_as}" < "$tmp_dir/tmp_datagen_value.json")
             if [ $? -ne 0 ]
             then
                 logerror "❌ schema derivation failed"
@@ -694,19 +722,21 @@ output_final_file=$tmp_dir/out_final.json
 SECONDS=0
 if [[ -n "$key" ]]
 then
-    log "✨ generating key data..."
-    generate_data "$key_schema_type" "$key_schema_file" "$output_key_file" "KEY"
+    if [[ -n "$derive_key_schema_as" ]] && [[ "$is_key_datagen" == "1" ]]
+    then
+        log "✨🍟 generating key data using datagen..."
+        generate_data "datagen" "$tmp_dir/original_key_datagen.avro" "$output_key_file" "KEY"
+    else
+        log "✨ generating key data..."
+        generate_data "$key_schema_type" "$key_schema_file" "$output_key_file" "KEY"
+    fi
 fi
 if [[ ! -n "$tombstone" ]]
 then
-    if [[ -n "$derive_value_schema_as" ]] && [[ -n "$quickstart" ]]
+    if [[ -n "$derive_value_schema_as" ]] && [[ "$is_value_datagen" == "1" ]]
     then
-        log "✨🍟 generating value data using quickstart $quickstart..."
-        generate_data "datagen" "$tmp_dir/original_quickstart.avro" "$output_value_file" "VALUE"
-    elif [[ -n "$derive_value_schema_as" ]] && [[ "$is_datagen" == "1" ]]
-    then
-        log "✨🍦 generating value data using datagen..."
-        generate_data "datagen" "$tmp_dir/original_quickstart.avro" "$output_value_file" "VALUE"
+        log "✨🍟 generating value data using datagen..."
+        generate_data "datagen" "$tmp_dir/original_value_datagen.avro" "$output_value_file" "VALUE"
     else
         log "✨ generating value data..."
         generate_data "$value_schema_type" "$value_schema_file" "$output_value_file" "VALUE"

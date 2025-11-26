@@ -960,7 +960,7 @@ playground_get_predefined_schemas_usage() {
   printf "playground get-predefined-schemas - Return some completion for predefined schemas\n\n"
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground get-predefined-schemas [CUR]\n"
+  printf "  playground get-predefined-schemas [CUR] [OPTIONS]\n"
   printf "  playground get-predefined-schemas --help | -h\n"
   echo
 
@@ -968,6 +968,12 @@ playground_get_predefined_schemas_usage() {
   if [[ -n "$long_usage" ]]; then
     # :command.usage_options
     printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--only-datagen")"
+    printf "\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -5512,7 +5518,6 @@ playground_topic_produce_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--quickstart QUICKSTART")"
     printf "    🍟 Name of\n    quickstart(https://github.com/confluentinc/kafka-connect-datagen/tree/master/src/main/resources)\n    to use\n"
-    printf "    %s\n" "Allowed: clickstream_codes_schema, clickstream_schema, clickstream_users_schema, inventory, orders_schema, ratings_schema, pageviews_schema, stock_trades_schema, users_array_map_schema, users_schema, campaign_finance, credit_cards, device_information, fleet_mgmt_description, fleet_mgmt_location, fleet_mgmt_sensors, gaming_games, gaming_player_activity, gaming_players, insurance_customer_activity, insurance_customers, insurance_offers, payroll_bonus, payroll_employee, payroll_employee_location, pizza_orders, pizza_orders_cancelled, pizza_orders_completed, product, purchase, shoe_clickstream, shoe_customers, shoe_orders, shoes, siem_logs, stores, syslog_logs, transactions"
     printf "    %s\n" "Conflicts: --value"
     echo
 
@@ -8412,10 +8417,15 @@ function get_predefined_schemas_with_fzf() {
   DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
   dir1=$(echo ${DIR_CLI%/*})
   dir2=$(echo ${dir1%/*})
-  predefined_folder=$dir2/scripts/cli/predefined-schemas
 
   cur="$1"
+  only_datagen="$2"
 
+  predefined_folder=$dir2/scripts/cli/predefined-schemas
+    if [[ -n "$only_datagen" ]]
+    then
+    predefined_folder=$dir2/scripts/cli/predefined-schemas/datagen
+    fi
   fzf_version=$(get_fzf_version)
   if version_gt $fzf_version "0.38"
   then
@@ -8430,9 +8440,19 @@ function get_predefined_schemas_with_fzf() {
 
   if [[ $(type -f bat 2>&1) =~ "not found" ]]
   then
-    res=$(find $predefined_folder -maxdepth 3 \( -name "*.json" -o -name "*.avsc" -o -name "*.proto" -o -name "*.proto5" -o -name "*.sql" -o -name "*.avro"  \) | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔰" --header="select a predefined schema" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
+    res=$(find $predefined_folder -maxdepth 3 \( -name "*.json" -o -name "*.avsc" -o -name "*.proto" -o -name "*.proto5" -o -name "*.sql" -o -name "*.avro"  \) | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🍟" --header="select a predefined schema" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}')
+
+    last_folder=$(basename $(dirname $res))
+    filename=$(basename "$res")
+    file="$last_folder/$filename"
+    echo "$cur@$file"
   else
-    res=$(find $predefined_folder -maxdepth 3 \( -name "*.json" -o -name "*.avsc" -o -name "*.proto" -o -name "*.proto5" -o -name "*.sql" -o -name "*.avro" \) | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔰" --header="select a predefined schema" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
+    res=$(find $predefined_folder -maxdepth 3 \( -name "*.json" -o -name "*.avsc" -o -name "*.proto" -o -name "*.proto5" -o -name "*.sql" -o -name "*.avro" \) | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🍟" --header="select a predefined schema" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}')
+
+    last_folder=$(basename $(dirname $res))
+    filename=$(basename "$res")
+    file="$last_folder/$filename"
+    echo "$cur@$file"
   fi
 }
 
@@ -14403,8 +14423,9 @@ playground_get_predefined_schemas_command() {
 
   # src/commands/get-predefined-schemas.sh
   cur="${args[cur]}"
+  only_datagen="${args[--only-datagen]}"
 
-  get_predefined_schemas_with_fzf "$cur"
+  get_predefined_schemas_with_fzf "$cur" "$only_datagen"
 }
 
 # :command.function
@@ -23539,9 +23560,8 @@ playground_topic_produce_command() {
 
   if [[ -n "$quickstart" ]]
   then
-      log "🍟 --quickstart $quickstart is used, retrieving schema from quickstart https://raw.githubusercontent.com/confluentinc/kafka-connect-datagen/refs/heads/master/src/main/resources/$quickstart.avro"
-      wget -q https://raw.githubusercontent.com/confluentinc/kafka-connect-datagen/refs/heads/master/src/main/resources/$quickstart.avro -O $tmp_dir/$quickstart.avro
-      value="@$tmp_dir/$quickstart.avro"
+      log "🍟 --quickstart $quickstart is used"
+      value="$quickstart"
   fi
 
   if [ "$value" = "-" ]
@@ -23561,25 +23581,24 @@ playground_topic_produce_command() {
   else
       if [[ $value == @* ]]
       then
-          # this is a schema file
-          argument_schema_file=$(echo "$value" | cut -d "@" -f 2)
-          cp $argument_schema_file $value_schema_file
+          # this is a predefined schema file
+          predefined_folder="$root_folder/scripts/cli/predefined-schemas"
+          predefined_selection=$(echo "$value" | cut -d "@" -f 2)
+          cp "$predefined_folder/$predefined_selection" "$value_schema_file"
       elif [ -f "$value" ]
       then
-          cp $value $value_schema_file
+          cp "$value" "$value_schema_file"
       else
           value_content=$value
-          echo "$value_content" > $value_schema_file
+          echo "$value_content" > "$value_schema_file"
       fi
   fi
 
-  is_datagen=0
-  set +e
+  is_value_datagen=0
   identify_schema "$value_schema_file" "value" > /dev/null 2>&1
-  set -e
   if [[ "$schema_type" == "datagen" ]]
   then
-      is_datagen=1
+      is_value_datagen=1
   fi
 
   get_environment_used
@@ -23772,21 +23791,33 @@ playground_topic_produce_command() {
   then
       if [[ $key == @* ]]
       then
-          # this is a schema file
-          argument_schema_file=$(echo "$key" | cut -d "@" -f 2)
-          cp $argument_schema_file $key_schema_file
+          # this is a predefined schema file
+          predefined_folder="$root_folder/scripts/cli/predefined-schemas"
+          predefined_selection=$(echo "$key" | cut -d "@" -f 2)
+          cp "$predefined_folder/$predefined_selection" "$key_schema_file"
       elif [ -f "$key" ]
       then
-          cp $key $key_schema_file
+          cp "$key" "$key_schema_file"
       else
           echo "$key" > "$key_schema_file"
       fi
 
-      if [[ -n "$derive_key_schema_as" ]]
+      is_key_datagen=0
+      identify_schema "$key_schema_file" "key" > /dev/null 2>&1
+      if [[ "$schema_type" == "datagen" ]]
       then
-          log "🪄 --derive-key-schema-as $derive_key_schema_as is used"
+          is_key_datagen=1
+      fi
+
+      if [[ "$is_key_datagen" == "1" ]]
+      then
+          log "🍦 --derive-key-schema-as $derive_key_schema_as is used with datagen schema, generating a payload:"
+          cp "${key_schema_file}" "$tmp_dir/original_key_datagen.avro"
+          schema_file_name="$(basename "${key_schema_file}")"
+          docker run --quiet --rm -v "$tmp_dir:/tmp/" vdesabou/avro-random-generator -f "/tmp/$schema_file_name" -i 1 -c > "$tmp_dir/tmp_datagen_key.json" 2> /dev/null
+          cat "$tmp_dir/tmp_datagen_key.json"
           set +e
-          output=$(playground --output-level ERROR  schema derive-schema --schema-type "${derive_key_schema_as}" < "$key_schema_file")
+          output=$(playground --output-level ERROR schema derive-schema --schema-type "${derive_key_schema_as}" < "$tmp_dir/tmp_datagen_key.json")
           if [ $? -ne 0 ]
           then
               logerror "❌ schema derivation failed"
@@ -23797,7 +23828,26 @@ playground_topic_produce_command() {
               echo "$output"
           fi
           set -e
-          echo "$output" > $key_schema_file
+          echo "$output" > ${key_schema_file}
+      else
+
+          if [[ -n "$derive_key_schema_as" ]]
+          then
+              log "🪄 --derive-key-schema-as $derive_key_schema_as is used"
+              set +e
+              output=$(playground --output-level ERROR  schema derive-schema --schema-type "${derive_key_schema_as}" < "$key_schema_file")
+              if [ $? -ne 0 ]
+              then
+                  logerror "❌ schema derivation failed"
+                  echo "$output"
+                  exit 1
+              else
+                  log "🪄 generated $derive_key_schema_as schema:"
+                  echo "$output"
+              fi
+              set -e
+              echo "$output" > "$key_schema_file"
+          fi
       fi
       identify_schema "$key_schema_file" "key"
       key_schema_type=$schema_type
@@ -23807,15 +23857,15 @@ playground_topic_produce_command() {
   then
       if [[ -n "$derive_value_schema_as" ]]
       then
-          if [[ "$is_datagen" == "1" ]]
+          if [[ "$is_value_datagen" == "1" ]]
           then
               log "🍦 --derive-value-schema-as $derive_value_schema_as is used with datagen schema, generating a payload:"
-              cp ${value_schema_file} $tmp_dir/original_quickstart.avro
+              cp "${value_schema_file}" "$tmp_dir/original_value_datagen.avro"
               schema_file_name="$(basename "${value_schema_file}")"
-              docker run --quiet --rm -v $tmp_dir:/tmp/ vdesabou/avro-random-generator -f /tmp/$schema_file_name -i 1 -c > $tmp_dir/tmp_quickstart_value.json 2> /dev/null
-              cat $tmp_dir/tmp_quickstart_value.json
+              docker run --quiet --rm -v "$tmp_dir:/tmp/" vdesabou/avro-random-generator -f "/tmp/$schema_file_name" -i 1 -c > "$tmp_dir/tmp_datagen_value.json" 2> /dev/null
+              cat "$tmp_dir/tmp_datagen_value.json"
               set +e
-              output=$(playground --output-level ERROR schema derive-schema --schema-type "${derive_value_schema_as}" < "$tmp_dir/tmp_quickstart_value.json")
+              output=$(playground --output-level ERROR schema derive-schema --schema-type "${derive_value_schema_as}" < "$tmp_dir/tmp_datagen_value.json")
               if [ $? -ne 0 ]
               then
                   logerror "❌ schema derivation failed"
@@ -24146,19 +24196,21 @@ playground_topic_produce_command() {
   SECONDS=0
   if [[ -n "$key" ]]
   then
-      log "✨ generating key data..."
-      generate_data "$key_schema_type" "$key_schema_file" "$output_key_file" "KEY"
+      if [[ -n "$derive_key_schema_as" ]] && [[ "$is_key_datagen" == "1" ]]
+      then
+          log "✨🍟 generating key data using datagen..."
+          generate_data "datagen" "$tmp_dir/original_key_datagen.avro" "$output_key_file" "KEY"
+      else
+          log "✨ generating key data..."
+          generate_data "$key_schema_type" "$key_schema_file" "$output_key_file" "KEY"
+      fi
   fi
   if [[ ! -n "$tombstone" ]]
   then
-      if [[ -n "$derive_value_schema_as" ]] && [[ -n "$quickstart" ]]
+      if [[ -n "$derive_value_schema_as" ]] && [[ "$is_value_datagen" == "1" ]]
       then
-          log "✨🍟 generating value data using quickstart $quickstart..."
-          generate_data "datagen" "$tmp_dir/original_quickstart.avro" "$output_value_file" "VALUE"
-      elif [[ -n "$derive_value_schema_as" ]] && [[ "$is_datagen" == "1" ]]
-      then
-          log "✨🍦 generating value data using datagen..."
-          generate_data "datagen" "$tmp_dir/original_quickstart.avro" "$output_value_file" "VALUE"
+          log "✨🍟 generating value data using datagen..."
+          generate_data "datagen" "$tmp_dir/original_value_datagen.avro" "$output_value_file" "VALUE"
       else
           log "✨ generating value data..."
           generate_data "$value_schema_type" "$value_schema_file" "$output_value_file" "VALUE"
@@ -31965,6 +32017,13 @@ playground_get_predefined_schemas_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --only-datagen)
+
+        # :flag.case_no_arg
+        args['--only-datagen']=1
+        shift
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
@@ -42747,10 +42806,6 @@ playground_topic_produce_parse_requirements() {
   fi
   if [[ ${args['--value-subject-name-strategy']:-} ]] && [[ ! ${args['--value-subject-name-strategy']:-} =~ ^(TopicNameStrategy|RecordNameStrategy|TopicRecordNameStrategy)$ ]]; then
     printf "%s\n" "--value-subject-name-strategy must be one of: TopicNameStrategy, RecordNameStrategy, TopicRecordNameStrategy" >&2
-    exit 1
-  fi
-  if [[ ${args['--quickstart']:-} ]] && [[ ! ${args['--quickstart']:-} =~ ^(clickstream_codes_schema|clickstream_schema|clickstream_users_schema|inventory|orders_schema|ratings_schema|pageviews_schema|stock_trades_schema|users_array_map_schema|users_schema|campaign_finance|credit_cards|device_information|fleet_mgmt_description|fleet_mgmt_location|fleet_mgmt_sensors|gaming_games|gaming_player_activity|gaming_players|insurance_customer_activity|insurance_customers|insurance_offers|payroll_bonus|payroll_employee|payroll_employee_location|pizza_orders|pizza_orders_cancelled|pizza_orders_completed|product|purchase|shoe_clickstream|shoe_customers|shoe_orders|shoes|siem_logs|stores|syslog_logs|transactions)$ ]]; then
-    printf "%s\n" "--quickstart must be one of: clickstream_codes_schema, clickstream_schema, clickstream_users_schema, inventory, orders_schema, ratings_schema, pageviews_schema, stock_trades_schema, users_array_map_schema, users_schema, campaign_finance, credit_cards, device_information, fleet_mgmt_description, fleet_mgmt_location, fleet_mgmt_sensors, gaming_games, gaming_player_activity, gaming_players, insurance_customer_activity, insurance_customers, insurance_offers, payroll_bonus, payroll_employee, payroll_employee_location, pizza_orders, pizza_orders_cancelled, pizza_orders_completed, product, purchase, shoe_clickstream, shoe_customers, shoe_orders, shoes, siem_logs, stores, syslog_logs, transactions" >&2
     exit 1
   fi
   if [[ ${args['--derive-key-schema-as']:-} ]] && [[ ! ${args['--derive-key-schema-as']:-} =~ ^(AVRO|JSON|PROTOBUF)$ ]]; then
