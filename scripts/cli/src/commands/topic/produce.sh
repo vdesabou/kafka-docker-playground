@@ -25,7 +25,6 @@ consume="${args[--consume]}"
 delete_topic="${args[--delete-topic]}"
 derive_key_schema_as="${args[--derive-key-schema-as]}"
 derive_value_schema_as="${args[--derive-value-schema-as]}"
-quickstart="${args[--quickstart]}"
 
 # Convert the space delimited string to an array
 eval "validate_config=(${args[--validate-config]})"
@@ -88,12 +87,6 @@ fi
 ref_schema_file=$tmp_dir/ref_schema
 key_schema_file=$tmp_dir/key_schema
 value_schema_file=$tmp_dir/value_schema
-
-if [[ -n "$quickstart" ]]
-then
-    log "🍟 --quickstart $quickstart is used"
-    value="$quickstart"
-fi
 
 if [ "$value" = "-" ]
 then
@@ -339,7 +332,7 @@ then
     then
         is_key_datagen=1
     fi
-    
+
     if [[ "$is_key_datagen" == "1" ]]
     then
         log "🍦 --derive-key-schema-as $derive_key_schema_as is used with datagen schema, generating a payload:"

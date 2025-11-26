@@ -248,9 +248,6 @@ commands:
   - name: cur
     required: false
     help: correspond to completion $cur
-  flags:
-    - long: --only-datagen
-      required: false
 
 - name: update-cache-versions
   private: true
@@ -2914,54 +2911,6 @@ commands:
         help: |-
           ☑️ Validate schema according to connect sink converter used
 
-      - long: --quickstart
-        required: false
-        arg: quickstart
-        help: |-
-            🍟 Name of quickstart(https://github.com/confluentinc/kafka-connect-datagen/tree/master/src/main/resources) to use
-        completions:
-          - $(playground get-predefined-schemas "$cur" --only-datagen)
-        conflicts: [--value]
-        # allowed: 
-        # - clickstream_codes_schema
-        # - clickstream_schema
-        # - clickstream_users_schema
-        # - inventory
-        # - orders_schema
-        # - ratings_schema
-        # - pageviews_schema
-        # - stock_trades_schema
-        # - users_array_map_schema
-        # - users_schema
-        # - campaign_finance
-        # - credit_cards
-        # - device_information
-        # - fleet_mgmt_description
-        # - fleet_mgmt_location
-        # - fleet_mgmt_sensors
-        # - gaming_games
-        # - gaming_player_activity
-        # - gaming_players
-        # - insurance_customer_activity
-        # - insurance_customers
-        # - insurance_offers
-        # - payroll_bonus
-        # - payroll_employee
-        # - payroll_employee_location
-        # - pizza_orders
-        # - pizza_orders_cancelled
-        # - pizza_orders_completed
-        # - product
-        # - purchase
-        # - shoe_clickstream
-        # - shoe_customers
-        # - shoe_orders
-        # - shoes
-        # - siem_logs
-        # - stores
-        # - syslog_logs
-        # - transactions
-
       - long: --derive-key-schema-as
         required: false
         arg: derive-key-schema-as
@@ -3158,7 +3107,7 @@ commands:
         }
         EOF
 
-        playground  topic produce -t topic-datagen-json-schema --nb-messages 1 --quickstart purchase --derive-value-schema-as JSON 
+        playground  topic produce -t topic-datagen-json-schema --nb-messages 1 --value @datagen/purchase.avro --derive-value-schema-as JSON 
 
         playground topic produce -t topic-avro --nb-messages 10 << 'EOF'
         {
@@ -3542,7 +3491,7 @@ commands:
         EOF
 
         # json schema references
-        playground topic produce --value /path/to/scripts/cli/predefined-schemas/json-schema/schema-reference/customer.json --reference /path/to/scripts/cli/predefined-schemas/json-schema/schema-reference/address.json --reference /path/to/scripts/cli/predefined-schemas/json-schema/schema-reference/email.json --topic customers
+        playground topic produce --value @json-schema/schema-reference/customer.json --reference @json-schema/schema-reference/address.json --reference @json-schema/schema-reference/email.json --topic customers
 
         # --derive-value-schema-as
         playground topic produce --topic tocpic --derive-value-schema-as PROTOBUF --derive-key-schema-as PROTOBUF --key '{"id": "1"}' << 'EOF'

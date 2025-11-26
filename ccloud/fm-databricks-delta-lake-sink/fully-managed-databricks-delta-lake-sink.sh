@@ -65,7 +65,7 @@ set +e
 aws s3 rm s3://$DATABRICKS_AWS_BUCKET_NAME --recursive --region $DATABRICKS_AWS_BUCKET_REGION
 set -e
 
-playground topic produce --topic pageviews --quickstart pageviews_schema --derive-value-schema-as AVRO --nb-messages 100
+playground topic produce --topic pageviews --value @datagen/pageviews.avro --derive-value-schema-as AVRO --nb-messages 100
 
 connector_name="DatabricksDeltaLakeSink_$USER"
 set +e

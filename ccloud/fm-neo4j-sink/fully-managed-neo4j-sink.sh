@@ -46,7 +46,7 @@ do
   sleep 5
 done
 
-playground topic produce --topic users --quickstart users_schema --derive-value-schema-as AVRO --nb-messages 10000 --key User%g
+playground topic produce --topic users --value @datagen/users_schema.avro --derive-value-schema-as AVRO --nb-messages 10000 --key User%g
 
 connector_name="Neo4jSink_$USER"
 set +e

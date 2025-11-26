@@ -2311,13 +2311,6 @@
             },
             {
               "names": [
-                "--quickstart"
-              ],
-              "argument": "QUICKSTART",
-              "description": "🍟 Name of quickstart(https://github.com/confluentinc/kafka-connect-datagen/tree/master/src/main/resources) to use\n\nConflicts with: --value\n"
-            },
-            {
-              "names": [
                 "--derive-key-schema-as"
               ],
               "argument": [

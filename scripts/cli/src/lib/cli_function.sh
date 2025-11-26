@@ -753,13 +753,8 @@ function get_predefined_schemas_with_fzf() {
   dir2=$(echo ${dir1%/*})
 
   cur="$1"
-  only_datagen="$2"
 
   predefined_folder=$dir2/scripts/cli/predefined-schemas
-    if [[ -n "$only_datagen" ]]
-    then
-    predefined_folder=$dir2/scripts/cli/predefined-schemas/datagen
-    fi
   fzf_version=$(get_fzf_version)
   if version_gt $fzf_version "0.38"
   then
