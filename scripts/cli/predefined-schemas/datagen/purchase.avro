@@ -1,0 +1,60 @@
+{
+        "namespace": "datagen.example",
+        "name": "purchase",
+        "type": "record",
+        "fields": [
+                {"name": "id", "type": {
+                    "type": "long",
+                    "arg.properties": {
+                        "iteration": {
+                            "start": 0
+                        }
+                    }
+                }},
+                {"name": "item_type", "type": {
+                    "type": "string",
+                       "arg.properties": {
+                         "options": [
+                           "boots",
+                           "shirt",
+                           "knife",
+                           "saucepan",
+                           "table",
+                           "chair",
+                           "clock",
+                           "frame",
+                           "guitar",
+                           "thermometer",
+                           "scarf",
+                           "doormat",
+                           "vase",
+                           "clippers",
+                           "game",
+                           "towels"
+                         ]
+                       }
+                }},
+                {"name":"quantity",
+                  "type":{
+                     "type":"long",
+                     "arg.properties":{
+                        "range":{
+                           "min":1,
+                           "max":10
+                        }
+                     }
+                 }},
+                 {"name": "price_per_unit", "type": {
+                    "type": "bytes",
+                    "logicalType": "decimal",
+                    "precision": 4,
+                    "scale": 2,
+                    "arg.properties": {
+                        "range": {
+                            "min": 10.00,
+                            "max": 50.00
+                        }
+                    }
+                  }}
+        ]
+}

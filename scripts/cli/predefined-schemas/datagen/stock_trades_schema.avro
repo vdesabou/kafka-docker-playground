@@ -1,0 +1,75 @@
+{
+  "namespace": "ksql",
+  "name": "StockTrade",
+  "doc": "Defines a hypothetical stock trade using some known test stock symbols.",
+  "type": "record",
+  "fields": [
+    {
+      "name": "side",
+      "doc": "A simulated trade side (buy or sell or short)",
+      "type": {
+        "type": "string",
+        "arg.properties": {
+          "options": [ "BUY", "SELL"  ]
+        }
+      }
+    },
+    {
+      "name": "quantity",
+      "doc": "A simulated random quantity of the trade",
+      "type": {
+        "type": "int",
+        "arg.properties": {
+          "range": {
+            "min": 1,
+            "max": 5000
+          }
+        }
+      }
+    },
+    {
+      "name": "symbol",
+      "doc": "Simulated stock symbols",
+      "type": {
+        "type": "string",
+        "arg.properties": {
+          "options": [ "ZBZX", "ZJZZT", "ZTEST", "ZVV", "ZVZZT", "ZWZZT", "ZXZZT" ]
+        }
+      }
+    },
+    {
+      "name": "price",
+      "doc": "A simulated random trade price in pennies",
+      "type": {
+        "type": "int",
+        "arg.properties": {
+          "range": {
+            "min": 5,
+            "max": 1000
+          }
+        }
+      }
+    },
+    {
+      "name": "account",
+      "doc": "Simulated accounts assigned to the trade",
+      "type": {
+        "type": "string",
+        "arg.properties": {
+          "options": [ "ABC123", "LMN456", "XYZ789" ]
+        }
+      }
+    },
+    {
+      "name": "userid", 
+      "doc": "The simulated user who executed the trade",
+      "type": {
+        "type": "string",
+        "arg.properties": {
+            "regex": "User_[1-9]"
+        }
+      }
+    }
+  ]
+}
+

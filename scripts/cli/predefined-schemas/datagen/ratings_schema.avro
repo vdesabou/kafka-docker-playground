@@ -1,0 +1,84 @@
+{
+        "namespace": "ksql",
+        "name": "ratings",
+        "type": "record",
+        "fields": [
+                {"name": "rating_id", "type": {
+                    "type": "long",
+                    "arg.properties": {
+                        "iteration": {
+                            "start": 1
+                        }
+                    }
+                }},
+                {"name": "user_id", "type": {
+                    "type": "int",
+                    "arg.properties": {
+                        "range": {
+                            "min": -1,
+                            "max": 20
+                        }
+                    }
+                }},
+                {"name": "stars", "type": {
+                    "type": "int",
+                    "arg.properties": {
+                        "range": {
+                            "min": 1,
+                            "max": 5
+                        }
+                    }
+                }},
+                {"name": "route_id", "type": {
+                    "type": "int",
+                    "arg.properties": {
+                        "range": {
+                            "min": 1,
+                            "max": 9999
+                        }
+                    }
+                }},
+          {"name": "rating_time", "type": {
+            "type": "long",
+            "format_as_time" : "unix_long",
+            "arg.properties": {
+              "iteration": { "start": 1, "step": 12}
+            }
+          }},
+
+          {"name": "channel", "type": {
+                    "type": "string",
+            "arg.properties": {
+              "options": [
+                "web",
+                "iOS",
+                "ios",
+                "iOS-test",
+                "android"
+              ]
+            }}},
+
+          {"name": "message", "type": {
+            "type": "string",
+            "arg.properties": {
+              "options": [
+                "worst. flight. ever. #neveragain",
+                "Surprisingly good, maybe you are getting your mojo back at long last!",
+                "Exceeded all my expectations. Thank you !",
+                "meh",
+                "(expletive deleted)",
+                "is this as good as it gets? really ?",
+                "airport refurb looks great, will fly outta here more!",
+                "why is it so difficult to keep the bathrooms clean ?",
+                "thank you for the most friendly, helpful experience today at your new lounge",
+                "more peanuts please",
+                "your team here rocks!"
+              ]
+            }
+          }}
+
+
+
+
+        ]
+}

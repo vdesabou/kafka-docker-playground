@@ -1,0 +1,219 @@
+{
+    "namespace": "syslogs",
+    "name": "syslog_logs",
+    "type": "record",
+    "fields": [
+        {
+            "name": "name",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "regex": "[a-zA-Z]{5,8}"
+                }
+            }
+        },
+        {
+            "name": "type",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "options": [
+                        "RFC5424",
+                        "RFC3164",
+                        "CEF",
+                        "UNKNOWN"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "message",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "regex": "[a-z ]{10,15}"
+                }
+            }
+        },
+        {
+            "name": "host",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "options": [
+                        "121.46.66.201",
+                        "127.26.223.241",
+                        "185.167.200.143",
+                        "137.92.22.136",
+                        "191.84.20.142",
+                        "151.253.100.45",
+                        "76.115.125.169",
+                        "25.19.61.124",
+                        "140.136.224.11",
+                        "107.226.4.123"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "version",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "options": [
+                        "3.25.1"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "tag",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "options": [
+                        ".source.s_src"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "level",
+            "type": {
+                "type": "int",
+                "arg.properties": {
+                    "range": {
+                        "min": 0,
+                        "max": 191
+                    }
+                }
+            }
+        },
+        {
+            "name": "facility",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "options": [
+                        "syslog",
+                        "authpriv",
+                        "cron"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "severity",
+            "type": {
+                "type": "int",
+                "arg.properties": {
+                    "range": {
+                        "min": 0,
+                        "max": 8
+                    }
+                }
+            }
+        },
+        {
+            "name": "appName",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "regex": "[A-Z]{5,8}"
+                }
+            }
+        },
+        {
+            "name": "remoteAddress",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "options": [
+                        "91.253.222.9",
+                        "48.92.8.255",
+                        "107.150.81.0",
+                        "254.11.108.139",
+                        "14.53.111.201",
+                        "215.70.232.123",
+                        "122.96.193.183",
+                        "185.128.89.135",
+                        "246.46.59.238",
+                        "238.158.147.172"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "rawMessage",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "regex": "[a-z ]{10,15}"
+                }
+            }
+        },
+        {
+            "name": "processId",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "regex": "[1-9]{1}[0-9]{6}"
+                }
+            }
+        },
+        {
+            "name": "messageId",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "regex": "[1-9]{1}[0-9]{2}"
+                }
+            }
+        },
+        {
+            "name": "deviceVendor",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "regex": "[a-z]{5}"
+                }
+            }
+        },
+        {
+            "name": "deviceProduct",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "regex": "[a-z]{5}"
+                }
+            }
+        },
+        {
+            "name": "deviceVersion",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "options": [
+                        "1.0",
+                        "2.0",
+                        "3.0",
+                        "4.0",
+                        "5.0"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "ts",
+            "type": {
+                "type": "long",
+                "arg.properties": {
+                    "iteration": {
+                        "start": 1609459200000,
+                        "step": 100
+                    }
+                }
+            }
+        }
+    ]
+}

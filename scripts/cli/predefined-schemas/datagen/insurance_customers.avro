@@ -1,0 +1,1543 @@
+{
+    "namespace": "insurance",
+    "name": "insurance_customers",
+    "type": "record",
+    "fields": [
+        {
+            "name": "customer_id",
+            "type": "int"
+        },
+        {
+            "name": "first_name",
+            "type": "string"
+        },
+        {
+            "name": "last_name",
+            "type": "string"
+        },
+        {
+            "name": "email",
+            "type": "string"
+        },
+        {
+            "name": "gender",
+            "type": "string"
+        },
+        {
+            "name": "income",
+            "type": "int"
+        },
+        {
+            "name": "fico",
+            "type": "int"
+        },
+        {
+            "name": "years_active",
+            "type": "int"
+        }
+    ],
+    "arg.properties": {
+        "options": [
+            {
+                "customer_id": 415,
+                "first_name": "Herold",
+                "last_name": "Agdahl",
+                "email": "hagdahlbi@last.fm",
+                "gender": "Male",
+                "income": 444152,
+                "fico": 423,
+                "years_active": 1
+            },
+            {
+                "customer_id": 871,
+                "first_name": "Nikkie",
+                "last_name": "Pennington",
+                "email": "npenningtono6@hao123.com",
+                "gender": "Female",
+                "income": 452642,
+                "fico": 767,
+                "years_active": 36
+            },
+            {
+                "customer_id": 597,
+                "first_name": "Josi",
+                "last_name": "Coleford",
+                "email": "jcolefordgk@unesco.org",
+                "gender": "Female",
+                "income": 430798,
+                "fico": 730,
+                "years_active": 1
+            },
+            {
+                "customer_id": 210,
+                "first_name": "Alis",
+                "last_name": "Brockway",
+                "email": "abrockway5t@wiley.com",
+                "gender": "Female",
+                "income": 210965,
+                "fico": 661,
+                "years_active": 30
+            },
+            {
+                "customer_id": 833,
+                "first_name": "Eugine",
+                "last_name": "Tzar",
+                "email": "etzarn4@umich.edu",
+                "gender": "Female",
+                "income": 390882,
+                "fico": 771,
+                "years_active": 43
+            },
+            {
+                "customer_id": 371,
+                "first_name": "Larina",
+                "last_name": "Skidmore",
+                "email": "lskidmoreaa@moonfruit.com",
+                "gender": "Female",
+                "income": 261165,
+                "fico": 482,
+                "years_active": 41
+            },
+            {
+                "customer_id": 387,
+                "first_name": "Raffarty",
+                "last_name": "Beccles",
+                "email": "rbecclesaq@cpanel.net",
+                "gender": "Male",
+                "income": 348862,
+                "fico": 821,
+                "years_active": 43
+            },
+            {
+                "customer_id": 313,
+                "first_name": "Winn",
+                "last_name": "Breadon",
+                "email": "wbreadon8o@altervista.org",
+                "gender": "Male",
+                "income": 489764,
+                "fico": 880,
+                "years_active": 10
+            },
+            {
+                "customer_id": 882,
+                "first_name": "Harold",
+                "last_name": "Igo",
+                "email": "higooh@nhs.uk",
+                "gender": "Male",
+                "income": 55800,
+                "fico": 893,
+                "years_active": 31
+            },
+            {
+                "customer_id": 854,
+                "first_name": "Barbara",
+                "last_name": "Henrichsen",
+                "email": "bhenrichsennp@hp.com",
+                "gender": "Female",
+                "income": 111818,
+                "fico": 839,
+                "years_active": 2
+            },
+            {
+                "customer_id": 895,
+                "first_name": "Nani",
+                "last_name": "Mincini",
+                "email": "nminciniou@blinklist.com",
+                "gender": "Female",
+                "income": 212199,
+                "fico": 811,
+                "years_active": 36
+            },
+            {
+                "customer_id": 198,
+                "first_name": "Rudd",
+                "last_name": "Fowgies",
+                "email": "rfowgies5h@meetup.com",
+                "gender": "Male",
+                "income": 337648,
+                "fico": 469,
+                "years_active": 19
+            },
+            {
+                "customer_id": 468,
+                "first_name": "Cecily",
+                "last_name": "Karolyi",
+                "email": "ckarolyicz@paginegialle.it",
+                "gender": "Female",
+                "income": 287668,
+                "fico": 686,
+                "years_active": 39
+            },
+            {
+                "customer_id": 860,
+                "first_name": "Jessalin",
+                "last_name": "Kender",
+                "email": "jkendernv@ucsd.edu",
+                "gender": "Female",
+                "income": 91516,
+                "fico": 753,
+                "years_active": 44
+            },
+            {
+                "customer_id": 383,
+                "first_name": "Hollis",
+                "last_name": "Ramage",
+                "email": "hramageam@alibaba.com",
+                "gender": "Male",
+                "income": 367829,
+                "fico": 414,
+                "years_active": 43
+            },
+            {
+                "customer_id": 226,
+                "first_name": "Eleonore",
+                "last_name": "Kerrod",
+                "email": "ekerrod69@sciencedaily.com",
+                "gender": "Female",
+                "income": 260176,
+                "fico": 793,
+                "years_active": 41
+            },
+            {
+                "customer_id": 630,
+                "first_name": "Shaylynn",
+                "last_name": "Amaya",
+                "email": "samayahh@phpbb.com",
+                "gender": "Female",
+                "income": 454307,
+                "fico": 536,
+                "years_active": 25
+            },
+            {
+                "customer_id": 546,
+                "first_name": "Had",
+                "last_name": "Idiens",
+                "email": "hidiensf5@shop-pro.jp",
+                "gender": "Male",
+                "income": 223522,
+                "fico": 645,
+                "years_active": 44
+            },
+            {
+                "customer_id": 949,
+                "first_name": "Farrand",
+                "last_name": "Dumphries",
+                "email": "fdumphriesqc@clickbank.net",
+                "gender": "Female",
+                "income": 410888,
+                "fico": 756,
+                "years_active": 41
+            },
+            {
+                "customer_id": 276,
+                "first_name": "Carena",
+                "last_name": "Cloughton",
+                "email": "ccloughton7n@phoca.cz",
+                "gender": "Female",
+                "income": 495407,
+                "fico": 416,
+                "years_active": 20
+            },
+            {
+                "customer_id": 595,
+                "first_name": "Graham",
+                "last_name": "Stein",
+                "email": "gsteingi@imgur.com",
+                "gender": "Male",
+                "income": 346149,
+                "fico": 597,
+                "years_active": 24
+            },
+            {
+                "customer_id": 406,
+                "first_name": "Consolata",
+                "last_name": "Farrin",
+                "email": "cfarrinb9@yellowpages.com",
+                "gender": "Female",
+                "income": 126493,
+                "fico": 826,
+                "years_active": 11
+            },
+            {
+                "customer_id": 565,
+                "first_name": "Trev",
+                "last_name": "Mollene",
+                "email": "tmollenefo@stanford.edu",
+                "gender": "Male",
+                "income": 76961,
+                "fico": 730,
+                "years_active": 34
+            },
+            {
+                "customer_id": 129,
+                "first_name": "Nicholle",
+                "last_name": "Sidary",
+                "email": "nsidary3k@netscape.com",
+                "gender": "Female",
+                "income": 82035,
+                "fico": 821,
+                "years_active": 23
+            },
+            {
+                "customer_id": 973,
+                "first_name": "Robby",
+                "last_name": "Esposi",
+                "email": "resposir0@histats.com",
+                "gender": "Male",
+                "income": 315754,
+                "fico": 409,
+                "years_active": 5
+            },
+            {
+                "customer_id": 10,
+                "first_name": "Antonietta",
+                "last_name": "Hardstaff",
+                "email": "ahardstaff9@ask.com",
+                "gender": "Female",
+                "income": 417732,
+                "fico": 842,
+                "years_active": 9
+            },
+            {
+                "customer_id": 579,
+                "first_name": "Emyle",
+                "last_name": "Steere",
+                "email": "esteereg2@domainmarket.com",
+                "gender": "Female",
+                "income": 380771,
+                "fico": 722,
+                "years_active": 38
+            },
+            {
+                "customer_id": 167,
+                "first_name": "Storm",
+                "last_name": "Renfield",
+                "email": "srenfield4m@mayoclinic.com",
+                "gender": "Female",
+                "income": 386862,
+                "fico": 453,
+                "years_active": 37
+            },
+            {
+                "customer_id": 273,
+                "first_name": "Phillipp",
+                "last_name": "Hyder",
+                "email": "phyder7k@cnn.com",
+                "gender": "Male",
+                "income": 223150,
+                "fico": 808,
+                "years_active": 15
+            },
+            {
+                "customer_id": 548,
+                "first_name": "Noelle",
+                "last_name": "Klass",
+                "email": "nklassf7@usgs.gov",
+                "gender": "Female",
+                "income": 50831,
+                "fico": 672,
+                "years_active": 39
+            },
+            {
+                "customer_id": 175,
+                "first_name": "Garek",
+                "last_name": "Jannasch",
+                "email": "gjannasch4u@umich.edu",
+                "gender": "Male",
+                "income": 58157,
+                "fico": 791,
+                "years_active": 44
+            },
+            {
+                "customer_id": 957,
+                "first_name": "Rena",
+                "last_name": "Reape",
+                "email": "rreapeqk@g.co",
+                "gender": "Female",
+                "income": 372940,
+                "fico": 835,
+                "years_active": 35
+            },
+            {
+                "customer_id": 45,
+                "first_name": "Kelcey",
+                "last_name": "Fydoe",
+                "email": "kfydoe18@npr.org",
+                "gender": "Female",
+                "income": 245023,
+                "fico": 465,
+                "years_active": 44
+            },
+            {
+                "customer_id": 582,
+                "first_name": "Wolfy",
+                "last_name": "Merigeau",
+                "email": "wmerigeaug5@friendfeed.com",
+                "gender": "Male",
+                "income": 366902,
+                "fico": 660,
+                "years_active": 18
+            },
+            {
+                "customer_id": 66,
+                "first_name": "Charita",
+                "last_name": "Hughes",
+                "email": "chughes1t@google.it",
+                "gender": "Female",
+                "income": 455085,
+                "fico": 709,
+                "years_active": 41
+            },
+            {
+                "customer_id": 472,
+                "first_name": "Davie",
+                "last_name": "Marcoolyn",
+                "email": "dmarcoolynd3@toplist.cz",
+                "gender": "Male",
+                "income": 369945,
+                "fico": 485,
+                "years_active": 30
+            },
+            {
+                "customer_id": 578,
+                "first_name": "Suzann",
+                "last_name": "Sallans",
+                "email": "ssallansg1@gnu.org",
+                "gender": "Female",
+                "income": 137396,
+                "fico": 435,
+                "years_active": 35
+            },
+            {
+                "customer_id": 825,
+                "first_name": "Brooks",
+                "last_name": "Shopcott",
+                "email": "bshopcottmw@edublogs.org",
+                "gender": "Male",
+                "income": 362624,
+                "fico": 876,
+                "years_active": 33
+            },
+            {
+                "customer_id": 572,
+                "first_name": "Grant",
+                "last_name": "Blethin",
+                "email": "gblethinfv@reddit.com",
+                "gender": "Male",
+                "income": 154295,
+                "fico": 798,
+                "years_active": 43
+            },
+            {
+                "customer_id": 322,
+                "first_name": "Idaline",
+                "last_name": "Mallen",
+                "email": "imallen8x@networksolutions.com",
+                "gender": "Female",
+                "income": 74954,
+                "fico": 714,
+                "years_active": 35
+            },
+            {
+                "customer_id": 864,
+                "first_name": "Gill",
+                "last_name": "Caddy",
+                "email": "gcaddynz@pcworld.com",
+                "gender": "Male",
+                "income": 298967,
+                "fico": 633,
+                "years_active": 42
+            },
+            {
+                "customer_id": 272,
+                "first_name": "Mariele",
+                "last_name": "Epton",
+                "email": "mepton7j@oaic.gov.au",
+                "gender": "Female",
+                "income": 482891,
+                "fico": 551,
+                "years_active": 45
+            },
+            {
+                "customer_id": 910,
+                "first_name": "Gerry",
+                "last_name": "Farman",
+                "email": "gfarmanp9@seesaa.net",
+                "gender": "Male",
+                "income": 350830,
+                "fico": 599,
+                "years_active": 19
+            },
+            {
+                "customer_id": 507,
+                "first_name": "Cirillo",
+                "last_name": "Willavize",
+                "email": "cwillavizee2@networksolutions.com",
+                "gender": "Male",
+                "income": 87378,
+                "fico": 518,
+                "years_active": 30
+            },
+            {
+                "customer_id": 942,
+                "first_name": "Wendye",
+                "last_name": "Akred",
+                "email": "wakredq5@twitter.com",
+                "gender": "Female",
+                "income": 311450,
+                "fico": 808,
+                "years_active": 17
+            },
+            {
+                "customer_id": 368,
+                "first_name": "Delmor",
+                "last_name": "Edensor",
+                "email": "dedensora7@wired.com",
+                "gender": "Male",
+                "income": 225683,
+                "fico": 440,
+                "years_active": 11
+            },
+            {
+                "customer_id": 643,
+                "first_name": "Rori",
+                "last_name": "Biggen",
+                "email": "rbiggenhu@yellowpages.com",
+                "gender": "Female",
+                "income": 119504,
+                "fico": 722,
+                "years_active": 32
+            },
+            {
+                "customer_id": 421,
+                "first_name": "Reiko",
+                "last_name": "Dron",
+                "email": "rdronbo@hibu.com",
+                "gender": "Female",
+                "income": 339053,
+                "fico": 596,
+                "years_active": 39
+            },
+            {
+                "customer_id": 92,
+                "first_name": "Willey",
+                "last_name": "Tollett",
+                "email": "wtollett2j@amazon.de",
+                "gender": "Male",
+                "income": 278712,
+                "fico": 803,
+                "years_active": 19
+            },
+            {
+                "customer_id": 433,
+                "first_name": "Tadio",
+                "last_name": "Littley",
+                "email": "tlittleyc0@t-online.de",
+                "gender": "Male",
+                "income": 294165,
+                "fico": 759,
+                "years_active": 6
+            },
+            {
+                "customer_id": 75,
+                "first_name": "Claiborn",
+                "last_name": "Sherewood",
+                "email": "csherewood22@loc.gov",
+                "gender": "Male",
+                "income": 128802,
+                "fico": 815,
+                "years_active": 32
+            },
+            {
+                "customer_id": 305,
+                "first_name": "Tierney",
+                "last_name": "Krikorian",
+                "email": "tkrikorian8g@wordpress.com",
+                "gender": "Female",
+                "income": 175243,
+                "fico": 719,
+                "years_active": 3
+            },
+            {
+                "customer_id": 173,
+                "first_name": "Gwendolin",
+                "last_name": "Mallya",
+                "email": "gmallya4s@mozilla.com",
+                "gender": "Female",
+                "income": 435535,
+                "fico": 552,
+                "years_active": 16
+            },
+            {
+                "customer_id": 863,
+                "first_name": "Hali",
+                "last_name": "Brunker",
+                "email": "hbrunkerny@go.com",
+                "gender": "Female",
+                "income": 450239,
+                "fico": 799,
+                "years_active": 37
+            },
+            {
+                "customer_id": 315,
+                "first_name": "Eba",
+                "last_name": "Litherland",
+                "email": "elitherland8q@icq.com",
+                "gender": "Female",
+                "income": 369614,
+                "fico": 786,
+                "years_active": 9
+            },
+            {
+                "customer_id": 344,
+                "first_name": "Darby",
+                "last_name": "Rheam",
+                "email": "drheam9j@ustream.tv",
+                "gender": "Female",
+                "income": 105164,
+                "fico": 884,
+                "years_active": 45
+            },
+            {
+                "customer_id": 526,
+                "first_name": "Hadria",
+                "last_name": "O'Clery",
+                "email": "hocleryel@plala.or.jp",
+                "gender": "Female",
+                "income": 404047,
+                "fico": 759,
+                "years_active": 12
+            },
+            {
+                "customer_id": 264,
+                "first_name": "Gwenni",
+                "last_name": "Andri",
+                "email": "gandri7b@stumbleupon.com",
+                "gender": "Female",
+                "income": 164274,
+                "fico": 615,
+                "years_active": 28
+            },
+            {
+                "customer_id": 225,
+                "first_name": "Carmelita",
+                "last_name": "Armell",
+                "email": "carmell68@tinyurl.com",
+                "gender": "Female",
+                "income": 355234,
+                "fico": 621,
+                "years_active": 28
+            },
+            {
+                "customer_id": 40,
+                "first_name": "Flemming",
+                "last_name": "Ludl",
+                "email": "fludl13@chron.com",
+                "gender": "Male",
+                "income": 50188,
+                "fico": 451,
+                "years_active": 4
+            },
+            {
+                "customer_id": 866,
+                "first_name": "Concettina",
+                "last_name": "Ikringill",
+                "email": "cikringillo1@newsvine.com",
+                "gender": "Female",
+                "income": 380505,
+                "fico": 500,
+                "years_active": 31
+            },
+            {
+                "customer_id": 473,
+                "first_name": "Legra",
+                "last_name": "Mapples",
+                "email": "lmapplesd4@icq.com",
+                "gender": "Female",
+                "income": 109376,
+                "fico": 850,
+                "years_active": 13
+            },
+            {
+                "customer_id": 662,
+                "first_name": "Viviana",
+                "last_name": "Thoresby",
+                "email": "vthoresbyid@wordpress.org",
+                "gender": "Female",
+                "income": 253060,
+                "fico": 418,
+                "years_active": 41
+            },
+            {
+                "customer_id": 611,
+                "first_name": "Dita",
+                "last_name": "Gerrietz",
+                "email": "dgerrietzgy@pcworld.com",
+                "gender": "Female",
+                "income": 323327,
+                "fico": 769,
+                "years_active": 24
+            },
+            {
+                "customer_id": 401,
+                "first_name": "Sapphire",
+                "last_name": "Lathee",
+                "email": "slatheeb4@foxnews.com",
+                "gender": "Female",
+                "income": 477165,
+                "fico": 848,
+                "years_active": 9
+            },
+            {
+                "customer_id": 993,
+                "first_name": "Bengt",
+                "last_name": "Corness",
+                "email": "bcornessrk@craigslist.org",
+                "gender": "Male",
+                "income": 394992,
+                "fico": 474,
+                "years_active": 14
+            },
+            {
+                "customer_id": 158,
+                "first_name": "Morton",
+                "last_name": "Teffrey",
+                "email": "mteffrey4d@amazon.com",
+                "gender": "Male",
+                "income": 185934,
+                "fico": 826,
+                "years_active": 19
+            },
+            {
+                "customer_id": 997,
+                "first_name": "Levi",
+                "last_name": "Crocroft",
+                "email": "lcrocroftro@marriott.com",
+                "gender": "Male",
+                "income": 364541,
+                "fico": 833,
+                "years_active": 15
+            },
+            {
+                "customer_id": 43,
+                "first_name": "Kele",
+                "last_name": "Flancinbaum",
+                "email": "kflancinbaum16@w3.org",
+                "gender": "Male",
+                "income": 468948,
+                "fico": 713,
+                "years_active": 42
+            },
+            {
+                "customer_id": 36,
+                "first_name": "Shaylynn",
+                "last_name": "Kitlee",
+                "email": "skitleez@goo.gl",
+                "gender": "Female",
+                "income": 128959,
+                "fico": 569,
+                "years_active": 21
+            },
+            {
+                "customer_id": 843,
+                "first_name": "Maia",
+                "last_name": "Springtorpe",
+                "email": "mspringtorpene@netlog.com",
+                "gender": "Female",
+                "income": 204079,
+                "fico": 545,
+                "years_active": 1
+            },
+            {
+                "customer_id": 814,
+                "first_name": "Nolie",
+                "last_name": "Coster",
+                "email": "ncosterml@newyorker.com",
+                "gender": "Female",
+                "income": 260330,
+                "fico": 404,
+                "years_active": 31
+            },
+            {
+                "customer_id": 965,
+                "first_name": "Marty",
+                "last_name": "Morgon",
+                "email": "mmorgonqs@blogspot.com",
+                "gender": "Male",
+                "income": 424541,
+                "fico": 433,
+                "years_active": 8
+            },
+            {
+                "customer_id": 967,
+                "first_name": "Ceciley",
+                "last_name": "Tinniswood",
+                "email": "ctinniswoodqu@macromedia.com",
+                "gender": "Female",
+                "income": 368036,
+                "fico": 606,
+                "years_active": 39
+            },
+            {
+                "customer_id": 470,
+                "first_name": "Davie",
+                "last_name": "Deport",
+                "email": "ddeportd1@xrea.com",
+                "gender": "Male",
+                "income": 57483,
+                "fico": 699,
+                "years_active": 22
+            },
+            {
+                "customer_id": 55,
+                "first_name": "Jae",
+                "last_name": "Borgars",
+                "email": "jborgars1i@wp.com",
+                "gender": "Male",
+                "income": 388179,
+                "fico": 837,
+                "years_active": 15
+            },
+            {
+                "customer_id": 615,
+                "first_name": "Melvin",
+                "last_name": "Brewood",
+                "email": "mbrewoodh2@acquirethisname.com",
+                "gender": "Male",
+                "income": 456571,
+                "fico": 890,
+                "years_active": 26
+            },
+            {
+                "customer_id": 30,
+                "first_name": "Staford",
+                "last_name": "Ben",
+                "email": "sbent@spiegel.de",
+                "gender": "Male",
+                "income": 362731,
+                "fico": 603,
+                "years_active": 4
+            },
+            {
+                "customer_id": 894,
+                "first_name": "Garreth",
+                "last_name": "Fallowfield",
+                "email": "gfallowfieldot@51.la",
+                "gender": "Male",
+                "income": 310827,
+                "fico": 422,
+                "years_active": 40
+            },
+            {
+                "customer_id": 333,
+                "first_name": "Krystalle",
+                "last_name": "Darnbrough",
+                "email": "kdarnbrough98@parallels.com",
+                "gender": "Female",
+                "income": 276156,
+                "fico": 580,
+                "years_active": 36
+            },
+            {
+                "customer_id": 763,
+                "first_name": "Major",
+                "last_name": "Meale",
+                "email": "mmealel6@omniture.com",
+                "gender": "Male",
+                "income": 309416,
+                "fico": 723,
+                "years_active": 38
+            },
+            {
+                "customer_id": 929,
+                "first_name": "Bennie",
+                "last_name": "Laing",
+                "email": "blaingps@scientificamerican.com",
+                "gender": "Female",
+                "income": 450578,
+                "fico": 769,
+                "years_active": 8
+            },
+            {
+                "customer_id": 994,
+                "first_name": "Raeann",
+                "last_name": "Linebarger",
+                "email": "rlinebargerrl@si.edu",
+                "gender": "Female",
+                "income": 484790,
+                "fico": 890,
+                "years_active": 33
+            },
+            {
+                "customer_id": 771,
+                "first_name": "Emory",
+                "last_name": "Southgate",
+                "email": "esouthgatele@g.co",
+                "gender": "Male",
+                "income": 161393,
+                "fico": 761,
+                "years_active": 14
+            },
+            {
+                "customer_id": 601,
+                "first_name": "Madella",
+                "last_name": "Chetham",
+                "email": "mchethamgo@google.it",
+                "gender": "Female",
+                "income": 191473,
+                "fico": 598,
+                "years_active": 29
+            },
+            {
+                "customer_id": 634,
+                "first_name": "Elita",
+                "last_name": "Kroll",
+                "email": "ekrollhl@sun.com",
+                "gender": "Female",
+                "income": 318111,
+                "fico": 672,
+                "years_active": 10
+            },
+            {
+                "customer_id": 955,
+                "first_name": "Hazel",
+                "last_name": "Ewbanke",
+                "email": "hewbankeqi@globo.com",
+                "gender": "Female",
+                "income": 392441,
+                "fico": 563,
+                "years_active": 11
+            },
+            {
+                "customer_id": 310,
+                "first_name": "Lodovico",
+                "last_name": "Crafts",
+                "email": "lcrafts8l@about.me",
+                "gender": "Male",
+                "income": 125866,
+                "fico": 445,
+                "years_active": 21
+            },
+            {
+                "customer_id": 463,
+                "first_name": "Corilla",
+                "last_name": "Piggford",
+                "email": "cpiggfordcu@google.com.au",
+                "gender": "Female",
+                "income": 194180,
+                "fico": 835,
+                "years_active": 25
+            },
+            {
+                "customer_id": 887,
+                "first_name": "Brennan",
+                "last_name": "Buttery",
+                "email": "bbutteryom@soundcloud.com",
+                "gender": "Male",
+                "income": 67549,
+                "fico": 536,
+                "years_active": 40
+            },
+            {
+                "customer_id": 770,
+                "first_name": "Nicol",
+                "last_name": "Hallgath",
+                "email": "nhallgathld@ehow.com",
+                "gender": "Female",
+                "income": 77799,
+                "fico": 659,
+                "years_active": 24
+            },
+            {
+                "customer_id": 386,
+                "first_name": "Rhianna",
+                "last_name": "Demschke",
+                "email": "rdemschkeap@webnode.com",
+                "gender": "Female",
+                "income": 434414,
+                "fico": 641,
+                "years_active": 11
+            },
+            {
+                "customer_id": 188,
+                "first_name": "Bellina",
+                "last_name": "Whitley",
+                "email": "bwhitley57@cbsnews.com",
+                "gender": "Female",
+                "income": 427043,
+                "fico": 683,
+                "years_active": 3
+            },
+            {
+                "customer_id": 62,
+                "first_name": "Joleen",
+                "last_name": "Chadd",
+                "email": "jchadd1p@adobe.com",
+                "gender": "Female",
+                "income": 161541,
+                "fico": 684,
+                "years_active": 17
+            },
+            {
+                "customer_id": 41,
+                "first_name": "Willie",
+                "last_name": "Bleddon",
+                "email": "wbleddon14@yellowpages.com",
+                "gender": "Female",
+                "income": 401028,
+                "fico": 842,
+                "years_active": 5
+            },
+            {
+                "customer_id": 465,
+                "first_name": "Griffith",
+                "last_name": "Thomlinson",
+                "email": "gthomlinsoncw@about.com",
+                "gender": "Male",
+                "income": 240613,
+                "fico": 650,
+                "years_active": 34
+            },
+            {
+                "customer_id": 932,
+                "first_name": "Kev",
+                "last_name": "Grabbam",
+                "email": "kgrabbampv@ft.com",
+                "gender": "Male",
+                "income": 442943,
+                "fico": 793,
+                "years_active": 43
+            },
+            {
+                "customer_id": 832,
+                "first_name": "Libbie",
+                "last_name": "Skuce",
+                "email": "lskucen3@about.me",
+                "gender": "Female",
+                "income": 414333,
+                "fico": 450,
+                "years_active": 37
+            },
+            {
+                "customer_id": 819,
+                "first_name": "Derward",
+                "last_name": "Stallworth",
+                "email": "dstallworthmq@qq.com",
+                "gender": "Male",
+                "income": 150254,
+                "fico": 705,
+                "years_active": 41
+            },
+            {
+                "customer_id": 103,
+                "first_name": "Russ",
+                "last_name": "Hellmer",
+                "email": "rhellmer2u@cbsnews.com",
+                "gender": "Male",
+                "income": 437338,
+                "fico": 513,
+                "years_active": 28
+            },
+            {
+                "customer_id": 377,
+                "first_name": "Nicholle",
+                "last_name": "McCart",
+                "email": "nmccartag@domainmarket.com",
+                "gender": "Female",
+                "income": 106811,
+                "fico": 680,
+                "years_active": 29
+            },
+            {
+                "customer_id": 216,
+                "first_name": "Gwen",
+                "last_name": "Dawson",
+                "email": "gdawson5z@ted.com",
+                "gender": "Female",
+                "income": 235140,
+                "fico": 885,
+                "years_active": 1
+            },
+            {
+                "customer_id": 958,
+                "first_name": "Anthea",
+                "last_name": "MacDermott",
+                "email": "amacdermottql@github.io",
+                "gender": "Female",
+                "income": 248104,
+                "fico": 715,
+                "years_active": 3
+            },
+            {
+                "customer_id": 39,
+                "first_name": "Gates",
+                "last_name": "Mendes",
+                "email": "gmendes12@spotify.com",
+                "gender": "Female",
+                "income": 94187,
+                "fico": 501,
+                "years_active": 32
+            },
+            {
+                "customer_id": 699,
+                "first_name": "Parsifal",
+                "last_name": "Lacer",
+                "email": "placerje@discovery.com",
+                "gender": "Male",
+                "income": 168013,
+                "fico": 630,
+                "years_active": 18
+            },
+            {
+                "customer_id": 557,
+                "first_name": "Alan",
+                "last_name": "Brumham",
+                "email": "abrumhamfg@huffingtonpost.com",
+                "gender": "Male",
+                "income": 165570,
+                "fico": 450,
+                "years_active": 25
+            },
+            {
+                "customer_id": 195,
+                "first_name": "Celle",
+                "last_name": "Hobell",
+                "email": "chobell5e@mapquest.com",
+                "gender": "Female",
+                "income": 158933,
+                "fico": 656,
+                "years_active": 3
+            },
+            {
+                "customer_id": 966,
+                "first_name": "Anabella",
+                "last_name": "Carbett",
+                "email": "acarbettqt@list-manage.com",
+                "gender": "Female",
+                "income": 179331,
+                "fico": 694,
+                "years_active": 9
+            },
+            {
+                "customer_id": 382,
+                "first_name": "Tracee",
+                "last_name": "Deaconson",
+                "email": "tdeaconsonal@wordpress.org",
+                "gender": "Female",
+                "income": 358295,
+                "fico": 446,
+                "years_active": 35
+            },
+            {
+                "customer_id": 796,
+                "first_name": "Conn",
+                "last_name": "Vanes",
+                "email": "cvanesm3@clickbank.net",
+                "gender": "Male",
+                "income": 322834,
+                "fico": 802,
+                "years_active": 13
+            },
+            {
+                "customer_id": 223,
+                "first_name": "Livia",
+                "last_name": "Norcutt",
+                "email": "lnorcutt66@theglobeandmail.com",
+                "gender": "Female",
+                "income": 312518,
+                "fico": 505,
+                "years_active": 34
+            },
+            {
+                "customer_id": 58,
+                "first_name": "Aurilia",
+                "last_name": "Hornung",
+                "email": "ahornung1l@census.gov",
+                "gender": "Female",
+                "income": 137743,
+                "fico": 482,
+                "years_active": 3
+            },
+            {
+                "customer_id": 232,
+                "first_name": "Gorden",
+                "last_name": "Kornes",
+                "email": "gkornes6f@skyrock.com",
+                "gender": "Male",
+                "income": 205095,
+                "fico": 853,
+                "years_active": 14
+            },
+            {
+                "customer_id": 486,
+                "first_name": "Delinda",
+                "last_name": "Chittey",
+                "email": "dchitteydh@globo.com",
+                "gender": "Female",
+                "income": 76898,
+                "fico": 501,
+                "years_active": 18
+            },
+            {
+                "customer_id": 462,
+                "first_name": "Dalton",
+                "last_name": "Churchill",
+                "email": "dchurchillct@zdnet.com",
+                "gender": "Male",
+                "income": 190931,
+                "fico": 506,
+                "years_active": 15
+            },
+            {
+                "customer_id": 441,
+                "first_name": "Em",
+                "last_name": "Courtin",
+                "email": "ecourtinc8@parallels.com",
+                "gender": "Female",
+                "income": 383650,
+                "fico": 706,
+                "years_active": 37
+            },
+            {
+                "customer_id": 731,
+                "first_name": "Annetta",
+                "last_name": "Fields",
+                "email": "afieldska@imdb.com",
+                "gender": "Female",
+                "income": 72063,
+                "fico": 708,
+                "years_active": 8
+            },
+            {
+                "customer_id": 388,
+                "first_name": "Gates",
+                "last_name": "Steddall",
+                "email": "gsteddallar@google.com.au",
+                "gender": "Female",
+                "income": 212122,
+                "fico": 794,
+                "years_active": 29
+            },
+            {
+                "customer_id": 395,
+                "first_name": "Ellerey",
+                "last_name": "Galtone",
+                "email": "egaltoneay@fastcompany.com",
+                "gender": "Male",
+                "income": 302819,
+                "fico": 744,
+                "years_active": 40
+            },
+            {
+                "customer_id": 606,
+                "first_name": "Bastien",
+                "last_name": "Burleton",
+                "email": "bburletongt@washington.edu",
+                "gender": "Male",
+                "income": 306724,
+                "fico": 523,
+                "years_active": 36
+            },
+            {
+                "customer_id": 307,
+                "first_name": "Alfi",
+                "last_name": "Fish",
+                "email": "afish8i@stumbleupon.com",
+                "gender": "Female",
+                "income": 115555,
+                "fico": 742,
+                "years_active": 31
+            },
+            {
+                "customer_id": 137,
+                "first_name": "Amaleta",
+                "last_name": "Neilands",
+                "email": "aneilands3s@wordpress.com",
+                "gender": "Female",
+                "income": 417631,
+                "fico": 755,
+                "years_active": 11
+            },
+            {
+                "customer_id": 56,
+                "first_name": "Maiga",
+                "last_name": "Skyram",
+                "email": "mskyram1j@sciencedaily.com",
+                "gender": "Female",
+                "income": 451031,
+                "fico": 871,
+                "years_active": 33
+            },
+            {
+                "customer_id": 719,
+                "first_name": "Barbra",
+                "last_name": "Crasswell",
+                "email": "bcrasswelljy@php.net",
+                "gender": "Female",
+                "income": 208742,
+                "fico": 615,
+                "years_active": 20
+            },
+            {
+                "customer_id": 104,
+                "first_name": "Anestassia",
+                "last_name": "Hinchshaw",
+                "email": "ahinchshaw2v@state.tx.us",
+                "gender": "Female",
+                "income": 204589,
+                "fico": 476,
+                "years_active": 16
+            },
+            {
+                "customer_id": 493,
+                "first_name": "Joan",
+                "last_name": "Forlonge",
+                "email": "jforlongedo@usatoday.com",
+                "gender": "Female",
+                "income": 365601,
+                "fico": 827,
+                "years_active": 42
+            },
+            {
+                "customer_id": 114,
+                "first_name": "Jeddy",
+                "last_name": "Pelchat",
+                "email": "jpelchat35@exblog.jp",
+                "gender": "Male",
+                "income": 97390,
+                "fico": 447,
+                "years_active": 26
+            },
+            {
+                "customer_id": 392,
+                "first_name": "Jermayne",
+                "last_name": "Filippyev",
+                "email": "jfilippyevav@pinterest.com",
+                "gender": "Male",
+                "income": 211833,
+                "fico": 741,
+                "years_active": 25
+            },
+            {
+                "customer_id": 343,
+                "first_name": "Pepillo",
+                "last_name": "Kadwallider",
+                "email": "pkadwallider9i@toplist.cz",
+                "gender": "Male",
+                "income": 323547,
+                "fico": 889,
+                "years_active": 27
+            },
+            {
+                "customer_id": 640,
+                "first_name": "Smith",
+                "last_name": "Jolley",
+                "email": "sjolleyhr@netvibes.com",
+                "gender": "Male",
+                "income": 442136,
+                "fico": 789,
+                "years_active": 24
+            },
+            {
+                "customer_id": 102,
+                "first_name": "David",
+                "last_name": "Peckitt",
+                "email": "dpeckitt2t@symantec.com",
+                "gender": "Male",
+                "income": 267979,
+                "fico": 505,
+                "years_active": 22
+            },
+            {
+                "customer_id": 268,
+                "first_name": "Emmott",
+                "last_name": "Lusted",
+                "email": "elusted7f@paginegialle.it",
+                "gender": "Male",
+                "income": 109105,
+                "fico": 828,
+                "years_active": 34
+            },
+            {
+                "customer_id": 294,
+                "first_name": "Kellsie",
+                "last_name": "Steers",
+                "email": "ksteers85@yahoo.com",
+                "gender": "Female",
+                "income": 432978,
+                "fico": 839,
+                "years_active": 24
+            },
+            {
+                "customer_id": 169,
+                "first_name": "Ricoriki",
+                "last_name": "Miall",
+                "email": "rmiall4o@wikipedia.org",
+                "gender": "Male",
+                "income": 240458,
+                "fico": 526,
+                "years_active": 43
+            },
+            {
+                "customer_id": 57,
+                "first_name": "Karalee",
+                "last_name": "Tuminelli",
+                "email": "ktuminelli1k@wufoo.com",
+                "gender": "Female",
+                "income": 102314,
+                "fico": 578,
+                "years_active": 25
+            },
+            {
+                "customer_id": 35,
+                "first_name": "Willie",
+                "last_name": "Rigden",
+                "email": "wrigdeny@simplemachines.org",
+                "gender": "Male",
+                "income": 348820,
+                "fico": 609,
+                "years_active": 12
+            },
+            {
+                "customer_id": 956,
+                "first_name": "Chico",
+                "last_name": "De Normanville",
+                "email": "cdenormanvilleqj@jimdo.com",
+                "gender": "Male",
+                "income": 108575,
+                "fico": 619,
+                "years_active": 36
+            },
+            {
+                "customer_id": 49,
+                "first_name": "Winifred",
+                "last_name": "Shawcross",
+                "email": "wshawcross1c@miitbeian.gov.cn",
+                "gender": "Female",
+                "income": 219323,
+                "fico": 468,
+                "years_active": 2
+            },
+            {
+                "customer_id": 752,
+                "first_name": "Konstantin",
+                "last_name": "Chung",
+                "email": "kchungkv@europa.eu",
+                "gender": "Male",
+                "income": 154355,
+                "fico": 755,
+                "years_active": 39
+            },
+            {
+                "customer_id": 522,
+                "first_name": "Didi",
+                "last_name": "Oldmeadow",
+                "email": "doldmeadoweh@tamu.edu",
+                "gender": "Female",
+                "income": 83238,
+                "fico": 868,
+                "years_active": 10
+            },
+            {
+                "customer_id": 845,
+                "first_name": "Elisabet",
+                "last_name": "Ranscomb",
+                "email": "eranscombng@ucla.edu",
+                "gender": "Female",
+                "income": 305152,
+                "fico": 814,
+                "years_active": 30
+            },
+            {
+                "customer_id": 980,
+                "first_name": "Kali",
+                "last_name": "Chasemore",
+                "email": "kchasemorer7@accuweather.com",
+                "gender": "Female",
+                "income": 274697,
+                "fico": 859,
+                "years_active": 1
+            },
+            {
+                "customer_id": 204,
+                "first_name": "Lily",
+                "last_name": "Gainforth",
+                "email": "lgainforth5n@qq.com",
+                "gender": "Female",
+                "income": 268598,
+                "fico": 544,
+                "years_active": 44
+            },
+            {
+                "customer_id": 581,
+                "first_name": "Rea",
+                "last_name": "McAneny",
+                "email": "rmcanenyg4@msu.edu",
+                "gender": "Female",
+                "income": 369682,
+                "fico": 813,
+                "years_active": 34
+            },
+            {
+                "customer_id": 886,
+                "first_name": "Hadleigh",
+                "last_name": "Fullick",
+                "email": "hfullickol@nps.gov",
+                "gender": "Male",
+                "income": 219324,
+                "fico": 846,
+                "years_active": 43
+            },
+            {
+                "customer_id": 694,
+                "first_name": "Lindsay",
+                "last_name": "Freckingham",
+                "email": "lfreckinghamj9@nydailynews.com",
+                "gender": "Male",
+                "income": 121780,
+                "fico": 472,
+                "years_active": 20
+            },
+            {
+                "customer_id": 229,
+                "first_name": "Hattie",
+                "last_name": "Sygroves",
+                "email": "hsygroves6c@chicagotribune.com",
+                "gender": "Female",
+                "income": 254510,
+                "fico": 702,
+                "years_active": 14
+            },
+            {
+                "customer_id": 753,
+                "first_name": "Werner",
+                "last_name": "Beatson",
+                "email": "wbeatsonkw@europa.eu",
+                "gender": "Male",
+                "income": 249245,
+                "fico": 660,
+                "years_active": 2
+            },
+            {
+                "customer_id": 190,
+                "first_name": "Frederica",
+                "last_name": "Ivons",
+                "email": "fivons59@symantec.com",
+                "gender": "Female",
+                "income": 436162,
+                "fico": 554,
+                "years_active": 10
+            },
+            {
+                "customer_id": 206,
+                "first_name": "Brandtr",
+                "last_name": "McNeely",
+                "email": "bmcneely5p@huffingtonpost.com",
+                "gender": "Male",
+                "income": 414909,
+                "fico": 675,
+                "years_active": 29
+            }
+        ]
+    }
+}

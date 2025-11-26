@@ -1,0 +1,41 @@
+{
+        "namespace": "datagen",
+        "name": "campaign_finance",
+        "type": "record",
+        "fields": [
+                {"name": "time", "type": {
+                  "type": "long",
+                  "arg.properties": {
+                        "range": {
+                            "min": 1587715775521,
+                            "max": 1619273364600
+                        }
+                  }
+                }},
+                {"name": "candidate_id", "type": {
+                    "type": "string",
+                    "arg.properties": {
+                        "regex": "[A-Z][1-9]{8,8}"
+                    }
+                }},
+                {"name": "party_affiliation", "type": {
+                    "type": "string",
+                    "arg.properties": {
+                         "options": [
+                           "REP",
+                           "DEM",
+                           "IND"
+                         ]
+                       }
+                }},
+                {"name": "contribution", "type": {
+                    "type": "int",
+                    "arg.properties": {
+                        "range": {
+                            "min": 20,
+                            "max": 3500
+                        }
+                    }
+                }}
+        ]
+}

@@ -1,0 +1,44 @@
+{
+    "type": "record",
+    "namespace": "payroll",
+    "name": "payroll_bonus",
+    "fields": [
+        {
+            "name": "employee_id",
+            "type": {
+                "type": "int",
+                "arg.properties": {
+                    "range": {
+                        "min": 1000,
+                        "max": 1100
+                    }
+                }
+            }
+        },
+        {
+            "name": "bonus",
+            "type": {
+                "type": "int",
+                "arg.properties": {
+                    "range": {
+                        "min": 10,
+                        "max": 50
+                    }
+                }
+            }
+        },
+        {
+            "name": "ts",
+            "type": {
+                "type": "long",
+                "logicalType": "timestamp-millis",
+                "arg.properties": {
+                    "range": {
+                        "min": 1609459200000,
+                        "max": 1640995199000
+                    }
+                }
+            }
+        }
+    ]
+}

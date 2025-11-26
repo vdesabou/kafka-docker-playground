@@ -1,0 +1,147 @@
+{
+        "namespace": "datagen.example",
+        "name": "users",
+        "type": "record",
+        "fields": [
+                {
+                  "name": "card_id",
+                  "type": "int"
+                },
+                {
+                  "name": "card_number",
+                  "type": "long"
+                },
+                {
+                  "name": "cvv",
+                  "type": "int"
+                },
+                {
+                  "name": "expiration_date",
+                  "type": "string"
+                }
+         ],
+         "arg.properties": {
+           "options": [
+                { "card_id": 1,
+                  "card_number": 6011601160116611,
+                  "cvv": 832,
+                  "expiration_date": "12/27"
+                },
+                { "card_id": 2,
+                  "card_number": 6011111111111117,
+                  "cvv": 833,
+                  "expiration_date": "12/26"
+                },
+                { "card_id": 3,
+                  "card_number": 6011000990139424,
+                  "cvv": 348,
+                  "expiration_date": "12/27"
+                },
+                { "card_id": 4,
+                  "card_number": 3530111333300000,
+                  "cvv": 288,
+                  "expiration_date": "11/27"
+                },
+                { "card_id": 5,
+                  "card_number": 3566002020360505,
+                  "cvv": 558,
+                  "expiration_date": "11/27"
+                },
+                { "card_id": 6,
+                  "card_number": 5431111111111111,
+                  "cvv": 383,
+                  "expiration_date": "11/26"
+                },
+                { "card_id": 7,
+                  "card_number": 5555555555554444,
+                  "cvv": 273,
+                  "expiration_date": "10/27"
+                },
+                { "card_id": 8,
+                  "card_number": 5105105105105100,
+                  "cvv": 663,
+                  "expiration_date": "10/27"
+                },
+                { "card_id": 9,
+                  "card_number": 4111111111111111, 
+                  "cvv": 822,
+                  "expiration_date": "10/26"
+                },
+                { "card_id": 10,
+                  "card_number": 4242424242424242, 
+                  "cvv": 190,
+                  "expiration_date": "09/27"
+                },
+                { "card_id": 11,
+                  "card_number": 4000056655665556, 
+                  "cvv": 729,
+                  "expiration_date": "09/26"
+                },
+                { "card_id": 12,
+                  "card_number": 5555555555554444, 
+                  "cvv": 289,
+                  "expiration_date": "08/27"
+                },
+                { "card_id": 13,
+                  "card_number": 2223003122003222, 
+                  "cvv": 115,
+                  "expiration_date": "08/26"
+                },
+                { "card_id": 14,
+                  "card_number": 5200828282828210, 
+                  "cvv": 927,
+                  "expiration_date": "08/27"
+                },
+                { "card_id": 15,
+                  "card_number": 5105105105105100, 
+                  "cvv": 329,
+                  "expiration_date": "07/27"
+                },
+                { "card_id": 16,
+                  "card_number": 6200000000000005,
+                  "cvv": 727,
+                  "expiration_date": "06/27"
+                },
+                { "card_id": 17,
+                  "card_number": 3056930009020004, 
+                  "cvv": 563,
+                  "expiration_date": "05/27"
+                },
+                { "card_id": 18,
+                  "card_number": 4000000760000002, 
+                  "cvv": 922,
+                  "expiration_date": "04/27"
+                },
+                { "card_id": 19,
+                  "card_number": 4000001240000000, 
+                  "cvv": 293,
+                  "expiration_date": "03/27"
+                },
+                { "card_id": 20,
+                  "card_number": 4000004840008001, 
+                  "cvv": 779,
+                  "expiration_date": "02/27"
+                },
+                { "card_id": 21,
+                  "card_number": 4000002500003155, 
+                  "cvv": 443,
+                  "expiration_date": "02/26"
+                },
+                { "card_id": 22,
+                  "card_number": 4000002760003184, 
+                  "cvv": 487,
+                  "expiration_date": "06/27"
+                },
+                { "card_id": 23,
+                  "card_number": 4000008260003178, 
+                  "cvv": 663,
+                  "expiration_date": "01/26"
+                },
+                { "card_id": 24,
+                  "card_number": 4000008260003179,
+                  "cvv": 723,
+                  "expiration_date": "01/26"
+                }
+            ]
+         }
+}

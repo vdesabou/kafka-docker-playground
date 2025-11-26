@@ -1,0 +1,43 @@
+{
+    "namespace": "fleet_mgmt",
+    "name": "fleet_mgmt_sensors",
+    "type": "record",
+    "fields": [
+        {
+            "name": "vehicle_id",
+            "type": {
+                "type": "int",
+                "arg.properties": {
+                    "range": {
+                        "min": 1000,
+                        "max": 9999
+                    }
+                }
+            }
+        },
+        {
+            "name": "engine_temperature",
+            "type": {
+                "type": "int",
+                "arg.properties": {
+                    "range": {
+                        "min": 150,
+                        "max": 250
+                    }
+                }
+            }
+        },
+        {
+            "name": "average_rpm",
+            "type": {
+                "type": "int",
+                "arg.properties": {
+                    "range": {
+                        "min": 1800,
+                        "max": 5000
+                    }
+                }
+            }
+        }
+    ]
+}

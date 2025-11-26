@@ -1,0 +1,79 @@
+{
+    "namespace": "pizza_orders",
+    "name": "pizza_orders_completed",
+    "type": "record",
+    "fields": [
+        {
+            "name": "store_id",
+            "type": {
+                "type": "int",
+                "arg.properties": {
+                    "range": {
+                        "min": 1,
+                        "max": 10
+                    }
+                }
+            }
+        },
+        {
+            "name": "store_order_id",
+            "type": {
+                "type": "int",
+                "arg.properties": {
+                    "iteration": {
+                        "start": 1000,
+                        "step": 2
+                    }
+                }
+            }
+        },
+        {
+            "name": "date",
+            "type": {
+                "type": "int",
+                "logicalType": "date",
+                "arg.properties": {
+                    "range": {
+                        "min": 18000,
+                        "max": 19000
+                    }
+                }
+            }
+        },
+        {
+            "name": "status",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "options": [
+                        "completed"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "rack_time_secs",
+            "type": {
+                "type": "int",
+                "arg.properties": {
+                    "range": {
+                        "min": 130,
+                        "max": 230
+                    }
+                }
+            }
+        },
+        {
+            "name": "order_delivery_time_secs",
+            "type": {
+                "type": "int",
+                "arg.properties": {
+                    "range": {
+                        "min": 1100,
+                        "max": 2000
+                    }
+                }
+            }
+        }
+    ]
+}

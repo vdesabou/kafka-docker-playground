@@ -1,0 +1,53 @@
+{
+    "type": "record",
+    "namespace": "payroll",
+    "name": "payroll_employee_location",
+    "fields": [
+        {
+            "name": "employee_id",
+            "type": {
+                "type": "int",
+                "arg.properties": {
+                    "range": {
+                        "min": 1000,
+                        "max": 1100
+                    }
+                }
+            }
+        },
+        {
+            "name": "lab",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "regex": "lab-\\d{1}"
+                }
+            }
+        },
+        {
+            "name": "department_id",
+            "type": {
+                "type": "int",
+                "arg.properties": {
+                    "range": {
+                        "min": 1,
+                        "max": 10
+                    }
+                }
+            }
+        },
+        {
+            "name": "arrival_date",
+            "type": {
+                "type": "int",
+                "logicalType": "date",
+                "arg.properties": {
+                    "range": {
+                        "min": 18000,
+                        "max": 19000
+                    }
+                }
+            }
+        }
+    ]
+}

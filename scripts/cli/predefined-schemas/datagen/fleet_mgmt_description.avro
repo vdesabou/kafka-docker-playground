@@ -1,0 +1,138 @@
+{
+    "namespace": "fleet_mgmt",
+    "name": "fleet_mgmt_description",
+    "type": "record",
+    "fields": [
+        {
+            "name": "vehicle_id",
+            "type": {
+                "type": "int",
+                "arg.properties": {
+                    "range": {
+                        "min": 1000,
+                        "max": 9999
+                    }
+                }
+            }
+        },
+        {
+            "name": "driver_name",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "options": [
+                        "Frieda Baldi",
+                        "Cherrita Gallaccio",
+                        "Matt Cleugh",
+                        "Dulciana Murfill",
+                        "Germayne Streetley",
+                        "Brenna Woolfall",
+                        "Gerhardt Tenbrug",
+                        "Hayley Tuma",
+                        "Winny Cadigan",
+                        "Bonnibelle Macek",
+                        "Lionel Byneth",
+                        "Trev Roper",
+                        "Lena MacFadzean",
+                        "Benton Allcorn",
+                        "Avis Moyler",
+                        "Marchall Rochewell",
+                        "Adele Bohl",
+                        "Barnett Mcall",
+                        "Frieda Pirrone",
+                        "Pattin Eringey",
+                        "Kalila Fewings",
+                        "Giacobo Beuscher",
+                        "Rozalin Hair",
+                        "Egon Beagan",
+                        "Owen Strotton",
+                        "Fernando Rosensaft",
+                        "Carleton Gwyther",
+                        "Kata Coll",
+                        "Rossie Hobben",
+                        "Stephanie Gookey",
+                        "Robyn Milazzo",
+                        "Tilda O'Lunney",
+                        "Nolan Kidney",
+                        "Jori Ottiwill",
+                        "Benito Graveson",
+                        "Zechariah Wrate",
+                        "Chelsae Napton",
+                        "Jeremy Heffernon",
+                        "Derk McAviy",
+                        "Constantin Mears",
+                        "Fitz Ballin",
+                        "Essy Bettles",
+                        "Gene Klemt",
+                        "Nikolai Arnopp",
+                        "Gustave Westhofer",
+                        "Simona Mayhow",
+                        "Cort Bainbridge",
+                        "Sibyl Vockins",
+                        "Andriette Gaze",
+                        "Shaughn De Simoni",
+                        "Nathaniel Hallowell",
+                        "Charley Dudill",
+                        "Cirstoforo Joblin",
+                        "Hyacinthia Kinastan",
+                        "Dur Lasselle",
+                        "Gay Chadburn",
+                        "Livvie Hawyes",
+                        "Aldrich MacVay",
+                        "Riva Rossant",
+                        "Johanna Reichartz",
+                        "Trent Gantlett",
+                        "Aryn Haskell",
+                        "Byrann Barock",
+                        "Gerda Cleugher",
+                        "Sonnie Guildford",
+                        "Vergil Borge",
+                        "Lurline Rocco",
+                        "Geoff Eddy",
+                        "Zea Leighton",
+                        "Leif Baden",
+                        "Quint Bidgod",
+                        "Talbot Cashell",
+                        "Sheridan Foulsham",
+                        "Camile Shrimplin",
+                        "Marcel Nayshe",
+                        "Lea Murrish",
+                        "Lucais Midson",
+                        "Zeb Rylatt",
+                        "Nertie Zuker",
+                        "Babara Henderson",
+                        "Electra Ridgley",
+                        "Jere Standingford",
+                        "Cyril Yellowlea",
+                        "Isadora Peegrem",
+                        "Caria Smewings",
+                        "Karena Kauffman",
+                        "Haywood Snowball",
+                        "Winslow Starcks",
+                        "Alis Ponton",
+                        "Marietta Lezemere",
+                        "Emilee Broadbridge",
+                        "Faye Beaument",
+                        "Shannah Beatson",
+                        "West Doy",
+                        "Chryste Wren",
+                        "Trumann Labba",
+                        "Anatollo Beckwith",
+                        "Konstanze Dunsford",
+                        "Raychel Roset",
+                        "Heindrick Ravenscroft"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "license_plate",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "regex": "[A-Z]{2}\\d{6}[A-Z]"
+                }
+            }
+        }
+    ]
+}

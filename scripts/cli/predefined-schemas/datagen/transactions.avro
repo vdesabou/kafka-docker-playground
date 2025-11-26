@@ -1,0 +1,62 @@
+{
+  "namespace": "datagen.example",
+  "name": "transactions",
+  "type": "record",
+  "fields": [
+    {
+      "name": "transaction_id",
+      "type": {
+        "type": "long",
+        "arg.properties": {
+          "iteration": {
+            "start": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "card_id",
+      "type": {
+        "type": "long",
+        "arg.properties": {
+          "range": {
+            "min": 1,
+            "max": 24
+          }
+        }
+      }
+    },
+    {
+      "name": "user_id",
+      "type": {
+        "type": "string",
+        "arg.properties": {
+          "regex": "User_[1-9]{0,1}"
+        }
+      }
+    },
+    {
+      "name": "purchase_id",
+      "type": {
+        "type": "long",
+        "arg.properties": {
+          "iteration": {
+            "start": 0
+          }
+        }
+      }
+    },
+    {
+      "name": "store_id",
+      "type": {
+        "type": "int",
+        "arg.properties": {
+          "range": {
+            "min": 1,
+            "max": 7
+          }
+        }
+      }
+    }
+  ]
+}

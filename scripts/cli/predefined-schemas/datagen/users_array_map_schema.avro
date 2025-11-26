@@ -1,0 +1,108 @@
+{
+        "namespace": "ksql",
+        "name": "users",
+        "type": "record",
+        "fields": [
+                {"name": "registertime", "type": {
+                    "type": "long",
+                    "arg.properties": {
+                        "range": {
+                            "min": 1487715775521,
+                            "max": 1519273364600
+                        }
+                    }
+                }},
+                {"name": "userid", "type": {
+                    "type": "string",
+                    "arg.properties": {
+                        "regex": "User_[1-9]"
+                    }
+                }},
+                {"name": "regionid", "type": {
+                    "type": "string",
+                    "arg.properties": {
+                        "regex": "Region_[1-9]"
+                    }
+                }},
+                {"name": "gender", "type": {
+                    "type": "string",
+                    "arg.properties": {
+                        "options": [
+                            "MALE",
+                            "FEMALE",
+                            "OTHER"
+                        ]
+                    }
+                }},
+                {
+                      "name": "interests",
+                      "type": {
+                        "type": "array",
+                        "items": "string",
+                        "arg.properties":
+                          {
+                            "options": [
+                              [
+                                "Game",
+                                "News"
+                              ],
+                              [
+                                "Game",
+                                "Sport"
+                              ],
+                              [
+                                "News",
+                                "Movies"
+                              ],
+                              [
+                                "News",
+                                "Travel"
+                              ]
+                            ]
+                          }
+                      }
+                },
+                {
+                       "name": "contactinfo",
+                       "type": {
+                         "type": "map",
+                         "values": "string",
+                         "arg.properties":
+                           {
+                             "options": [
+                               {
+                                 "phone": "6503349999",
+                                 "city": "San Mateo",
+                                 "state": "CA",
+                                 "zipcode": "94403"
+                               },
+                               {
+                                 "phone": "9492229999",
+                                 "city": "Irvine",
+                                 "state": "CA",
+                                 "zipcode": "92617"
+                               },
+                               {
+                                 "phone": "6503889999",
+                                 "city": "Palo Alto",
+                                 "state": "CA",
+                                 "zipcode": "94301"
+                               },
+                               {
+                                 "phone": "4083366881",
+                                 "city": "San Jose",
+                                 "state": "CA",
+                                 "zipcode": "95112"
+                               },
+                               {
+                                 "phone": "6502215368",
+                                 "city": "San Carlos",
+                                 "state": "CA",
+                                 "zipcode": "94070"
+                               }
+                             ]
+                           }
+                       }
+                }
+        ]
+}

@@ -1,0 +1,51 @@
+{
+    "namespace": "gaming",
+    "name": "gaming_games",
+    "type": "record",
+    "fields": [
+        {
+            "name": "id",
+            "type": {
+                "type": "int",
+                "arg.properties": {
+                    "range": {
+                        "min": 1000,
+                        "max": 5000
+                    }
+                }
+            }
+        },
+        {
+            "name": "room_name",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "options": [
+                        "Arcade -- Rookie",
+                        "Arcade -- Skilled",
+                        "Arcade -- Expert",
+                        "Survival -- Rookie",
+                        "Survival -- Skilled",
+                        "Survival -- Expert",
+                        "Classic -- Rookie",
+                        "Classic -- Skilled",
+                        "Classic -- Expert"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "created_date",
+            "type": {
+                "type": "long",
+                "logicalType": "timestamp-millis",
+                "arg.properties": {
+                    "iteration": {
+                        "start": 1609459200000,
+                        "step": 100000
+                    }
+                }
+            }
+        }
+    ]
+}

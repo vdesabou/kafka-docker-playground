@@ -1,0 +1,38 @@
+{
+        "namespace": "ksql",
+        "name": "users",
+        "type": "record",
+        "fields": [
+                {"name": "registertime", "type": {
+                    "type": "long",
+                    "arg.properties": {
+                        "range": {
+                            "min": 1487715775521,
+                            "max": 1519273364600
+                        }
+                    }
+                }},
+                {"name": "userid", "type": {
+                    "type": "string",
+                    "arg.properties": {
+                        "regex": "User_[1-9]"
+                    }
+                }},
+                {"name": "regionid", "type": {
+                    "type": "string",
+                    "arg.properties": {
+                        "regex": "Region_[1-9]"
+                    }
+                }},
+                {"name": "gender", "type": {
+                    "type": "string",
+                    "arg.properties": {
+                        "options": [
+                            "MALE",
+                            "FEMALE",
+                            "OTHER"
+                        ]
+                    }
+                }}
+        ]
+}

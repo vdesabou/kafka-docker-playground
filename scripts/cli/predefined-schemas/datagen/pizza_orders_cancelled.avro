@@ -1,0 +1,55 @@
+{
+    "namespace": "pizza_orders",
+    "name": "pizza_orders_cancelled",
+    "type": "record",
+    "fields": [
+        {
+            "name": "store_id",
+            "type": {
+                "type": "int",
+                "arg.properties": {
+                    "range": {
+                        "min": 1,
+                        "max": 10
+                    }
+                }
+            }
+        },
+        {
+            "name": "store_order_id",
+            "type": {
+                "type": "int",
+                "arg.properties": {
+                    "iteration": {
+                        "start": 1001,
+                        "step": 2
+                    }
+                }
+            }
+        },
+        {
+            "name": "date",
+            "type": {
+                "type": "int",
+                "logicalType": "date",
+                "arg.properties": {
+                    "range": {
+                        "min": 18000,
+                        "max": 19000
+                    }
+                }
+            }
+        },
+        {
+            "name": "status",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "options": [
+                        "cancelled"
+                    ]
+                }
+            }
+        }
+    ]
+}

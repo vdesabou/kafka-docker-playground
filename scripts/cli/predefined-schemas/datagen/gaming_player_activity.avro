@@ -1,0 +1,52 @@
+{
+    "namespace": "gaming",
+    "name": "gaming_player_activity",
+    "type": "record",
+    "fields": [
+        {
+            "name": "player_id",
+            "type": {
+                "type": "int",
+                "arg.properties": {
+                    "range": {
+                        "min": 1001,
+                        "max": 1101
+                    }
+                }
+            }
+        },
+        {
+            "name": "game_room_id",
+            "type": {
+                "type": "int",
+                "arg.properties": {
+                    "range": {
+                        "min": 1000,
+                        "max": 5000
+                    }
+                }
+            }
+        },
+        {
+            "name": "points",
+            "type": {
+                "type": "int",
+                "arg.properties": {
+                    "range": {
+                        "min": 10,
+                        "max": 500
+                    }
+                }
+            }
+        },
+        {
+            "name": "coordinates",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "regex": "\\[[0-9][0-9],[0-9][0-9]\\]"
+                }
+            }
+        }
+    ]
+}
