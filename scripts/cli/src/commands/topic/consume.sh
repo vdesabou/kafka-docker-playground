@@ -450,26 +450,51 @@ fi
 
       if [[ ! -n "$timestamp_field" ]]
       then
-        if [ $display_line -eq 1 ]
-        then
-          payload_field=${line_with_date#*|*|*|*|*|}
-          payload=${payload_field%%|*}
-          if [ ${#payload} -lt $max_characters ]
+          if [ $display_line -eq 1 ]
           then
-            if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
+            payload_field=${line_with_date#*|*|*|*|*|}
+            if [ ${#payload} -lt $max_characters ]
             then
-              echo "$line_with_date" | awk 'BEGIN{FS=OFS="|"} {$4="Headers:"$4; $5="Key:"$5; $6="KeySchemaId:"$6; $7="Value:"$7; $8="ValueSchemaId:"$8} 1'
+                if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]; then
+                    # Use printf to safely pipe 8MB data to awk
+                    printf '%s\n' "$line_with_date" | awk 'BEGIN{FS=OFS="|"} {$4="Headers:"$4; $5="Key:"$5; $6="KeySchemaId:"$6; $7="Value:"$7; $8="ValueSchemaId:"$8} 1'
+                else
+                    # Use printf to safely pipe 8MB data to awk
+                    printf '%s\n' "$line_with_date" | awk 'BEGIN{FS=OFS="|"} {$4="Headers:"$4; $5="Key:"$5; $6="Value:"$6; $7="ValueSchemaId:"$7} 1'
+                fi
             else
-              echo "$line_with_date" | awk 'BEGIN{FS=OFS="|"} {$4="Headers:"$4; $5="Key:"$5; $6="Value:"$6; $7="ValueSchemaId:"$7} 1'
+                if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]; then
+                    printf '%s\n' "$line_with_date" | awk -v max="$max_characters" 'BEGIN{FS=OFS="|"} {
+                        # 1. Label the fields
+                        $4="Headers:"$4; $5="Key:"$5; $6="KeySchemaId:"$6; $7="Value:"$7; $8="ValueSchemaId:"$8
+                        
+                        # 2. Reconstruct record implicit by field modification
+                        len = length($0)
+                        
+                        # 3. Truncate if necessary
+                        if (len > max) {
+                            print substr($0, 1, max) "...<truncated, only showing first " max " characters, out of " len ">..."
+                        } else {
+                            print $0
+                        }
+                    }'
+                else
+                    printf '%s\n' "$line_with_date" | awk -v max="$max_characters" 'BEGIN{FS=OFS="|"} {
+                        # 1. Label the fields
+                        $4="Headers:"$4; $5="Key:"$5; $6="Value:"$6; $7="ValueSchemaId:"$7
+                        
+                        # 2. Reconstruct record implicit by field modification
+                        len = length($0)
+                        
+                        # 3. Truncate if necessary
+                        if (len > max) {
+                            print substr($0, 1, max) "...<truncated, only showing first " max " characters, out of " len ">..."
+                        } else {
+                            print $0
+                        }
+                    }'
+                fi
             fi
-          else
-            if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
-            then
-              echo "$line_with_date" | awk 'BEGIN{FS=OFS="|"} {$4="Headers:"$4; $5="Key:"$5; $6="KeySchemaId:"$6; $7="Value:"$7; $8="ValueSchemaId:"$8} 1' | cut -c 1-$max_characters | awk "{print \$0 \"...<truncated, only showing first $max_characters characters, out of ${#payload}>...\"}"
-            else
-              echo "$line_with_date" | awk 'BEGIN{FS=OFS="|"} {$4="Headers:"$4; $5="Key:"$5; $6="Value:"$6; $7="ValueSchemaId:"$7} 1' | cut -c 1-$max_characters | awk "{print \$0 \"...<truncated, only showing first $max_characters characters, out of ${#payload}>...\"}"
-            fi
-          fi
         fi
       fi
 
@@ -508,17 +533,20 @@ fi
         fi
       fi
 
-      if [ $display_line -eq 1 ]
-      then
-        payload_field=${line#*|*|*|*|*|}
-        payload=${payload_field%%|*}
-        if [ ${#payload} -lt $max_characters ]
-        then
-          echo "$line"
-        else
-          echo "$line" | cut -c 1-$max_characters | awk "{print \$0 \"...<truncated, only showing first $max_characters characters, out of ${#payload}>...\"}"
+        if [ $display_line -eq 1 ]; then
+        # We pass the raw line to awk. awk handles the parsing and length checks instantly.
+        printf '%s\n' "$line" | awk -v max="$max_characters" -F"|" '{
+            payload_len = length($6)
+
+            # 2. Compare length
+            if (payload_len < max) {
+                print $0
+            } else {
+                # 3. Truncate (equivalent to cut -c) and print message
+                print substr($0, 1, max) "...<truncated, only showing first " max " characters, out of " payload_len ">..."
+            }
+        }'
         fi
-      fi
     fi
   done < "$fifo_path"
 
