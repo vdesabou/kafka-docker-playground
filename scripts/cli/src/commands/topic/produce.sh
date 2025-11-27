@@ -103,10 +103,10 @@ then
         fi
     fi
 else
-    if [[ $value == @* ]]
+    if [[ $value == @* ]] || [[ $value == *predefined-schemas/* ]]
     then
         # this is a predefined schema file
-        predefined_folder="$root_folder/scripts/cli/predefined-schemas"
+        predefined_folder="$root_folder/scripts/cli/"
         predefined_selection=$(echo "$value" | cut -d "@" -f 2)
         cp "$predefined_folder/$predefined_selection" "$value_schema_file"
     elif [ -f "$value" ]
@@ -313,10 +313,10 @@ fi
 
 if [[ -n "$key" ]]
 then
-    if [[ $key == @* ]]
+    if [[ $key == @* ]] || [[ $key == *predefined-schemas/* ]]
     then
         # this is a predefined schema file
-        predefined_folder="$root_folder/scripts/cli/predefined-schemas"
+        predefined_folder="$root_folder/scripts/cli"
         predefined_selection=$(echo "$key" | cut -d "@" -f 2)
         cp "$predefined_folder/$predefined_selection" "$key_schema_file"
     elif [ -f "$key" ]

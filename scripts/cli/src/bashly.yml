@@ -3107,7 +3107,7 @@ commands:
         }
         EOF
 
-        playground  topic produce -t topic-datagen-json-schema --nb-messages 1 --value @datagen/purchase.avro --derive-value-schema-as JSON 
+        playground  topic produce -t topic-datagen-json-schema --nb-messages 1 --value predefined-schemas/datagen/purchase.avro --derive-value-schema-as JSON 
 
         playground topic produce -t topic-avro --nb-messages 10 << 'EOF'
         {
@@ -3491,7 +3491,7 @@ commands:
         EOF
 
         # json schema references
-        playground topic produce --value @json-schema/schema-reference/customer.json --reference @json-schema/schema-reference/address.json --reference @json-schema/schema-reference/email.json --topic customers
+        playground topic produce --value predefined-schemas/json-schema/schema-reference/customer.json --reference @json-schema/schema-reference/address.json --reference @json-schema/schema-reference/email.json --topic customers
 
         # --derive-value-schema-as
         playground topic produce --topic tocpic --derive-value-schema-as PROTOBUF --derive-key-schema-as PROTOBUF --key '{"id": "1"}' << 'EOF'
