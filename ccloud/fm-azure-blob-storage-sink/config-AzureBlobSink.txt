@@ -53,6 +53,36 @@ Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, PROTO
 	 - Required: true
 
 ==========================
+Azure credentials
+==========================
+🔘 provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Azure provider-integration to mint Microsoft Entra ID application tokens.
+	 - Required: HIGH
+
+🔘 authentication.method
+
+How Confluent Cloud authenticates with Azure. Allowed values - ``Storage Account Key`` and ``Microsoft Entra ID application``
+
+	 - Type: STRING
+	 - Default: Storage Account Key
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 azblob.account.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The Azure Storage account key.
+	 - Required: HIGH
+
+==========================
 How should we connect to your data?
 ==========================
 🔘 connector.class
@@ -122,15 +152,6 @@ Azure Blob Storage details
 	 - Type: true
 	 - Default: PASSWORD
 	 - Importance: Must be between 3-23 alphanumeric characters.
-	 - Required: HIGH
-
-🔘 azblob.account.key
-
-
-
-	 - Type: true
-	 - Default: PASSWORD
-	 - Importance: The Azure Storage account key.
 	 - Required: HIGH
 
 🔘 azblob.container.name
@@ -319,15 +340,6 @@ Number of tasks for this connector
 ==========================
 Additional Configs
 ==========================
-🔘 value.converter.decimal.format
-
-Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
-
-	 - Type: STRING
-	 - Default: BASE64
-	 - Importance: LOW
-	 - Required: false
-
 🔘 value.converter.replace.null.with.default
 
 Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
@@ -364,6 +376,24 @@ Use this property if you would like to configure the connector's error handling 
 	 - Importance: LOW
 	 - Required: false
 
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.connect.meta.data
 
 
@@ -391,15 +421,6 @@ How to construct the subject name for key schema registration.
 	 - Importance: LOW
 	 - Required: false
 
-🔘 value.converter.ignore.default.for.nullables
-
-When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
-	 - Required: false
-
 ==========================
 Auto-restart policy
 ==========================
@@ -421,6 +442,6 @@ Egress allowlist
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: 
+	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 	 - Required: HIGH
 

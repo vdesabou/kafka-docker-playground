@@ -1,3 +1,4 @@
+    "authentication.method": "Storage Account Key",
     "auto.restart.on.user.error": "true",
     "az.compression.type": "none",
     "azblob.account.key": "PASSWORD",
@@ -24,6 +25,7 @@
     "partition.field.name": "LIST",
     "partitioner.class": "TimeBasedPartitioner",
     "path.format": "'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH",
+    "provider.integration.id": "STRING",
     "rotate.interval.ms": "${time.interval}",
     "rotate.schedule.interval.ms": "-1",
     "schema.context.name": "default",
