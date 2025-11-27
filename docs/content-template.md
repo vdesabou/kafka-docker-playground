@@ -437,3 +437,4 @@ Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 - 🔍 [ksqlDB Schema Inference with ID](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/schema-inference-with-id) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 💬 [MQTT Proxy](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/mqtt-proxy) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 💱 [Kafka Connect JSONata Transform](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/kafka-connect-jsonata) :other/kafka-connect-jsonata:
+- 🧠 [CLI examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cli) :other/cli:

@@ -249,7 +249,7 @@ playground topic produce -t topic-json-multiple-lines --tombstone --key "mykey1"
 playground topic produce -t topic-avro-example3 < ../../scripts/cli/predefined-schemas/avro/lead.avsc
 
 # record-size
-playground topic produce -t topic-avro-example-big-size --nb-messages 3 --record-size 10000000 << 'EOF'
+playground topic produce -t topic-avro-example-big-size --nb-messages 3 --record-size 8300000 << 'EOF'
 {
     "fields": [
     {
