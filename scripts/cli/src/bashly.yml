@@ -3490,9 +3490,6 @@ commands:
         }
         EOF
 
-        # json schema references
-        playground topic produce --value predefined-schemas/json-schema/schema-reference/customer.json --reference @json-schema/schema-reference/address.json --reference @json-schema/schema-reference/email.json --topic customers
-
         # --derive-value-schema-as
         playground topic produce --topic tocpic --derive-value-schema-as PROTOBUF --derive-key-schema-as PROTOBUF --key '{"id": "1"}' << 'EOF'
         {"name": "Foo", "Age": {"int": 12}}
