@@ -9,16 +9,16 @@ source ${DIR}/../../scripts/utils.sh
 username=$(whoami)
 uppercase_username=$(echo $username | tr '[:lower:]' '[:upper:]')
 
-PLAYGROUND_DB=PG_DB_${uppercase_username}${TAG}
+PLAYGROUND_DB=PG_DB_${uppercase_username}${TAG}_streaming
 PLAYGROUND_DB=${PLAYGROUND_DB//[-._]/}
 
-PLAYGROUND_WAREHOUSE=PG_WH_${uppercase_username}${TAG}
+PLAYGROUND_WAREHOUSE=PG_WH_${uppercase_username}${TAG}_streaming
 PLAYGROUND_WAREHOUSE=${PLAYGROUND_WAREHOUSE//[-._]/}
 
-PLAYGROUND_CONNECTOR_ROLE=PG_ROLE_${uppercase_username}${TAG}
+PLAYGROUND_CONNECTOR_ROLE=PG_ROLE_${uppercase_username}${TAG}_streaming
 PLAYGROUND_CONNECTOR_ROLE=${PLAYGROUND_CONNECTOR_ROLE//[-._]/}
 
-PLAYGROUND_USER=PG_USER_${uppercase_username}${TAG}
+PLAYGROUND_USER=PG_USER_${uppercase_username}${TAG}_streaming
 PLAYGROUND_USER=${PLAYGROUND_USER//[-._]/}
 
 SNOWFLAKE_ACCOUNT_NAME=${SNOWFLAKE_ACCOUNT_NAME:-$1}
