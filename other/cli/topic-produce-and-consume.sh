@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-function test () {
+function produce () {
 
 playground topic produce --tombstone --topic a-topic --key mykey
 
@@ -249,7 +249,7 @@ playground topic produce -t topic-json-multiple-lines --tombstone --key "mykey1"
 playground topic produce -t topic-avro-example3 < ../../scripts/cli/predefined-schemas/avro/lead.avsc
 
 # record-size
-playground topic produce -t topic-avro-example-big-size --nb-messages 3 --record-size 8300000 << 'EOF'
+playground topic produce -t topic-avro-example-big-size --nb-messages 1 --record-size 8300000 << 'EOF'
 {
     "fields": [
     {
@@ -457,11 +457,19 @@ EOF
 playground topic produce --topic fleet --value predefined-schemas/datagen/fleet_mgmt_location.avro --derive-value-schema-as AVRO --nb-messages 10000 --key predefined-schemas/datagen/fleet_mgmt_description.avro --derive-key-schema-as AVRO 
 }
 
+function consume () {
+    for topic in $(playground --output-level WARN topic list)
+    do
+        log "📥 Consuming from topic ${topic}"
+        playground topic consume --topic $topic --min-expected-messages 1 --timeout 60
+    done
+}
 
 for environment in plaintext ccloud; do
     log "🏗️ Starting environment for ${environment}"
     playground start-environment --environment ${environment}
-    test
+    produce
+    consume
     log "🧹 Stopping environment for ${environment}"
     playground stop
 done
