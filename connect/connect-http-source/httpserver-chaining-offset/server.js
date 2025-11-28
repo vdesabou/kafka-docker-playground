@@ -9,21 +9,32 @@ let delay = 0; // response delay in ms
 let responseBody = {}; // response body
 let closeConnection = false; // flag to track connection closure
 
-// Sample data for Elasticsearch search_after pagination
+// Sample data for Elasticsearch search_after pagination with time-based document generation
 const INITIAL_TIMESTAMP = 1647948000000;
 const PAGE_SIZE = 3; // Number of documents per page (matching the example: 3 docs)
-const TOTAL_DOCUMENTS = 15; // Total number of documents to simulate
-const MAX_TIMESTAMP = INITIAL_TIMESTAMP + (TOTAL_DOCUMENTS * 1000); // Last timestamp
+const DOCUMENTS_PER_INTERVAL = 3; // Generate 3 new documents every 5 seconds
+const GENERATION_INTERVAL_MS = 5000; // 5 seconds
+
+// Track when the server started to calculate available documents
+const SERVER_START_TIME = Date.now();
 
 const generateElasticsearchDocuments = (afterTime, pageSize) => {
   const hits = [];
-  const startTime = afterTime || INITIAL_TIMESTAMP; // Initial timestamp if not provided
+  const startTime = afterTime || INITIAL_TIMESTAMP;
+  
+  // Calculate how many documents should be available based on elapsed time
+  const elapsedSeconds = Math.floor((Date.now() - SERVER_START_TIME) / GENERATION_INTERVAL_MS);
+  const maxAvailableDocuments = (elapsedSeconds + 1) * DOCUMENTS_PER_INTERVAL;
+  const maxAvailableTimestamp = INITIAL_TIMESTAMP + (maxAvailableDocuments * 1000);
+  
+  console.log(`Elapsed intervals: ${elapsedSeconds}, Max available documents: ${maxAvailableDocuments}, Max timestamp: ${maxAvailableTimestamp}`);
   
   for (let i = 0; i < pageSize; i++) {
     const timestamp = startTime + (i * 1000) + 1000; // Increment by 1 second for each doc
     
-    // Stop generating documents if we've reached the maximum
-    if (timestamp > MAX_TIMESTAMP) {
+    // Only return documents that should be "available" based on time elapsed
+    if (timestamp > maxAvailableTimestamp) {
+      console.log(`Document with timestamp ${timestamp} not yet available (max: ${maxAvailableTimestamp})`);
       break;
     }
     
@@ -35,9 +46,11 @@ const generateElasticsearchDocuments = (afterTime, pageSize) => {
         "name": `Name${timestamp}`,
         "time": timestamp.toString()
       },
-      "sort": [timestamp] // The sort value used for search_after
+      "sort": [timestamp]
     });
   }
+  
+  console.log(`Returning ${hits.length} documents`);
   return hits;
 };
 

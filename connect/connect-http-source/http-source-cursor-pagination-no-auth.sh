@@ -23,28 +23,37 @@ then
      exit 111
 fi
 
+cd ../../connect/connect-http-source/
+if [ ! -f jcl-over-slf4j-2.0.7.jar ]
+then
+     wget -q https://repo1.maven.org/maven2/org/slf4j/jcl-over-slf4j/2.0.7/jcl-over-slf4j-2.0.7.jar
+fi
+cd -
+
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.cursor-pagination.no-auth.yml"
+
+playground debug log-level set --package "org.apache.http" --level TRACE
 
 log "Creating http-source connector with cursor pagination (Google Cloud Storage API style)"
 playground connector create-or-update --connector http-source  << EOF
 {
-     "tasks.max": "1",
-     "connector.class": "io.confluent.connect.http.HttpSourceConnector",
-     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-     "value.converter.schemas.enable": "false",
-     "confluent.topic.bootstrap.servers": "broker:9092",
-     "confluent.topic.replication.factor": "1",
-     "topic.name.pattern":"http-topic-\${entityName}",
-     "entity.names": "messages",
-     "url": "http://httpserver:9006/storage/v1/b/test-bucket/o",
-     "http.offset.mode": "CURSOR_PAGINATION",
-     "http.request.method": "GET",
-     "http.request.parameters": "pageToken=\${offset}",
-     "http.response.data.json.pointer": "/items",
-     "http.next.page.json.pointer": "/nextPageToken",
-     "http.timer.interval.millis": "5000"
+    "tasks.max": "1",
+    "connector.class": "io.confluent.connect.http.HttpSourceConnector",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1",
+    "topic.name.pattern":"http-topic-\${entityName}",
+    "entity.names": "messages",
+    "url": "http://httpserver:9006/storage/v1/b/test-bucket/o",
+    "http.offset.mode": "CURSOR_PAGINATION",
+    "http.request.method": "GET",
+    "http.request.parameters": "pageToken=\${offset}",
+    "http.response.data.json.pointer": "/items",
+    "http.next.page.json.pointer": "/nextPageToken",
+    "request.interval.ms": "1000"
 }
 EOF
 
