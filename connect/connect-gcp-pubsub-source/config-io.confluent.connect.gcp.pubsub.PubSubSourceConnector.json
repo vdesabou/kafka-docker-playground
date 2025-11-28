@@ -1,6 +1,5 @@
     "gcp.pubsub.credentials.json": "[hidden]",
     "gcp.pubsub.credentials.path": "STRING",
-    "gcp.pubsub.credentials.provider.class": "STRING",
     "gcp.pubsub.data.format": "utf_8",
     "gcp.pubsub.max.retry.time": "5",
     "gcp.pubsub.message.max.count": "10000",
