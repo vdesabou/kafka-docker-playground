@@ -42,6 +42,9 @@ connect/connect-vertica-sink
 connect/connect-ibm-mq-sink
 connect/connect-ibm-mq-source
 
+connect/connect-jdbc-ibmdb2-sink
+connect/connect-jdbc-ibmdb2-source
+
 environment/kerberos
 environment/ssl_kerberos
 environment/mdc-kerberos
