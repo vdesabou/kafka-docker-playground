@@ -461,7 +461,7 @@ function consume () {
     for topic in $(playground --output-level WARN topic list)
     do
         log "📥 Consuming from topic ${topic}"
-        playground topic consume --topic $topic --min-expected-messages 1 --timeout 60
+        playground topic consume --topic $topic
     done
 }
 
