@@ -2493,6 +2493,17 @@ subcommands:
             
             Conflicts with: --max-characters, --tail, --min-expected-messages
             
+        - names:
+          - --isolation-level
+          argument: read_uncommitted
+          description: | 
+            🫥 The isolation level to use, see https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#isolation-level
+            If not set, default is read_uncommitted
+            
+            Default value: read_uncommitted
+            
+            Allowed values: read_uncommitted, read_committed
+            
       - name: produce
         description: | 
           📤 Produce to a topic

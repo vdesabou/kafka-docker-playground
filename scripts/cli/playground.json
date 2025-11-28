@@ -2137,6 +2137,13 @@
               ],
               "argument": "",
               "description": "🔖 Save full dump of topic to a file and open with text editor set with playground config editor <editor> (default is code)\n\nConflicts with: --max-characters, --tail, --min-expected-messages\n"
+            },
+            {
+              "names": [
+                "--isolation-level"
+              ],
+              "argument": "read_uncommitted",
+              "description": "🫥 The isolation level to use, see https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#isolation-level\nIf not set, default is read_uncommitted\n\nDefault value: read_uncommitted\n\nAllowed values: read_uncommitted, read_committed\n"
             }
           ]
         },
