@@ -54,6 +54,7 @@ cat <<EOF > /tmp/kafka-connect/examples/playlists.xml
 EOF
 EOFCONNECT
 
+playground topic create --topic playlists-filepulse-xml-00 
 
 log "Creating XML FilePulse Source connector"
 if ! version_gt $VERSION "1.9.9"
