@@ -11,10 +11,6 @@ connect/connect-jdbc-oracle21-source
 connect/connect-jms-oracle21-sink
 connect/connect-jms-oracle21-source
 
-# https://integration-development.ideas.ibm.com/ideas/MESNS-I-369
-connect/connect-ibm-mq-sink
-connect/connect-ibm-mq-source
-
 connect/connect-jdbc-ibmdb2-sink
 connect/connect-jdbc-ibmdb2-source
 

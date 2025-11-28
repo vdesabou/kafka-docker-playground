@@ -39,6 +39,9 @@ connect/connect-splunk-sink
 connect/connect-syslog-source
 connect/connect-vertica-sink
 
+connect/connect-ibm-mq-sink
+connect/connect-ibm-mq-source
+
 environment/kerberos
 environment/ssl_kerberos
 environment/mdc-kerberos
