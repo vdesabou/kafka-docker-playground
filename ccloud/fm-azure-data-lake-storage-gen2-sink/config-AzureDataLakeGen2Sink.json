@@ -22,6 +22,7 @@
     "name": "STRING",
     "output.data.format": "${input.data.format}",
     "parquet.codec": "STRING",
+    "partitioner.class": "TimeBasedPartitioner",
     "path.format": "'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH",
     "provider.integration.id": "STRING",
     "rotate.interval.ms": "${time.interval}",

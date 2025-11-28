@@ -217,23 +217,32 @@ Set the output message format for values. Valid entries are AVRO, JSON, PARQUET 
 ==========================
 Organize my data by...
 ==========================
+🔘 partitioner.class
+
+The partitioner to use when writing data to the Azure Data Lake Storage container. Supported values are `DefaultPartitioner` (organizes records by the topic partition) and `TimeBasedPartitioner` (organizes records by time, e.g., daily or hourly).
+
+	 - Type: STRING
+	 - Default: TimeBasedPartitioner
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 path.format
 
-This configuration is used to set the format of the data directories when partitioning with TimeBasedPartitioner. The format set in this configuration converts the Unix timestamp to a valid directory string. To organize files like this example, https://<storage-account-name>.blob.core.windows.net/<container-name>/json_logs/daily/<Topic-Name>/dt=YYYY-MM-DD/hr=09/<files>, use the properties: topics.dir=json_logs/daily, and time.interval=HOURLY.
+This configuration is used to set the format of the data directories when partitioning with TimeBasedPartitioner. The format set in this configuration converts the Unix timestamp to a valid directory string. To organize files like this example, https://<storage-account-name>.blob.core.windows.net/<container-name>/json_logs/daily/<Topic-Name>/dt=YYYY-MM-DD/hr=09/<files>, use the properties: topics.dir=json_logs/daily, path.format='dt'=YYYY-MM-dd/'hr'=HH, and time.interval=HOURLY.
 
 	 - Type: STRING
 	 - Default: 'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 time.interval
+🔘 locale
 
+Sets the locale to use with TimeBasedPartitioner.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Partitioning interval of data, according to the time ingested to storage.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: en
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 rotate.schedule.interval.ms
 
@@ -243,6 +252,24 @@ Scheduled rotation uses rotate.schedule.interval.ms to close the file and upload
 	 - Default: -1
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 timezone
+
+Sets the timezone used by the TimeBasedPartitioner.
+
+	 - Type: STRING
+	 - Default: UTC
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 timestamp.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Sets the field that contains the timestamp used for the TimeBasedPartitioner
+	 - Required: HIGH
 
 🔘 rotate.interval.ms
 
@@ -262,32 +289,14 @@ Number of records written to storage before invoking file commits.
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 timestamp.field
+🔘 time.interval
 
 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Sets the field that contains the timestamp used for the TimeBasedPartitioner
+	 - Importance: Partitioning interval of data, according to the time ingested to storage.
 	 - Required: HIGH
-
-🔘 timezone
-
-Sets the timezone used by the TimeBasedPartitioner.
-
-	 - Type: STRING
-	 - Default: UTC
-	 - Importance: HIGH
-	 - Required: false
-
-🔘 locale
-
-Sets the locale to use with TimeBasedPartitioner.
-
-	 - Type: STRING
-	 - Default: en
-	 - Importance: HIGH
-	 - Required: false
 
 ==========================
 Consumer configuration
@@ -427,6 +436,6 @@ Egress allowlist
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: 
+	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 	 - Required: HIGH
 
