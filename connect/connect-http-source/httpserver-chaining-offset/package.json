@@ -1,0 +1,12 @@
+{
+  "name": "http-error-code-server",
+  "version": "1.0.0",
+  "description": "HTTP server returning configurable error codes",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
