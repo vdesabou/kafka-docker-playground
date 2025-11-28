@@ -1685,7 +1685,7 @@ if [ ! -z "$ENABLE_CONTROL_CENTER" ]
 then
       if [ -z "$ENABLE_LEGACY_CONTROL_CENTER" ]
       then
-        log "💠⭐ checking if newer control-center next-gen image is available.."
+        #log "💠⭐ checking if newer control-center next-gen image is available.."
         docker pull confluentinc/cp-enterprise-control-center-next-gen:latest > /dev/null 2>&1
       fi
 fi

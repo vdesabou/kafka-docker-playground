@@ -10194,12 +10194,12 @@ function check_and_update_playground_version() {
 function get_ccs_or_ce_specifics() {
   if [[ $CP_CONNECT_IMAGE == *"cp-kafka-"* ]]
   then
-    log "Ⓜ️ detected connect community image used, disabling Monitoring Interceptors"
+    #log "Ⓜ️ detected connect community image used, disabling Monitoring Interceptors"
     export CONNECT_CONSUMER_INTERCEPTOR_CLASSES=""
     export CONNECT_PRODUCER_INTERCEPTOR_CLASSES=""
   elif version_gt $TAG_BASE "7.9.9"
   then
-    log "Ⓜ️ disabling Monitoring Interceptors as CP image is > 8"
+    #log "Ⓜ️ disabling Monitoring Interceptors as CP image is > 8"
     export CONNECT_CONSUMER_INTERCEPTOR_CLASSES=""
     export CONNECT_PRODUCER_INTERCEPTOR_CLASSES=""
   else
@@ -17207,7 +17207,7 @@ playground_run_command() {
   then
         if [ -z "$ENABLE_LEGACY_CONTROL_CENTER" ]
         then
-          log "💠⭐ checking if newer control-center next-gen image is available.."
+          #log "💠⭐ checking if newer control-center next-gen image is available.."
           docker pull confluentinc/cp-enterprise-control-center-next-gen:latest > /dev/null 2>&1
         fi
   fi
