@@ -141,7 +141,7 @@ How should we connect to your database?
 
 🔘 ssl.mode
 
-What SSL mode should we use to connect to your database. `prefer` and `require` allows for the connection to be encrypted but does not do certificate validation on the server. `verify-ca` and `verify-full` require a file containing SSL CA certificate to be provided. The server's certificate will be verified to be signed by one of these authorities.`verify-ca` will verify that the server certificate is issued by a trusted CA. `verify-full` will verify that the server certificate is issued by a trusted CA and that the server hostname matches that in the certificate. Client authentication is not performed.
+What SSL mode should we use to connect to your database. `prefer` allows for the connection to not be encrypted and `require` allows for the connection to be encrypted but does not do certificate validation on the server. `verify-ca` and `verify-full` require a file containing SSL CA certificate to be provided. The server's certificate will be verified to be signed by one of these authorities.`verify-ca` will verify that the server certificate is issued by a trusted CA. `verify-full` will verify that the server certificate is issued by a trusted CA and that the server hostname matches that in the certificate. Client authentication is not performed.
 
 	 - Type: STRING
 	 - Default: prefer
@@ -475,6 +475,6 @@ Egress allowlist
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: 
+	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 	 - Required: HIGH
 
