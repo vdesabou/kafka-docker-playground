@@ -922,6 +922,15 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api1.upsert.method`` is set to ``POST``. This property must not be set if ``api1.upsert.method`` is ``NONE``.
 	 - Required: MEDIUM
 
+🔘 api1.forward.kafka.headers
+
+Whether to forward Kafka record headers as HTTP headers. When set to false, Kafka headers are ignored for HTTP request construction and batching grouping.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
 ==========================
 API-2 Configs
 ==========================
@@ -1230,6 +1239,15 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 	 - Default: STRING
 	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api2.upsert.method`` is set to ``POST``. This property must not be set if ``api2.upsert.method`` is ``NONE``.
 	 - Required: MEDIUM
+
+🔘 api2.forward.kafka.headers
+
+Whether to forward Kafka record headers as HTTP headers. When set to false, Kafka headers are ignored for HTTP request construction and batching grouping.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-3 Configs
@@ -1540,6 +1558,15 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api3.upsert.method`` is set to ``POST``. This property must not be set if ``api3.upsert.method`` is ``NONE``.
 	 - Required: MEDIUM
 
+🔘 api3.forward.kafka.headers
+
+Whether to forward Kafka record headers as HTTP headers. When set to false, Kafka headers are ignored for HTTP request construction and batching grouping.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
 ==========================
 API-4 Configs
 ==========================
@@ -1848,6 +1875,15 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 	 - Default: STRING
 	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api4.upsert.method`` is set to ``POST``. This property must not be set if ``api4.upsert.method`` is ``NONE``.
 	 - Required: MEDIUM
+
+🔘 api4.forward.kafka.headers
+
+Whether to forward Kafka record headers as HTTP headers. When set to false, Kafka headers are ignored for HTTP request construction and batching grouping.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-5 Configs
@@ -2158,6 +2194,15 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api5.upsert.method`` is set to ``POST``. This property must not be set if ``api5.upsert.method`` is ``NONE``.
 	 - Required: MEDIUM
 
+🔘 api5.forward.kafka.headers
+
+Whether to forward Kafka record headers as HTTP headers. When set to false, Kafka headers are ignored for HTTP request construction and batching grouping.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
 ==========================
 API-6 Configs
 ==========================
@@ -2466,6 +2511,15 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 	 - Default: STRING
 	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api6.upsert.method`` is set to ``POST``. This property must not be set if ``api6.upsert.method`` is ``NONE``.
 	 - Required: MEDIUM
+
+🔘 api6.forward.kafka.headers
+
+Whether to forward Kafka record headers as HTTP headers. When set to false, Kafka headers are ignored for HTTP request construction and batching grouping.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-7 Configs
@@ -2776,6 +2830,15 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api7.upsert.method`` is set to ``POST``. This property must not be set if ``api7.upsert.method`` is ``NONE``.
 	 - Required: MEDIUM
 
+🔘 api7.forward.kafka.headers
+
+Whether to forward Kafka record headers as HTTP headers. When set to false, Kafka headers are ignored for HTTP request construction and batching grouping.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
 ==========================
 API-8 Configs
 ==========================
@@ -3084,6 +3147,15 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 	 - Default: STRING
 	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api8.upsert.method`` is set to ``POST``. This property must not be set if ``api8.upsert.method`` is ``NONE``.
 	 - Required: MEDIUM
+
+🔘 api8.forward.kafka.headers
+
+Whether to forward Kafka record headers as HTTP headers. When set to false, Kafka headers are ignored for HTTP request construction and batching grouping.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-9 Configs
@@ -3394,6 +3466,15 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api9.upsert.method`` is set to ``POST``. This property must not be set if ``api9.upsert.method`` is ``NONE``.
 	 - Required: MEDIUM
 
+🔘 api9.forward.kafka.headers
+
+Whether to forward Kafka record headers as HTTP headers. When set to false, Kafka headers are ignored for HTTP request construction and batching grouping.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
 ==========================
 API-10 Configs
 ==========================
@@ -3702,6 +3783,15 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 	 - Default: STRING
 	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api10.upsert.method`` is set to ``POST``. This property must not be set if ``api10.upsert.method`` is ``NONE``.
 	 - Required: MEDIUM
+
+🔘 api10.forward.kafka.headers
+
+Whether to forward Kafka record headers as HTTP headers. When set to false, Kafka headers are ignored for HTTP request construction and batching grouping.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-11 Configs
@@ -4012,6 +4102,15 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api11.upsert.method`` is set to ``POST``. This property must not be set if ``api11.upsert.method`` is ``NONE``.
 	 - Required: MEDIUM
 
+🔘 api11.forward.kafka.headers
+
+Whether to forward Kafka record headers as HTTP headers. When set to false, Kafka headers are ignored for HTTP request construction and batching grouping.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
 ==========================
 API-12 Configs
 ==========================
@@ -4320,6 +4419,15 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 	 - Default: STRING
 	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api12.upsert.method`` is set to ``POST``. This property must not be set if ``api12.upsert.method`` is ``NONE``.
 	 - Required: MEDIUM
+
+🔘 api12.forward.kafka.headers
+
+Whether to forward Kafka record headers as HTTP headers. When set to false, Kafka headers are ignored for HTTP request construction and batching grouping.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-13 Configs
@@ -4630,6 +4738,15 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api13.upsert.method`` is set to ``POST``. This property must not be set if ``api13.upsert.method`` is ``NONE``.
 	 - Required: MEDIUM
 
+🔘 api13.forward.kafka.headers
+
+Whether to forward Kafka record headers as HTTP headers. When set to false, Kafka headers are ignored for HTTP request construction and batching grouping.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
 ==========================
 API-14 Configs
 ==========================
@@ -4938,6 +5055,15 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 	 - Default: STRING
 	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api14.upsert.method`` is set to ``POST``. This property must not be set if ``api14.upsert.method`` is ``NONE``.
 	 - Required: MEDIUM
+
+🔘 api14.forward.kafka.headers
+
+Whether to forward Kafka record headers as HTTP headers. When set to false, Kafka headers are ignored for HTTP request construction and batching grouping.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-15 Configs
@@ -5248,6 +5374,15 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api15.upsert.method`` is set to ``POST``. This property must not be set if ``api15.upsert.method`` is ``NONE``.
 	 - Required: MEDIUM
 
+🔘 api15.forward.kafka.headers
+
+Whether to forward Kafka record headers as HTTP headers. When set to false, Kafka headers are ignored for HTTP request construction and batching grouping.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
 ==========================
 Auto-restart policy
 ==========================
@@ -5269,6 +5404,6 @@ Egress allowlist
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: 
+	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 	 - Required: HIGH
 
