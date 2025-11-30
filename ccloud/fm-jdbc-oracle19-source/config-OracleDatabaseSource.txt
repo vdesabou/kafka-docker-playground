@@ -154,7 +154,7 @@ Select database connection using sid or service name
 
 	 - Type: false
 	 - Default: PASSWORD
-	 - Importance: The trust store containing server CA certificate. Only required if using `verify-ca` or `verify-full` ssl mode.
+	 - Importance: The binary trust store file that contains the server's CA certificate. Only required if you use verify-ca or verify-full ssl mode. The connector supports files in JKS format. For REST API usage, you must base64-encode the binary trust store file and prefix it with ``data:text/plain;base64,``. For example, first, encode the file ``base64_truststore=<span>(cat /path/to/truststore.jks | base64)`` and then use ``data:text/plain;base64,</span>base64_truststore`` as the value.
 	 - Required: LOW
 
 🔘 ssl.mode
@@ -502,6 +502,6 @@ Egress allowlist
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: 
+	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 	 - Required: HIGH
 
