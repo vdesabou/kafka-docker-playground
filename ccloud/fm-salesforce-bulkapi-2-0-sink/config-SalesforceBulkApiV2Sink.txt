@@ -259,6 +259,15 @@ Flag to prevent reference type fields from being updated or inserted in Salesfor
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 skip.relationship.fields
+
+Flag to skip relationship fields in records from being updated or inserted in Salesforce SObjects.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 override.event.type
 
 A flag to indicate that the Kafka SObject source record EventType(create, update, delete) is overriden to use the operation specified in the salesforce.sink.object.operation configuration setting
@@ -436,6 +445,6 @@ Egress allowlist
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: 
+	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 	 - Required: HIGH
 
