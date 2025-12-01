@@ -24,8 +24,17 @@ fi
 
 source ${DIR}/../../scripts/utils.sh
 
+cd ../../connect/connect-http-v2-source/
+if [ ! -f jcl-over-slf4j-2.0.7.jar ]
+then
+     wget -q https://repo1.maven.org/maven2/org/slf4j/jcl-over-slf4j/2.0.7/jcl-over-slf4j-2.0.7.jar
+fi
+cd -
+
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.no-auth.yml"
+
+playground debug log-level set --package "org.apache.http" --level TRACE
 
 log "Set webserver to reply with 200"
 curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006/set-response-error-code
@@ -42,13 +51,13 @@ playground connector create-or-update --connector http-source  << EOF
     "connection.disallow.local.ips": "false",
     "connection.disallow.private.ips": "false",
 
-  "apis.num": "1",
-  "api1.http.api.path": "/api/messages",
-  "api1.topics": "http-source-topic-v2",
-  "api1.http.request.headers": "Content-Type: application/json",
-  "api1.test.api": "false",
-  "api1.http.offset.mode": "SIMPLE_INCREMENTING",
-  "api1.http.initial.offset": "0"
+    "apis.num": "1",
+    "api1.http.api.path": "/api/messages",
+    "api1.topics": "http-source-topic-v2",
+    "api1.http.request.headers": "Content-Type: application/json",
+    "api1.test.api": "false",
+    "api1.http.offset.mode": "SIMPLE_INCREMENTING",
+    "api1.http.initial.offset": "0"
 }
 EOF
 

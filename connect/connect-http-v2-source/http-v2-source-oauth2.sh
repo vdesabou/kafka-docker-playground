@@ -24,8 +24,17 @@ fi
 
 source ${DIR}/../../scripts/utils.sh
 
+cd ../../connect/connect-http-v2-source/
+if [ ! -f jcl-over-slf4j-2.0.7.jar ]
+then
+     wget -q https://repo1.maven.org/maven2/org/slf4j/jcl-over-slf4j/2.0.7/jcl-over-slf4j-2.0.7.jar
+fi
+cd -
+
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.oauth2.yml"
+
+playground debug log-level set --package "org.apache.http" --level TRACE
 
 log "Creating http-source connector"
 playground connector create-or-update --connector http-source  << EOF
