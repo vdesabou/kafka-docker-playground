@@ -35,6 +35,7 @@
     "salesforce.username": "STRING",
     "salesforce.version": "65.0",
     "schema.context.name": "default",
+    "skip.relationship.fields": "true",
     "tasks.max": "INT",
     "topics": "LIST",
     "topics.regex": "STRING",
