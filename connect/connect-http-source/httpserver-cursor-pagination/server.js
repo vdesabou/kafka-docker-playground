@@ -38,7 +38,19 @@ const generateSampleObjects = (startIndex, count) => {
 };
 
 const PAGE_SIZE = 5; // Number of objects per page
-const TOTAL_OBJECTS = 15; // Total number of objects to simulate
+const INITIAL_OBJECTS = 15; // Initial number of objects available
+
+// Continuously and randomly add more objects after the initial set
+let currentTotalObjects = INITIAL_OBJECTS;
+const GROWTH_INTERVAL_MS = 5000; // every 5 seconds
+const MIN_NEW_OBJECTS = 1; // at least 1 new object per interval
+const MAX_NEW_OBJECTS = 5; // up to 5 new objects per interval
+
+setInterval(() => {
+  const add = Math.floor(Math.random() * (MAX_NEW_OBJECTS - MIN_NEW_OBJECTS + 1)) + MIN_NEW_OBJECTS;
+  currentTotalObjects += add;
+  console.log(`[${new Date().toISOString()}] Added ${add} new objects. Total now: ${currentTotalObjects}`);
+}, GROWTH_INTERVAL_MS);
 
 app.use((req, res, next) => {
   setTimeout(() => {
@@ -158,13 +170,16 @@ app.get('/storage/v1/b/:bucket/o', (req, res) => {
     }
   }
   
-  // Generate sample objects for this page
-  const items = generateSampleObjects(startIndex, Math.min(PAGE_SIZE, TOTAL_OBJECTS - startIndex));
-  
-  // Calculate next page token
-  const nextIndex = startIndex + PAGE_SIZE;
-  const hasMorePages = nextIndex < TOTAL_OBJECTS;
-  const nextPageToken = hasMorePages ? Buffer.from(nextIndex.toString()).toString('base64') : null;
+  // Determine how many items are currently available, respecting dynamic growth
+  const endIndexExclusive = Math.min(startIndex + PAGE_SIZE, currentTotalObjects);
+  const availableCount = Math.max(0, endIndexExclusive - startIndex);
+
+  // Generate sample objects for this page window
+  const items = generateSampleObjects(startIndex, availableCount);
+
+  // Calculate next page token based on current availability
+  const hasMorePages = endIndexExclusive < currentTotalObjects;
+  const nextPageToken = hasMorePages ? Buffer.from(endIndexExclusive.toString()).toString('base64') : null;
   
   // Build response in Google Cloud Storage API format
   const response = {
@@ -181,7 +196,7 @@ app.get('/storage/v1/b/:bucket/o', (req, res) => {
   console.log("body:");
   console.log(req.body);
   console.log(`[${new Date().toISOString()}] sending back ${JSON.stringify(response)}`); 
-  console.log(`Returning ${items.length} items, startIndex: ${startIndex}, nextPageToken: ${nextPageToken || 'none'}`);
+  console.log(`Returning ${items.length} items, startIndex: ${startIndex}, endIndex: ${endIndexExclusive}, currentTotal: ${currentTotalObjects}, nextPageToken: ${nextPageToken || 'none'}`);
   res.status(200).json(response);
 });
 
