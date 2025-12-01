@@ -193,6 +193,12 @@ app.post('/test-index/_search', (req, res) => {
   
   // Get the last sort value for the next search_after
   const lastSortValue = hits.length > 0 ? hits[hits.length - 1].sort[0] : null;
+
+  console.log("headers:");
+  console.log(req.headers);
+  console.log("body:");
+  console.log(req.body);
+  console.log(`[${new Date().toISOString()}] sending back ${JSON.stringify(response)}`); 
   console.log(`Returning ${hits.length} documents, last sort value: ${lastSortValue}`);
   
   res.status(200).json(response);

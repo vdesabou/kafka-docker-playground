@@ -175,7 +175,12 @@ app.get('/storage/v1/b/:bucket/o', (req, res) => {
   if (nextPageToken) {
     response.nextPageToken = nextPageToken;
   }
-  
+
+  console.log("headers:");
+  console.log(req.headers);
+  console.log("body:");
+  console.log(req.body);
+  console.log(`[${new Date().toISOString()}] sending back ${JSON.stringify(response)}`); 
   console.log(`Returning ${items.length} items, startIndex: ${startIndex}, nextPageToken: ${nextPageToken || 'none'}`);
   res.status(200).json(response);
 });
