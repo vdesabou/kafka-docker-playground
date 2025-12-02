@@ -1,18 +1,6 @@
 #!/bin/bash
 set -e
 
-# https://docs.confluent.io/cloud/current/connectors/cc-http-source.html#cursor-pagination-offset-mode-with-the-gcs-list-objects-rest-api
-# This example demonstrates cursor pagination with Google Cloud Storage API-style responses
-# The HTTP server returns paginated data with the following structure:
-# {
-#   "kind": "storage#objects",
-#   "nextPageToken": "CkV0b3BpY3MvZGVtby9MS9ob3V...=",
-#   "items": [ {...}, {...}, ... ]
-# }
-# The connector makes requests to http://httpserver:9006/storage/v1/b/test-bucket/o?pageToken=<token>
-# and uses the nextPageToken from the response to fetch subsequent pages
-
-
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 if [ -z "$CONNECTOR_ZIP" ]
@@ -44,11 +32,11 @@ fi
 cd -
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.cursor-pagination.no-auth.yml"
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.chaining-offset.yml"
 
 playground debug log-level set --package "org.apache.http" --level TRACE
 
-log "Creating http-source connector with cursor pagination (Google Cloud Storage API style)"
+log "Creating http-source connector with chaining offset mode (Elasticsearch search_after pagination)"
 playground connector create-or-update --connector http-source  << EOF
 {
     "tasks.max": "1",
@@ -60,17 +48,17 @@ playground connector create-or-update --connector http-source  << EOF
     "http.api.base.url": "http://httpserver:9006",
 
     "apis.num": "1",
-    "api1.http.api.path": "/storage/v1/b/test-bucket/o",
+    "api1.http.api.path": "/test-index/_search",
     "api1.topics": "http-source-topic-v2",
     "api1.http.request.headers": "Content-Type: application/json",
     "api1.test.api": "false",
-
-    "api1.http.offset.mode": "CURSOR_PAGINATION",
-    "api1.http.request.method": "GET",
-    "api1.http.request.parameters": "pageToken=\${offset}",
-    "api1.http.response.data.json.pointer": "/items",
-    "api1.http.next.page.json.pointer": "/nextPageToken",
-    "api1.request.interval.ms": "1000",
+    "api1.http.offset.mode": "CHAINING",
+    "api1.http.request.method": "POST",
+    "api1.http.request.body": "{\\"size\\": 100, \\"sort\\": [{\\"@time\\": \\"asc\\"}], \\"search_after\\": [\${offset}]}",
+    "api1.http.initial.offset": "1647948000000",
+    "api1.http.response.data.json.pointer": "/hits/hits",
+    "api1.http.offset.json.pointer": "/sort/0",
+    "api1.request.interval.ms": "5000",
 
     "reporter.bootstrap.servers": "broker:9092",
     "reporter.error.topic.name": "error-responses",
@@ -81,7 +69,9 @@ playground connector create-or-update --connector http-source  << EOF
 }
 EOF
 
-sleep 10
+log "Wait 5 seconds for connector to start and fetch initial batch"
+sleep 5
 
-log "Verify we have received the data in http-source-topic-v2 topic (expecting 15 messages across 3 pages)"
-playground topic consume --topic http-source-topic-v2 --min-expected-messages 15 --timeout 60
+playground topic consume --topic http-source-topic-v2 --min-expected-messages 3 --timeout 10
+
+log "The connector should fetch new data every 5 seconds"
