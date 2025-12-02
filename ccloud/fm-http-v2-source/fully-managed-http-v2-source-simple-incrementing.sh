@@ -11,9 +11,9 @@ display_ngrok_warning
 bootstrap_ccloud_environment
 
 
-docker compose -f docker-compose.noauth.yml build
-docker compose -f docker-compose.noauth.yml down -v --remove-orphans
-docker compose -f docker-compose.noauth.yml up -d --quiet-pull
+docker compose -f docker-compose.yml build
+docker compose -f docker-compose.yml down -v --remove-orphans
+docker compose -f docker-compose.yml up -d --quiet-pull
 
 sleep 5
 
@@ -58,46 +58,40 @@ set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
 
-log "Set webserver to reply with 200"
-curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006/set-response-error-code
-# curl -X PUT -H "Content-Type: application/json" --data '{"delay": 2000}' http://localhost:9006/set-response-time
-curl -X PUT -H "Content-Type: application/json" --data '{"store":{"book":[{"category":"reference","sold":false,"author":"Nigel Rees","title":"Sayings of the Century","price":8.95}],"bicycle":{"color":"red","price":19.95}}}' http://localhost:9006/set-response-body
-
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
-  "connector.class": "HttpSourceV2",
-  "name": "$connector_name",
-  "kafka.auth.mode": "KAFKA_API_KEY",
-  "kafka.api.key": "$CLOUD_KEY",
-  "kafka.api.secret": "$CLOUD_SECRET",
-  "output.data.format": "AVRO",
-  "tasks.max" : "1",
+    "connector.class": "HttpSourceV2",
+    "name": "$connector_name",
+    "kafka.auth.mode": "KAFKA_API_KEY",
+    "kafka.api.key": "$CLOUD_KEY",
+    "kafka.api.secret": "$CLOUD_SECRET",
+    "output.data.format": "AVRO",
+    "tasks.max" : "1",
 
-  "http.api.base.url": "http://$NGROK_HOSTNAME:$NGROK_PORT",
-  "behavior.on.error": "FAIL",
-  "apis.num": "1",
-  "api1.http.api.path": "/",
-  "api1.topics": "http-source-topic-v2",
-  "api1.http.request.headers": "Content-Type: application/json",
-  "api1.test.api": "false",
-  "api1.http.offset.mode": "SIMPLE_INCREMENTING",
-  "api1.http.initial.offset": "0"
+    "http.api.base.url": "http://$NGROK_HOSTNAME:$NGROK_PORT",
+    "behavior.on.error": "FAIL",
+
+    "apis.num": "1",
+    "api1.http.api.path": "/wiki/rest/api/space",
+    "api1.topics": "http-topic-spaces",
+    "api1.http.request.headers": "Content-Type: application/json",
+    "api1.test.api": "false",
+
+    "api1.http.offset.mode": "SIMPLE_INCREMENTING",
+    "api1.http.request.parameters": "start=\${offset}&limit=1",
+    "api1.http.initial.offset": "0",
+    "api1.http.response.data.json.pointer": "/results",
+    "api1.request.interval.ms": "1000"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-log "Send a message to HTTP server"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{"test":"value"}' \
-     http://localhost:9006/
 
+sleep 10
 
-sleep 2
-
-log "Verify we have received the data in http-source-topic-v2 topic"
-playground topic consume --topic http-source-topic-v2 --min-expected-messages 1 --timeout 60
+log "Verify we have received the initial spaces in http-topic-spaces topic (expecting at least 15 spaces, 1 per page)"
+playground topic consume --topic http-topic-spaces --min-expected-messages 15 --timeout 60
 
 
 log "Do you want to delete the fully managed connector $connector_name ?"

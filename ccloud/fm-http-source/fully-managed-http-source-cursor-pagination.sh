@@ -11,9 +11,10 @@ display_ngrok_warning
 bootstrap_ccloud_environment
 
 
-docker compose -f docker-compose.cursor-pagination.no-auth.yml build
-docker compose -f docker-compose.cursor-pagination.no-auth.yml down -v --remove-orphans
-docker compose -f docker-compose.cursor-pagination.no-auth.yml up -d --quiet-pull
+
+docker compose -f docker-compose.yml build
+docker compose -f docker-compose.yml down -v --remove-orphans
+docker compose -f docker-compose.yml up -d --quiet-pull
 
 sleep 5
 
@@ -45,51 +46,52 @@ do
 done
 
 set +e
-playground topic delete --topic http-source-topic-v2
+playground topic delete --topic http-topic-messages
 set -e
 
-log "Creating http-source-topic-v2 topic in Confluent Cloud"
+log "Creating http-topic-messages topic in Confluent Cloud"
 set +e
-playground topic create --topic http-source-topic-v2
+playground topic create --topic http-topic-messages
 set -e
 
-connector_name="HttpSourceV2_$USER"
+connector_name="HttpSource_$USER"
 set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
 
+# log "Set webserver to reply with 200"
+# curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006/set-response-error-code
+# curl -X PUT -H "Content-Type: application/json" --data '{"delay": 2000}' http://localhost:9006/set-response-time
+
+
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
-    "connector.class": "HttpSourceV2",
+    "connector.class": "HttpSource",
     "name": "$connector_name",
     "kafka.auth.mode": "KAFKA_API_KEY",
     "kafka.api.key": "$CLOUD_KEY",
     "kafka.api.secret": "$CLOUD_SECRET",
-    "output.data.format": "AVRO",
     "tasks.max" : "1",
-
-    "http.api.base.url": "http://$NGROK_HOSTNAME:$NGROK_PORT",
-    "behavior.on.error": "FAIL",
-    "apis.num": "1",
-    "api1.http.api.path": "/storage/v1/b/test-bucket/o",
-    "api1.topics": "http-source-topic-v2",
-    "api1.http.request.headers": "Content-Type: application/json",
-    "api1.test.api": "false",
-
-    "api1.http.offset.mode": "CURSOR_PAGINATION",
-    "api1.http.request.method": "GET",
-    "api1.http.request.parameters": "pageToken=\${offset}",
-    "api1.http.response.data.json.pointer": "/items",
-    "api1.http.next.page.json.pointer": "/nextPageToken",
-    "api1.request.interval.ms": "1000"
+    "output.data.format": "AVRO",
+    "topic.name.pattern":"http-topic-\${entityName}",
+    "entity.names": "messages",
+    "url": "http://$NGROK_HOSTNAME:$NGROK_PORT/test-index/_search",
+    "http.offset.mode": "CHAINING",
+    "http.request.method": "POST",
+    "http.request.body": "{\\"size\\": 100, \\"sort\\": [{\\"@time\\": \\"asc\\"}], \\"search_after\\": [\${offset}]}",
+    "http.initial.offset": "1647948000000",
+    "http.response.data.json.pointer": "/hits/hits",
+    "http.offset.json.pointer": "/sort/0",
+    "request.interval.ms": "5000"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
+log "Wait 5 seconds for connector to start and fetch initial batch"
+sleep 5
 
-log "Verify we have received the data in http-source-topic-v2 topic (expecting 15 messages across 3 pages)"
-playground topic consume --topic http-source-topic-v2 --min-expected-messages 15 --timeout 60
+playground topic consume --topic http-topic-messages --min-expected-messages 3 --timeout 10
 
 
 log "Do you want to delete the fully managed connector $connector_name ?"

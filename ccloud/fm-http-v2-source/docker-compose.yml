@@ -4,7 +4,7 @@ services:
 
   httpserver:
     build:
-      context: ../../connect/connect-http-source/httpserver-cursor-pagination
+      context: ../../connect/connect-http-sink/httpserver
     hostname: httpserver
     container_name: httpserver
     ports:
