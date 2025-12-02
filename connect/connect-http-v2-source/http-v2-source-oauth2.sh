@@ -58,7 +58,14 @@ playground connector create-or-update --connector http-source  << EOF
     "auth.type": "OAUTH2",
     "oauth2.token.url": "http://httpserver:8080/oauth/token",
     "oauth2.client.id": "kc-client",
-    "oauth2.client.secret": "kc-secret"
+    "oauth2.client.secret": "kc-secret",
+
+    "reporter.bootstrap.servers": "broker:9092",
+    "reporter.error.topic.name": "error-responses",
+    "reporter.error.topic.replication.factor": 1,
+    "reporter.result.topic.name": "success-responses",
+    "reporter.result.topic.replication.factor": 1,
+    "reporter.result.topic.value.format": "string"
 }
 EOF
 

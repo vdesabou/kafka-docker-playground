@@ -57,7 +57,14 @@ playground connector create-or-update --connector http-source  << EOF
     "api1.http.request.headers": "Content-Type: application/json",
     "api1.test.api": "false",
     "api1.http.offset.mode": "SIMPLE_INCREMENTING",
-    "api1.http.initial.offset": "0"
+    "api1.http.initial.offset": "0",
+
+    "reporter.bootstrap.servers": "broker:9092",
+    "reporter.error.topic.name": "error-responses",
+    "reporter.error.topic.replication.factor": 1,
+    "reporter.result.topic.name": "success-responses",
+    "reporter.result.topic.replication.factor": 1,
+    "reporter.result.topic.value.format": "string"
 }
 EOF
 

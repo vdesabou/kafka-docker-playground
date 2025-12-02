@@ -70,7 +70,14 @@ playground connector create-or-update --connector http-source  << EOF
     "api1.http.request.parameters": "pageToken=\${offset}",
     "api1.http.response.data.json.pointer": "/items",
     "api1.http.next.page.json.pointer": "/nextPageToken",
-    "api1.request.interval.ms": "1000"
+    "api1.request.interval.ms": "1000",
+
+    "reporter.bootstrap.servers": "broker:9092",
+    "reporter.error.topic.name": "error-responses",
+    "reporter.error.topic.replication.factor": 1,
+    "reporter.result.topic.name": "success-responses",
+    "reporter.result.topic.replication.factor": 1,
+    "reporter.result.topic.value.format": "string"
 }
 EOF
 
