@@ -53,6 +53,8 @@ docker exec -i ibmmq runmqsc QM1 << EOF
 REFRESH SECURITY TYPE(AUTHSERV)
 EOF
 
+playground topic create --topic MyKafkaTopicName
+
 log "Creating IBM MQ source connector"
 playground connector create-or-update --connector ibm-mq-source-eos  << EOF
 {
