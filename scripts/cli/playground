@@ -29160,8 +29160,19 @@ playground_connector_create_or_update_command() {
           else
               bat $json_file --highlight-line $error_line
           fi
+
+          log "🔧 In next step, you can fix json, save and close the file to continue"
+          playground open --file "${json_file}" --wait
+          json_content=$(cat "$json_file")
+
+          if ! echo "$json_content" | jq -e .  > /dev/null 2>&1
+          then
+              logerror "❌ JSON is still invalid after editing, exiting"
+              exit 1
+          fi
+      else
+          exit 1
       fi
-      exit 1
   fi
 
   is_create=1
