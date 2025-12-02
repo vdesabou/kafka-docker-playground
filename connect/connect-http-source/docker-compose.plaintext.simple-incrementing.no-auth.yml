@@ -1,0 +1,16 @@
+---
+services:
+
+  connect:
+    volumes:
+      - ../../connect/connect-http-source/jcl-over-slf4j-2.0.7.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-http-source/lib/jcl-over-slf4j-2.0.7.jar
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-http-source
+
+  httpserver:
+    build:
+      context: ../../connect/connect-http-source/httpserver-simple-incrementing
+    hostname: httpserver
+    container_name: httpserver
+    ports:
+      - "9006:9006"
