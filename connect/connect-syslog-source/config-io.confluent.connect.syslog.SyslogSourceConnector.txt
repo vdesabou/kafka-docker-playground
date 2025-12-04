@@ -258,7 +258,7 @@ The size of the socket receive buffer in bytes.
 The type of event group to use with the Netty listener. `EPOLL` is only supported on Linux.
 
 	 - Type: STRING
-	 - Default: EPOLL
+	 - Default: NIO
 	 - Importance: LOW
 	 - Required: false
 
