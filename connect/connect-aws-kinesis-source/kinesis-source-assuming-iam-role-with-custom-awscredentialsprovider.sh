@@ -93,6 +93,8 @@ log "Insert records in Kinesis stream"
 # The example shows that a record containing partition key 123 and data "test-message-1" is inserted into kafka_docker_playground.
 aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --data test-message-1 --region $AWS_REGION
 
+playground topic create --topic kinesis_topic
+
 log "Creating Kinesis Source connector"
 playground connector create-or-update --connector kinesis-source  << EOF
 {

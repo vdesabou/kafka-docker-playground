@@ -49,6 +49,8 @@ sleep 60
 log "Insert records in Kinesis stream".
 aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --data test-message-1 --region $AWS_REGION
 
+playground topic create --topic kinesis_topic
+
 log "Creating Kinesis Source connector"
 playground connector create-or-update --connector kinesis-source  << EOF
 {
