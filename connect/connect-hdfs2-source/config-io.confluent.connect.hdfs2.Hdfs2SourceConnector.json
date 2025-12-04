@@ -40,7 +40,7 @@
     "topic.regex.list": "LIST",
     "topics.dir": "topics",
     "transforms.AddPrefix.negate": "false",
-    "transforms.AddPrefix.plugin.version": "8.1.0-ce",
+    "transforms.AddPrefix.plugin.version": "8.1.1-ce",
     "transforms.AddPrefix.predicate": "",
     "transforms.AddPrefix.regex": "",
     "transforms.AddPrefix.replacement": "",
