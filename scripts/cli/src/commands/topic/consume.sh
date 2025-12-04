@@ -230,7 +230,12 @@ do
     log "✨ Display content of topic $topic, it contains $nb_messages messages, but displaying only --max-messages=$max_messages"
     nb_messages=$max_messages
   else
-    log "✨ Display content of topic $topic, it contains $nb_messages messages"
+    if [ "$isolation_level" == "read_committed" ]
+    then
+        log "🔒 --isolation-level is set to $isolation_level, only committed messages will be displayed"
+    else
+        log "✨ Display content of topic $topic, it contains $nb_messages messages"
+    fi
   fi
 
   if [[ -n "$grep_string" ]]
@@ -291,7 +296,21 @@ fi
   nottailing2=""
   if [ ! -n "$tail" ]
   then
-    nottailing1="--from-beginning --max-messages $nb_messages"
+    if [ "$isolation_level" == "read_committed" ]
+    then
+        if [[ -n "$min_expected_messages" ]] && [ "$min_expected_messages" != "0" ]
+        then
+            log "✨ Display content of topic $topic, it contains $nb_messages messages, but this value may be lower than expected due to uncommitted messages, using --max-messages=$min_expected_messages"
+            nottailing1="--from-beginning --max-messages $min_expected_messages"
+        else
+            log "✨ Display content of topic $topic, it contains $nb_messages messages, but this value may be lower than expected due to uncommitted messages, using --max-messages=1"
+            nottailing1="--from-beginning --max-messages 1"
+        fi
+        
+    else
+        nottailing1="--from-beginning --max-messages $nb_messages"
+    fi
+
     if [[ ! -n "$timestamp_field" ]]
     then
       nottailing2="timeout $timeout"
