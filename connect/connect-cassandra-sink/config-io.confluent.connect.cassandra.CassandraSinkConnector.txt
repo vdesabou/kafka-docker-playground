@@ -15,7 +15,7 @@ Class for the 'createKey' transformation.
 Version of the 'createKey' transformation.
 
 	 - Type: STRING
-	 - Default: 8.1.0-ce
+	 - Default: 8.1.1-ce
 	 - Importance: HIGH
 	 - Required: false
 
