@@ -36,7 +36,7 @@ Class for the 'MaskField' transformation.
 Version of the 'MaskField' transformation.
 
 	 - Type: STRING
-	 - Default: 8.1.0-ce
+	 - Default: 8.1.1-ce
 	 - Importance: HIGH
 	 - Required: false
 

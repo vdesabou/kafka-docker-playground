@@ -47,7 +47,7 @@
     "topics.regex": "",
     "transforms.MaskField.fields": "",
     "transforms.MaskField.negate": "false",
-    "transforms.MaskField.plugin.version": "8.1.0-ce",
+    "transforms.MaskField.plugin.version": "8.1.1-ce",
     "transforms.MaskField.predicate": "",
     "transforms.MaskField.replace.null.with.default": "true",
     "transforms.MaskField.replacement": "",
