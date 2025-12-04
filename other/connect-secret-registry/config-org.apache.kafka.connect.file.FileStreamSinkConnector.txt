@@ -15,7 +15,7 @@ Class for the 'InsertField' transformation.
 Version of the 'InsertField' transformation.
 
 	 - Type: STRING
-	 - Default: 8.1.0-ce
+	 - Default: 8.1.1-ce
 	 - Importance: HIGH
 	 - Required: false
 
