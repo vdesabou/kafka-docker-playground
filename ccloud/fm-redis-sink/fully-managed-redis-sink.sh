@@ -11,7 +11,7 @@ display_ngrok_warning
 bootstrap_ccloud_environment
 
 set +e
-playground topic delete --topic users
+playground topic delete --topic redis_topic
 set -e
 
 docker compose build
@@ -46,8 +46,8 @@ do
 done
 
 
-log "Sending messages to topic users"
-playground topic produce -t users --nb-messages 3 --key "key1" << 'EOF'
+log "Sending messages to topic redis_topic"
+playground topic produce -t redis_topic --nb-messages 3 --key "key1" << 'EOF'
 value%g
 EOF
 
@@ -68,7 +68,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "input.data.format": "STRING",
      "redis.hostname": "$NGROK_HOSTNAME",
      "redis.portnumber": "$NGROK_PORT",
-     "topics": "users",
+     "topics": "redis_topic",
      "tasks.max" : "1"
 }
 EOF
@@ -78,9 +78,9 @@ sleep 10
 
 log "Verify data is in Redis"
 docker exec -i redis redis-cli COMMAND GETKEYS "MSET" "key1" "value1" "key2" "value2" "key3" "value3"
-docker exec -i redis redis-cli COMMAND GETKEYS "MSET" "__kafka.offset.users.0" "{\"topic\":\"users\",\"partition\":0,\"offset\":2}" > /tmp/result.log  2>&1
+docker exec -i redis redis-cli COMMAND GETKEYS "MSET" "__kafka.offset.redis_topic.0" "{\"topic\":\"redis_topic\",\"partition\":0,\"offset\":2}" > /tmp/result.log  2>&1
 cat /tmp/result.log
-grep "__kafka.offset.users.0" /tmp/result.log
+grep "__kafka.offset.redis_topic.0" /tmp/result.log
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
