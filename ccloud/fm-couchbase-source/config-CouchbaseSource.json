@@ -21,7 +21,7 @@
     "errors.tolerance": "none",
     "kafka.api.key": "STRING",
     "kafka.api.secret": "PASSWORD",
-    "kafka.auth.mode": "KAFKA_API_KEY",
+    "kafka.auth.mode": "${connect.regional.connector}",
     "kafka.service.account.id": "STRING",
     "key.converter.key.subject.name.strategy": "TopicNameStrategy",
     "name": "STRING",
