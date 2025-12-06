@@ -162,6 +162,8 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
+sleep 5
+
 docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
 USE testDB;
 INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@office.com');
