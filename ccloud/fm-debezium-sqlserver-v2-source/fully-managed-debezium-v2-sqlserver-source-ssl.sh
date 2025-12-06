@@ -157,12 +157,11 @@ playground connector create-or-update --connector $connector_name << EOF
   "database.encrypt": "true",
   "database.truststore": "$base64_truststore",
   "database.truststore.password": "confluent",
+  "streaming.delay.ms": "1",
   "tasks.max": "1"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 180
-
-sleep 5
 
 docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
 USE testDB;
