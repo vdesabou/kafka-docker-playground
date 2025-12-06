@@ -167,8 +167,7 @@ then
           fi
 
           ret=$(choose_connector_tag "$owner/$name")
-          connector_tag=${ret#* }
-          connector_tag=${connector_tag#v}
+          connector_tag=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
           
           if [ -z "$connector_tags" ]; then
             connector_tags="$connector_tag"
@@ -1268,9 +1267,8 @@ then
         fi
 
         ret=$(choose_connector_tag "$owner/$name")
-        connector_tag=${ret#* }
-        connector_tag=${connector_tag#v}
-        
+        connector_tag=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
+
         if [ -z "$connector_tags" ]; then
           connector_tags="$connector_tag"
         else
