@@ -2,8 +2,6 @@
 services:
 
   connect:
-    volumes:
-      - ../../connect/connect-http-v2-sink/jcl-over-slf4j-2.0.7.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-http-v2/lib/jcl-over-slf4j-2.0.7.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-http-v2
       KAFKA_OPTS: "--add-opens=java.base/java.net=ALL-UNNAMED"

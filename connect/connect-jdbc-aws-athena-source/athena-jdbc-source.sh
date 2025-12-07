@@ -56,6 +56,13 @@ export AWS_DEFAULT_REGION=$AWS_REGION
 export AWS_ATHENA_S3_STAGING_DIR=s3://$AWS_BUCKET_NAME/athena
 export AWS_ATHENA_WORK_GROUP=$ATHENA_WORK_GROUP
 
+
+cd ../../connect/connect-jdbc-aws-athena-source
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/
+cp ../../connect/connect-jdbc-aws-athena-source/AthenaJDBC42-2.1.3.1002.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/AthenaJDBC42-2.1.3.1002.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

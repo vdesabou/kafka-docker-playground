@@ -23,6 +23,13 @@ then
      wget -q https://repo.maven.apache.org/maven2/com/singlestore/singlestore-jdbc-client/1.0.1/singlestore-jdbc-client-1.0.1.jar
 fi
 
+
+cd ../../connect/connect-singlestore-sink
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/singlestore-singlestore-kafka-connector/lib/
+cp ../../connect/connect-singlestore-sink/singlestore-jdbc-client-1.0.1.jar ../../confluent-hub/singlestore-singlestore-kafka-connector/lib/singlestore-jdbc-client-1.0.1.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

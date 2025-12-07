@@ -35,7 +35,5 @@ services:
   connect:
     depends_on:
       - kudu
-    volumes:
-        - ../../connect/connect-kudu-sink/ImpalaJDBC42.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-kudu/lib/ImpalaJDBC42.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-kudu

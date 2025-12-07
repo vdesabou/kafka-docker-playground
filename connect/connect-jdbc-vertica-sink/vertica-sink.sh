@@ -22,6 +22,13 @@ then
      rm -f ${DIR}/vertica-client-10.0.1-0.x86_64.tar.gz
 fi
 
+
+cd ../../connect/connect-jdbc-vertica-sink
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/
+cp ../../connect/connect-jdbc-vertica-sink/vertica-jdbc.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/vertica-jdbc.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

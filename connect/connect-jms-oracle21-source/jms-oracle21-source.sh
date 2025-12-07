@@ -14,6 +14,15 @@ fi
 create_or_get_oracle_image "LINUX.X64_213000_db_home.zip" "../../connect/connect-cdc-oracle21-source/ora-setup-scripts-cdb-table"
 
 # required to make utils.sh script being able to work, do not remove:
+
+cd ../../connect/connect-jms-oracle21-source
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jms/lib/
+cp ../../connect/connect-jms-oracle21-source/ojdbc8.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/ojdbc8.jar
+cp ../../connect/connect-jms-oracle21-source/aqapi.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/aqapi.jar
+cp ../../connect/connect-jms-oracle21-source/jta-1.1.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/jta-1.1.jar
+cd -
 # PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 #playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

@@ -46,6 +46,13 @@ then
      exit 1
 fi
 
+
+cd ../../connect/connect-marketo-source
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-marketo/lib/
+cp ../../connect/connect-marketo-source/jcl-over-slf4j-2.0.7.jar ../../confluent-hub/confluentinc-kafka-connect-marketo/lib/jcl-over-slf4j-2.0.7.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

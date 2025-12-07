@@ -28,7 +28,5 @@ services:
   connect:
     depends_on:
       - mariadb
-    volumes:
-      - ../../connect/connect-debezium-mariadb-source/debezium-connector-mariadb:/usr/share/confluent-hub-components/debezium-connector-mariadb/jars
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components

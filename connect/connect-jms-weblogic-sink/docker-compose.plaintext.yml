@@ -21,8 +21,6 @@ services:
   connect:
     depends_on:
       - weblogic-jms
-    volumes:
-        - ../../connect/connect-jms-weblogic-sink/jms-receiver/lib/wlthint3client.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/wlthint3client.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink
       # JDK 17

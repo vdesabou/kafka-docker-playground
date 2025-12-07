@@ -16,9 +16,5 @@ services:
   connect:
     depends_on:
       - oracle
-    volumes:
-        - ../../connect/connect-jms-oracle21-sink/ojdbc8.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/ojdbc8.jar
-        - ../../connect/connect-jms-oracle21-sink/aqapi.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/aqapi.jar
-        - ../../connect/connect-jms-oracle21-sink/jta-1.1.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/jta-1.1.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink

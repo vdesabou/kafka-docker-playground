@@ -27,7 +27,5 @@ services:
   connect:
     depends_on:
       - mysql
-    volumes:
-        - ../../connect/connect-jdbc-mysql-source/mysql-connector-j-8.4.0.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-j-8.4.0.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc

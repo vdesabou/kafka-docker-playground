@@ -67,8 +67,6 @@ services:
     depends_on:
       - hive-server
       - presto-coordinator
-    volumes:
-        - ../../connect/connect-jdbc-hive-source/hive-jdbc-3.1.2-standalone.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/hive-jdbc-3.1.2-standalone.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
 

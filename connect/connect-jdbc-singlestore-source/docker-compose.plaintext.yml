@@ -12,7 +12,5 @@ services:
   connect:
     depends_on:
       - singlestore
-    volumes:
-        - ../../connect/connect-jdbc-singlestore-source/mysql-connector-java-5.1.45.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-5.1.45.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc

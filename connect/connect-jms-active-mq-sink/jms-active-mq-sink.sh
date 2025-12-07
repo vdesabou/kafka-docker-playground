@@ -19,6 +19,13 @@ then
 fi
 cd -
 
+
+cd ../../connect/connect-jms-active-mq-sink
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jms-sink/lib/
+cp ../../connect/connect-jms-active-mq-sink/activemq-all-5.15.4.jar ../../confluent-hub/confluentinc-kafka-connect-jms-sink/lib/activemq-all-5.15.4.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

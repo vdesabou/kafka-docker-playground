@@ -12,7 +12,5 @@ services:
   connect:
     depends_on:
       - tibco-ems
-    volumes:
-        - ../../connect/connect-jms-tibco-sink/tibjms.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/tibjms.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink

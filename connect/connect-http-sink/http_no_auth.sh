@@ -18,6 +18,12 @@ then
 fi
 cd -
 
+cd ../../connect/connect-http-sink
+# Copy JAR to confluent-hub
+mkdir -p ${DIR}/../../confluent-hub/confluentinc-kafka-connect-http/lib/
+cp ../../connect/connect-http-sink/jcl-over-slf4j-2.0.7.jar ${DIR}/../../confluent-hub/confluentinc-kafka-connect-http/lib/
+cd -
+
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

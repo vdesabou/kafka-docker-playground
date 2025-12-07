@@ -61,6 +61,14 @@ done
 
 handle_aws_credentials
 
+
+cd ../../connect/connect-aws-s3-sink
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-s3/lib/
+if [ -f "connect/connect-aws-s3-sink/$COMPONENT_NAME/target/awscredentialsprovider-1.0.0-jar-with-dependencies.jar" ]; then
+    cp connect/connect-aws-s3-sink/$COMPONENT_NAME/target/awscredentialsprovider-1.0.0-jar-with-dependencies.jar ../../confluent-hub/confluentinc-kafka-connect-s3/lib/awscredentialsprovider-1.0.0-jar-with-dependencies.jar
+fi
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.backup-and-restore-assuming-iam-role-with-custom-aws-credential-provider.yml"
 

@@ -2,7 +2,5 @@
 services:
 
   connect:
-    volumes:
-      - ../../connect/connect-marketo-source/jcl-over-slf4j-2.0.7.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-marketo/lib/jcl-over-slf4j-2.0.7.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-marketo

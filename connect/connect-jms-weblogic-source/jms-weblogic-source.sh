@@ -58,6 +58,13 @@ do
      set -e
 done
 
+
+cd ../../connect/connect-jms-weblogic-source
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jms/lib/
+cp ../../connect/connect-jms-weblogic-source/jms-sender/lib/wlthint3client.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/wlthint3client.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

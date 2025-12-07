@@ -14,7 +14,5 @@ services:
   connect:
     depends_on:
       - mariadb
-    volumes:
-        - ../../connect/connect-jdbc-mariadb-sink/mariadb-java-client-3.2.0.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mariadb-java-client-3.2.0.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc

@@ -43,6 +43,16 @@ else
 fi
 cd -
 
+cd ../../connect/connect-gcp-google-pubsub-source
+
+# Copy JAR files to confluent-hub for GCP pubsub connector
+mkdir -p ../../confluent-hub/pubsub-group-kafka-connector/
+[ -f pubsub-group-kafka-connector-1.3.2.jar ] && cp pubsub-group-kafka-connector-1.3.2.jar ../../confluent-hub/pubsub-group-kafka-connector/
+[ -f grpc-netty-1.70.0.jar ] && cp grpc-netty-1.70.0.jar ../../confluent-hub/pubsub-group-kafka-connector/
+[ -f grpc-rls-1.70.0.jar ] && cp grpc-rls-1.70.0.jar ../../confluent-hub/pubsub-group-kafka-connector/
+
+cd -
+
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

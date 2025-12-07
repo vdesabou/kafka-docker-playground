@@ -138,6 +138,13 @@ USE ROLE SECURITYADMIN;
 GRANT ROLE $PLAYGROUND_CONNECTOR_ROLE TO USER $PLAYGROUND_USER;
 EOF
 
+
+cd ../../connect/connect-jdbc-snowflake-sink
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/
+cp ../../connect/connect-jdbc-snowflake-sink/snowflake-jdbc-3.13.16.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/snowflake-jdbc-3.13.16.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

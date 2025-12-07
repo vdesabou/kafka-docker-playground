@@ -12,7 +12,5 @@ services:
   connect:
     depends_on:
       - amps
-    volumes:
-        - ../../connect/connect-amps-source/amps_client.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-amps/lib/amps_client.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-amps

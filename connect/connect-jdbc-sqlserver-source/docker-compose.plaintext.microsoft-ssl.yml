@@ -20,7 +20,6 @@ services:
     depends_on:
       - sqlserver
     volumes:
-        - ../../connect/connect-jdbc-sqlserver-source/sqljdbc_12.2/enu/mssql-jdbc-12.2.0.jre11.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mssql-jdbc-12.2.0.jre11.jar
         - ../../connect/connect-jdbc-sqlserver-source/ssl/truststore.jks:/tmp/truststore.jks
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc

@@ -22,8 +22,6 @@ services:
     depends_on:
       - ibmmq
     volumes:
-        - ../../connect/connect-ibm-mq-source/com.ibm.mq.allclient.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq/lib/com.ibm.mq.allclient.jar
-        - ../../connect/connect-ibm-mq-source/jms.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq/lib/jms.jar
         - ../../connect/connect-ibm-mq-source/security/kafka.connect.truststore.jks:/tmp/truststore.jks
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq

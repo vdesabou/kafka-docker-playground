@@ -73,6 +73,13 @@ then
      exit 1
 fi
 
+
+cd ../../connect/connect-databricks-delta-lake-sink
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-databricks-delta-lake/lib/
+cp ../../connect/connect-databricks-delta-lake-sink/SparkJDBC42.jar ../../confluent-hub/confluentinc-kafka-connect-databricks-delta-lake/lib/SparkJDBC42.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

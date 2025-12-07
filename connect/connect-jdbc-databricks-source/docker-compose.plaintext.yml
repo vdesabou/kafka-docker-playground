@@ -9,8 +9,6 @@ services:
       DATABRICKS_ACCESS_TOKEN: "${DATABRICKS_TOKEN}"
     
   connect:
-    volumes:
-      - ../../connect/connect-jdbc-databricks-source/DatabricksJDBC42.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/DatabricksJDBC42.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
       KAFKA_OPTS: "--add-opens=java.base/java.nio=org.apache.arrow.memory.core,ALL-UNNAMED"

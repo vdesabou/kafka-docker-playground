@@ -12,6 +12,15 @@ fi
 
 source ${DIR}/../../scripts/utils.sh
 
+
+cd ../../connect/connect-http-source
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-http-source/lib/
+cp ../../connect/connect-http-source/jcl-over-slf4j-2.0.7.jar ../../confluent-hub/confluentinc-kafka-connect-http-source/lib/jcl-over-slf4j-2.0.7.jar
+cp ../../connect/connect-http-source/jcl-over-slf4j-2.0.7.jar ../../confluent-hub/confluentinc-kafka-connect-http-source/lib/jcl-over-slf4j-2.0.7.jar
+cp ../../connect/connect-http-source/jcl-over-slf4j-2.0.7.jar ../../confluent-hub/confluentinc-kafka-connect-http-source/lib/jcl-over-slf4j-2.0.7.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.oauth2.yml"
 

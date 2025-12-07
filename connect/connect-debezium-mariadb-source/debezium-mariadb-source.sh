@@ -54,6 +54,16 @@ else
      log "🛑 SQL_DATAGEN is not set"
 fi
 
+cd ../../connect/connect-debezium-mariadb-source
+
+# Copy debezium-connector-mariadb directory to confluent-hub
+if [ -d debezium-connector-mariadb ]; then
+    mkdir -p ../../confluent-hub/debezium-connector-mariadb/jars/
+    cp -r debezium-connector-mariadb/* ../../confluent-hub/debezium-connector-mariadb/jars/
+fi
+
+cd -
+
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

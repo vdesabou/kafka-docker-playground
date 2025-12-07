@@ -52,6 +52,19 @@ then
 fi
 cd -
 
+
+cd ../../connect/connect-debezium-oracle19-source
+
+# Copy debezium-connector-oracle directory to confluent-hub
+if [ -d debezium-connector-oracle ]; then
+    mkdir -p ../../confluent-hub/debezium-connector-oracle/jars/
+    cp -r debezium-connector-oracle/* ../../confluent-hub/debezium-connector-oracle/jars/
+fi
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/debezium-connector-oracle/lib/
+cp ../../connect/connect-debezium-oracle19-source/ojdbc8.jar ../../confluent-hub/debezium-connector-oracle/lib/ojdbc8.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

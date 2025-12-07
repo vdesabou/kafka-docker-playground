@@ -4,12 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f ${DIR}/mysql-connector-java-5.1.45.jar ]
+cd ../../connect/connect-jdbc-mysql-source
+if [ ! -f ${PWD}/mysql-connector-j-8.4.0.jar ]
 then
-     log "Downloading mysql-connector-java-5.1.45.jar"
-     wget -q https://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.45/mysql-connector-java-5.1.45.jar
+     log "Downloading mysql-connector-j-8.4.0.jar"
+     wget -q https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.4.0/mysql-connector-j-8.4.0.jar
 fi
-
+cd -
 
 for component in producer consumer streams
 do
@@ -24,6 +25,13 @@ do
      fi
      set -e
 done
+
+cd ../../connect/connect-jdbc-mysql-source
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/
+cp ../../connect/connect-jdbc-mysql-source/mysql-connector-j-8.4.0.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/mysql-connector-j-8.4.0.jar
+cd -
 
 ${DIR}/../../environment/mdc-plaintext/start.sh "${PWD}/docker-compose.mdc-plaintext.yml"
 

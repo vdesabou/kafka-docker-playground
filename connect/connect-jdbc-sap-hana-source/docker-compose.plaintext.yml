@@ -22,7 +22,5 @@ services:
       - HXEHana1
 
   connect:
-    volumes:
-      - ../../connect/connect-jdbc-sap-hana-source/ngdbc-2.12.9.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/ngdbc-2.12.9.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc

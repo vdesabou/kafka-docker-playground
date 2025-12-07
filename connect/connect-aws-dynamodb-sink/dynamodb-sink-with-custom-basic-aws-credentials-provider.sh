@@ -83,6 +83,13 @@ function cleanup_cloud_resources {
 }
 trap cleanup_cloud_resources EXIT
 
+
+cd ../../connect/connect-aws-dynamodb-sink
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-aws-dynamodb/lib/
+cp ../../connect/connect-aws-dynamodb-sink/basicawscredentialsprovider/target/awscredentialsprovider-1.0.0-jar-with-dependencies.jar ../../confluent-hub/confluentinc-kafka-connect-aws-dynamodb/lib/awscredentialsprovider-1.0.0-jar-with-dependencies.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.with-custom-basic-aws-credentials-provider.yml"
 

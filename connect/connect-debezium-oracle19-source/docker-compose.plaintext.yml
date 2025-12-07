@@ -25,9 +25,6 @@ services:
       ORACLE_PWD: Admin123
 
   connect:
-    volumes:
-      - ../../connect/connect-debezium-oracle19-source/debezium-connector-oracle:/usr/share/confluent-hub-components/debezium-connector-oracle/jars
-      - ../../connect/connect-debezium-oracle19-source/ojdbc8.jar:/usr/share/confluent-hub-components/debezium-connector-oracle/lib/ojdbc8.jar
     depends_on:
       - oracle
     environment:

@@ -12,7 +12,5 @@ services:
   connect:
     depends_on:
       - singlestore
-    volumes:
-        - ../../connect/connect-singlestore-sink/singlestore-jdbc-client-1.0.1.jar:/usr/share/confluent-hub-components/singlestore-singlestore-kafka-connector/lib/singlestore-jdbc-client-1.0.1.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/singlestore-singlestore-kafka-connector

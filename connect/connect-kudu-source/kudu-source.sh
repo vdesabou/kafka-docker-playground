@@ -20,6 +20,13 @@ then
      exit 1
 fi
 
+
+cd ../../connect/connect-kudu-source
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-kudu/lib/
+cp ../../connect/connect-kudu-source/ImpalaJDBC42.jar ../../confluent-hub/confluentinc-kafka-connect-kudu/lib/ImpalaJDBC42.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

@@ -57,6 +57,16 @@ then
 fi
 cd -
 
+
+cd ../../connect/connect-cdc-xstream-oracle19-source
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-oracle-xstream-cdc-source/lib/
+cp ../../connect/connect-cdc-xstream-oracle19-source/lib/instantclient/ojdbc8.jar ../../confluent-hub/confluentinc-kafka-connect-oracle-xstream-cdc-source/lib/ojdbc8.jar
+cp ../../connect/connect-cdc-xstream-oracle19-source/lib/instantclient/xstreams.jar ../../confluent-hub/confluentinc-kafka-connect-oracle-xstream-cdc-source/lib/xstreams.jar
+cp ../../connect/connect-cdc-xstream-oracle19-source/lib/instantclient/ojdbc8.jar ../../confluent-hub/confluentinc-kafka-connect-oracle-xstream-cdc-source/lib/ojdbc8.jar
+cp ../../connect/connect-cdc-xstream-oracle19-source/lib/instantclient/xstreams.jar ../../confluent-hub/confluentinc-kafka-connect-oracle-xstream-cdc-source/lib/xstreams.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

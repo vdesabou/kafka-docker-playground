@@ -19,6 +19,13 @@ then
 fi
 cd -
 
+
+cd ../../connect/connect-jdbc-mariadb-sink
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/
+cp ../../connect/connect-jdbc-mariadb-sink/mariadb-java-client-3.2.0.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/mariadb-java-client-3.2.0.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

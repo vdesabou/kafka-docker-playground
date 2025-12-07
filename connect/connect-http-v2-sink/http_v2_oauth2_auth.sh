@@ -31,6 +31,13 @@ then
 fi
 cd -
 
+
+cd ../../connect/connect-http-v2-sink
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-http-v2/lib/
+cp ../../connect/connect-http-v2-sink/jcl-over-slf4j-2.0.7.jar ../../confluent-hub/confluentinc-kafka-connect-http-v2/lib/jcl-over-slf4j-2.0.7.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.oauth2.yml"
 

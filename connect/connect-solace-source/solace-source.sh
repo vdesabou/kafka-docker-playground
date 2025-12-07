@@ -38,6 +38,13 @@ then
 fi
 cd -
 
+
+cd ../../connect/connect-solace-source
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-solace-source/lib/
+cp ../../connect/connect-solace-source/sol-jms-10.6.4.jar ../../confluent-hub/confluentinc-kafka-connect-solace-source/lib/sol-jms-10.6.4.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

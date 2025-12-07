@@ -3,9 +3,5 @@ services:
   connect:
     volumes:
         - ../../connect/connect-gcp-google-pubsub-source/keyfile.json:/tmp/keyfile.json:ro
-        - ../../connect/connect-gcp-google-pubsub-source/pubsub-group-kafka-connector-1.3.2.jar:/usr/share/confluent-hub-components/pubsub-group-kafka-connector/pubsub-group-kafka-connector-1.3.2.jar
-
-        - ../../connect/connect-gcp-google-pubsub-source/grpc-netty-1.70.0.jar:/usr/share/confluent-hub-components/pubsub-group-kafka-connector/grpc-netty-1.70.0.jar
-        - ../../connect/connect-gcp-google-pubsub-source/grpc-rls-1.70.0.jar:/usr/share/confluent-hub-components/pubsub-group-kafka-connector/grpc-rls-1.70.0.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/java/,/usr/share/confluent-hub-components/

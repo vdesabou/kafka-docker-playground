@@ -134,7 +134,6 @@ services:
     ports:
       - "8083:8083"
     volumes:
-      - ../../other/monitoring-demo/mysql-connector-java-5.1.45.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-5.1.45.jar
       - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
     environment:
       CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"

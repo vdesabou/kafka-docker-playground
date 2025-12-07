@@ -97,6 +97,13 @@ sed -e "s|:AZURE_SQL_URL:|$AZURE_SQL_URL|g" \
     -e "s|:AZURE_DATA_WAREHOUSE_NAME:|$AZURE_DATA_WAREHOUSE_NAME|g" \
     ../../connect/connect-jdbc-azure-synapse-analytics-source/data.template > ../../connect/connect-jdbc-azure-synapse-analytics-source/data
 
+
+cd ../../connect/connect-jdbc-azure-synapse-analytics-source
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/
+cp ../../connect/connect-jdbc-azure-synapse-analytics-source/sqljdbc_12.2/enu/mssql-jdbc-12.2.0.jre11.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/mssql-jdbc-12.2.0.jre11.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

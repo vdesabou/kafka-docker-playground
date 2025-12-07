@@ -11,7 +11,5 @@ services:
   connect:
     depends_on:
       - activemq
-    volumes:
-        - ../../connect/connect-jms-active-mq-sink/activemq-all-5.15.4.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/activemq-all-5.15.4.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink

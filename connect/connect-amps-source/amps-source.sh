@@ -43,6 +43,13 @@ then
      cd ${OLDDIR}
 fi
 
+cd ../../connect/connect-amps-source
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-amps/lib/
+cp ../../connect/connect-amps-source/amps_client.jar ../../confluent-hub/confluentinc-kafka-connect-amps/lib/amps_client.jar
+cd -
+
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

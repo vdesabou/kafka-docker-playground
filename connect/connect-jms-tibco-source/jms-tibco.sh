@@ -41,6 +41,14 @@ then
      cd ${OLDDIR}
 fi
 
+
+cd ../../connect/connect-jms-tibco-source
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jms/lib/
+cp ../../connect/connect-jms-tibco-source/tibjms.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/tibjms.jar
+cp ../../connect/connect-jms-tibco-source/jms-2.0.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/jms-2.0.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

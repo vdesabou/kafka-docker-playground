@@ -17,7 +17,6 @@ services:
     depends_on:
       - ibmdb2
     volumes:
-        - ../../connect/connect-jdbc-ibmdb2-source/db2jcc4.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/db2jcc4.jar
         - ../../connect/connect-jdbc-ibmdb2-source/security:/etc/kafka/secrets
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc

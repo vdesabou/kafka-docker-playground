@@ -37,6 +37,18 @@ then
      cp ${PWD}/install/wmq/JavaSE/lib/com.ibm.mq.allclient.jar ${PWD}/
 fi
 cd -
+
+cd ../../connect/connect-ibm-mq-sink
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-ibmmq-sink/lib/
+cp ../../connect/connect-ibm-mq-sink/com.ibm.mq.allclient.jar ../../confluent-hub/confluentinc-kafka-connect-ibmmq-sink/lib/com.ibm.mq.allclient.jar
+cp ../../connect/connect-ibm-mq-sink/jms.jar ../../confluent-hub/confluentinc-kafka-connect-ibmmq-sink/lib/jms.jar
+cp ../../connect/connect-ibm-mq-sink/com.ibm.mq.allclient.jar ../../confluent-hub/confluentinc-kafka-connect-ibmmq-sink/lib/com.ibm.mq.allclient.jar
+cp ../../connect/connect-ibm-mq-sink/jms.jar ../../confluent-hub/confluentinc-kafka-connect-ibmmq-sink/lib/jms.jar
+cp ../../connect/connect-ibm-mq-sink/com.ibm.mq.allclient.jar ../../confluent-hub/confluentinc-kafka-connect-ibmmq-sink/lib/com.ibm.mq.allclient.jar
+cp ../../connect/connect-ibm-mq-sink/jms.jar ../../confluent-hub/confluentinc-kafka-connect-ibmmq-sink/lib/jms.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

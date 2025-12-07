@@ -42,6 +42,14 @@ then
      wget -q https://repo1.maven.org/maven2/commons-lang/commons-lang/2.6/commons-lang-2.6.jar
 fi
 
+
+cd ../../connect/connect-jms-solace-source
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jms/lib/
+cp ../../connect/connect-jms-solace-source/sol-jms-10.6.4.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/sol-jms-10.6.4.jar
+cp ../../connect/connect-jms-solace-source/commons-lang-2.6.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/commons-lang-2.6.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

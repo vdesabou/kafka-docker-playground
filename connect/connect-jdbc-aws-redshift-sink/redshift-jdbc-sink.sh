@@ -22,6 +22,13 @@ fi
 
 handle_aws_credentials
 
+
+cd ../../connect/connect-jdbc-aws-redshift-sink
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/
+cp ../../connect/connect-jdbc-aws-redshift-sink/redshift-jdbc42-2.1.0.17/redshift-jdbc42-2.1.0.17.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/redshift-jdbc42-2.1.0.17.jar
+cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
