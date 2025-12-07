@@ -27,7 +27,9 @@ then
      rm -rf /tmp/TIB_ems-ce_8.5.1
      unzip ../../connect/connect-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip -d /tmp/
      tar xvfz /tmp/TIB_ems-ce_8.5.1/tar/TIB_ems-ce_8.5.1_linux_x86_64-java_client.tar.gz opt/tibco/ems/8.5/lib/tibjms.jar
+     tar xvfz /tmp/TIB_ems-ce_8.5.1/tar/TIB_ems-ce_8.5.1_linux_x86_64-java_client.tar.gz opt/tibco/ems/8.5/lib/jms-2.0.jar
      cp ../../connect/connect-tibco-source/opt/tibco/ems/8.5/lib/tibjms.jar ../../connect/connect-tibco-source/
+     cp ../../connect/connect-tibco-source/opt/tibco/ems/8.5/lib/jms-2.0.jar ../../connect/connect-tibco-source/
      rm -rf ../../connect/connect-tibco-source/opt
 fi
 
