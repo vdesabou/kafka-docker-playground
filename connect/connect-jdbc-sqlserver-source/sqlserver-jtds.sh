@@ -33,14 +33,6 @@ else
      log "🛑 SQL_DATAGEN is not set"
 fi
 
-
-cd ../../connect/connect-jdbc-sqlserver-source
-
-# Copy JAR files to confluent-hub
-mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/
-cp ../../connect/connect-jdbc-sqlserver-source/sqljdbc_12.2/enu/mssql-jdbc-12.2.0.jre11.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/mssql-jdbc-12.2.0.jre11.jar
-cp ../../connect/connect-jdbc-sqlserver-source/sqljdbc_12.2/enu/mssql-jdbc-12.2.0.jre11.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/mssql-jdbc-12.2.0.jre11.jar
-cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.jtds.yml"
 
@@ -73,19 +65,19 @@ EOF
 log "Creating JDBC SQL Server (with JTDS driver) source connector"
 playground connector create-or-update --connector sqlserver-source  << EOF
 {
-              "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-              "tasks.max": "1",
-              "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433/testDB",
-              "connection.user": "sa",
-              "connection.password": "Password!",
-              "table.whitelist": "customers",
-              "mode": "incrementing",
-              "incrementing.column.name": "id",
-              "topic.prefix": "sqlserver-",
-              "validate.non.null":"false",
-              "errors.log.enable": "true",
-              "errors.log.include.messages": "true"
-          }
+    "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+    "tasks.max": "1",
+    "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433/testDB",
+    "connection.user": "sa",
+    "connection.password": "Password!",
+    "table.whitelist": "customers",
+    "mode": "incrementing",
+    "incrementing.column.name": "id",
+    "topic.prefix": "sqlserver-",
+    "validate.non.null":"false",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
+}
 EOF
 
 sleep 5
