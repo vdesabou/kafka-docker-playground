@@ -349,7 +349,8 @@ playground connector create-or-update --connector cdc-xstream-oracle-source << E
 }
 EOF
 
-sleep 5
+log "sleeping some time to capture post initial snapshot records"
+sleep 10
 
 log "Insert 2 customers in CUSTOMERS table"
 docker exec -i oracle sqlplus c\#\#cfltuser/password@//localhost:1521/ORCLCDB << EOF
