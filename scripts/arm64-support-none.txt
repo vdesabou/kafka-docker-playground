@@ -26,3 +26,8 @@ connect/connect-kudu-sink
 connect/connect-kudu-source
 connect/connect-mapr-sink
 connect/connect-pivotal-gemfire-sink
+
+connect/connect-jms-tibco-sink
+connect/connect-jms-tibco-source
+connect/connect-tibco-sink
+connect/connect-tibco-source
