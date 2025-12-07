@@ -50,13 +50,6 @@ then
      wget -q https://repo1.maven.org/maven2/javax/transaction/jta/1.1/jta-1.1.jar
 fi
 
-# Copy JAR files to confluent-hub
-mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jms/lib/
-cp ../../connect/connect-jms-oracle21-source/ojdbc8.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/ojdbc8.jar
-cp ../../connect/connect-jms-oracle21-source/aqapi.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/aqapi.jar
-cp ../../connect/connect-jms-oracle21-source/jta-1.1.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/jta-1.1.jar
-cd -
-
 if [[ "$OSTYPE" == "darwin"* ]]
 then
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
@@ -65,6 +58,13 @@ else
     # on CI, docker is run as runneradmin user, need to use sudo
     sudo chmod -R a+rw .
 fi
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jms/lib/
+cp ../../connect/connect-jms-oracle21-source/ojdbc8.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/ojdbc8.jar
+cp ../../connect/connect-jms-oracle21-source/aqapi.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/aqapi.jar
+cp ../../connect/connect-jms-oracle21-source/jta-1.1.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/jta-1.1.jar
+cd -
 
 set_profiles
 docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f "${PWD}/docker-compose.plaintext.yml" ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} up -d --quiet-pull
