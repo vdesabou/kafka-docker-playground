@@ -42,6 +42,17 @@ cd ../../connect/connect-jdbc-ibmdb2-source
 rm -f db2jcc4.jar
 log "Getting db2jcc4.jar"
 docker cp ibmdb2:/opt/ibm/db2/V11.5/java/db2jcc4.jar db2jcc4.jar
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    chmod -R a+rw .
+else
+    # on CI, docker is run as runneradmin user, need to use sudo
+    ls -lrt
+    sudo chmod -R a+rw .
+    ls -lrt
+fi
+cp db2jcc4.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/db2jcc4.jar
 cd -
 
 

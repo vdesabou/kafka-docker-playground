@@ -42,6 +42,17 @@ cd ../../connect/connect-jdbc-ibmdb2-sink
 rm -f db2jcc4.jar
 log "Getting db2jcc4.jar"
 docker cp ibmdb2:/opt/ibm/db2/V11.5/java/db2jcc4.jar db2jcc4.jar
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    chmod -R a+rw .
+else
+    # on CI, docker is run as runneradmin user, need to use sudo
+    ls -lrt
+    sudo chmod -R a+rw .
+    ls -lrt
+fi
+cp db2jcc4.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/db2jcc4.jar
 cd -
 
 playground container logs --container ibmdb2 --wait-for-log "Setup has completed" --max-wait 600
@@ -112,13 +123,6 @@ wait_container_ready
 
 # Keep it for utils.sh
 
-cd ../../connect/connect-jdbc-ibmdb2-sink
-
-# Copy JAR files to confluent-hub
-mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/
-cp ../../connect/connect-jdbc-ibmdb2-sink/db2jcc4.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/db2jcc4.jar
-cp ../../connect/connect-jdbc-ibmdb2-sink/db2jcc4.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/db2jcc4.jar
-cd -
 # PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 #playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssl.yml"
 
