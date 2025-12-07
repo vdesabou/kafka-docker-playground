@@ -1570,8 +1570,11 @@
               "names": [
                 "--action"
               ],
-              "argument": "enable",
-              "description": "🟢 enable or disable\n\nDefault value: enable\n\nAllowed values: enable, disable\n"
+              "argument": [
+                "start",
+                "stop"
+              ],
+              "description": "🟢 start or stop\n\nRequired: ✓ Yes\n\nAllowed values: start, stop\n"
             }
           ]
         },

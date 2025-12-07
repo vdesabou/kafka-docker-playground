@@ -2097,7 +2097,7 @@ commands:
           - $(playground get-docker-ports)
         help: |-
           Port on which tcp traffic should be blocked
-      - &action
+      - &action_start_stop
         long: --action
         allowed: [start, stop]
         arg: action
@@ -2125,7 +2125,7 @@ commands:
           - ssl_handshake: Enable SSL handshake debugging, i.e -Djavax.net.debug=ssl:handshake
           - class_loading: Enable class loading debugging, i.e -verbose:class
           - kerberos: Enable Kerberos debugging, i.e -Dsun.security.krb5.debug=true
-      - &action
+      - &action_enable_disable
         long: --action
         allowed: [enable, disable]
         arg: action
@@ -2190,7 +2190,7 @@ commands:
         default: ".*"
         help: |-
           method name to instrument (it supports regex like .*find.*)
-      - *action
+      - *action_enable_disable
     examples:
     - playground debug jscissors
     - playground debug jscissors --container broker
@@ -2205,7 +2205,7 @@ commands:
       Open the jfr file with JDK Mission Control JMC(https://jdk.java.net/jmc/)
     flags:
       - *container
-      - *action
+      - *action_start_stop
     examples:
     - playground debug flight-recorder --action start
     - playground debug flight-recorder --action stop

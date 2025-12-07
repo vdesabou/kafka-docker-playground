@@ -455,7 +455,7 @@ _playground_completions() {
       ;;
 
     *'debug flight-recorder'*'--action')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "enable disable")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "start stop")" -- "$cur")
       ;;
 
     *'tools read-parquet-file'*'--file')

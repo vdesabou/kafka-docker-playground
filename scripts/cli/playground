@@ -4341,10 +4341,9 @@ playground_debug_flight_recorder_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--action ACTION")"
-    printf "    🟢 enable or disable\n"
-    printf "    %s\n" "Allowed: enable, disable"
-    printf "    %s\n" "Default: enable"
+    printf "  %s\n" "$(magenta "--action ACTION (required)")"
+    printf "    🟢 start or stop\n"
+    printf "    %s\n" "Allowed: start, stop"
     echo
 
     # :command.usage_fixed_flags
@@ -21535,13 +21534,13 @@ playground_debug_generate_diagnostics_command() {
   		exit 1
   	fi
 
-  	docker exec $container curl -L https://packages.confluent.io/tools/diagnostics-bundle/diagnostics-bundle-1.0.0.jar -o /tmp/diagnostics-bundle-1.0.0.jar > /dev/null 2>&1
+  	docker exec $container curl -L https://packages.confluent.io/tools/diagnostics-bundle/diagnostics-bundle-1.0.4.jar -o /tmp/diagnostics-bundle-1.0.4.jar > /dev/null 2>&1
 
   	fifo_path="$tmp_dir/collect_fifo"
   	mkfifo "$fifo_path"
 
   	set +e
-  	docker exec $container java -jar /tmp/diagnostics-bundle-1.0.0.jar collect > "$fifo_path" 2>&1 &
+  	docker exec $container java -jar /tmp/diagnostics-bundle-1.0.4.jar collect > "$fifo_path" 2>&1 &
 
   	# Loop through each line in the named pipe
   	while read -r line
@@ -21981,82 +21980,69 @@ playground_debug_flight_recorder_command() {
 
   for container in "${container_array[@]}"
   do
-  	filename="flight-recorder-$container-$(date '+%Y-%m-%d-%H-%M-%S').jfr"
+      filename="flight-recorder-$container-$(date '+%Y-%m-%d-%H-%M-%S').jfr"
 
-  	set +e
-  	docker exec $container type jcmd > /dev/null 2>&1
-  	if [ $? != 0 ]
-  	then
-  		tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
-  		if [ $? != 0 ] || [ "$tag" == "" ]
-  		then
-  			logerror "Could not find current CP version from docker ps"
-  			exit 1
-  		fi
+      set +e
+      docker exec $container type jcmd > /dev/null 2>&1
+      if [ $? != 0 ]
+      then
+          logwarn "jcmd is not installed on container $container, attempting to install jdk 17"
+          playground container change-jdk --version 17
 
-  		logwarn "jcmd is not installed on container $container, attempting to install it"
+          docker exec $container type jcmd > /dev/null 2>&1
+          if [ $? != 0 ]
+          then
+              logerror "❌ jcmd could not be installed on container $container"
+              exit 1
+          fi
+      fi
 
-  		if [[ "$tag" == *ubi8 ]] || version_gt $tag "5.9.0"
-  		then
-  		docker exec --privileged --user root $container bash -c "yum -y install --disablerepo='Confluent*' openjdk"
-  		else
-  		docker exec --privileged --user root $container bash -c "apt-get update && echo openjdk | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*"
-  		fi
-  	fi
-  	docker exec $container type jcmd > /dev/null 2>&1
-  	if [ $? != 0 ]
-  	then
-  		logerror "❌ jcmd could not be installed"
-  		exit 1
-  	fi
-  	set -e
+      case "${action}" in
+          start)
+              set +e
+              output=$(docker exec ${container} jcmd 1 JFR.check)
+              echo "$output" | grep "running" | grep "dump1"
+              if [ $? -eq 0 ]
+              then
+                  logwarn "🛩️ flight recorder is already started !"
+                  exit 0
+              fi
+              set -e
 
-  	case "${action}" in
-  		start)
-  			set +e
-  			output=$(docker exec ${container} jcmd 1 JFR.check)
-  			echo "$output" | grep "running" | grep "dump1"
-  			if [ $? -eq 0 ]
-  			then
-  				logwarn "🛩️ flight recorder is already started !"
-  				exit 0
-  			fi
-  			set -e
-
-  			docker cp ${root_folder}/scripts/cli/all.jfc ${container}:/tmp/all.jfc > /dev/null 2>&1
-  			docker exec ${container} jcmd 1 JFR.start name=dump1 filename=/tmp/${filename} settings=/tmp/all.jfc
-  			if [ $? -eq 0 ]
-  			then
-  				log "🛩️ flight recorder is now started"
-  			else
-  				logerror "❌ Failed to start flight recorder"
-  			fi
-  		;;
-  		stop)
-  			set +e
-  			output=$(docker exec ${container} jcmd 1 JFR.check)
-  			echo "$output" | grep "running" | grep "dump1"
-  			if [ $? -ne 0 ]
-  			then
-  				logerror "🛩️ flight recorder is not started !"
-  				exit 1
-  			fi
-  			set -e
-  			docker exec ${container} jcmd 1 JFR.stop name=dump1 filename=/tmp/${filename}
-  			if [ $? -eq 0 ]
-  			then
-  				log "🛩️ flight recorder is available at ${filename}"
-  				log "use JDK Mission Control JMC (https://jdk.java.net/jmc/) to open it"
-  				docker cp ${container}:/tmp/${filename} ${filename}
-  			else
-  				logerror "❌ Failed to stop flight recorder"
-  			fi
-  		;;
-  		*)
-  			logerror "should not happen"
-  			exit 1
-  		;;
-  	esac
+              docker cp ${root_folder}/scripts/cli/all.jfc ${container}:/tmp/all.jfc > /dev/null 2>&1
+              docker exec ${container} jcmd 1 JFR.start name=dump1 filename=/tmp/${filename} settings=/tmp/all.jfc
+              if [ $? -eq 0 ]
+              then
+                  log "🛩️ flight recorder is now started"
+              else
+                  logerror "❌ Failed to start flight recorder"
+              fi
+          ;;
+          stop)
+              set +e
+              output=$(docker exec ${container} jcmd 1 JFR.check)
+              echo "$output" | grep "running" | grep "dump1"
+              if [ $? -ne 0 ]
+              then
+                  logerror "🛩️ flight recorder is not started !"
+                  exit 1
+              fi
+              set -e
+              docker exec ${container} jcmd 1 JFR.stop name=dump1 filename=/tmp/${filename}
+              if [ $? -eq 0 ]
+              then
+                  log "🛩️ flight recorder is available at ${filename}"
+                  log "use JDK Mission Control JMC (https://jdk.java.net/jmc/) to open it"
+                  docker cp ${container}:/tmp/${filename} ${filename}
+              else
+                  logerror "❌ Failed to stop flight recorder"
+              fi
+          ;;
+          *)
+              logerror "should not happen"
+              exit 1
+          ;;
+      esac
   done
 }
 
@@ -22364,7 +22350,7 @@ playground_container_change_jdk_command() {
       # for 8.x install yum
       playground container exec --root --command "microdnf -y install yum" > /dev/null 2>&1
       set -e
-      log "🤎 Installing Azul JDK ${version} on container ${container}" /usr/lib/jvm/java-11-zulu-openjdk/bin/java
+      log "🤎 Installing Azul JDK ${version} on container ${container}"
       playground container exec --container "${container}" --root --command "yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm ; yum -y install zulu${version}-jdk"
       if [ $? -eq 0 ]
       then
@@ -39864,13 +39850,18 @@ playground_debug_flight_recorder_parse_requirements() {
     esac
   done
 
+  # :command.required_flags_filter
+  if [[ -z ${args['--action']+x} ]]; then
+    printf "missing required flag: --action ACTION\n" >&2
+    exit 1
+  fi
+
   # :command.default_assignments
   [[ -n ${args['--container']:-} ]] || args['--container']="connect"
-  [[ -n ${args['--action']:-} ]] || args['--action']="enable"
 
   # :command.whitelist_filter
-  if [[ ${args['--action']:-} ]] && [[ ! ${args['--action']:-} =~ ^(enable|disable)$ ]]; then
-    printf "%s\n" "--action must be one of: enable, disable" >&2
+  if [[ ${args['--action']:-} ]] && [[ ! ${args['--action']:-} =~ ^(start|stop)$ ]]; then
+    printf "%s\n" "--action must be one of: start, stop" >&2
     exit 1
   fi
 

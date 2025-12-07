@@ -1890,13 +1890,13 @@ subcommands:
             
         - names:
           - --action
-          argument: enable
+          argument: [start, stop]
           description: | 
-            🟢 enable or disable
+            🟢 start or stop
             
-            Default value: enable
+            Required: ✓ Yes
             
-            Allowed values: enable, disable
+            Allowed values: start, stop
             
       - name: log-level
         description: | 

@@ -10,7 +10,7 @@ do
     # for 8.x install yum
     playground container exec --root --command "microdnf -y install yum" > /dev/null 2>&1
     set -e
-    log "🤎 Installing Azul JDK ${version} on container ${container}" /usr/lib/jvm/java-11-zulu-openjdk/bin/java
+    log "🤎 Installing Azul JDK ${version} on container ${container}"
     playground container exec --container "${container}" --root --command "yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm ; yum -y install zulu${version}-jdk"
     if [ $? -eq 0 ]
     then
