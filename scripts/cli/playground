@@ -17148,6 +17148,15 @@ playground_run_command() {
     fi
     rm /tmp/playground-run-command-used
     echo ""
+
+    if [ -z "$GITHUB_RUN_NUMBER" ]
+    then
+      if [ "$original_exit_status" -ne 0 ]
+      then
+          # 💡 Exit the function (and the script) with the captured status
+          exit "$original_exit_status"
+      fi
+    fi
     sleep 3
 
     connector_type=$(playground state get run.connector_type)
