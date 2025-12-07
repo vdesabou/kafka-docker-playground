@@ -27,13 +27,6 @@ fi
 handle_aws_credentials
 
 
-cd ../../connect/connect-aws-kinesis-source
-
-# Copy JAR files to confluent-hub
-mkdir -p ../../confluent-hub/confluentinc-kafka-connect-kinesis/lib/
-if [ -f "${DIR}/../../connect/connect-aws-kinesis-source/$COMPONENT_NAME/target/awscredentialsprovider-1.0.0-jar-with-dependencies.jar" ]; then
-    cp ../../connect/connect-aws-kinesis-source/$COMPONENT_NAME/target/awscredentialsprovider-1.0.0-jar-with-dependencies.jar ../../confluent-hub/confluentinc-kafka-connect-kinesis/lib/awscredentialsprovider-1.0.0-jar-with-dependencies.jar
-fi
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.with-assuming-iam-role.yml"
 
