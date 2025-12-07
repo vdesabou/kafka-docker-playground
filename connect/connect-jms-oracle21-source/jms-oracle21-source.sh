@@ -15,14 +15,6 @@ create_or_get_oracle_image "LINUX.X64_213000_db_home.zip" "../../connect/connect
 
 # required to make utils.sh script being able to work, do not remove:
 
-cd ../../connect/connect-jms-oracle21-source
-
-# Copy JAR files to confluent-hub
-mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jms/lib/
-cp ../../connect/connect-jms-oracle21-source/ojdbc8.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/ojdbc8.jar
-cp ../../connect/connect-jms-oracle21-source/aqapi.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/aqapi.jar
-cp ../../connect/connect-jms-oracle21-source/jta-1.1.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/jta-1.1.jar
-cd -
 # PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 #playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
@@ -43,6 +35,7 @@ docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nol
      exit;
 EOF
 
+cd ../../connect/connect-jms-oracle21-source
 if [ ! -f aqapi.jar ]
 then
      docker cp oracle:/opt/oracle/product/21c/dbhome_1/rdbms/jlib/aqapi.jar aqapi.jar
@@ -56,6 +49,13 @@ then
      # NoClassDefFoundError: javax/transaction/Synchronization
      wget -q https://repo1.maven.org/maven2/javax/transaction/jta/1.1/jta-1.1.jar
 fi
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jms/lib/
+cp ../../connect/connect-jms-oracle21-source/ojdbc8.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/ojdbc8.jar
+cp ../../connect/connect-jms-oracle21-source/aqapi.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/aqapi.jar
+cp ../../connect/connect-jms-oracle21-source/jta-1.1.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/jta-1.1.jar
+cd -
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then

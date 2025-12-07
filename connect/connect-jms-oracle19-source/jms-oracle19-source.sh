@@ -52,10 +52,10 @@ then
 fi
 
 # Copy JAR files to confluent-hub
-mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jms-source/lib/
-cp ../../connect/connect-jms-oracle19-source/ojdbc8.jar ../../confluent-hub/confluentinc-kafka-connect-jms-source/lib/ojdbc8.jar
-cp ../../connect/connect-jms-oracle19-source/aqapi.jar ../../confluent-hub/confluentinc-kafka-connect-jms-source/lib/aqapi.jar
-cp ../../connect/connect-jms-oracle19-source/jta-1.1.jar ../../confluent-hub/confluentinc-kafka-connect-jms-source/lib/jta-1.1.jar
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jms/lib/
+cp ../../connect/connect-jms-oracle19-source/ojdbc8.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/ojdbc8.jar
+cp ../../connect/connect-jms-oracle19-source/aqapi.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/aqapi.jar
+cp ../../connect/connect-jms-oracle19-source/jta-1.1.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/jta-1.1.jar
 cd -
 
 if [[ "$OSTYPE" == "darwin"* ]]
@@ -139,27 +139,27 @@ EOF
 log "Creating JMS Oracle AQ source connector"
 playground connector create-or-update --connector jms-oracle-source  << EOF
 {
-               "connector.class": "io.confluent.connect.jms.JmsSourceConnector",
-               "tasks.max": "1",
-               "kafka.topic": "jms-oracle-topic",
+    "connector.class": "io.confluent.connect.jms.JmsSourceConnector",
+    "tasks.max": "1",
+    "kafka.topic": "jms-oracle-topic",
 
-               "db_url": "jdbc:oracle:thin:@oracle:1521/ORCLCDB",
-               "java.naming.factory.initial": "oracle.jms.AQjmsInitialContextFactory",
-               "java.naming.provider.url": "jdbc:oracle:thin:@oracle:1521/ORCLCDB",
-               "java.naming.security.credentials": "mypassword",
-               "java.naming.security.principal": "C##MYUSER",
-               "jms.destination.name": "PLAYGROUND",
-               "jms.destination.type": "queue",
-               "jms.message.format": "bytes",
-               "jndi.connection.factory": "javax.jms.XAQueueConnectionFactory",
+    "db_url": "jdbc:oracle:thin:@oracle:1521/ORCLCDB",
+    "java.naming.factory.initial": "oracle.jms.AQjmsInitialContextFactory",
+    "java.naming.provider.url": "jdbc:oracle:thin:@oracle:1521/ORCLCDB",
+    "java.naming.security.credentials": "mypassword",
+    "java.naming.security.principal": "C##MYUSER",
+    "jms.destination.name": "PLAYGROUND",
+    "jms.destination.type": "queue",
+    "jms.message.format": "bytes",
+    "jndi.connection.factory": "javax.jms.XAQueueConnectionFactory",
 
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://schema-registry:8081",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1"
+}
 EOF
 
 
