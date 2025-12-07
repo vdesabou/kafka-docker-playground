@@ -11,28 +11,20 @@ then
      exit 111
 fi
 
-
-cd ../../connect/connect-jdbc-sqlserver-sink
-
-# Copy JAR files to confluent-hub
-mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/
-cp ../../connect/connect-jdbc-sqlserver-sink/sqljdbc_12.2/enu/mssql-jdbc-12.2.0.jre11.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/mssql-jdbc-12.2.0.jre11.jar
-cp ../../connect/connect-jdbc-sqlserver-sink/sqljdbc_12.2/enu/mssql-jdbc-12.2.0.jre11.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/mssql-jdbc-12.2.0.jre11.jar
-cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.jtds.yml"
 
 log "Creating JDBC SQL Server (with JTDS driver) sink connector"
 playground connector create-or-update --connector sqlserver-sink  << EOF
 {
-               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-                    "tasks.max": "1",
-                    "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433",
-                    "connection.user": "sa",
-                    "connection.password": "Password!",
-                    "topics": "orders",
-                    "auto.create": "true"
-          }
+    "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+    "tasks.max": "1",
+    "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433",
+    "connection.user": "sa",
+    "connection.password": "Password!",
+    "topics": "orders",
+    "auto.create": "true"
+}
 EOF
 
 log "Sending messages to topic orders"
