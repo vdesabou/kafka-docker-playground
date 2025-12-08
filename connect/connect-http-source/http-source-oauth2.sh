@@ -13,12 +13,17 @@ fi
 source ${DIR}/../../scripts/utils.sh
 
 
+cd ../../connect/connect-http-source/
+if [ ! -f jcl-over-slf4j-2.0.7.jar ]
+then
+     wget -q https://repo1.maven.org/maven2/org/slf4j/jcl-over-slf4j/2.0.7/jcl-over-slf4j-2.0.7.jar
+fi
+cd -
+
 cd ../../connect/connect-http-source
 
 # Copy JAR files to confluent-hub
 mkdir -p ../../confluent-hub/confluentinc-kafka-connect-http-source/lib/
-cp ../../connect/connect-http-source/jcl-over-slf4j-2.0.7.jar ../../confluent-hub/confluentinc-kafka-connect-http-source/lib/jcl-over-slf4j-2.0.7.jar
-cp ../../connect/connect-http-source/jcl-over-slf4j-2.0.7.jar ../../confluent-hub/confluentinc-kafka-connect-http-source/lib/jcl-over-slf4j-2.0.7.jar
 cp ../../connect/connect-http-source/jcl-over-slf4j-2.0.7.jar ../../confluent-hub/confluentinc-kafka-connect-http-source/lib/jcl-over-slf4j-2.0.7.jar
 cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
