@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  oracle:
+    addr: oracle:1532
+    proto: tcp
