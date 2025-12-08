@@ -312,6 +312,7 @@ set -e
 
 log "🔏 copy cwallet.sso to /tmp"
 docker cp oracle:/tmp/server/cwallet.sso /tmp
+base64_cwallet=$(cat /tmp/cwallet.sso | base64 | tr -d '\n')
 
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
@@ -335,7 +336,7 @@ playground connector create-or-update --connector $connector_name << EOF
     "database.user": "c##cfltuser",
 
     "database.tls.mode": "one-way",
-    "database.wallet.file": "/tmp/cwallet.sso",
+    "database.wallet.file": "data:text/plain;base64,$base64_cwallet",
 
     "topic.prefix": "cflt",
     "tasks.max" : "1"
