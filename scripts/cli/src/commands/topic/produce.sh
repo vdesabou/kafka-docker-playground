@@ -1209,16 +1209,16 @@ do
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker exec -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone --property parse.key=true --property key.separator=\"|\" --property parse.headers=true --property headers.delimiter=\"|\" --property headers.separator=\",\" --property headers.key.separator=\":\""
+                            echo "cat /tmp/verbose_input_file.txt | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone --property parse.key=true --property key.separator=\"|\" --property parse.headers=true --property headers.delimiter=\"|\" --property headers.separator=\",\" --property headers.key.separator=\":\""
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone --property parse.key=true --property key.separator="|" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone --property parse.key=true --property key.separator="|" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
                     else
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker exec -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone --property parse.key=true --property key.separator=\"|\""
+                            echo "cat /tmp/verbose_input_file.txt | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone --property parse.key=true --property key.separator=\"|\""
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone --property parse.key=true --property key.separator="|"
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone --property parse.key=true --property key.separator="|"
                     fi
                 else
                     if [[ -n "$headers" ]]
@@ -1226,16 +1226,16 @@ do
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker exec -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone --property parse.headers=true --property headers.delimiter=\"|\" --property headers.separator=\",\" --property headers.key.separator=\":\""
+                            echo "cat /tmp/verbose_input_file.txt | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone --property parse.headers=true --property headers.delimiter=\"|\" --property headers.separator=\",\" --property headers.key.separator=\":\""
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
                     else
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker exec -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone"
+                            echo "cat /tmp/verbose_input_file.txt | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone"
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone
                     fi
                 fi
             fi

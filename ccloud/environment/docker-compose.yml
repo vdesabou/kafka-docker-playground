@@ -62,10 +62,9 @@ services:
       CONNECT_CONFIG_PROVIDERS_FILE_CLASS: 'org.apache.kafka.common.config.provider.FileConfigProvider'
       # Enable topic creation by the connect worker (as auto-topic creation is disabled on Confluent Cloud)
       CONNECT_TOPIC_CREATION_ENABLE: "true"
-      # # https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging
-      # KAFKA_DEBUG: 'true'
+      KAFKA_DEBUG: 'true'
       # # With JDK9+, need to specify address=*:5005, see https://www.baeldung.com/java-application-remote-debugging#from-java9
-      # JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
+      JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
       CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
 
       

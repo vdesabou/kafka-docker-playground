@@ -6,6 +6,11 @@ IFS=' ' read -ra container_array <<< "$containers"
 
 for container in "${container_array[@]}"
 do
+    if [[ "$container" == connect* ]]
+    then
+        log "💫 enable-remote-debugging is already enabled for connect container $container"
+        continue
+    fi
     log "✨ enable remote debugging for $container"
     playground container set-environment-variables --container "${container}" --env "KAFKA_DEBUG: 'true'" --env "JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'"
 
