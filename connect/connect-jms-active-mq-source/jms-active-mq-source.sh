@@ -58,4 +58,24 @@ sleep 5
 log "Verify we have received the data in MyKafkaTopicName topic"
 playground topic consume --topic MyKafkaTopicName --min-expected-messages 1 --timeout 60
 
+sleep 5
 
+log "Asserting that ActiveMQ queue DEV.QUEUE.1 is empty after connector processing"
+log "This tests that commitRecord API properly deletes messages from external system"
+QUEUE_SIZE=$(curl -s -u admin:admin "http://localhost:8161/admin/xml/queues.jsp" | grep -A 5 "DEV.QUEUE.1" | grep "size" | sed 's/.*size=\"\([0-9]*\)\".*/\1/')
+
+if [ -z "$QUEUE_SIZE" ]; then
+    logerror "❌ Failed to retrieve queue size from ActiveMQ"
+    exit 1
+fi
+
+log "Current queue size for DEV.QUEUE.1: $QUEUE_SIZE"
+
+if [ "$QUEUE_SIZE" -eq 0 ]; then
+    log "✅ SUCCESS: ActiveMQ queue DEV.QUEUE.1 is empty - message was successfully consumed and deleted"
+else
+    logerror "❌ FAILURE: Messages still remain in ActiveMQ queue DEV.QUEUE.1 (size: $QUEUE_SIZE) - message was not deleted"
+    log "Displaying queue statistics:"
+    curl -s -u admin:admin "http://localhost:8161/admin/xml/queues.jsp" | grep -A 10 "DEV.QUEUE.1"
+    exit 1
+fi
