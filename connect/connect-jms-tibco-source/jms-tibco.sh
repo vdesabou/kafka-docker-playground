@@ -21,16 +21,16 @@ then
      exit 1
 fi
 
-if [ ! -f ../../connect/connect-jms-tibco-source/tibjms.jar ]
+if [ ! -f ../../connect/connect-jms-tibco-source/tibjms.jar ] || [ ! -f ../../connect/connect-jms-tibco-source/jms-2.0.jar ]
 then
-    log "../../connect/connect-jms-tibco-source/tibjms.jar missing, will get it from ../../connect/connect-jms-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip"
+    log "../../connect/connect-jms-tibco-source/tibjms.jar or jms-2.0.jar missing, will get them from ../../connect/connect-jms-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip"
     rm -rf /tmp/TIB_ems-ce_8.5.1
     unzip ../../connect/connect-jms-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip -d /tmp/
     tar xvfz /tmp/TIB_ems-ce_8.5.1/tar/TIB_ems-ce_8.5.1_linux_x86_64-java_client.tar.gz opt/tibco/ems/8.5/lib/tibjms.jar
     tar xvfz /tmp/TIB_ems-ce_8.5.1/tar/TIB_ems-ce_8.5.1_linux_x86_64-java_client.tar.gz opt/tibco/ems/8.5/lib/jms-2.0.jar
     cp opt/tibco/ems/8.5/lib/tibjms.jar ../../connect/connect-jms-tibco-source/
     cp opt/tibco/ems/8.5/lib/jms-2.0.jar ../../connect/connect-jms-tibco-source/
-    rm -rf ../../connect/connect-jms-tibco-source/opt
+    rm -rf opt
 fi
 
 if test -z "$(docker images -q tibems:latest)"
@@ -87,3 +87,31 @@ sleep 5
 
 log "Verify we have received the data in from-tibco-messages topic"
 playground topic consume --topic from-tibco-messages --min-expected-messages 2 --timeout 60
+
+sleep 5
+
+log "Asserting that TIBCO EMS queue connector-quickstart is empty after connector processing"
+log "This tests that commitRecord API properly deletes messages from external system"
+
+# Try to consume one message with a short timeout - if queue is empty, consumer will timeout
+set +e
+CONSUMER_OUTPUT=$(docker exec tibco-ems bash -c '
+cd /opt/tibco/ems/8.5/samples/java
+export TIBEMS_JAVA=/opt/tibco/ems/8.5/lib
+CLASSPATH=${TIBEMS_JAVA}/jms-2.0.jar:${CLASSPATH}
+CLASSPATH=.:${TIBEMS_JAVA}/tibjms.jar:${TIBEMS_JAVA}/tibjmsadmin.jar:${CLASSPATH}
+export CLASSPATH
+timeout 5 java tibjmsMsgConsumer -user admin -queue connector-quickstart 2>&1 || true
+')
+set -e
+
+# Check if any messages were consumed
+if echo "$CONSUMER_OUTPUT" | grep -q "Received [0-9]* messages"; then
+    QUEUE_SIZE=$(echo "$CONSUMER_OUTPUT" | grep -o "Received [0-9]* messages" | grep -o "[0-9]*")
+    logerror "❌ FAILURE: Messages still remain in TIBCO EMS queue connector-quickstart (consumed: $QUEUE_SIZE) - messages were not deleted"
+    log "Consumer output:"
+    echo "$CONSUMER_OUTPUT"
+    exit 1
+else
+    log "✅ SUCCESS: TIBCO EMS queue connector-quickstart is empty - messages were successfully consumed and deleted"
+fi
