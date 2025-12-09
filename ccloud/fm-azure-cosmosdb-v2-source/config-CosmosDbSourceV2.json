@@ -18,6 +18,7 @@
     "azure.cosmos.source.messageKey.enabled": "true",
     "azure.cosmos.source.messageKey.field": "id",
     "azure.cosmos.source.metadata.poll.delay.ms": "300000",
+    "azure.cosmos.source.metadata.storage.name.override": "STRING",
     "azure.cosmos.source.metadata.storage.name.prefix": "cosmos.metadata.topic",
     "azure.cosmos.source.metadata.storage.type": "Kafka",
     "azure.cosmos.throughputControl.account.endpoint": "STRING",

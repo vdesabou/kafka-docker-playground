@@ -430,14 +430,14 @@ Number of tasks for this connector
 ==========================
 Metadata details
 ==========================
-🔘 azure.cosmos.source.metadata.storage.name.prefix
+🔘 azure.cosmos.source.metadata.poll.delay.ms
 
-The resource name of the metadata storage prefix. If metadata storage type is Kafka topic, then this config refers to kafka topic name, the metadata topic will be created if it does not already exist, else it will use the pre-created topic. If metadata storage type is ``Cosmos``, then this config refers to container name, for ``MasterKey`` auth, this container will be created with ``AutoScale`` with 4000 RU if not already exists, for ``ServicePrincipal`` auth, it requires the container to be created ahead of time .
+Indicates how often to check the metadata changes (including container split/merge, adding/removing/recreated containers). When changes are detected, it will reconfigure the tasks. Default is 5 minutes
 
-	 - Type: STRING
-	 - Default: cosmos.metadata.topic
+	 - Type: INT
+	 - Default: 300000
 	 - Importance: MEDIUM
-	 - Required: true
+	 - Required: false
 
 🔘 azure.cosmos.source.metadata.storage.type
 
@@ -448,14 +448,23 @@ The storage type of the metadata. Two types are supported: Cosmos, Kafka.
 	 - Importance: MEDIUM
 	 - Required: true
 
-🔘 azure.cosmos.source.metadata.poll.delay.ms
+🔘 azure.cosmos.source.metadata.storage.name.prefix
 
-Indicates how often to check the metadata changes (including container split/merge, adding/removing/recreated containers). When changes are detected, it will reconfigure the tasks. Default is 5 minutes
+The resource name prefix of the metadata storage. By default, the full name is computed as prefix + connector ID. If metadata storage type is Kafka, this refers to the kafka topic name prefix. If metadata storage type is Cosmos, this refers to the container name prefix. Use the override field below to specify a custom full name instead.
 
-	 - Type: INT
-	 - Default: 300000
+	 - Type: STRING
+	 - Default: cosmos.metadata.topic
 	 - Importance: MEDIUM
-	 - Required: false
+	 - Required: true
+
+🔘 azure.cosmos.source.metadata.storage.name.override
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Optional. Specify the full metadata storage name. If specified, this value overrides the default prefix-based naming convention. If metadata storage type is Kafka, enter the Kafka topic name. If Cosmos, enter the container name. To use the default naming convention (prefix + connector ID), leave this field empty.
+	 - Required: MEDIUM
 
 ==========================
 Message key details
