@@ -22,9 +22,9 @@ AZURE_COSMOSDB_CONTAINER_NAME=$AZURE_NAME
 bootstrap_ccloud_environment "azure" "$AZURE_REGION"
 
 set +e
-playground topic delete --topic hotels
+playground topic delete --topic hotelsv2
 sleep 3
-playground topic create --topic hotels --nb-partitions 1
+playground topic create --topic hotelsv2 --nb-partitions 1
 set -e
 
 set +e
@@ -103,17 +103,17 @@ playground connector create-or-update --connector $connector_name << EOF
     "azure.cosmos.account.endpoint": "$AZURE_COSMOSDB_DB_ENDPOINT_URI",
     "azure.cosmos.account.key": "$AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY",
     "azure.cosmos.sink.database.name": "$AZURE_COSMOSDB_DB_NAME",
-    "azure.cosmos.sink.containers.topicMap": "hotels#${AZURE_COSMOSDB_DB_NAME}",
+    "azure.cosmos.sink.containers.topicMap": "hotelsv2#${AZURE_COSMOSDB_DB_NAME}",
     "azure.cosmos.sink.id.strategy": "FullKeyStrategy",
-    "topics": "hotels",
+    "topics": "hotelsv2",
     "tasks.max" : "1"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
 
-log "Write data to topic hotels"
-playground topic produce -t hotels --nb-messages 3 << 'EOF'
+log "Write data to topic hotelsv2"
+playground topic produce -t hotelsv2 --nb-messages 3 << 'EOF'
 {"id": "h1", "HotelName": "Marriott", "Description": "Marriott description"}
 {"id": "h2", "HotelName": "HolidayInn", "Description": "HolidayInn description"}
 {"id": "h3", "HotelName": "Motel8", "Description": "Motel8 description"}
