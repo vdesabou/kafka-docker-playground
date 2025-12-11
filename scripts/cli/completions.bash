@@ -1399,7 +1399,7 @@ _playground_completions() {
       ;;
 
     *'topic list'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --show-internal -h")" -- "$cur")
       ;;
 
     *'ec2 stop'*'-i')

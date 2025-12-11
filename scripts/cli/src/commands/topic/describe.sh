@@ -6,7 +6,7 @@ get_security_broker "--command-config"
 if [[ ! -n "$topic" ]]
 then
     log "✨ --topic flag was not provided, applying command to all topics"
-    topic=$(playground get-topic-list --skip-connect-internal-topics)
+    topic=$(playground get-topic-list --skip-internal-topics)
     if [ "$topic" == "" ]
     then
         logerror "❌ No topic found !"

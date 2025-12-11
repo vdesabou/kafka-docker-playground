@@ -2339,8 +2339,14 @@ subcommands:
       - name: list
         description: | 
           🔘 List topics
-        usage: playground topic list
-        options: []
+        usage: playground topic list [OPTIONS]
+        options:
+        - names:
+          - --show-internal
+          argument: ""
+          description: | 
+            🫥 Display internal topics
+            
       - name: describe
         description: | 
           🔬 Describe topic

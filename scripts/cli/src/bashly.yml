@@ -155,7 +155,7 @@ commands:
   help: Return some completion for topic list
   private: true
   flags:
-  - long: --skip-connect-internal-topics
+  - long: --skip-internal-topics
     required: false
 
 - name: get-subject-list
@@ -2588,6 +2588,11 @@ commands:
       group: Topic
       help: |-
         🔘 List topics
+      flags:
+      - long: --show-internal
+        help: |-
+          🫥 Display internal topics
+        required: false
 
     - name: describe
       group: Topic

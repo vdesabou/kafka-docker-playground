@@ -1985,8 +1985,16 @@
         {
           "name": "list",
           "description": "🔘 List topics\n",
-          "usage": "playground topic list",
-          "options": []
+          "usage": "playground topic list [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--show-internal"
+              ],
+              "argument": "",
+              "description": "🫥 Display internal topics\n"
+            }
+          ]
         },
         {
           "name": "describe",

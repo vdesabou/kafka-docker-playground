@@ -128,7 +128,7 @@ then
       exit 1
     fi
     log "✨ --topic flag was not provided, applying command to all topics"
-    topic=$(playground get-topic-list --skip-connect-internal-topics)
+    topic=$(playground get-topic-list --skip-internal-topics)
     if [ "$topic" == "" ]
     then
         logerror "❌ no topic found !"

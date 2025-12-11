@@ -691,7 +691,7 @@ playground_get_topic_list_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--skip-connect-internal-topics")"
+    printf "  %s\n" "$(magenta "--skip-internal-topics")"
     printf "\n"
     echo
 
@@ -5205,7 +5205,7 @@ playground_topic_list_usage() {
   printf "playground topic list - 🔘 List topics\n\n"
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground topic list\n"
+  printf "  playground topic list [OPTIONS]\n"
   printf "  playground topic list --help | -h\n"
   echo
 
@@ -5213,6 +5213,12 @@ playground_topic_list_usage() {
   if [[ -n "$long_usage" ]]; then
     # :command.usage_options
     printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--show-internal")"
+    printf "    🫥 Display internal topics\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -14174,13 +14180,13 @@ playground_get_kafka_region_list_command() {
 playground_get_topic_list_command() {
 
   # src/commands/get-topic-list.sh
-  skip_connect_internal_topics="${args[--skip-connect-internal-topics]}"
+  skip_internal_topics="${args[--skip-internal-topics]}"
 
   get_environment_used
 
   if [[ "$environment" == "ccloud" ]]
   then
-    if [[ -n "$skip_connect_internal_topics" ]]
+    if [[ -n "$skip_internal_topics" ]]
     then
       set +e
       confluent kafka topic list | grep -v "connect-" | grep -v "_confluent-monitoring" | grep -v "_confluent-command" | awk '{if(NR>2) print $1}'
@@ -14196,11 +14202,11 @@ playground_get_topic_list_command() {
     docker exec $broker_container ls /var/lib/kafka/data > /dev/null 2>&1
     if [ $? -eq 0 ]
     then
-      if [[ -n "$skip_connect_internal_topics" ]]
+      if [[ -n "$skip_internal_topics" ]]
       then
         docker exec $broker_container ls /var/lib/kafka/data | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "connect-" | grep -v "^_" | grep -v "delete" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
       else
-        docker exec $broker_container ls /var/lib/kafka/data | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "^_" | grep -v "delete" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
+        docker exec $broker_container ls /var/lib/kafka/data | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "delete" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
       fi
     fi
   fi
@@ -22631,7 +22637,7 @@ playground_topic_get_number_records_command() {
   if [[ ! -n "$topic" ]]
   then
       log "✨ --topic flag was not provided, applying command to all topics"
-      topic=$(playground get-topic-list --skip-connect-internal-topics)
+      topic=$(playground get-topic-list --skip-internal-topics)
       if [ "$topic" == "" ]
       then
           logerror "❌ No topic found !"
@@ -22782,8 +22788,17 @@ playground_topic_display_consumer_offsets_command() {
 playground_topic_list_command() {
 
   # src/commands/topic/list.sh
-  log "🔘 List of topics (internal topics are excluded)"
-  playground get-topic-list --skip-connect-internal-topics
+  show_internal="${args[--show-internal]}"
+
+  if [[ -n "$show_internal" ]]
+  then
+      log "🫥 List of topics (internal topics are included)"
+      playground get-topic-list
+  else
+
+      log "🔘 List of topics (internal topics are excluded)"
+      playground get-topic-list --skip-internal-topics
+  fi
 }
 
 # :command.function
@@ -22798,7 +22813,7 @@ playground_topic_describe_command() {
   if [[ ! -n "$topic" ]]
   then
       log "✨ --topic flag was not provided, applying command to all topics"
-      topic=$(playground get-topic-list --skip-connect-internal-topics)
+      topic=$(playground get-topic-list --skip-internal-topics)
       if [ "$topic" == "" ]
       then
           logerror "❌ No topic found !"
@@ -22862,7 +22877,7 @@ playground_topic_set_schema_compatibility_command() {
   then
       logwarn "--topic flag was not provided, applying command to all topics"
       check_if_continue
-      topic=$(playground get-topic-list --skip-connect-internal-topics)
+      topic=$(playground get-topic-list --skip-internal-topics)
       if [ "$topic" == "" ]
       then
           logerror "❌ No topic found !"
@@ -23018,7 +23033,7 @@ playground_topic_consume_command() {
         exit 1
       fi
       log "✨ --topic flag was not provided, applying command to all topics"
-      topic=$(playground get-topic-list --skip-connect-internal-topics)
+      topic=$(playground get-topic-list --skip-internal-topics)
       if [ "$topic" == "" ]
       then
           logerror "❌ no topic found !"
@@ -31557,10 +31572,10 @@ playground_get_topic_list_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
-      --skip-connect-internal-topics)
+      --skip-internal-topics)
 
         # :flag.case_no_arg
-        args['--skip-connect-internal-topics']=1
+        args['--skip-internal-topics']=1
         shift
         ;;
 
@@ -41851,6 +41866,13 @@ playground_topic_list_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --show-internal)
+
+        # :flag.case_no_arg
+        args['--show-internal']=1
+        shift
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
