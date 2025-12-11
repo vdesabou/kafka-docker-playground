@@ -6,7 +6,7 @@ services:
     volumes:
       - ${AWS_CREDENTIALS_FILE_NAME:-/dev/null}:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials 
       - $HOME/.aws/config:$CONNECT_CONTAINER_HOME_DIR/.aws/config
-      - ../../ccloud/connect-aws-redshift-sink/redshift-jdbc42-2.1.0.17/redshift-jdbc42-2.1.0.17.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-aws-redshift/lib/redshift-jdbc42-2.1.0.17.jar
+      - ../../connect/connect-aws-redshift-sink/redshift-jdbc42-2.1.0.17/redshift-jdbc42-2.1.0.17.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-aws-redshift/lib/redshift-jdbc42-2.1.0.17.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-aws-redshift
       # CONNECT_CONFLUENT_TOPIC: "my_license_topic"
