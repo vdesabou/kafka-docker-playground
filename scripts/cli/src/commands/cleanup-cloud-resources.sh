@@ -106,7 +106,7 @@ function cleanup_aws () {
     log "Cleanup AWS Redshift clusters"
     for cluster in $(aws redshift describe-clusters --region $AWS_REGION | jq '.Clusters[].ClusterIdentifier' -r)
     do
-        if [[ $cluster = pg${user}redshift* ]] || [[ $cluster = pg${user}jdbcredshift* ]]
+        if [[ $cluster = pg*${user}redshift* ]] || [[ $cluster = pg*${user}jdbcredshift* ]]
         then
             log "Delete AWS Redshift $cluster"
             check_if_skip "aws redshift delete-cluster --cluster-identifier $cluster --skip-final-cluster-snapshot --region $AWS_REGION"
@@ -117,9 +117,9 @@ function cleanup_aws () {
     done
 
     log "Cleanup AWS DynamoDB tables"
-    for dynamo_table in $(aws dynamodb list-tables --region $AWS_REGION | jq '.TableNames[].TableName' -r)
+    for dynamo_table in $(aws dynamodb list-tables --region $AWS_REGION | jq '.TableNames[]' -r)
     do
-        if [[ $dynamo_table = *pg${user}* ]]
+        if [[ $dynamo_table = pg*${user}* ]]
         then
             log "Removing AWS dynamodb table $dynamo_table"
             check_if_skip "aws dynamodb delete-table --table-name ${dynamo_table}"
