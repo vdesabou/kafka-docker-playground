@@ -1,0 +1,543 @@
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode, whenever possible.
+
+	 - Type: STRING
+	 - Default: ${connect.regional.connector}
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 datapreview.schemas.enable
+
+This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+CSFLE
+==========================
+🔘 csfle.enabled
+
+Determines whether the connector honours CSFLE rules or not
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sr.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
+	 - Required: HIGH
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+How should we connect to your database?
+==========================
+🔘 database.hostname
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: IP address or hostname of the Oracle database server.
+	 - Required: HIGH
+
+🔘 database.port
+
+Port number of the Oracle database server.
+
+	 - Type: INT
+	 - Default: 1521
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 database.user
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Name of the Oracle database user to use when connecting to the database.
+	 - Required: HIGH
+
+🔘 database.password
+
+
+
+	 - Type: true
+	 - Default: PASSWORD
+	 - Importance: Password of the Oracle database user to use when connecting to the database.
+	 - Required: HIGH
+
+🔘 database.dbname
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Name of the database to connect to. In a multitenant container database, this is the name of the container database (CDB).
+	 - Required: HIGH
+
+🔘 database.service.name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Name of the database service to which to connect. In a multitenant container database, this is the service used to connect to the container database (CDB). For Oracle Real Application Clusters (RAC), use the service created by Oracle XStream.
+	 - Required: HIGH
+
+🔘 database.pdb.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Name of the pluggable database to connect to in a multitenant architecture. The container database (CDB) name must be given via ``database.dbname`` in this case. This configuration should not be specified when connecting to a non-container database.
+	 - Required: HIGH
+
+🔘 database.out.server.name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Name of the XStream outbound server to connect to.
+	 - Required: HIGH
+
+🔘 database.tls.mode
+
+Specifies whether to use Transport Layer Security (TLS) to connect to the Oracle database. Select one of the following options: 
+
+	 - Type: STRING
+	 - Default: disable
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 database.wallet.file
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Specifies the Oracle client wallet (cwallet.sso) that holds the certificates used for TLS connections between the connector and the database server. This must be a single sign-on (SSO) auto-login wallet. For one-way TLS, a client wallet is required only if the system's default certificate store does not contain the trusted CA root certificate used to sign the server's certificate. In that case, the client wallet must include the trusted CA root certificate. For two-way TLS (mutual TLS), a client wallet is required and must contain both the client certificate and the trusted CA root certificate used to sign the server's certificate.
+	 - Required: MEDIUM
+
+🔘 database.processor.licenses
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Specifies the number of Oracle processor licenses required for the source database server or cluster. The is determined by multiplying the total number of processor cores by a core processor licensing factor, as specified in the Oracle Processor Core Factor Table.
+	 - Required: MEDIUM
+
+==========================
+Output messages
+==========================
+🔘 output.key.format
+
+Sets the output Kafka record key format. Valid entries are AVRO, JSON_SR, or PROTOBUF. Note that you need to have Confluent Cloud Schema Registry configured when using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+
+	 - Type: STRING
+	 - Default: AVRO
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 output.data.format
+
+Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, or PROTOBUF. Note that you need to have Confluent Cloud Schema Registry configured when using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+
+	 - Type: STRING
+	 - Default: AVRO
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+How should we name your topic(s)?
+==========================
+🔘 topic.prefix
+
+Warning: Do not change the value of this property. If you change the value, after a restart, instead of continuing to emit events to the original topics, the connector emits subsequent events to topics whose names are based on the new value. The connector is also unable to recover its database schema history topic.
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Topic prefix that provides a namespace for the Oracle database server or cluster from which the connector captures changes. The topic prefix should be unique across all other connectors, since it is used as a prefix for all Kafka topic names that receive events from this connector. Only alphanumeric characters, hyphens, dots and underscores are accepted. 
+	 - Required: HIGH
+
+==========================
+Connector configuration
+==========================
+🔘 table.include.list
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: An optional, comma-separated list of regular expressions that match fully-qualified table identifiers for the tables whose changes you want to capture. When this property is set, the connector will only capture changes from the specified tables. Each identifier is of the form `schemaName.tableName`. By default, the connector captures changes from all non-system tables in each captured database. To match the name of a table, the connector applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire identifier for the table; it does not match substrings that might be present in a table name. If you include this property in the configuration, do not set the ``table.exclude.list`` property.
+	 - Required: HIGH
+
+🔘 table.exclude.list
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: An optional, comma-separated list of regular expressions that match fully-qualified table identifiers for the tables whose changes you do not want to capture. When this property is set, the connector captures changes from any table that is not specified in the exclude list. Each identifier is of the form `schemaName.tableName`. To match the name of a table, the connector applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire identifier for the table; it does not match substrings that might be present in a table name. If you include this property in the configuration, do not set the ``table.include.list`` property.
+	 - Required: HIGH
+
+🔘 snapshot.mode
+
+The criteria for running a snapshot upon startup of the connector. Select one of the following snapshot options: 
+
+	 - Type: STRING
+	 - Default: initial
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 schema.history.internal.skip.unparseable.ddl
+
+A boolean value that specifies whether the connector should ignore a DDL statement that cannot be parsed or stop processing for a human to address the issue. The safe default is `false` which causes the connector to fail when it encounters an unparseable DDL statement. Setting the value to `true` should be done with care as it will cause the connector to skip processing any DDL statement it cannot parse, and this could potentially lead to schema mismatches and data loss.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snapshot.database.errors.max.retries
+
+Specifies the number of retry attempts the connector will make to snapshot a table if a database error occurs. This configuration property currently only retries failures related to ORA-01466 error. By default, no retries are attempted.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 tombstones.on.delete
+
+Controls whether a delete event is followed by a tombstone event. The following values are possible: 
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 skipped.operations
+
+A comma-separated list of operations to skip during streaming. You can configure the connector to skip the following types of operations: c (inserts/create), u (updates), d (deletes), t (truncates), and none to indicate nothing is skipped. The default value is t, ensuring that only truncate operations are skipped.
+
+	 - Type: STRING
+	 - Default: t
+	 - Importance: LOW
+	 - Required: false
+
+🔘 schema.name.adjustment.mode
+
+Specifies how schema names should be adjusted for compatibility with the message converter used by the connector. The following values are possible:  
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 field.name.adjustment.mode
+
+Specifies how field names should be adjusted for compatibility with the message converter used by the connector. The following values are possible: 
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 heartbeat.interval.ms
+
+Controls how often the connector sends heartbeat messages to a heartbeat topic. It is useful in situations when no changes occur in the captured tables for an extended period. In such cases, there are no change event messages generated, causing the committed source offset to remain unchanged. As a result, the connector is unable to update the processed low watermark on the outbound server which could result in the database retaining archived redo log files longer than needed. The default value is 0 which disables the heartbeat mechanism.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 database.os.timezone
+
+Specifies the database server's operating system timezone. This is used to read the time when the LCR was generated at the source database. The default timezone is UTC. The value has to be a valid `java.time.ZoneId` identifier.
+
+	 - Type: STRING
+	 - Default: UTC
+	 - Importance: LOW
+	 - Required: false
+
+🔘 column.include.list
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: An optional, comma-separated list of regular expressions that match fully-qualified column identifiers to be included in change event values. Each identifier is of the form `schemaName.tableName.columnName`. To match the name of a column, the connector applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire identifier for the column; it does not match substrings that might be present in a column name. If you include this property in the configuration, do not set the `column.exclude.list` property. Note: Primary key columns are always included in an event's key, even if you do not use this property to explicitly include its value.
+	 - Required: MEDIUM
+
+🔘 column.exclude.list
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: An optional, comma-separated list of regular expressions that match fully-qualified column identifiers to be excluded from change event values. Each identifier is of the form `schemaName.tableName.columnName`. To match the name of a column, the connector applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire identifier for the column; it does not match substrings that might be present in a column name. If you include this property in the configuration, do not set the `column.include.list` property. Note: Primary key columns are always included in an event's key, even if you use this property to explicitly exclude its value.
+	 - Required: MEDIUM
+
+🔘 unavailable.value.placeholder
+
+Specifies the constant provided by the connector to indicate that the original value was unavailable and not provided by the database.
+
+	 - Type: STRING
+	 - Default: __cflt_unavailable_value
+	 - Importance: LOW
+	 - Required: false
+
+🔘 lob.oversize.threshold
+
+Specifies the maximum size threshold (in bytes) for large object (LOB) column values, including CLOB, NCLOB, and BLOB. For CLOB and NCLOB values, the connector calculates the size as the UTF-8 encoded byte length of the string. If a LOB value exceeds this threshold, the connector handles it according to the strategy specified using the ``lob.oversize.handling.mode`` configuration. The default value is -1, which disables oversize handling.
+
+	 - Type: INT
+	 - Default: -1
+	 - Importance: LOW
+	 - Required: false
+
+🔘 lob.oversize.handling.mode
+
+Defines how the connector handles large object (LOB) column values that exceed the size threshold specified using the ``lob.oversize.threshold`` configuration. Select one of the following options: 
+
+	 - Type: STRING
+	 - Default: fail
+	 - Importance: LOW
+	 - Required: false
+
+🔘 skip.value.placeholder
+
+Specifies the constant provided by the connector to indicate that the original value was skipped by the connector due to exceeding the configured size threshold.
+
+	 - Type: STRING
+	 - Default: __cflt_skipped_value
+	 - Importance: LOW
+	 - Required: false
+
+🔘 signal.data.collection
+
+The case of object names in the fully-qualified name must match exactly how they are stored in the Oracle database. Unquoted identifiers are case-insensitive and are treated as uppercase by default, whereas quoted identifiers are case-sensitive. 
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Specifies the fully qualified name of the signaling table in the format: `databaseName.schemaName.tableName`.
+	 - Required: MEDIUM
+
+🔘 signal.enabled.channels
+
+Specifies which signaling channels are enabled for the connector. Supported values are:
+
+	 - Type: LIST
+	 - Default: source
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 signal.kafka.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Specifies the name of the Kafka topic that the connector monitors for signals. The topic must have a single partition to ensure signal ordering is preserved.
+	 - Required: MEDIUM
+
+==========================
+How should we handle data types?
+==========================
+🔘 decimal.handling.mode
+
+Specifies how the connector should handle NUMBER, DECIMAL and NUMERIC columns. You can set one of the following options: 
+
+	 - Type: STRING
+	 - Default: precise
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 binary.handling.mode
+
+Specifies how the connector should handle binary (BLOB) columns. You can set one of the following options: 
+
+	 - Type: STRING
+	 - Default: bytes
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 time.precision.mode
+
+Specifies how the connector should handle time, date, and timestamp columns. You can set one of the following options: 
+
+	 - Type: STRING
+	 - Default: adaptive
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+Specifies the maximum number of tasks for the connector. Since this connector supports only a single task, the maximum is capped at 1.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Egress allowlist
+==========================
+🔘 connector.egress.whitelist
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
+	 - Required: HIGH
+
