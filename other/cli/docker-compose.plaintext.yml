@@ -1,0 +1,14 @@
+---
+services:
+
+  connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-http
+
+  httpserver:
+    build:
+      context: ../../connect/connect-http-sink/httpserver
+    hostname: httpserver
+    container_name: httpserver
+    ports:
+      - "9006:9006"
