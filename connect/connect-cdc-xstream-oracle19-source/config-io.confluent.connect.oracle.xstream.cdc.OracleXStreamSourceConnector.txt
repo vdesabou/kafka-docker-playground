@@ -1,0 +1,405 @@
+==========================
+Oracle
+==========================
+🔘 database.hostname
+
+Resolvable hostname or IP address of the database server.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 database.port
+
+Port of the database server.
+
+	 - Type: INT
+	 - Default: 1521
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 database.user
+
+Name of the database user to be used when connecting to the database.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 database.password
+
+Password of the database user to be used when connecting to the database.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 database.dbname
+
+The name of the database from which the connector should capture changes
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 database.service.name
+
+Name of the database service to which to connect. In a multitenant container database, this is the service used to connect to the container database (CDB). For Oracle Real Application Clusters (RAC), use the service created by Oracle XStream.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 database.tls.mode
+
+Specifies whether to use Transport Layer Security (TLS) to connect to the Oracle database. Select one of the following options: 
+
+	 - Type: STRING
+	 - Default: disable
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 database.wallet.location
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Specifies the directory path containing the Oracle client wallet (cwallet.sso) that holds the certificates used for TLS connections between the connector and the database server. This must be a single sign-on (SSO) auto-login wallet. For one-way TLS, a client wallet is required only if the system's default certificate store does not contain the trusted CA root certificate used to sign the server's certificate. In that case, the client wallet must include the trusted CA root certificate. For two-way TLS (mutual TLS), a client wallet is required and must contain both the client certificate and the trusted CA root certificate used to sign the server's certificate.
+	 - Required: MEDIUM
+
+🔘 database.pdb.name
+
+Name of the pluggable database when working with a multi-tenant set-up. The CDB name must be given via database.dbname in this case. This configuration should not be specified when connecting to a non-container database.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 database.out.server.name
+
+Name of the XStream Out server to connect to.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 database.processor.licenses
+
+Specifies the number of Oracle processor licenses required for the source database server or cluster. The is determined by multiplying the total number of processor cores by a core processor licensing factor, as specified in the Oracle Processor Core Factor Table.
+
+	 - Type: INT
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Connector
+==========================
+🔘 topic.prefix
+
+Topic prefix that identifies and provides a namespace for the particular database server/cluster is capturing changes. The topic prefix should be unique across all other connectors, since it is used as a prefix for all Kafka topic names that receive events emitted by this connector. Only alphanumeric characters, hyphens, dots and underscores must be accepted.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 table.include.list
+
+The tables for which changes are to be captured
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 table.exclude.list
+
+A comma-separated list of regular expressions that match the fully-qualified names of tables to be excluded from monitoring
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snapshot.mode
+
+The criteria for running a snapshot upon startup of the connector. Select one of the following snapshot options: 'initial' (default): The snapshot includes both the structure (schema) and data of the captured tables. Specify this value to populate topics with a complete representation of the data from the captured tables. After the snapshot completes,the connector begins to stream event records for subsequent database changes.
+
+	 - Type: STRING
+	 - Default: initial
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snapshot.fetch.size
+
+The maximum number of records that should be loaded into memory while performing a snapshot.
+
+	 - Type: INT
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snapshot.max.threads
+
+The maximum number of threads used to perform the snapshot. Defaults to 1.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snapshot.database.errors.max.retries
+
+The number of attempts to retry database errors during snapshots before failing.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 column.include.list
+
+Regular expressions matching columns to include in change events
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 column.exclude.list
+
+Regular expressions matching columns to exclude from change events
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 binary.handling.mode
+
+Specify how binary (blob, binary, etc.) columns should be represented in change events, including: 'bytes' represents binary data as byte array (default); 'base64' represents binary data as base64-encoded string; 'base64-url-safe' represents binary data as base64-url-safe-encoded string; 'hex' represents binary data as hex-encoded (base16) string
+
+	 - Type: STRING
+	 - Default: bytes
+	 - Importance: LOW
+	 - Required: false
+
+🔘 decimal.handling.mode
+
+Specify how DECIMAL and NUMERIC columns should be represented in change events, including: 'precise' (the default) uses java.math.BigDecimal to represent values, which are encoded in the change events using a binary representation and Kafka Connect's 'org.apache.kafka.connect.data.Decimal' type; 'string' uses string to represent values; 'double' represents values using Java's 'double', which may not offer the precision but will be far easier to use in consumers.
+
+	 - Type: STRING
+	 - Default: precise
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 time.precision.mode
+
+Time, date, and timestamps can be represented with different kinds of precisions, including: 'adaptive' (the default) bases the precision of time, date, and timestamp values on the database column's precision; 'adaptive_time_microseconds' like 'adaptive' mode, but TIME fields always use microseconds precision; 'connect' always represents time, date, and timestamp values using Kafka Connect's built-in representations for Time, Date, and Timestamp, which uses millisecond precision regardless of the database columns' precision.
+
+	 - Type: STRING
+	 - Default: adaptive
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 query.fetch.size
+
+The maximum number of records that should be loaded into memory while streaming. A value of '0' uses the default JDBC fetch size, defaults to '10000'.
+
+	 - Type: INT
+	 - Default: 10000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 topic.naming.strategy
+
+The name of the TopicNamingStrategy class that should be used to determine the topic name for data change, schema change, transaction, heartbeat event etc.
+
+	 - Type: CLASS
+	 - Default: io.confluent.connect.oracle.xstream.cdc.schema.OracleTopicNamingStrategy
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 tombstones.on.delete
+
+Whether delete operations should be represented by a delete event and a subsequent tombstone event (true) or only by a delete event (false). Emitting the tombstone event (the default behavior) allows Kafka to completely delete all events pertaining to the given key once the source record got deleted.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 schema.name.adjustment.mode
+
+Specify how schema names should be adjusted for compatibility with the message converter used by the connector, including: 'avro' replaces the characters that cannot be used in the Avro type name with underscore; 'avro_unicode' replaces the underscore or characters that cannot be used in the Avro type name with corresponding unicode like _uxxxx. Note: _ is an escape sequence like backslash in Java;'none' does not apply any adjustment (default)
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 field.name.adjustment.mode
+
+Specify how field names should be adjusted for compatibility with the message converter used by the connector, including: 'avro' replaces the characters that cannot be used in the Avro type name with underscore; 'avro_unicode' replaces the underscore or characters that cannot be used in the Avro type name with corresponding unicode like _uxxxx. Note: _ is an escape sequence like backslash in Java;'none' does not apply any adjustment (default)
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 topic.heartbeat.prefix
+
+Controls the name of the topic to which the connector sends heartbeat messages. Defaults to __cflt-oracle-heartbeat. The heartbeat topic name follows this format: 'topic.heartbeat.prefix'.'topic.prefix'.
+
+	 - Type: STRING
+	 - Default: __cflt-oracle-heartbeat
+	 - Importance: LOW
+	 - Required: false
+
+🔘 heartbeat.interval.ms
+
+Length of an interval in milli-seconds in in which the connector periodically sends heartbeat messages to a heartbeat topic. Use 0 to disable heartbeat messages. Disabled by default.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 database.os.timezone
+
+Specifies the database server's operating system timezone. This is used to read the time when the LCR was generated at the source database. The default timezone is UTC. The value has to be a valid java.time.ZoneId identifier.
+
+	 - Type: STRING
+	 - Default: Z
+	 - Importance: LOW
+	 - Required: false
+
+🔘 lob.oversize.handling.mode
+
+Defines how the connector handles large object (LOB) column values that exceed the size threshold specified using the `lob.oversize.threshold` configuration. Select one of the following options:
+
+	 - Type: STRING
+	 - Default: fail
+	 - Importance: LOW
+	 - Required: false
+
+🔘 lob.oversize.threshold
+
+Specifies the maximum size threshold (in bytes) for large object (LOB) column values, including CLOB, NCLOB, and BLOB. For CLOB and NCLOB values, the connector calculates the size as the UTF-8 encoded byte length of the string. If a LOB value exceeds this threshold, the connector handles it according to the strategy specified using the `lob.oversize.handling.mode` configuration. The default value is -1, which disables oversize handling.
+
+	 - Type: INT
+	 - Default: -1
+	 - Importance: LOW
+	 - Required: false
+
+🔘 skipped.operations
+
+The comma-separated list of operations to skip during streaming, defined as: 'c' for inserts/create; 'u' for updates; 'd' for deletes, 't' for truncates, and 'none' to indicate nothing skipped. By default, only truncate operations will be skipped.
+
+	 - Type: LIST
+	 - Default: t
+	 - Importance: LOW
+	 - Required: false
+
+🔘 unavailable.value.placeholder
+
+Specifies the constant provided by the connector to indicate that the original value was unavailable and not provided by the database.
+
+	 - Type: STRING
+	 - Default: __cflt_unavailable_value
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 skip.value.placeholder
+
+Specifies the constant provided by the connector to indicate that the original value was skipped by the connector due to exceeding the configured size threshold.
+
+	 - Type: STRING
+	 - Default: __cflt_skipped_value
+	 - Importance: LOW
+	 - Required: false
+
+🔘 signal.data.collection
+
+Specifies the fully qualified name of the signaling table in the format: databaseName.schemaName.tableName. This table is used to send signals to the connector when using the source channel.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 signal.enabled.channels
+
+Specifies which signaling channels are enabled for the connector. Supported values are:
+
+	 - Type: LIST
+	 - Default: source
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 signal.kafka.topic
+
+Specifies the name of the Kafka topic that the connector monitors for signals. The topic must have a single partition to ensure signal ordering is preserved.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 signal.kafka.bootstrap.servers
+
+A list of host/port pairs that the connector will use for establishing the initial connection to the Kafka cluster for retrieving signals to the connector. This should point to the same Kafka cluster used by the Kafka Connect process.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+History Storage
+==========================
+🔘 schema.history.internal.kafka.topic
+
+The name of the topic for the database schema history
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 schema.history.internal.kafka.bootstrap.servers
+
+A list of host/port pairs that the connector will use for establishing the initial connection to the Kafka cluster for retrieving database schema history previously stored by the connector. This should point to the same Kafka cluster used by the Kafka Connect process.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 schema.history.internal.skip.unparseable.ddl
+
+Controls the action the connector will take when it meets a DDL statement, that it cannot parse. By default the connector will stop operating but by changing the setting it can ignore the statements which it cannot parse. If skipping is enabled then connector can miss metadata changes.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 schema.history.internal.store.only.captured.tables.ddl
+
+Specifies whether the connector records schema changes for all tables in the database or only for tables designated for capture. By default (true), schema changes are recorded only for the tables designated for capture. If set to false, schema changes will be recorded for all non-system tables in the database, including tables that are not designated for capture.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
