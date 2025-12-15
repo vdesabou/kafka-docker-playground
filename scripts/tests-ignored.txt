@@ -37,3 +37,6 @@ hbase-sink-kerberos.sh
 hdfs3-sink-ha-kerberos.sh
 
 start-custom-log4j2.sh
+
+# EKS specific
+s3-sink-backup-and-restore-irsa.sh

@@ -1,0 +1,19 @@
+---
+services:
+  connect:
+      # In a real EKS environment with IRSA, the service account token would be mounted here:
+      # - /var/run/secrets/eks.amazonaws.com/serviceaccount/token:/var/run/secrets/eks.amazonaws.com/serviceaccount/token:ro
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3
+      AWS_REGION: $AWS_REGION
+      
+      # These environment variables are automatically set by EKS when using IRSA:
+      # AWS_WEB_IDENTITY_TOKEN_FILE: /var/run/secrets/eks.amazonaws.com/serviceaccount/token
+      # AWS_ROLE_ARN: The IAM role ARN associated with the Kubernetes service account
+      # AWS_ROLE_SESSION_NAME: (optional) Session name for the role
+      
+      
+      # Optional: If you need to assume an additional role beyond the IRSA role
+      # AWS_STS_ROLE_ARN: $AWS_STS_ROLE_ARN
+      # AWS_STS_SESSION_NAME: "kafka-connect-session"
+      # AWS_STS_EXTERNAL_ID: "123"
