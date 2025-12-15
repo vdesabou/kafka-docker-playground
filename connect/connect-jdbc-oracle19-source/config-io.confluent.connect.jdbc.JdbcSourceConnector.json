@@ -18,6 +18,7 @@
     "poll.interval.ms": "5000",
     "poll.linger.ms": "5000",
     "query": "STRING",
+    "query.masked": "[hidden]",
     "query.retry.attempts": "-1",
     "query.suffix": "STRING",
     "quote.sql.identifiers": "ALWAYS",
