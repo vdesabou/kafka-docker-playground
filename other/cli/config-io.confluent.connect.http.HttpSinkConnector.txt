@@ -1,0 +1,999 @@
+==========================
+Connection
+==========================
+🔘 http.api.url
+
+HTTP API URL.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 request.method
+
+HTTP Request Method. Valid options are ``put``, ``post`` or ``patch``.
+
+	 - Type: STRING
+	 - Default: post
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 behavior.on.null.values
+
+How to handle records with a non-null key and a null value (i.e. Kafka tombstone records). Valid options are ``ignore``, ``delete``, ``log`` and ``fail``.
+
+	 - Type: STRING
+	 - Default: ignore
+	 - Importance: LOW
+	 - Required: false
+
+🔘 behavior.on.error
+
+Error handling behavior setting for handling response from HTTP requests. Must be configured to one of the following:
+
+	 - Type: STRING
+	 - Default: fail
+	 - Importance: LOW
+	 - Required: false
+
+🔘 headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in all requests. Individual headers should be separated by the ``header.separator``
+	 - Required: HIGH
+
+🔘 header.separator
+
+Separator character used in headers property.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 http.proxy.host
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The host or ip of the http proxy.
+	 - Required: HIGH
+
+🔘 http.proxy.port
+
+The port number of the http proxy.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 http.proxy.user
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The username to be used when authenticating with the http proxy.
+	 - Required: HIGH
+
+🔘 http.proxy.password
+
+The password to be used when authenticating with the http proxy.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 http.connect.timeout.ms
+
+Time to wait for a connection to be established.
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 http.request.timeout.ms
+
+Time to wait for a request response to arrive.
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 connection.disallow.local.ips
+
+Disallow local IP addresses after DNS resolution.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 connection.disallow.private.ips
+
+Disallow private IP addresses after DNS resolution.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 connection.disallow.class.e.ips
+
+Disallow Class E IP addresses after DNS resolution.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 connection.disallow.cidr.ranges
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Disallow IP addresses from the configured CIDR ranges after DNS resolution.
+	 - Required: LOW
+
+🔘 connection.allow.cidr.ranges
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Allow IP addresses from the configured CIDR ranges after DNS resolution.
+	 - Required: LOW
+
+🔘 deletes.send.in.order
+
+Flag denoting whether delete request for tombstone should be sent in order. By default, the delete request will be sent immediately on encountering a tombstone record while other non-tombstone records gets batched and will be sent only when batch is full. To override the default behavior and to send tombstone record in order before processing next set of records, this property needs to set to true. Setting this to true will ensure all records that all tombstone/non-tombstone records are sent in order. 
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Authorization
+==========================
+🔘 auth.type
+
+Authentication type of the endpoint. Valid values  are ``NONE``, ``BASIC``, ``OAUTH2`` (Client Credentials grant type only).
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 connection.user
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The username to be used with an endpoint requiring authentication.
+	 - Required: HIGH
+
+🔘 connection.password
+
+The password to be used with an endpoint requiring authentication.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 oauth2.token.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The URL to be used for fetching OAuth2 token. Client Credentials is the only supported grant type.
+	 - Required: HIGH
+
+🔘 oauth2.client.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The client id used when fetching OAuth2 token
+	 - Required: HIGH
+
+🔘 oauth2.client.secret
+
+The secret used when fetching OAuth2 token
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 oauth2.token.property
+
+The name of the property containing the OAuth2 token returned by the http proxy. Default value is ``access_token``.
+
+	 - Type: STRING
+	 - Default: access_token
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 oauth2.client.auth.mode
+
+Specifies how to encode ``client_id`` and ``client_secret`` in the OAuth2 authorization request. If set to 'header', the credentials are encoded as an ``'Authorization: Basic <base-64 encoded client_id:client_secret>'`` HTTP header. If set to 'url', then ``client_id`` and ``client_secret`` are sent in body as URL encoded parameters.
+
+	 - Type: STRING
+	 - Default: header
+	 - Importance: LOW
+	 - Required: false
+
+🔘 oauth2.client.scope
+
+The scope used when fetching OAuth2 token
+
+	 - Type: STRING
+	 - Default: any
+	 - Importance: LOW
+	 - Required: false
+
+🔘 oauth2.client.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request to the OAuth2 client endpoint. Individual headers should be separated by `oauth2.client.header.separator`. Note: 'Content-Type` header if added will be overridden by the connector with value 'application/x-www-form-urlencoded'
+	 - Required: LOW
+
+🔘 oauth2.client.header.separator
+
+Separator character used in `oauth2.client.headers` property.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: LOW
+	 - Required: false
+
+🔘 oauth2.jwt.enabled
+
+Whether to generate and add jwt token to request. If selected, jwt token will be added as jwt_token request param
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 oauth2.jwt.keystore.path
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Path to keystore containing key to use to generate JWT.
+	 - Required: MEDIUM
+
+🔘 oauth2.jwt.keystore.password
+
+Password to access JWT keystore.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 oauth2.jwt.keystore.type
+
+JWT Keystore type
+
+	 - Type: STRING
+	 - Default: JKS
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 oauth2.jwt.claimset
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: JSON containing JWT claims
+	 - Required: MEDIUM
+
+🔘 oauth2.jwt.signature.algorithm
+
+Algorithm to use for signing claims
+
+	 - Type: STRING
+	 - Default: rs256
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Retries
+==========================
+🔘 max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 retry.backoff.ms
+
+The time in milliseconds to wait following an error before a retry attempt is made.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 retry.on.status.codes
+
+The HTTP error codes to retry on. Comma-separated list of codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, '400-' includes all codes greater than or equal to 400. '400-500' includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine grained control over retry behavior. For example, '404,408,500-' will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Regex
+==========================
+🔘 regex.patterns
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``
+	 - Required: LOW
+
+🔘 regex.replacements
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here.
+	 - Required: LOW
+
+🔘 regex.separator
+
+Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
+
+	 - Type: STRING
+	 - Default: ~
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Batching
+==========================
+🔘 request.body.format
+
+Used to produce request body in either JSON or String format
+
+	 - Type: STRING
+	 - Default: string
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 batch.json.as.array
+
+Send individual messages in a JSON array.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 batch.key.pattern
+
+Pattern used to build the key for a given batch. ``${key}`` and ``${topic}`` can be used to include message attributes here.
+
+	 - Type: STRING
+	 - Default: someKey
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 batch.max.size
+
+The number of records accumulated in a batch before the HTTP API is invoked.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 batch.prefix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records.
+	 - Required: HIGH
+
+🔘 batch.suffix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records.
+	 - Required: HIGH
+
+🔘 batch.separator
+
+Separator for records in a batch.
+
+	 - Type: STRING
+	 - Default: ,
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 batch.seperator
+
+Separator for records in a batch.
+
+	 - Type: STRING
+	 - Default: ,
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 json.decimal.format
+
+Specify the Request Body JSON serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 csfle.enabled
+
+Whether csfle is enabled
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+On Failure
+==========================
+🔘 report.errors.as
+
+Dictates the content of records produced to the error topic. If set to ``error_string``, the value would be a human readable string describing the failure. The value will include some or all of the following information if available: http response code, reason phrase, submitted payload, url, response content, exception and error message.
+
+	 - Type: STRING
+	 - Default: error_string
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Security
+==========================
+🔘 https.ssl.key.password
+
+The password of the private key in the key store file or the PEM key specified in 'ssl.keystore.key'.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 https.ssl.keystore.certificate.chain
+
+Certificate chain in the format specified by 'ssl.keystore.type'. Default SSL engine factory supports only PEM format with a list of X.509 certificates
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 https.ssl.keystore.key
+
+Private key in the format specified by 'ssl.keystore.type'. Default SSL engine factory supports only PEM format with PKCS#8 keys. If the key is encrypted, key password must be specified using 'ssl.key.password'
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 https.ssl.keystore.location
+
+The location of the key store file. This is optional for client and can be used for two-way authentication for client.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 https.ssl.keystore.password
+
+The store password for the key store file. This is optional for client and only needed if 'ssl.keystore.location' is configured. Key store password is not supported for PEM format.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 https.ssl.truststore.certificates
+
+Trusted certificates in the format specified by 'ssl.truststore.type'. Default SSL engine factory supports only PEM format with X.509 certificates.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 https.ssl.truststore.location
+
+The location of the trust store file.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 https.ssl.truststore.password
+
+The password for the trust store file. If a password is not set, trust store file configured will still be used, but integrity checking is disabled. Trust store password is not supported for PEM format.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 https.ssl.enabled.protocols
+
+The list of protocols enabled for SSL connections. The default is 'TLSv1.2,TLSv1.3'. This means that clients and servers will prefer TLSv1.3 if both support it and fallback to TLSv1.2 otherwise (assuming both support at least TLSv1.2). This default should be fine for most use cases. Also see the config documentation for `ssl.protocol` to understand how it can impact the TLS version negotiation behavior.
+
+	 - Type: LIST
+	 - Default: TLSv1.2,TLSv1.3
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 https.ssl.keystore.type
+
+The file format of the key store file. This is optional for client. The values currently supported by the default `ssl.engine.factory.class` are [JKS, PKCS12, PEM].
+
+	 - Type: STRING
+	 - Default: JKS
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 https.ssl.protocol
+
+The SSL protocol used to generate the SSLContext. The default is 'TLSv1.3', which should be fine for most use cases. A typical alternative to the default is 'TLSv1.2'. Allowed values for this config are dependent on the JVM. Clients using the defaults for this config and 'ssl.enabled.protocols' will downgrade to 'TLSv1.2' if the server does not support 'TLSv1.3'. If this config is set to 'TLSv1.2', however, clients will not use 'TLSv1.3' even if it is one of the values in `ssl.enabled.protocols` and the server only supports 'TLSv1.3'.
+
+	 - Type: STRING
+	 - Default: TLSv1.3
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 https.ssl.provider
+
+The name of the security provider used for SSL connections. Default value is the default security provider of the JVM.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 https.ssl.truststore.type
+
+The file format of the trust store file. The values currently supported by the default `ssl.engine.factory.class` are [JKS, PKCS12, PEM].
+
+	 - Type: STRING
+	 - Default: JKS
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 https.ssl.cipher.suites
+
+A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 https.ssl.endpoint.identification.algorithm
+
+The endpoint identification algorithm to validate server hostname using server certificate. 
+
+	 - Type: STRING
+	 - Default: https
+	 - Importance: LOW
+	 - Required: false
+
+🔘 https.ssl.engine.factory.class
+
+The class of type org.apache.kafka.common.security.auth.SslEngineFactory to provide SSLEngine objects. Default value is org.apache.kafka.common.security.ssl.DefaultSslEngineFactory. Alternatively, setting this to org.apache.kafka.common.security.ssl.CommonNameLoggingSslEngineFactory will log the common name of expired SSL certificates used by clients to authenticate at any of the brokers with log level INFO. Note that this will cause a tiny delay during establishment of new connections from mTLS clients to brokers due to the extra code for examining the certificate chain provided by the client. Note further that the implementation uses a custom truststore based on the standard Java truststore and thus might be considered a security risk due to not being as mature as the standard one.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 https.ssl.keymanager.algorithm
+
+The algorithm used by key manager factory for SSL connections. Default value is the key manager factory algorithm configured for the Java Virtual Machine.
+
+	 - Type: STRING
+	 - Default: SunX509
+	 - Importance: LOW
+	 - Required: false
+
+🔘 https.ssl.secure.random.implementation
+
+The SecureRandom PRNG implementation to use for SSL cryptography operations. 
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 https.ssl.trustmanager.algorithm
+
+The algorithm used by trust manager factory for SSL connections. Default value is the trust manager factory algorithm configured for the Java Virtual Machine.
+
+	 - Type: STRING
+	 - Default: PKIX
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+reporter.result.topic.name
+==========================
+🔘 ${connector}-success
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the topic to produce records to after successfully processing a sink record. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
+	 - Required: MEDIUM
+
+==========================
+reporter.result.topic.replication.factor
+==========================
+🔘 3
+
+
+
+	 - Type: false
+	 - Default: SHORT
+	 - Importance: The replication factor of the result topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
+	 - Required: MEDIUM
+
+==========================
+reporter.result.topic.partitions
+==========================
+🔘 1
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The number of partitions in the result topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions to handle the potential throughput.
+	 - Required: MEDIUM
+
+==========================
+Formatter
+==========================
+🔘 reporter.result.topic.key.format
+
+The format in which the result report key is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.result.topic.key.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.key.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.key.format.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Formatter
+==========================
+🔘 reporter.result.topic.value.format
+
+The format in which the result report value is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.result.topic.value.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.value.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.value.format.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+reporter.error.topic.name
+==========================
+🔘 ${connector}-error
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the topic to produce records to after each unsuccessful record sink attempt. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
+	 - Required: MEDIUM
+
+==========================
+reporter.error.topic.replication.factor
+==========================
+🔘 3
+
+
+
+	 - Type: false
+	 - Default: SHORT
+	 - Importance: The replication factor of the error topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
+	 - Required: MEDIUM
+
+==========================
+reporter.error.topic.partitions
+==========================
+🔘 1
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The number of partitions in the error topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions in order to handle the potential throughput.
+	 - Required: MEDIUM
+
+==========================
+Formatter
+==========================
+🔘 reporter.error.topic.key.format
+
+The format in which the error report key is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.error.topic.key.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.key.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.key.format.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Formatter
+==========================
+🔘 reporter.error.topic.value.format
+
+The format in which the error report value is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.error.topic.value.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.value.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.value.format.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+reporter.bootstrap.servers
+==========================
+🔘 LIST
+
+
+
+	 - Type: MEDIUM
+	 - Default: false
+	 - Importance: 
+	 - Required: A list of host/port pairs to use for establishing the initial connection to the Kafka cluster. The client will make use of all servers irrespective of which servers are specified here for bootstrapping&mdash;this list only impacts the initial hosts used to discover the full set of servers. This list should be in the form <code>host1:port1,host2:port2,...</code>. Since these servers are just used for the initial connection to discover the full cluster membership (which may change dynamically), this list need not contain the full set of servers (you may want more than one, though, in case a server is down).
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 value.converter.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+==========================
+Schemas
+==========================
+🔘 value.converter.schemas.cache.size
+
+The maximum number of schemas that can be cached in this converter instance.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schemas
+==========================
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
