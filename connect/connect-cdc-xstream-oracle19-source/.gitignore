@@ -1,5 +1,6 @@
 *.zip
-*.txt
+ssl
+mtls
 lib
 orclcdc_readiness.sql
 orclcdc_diag.sql
