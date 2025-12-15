@@ -220,6 +220,15 @@ By default, the JDBC connector will validate that all incrementing and timestamp
 	 - Importance: If specified, the query to perform to select new or updated rows. Use this setting if you want to join tables, select subsets of columns in a table, or filter data. If used, this connector will only copy data using this query -- whole-table copying will be disabled. Different query modes may still be used for incremental updates, but in order to properly construct the incremental query, it must be possible to append a WHERE clause to this query (i.e. no WHERE clauses may be used). If you use a WHERE clause, it must handle incremental queries itself.
 	 - Required: MEDIUM
 
+🔘 query.masked
+
+Same as 'query' configuration but the query string is maskedUse this config to prevent sensitive information from being logged.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 quote.sql.identifiers
 
 When to quote table names, column names, and other identifiers in SQL statements. For backward compatibility, the default is ``always``.
