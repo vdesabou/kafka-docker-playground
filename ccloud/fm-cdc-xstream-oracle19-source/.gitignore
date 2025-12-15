@@ -1,5 +1,5 @@
 *.zip
-*.txt
+ssl
 lib
 orclcdc_diag.sql
 orclcdc_diag.html
