@@ -50,7 +50,7 @@ function cleanup_aws () {
     log "Cleanup AWS Kinesis streams"
     for stream in $(aws kinesis list-streams --region $AWS_REGION | jq '.StreamNames[]' -r)
     do
-        if [[ $stream = *pg${user}* ]]
+        if [[ $stream = *pg*${user}* ]]
         then
             log "Removing AWS Kinesis stream $stream"
             check_if_skip "aws kinesis delete-stream --stream-name $stream --region $AWS_REGION"
@@ -60,7 +60,7 @@ function cleanup_aws () {
     log "Cleanup AWS SQS queues"
     for queue in $(aws sqs list-queues --region $AWS_REGION | jq '.QueueUrls[]' -r)
     do
-        if [[ $queue = *pg${user}* ]]
+        if [[ $queue = *pg*${user}* ]]
         then
             log "Removing AWS SQS queue $queue"
             check_if_skip "aws sqs delete-queue --queue-url ${queue}"
@@ -70,7 +70,7 @@ function cleanup_aws () {
     log "Cleanup AWS Lambda functions"
     for function in $(aws lambda list-functions --region $AWS_REGION | jq '.Functions[].FunctionName' -r)
     do
-        if [[ $function = *pglambdafunction* ]] || [[ $function = *pg${user}* ]]
+        if [[ $function = *pglambdafunction* ]] || [[ $function = *pg*${user}* ]]
         then
             log "Removing AWS Lambda function $function"
             check_if_skip "aws lambda delete-function --function-name ${function}"
@@ -80,7 +80,7 @@ function cleanup_aws () {
     log "Cleanup AWS Lambda IAM roles"
     for role in $(aws iam list-roles --region $AWS_REGION | jq '.Roles[].RoleName' -r)
     do
-        if [[ $role = *pglambdarole* ]] || [[ $role = *pg${user}* ]]
+        if [[ $role = *pglambdarole* ]] || [[ $role = *pg*${user}* ]]
         then
             log "Removing AWS Lambda role $role"
             check_if_skip "aws iam delete-role --role-name ${role}"
@@ -90,13 +90,13 @@ function cleanup_aws () {
     log "Cleanup AWS CloudWatch log group"
     for log_group in $(aws logs describe-log-groups --region $AWS_REGION | jq '.logGroups[].logGroupName' -r)
     do
-        if [[ $log_group = *myloggroup* ]] || [[ $log_group = *pg${user}* ]]
+        if [[ $log_group = *myloggroup* ]] || [[ $log_group = *pg*${user}* ]]
         then
-            for log_stream in $(aws logs describe-log-streams --log-group-name $log_group --region $AWS_REGION | jq '.logStreams[].logStreamName' -r)
-            do
-                log "Removing AWS CloudWatch log stream $log_stream for log group $log_group"
-                check_if_skip "aws logs delete-log-stream --log-group-name ${log_group} --log-stream-name ${log_stream}"
-            done
+            # for log_stream in $(aws logs describe-log-streams --log-group-name $log_group --region $AWS_REGION | jq '.logStreams[].logStreamName' -r)
+            # do
+            #     log "Removing AWS CloudWatch log stream $log_stream for log group $log_group"
+            #     check_if_skip "aws logs delete-log-stream --log-group-name ${log_group} --log-stream-name \"${log_stream}\""
+            # done
 
             log "Removing AWS CloudWatch log group $log_group"
             check_if_skip "aws logs delete-log-group --log-group-name ${log_group}"
@@ -139,7 +139,7 @@ function cleanup_azure () {
     log "Cleanup Azure Resource groups"
     for group in $(az group list --query '[].name' --output tsv)
     do
-    if [[ $group = pg${user}* ]]
+    if [[ $group = pg*${user}* ]]
     then
         if [ ! -z "$GITHUB_RUN_NUMBER" ]
         then
@@ -175,7 +175,7 @@ function cleanup_gcp () {
     log "Cleanup GCP BQ datasets"
     for dataset in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" ls)
     do
-        if [[ $dataset = *pg${user}* ]]
+        if [[ $dataset = *pg*${user}* ]]
         then
             log "Remove GCP BQ dataset $dataset"
             check_if_skip "docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id \"$GCP_PROJECT\" rm -r -f -d \"$dataset\""
@@ -185,7 +185,7 @@ function cleanup_gcp () {
     log "Cleanup Spanner instances"
     for spanner_instance in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner instances list --project $GCP_PROJECT --format="value(NAME)")
     do
-        if [[ $spanner_instance = *pg${user}* ]]
+        if [[ $spanner_instance = *pg*${user}* ]]
         then
 
 #             for spanner_db in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner databases list --project $GCP_PROJECT --instance $spanner_instance --format="value(NAME)")
@@ -214,7 +214,7 @@ EOF
     log "Cleanup BigTable instances"
     for bigtable_instance in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud bigtable instances list --project $GCP_PROJECT --format="value(NAME)")
     do
-        if [[ $bigtable_instance = *pg${user}* ]]
+        if [[ $bigtable_instance = *pg*${user}* ]]
         then
             log "Remove BigTable instance $bigtable_instance"
             docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud bigtable instances delete $bigtable_instance --project $GCP_PROJECT << EOF
