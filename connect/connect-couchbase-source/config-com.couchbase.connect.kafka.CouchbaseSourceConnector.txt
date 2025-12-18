@@ -163,6 +163,15 @@ When the Kafka Connect framework polls the connector for new records, the connec
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 couchbase.scope
+
+If you specify neither "couchbase.scope" nor "couchbase.collections", the connector will stream from all collections of all scopes in the bucket.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: If you wish to stream from all collections within a scope, specify the scope name here.
+	 - Required: MEDIUM
+
 🔘 couchbase.collection.to.topic
 
 Collection and Topic are joined by an equals sign. Map entries are delimited by commas.
@@ -251,15 +260,6 @@ A document passes the jsonpath filter if the expression matches something in the
 	 - Type: false
 	 - Default: STRING
 	 - Importance: If you wish to filter the documents being sent, in addition to or instead of using a custom Filter class, this is applied before the couchbase.event.filter or the couchbase.source.handler
-	 - Required: MEDIUM
-
-🔘 couchbase.scope
-
-If you specify neither "couchbase.scope" nor "couchbase.collections", the connector will stream from all collections of all scopes in the bucket.
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: If you wish to stream from all collections within a scope, specify the scope name here.
 	 - Required: MEDIUM
 
 🔘 couchbase.topic
