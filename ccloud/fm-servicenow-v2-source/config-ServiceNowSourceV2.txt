@@ -24,10 +24,10 @@ Kafka Cluster credentials
 ==========================
 🔘 kafka.auth.mode
 
-Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode, whenever possible.
 
 	 - Type: STRING
-	 - Default: KAFKA_API_KEY
+	 - Default: ${connect.regional.connector}
 	 - Importance: HIGH
 	 - Required: false
 
@@ -550,6 +550,15 @@ Timestamp Field to be used for pagination.
 	 - Importance: Offset field if pagination query is used.
 	 - Required: LOW
 
+🔘 table1.request.parameters.separator
+
+Specifies a character to separate servicenow query parameters, which is not present in the provided pagination query. For example - by default, it is set to `&`. If `&` is part of the pagination query, set it to some other separator like `|`. Shouldn't be a `=`
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: LOW
+	 - Required: false
+
 🔘 table1.display.value
 
 Specify whether to display values for the ServiceNow table records.
@@ -567,15 +576,6 @@ Specify whether to display values for the ServiceNow table records.
 	 - Default: STRING
 	 - Importance: A comma-separated list of fields that should be included in the Kafka record. The list must necessarily include the selected timestamp field (either `sys_updated_on` or `sys_created_on`) and the `sys_id` field. It defaults to all fields from the response.
 	 - Required: LOW
-
-🔘 table1.suppress.pagination.header
-
-Indicates whether to remove the Link header from the response. The Link header provides various URLs to relative pages in the record set which you can use to paginate the returned record set.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: MEDIUM
-	 - Required: false
 
 🔘 table1.request.interval.ms
 
@@ -616,6 +616,15 @@ Indicates if a ``SELECT COUNT(*)`` query will run to retrieve the row count on t
 🔘 table1.query.domain
 
 Indicates whether to restrict the record search to the domains that are accessible to the logged in user . If set to ``true``, it excludes the records from domains that the current logged in user can't access.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table1.suppress.pagination.header
+
+Indicates whether to remove the Link header from the response. The Link header provides various URLs to relative pages in the record set which you can use to paginate the returned record set.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -688,6 +697,15 @@ Timestamp Field to be used for pagination.
 	 - Importance: Offset field if pagination query is used.
 	 - Required: LOW
 
+🔘 table2.request.parameters.separator
+
+Specifies a character to separate servicenow query parameters, which is not present in the provided pagination query. For example - by default, it is set to `&`. If `&` is part of the pagination query, set it to some other separator like `|`. Shouldn't be a `=`
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: LOW
+	 - Required: false
+
 🔘 table2.display.value
 
 Specify whether to display values for the ServiceNow table records.
@@ -712,15 +730,6 @@ The time in milliseconds to wait between consecutive requests.
 
 	 - Type: INT
 	 - Default: 2000
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 table2.suppress.pagination.header
-
-Indicates whether to remove the Link header from the response. The Link header provides various URLs to relative pages in the record set which you can use to paginate the returned record set.
-
-	 - Type: BOOLEAN
-	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -754,6 +763,15 @@ Indicates if a ``SELECT COUNT(*)`` query will run to retrieve the row count on t
 🔘 table2.query.domain
 
 Indicates whether to restrict the record search to the domains that are accessible to the logged in user . If set to ``true``, it excludes the records from domains that the current logged in user can't access.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table2.suppress.pagination.header
+
+Indicates whether to remove the Link header from the response. The Link header provides various URLs to relative pages in the record set which you can use to paginate the returned record set.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -826,6 +844,15 @@ Timestamp Field to be used for pagination.
 	 - Importance: Offset field if pagination query is used.
 	 - Required: LOW
 
+🔘 table3.request.parameters.separator
+
+Specifies a character to separate servicenow query parameters, which is not present in the provided pagination query. For example - by default, it is set to `&`. If `&` is part of the pagination query, set it to some other separator like `|`. Shouldn't be a `=`
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: LOW
+	 - Required: false
+
 🔘 table3.display.value
 
 Specify whether to display values for the ServiceNow table records.
@@ -843,15 +870,6 @@ Specify whether to display values for the ServiceNow table records.
 	 - Default: STRING
 	 - Importance: A comma-separated list of fields that should be included in the Kafka record. The list must necessarily include the selected timestamp field (either `sys_updated_on` or `sys_created_on`) and the `sys_id` field. It defaults to all fields from the response.
 	 - Required: LOW
-
-🔘 table3.suppress.pagination.header
-
-Indicates whether to remove the Link header from the response. The Link header provides various URLs to relative pages in the record set which you can use to paginate the returned record set.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: MEDIUM
-	 - Required: false
 
 🔘 table3.request.interval.ms
 
@@ -892,6 +910,15 @@ Indicates if a ``SELECT COUNT(*)`` query will run to retrieve the row count on t
 🔘 table3.query.domain
 
 Indicates whether to restrict the record search to the domains that are accessible to the logged in user . If set to ``true``, it excludes the records from domains that the current logged in user can't access.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table3.suppress.pagination.header
+
+Indicates whether to remove the Link header from the response. The Link header provides various URLs to relative pages in the record set which you can use to paginate the returned record set.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -964,6 +991,15 @@ Timestamp Field to be used for pagination.
 	 - Importance: Offset field if pagination query is used.
 	 - Required: LOW
 
+🔘 table4.request.parameters.separator
+
+Specifies a character to separate servicenow query parameters, which is not present in the provided pagination query. For example - by default, it is set to `&`. If `&` is part of the pagination query, set it to some other separator like `|`. Shouldn't be a `=`
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: LOW
+	 - Required: false
+
 🔘 table4.display.value
 
 Specify whether to display values for the ServiceNow table records.
@@ -981,15 +1017,6 @@ Specify whether to display values for the ServiceNow table records.
 	 - Default: STRING
 	 - Importance: A comma-separated list of fields that should be included in the Kafka record. The list must necessarily include the selected timestamp field (either `sys_updated_on` or `sys_created_on`) and the `sys_id` field. It defaults to all fields from the response.
 	 - Required: LOW
-
-🔘 table4.suppress.pagination.header
-
-Indicates whether to remove the Link header from the response. The Link header provides various URLs to relative pages in the record set which you can use to paginate the returned record set.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: MEDIUM
-	 - Required: false
 
 🔘 table4.request.interval.ms
 
@@ -1030,6 +1057,15 @@ Indicates if a ``SELECT COUNT(*)`` query will run to retrieve the row count on t
 🔘 table4.query.domain
 
 Indicates whether to restrict the record search to the domains that are accessible to the logged in user . If set to ``true``, it excludes the records from domains that the current logged in user can't access.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table4.suppress.pagination.header
+
+Indicates whether to remove the Link header from the response. The Link header provides various URLs to relative pages in the record set which you can use to paginate the returned record set.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -1102,6 +1138,15 @@ Timestamp Field to be used for pagination.
 	 - Importance: Offset field if pagination query is used.
 	 - Required: LOW
 
+🔘 table5.request.parameters.separator
+
+Specifies a character to separate servicenow query parameters, which is not present in the provided pagination query. For example - by default, it is set to `&`. If `&` is part of the pagination query, set it to some other separator like `|`. Shouldn't be a `=`
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: LOW
+	 - Required: false
+
 🔘 table5.display.value
 
 Specify whether to display values for the ServiceNow table records.
@@ -1119,15 +1164,6 @@ Specify whether to display values for the ServiceNow table records.
 	 - Default: STRING
 	 - Importance: A comma-separated list of fields that should be included in the Kafka record. The list must necessarily include the selected timestamp field (either `sys_updated_on` or `sys_created_on`) and the `sys_id` field. It defaults to all fields from the response.
 	 - Required: LOW
-
-🔘 table5.suppress.pagination.header
-
-Indicates whether to remove the Link header from the response. The Link header provides various URLs to relative pages in the record set which you can use to paginate the returned record set.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: MEDIUM
-	 - Required: false
 
 🔘 table5.request.interval.ms
 
@@ -1168,6 +1204,15 @@ Indicates if a ``SELECT COUNT(*)`` query will run to retrieve the row count on t
 🔘 table5.query.domain
 
 Indicates whether to restrict the record search to the domains that are accessible to the logged in user . If set to ``true``, it excludes the records from domains that the current logged in user can't access.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table5.suppress.pagination.header
+
+Indicates whether to remove the Link header from the response. The Link header provides various URLs to relative pages in the record set which you can use to paginate the returned record set.
 
 	 - Type: BOOLEAN
 	 - Default: true

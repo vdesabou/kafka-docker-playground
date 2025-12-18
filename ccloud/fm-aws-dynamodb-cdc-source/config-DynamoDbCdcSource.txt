@@ -24,10 +24,10 @@ Kafka Cluster credentials
 ==========================
 🔘 kafka.auth.mode
 
-Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode, whenever possible.
 
 	 - Type: STRING
-	 - Default: KAFKA_API_KEY
+	 - Default: ${connect.regional.connector}
 	 - Importance: HIGH
 	 - Required: false
 
@@ -146,6 +146,54 @@ Sets the output Kafka record key format. Valid entries are AVRO, JSON_SR, PROTOB
 	 - Type: STRING
 	 - Default: AVRO
 	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Schema Validation
+==========================
+🔘 document.content.format
+
+Sets the document content format. 'json_string' mode (default) outputs records as JSON strings in a 'document' field. 'schema' mode infers Kafka Connect schemas from DynamoDB records and outputs structured data with individual fields. Note that 'schema' mode requires appropriate converters (AVRO, JSON_SR, etc.) for full functionality.
+
+	 - Type: STRING
+	 - Default: json_string
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 document.schema.source
+
+Specifies the source of the document schema. This configuration is only used when 'document.content.format' is set to 'schema'. 'user_provided' (default) - records are validated against the schema specified in 'schema.user.schema' configuration. 'auto_infer' - the connector infers the schema from incoming records and registers it in Schema Registry. 
+
+	 - Type: STRING
+	 - Default: user_provided
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 document.schema.value
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Specifies an Avro schema definition for the document field of the SourceRecord. Required when 'document.schema.source' is set to 'user_provided'. Example: {"type":"record","name":"User","fields":[{"name":"id","type":["null","string"]},{"name":"name","type":["null","string"]}]}.
+	 - Required: MEDIUM
+
+🔘 document.schema.validation
+
+Schema validation mode. 'strict' = fail if extra fields, missing mandatory fields, or type mismatches are detected. 'lenient' = drop extra fields and continue processing, but still fail on missing mandatory fields and type mismatches (data integrity issues).
+
+	 - Type: STRING
+	 - Default: strict
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 decimal.handling.mode
+
+Controls how DynamoDB Number types are mapped to Kafka Connect schemas during auto-inference. Options: 'double' (always FLOAT64 - RECOMMENDED), 'long' (always INT64), 'string' (always STRING), 'auto' (infers INT32/INT64/FLOAT64 based on value). Only applicable when 'document.content.format=schema' and 'document.schema.source=auto_infer'. Default is 'double' for schema consistency and backward compatibility. WARNING: Using 'auto' mode can cause backward incompatible schemas when the range of numeric values varies widely between messages, as the same field may be inferred as different types (e.g., INT32 vs INT64 vs FLOAT64), leading to Schema Registry registration failures.
+
+	 - Type: STRING
+	 - Default: double
+	 - Importance: MEDIUM
 	 - Required: false
 
 ==========================
