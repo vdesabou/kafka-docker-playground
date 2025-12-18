@@ -69,10 +69,10 @@ Kafka Cluster credentials
 ==========================
 🔘 kafka.auth.mode
 
-Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode, whenever possible.
 
 	 - Type: STRING
-	 - Default: KAFKA_API_KEY
+	 - Default: ${connect.regional.connector}
 	 - Importance: HIGH
 	 - Required: false
 
@@ -484,21 +484,21 @@ Enable connector to automatically restart on user-actionable errors.
 ==========================
 Additional Configs
 ==========================
-🔘 value.converter.decimal.format
-
-Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
-
-	 - Type: STRING
-	 - Default: BASE64
-	 - Importance: LOW
-	 - Required: false
-
 🔘 value.converter.reference.subject.name.strategy
 
 Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
 
 	 - Type: STRING
 	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
 	 - Importance: LOW
 	 - Required: false
 

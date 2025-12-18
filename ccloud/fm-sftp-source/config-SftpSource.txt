@@ -24,10 +24,10 @@ Kafka Cluster credentials
 ==========================
 🔘 kafka.auth.mode
 
-Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode, whenever possible.
 
 	 - Type: STRING
-	 - Default: KAFKA_API_KEY
+	 - Default: ${connect.regional.connector}
 	 - Importance: HIGH
 	 - Required: false
 
@@ -77,6 +77,27 @@ Which topic do you want to send data to?
 	 - Type: true
 	 - Default: STRING
 	 - Importance: Identifies the topic name to write the data to.
+	 - Required: HIGH
+
+==========================
+CSFLE
+==========================
+🔘 csfle.enabled
+
+Determines whether the connector honours CSFLE rules or not
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sr.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
 	 - Required: HIGH
 
 ==========================
@@ -436,12 +457,12 @@ Flag to determine if the carriage return at the end of the line should be mainta
 	 - Importance: LOW
 	 - Required: false
 
-🔘 csv.null.field.indicator
+🔘 csv.null.field.mode
 
-Indicator to determine how the CSV Reader can determine if a field is null. Valid values are EMPTY_SEPARATORS, EMPTY_QUOTES, BOTH, NEITHER. For more information see http://opencsv.sourceforge.net/apidocs/com/opencsv/enums/CSVReaderNullFieldIndicator.html.
+Indicator to determine how the CSV Reader can determine if a field is null. Valid values are EMPTY_SEPARATORS, EMPTY_QUOTES, BOTH, NEITHER. For more information see http://opencsv.sourceforge.net/apidocs/com/opencsv/enums/CSVReaderNullFieldIndicator.html. NOTE: Empty quotes or empty delimiter for non-string fields are always treated as null.
 
 	 - Type: STRING
-	 - Default: NEITHER
+	 - Default: BOTH
 	 - Importance: LOW
 	 - Required: false
 
@@ -469,6 +490,15 @@ Flag to enable validating the integrity of all records in the CSV file before pr
 
 	 - Type: STRING
 	 - Default: NO
+	 - Importance: LOW
+	 - Required: false
+
+🔘 csv.null.field.indicator
+
+DEPRECATED: The config has been deprecated in favor of Null Field Mode.
+
+	 - Type: STRING
+	 - Default: NEITHER
 	 - Importance: LOW
 	 - Required: false
 
