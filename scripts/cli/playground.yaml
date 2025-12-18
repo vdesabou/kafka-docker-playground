@@ -211,6 +211,12 @@ subcommands:
             
         usage: playground cloud-resources aws COMMAND
         options: []
+      - name: azure
+        description: | 
+          azure commands
+            
+        usage: playground cloud-resources azure COMMAND
+        options: []
   - name: aws
     description: | 
         aws commands
@@ -270,6 +276,72 @@ subcommands:
             
             By default it will only display total cost in dollars. Use the --detailed flag to see more information.
         usage: playground cloud-resources aws costs-history [OPTIONS]
+        options:
+        - names:
+          - --detailed
+          argument: ""
+          description: | 
+            💹 display all details for each month
+            
+  - name: azure
+    description: | 
+        azure commands
+        
+    usage: playground cloud-resources azure COMMAND
+    options: []
+    subcommands:
+      - name: list
+        description: | 
+          📋 List all active resources
+            
+        usage: playground cloud-resources azure list [OPTIONS]
+        options:
+        - names:
+          - --user
+          argument: USER
+          description: | 
+            ☢️ force user
+            
+      - name: costs
+        description: | 
+          💰 Show azure costs
+            
+        usage: playground cloud-resources azure costs [OPTIONS]
+        options:
+        - names:
+          - --user
+          argument: USER
+          description: | 
+            ☢️ force user
+            
+        - names:
+          - --start-date
+          argument: START_DATE
+          description: | 
+            🗓️ start date in format yyyy-mm-dd
+            
+            Default is 30 days ago
+            
+        - names:
+          - --end-date
+          argument: END_DATE
+          description: | 
+            🗓️ end date in format yyyy-mm-dd
+            
+              Default is 3 days ago
+            
+        - names:
+          - --display-only-total-cost
+          argument: ""
+          description: | 
+            💰 display only total cost
+            
+      - name: costs-history
+        description: | 
+          👛  Retrieve azure costs for each month since last year
+            
+            By default it will only display total cost in dollars. Use the --detailed flag to see more information.
+        usage: playground cloud-resources azure costs-history [OPTIONS]
         options:
         - names:
           - --detailed
