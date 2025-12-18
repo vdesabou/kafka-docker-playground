@@ -96,10 +96,10 @@ Kafka Cluster credentials
 ==========================
 🔘 kafka.auth.mode
 
-Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode, whenever possible.
 
 	 - Type: STRING
-	 - Default: KAFKA_API_KEY
+	 - Default: ${connect.regional.connector}
 	 - Importance: HIGH
 	 - Required: false
 
@@ -310,6 +310,15 @@ Flag to prevent reference type fields from being updated or inserted in Salesfor
 	 - Importance: LOW
 	 - Required: false
 
+🔘 skip.object1.relationship.fields
+
+Flag to skip relationship fields in records from being updated or inserted in Salesforce SObjects.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 salesforce.object1.use.custom.id.field
 
 Flag to use custom external id field in SObjects.
@@ -383,6 +392,15 @@ Flag to prevent reference type fields from being updated or inserted in Salesfor
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: LOW
+	 - Required: false
+
+🔘 skip.object2.relationship.fields
+
+Flag to skip relationship fields in records from being updated or inserted in Salesforce SObjects.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
 	 - Required: false
 
 🔘 salesforce.object2.use.custom.id.field
@@ -460,6 +478,15 @@ Flag to prevent reference type fields from being updated or inserted in Salesfor
 	 - Importance: LOW
 	 - Required: false
 
+🔘 skip.object3.relationship.fields
+
+Flag to skip relationship fields in records from being updated or inserted in Salesforce SObjects.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 salesforce.object3.use.custom.id.field
 
 Flag to use custom external id field in SObjects.
@@ -535,6 +562,15 @@ Flag to prevent reference type fields from being updated or inserted in Salesfor
 	 - Importance: LOW
 	 - Required: false
 
+🔘 skip.object4.relationship.fields
+
+Flag to skip relationship fields in records from being updated or inserted in Salesforce SObjects.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 salesforce.object4.use.custom.id.field
 
 Flag to use custom external id field in SObjects.
@@ -608,6 +644,15 @@ Flag to prevent reference type fields from being updated or inserted in Salesfor
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: LOW
+	 - Required: false
+
+🔘 skip.object5.relationship.fields
+
+Flag to skip relationship fields in records from being updated or inserted in Salesforce SObjects.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
 	 - Required: false
 
 🔘 salesforce.object5.use.custom.id.field
