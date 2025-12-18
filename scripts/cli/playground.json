@@ -117,6 +117,91 @@
       "subcommands": null
     },
     {
+      "name": "cloud-resources",
+      "description": "🔗 Connector commands\n",
+      "usage": "playground cloud-resources COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "aws",
+          "description": "aws commands\n  \n",
+          "usage": "playground cloud-resources aws COMMAND",
+          "options": []
+        }
+      ]
+    },
+    {
+      "name": "aws",
+      "description": "aws commands\n",
+      "usage": "playground cloud-resources aws COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "list",
+          "description": "📋 List all active resources\n  \n",
+          "usage": "playground cloud-resources aws list [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--user"
+              ],
+              "argument": "USER",
+              "description": "☢️ force user\n"
+            }
+          ]
+        },
+        {
+          "name": "costs",
+          "description": "💰 Show aws costs\n  \n",
+          "usage": "playground cloud-resources aws costs [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--user"
+              ],
+              "argument": "USER",
+              "description": "☢️ force user\n"
+            },
+            {
+              "names": [
+                "--start-date"
+              ],
+              "argument": "START_DATE",
+              "description": "🗓️ start date in format yyyy-mm-dd\n\nDefault is 30 days ago\n"
+            },
+            {
+              "names": [
+                "--end-date"
+              ],
+              "argument": "END_DATE",
+              "description": "🗓️ end date in format yyyy-mm-dd\n\n  Default is 3 days ago\n"
+            },
+            {
+              "names": [
+                "--display-only-total-cost"
+              ],
+              "argument": "",
+              "description": "💰 display only total cost\n"
+            }
+          ]
+        },
+        {
+          "name": "costs-history",
+          "description": "👛  Retrieve aws costs for each month since last year\n  \n  By default it will only display total cost in dollars. Use the --detailed flag to see more information.\n",
+          "usage": "playground cloud-resources aws costs-history [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--detailed"
+              ],
+              "argument": "",
+              "description": "💹 display all details for each month\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "ccloud-costs",
       "description": "💰  Retrieve ccloud costs for a range of dates\n\nAll you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n\nCost data can take up to 72 hours to become available.\n\nStart date can reach a maximum of one year into the past\n\nOne month is the maximum window between start and end dates\n\nFor accuracy, Confluent recommends using a start_date that is at least 72 hours prior to the current date and time.\n",
       "usage": "playground ccloud-costs [OPTIONS]",

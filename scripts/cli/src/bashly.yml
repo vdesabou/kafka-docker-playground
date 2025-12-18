@@ -575,6 +575,63 @@ commands:
   examples:
     - playground ai --model gemini-1.5-pro-latest --output-format json
 
+- name: cloud-resources
+  expose: always
+  group: Cloud Resources
+  help: |-
+    🔗 Connector commands
+
+  commands:
+  - name: aws
+    help: |
+      aws commands
+    commands:
+    - name: list
+      help: |
+        📋 List all active resources
+      flags:
+      - &user
+        long: --user
+        private: true
+        arg: user
+        help: |-
+          ☢️ force user
+    - name: costs
+      help: |
+        💰 Show aws costs
+      flags:
+      - *user
+      - long: --start-date
+        arg: start_date
+        validate: date_format
+        required: false
+        help: |- 
+          🗓️ start date in format yyyy-mm-dd
+
+          Default is 30 days ago
+      - long: --end-date
+        arg: end_date
+        validate: date_format
+        required: false
+        help: |- 
+          🗓️ end date in format yyyy-mm-dd
+
+            Default is 3 days ago
+      - long: --display-only-total-cost
+        private: true
+        help: |-
+          💰 display only total cost
+    - name: costs-history
+      help: |-
+        👛  Retrieve aws costs for each month since last year
+        
+        By default it will only display total cost in dollars. Use the --detailed flag to see more information.
+
+      flags:
+        - long: --detailed
+          help: |-
+            💹 display all details for each month
+
 - name: ccloud-costs
   dependencies:
     confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
