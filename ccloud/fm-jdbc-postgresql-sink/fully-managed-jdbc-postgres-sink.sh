@@ -15,10 +15,10 @@ bootstrap_ccloud_environment
 
 
 set +e
-playground topic delete --topic orders
+playground topic delete --topic myproducts
 set -e
 
-playground topic create --topic orders
+playground topic create --topic myproducts
 
 docker compose build
 docker compose down -v --remove-orphans
@@ -72,7 +72,7 @@ playground connector create-or-update --connector $connector_name << EOF
   "connection.user": "myuser",
   "connection.password": "mypassword",
   "db.name": "postgres",
-  "topics": "orders",
+  "topics": "myproducts",
   "db.timezone": "UTC",
   "auto.create": "true",
   "tasks.max": "1"
@@ -82,8 +82,8 @@ wait_for_ccloud_connector_up $connector_name 180
 
 sleep 5
 
-log "Sending messages to topic orders"
-playground topic produce -t orders --nb-messages 1 << 'EOF'
+log "Sending messages to topic myproducts"
+playground topic produce -t myproducts --nb-messages 1 << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -108,7 +108,7 @@ playground topic produce -t orders --nb-messages 1 << 'EOF'
 }
 EOF
 
-playground topic produce -t orders --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
+playground topic produce -t myproducts --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -136,8 +136,8 @@ EOF
 sleep 5
 
 
-log "Show content of ORDERS table:"
-docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM ORDERS'" > /tmp/result.log  2>&1
+log "Show content of MYPRODUCTS table:"
+docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM MYPRODUCTS'" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "foo" /tmp/result.log
 

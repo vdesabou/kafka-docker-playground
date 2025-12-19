@@ -56,7 +56,7 @@ curl -X PUT \
      http://localhost:8083/connectors/elastic-sink/config
 
 log "Create ssh logs"
-docker exec -i connect bash -c 'unset KAFKA_DEBUG;kafka-topics --bootstrap-server broker:9092 --topic ssh_logs --partitions 1 --replication-factor 1 --create'
+docker exec -i connect -e KAFKA_DEBUG="" bash -c 'kafka-topics --bootstrap-server broker:9092 --topic ssh_logs --partitions 1 --replication-factor 1 --create'
 
 log "Create the ksqlDB stream"
 timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
