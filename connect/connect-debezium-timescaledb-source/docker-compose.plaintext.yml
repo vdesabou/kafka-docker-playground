@@ -1,0 +1,30 @@
+---
+services:
+
+  postgres:
+    image: debezium/postgres:15-alpine
+    hostname: postgres
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=mypassword
+      - POSTGRES_DB=postgres
+
+
+  timescaledb:
+    image: quay.io/debezium/timescaledb:2.4
+    hostname: timescaledb
+    container_name: timescaledb
+    build:
+      context: ../../connect/connect-debezium-timescaledb-source/timescaledb
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+  connect:
+    depends_on:
+      - postgres
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/debezium-debezium-connector-postgresql
