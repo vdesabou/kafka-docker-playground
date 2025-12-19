@@ -22,7 +22,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Debezium PostgreSQL source connector with TimescaleDB"
-playground connector create-or-update --connector debezium-postgres-source  << EOF
+playground connector create-or-update --connector debezium-timescaledb-source  << EOF
 {
     "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
     "tasks.max": "1",
