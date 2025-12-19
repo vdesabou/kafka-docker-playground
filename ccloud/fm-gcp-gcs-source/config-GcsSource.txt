@@ -48,10 +48,10 @@ Kafka Cluster credentials
 ==========================
 🔘 kafka.auth.mode
 
-Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode, whenever possible.
 
 	 - Type: STRING
-	 - Default: KAFKA_API_KEY
+	 - Default: ${connect.regional.connector}
 	 - Importance: HIGH
 	 - Required: false
 
@@ -288,15 +288,6 @@ Number of tasks for this connector
 ==========================
 Additional Configs
 ==========================
-🔘 value.converter.decimal.format
-
-Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
-
-	 - Type: STRING
-	 - Default: BASE64
-	 - Importance: LOW
-	 - Required: false
-
 🔘 value.converter.replace.null.with.default
 
 Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
@@ -333,6 +324,24 @@ Use this property if you would like to configure the connector's error handling 
 	 - Importance: LOW
 	 - Required: false
 
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.connect.meta.data
 
 
@@ -357,15 +366,6 @@ How to construct the subject name for key schema registration.
 
 	 - Type: STRING
 	 - Default: TopicNameStrategy
-	 - Importance: LOW
-	 - Required: false
-
-🔘 value.converter.ignore.default.for.nullables
-
-When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
-
-	 - Type: BOOLEAN
-	 - Default: false
 	 - Importance: LOW
 	 - Required: false
 

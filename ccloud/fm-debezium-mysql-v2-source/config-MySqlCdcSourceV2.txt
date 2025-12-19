@@ -24,10 +24,10 @@ Kafka Cluster credentials
 ==========================
 🔘 kafka.auth.mode
 
-Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode, whenever possible.
 
 	 - Type: STRING
-	 - Default: KAFKA_API_KEY
+	 - Default: ${connect.regional.connector}
 	 - Importance: HIGH
 	 - Required: false
 

@@ -24,10 +24,10 @@ Kafka Cluster credentials
 ==========================
 🔘 kafka.auth.mode
 
-Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode, whenever possible.
 
 	 - Type: STRING
-	 - Default: KAFKA_API_KEY
+	 - Default: ${connect.regional.connector}
 	 - Importance: HIGH
 	 - Required: false
 
@@ -196,6 +196,15 @@ Database details
 	 - Importance: A comma-separated list of regular expressions that match the fully-qualified names of tables to be excluded from copying. Use a comma-separated list to specify multiple regular expressions. Table names are case-sensitive. For example, ``table.exclude.list: schema1.customer.*,schema2.order.*``. If specified, ``table.whitelist`` cannot not be set.
 	 - Required: MEDIUM
 
+🔘 query
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: If specified, the connector uses this custom SQL query to read source records, which allows for operations like joining tables or selecting subsets of data. Providing a query instructs the connector to read only the result set instead of performing a full table copy. This configuration supports different query modes with the incremental query properly constructed by appending a WHERE clause (For more information, `Incremental Query Modes - <https://docs.confluent.io/kafka-connectors/jdbc/current/source-connector/overview.html#incremental-query-modes>`). Note that only SELECT statements are supported. Always adhere to security best practices, like enforcing strict authorization via `<https://docs.confluent.io/cloud/current/connectors/managed-connector-rbac.html#managed-connector-rbac>`, applying appropriate :ref: `network access controls - <https://docs.confluent.io/cloud/current/security/access-control/ip-filtering/manage-ip-filters.html>` for control plane APIs, and following the principle of least privilege when provisioning identities or credentials for any third-party systems.
+	 - Required: MEDIUM
+
 🔘 table.types
 
 By default, the JDBC connector will only detect tables with type TABLE from the source Database. This config allows a command separated list of table types to extract.
@@ -356,6 +365,27 @@ How long to wait after a row with a certain timestamp appears before we include 
 	 - Required: false
 
 ==========================
+CSFLE
+==========================
+🔘 csfle.enabled
+
+Determines whether the connector honours CSFLE rules or not
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sr.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
+	 - Required: HIGH
+
+==========================
 Output messages
 ==========================
 🔘 output.data.format
@@ -382,15 +412,6 @@ Number of tasks for this connector
 ==========================
 Additional Configs
 ==========================
-🔘 value.converter.decimal.format
-
-Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
-
-	 - Type: STRING
-	 - Default: BASE64
-	 - Importance: LOW
-	 - Required: false
-
 🔘 value.converter.replace.null.with.default
 
 Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
@@ -427,6 +448,24 @@ Use this property if you would like to configure the connector's error handling 
 	 - Importance: LOW
 	 - Required: false
 
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.connect.meta.data
 
 
@@ -451,15 +490,6 @@ How to construct the subject name for key schema registration.
 
 	 - Type: STRING
 	 - Default: TopicNameStrategy
-	 - Importance: LOW
-	 - Required: false
-
-🔘 value.converter.ignore.default.for.nullables
-
-When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
-
-	 - Type: BOOLEAN
-	 - Default: false
 	 - Importance: LOW
 	 - Required: false
 

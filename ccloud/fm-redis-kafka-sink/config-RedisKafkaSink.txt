@@ -66,10 +66,10 @@ Kafka Cluster credentials
 ==========================
 🔘 kafka.auth.mode
 
-Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode, whenever possible.
 
 	 - Type: STRING
-	 - Default: KAFKA_API_KEY
+	 - Default: ${connect.regional.connector}
 	 - Importance: HIGH
 	 - Required: false
 
@@ -169,6 +169,45 @@ The database index to write to.
 	 - Importance: The username of the Redis user connecting to the Redis database server.
 	 - Required: MEDIUM
 
+🔘 redis.server.mode
+
+Whether redis server is running on one or multiple nodes.
+
+	 - Type: STRING
+	 - Default: Standalone
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Auth Mode
+==========================
+🔘 rediskafka.cluster.service.name
+
+Specify the Redis service you are using. Choose `AWS ElastiCache` for Amazon ElastiCache, `AWS MemoryDB` for Amazon MemoryDB, or `Others` for any other Redis service (self-hosted, Redis Cloud, etc.). Note: IAM roles authentication is only supported for AWS ElastiCache and AWS MemoryDB services. For other services, use password authentication.
+
+	 - Type: STRING
+	 - Default: Others
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 authentication.method
+
+Select how you want to authenticate the DB. Username Password or AWS IAM Roles.
+
+	 - Type: STRING
+	 - Default: Password
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing integration that has access to your resource. In case you need to integrate a new IAM role, use provider integration
+	 - Required: HIGH
+
 🔘 redis.password
 
 
@@ -177,6 +216,33 @@ The database index to write to.
 	 - Default: PASSWORD
 	 - Importance: The password of the Redis user connecting to the Redis database server.
 	 - Required: MEDIUM
+
+🔘 rediskafka.aws.credentials.provider.cluster.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of your AWS ElastiCache or MemoryDB cluster that you want to connect to.
+	 - Required: MEDIUM
+
+🔘 rediskafka.aws.credentials.provider.elasticache.is.serverless
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Set to `true` if you are connecting to an ElastiCache serverless configuration. This setting affects how the IAM authentication token is generated for ElastiCache serverless endpoints.
+	 - Required: MEDIUM
+
+🔘 rediskafka.aws.credentials.provider.cluster.region
+
+The AWS region where your cluster is deployed (e.g., us-east-1, eu-west-1). This must match the region of your ElastiCache or MemoryDB cluster for IAM authentication to work correctly.
+
+	 - Type: STRING
+	 - Default: us-west-2
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Redis security
@@ -343,15 +409,6 @@ Maximum number of connections in the pool in the range of 1 to 100.
 
 	 - Type: INT
 	 - Default: 8
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 redis.server.mode
-
-Whether redis server is running on one or multiple nodes.
-
-	 - Type: STRING
-	 - Default: Standalone
 	 - Importance: MEDIUM
 	 - Required: false
 

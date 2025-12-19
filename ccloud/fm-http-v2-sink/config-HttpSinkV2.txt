@@ -87,10 +87,10 @@ Kafka Cluster credentials
 ==========================
 🔘 kafka.auth.mode
 
-Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode, whenever possible.
 
 	 - Type: STRING
-	 - Default: KAFKA_API_KEY
+	 - Default: ${connect.regional.connector}
 	 - Importance: HIGH
 	 - Required: false
 
@@ -829,7 +829,7 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
 🔘 api1.regex.separator
@@ -1147,7 +1147,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
 🔘 api2.regex.separator
@@ -1465,7 +1465,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
 🔘 api3.regex.separator
@@ -1783,7 +1783,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
 🔘 api4.regex.separator
@@ -2101,7 +2101,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
 🔘 api5.regex.separator
@@ -2419,7 +2419,7 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
 🔘 api6.regex.separator
@@ -2737,7 +2737,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
 🔘 api7.regex.separator
@@ -3055,7 +3055,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
 🔘 api8.regex.separator
@@ -3373,7 +3373,7 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
 🔘 api9.regex.separator
@@ -3691,7 +3691,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
 🔘 api10.regex.separator
@@ -4009,7 +4009,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
 🔘 api11.regex.separator
@@ -4327,7 +4327,7 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
 🔘 api12.regex.separator
@@ -4645,7 +4645,7 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
 🔘 api13.regex.separator
@@ -4963,7 +4963,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
 🔘 api14.regex.separator
@@ -5281,7 +5281,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
 🔘 api15.regex.separator
