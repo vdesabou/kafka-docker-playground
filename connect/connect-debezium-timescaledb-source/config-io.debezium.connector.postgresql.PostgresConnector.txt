@@ -1,43 +1,25 @@
 ==========================
-Transforms: addTopicSuffix
+Transforms: timescaledb
 ==========================
-🔘 transforms.addTopicSuffix.type
+🔘 transforms.timescaledb.type
 
-Class for the 'addTopicSuffix' transformation.
+Class for the 'timescaledb' transformation.
 
 	 - Type: CLASS
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 transforms.addTopicSuffix.plugin.version
+🔘 transforms.timescaledb.plugin.version
 
-Version of the 'addTopicSuffix' transformation.
+Version of the 'timescaledb' transformation.
 
 	 - Type: STRING
-	 - Default: 8.1.1-ce
+	 - Default: 3.1.2.Final
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 transforms.addTopicSuffix.regex
-
-Regular expression to use for matching.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
-🔘 transforms.addTopicSuffix.replacement
-
-Replacement string.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
-🔘 transforms.addTopicSuffix.negate
+🔘 transforms.timescaledb.negate
 
 Whether the configured predicate should be negated.
 
@@ -46,12 +28,30 @@ Whether the configured predicate should be negated.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 transforms.addTopicSuffix.predicate
+🔘 transforms.timescaledb.predicate
 
 The alias of a predicate used to determine whether to apply this transformation.
 
 	 - Type: STRING
 	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.timescaledb.schema.list
+
+Comma-separated list schema names that contain TimescaleDB data tables, defaults to: '_timescaledb_internal'
+
+	 - Type: LIST
+	 - Default: _timescaledb_internal
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 transforms.timescaledb.target.topic.prefix
+
+The namespace (prefix) of topics where TimescaleDB events will be routed, defaults to: '_timescaledb_internal'
+
+	 - Type: STRING
+	 - Default: timescaledb
 	 - Importance: MEDIUM
 	 - Required: false
 
