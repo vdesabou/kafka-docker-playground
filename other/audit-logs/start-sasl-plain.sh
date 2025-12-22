@@ -14,4 +14,4 @@ playground start-environment --environment sasl-plain --docker-compose-override-
 sleep 10
 
 log "Checking messages from topic confluent-audit-log-events"
-docker exec -i connect -e KAFKA_DEBUG="" kafka-console-consumer --bootstrap-server broker:9092 --topic confluent-audit-log-events --consumer.config /tmp/client.properties --from-beginning --max-messages 5
+docker exec -e KAFKA_DEBUG="" -i connect  kafka-console-consumer --bootstrap-server broker:9092 --topic confluent-audit-log-events --consumer.config /tmp/client.properties --from-beginning --max-messages 5
