@@ -18205,6 +18205,14 @@ playground_run_command() {
 
   playground generate-fzf-find-files &
   generate_connector_versions > /dev/null 2>&1 &
+
+  if [[ $test_file == *"aws"* ]]
+  then
+      playground cloud-resources aws costs-history > /tmp/aws-costs-history.txt &
+  elif [[ $test_file == *"azure"* ]]
+  then
+      playground cloud-resources azure costs-history > /tmp/azure-costs-history.txt &
+  fi
   set +e
 
   if [ ! -z "$ENABLE_CONTROL_CENTER" ]
@@ -18340,6 +18348,40 @@ playground_run_command() {
         cat /tmp/ccloud-costs-history.txt
       fi
       log "👀 if you want more details, run <playground ccloud-costs-history --detailed>"
+    elif [[ $test_file == *"aws"* ]]
+    then
+      echo ""
+      # wait that process with "playground cloud-resources aws costs-history" is finished
+      set +e
+      while pgrep -f "playground cloud-resources aws costs-history" > /dev/null
+      do
+        log "⌛ wait for monthly aws costs..."
+        sleep 5
+      done
+      set -e
+      if [ -f /tmp/aws-costs-history.txt ]
+      then
+        log "📅💰 monthly aws costs"
+        cat /tmp/aws-costs-history.txt
+      fi
+      log "👀 if you want more details, run <playground cloud-resources aws costs-history --detailed>"
+    elif [[ $test_file == *"azure"* ]]
+    then
+      echo ""
+      # wait that process with "playground cloud-resources azure costs-history" is finished
+      set +e
+      while pgrep -f "playground cloud-resources azure costs-history" > /dev/null
+      do
+        log "⌛ wait for monthly azure costs..."
+        sleep 5
+      done
+      set -e
+      if [ -f /tmp/azure-costs-history.txt ]
+      then
+        log "📅💰 monthly azure costs"
+        cat /tmp/azure-costs-history.txt
+      fi
+      log "👀 if you want more details, run <playground cloud-resources azure costs-history --detailed>"
     fi
   fi
 }
