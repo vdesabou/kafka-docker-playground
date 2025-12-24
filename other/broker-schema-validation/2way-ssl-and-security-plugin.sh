@@ -71,7 +71,7 @@ docker exec -e KAFKA_DEBUG="" -i connect kafka-console-producer \
 EOF
 
 log "Sending a Avro record, it should work"
-docker exec -e KAFKA_DEBUG=""-i connect kafka-avro-console-producer \
+docker exec -e KAFKA_DEBUG="" -i connect kafka-avro-console-producer \
      --topic topic-validation \
      --bootstrap-server broker:9092 \
      --property basic.auth.credentials.source=USER_INFO \
