@@ -3791,10 +3791,7 @@ function login_and_maybe_set_azure_subscription () {
 
   if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
   then
-    log "🫐 Logging to Azure using environment variables AZ_USER and AZ_PASS "
-    set +e
-    az logout
-    set -e
+    log "🫐 Logging to Azure using environment variables AZ_USER and AZ_PASS"
     az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
   else
     logerror "❌ AZ_USER and AZ_PASS environment variables are not set (for Confluent employees, that is simply your Confluent email address and Okta password)"
