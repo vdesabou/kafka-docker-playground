@@ -25,8 +25,10 @@ set +e
 if [ "$AWS_REGION" == "us-east-1" ]
 then
     aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION
+    aws s3api put-bucket-tagging --bucket $AWS_BUCKET_NAME --tagging "TagSet=[{Key=cflt_managed_by,Value=user},{Key=cflt_managed_id,Value=$USER}]"
 else
     aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
+    aws s3api put-bucket-tagging --bucket $AWS_BUCKET_NAME --tagging "TagSet=[{Key=cflt_managed_by,Value=user},{Key=cflt_managed_id,Value=$USER}]"
 fi
 set -e
 log "Empty bucket <$AWS_BUCKET_NAME/$TAG>, if required"
