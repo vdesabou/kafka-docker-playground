@@ -130,7 +130,6 @@ function cleanup_aws () {
 function cleanup_azure () {
     if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
     then
-        az logout
         az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
     fi
 
