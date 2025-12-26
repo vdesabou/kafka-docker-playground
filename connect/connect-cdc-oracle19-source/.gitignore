@@ -1,4 +1,5 @@
 *.zip
-*.txt
 current_scn
 oracle-readiness.sql
+ssl
+mtls
