@@ -154,6 +154,15 @@ The connector writes metrics to the log at this interval.
 ==========================
 Sink Behavior
 ==========================
+🔘 couchbase.document.id
+
+If not specified, the Couchbase document ID is the Kafka record key.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Format string to use for the Couchbase document ID. May refer to document fields via placeholders like ${/path/to/field}
+	 - Required: MEDIUM
+
 🔘 couchbase.default.collection
 
 Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
@@ -198,15 +207,6 @@ Overrides the `couchbase.sink.handler` property.
 	 - Default: DOCUMENT
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 couchbase.document.id
-
-If not specified, the Couchbase document ID is the Kafka record key.
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Format string to use for the Couchbase document ID. May refer to document fields via placeholders like ${/path/to/field}
-	 - Required: MEDIUM
 
 🔘 couchbase.remove.document.id
 
