@@ -172,6 +172,24 @@ If you specify neither "couchbase.scope" nor "couchbase.collections", the connec
 	 - Importance: If you wish to stream from all collections within a scope, specify the scope name here.
 	 - Required: MEDIUM
 
+🔘 couchbase.collection.to.topic
+
+Collection and Topic are joined by an equals sign. Map entries are delimited by commas.
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A map from Couchbase collection to Kafka topic.
+	 - Required: MEDIUM
+
+🔘 couchbase.source.handler
+
+The fully-qualified class name of the source handler to use. The source handler determines how the Couchbase document is converted into a Kafka record.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: true
+
 🔘 couchbase.header.name.prefix
 
 The connector prepends this value to header names to prevent collision with headers set by other parts of the system.
@@ -243,24 +261,6 @@ A document passes the jsonpath filter if the expression matches something in the
 	 - Default: STRING
 	 - Importance: If you wish to filter the documents being sent, in addition to or instead of using a custom Filter class, this is applied before the couchbase.event.filter or the couchbase.source.handler
 	 - Required: MEDIUM
-
-🔘 couchbase.collection.to.topic
-
-Collection and Topic are joined by an equals sign. Map entries are delimited by commas.
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A map from Couchbase collection to Kafka topic.
-	 - Required: MEDIUM
-
-🔘 couchbase.source.handler
-
-The fully-qualified class name of the source handler to use. The source handler determines how the Couchbase document is converted into a Kafka record.
-
-	 - Type: CLASS
-	 - Default: null
-	 - Importance: MEDIUM
-	 - Required: true
 
 🔘 couchbase.topic
 

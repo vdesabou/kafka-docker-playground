@@ -28,15 +28,6 @@ This property is required unless using the experimental AnalyticsSinkHandler.
 	 - Importance: Name of the Couchbase bucket to use.
 	 - Required: HIGH
 
-🔘 couchbase.seed.nodes
-
-Addresses of Couchbase Server nodes, delimited by commas.
-
-	 - Type: LIST
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
 🔘 couchbase.network
 
 The network selection strategy for connecting to a Couchbase Server cluster that advertises alternate addresses.
@@ -45,6 +36,15 @@ The network selection strategy for connecting to a Couchbase Server cluster that
 	 - Default: auto
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 couchbase.seed.nodes
+
+Addresses of Couchbase Server nodes, delimited by commas.
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 couchbase.bootstrap.timeout
 
@@ -58,6 +58,33 @@ On startup, the connector will wait this long for a Couchbase connection to be e
 ==========================
 Security
 ==========================
+🔘 couchbase.trust.store.password
+
+Password for accessing the trust store.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.client.certificate.path
+
+If you supply a value for this config property, the `couchbase.username` and `couchbase.password` properties will be ignored.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Absolute filesystem path to a Java keystore or PKCS12 bundle holding the private key and certificate chain to use for client certificate authentication (mutual TLS).
+	 - Required: MEDIUM
+
+🔘 couchbase.client.certificate.password
+
+Password for accessing the client certificate.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.enable.tls
 
 Use secure connection to Couchbase Server.
@@ -94,33 +121,6 @@ If you want to use a Java keystore instead of a PEM file, specify `couchbase.tru
 	 - Importance: Absolute filesystem path to the PEM file containing the CA certificate used by Couchbase Server.
 	 - Required: MEDIUM
 
-🔘 couchbase.client.certificate.path
-
-If you supply a value for this config property, the `couchbase.username` and `couchbase.password` properties will be ignored.
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Absolute filesystem path to a Java keystore or PKCS12 bundle holding the private key and certificate chain to use for client certificate authentication (mutual TLS).
-	 - Required: MEDIUM
-
-🔘 couchbase.client.certificate.password
-
-Password for accessing the client certificate.
-
-	 - Type: PASSWORD
-	 - Default: [hidden]
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.trust.store.password
-
-Password for accessing the trust store.
-
-	 - Type: PASSWORD
-	 - Default: [hidden]
-	 - Importance: MEDIUM
-	 - Required: false
-
 ==========================
 Logging
 ==========================
@@ -154,15 +154,6 @@ The connector writes metrics to the log at this interval.
 ==========================
 Sink Behavior
 ==========================
-🔘 couchbase.document.id
-
-If not specified, the Couchbase document ID is the Kafka record key.
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Format string to use for the Couchbase document ID. May refer to document fields via placeholders like ${/path/to/field}
-	 - Required: MEDIUM
-
 🔘 couchbase.default.collection
 
 Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
@@ -207,6 +198,15 @@ Overrides the `couchbase.sink.handler` property.
 	 - Default: DOCUMENT
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 couchbase.document.id
+
+If not specified, the Couchbase document ID is the Kafka record key.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Format string to use for the Couchbase document ID. May refer to document fields via placeholders like ${/path/to/field}
+	 - Required: MEDIUM
 
 🔘 couchbase.remove.document.id
 
