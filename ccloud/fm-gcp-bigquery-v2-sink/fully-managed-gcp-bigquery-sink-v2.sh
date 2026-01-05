@@ -61,6 +61,8 @@ trap cleanup_cloud_resources EXIT
 
 log "Creating bqtopic topic in Confluent Cloud"
 set +e
+playground topic delete --topic bqtopic
+sleep 2
 playground topic create --topic bqtopic
 set -e
 
