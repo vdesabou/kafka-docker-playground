@@ -1,1 +1,1 @@
-confluent kafka region list | awk -F'|' '{print $1"/"$3}' | sed 's/[[:blank:]]//g' | grep -v "CloudID" | grep -v "\-\-\-" | grep -v '^/' > $root_folder/scripts/cli/confluent-kafka-region-list.txt
+confluent kafka region list | awk -F'|' '{print $2"/"$3}' | sed 's/[[:blank:]]//g' | grep -v "Cloud" | grep -v "\-\-\-" | grep -v '^/' > $root_folder/scripts/cli/confluent-kafka-region-list.txt
