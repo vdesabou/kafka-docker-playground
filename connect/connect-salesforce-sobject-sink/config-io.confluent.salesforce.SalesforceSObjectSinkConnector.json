@@ -49,6 +49,7 @@
     "salesforce.use.custom.id.field": "false",
     "salesforce.username": "",
     "salesforce.version": "latest",
+    "skip.relationship.fields": "true",
     "topics": "",
     "topics.regex": "",
     "value.converter.converter.type": "",

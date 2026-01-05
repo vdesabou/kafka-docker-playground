@@ -466,6 +466,15 @@ Flag to prevent reference type fields from being updated or inserted in Salesfor
 	 - Importance: LOW
 	 - Required: false
 
+🔘 skip.relationship.fields
+
+Flag to skip relationship fields in records from being updated or inserted in Salesforce SObjects
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 salesforce.custom.id.field.name
 
 Name of a custom external id field in SObject to structure Rest Api calls for insert, upsert, delete, and update operations.  When ``salesforce.use.custom.id.field=true`` , The operations substitute the value of the ``id`` field of source records in |ak| into the value of the specified custom external id field for sink records. This allows the sink connector to match records for operations without having to specify the  ``id`` field in Salesforce which is auto generated.
