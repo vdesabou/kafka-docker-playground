@@ -1,20 +1,20 @@
 ==========================
 Connection
 ==========================
-🔘 couchbase.username
-
-Name of the Couchbase user to authenticate as.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
 🔘 couchbase.password
 
 Password of the Couchbase user.
 
 	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 couchbase.username
+
+Name of the Couchbase user to authenticate as.
+
+	 - Type: STRING
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: true
@@ -238,15 +238,6 @@ Retry failed writes to Couchbase until this deadline is reached. If time runs ou
 ==========================
 Durability
 ==========================
-🔘 couchbase.replicate.to
-
-For Couchbase Server versions prior to 6.5, this is how you require the connector to verify a write has reached the memory of a certain number of replicas before considering the write successful.
-
-	 - Type: STRING
-	 - Default: NONE
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.durability
 
 The preferred way to specify an enhanced durability requirement when using Couchbase Server 6.5 or later.
@@ -259,6 +250,15 @@ The preferred way to specify an enhanced durability requirement when using Couch
 🔘 couchbase.persist.to
 
 For Couchbase Server versions prior to 6.5, this is how you require the connector to verify a write is persisted to disk on a certain number of replicas before considering the write successful.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.replicate.to
+
+For Couchbase Server versions prior to 6.5, this is how you require the connector to verify a write has reached the memory of a certain number of replicas before considering the write successful.
 
 	 - Type: STRING
 	 - Default: NONE
