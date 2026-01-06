@@ -566,6 +566,7 @@ then
   MENU_CLUSTER_NAME="🎰 Cluster name $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CLUSTER_NAME})) ' ') --cluster-name"
   MENU_CLUSTER_CREDS="🔒 Kafka api key & secret $(printf '%*s' $((${MAX_LENGTH}-25-${#MENU_CLUSTER_CREDS})) ' ') --cluster-creds"
   MENU_CLUSTER_SR_CREDS="🔰 Schema registry api key & secret $(printf '%*s' $((${MAX_LENGTH}-35-${#MENU_CLUSTER_SR_CREDS})) ' ') --cluster-schema-registry-creds"
+  MENU_UNSET_CLUSTER_NAME="❌🎰🎯 Unset cluster name (will also reset cloud region, cluster type and cloud provider)"
 
   readonly MENU_SEPARATOR_CLOUD="-----------------confluent cloud------------------" #38
 
@@ -635,38 +636,6 @@ then
       unset 'options[27]'
       unset 'options[28]'
 
-    #   if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
-    #   then
-    #     if [ ! -z "$CLUSTER_TYPE" ]
-    #     then
-    #       unset CLUSTER_TYPE
-    #     fi
-    #     if [ ! -z "$CLUSTER_CLOUD" ]
-    #     then
-    #       unset CLUSTER_CLOUD
-    #     fi
-    #     if [ ! -z "$CLUSTER_REGION" ]
-    #     then
-    #       unset CLUSTER_REGION
-    #     fi
-    #     if [ ! -z "$ENVIRONMENT" ]
-    #     then
-    #       unset ENVIRONMENT
-    #     fi
-    #     if [ ! -z "$CLUSTER_NAME" ]
-    #     then
-    #       unset CLUSTER_NAME
-    #       cluster_name=""
-    #     fi
-    #     if [ ! -z "$CLUSTER_CREDS" ]
-    #     then
-    #       unset CLUSTER_CREDS
-    #     fi 
-    #     if [ ! -z "$SCHEMA_REGISTRY_CREDS" ]
-    #     then
-    #       unset SCHEMA_REGISTRY_CREDS
-    #     fi
-    #   fi
       if [ ! -z "$CLUSTER_NAME" ] || [[ -n "$cluster_name" ]]
       then
         if [ ! -z "$CLUSTER_NAME" ]
@@ -675,8 +644,9 @@ then
 		  export CLUSTER_NAME=$cluster_name
         fi
         #
-        # CLUSTER_NAME is set
+        # CLUSTER_NAME is set - add menu option to unset it
         #
+        options+=("$MENU_UNSET_CLUSTER_NAME")
         ccloud_preview="🎯 ${YELLOW}cluster-name is set, your existing ccloud cluster will be used...${NC}\n\n"
         ccloud_preview="${ccloud_preview}🎰 ${YELLOW}cluster-name=$cluster_name${NC}\n"
 
@@ -691,16 +661,16 @@ then
 
         if [ -z $CLUSTER_CLOUD ] 
         then
-          ccloud_preview="${ccloud_preview}❌  🌤${RED}cluster-cloud is missing!${NC}\n"
+          ccloud_preview="${ccloud_preview}❌  ${RED}🌤cluster-cloud is missing!${NC}\n"
           unset 'options[0]'
           has_error=1
         else
-          ccloud_preview="${ccloud_preview}🌤 ${YELLOW}cluster-cloud=$CLUSTER_CLOUD${NC}\n"
+          ccloud_preview="${ccloud_preview}🌤  ${YELLOW}cluster-cloud=$CLUSTER_CLOUD${NC}\n"
         fi
         
         if [ -z $CLUSTER_REGION ] 
         then
-          ccloud_preview="${ccloud_preview}❌ 🗺${RED}cluster-region is missing!${NC}\n"
+          ccloud_preview="${ccloud_preview}❌ ${RED}🗺cluster-region is missing!${NC}\n"
           unset 'options[0]'
           has_error=1
         else
@@ -709,7 +679,7 @@ then
 
         if [ -z $CLUSTER_CREDS ] 
         then
-          ccloud_preview="${ccloud_preview}❌ 🔒${RED}cluster-creds is missing!${NC}\n"
+          ccloud_preview="${ccloud_preview}❌ ${RED}🔒cluster-creds is missing!${NC}\n"
           unset 'options[0]'
           has_error=1
         fi
@@ -761,7 +731,7 @@ then
         
         if [ -z $CLUSTER_REGION ] && [[ ! -n "$cluster_region" ]]
         then
-          ccloud_preview="${ccloud_preview}🗺 ${CYAN}cluster-region is missing, default region for provider will be used${NC}\n"
+          ccloud_preview="${ccloud_preview}🗺  ${CYAN}cluster-region is missing, default region for provider will be used${NC}\n"
         else
           if [ ! -z "$CLUSTER_REGION" ]
           then
@@ -1397,6 +1367,28 @@ then
       set -e
       array_flag_list+=("--cluster-schema-registry-creds $cluster_schema_registry_creds")
 	  export SCHEMA_REGISTRY_CREDS=$cluster_schema_registry_creds
+    fi
+
+    if [[ $res == *"$MENU_UNSET_CLUSTER_NAME"* ]]
+    then
+      maybe_remove_flag "--cluster-name"
+      maybe_remove_flag "--cluster-cloud"
+      maybe_remove_flag "--cluster-region"
+      maybe_remove_flag "--cluster-type"
+      maybe_remove_flag "--cluster-creds"
+      maybe_remove_flag "--cluster-schema-registry-creds"
+      unset CLUSTER_NAME
+      unset CLUSTER_CLOUD
+      unset CLUSTER_REGION
+      unset CLUSTER_TYPE
+      unset CLUSTER_CREDS
+      unset SCHEMA_REGISTRY_CREDS
+      cluster_name=""
+      cluster_cloud=""
+      cluster_region=""
+      cluster_type=""
+      cluster_creds=""
+      cluster_schema_registry_creds=""
     fi
   done # end while loop stop
 
