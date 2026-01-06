@@ -566,11 +566,14 @@ then
   MENU_CLUSTER_NAME="🎰 Cluster name $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_CLUSTER_NAME})) ' ') --cluster-name"
   MENU_CLUSTER_CREDS="🔒 Kafka api key & secret $(printf '%*s' $((${MAX_LENGTH}-25-${#MENU_CLUSTER_CREDS})) ' ') --cluster-creds"
   MENU_CLUSTER_SR_CREDS="🔰 Schema registry api key & secret $(printf '%*s' $((${MAX_LENGTH}-35-${#MENU_CLUSTER_SR_CREDS})) ' ') --cluster-schema-registry-creds"
-  MENU_UNSET_CLUSTER_NAME="❌🎰🎯 Unset cluster name (will also reset cloud region, cluster type and cloud provider)"
 
-  readonly MENU_SEPARATOR_CLOUD="-----------------confluent cloud------------------" #38
+  MENU_UNSET_CLUSTER_NAME="❌🎰🎯 Unset cluster name (will also reset cloud region, cluster type and cloud provider)" #40
 
-  readonly MENU_GO_BACK="🔙 Go back"
+  readonly MENU_SEPARATOR_CLOUD="-----------------confluent cloud------------------" #41
+
+  readonly MENU_GO_BACK="🔙 Go back" #42
+
+
 
   last_two_folders=$(basename $(dirname $(dirname $test_file)))/$(basename $(dirname $test_file))
   example="$last_two_folders/$filename"
@@ -612,7 +615,7 @@ then
   while [ $stop != 1 ]
   do
     has_error=0
-    options=("$MENU_LETS_GO" "$MENU_PROBLEM" "$MENU_OPEN_FILE" "$MENU_OPEN_DOCS" "$MENU_SEPARATOR" "$MENU_TAG" "$MENU_CONNECT_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_ENVIRONMENT" "$MENU_SEPARATOR" "$MENU_ENABLE_KSQLDB" "$MENU_ENABLE_C3" "$MENU_ENABLE_CONDUKTOR" "$MENU_ENABLE_RP" "$MENU_ENABLE_GRAFANA" "$MENU_ENABLE_BROKERS" "$MENU_ENABLE_CONNECT_WORKERS" "$MENU_ENABLE_KCAT" "$MENU_ENABLE_SQL_DATAGEN" "$MENU_ENABLE_FLINK" "$MENU_DISABLE_KSQLDB" "$MENU_DISABLE_C3" "$MENU_DISABLE_CONDUKTOR" "$MENU_DISABLE_RP" "$MENU_DISABLE_GRAFANA" "$MENU_DISABLE_BROKERS" "$MENU_DISABLE_CONNECT_WORKERS" "$MENU_DISABLE_KCAT" "$MENU_DISABLE_SQL_DATAGEN" "$MENU_DISABLE_FLINK" "$MENU_SEPARATOR_FEATURES" "$MENU_CLUSTER_TYPE" "$MENU_CLUSTER_CLOUD" "$MENU_CLUSTER_REGION" "$MENU_CLUSTER_ENVIRONMENT" "$MENU_CLUSTER_NAME" "$MENU_CLUSTER_CREDS" "$MENU_CLUSTER_SR_CREDS" "$MENU_SEPARATOR_CLOUD" "$MENU_GO_BACK")
+    options=("$MENU_LETS_GO" "$MENU_PROBLEM" "$MENU_OPEN_FILE" "$MENU_OPEN_DOCS" "$MENU_SEPARATOR" "$MENU_TAG" "$MENU_CONNECT_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_ENVIRONMENT" "$MENU_SEPARATOR" "$MENU_ENABLE_KSQLDB" "$MENU_ENABLE_C3" "$MENU_ENABLE_CONDUKTOR" "$MENU_ENABLE_RP" "$MENU_ENABLE_GRAFANA" "$MENU_ENABLE_BROKERS" "$MENU_ENABLE_CONNECT_WORKERS" "$MENU_ENABLE_KCAT" "$MENU_ENABLE_SQL_DATAGEN" "$MENU_ENABLE_FLINK" "$MENU_DISABLE_KSQLDB" "$MENU_DISABLE_C3" "$MENU_DISABLE_CONDUKTOR" "$MENU_DISABLE_RP" "$MENU_DISABLE_GRAFANA" "$MENU_DISABLE_BROKERS" "$MENU_DISABLE_CONNECT_WORKERS" "$MENU_DISABLE_KCAT" "$MENU_DISABLE_SQL_DATAGEN" "$MENU_DISABLE_FLINK" "$MENU_SEPARATOR_FEATURES" "$MENU_CLUSTER_TYPE" "$MENU_CLUSTER_CLOUD" "$MENU_CLUSTER_REGION" "$MENU_CLUSTER_ENVIRONMENT" "$MENU_CLUSTER_NAME" "$MENU_CLUSTER_CREDS" "$MENU_CLUSTER_SR_CREDS" "$MENU_UNSET_CLUSTER_NAME" "$MENU_SEPARATOR_CLOUD" "$MENU_GO_BACK")
 
     if [[ $test_file == *"ccloud"* ]] || [ "$PLAYGROUND_ENVIRONMENT" == "ccloud" ]
     then
@@ -641,12 +644,11 @@ then
         if [ ! -z "$CLUSTER_NAME" ]
         then
           cluster_name=$CLUSTER_NAME
-		  export CLUSTER_NAME=$cluster_name
+          export CLUSTER_NAME=$cluster_name
         fi
         #
-        # CLUSTER_NAME is set - add menu option to unset it
+        # CLUSTER_NAME is set
         #
-        options+=("$MENU_UNSET_CLUSTER_NAME")
         ccloud_preview="🎯 ${YELLOW}cluster-name is set, your existing ccloud cluster will be used...${NC}\n\n"
         ccloud_preview="${ccloud_preview}🎰 ${YELLOW}cluster-name=$cluster_name${NC}\n"
 
@@ -694,6 +696,9 @@ then
         #
         # CLUSTER_NAME is not set
         #
+
+        # hide menu to unset cluster name as it is not set
+        unset 'options[40]'
         ccloud_preview="✨ ${YELLOW}cluster-name is not set, a new ccloud cluster will be created...${NC}\n\n"
 
         if [ -z $ENVIRONMENT ] && [[ ! -n "$cluster_environment" ]]
@@ -749,11 +754,7 @@ then
       unset 'options[38]'
       unset 'options[39]'
       unset 'options[40]'
-
-      unset 'options[42]'
-      unset 'options[43]'
-      unset 'options[44]'
-      unset 'options[45]'
+      unset 'options[41]'
     fi
 
     if [ $connector_example == 0 ]
@@ -1286,7 +1287,7 @@ then
       options=(basic standard dedicated)
       cluster_type=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔋" --header="select a cluster type" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
       array_flag_list+=("--cluster-type $cluster_type")
-	  export CLUSTER_TYPE=$cluster_type
+      export CLUSTER_TYPE=$cluster_type
     fi
 
     if [[ $res == *"$MENU_CLUSTER_CLOUD"* ]]
@@ -1295,7 +1296,7 @@ then
       options=(aws gcp azure)
       cluster_cloud=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔋" --header="select a cluster type" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
       array_flag_list+=("--cluster-cloud $cluster_cloud")
-	  export CLUSTER_CLOUD=$cluster_cloud
+      export CLUSTER_CLOUD=$cluster_cloud
     fi
 
     if [[ $res == *"$MENU_CLUSTER_REGION"* ]]
@@ -1310,7 +1311,7 @@ then
       cluster_region=${cluster_region//[$' \t']/}
       cluster_region=${cluster_region#*/}
       array_flag_list+=("--cluster-region $cluster_region")
-	  export CLUSTER_REGION=$cluster_region
+      export CLUSTER_REGION=$cluster_region
     fi
 
     if [[ $res == *"$MENU_CLUSTER_ENVIRONMENT"* ]]
@@ -1328,7 +1329,7 @@ then
         cluster_environment=${cluster_environment%%/*}
       fi
       array_flag_list+=("--cluster-environment $cluster_environment")
-	  export ENVIRONMENT=$cluster_environment
+      export ENVIRONMENT=$cluster_environment
     fi
 
     if [[ $res == *"$MENU_CLUSTER_NAME"* ]]
@@ -1346,7 +1347,7 @@ then
         cluster_name=${cluster_name#*/}
       fi
       array_flag_list+=("--cluster-name $cluster_name")
-	  export CLUSTER_NAME=$cluster_name
+      export CLUSTER_NAME=$cluster_name
     fi
 
     if [[ $res == *"$MENU_CLUSTER_CREDS"* ]]
@@ -1356,7 +1357,7 @@ then
       cluster_creds=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔐" --header="Enter the Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_empty_pointer --print-query)
       set -e
       array_flag_list+=("--cluster-creds $cluster_creds")
-	  export CLUSTER_CREDS=$cluster_creds
+      export CLUSTER_CREDS=$cluster_creds
     fi
 
     if [[ $res == *"$MENU_CLUSTER_SR_CREDS"* ]]
@@ -1366,7 +1367,7 @@ then
       cluster_schema_registry_creds=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔐" --header="Enter the Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_empty_pointer --print-query)
       set -e
       array_flag_list+=("--cluster-schema-registry-creds $cluster_schema_registry_creds")
-	  export SCHEMA_REGISTRY_CREDS=$cluster_schema_registry_creds
+      export SCHEMA_REGISTRY_CREDS=$cluster_schema_registry_creds
     fi
 
     if [[ $res == *"$MENU_UNSET_CLUSTER_NAME"* ]]
