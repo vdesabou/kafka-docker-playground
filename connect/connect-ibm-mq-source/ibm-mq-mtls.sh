@@ -50,12 +50,6 @@ cd ../../connect/connect-ibm-mq-source
 mkdir -p ../../confluent-hub/confluentinc-kafka-connect-ibmmq/lib/
 cp ../../connect/connect-ibm-mq-source/com.ibm.mq.allclient.jar ../../confluent-hub/confluentinc-kafka-connect-ibmmq/lib/com.ibm.mq.allclient.jar
 cp ../../connect/connect-ibm-mq-source/jms.jar ../../confluent-hub/confluentinc-kafka-connect-ibmmq/lib/jms.jar
-cp ../../connect/connect-ibm-mq-source/com.ibm.mq.allclient.jar ../../confluent-hub/confluentinc-kafka-connect-ibmmq/lib/com.ibm.mq.allclient.jar
-cp ../../connect/connect-ibm-mq-source/jms.jar ../../confluent-hub/confluentinc-kafka-connect-ibmmq/lib/jms.jar
-cp ../../connect/connect-ibm-mq-source/com.ibm.mq.allclient.jar ../../confluent-hub/confluentinc-kafka-connect-ibmmq/lib/com.ibm.mq.allclient.jar
-cp ../../connect/connect-ibm-mq-source/jms.jar ../../confluent-hub/confluentinc-kafka-connect-ibmmq/lib/jms.jar
-cp ../../connect/connect-ibm-mq-source/com.ibm.mq.allclient.jar ../../confluent-hub/confluentinc-kafka-connect-ibmmq/lib/com.ibm.mq.allclient.jar
-cp ../../connect/connect-ibm-mq-source/jms.jar ../../confluent-hub/confluentinc-kafka-connect-ibmmq/lib/jms.jar
 cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.mtls.yml"
