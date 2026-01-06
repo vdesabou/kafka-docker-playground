@@ -1422,7 +1422,7 @@ do
     fi
 done
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
-log "📤 produced $nb_messages records to topic $topic, $ELAPSED"
+log "📤 produced $nb_messages_sent records to topic $topic, $ELAPSED"
 
 if [[ -n "$consume" ]]
 then
