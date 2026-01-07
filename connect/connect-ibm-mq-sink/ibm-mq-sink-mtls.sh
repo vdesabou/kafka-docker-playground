@@ -50,10 +50,6 @@ cd ../../connect/connect-ibm-mq-sink
 mkdir -p ../../confluent-hub/confluentinc-kafka-connect-ibmmq-sink/lib/
 cp ../../connect/connect-ibm-mq-sink/com.ibm.mq.allclient.jar ../../confluent-hub/confluentinc-kafka-connect-ibmmq-sink/lib/com.ibm.mq.allclient.jar
 cp ../../connect/connect-ibm-mq-sink/jms.jar ../../confluent-hub/confluentinc-kafka-connect-ibmmq-sink/lib/jms.jar
-cp ../../connect/connect-ibm-mq-sink/com.ibm.mq.allclient.jar ../../confluent-hub/confluentinc-kafka-connect-ibmmq-sink/lib/com.ibm.mq.allclient.jar
-cp ../../connect/connect-ibm-mq-sink/jms.jar ../../confluent-hub/confluentinc-kafka-connect-ibmmq-sink/lib/jms.jar
-cp ../../connect/connect-ibm-mq-sink/com.ibm.mq.allclient.jar ../../confluent-hub/confluentinc-kafka-connect-ibmmq-sink/lib/com.ibm.mq.allclient.jar
-cp ../../connect/connect-ibm-mq-sink/jms.jar ../../confluent-hub/confluentinc-kafka-connect-ibmmq-sink/lib/jms.jar
 cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.mtls.yml"
@@ -84,27 +80,27 @@ EOF
 log "Creating IBM MQ sink connector"
 playground connector create-or-update --connector ibm-mq-sink-mtls  << EOF
 {
-     "connector.class": "io.confluent.connect.jms.IbmMqSinkConnector",
-     "topics": "sink-messages",
-     "mq.hostname": "ibmmq",
-     "mq.port": "1414",
-     "mq.transport.type": "client",
-     "mq.queue.manager": "QM1",
-     "mq.channel": "DEV.APP.SVRCONN",
-     "mq.username": "",
-     "mq.password": "",
-     "mq.tls.truststore.location": "/tmp/truststore.jks",
-     "mq.tls.truststore.password": "confluent",
-     "mq.tls.keystore.location": "/tmp/keystore.jks",
-     "mq.tls.keystore.password": "confluent",
-     "mq.ssl.cipher.suite":"TLS_RSA_WITH_AES_128_CBC_SHA256",
-     "jms.destination.name": "DEV.QUEUE.1",
-     "jms.destination.type": "queue",
-     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-     "confluent.license": "",
-     "confluent.topic.bootstrap.servers": "broker:9092",
-     "confluent.topic.replication.factor": "1"
+    "connector.class": "io.confluent.connect.jms.IbmMqSinkConnector",
+    "topics": "sink-messages",
+    "mq.hostname": "ibmmq",
+    "mq.port": "1414",
+    "mq.transport.type": "client",
+    "mq.queue.manager": "QM1",
+    "mq.channel": "DEV.APP.SVRCONN",
+    "mq.username": "",
+    "mq.password": "",
+    "mq.tls.truststore.location": "/tmp/truststore.jks",
+    "mq.tls.truststore.password": "confluent",
+    "mq.tls.keystore.location": "/tmp/keystore.jks",
+    "mq.tls.keystore.password": "confluent",
+    "mq.ssl.cipher.suite":"TLS_RSA_WITH_AES_128_CBC_SHA256",
+    "jms.destination.name": "DEV.QUEUE.1",
+    "jms.destination.type": "queue",
+    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1"
 }
 EOF
 
