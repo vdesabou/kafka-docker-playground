@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  ibmmq:
+    addr: ibmmq:1414
+    proto: tcp
