@@ -58,6 +58,15 @@ On startup, the connector will wait this long for a Couchbase connection to be e
 ==========================
 Security
 ==========================
+🔘 couchbase.trust.store.password
+
+Password for accessing the trust store.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.enable.tls
 
 Use secure connection to Couchbase Server.
@@ -112,15 +121,6 @@ Password for accessing the client certificate.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 couchbase.trust.store.password
-
-Password for accessing the trust store.
-
-	 - Type: PASSWORD
-	 - Default: [hidden]
-	 - Importance: MEDIUM
-	 - Required: false
-
 ==========================
 Logging
 ==========================
@@ -160,6 +160,33 @@ Qualified name (scope.collection or bucket.scope.collection) of the destination 
 
 	 - Type: STRING
 	 - Default: _default._default
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.topic.to.collection
+
+Topic and collection are joined by an equals sign. Map entries are delimited by commas.
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A map from Kafka topic to Couchbase collection.
+	 - Required: MEDIUM
+
+🔘 couchbase.topic.to.document.id
+
+Topic and document ID format are joined by an equals sign. Map entries are delimited by commas.
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A map of per-topic overrides for the `couchbase.document.id` configuration property.
+	 - Required: MEDIUM
+
+🔘 couchbase.sink.handler
+
+The fully-qualified class name of the sink handler to use. The sink handler determines how the Kafka record is translated into actions on Couchbase documents.
+
+	 - Type: CLASS
+	 - Default: com.couchbase.connect.kafka.handler.sink.UpsertSinkHandler
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -208,45 +235,9 @@ Retry failed writes to Couchbase until this deadline is reached. If time runs ou
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 couchbase.topic.to.collection
-
-Topic and collection are joined by an equals sign. Map entries are delimited by commas.
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A map from Kafka topic to Couchbase collection.
-	 - Required: MEDIUM
-
-🔘 couchbase.topic.to.document.id
-
-Topic and document ID format are joined by an equals sign. Map entries are delimited by commas.
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A map of per-topic overrides for the `couchbase.document.id` configuration property.
-	 - Required: MEDIUM
-
-🔘 couchbase.sink.handler
-
-The fully-qualified class name of the sink handler to use. The sink handler determines how the Kafka record is translated into actions on Couchbase documents.
-
-	 - Type: CLASS
-	 - Default: com.couchbase.connect.kafka.handler.sink.UpsertSinkHandler
-	 - Importance: MEDIUM
-	 - Required: false
-
 ==========================
 Durability
 ==========================
-🔘 couchbase.replicate.to
-
-For Couchbase Server versions prior to 6.5, this is how you require the connector to verify a write has reached the memory of a certain number of replicas before considering the write successful.
-
-	 - Type: STRING
-	 - Default: NONE
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.durability
 
 The preferred way to specify an enhanced durability requirement when using Couchbase Server 6.5 or later.
@@ -259,6 +250,15 @@ The preferred way to specify an enhanced durability requirement when using Couch
 🔘 couchbase.persist.to
 
 For Couchbase Server versions prior to 6.5, this is how you require the connector to verify a write is persisted to disk on a certain number of replicas before considering the write successful.
+
+	 - Type: STRING
+	 - Default: NONE
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.replicate.to
+
+For Couchbase Server versions prior to 6.5, this is how you require the connector to verify a write has reached the memory of a certain number of replicas before considering the write successful.
 
 	 - Type: STRING
 	 - Default: NONE
