@@ -21,9 +21,9 @@ AZURE_COSMOSDB_CONTAINER_NAME=$AZURE_NAME
 bootstrap_ccloud_environment "azure" "$AZURE_REGION"
 
 set +e
-playground topic delete --topic apparels
+playground topic delete --topic apparelsv2
 sleep 3
-playground topic create --topic apparels --nb-partitions 1
+playground topic create --topic apparelsv2 --nb-partitions 1
 set -e
 
 
@@ -105,7 +105,7 @@ playground connector create-or-update --connector $connector_name << EOF
     "azure.cosmos.source.database.name": "$AZURE_COSMOSDB_DB_NAME",
     "azure.cosmos.source.containers.includeAll": "true",
     "azure.cosmos.source.containers.includedList":"$AZURE_COSMOSDB_CONTAINER_NAME",
-    "azure.cosmos.source.containers.topicMap": "apparels#${AZURE_COSMOSDB_DB_NAME}",
+    "azure.cosmos.source.containers.topicMap": "apparelsv2#${AZURE_COSMOSDB_DB_NAME}",
 
     "output.data.format": "AVRO",
     "topics": "hotels",
@@ -122,8 +122,8 @@ sleep 30
 log "Send again messages to Azure Cosmos DB"
 docker exec -e AZURE_COSMOSDB_DB_ENDPOINT_URI="$AZURE_COSMOSDB_DB_ENDPOINT_URI" -e AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY="$AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY" -e AZURE_COSMOSDB_DB_NAME="$AZURE_COSMOSDB_DB_NAME" -e AZURE_COSMOSDB_CONTAINER_NAME="$AZURE_COSMOSDB_CONTAINER_NAME" azure-cosmos-client bash -c "python /insert-data.py"
 
-log "Verifying topic apparels"
-playground topic consume --topic apparels --min-expected-messages 2 --timeout 60
+log "Verifying topic apparelsv2"
+playground topic consume --topic apparelsv2 --min-expected-messages 2 --timeout 60
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
