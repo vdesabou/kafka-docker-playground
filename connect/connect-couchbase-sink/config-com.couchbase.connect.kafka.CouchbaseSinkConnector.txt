@@ -163,33 +163,6 @@ Qualified name (scope.collection or bucket.scope.collection) of the destination 
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 couchbase.topic.to.collection
-
-Topic and collection are joined by an equals sign. Map entries are delimited by commas.
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A map from Kafka topic to Couchbase collection.
-	 - Required: MEDIUM
-
-🔘 couchbase.topic.to.document.id
-
-Topic and document ID format are joined by an equals sign. Map entries are delimited by commas.
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A map of per-topic overrides for the `couchbase.document.id` configuration property.
-	 - Required: MEDIUM
-
-🔘 couchbase.sink.handler
-
-The fully-qualified class name of the sink handler to use. The sink handler determines how the Kafka record is translated into actions on Couchbase documents.
-
-	 - Type: CLASS
-	 - Default: com.couchbase.connect.kafka.handler.sink.UpsertSinkHandler
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.document.mode
 
 Overrides the `couchbase.sink.handler` property.
@@ -232,6 +205,33 @@ Retry failed writes to Couchbase until this deadline is reached. If time runs ou
 
 	 - Type: STRING
 	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.topic.to.collection
+
+Topic and collection are joined by an equals sign. Map entries are delimited by commas.
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A map from Kafka topic to Couchbase collection.
+	 - Required: MEDIUM
+
+🔘 couchbase.topic.to.document.id
+
+Topic and document ID format are joined by an equals sign. Map entries are delimited by commas.
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A map of per-topic overrides for the `couchbase.document.id` configuration property.
+	 - Required: MEDIUM
+
+🔘 couchbase.sink.handler
+
+The fully-qualified class name of the sink handler to use. The sink handler determines how the Kafka record is translated into actions on Couchbase documents.
+
+	 - Type: CLASS
+	 - Default: com.couchbase.connect.kafka.handler.sink.UpsertSinkHandler
 	 - Importance: MEDIUM
 	 - Required: false
 
