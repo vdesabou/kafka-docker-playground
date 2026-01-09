@@ -1,3 +1,4 @@
+    "allow.optional.map.keys": "false",
     "avro.codec": "",
     "behavior.on.null.values": "fail",
     "connect.meta.data": "true",

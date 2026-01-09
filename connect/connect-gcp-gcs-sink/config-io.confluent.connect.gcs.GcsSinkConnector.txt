@@ -91,6 +91,15 @@ The Avro compression codec to be used for output  files. Available values: null,
 	 - Importance: LOW
 	 - Required: false
 
+🔘 allow.optional.map.keys
+
+Allow optional string map key when converting from Connect Schema to Avro Schema.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 Schema
 ==========================
