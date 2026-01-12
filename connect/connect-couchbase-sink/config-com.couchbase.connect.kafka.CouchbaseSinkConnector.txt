@@ -328,24 +328,6 @@ This property determines the time period after which client cancels the Query re
 ==========================
 Sub Document Sink Handler
 ==========================
-🔘 couchbase.subdocument.create.path
-
-Whether to add the parent paths if they are missing in the document.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.subdocument.create.document
-
-This property controls whether to create the document if it does not exist.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.subdocument.path
 
 This property is specific to `SubDocumentSinkHandler`.
@@ -361,6 +343,24 @@ Setting to indicate the type of update to a sub-document.
 
 	 - Type: STRING
 	 - Default: UPSERT
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.subdocument.create.path
+
+Whether to add the parent paths if they are missing in the document.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.subdocument.create.document
+
+This property controls whether to create the document if it does not exist.
+
+	 - Type: BOOLEAN
+	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
 
