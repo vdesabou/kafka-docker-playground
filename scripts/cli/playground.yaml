@@ -1090,6 +1090,16 @@ subcommands:
             🔧 Add a custom SMT (which is a no-op)
             
         - names:
+          - --connector-plugin
+          argument: CONNECTOR-PLUGIN
+          description: | 
+            🔌 Add Connector plugin to CONNECT_PLUGIN_PATH
+            
+            🎓 Tip: use <tab> completion to trigger fzf completion
+            
+            Repeatable: ✓ Yes
+            
+        - names:
           - --pipeline
           argument: SINK_FILE
           description: | 

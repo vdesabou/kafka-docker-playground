@@ -848,6 +848,13 @@
             },
             {
               "names": [
+                "--connector-plugin"
+              ],
+              "argument": "CONNECTOR-PLUGIN",
+              "description": "🔌 Add Connector plugin to CONNECT_PLUGIN_PATH\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRepeatable: ✓ Yes\n"
+            },
+            {
+              "names": [
                 "--pipeline"
               ],
               "argument": "SINK_FILE",

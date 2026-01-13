@@ -8,6 +8,8 @@ add_custom_smt="${args[--custom-smt]}"
 
 eval "pipeline_array=(${args[--pipeline]})"
 
+eval "connector_plugin_array=(${args[--connector-plugin]})"
+
 schema_file_key="${args[--producer-schema-key]}"
 schema_file_value="${args[--producer-schema-value]}"
 
@@ -56,10 +58,11 @@ then
   fi
   readonly MENU_LETS_GO="🏭 Create the reproduction model !" #0
 
-  MENU_ENABLE_CUSTOM_SMT="🔧 Add custom SMT $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_ENABLE_CUSTOM_SMT})) ' ') --custom-smt"
+  MENU_ENABLE_CUSTOM_SMT="🔧 Add custom SMT $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_ENABLE_CUSTOM_SMT})) ' ') --custom-smt" #2
+  MENU_ADD_CONNECTOR_PLUGIN="🔌 Add connector plugin $(printf '%*s' $((${MAX_LENGTH}-23-${#MENU_ADD_CONNECTOR_PLUGIN})) ' ') --connector-plugin" #4
 
   readonly MENU_DISABLE_CUSTOM_SMT="❌🔧 Disable custom SMT" #3
-  readonly MENU_GO_BACK="🔙 Go back"
+  readonly MENU_GO_BACK="🔙 Go back" #5
 
   last_two_folders=$(basename $(dirname $(dirname $test_file)))/$(basename $(dirname $test_file))
   example="$last_two_folders/$filename"
@@ -71,12 +74,12 @@ then
     length=${#pipeline_array[@]}
     if ((length > 0))
     then
-      MENU_PIPELINE="🔖 Add another sink to pipeline $(printf '%*s' $((${MAX_LENGTH}-32-${#MENU_PIPELINE})) ' ') --pipeline"
+      MENU_PIPELINE="🔖 Add another sink to pipeline $(printf '%*s' $((${MAX_LENGTH}-32-${#MENU_PIPELINE})) ' ') --pipeline" #1
     else
       MENU_PIPELINE="🔖 Create pipeline with sink $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_PIPELINE})) ' ') --pipeline"
     fi
 
-    options=("$MENU_LETS_GO" "$MENU_PIPELINE" "$MENU_ENABLE_CUSTOM_SMT" "$MENU_DISABLE_CUSTOM_SMT" "$MENU_GO_BACK")
+    options=("$MENU_LETS_GO" "$MENU_PIPELINE" "$MENU_ENABLE_CUSTOM_SMT" "$MENU_DISABLE_CUSTOM_SMT" "$MENU_ADD_CONNECTOR_PLUGIN" "$MENU_GO_BACK")
 
     connector_example=0
     get_connector_paths
@@ -100,7 +103,7 @@ then
 
     if [ $connector_example == 0 ]
     then
-      for((i=1;i<4;i++)); do
+      for((i=1;i<5;i++)); do
         unset "options[$i]"
       done
     else
@@ -157,6 +160,18 @@ then
       array_flag_list=("${array_flag_list[@]/"--custom-smt"}")
       unset CUSTOM_SMT
       add_custom_smt=""
+    fi
+
+    if [[ $res == *"$MENU_ADD_CONNECTOR_PLUGIN"* ]]
+    then
+      set +e
+      selected_plugin=$(playground get-connector-plugin | head -1)
+      if [[ $selected_plugin == *"@"* ]]
+      then
+        selected_plugin=$(echo "$selected_plugin" | cut -d "@" -f 2)
+        connector_plugin_array+=("$selected_plugin")
+      fi
+      set -e
     fi
 
     if [[ $res == *"$MENU_PIPELINE"* ]]
@@ -334,6 +349,29 @@ then
   cp ${docker_compose_file} $docker_compose_test_file
 
   docker_compose_test_file_name=$(basename -- "$docker_compose_test_file")
+
+    length=${#connector_plugin_array[@]}
+    if ((length > 0))
+    then
+        for selected_plugin in "${connector_plugin_array[@]}"; do
+            vendor=$(echo "$selected_plugin" | cut -d'/' -f1)
+            plugin_name=$(echo "$selected_plugin" | cut -d'/' -f2)
+            selected_plugin="/usr/share/confluent-hub-components/$vendor-$plugin_name"
+            test_file_directory="$(dirname "${test_file}")"
+
+            # Check if CONNECT_PLUGIN_PATH already exists
+            if grep -q "CONNECT_PLUGIN_PATH" "$docker_compose_file"
+            then
+                yq -i '.services.connect.environment.CONNECT_PLUGIN_PATH |= . + "," + "'$selected_plugin'"' "$docker_compose_test_file"
+            else
+                # Add CONNECT_PLUGIN_PATH to connect service environment
+                yq -i '.services.connect.environment.CONNECT_PLUGIN_PATH = "'$selected_plugin'"' "$docker_compose_test_file"
+            fi
+
+            log "✅🔌 Connector plugin $selected_plugin added to docker-compose file $docker_compose_file"
+        done
+    fi
+
 fi
 
 if [ "${docker_compose_file}" != "" ]
