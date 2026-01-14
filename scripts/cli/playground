@@ -13688,6 +13688,11 @@ function handle_onprem_connect_rest_api () {
 }
 
 function display_ngrok_warning () {
+
+  set +e
+  docker pull ngrok/ngrok > /dev/null 2>&1
+  set +e
+
   if [ -z "$NGROK_AUTH_TOKEN" ]
   then
       logerror "NGROK_AUTH_TOKEN is not set. Export it as environment variable or pass it as argument"
