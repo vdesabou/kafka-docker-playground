@@ -88,26 +88,8 @@ set +e
 aws s3 rm s3://$DATABRICKS_AWS_BUCKET_NAME --recursive --region $DATABRICKS_AWS_BUCKET_REGION
 set -e
 
-log "Create topic pageviews"
-curl -s -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-               "kafka.topic": "pageviews",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "value.converter.schemas.enable": "false",
-               "max.interval": 10,
-               "iterations": "10",
-               "tasks.max": "1",
-               "quickstart": "pageviews"
-          }' \
-     http://localhost:8083/connectors/datagen-pageviews/config | jq .
-
-wait_for_datagen_connector_to_inject_data "pageviews" "1"
-
-playground connector delete
+log "Sending messages to topic pageviews"
+playground topic produce --topic pageviews --value predefined-schemas/datagen/pageviews.avro --derive-value-schema-as AVRO --nb-messages 100
 
 log "Creating Databricks Delta Lake Sink connector"
 playground connector create-or-update --connector databricks-delta-lake-sink  << EOF
