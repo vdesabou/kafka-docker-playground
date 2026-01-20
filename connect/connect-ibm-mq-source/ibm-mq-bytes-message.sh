@@ -79,7 +79,7 @@ sleep 5
 
 log "Sending messages to DEV.QUEUE.1 JMS queue using BytesMessage:"
 log "Compiling JmsProducer.java"
-docker run -i --rm -e CLASSPATH="/tmp/jms.jar:/tmp/com.ibm.mq.allclient.jar" -v $PWD/../../connect/connect-ibm-mq-source/com.ibm.mq.allclient.jar:/tmp/com.ibm.mq.allclient.jar -v $PWD/../../connect/connect-ibm-mq-source/jms.jar:/tmp/jms.jar -v $PWD/JmsProducer.java:/tmp/JmsProducer.java -v $PWD:/tmp/ -w /tmp maven:3.6.1-jdk-8 javac JmsProducer.java
+docker run -i --rm -e CLASSPATH="/tmp/jms.jar:/tmp/com.ibm.mq.allclient.jar" -v $PWD/../../connect/connect-ibm-mq-source/com.ibm.mq.allclient.jar:/tmp/com.ibm.mq.allclient.jar -v $PWD/../../connect/connect-ibm-mq-source/jms.jar:/tmp/jms.jar -v $PWD/JmsProducer.java:/tmp/JmsProducer.java -v $PWD:/tmp/ -w /tmp maven:3.9.11-eclipse-temurin-8 javac JmsProducer.java
 docker cp JmsProducer.class ibmmq:/opt/mqm/samp/jms/samples/JmsProducer.class
 log "Sending 100 messages to DEV.QUEUE.1 JMS queue using BytesMessage:"
 docker exec -i ibmmq /opt/mqm/java/bin/runjms JmsProducer -m QM1 -d DEV.QUEUE.1 -h localhost -p 1414 -l DEV.APP.SVRCONN -u app -w passw0rd 
