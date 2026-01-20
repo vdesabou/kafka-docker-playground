@@ -25,7 +25,7 @@ items=($topic)
 cached_tag=""
 cached_broker_container=""
 if [[ "$environment" != "ccloud" ]]; then
-    cached_tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+    cached_tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
     if [ -z "$cached_tag" ]; then
         logerror "Could not find current CP version from docker ps"
         exit 1

@@ -848,7 +848,7 @@ then
     fi
 
     set +e
-    tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+    tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
     if [ $? != 0 ] || [ "$tag" == "" ]
     then
         logerror "❌ Could not find current CP version from docker ps"
@@ -1091,7 +1091,7 @@ trap handle_signal SIGINT
 
 parameter_for_list_broker="--bootstrap-server"
 set +e
-tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
 if [ $? != 0 ] || [ "$tag" == "" ]
 then
     # default to --bootstrap-server

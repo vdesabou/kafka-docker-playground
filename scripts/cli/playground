@@ -22857,7 +22857,7 @@ playground_debug_block_traffic_command() {
       docker exec $container type iptables > /dev/null 2>&1
       if [ $? != 0 ]
       then
-          tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+          tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
           if [ $? != 0 ] || [ "$tag" == "" ]
           then
               logerror "Could not find current CP version from docker ps"
@@ -23724,7 +23724,7 @@ playground_topic_get_number_records_command() {
   cached_tag=""
   cached_broker_container=""
   if [[ "$environment" != "ccloud" ]]; then
-      cached_tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+      cached_tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
       if [ -z "$cached_tag" ]; then
           logerror "Could not find current CP version from docker ps"
           exit 1
@@ -25439,7 +25439,7 @@ playground_topic_produce_command() {
       fi
 
       set +e
-      tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+      tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
       if [ $? != 0 ] || [ "$tag" == "" ]
       then
           logerror "❌ Could not find current CP version from docker ps"
@@ -25685,7 +25685,7 @@ playground_topic_produce_command() {
 
   parameter_for_list_broker="--bootstrap-server"
   set +e
-  tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+  tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
   if [ $? != 0 ] || [ "$tag" == "" ]
   then
       # default to --bootstrap-server
@@ -27608,7 +27608,7 @@ playground_connector_offsets_get_command() {
 
   if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
   then
-      tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+      tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
       if [ $? != 0 ] || [ "$tag" == "" ]
       then
           logerror "❌ could not find current CP version from docker ps"
@@ -27735,7 +27735,7 @@ playground_connector_offsets_reset_command() {
 
   if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
   then
-      tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+      tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
       if [ $? != 0 ] || [ "$tag" == "" ]
       then
           logerror "❌ could not find current CP version from docker ps"
@@ -27899,7 +27899,7 @@ playground_connector_offsets_alter_command() {
 
   if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
   then
-      tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+      tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
       if [ $? != 0 ] || [ "$tag" == "" ]
       then
           logerror "❌ could not find current CP version from docker ps"
@@ -28524,7 +28524,7 @@ playground_connector_restart_command() {
               handle_ccloud_connect_rest_api "curl -s --request POST \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/restart\" --header \"authorization: Basic $authorization\""
           fi
       else
-              tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+              tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
               if [ $? != 0 ] || [ "$tag" == "" ]
               then
                   logerror "Could not find current CP version from docker ps"
@@ -28592,7 +28592,7 @@ playground_connector_stop_command() {
       fi
   fi
 
-  tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+  tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
   if [ $? != 0 ] || [ "$tag" == "" ]
   then
       logerror "❌ could not find current CP version from docker ps"
@@ -30192,7 +30192,7 @@ playground_connector_create_or_update_command() {
 
   if [[ -n "$initial_state" ]]
   then
-      tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect-.*:' | awk -F':' '{print $2}')
+      tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
       if [ $? != 0 ] || [ "$tag" == "" ]
       then
           logerror "❌ could not find current CP version from docker ps"

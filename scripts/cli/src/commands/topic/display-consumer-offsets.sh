@@ -14,7 +14,7 @@ else
         echo "kafka-console-consumer --bootstrap-server $bootstrap_server --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security"
     fi
 
-	tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-server-.*:' | awk -F':' '{print $2}')
+	tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
 	if [ $? != 0 ] || [ "$tag" == "" ]
 	then
 		logerror "Could not find current CP version from docker ps"
