@@ -457,6 +457,15 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 	 - Importance: LOW
 	 - Required: false
 
+🔘 key.converter.key.schema.id.serializer
+
+The class name of the schema ID serializer for keys. This is used to serialize schema IDs in the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.connect.meta.data
 
 
@@ -481,6 +490,15 @@ How to construct the subject name for key schema registration.
 
 	 - Type: STRING
 	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.value.schema.id.serializer
+
+The class name of the schema ID serializer for values. This is used to serialize schema IDs in the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
 	 - Importance: LOW
 	 - Required: false
 
@@ -510,7 +528,7 @@ Table - 1 configurations
 Size of the batch of records to be fetched from the ServiceNow table. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
 
 	 - Type: INT
-	 - Default: 20000
+	 - Default: 5000
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -552,7 +570,7 @@ Timestamp Field to be used for pagination.
 
 🔘 table1.request.parameters.separator
 
-Specifies a character to separate servicenow query parameters, which is not present in the provided pagination query. For example - by default, it is set to `&`. If `&` is part of the pagination query, set it to some other separator like `|`. Shouldn't be a `=`
+Specifies the character used to separate ServiceNow query parameters. This character must not be present in the provided pagination query. Defaults to ``&``. If ``&`` is part of your pagination query, set it to an alternative separator, such as ``|``. Do not use ``=``, ``_`` or any alphanumeric character.
 
 	 - Type: STRING
 	 - Default: &
@@ -657,7 +675,7 @@ Table - 2 configurations
 Size of the batch of records to be fetched from the ServiceNow table. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
 
 	 - Type: INT
-	 - Default: 20000
+	 - Default: 5000
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -699,7 +717,7 @@ Timestamp Field to be used for pagination.
 
 🔘 table2.request.parameters.separator
 
-Specifies a character to separate servicenow query parameters, which is not present in the provided pagination query. For example - by default, it is set to `&`. If `&` is part of the pagination query, set it to some other separator like `|`. Shouldn't be a `=`
+Specifies the character used to separate ServiceNow query parameters. This character must not be present in the provided pagination query. Defaults to ``&``. If ``&`` is part of your pagination query, set it to an alternative separator, such as ``|``. Do not use ``=``, ``_`` or any alphanumeric character.
 
 	 - Type: STRING
 	 - Default: &
@@ -804,7 +822,7 @@ Table - 3 configurations
 Size of the batch of records to be fetched from the ServiceNow table. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
 
 	 - Type: INT
-	 - Default: 20000
+	 - Default: 5000
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -846,7 +864,7 @@ Timestamp Field to be used for pagination.
 
 🔘 table3.request.parameters.separator
 
-Specifies a character to separate servicenow query parameters, which is not present in the provided pagination query. For example - by default, it is set to `&`. If `&` is part of the pagination query, set it to some other separator like `|`. Shouldn't be a `=`
+Specifies the character used to separate ServiceNow query parameters. This character must not be present in the provided pagination query. Defaults to ``&``. If ``&`` is part of your pagination query, set it to an alternative separator, such as ``|``. Do not use ``=``, ``_`` or any alphanumeric character.
 
 	 - Type: STRING
 	 - Default: &
@@ -951,7 +969,7 @@ Table - 4 configurations
 Size of the batch of records to be fetched from the ServiceNow table. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
 
 	 - Type: INT
-	 - Default: 20000
+	 - Default: 5000
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -993,7 +1011,7 @@ Timestamp Field to be used for pagination.
 
 🔘 table4.request.parameters.separator
 
-Specifies a character to separate servicenow query parameters, which is not present in the provided pagination query. For example - by default, it is set to `&`. If `&` is part of the pagination query, set it to some other separator like `|`. Shouldn't be a `=`
+Specifies the character used to separate ServiceNow query parameters. This character must not be present in the provided pagination query. Defaults to ``&``. If ``&`` is part of your pagination query, set it to an alternative separator, such as ``|``. Do not use ``=``, ``_`` or any alphanumeric character.
 
 	 - Type: STRING
 	 - Default: &
@@ -1098,7 +1116,7 @@ Table - 5 configurations
 Size of the batch of records to be fetched from the ServiceNow table. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
 
 	 - Type: INT
-	 - Default: 20000
+	 - Default: 5000
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -1140,7 +1158,7 @@ Timestamp Field to be used for pagination.
 
 🔘 table5.request.parameters.separator
 
-Specifies a character to separate servicenow query parameters, which is not present in the provided pagination query. For example - by default, it is set to `&`. If `&` is part of the pagination query, set it to some other separator like `|`. Shouldn't be a `=`
+Specifies the character used to separate ServiceNow query parameters. This character must not be present in the provided pagination query. Defaults to ``&``. If ``&`` is part of your pagination query, set it to an alternative separator, such as ``|``. Do not use ``=``, ``_`` or any alphanumeric character.
 
 	 - Type: STRING
 	 - Default: &
